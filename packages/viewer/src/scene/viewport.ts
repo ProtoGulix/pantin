@@ -29,6 +29,7 @@ export interface Viewport {
 }
 
 const SELECTION_COLOR = Color3.FromHexString("#f0a030");
+const RIGHT_MOUSE_BUTTON = 2;
 
 interface ViewportContext {
   scene: Scene;
@@ -45,7 +46,11 @@ function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera 
   // Looking from core -Y towards +Y, slightly from the right and above.
   const camera = new ArcRotateCamera("camera", -2.0, 1.1, 3, Vector3.Zero(), scene);
   camera.wheelDeltaPercentage = 0.01;
-  camera.attachControl(canvas, true);
+  // Pan with a right-button drag or Ctrl + left-button drag. Default actions
+  // must be prevented, otherwise the browser's context menu opens on the right
+  // button and cancels the drag.
+  camera.attachControl(false, true, RIGHT_MOUSE_BUTTON);
+  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
   return camera;
 }
 
