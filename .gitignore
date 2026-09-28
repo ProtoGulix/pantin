@@ -31,3 +31,6 @@ __pycache__/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# User's proprietary CAD and test material: never published
+private/

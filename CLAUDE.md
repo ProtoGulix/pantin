@@ -172,7 +172,7 @@ Import CAO :
 Communications automate :
 
 1. Cible de test : CODESYS Control Win V3 (SoftPLC livré avec l'IDE). Le mode Simulation de l'IDE coupe toute communication, il ne convient pas.
-2. Modbus TCP d'abord (le plus simple à câbler), OPC UA ensuite. Deux rôles possibles pour le simulateur : client (il interroge l'automate) ou esclave (il simule des modules d'E/S que l'automate interroge, avec une IP ou un port par module). Le design doit permettre les deux, priorité à confirmer avec l'utilisateur.
+2. Modbus TCP d'abord (le plus simple à câbler), OPC UA ensuite. Deux rôles possibles pour le simulateur : client (il interroge l'automate) ou esclave (il simule des modules d'E/S que l'automate interroge, avec une IP ou un port par module). Le design doit permettre les deux. Priorité : esclave (ADR 0003).
 3. Découplage : la simulation ne dépend pas du cycle de l'automate. Échanges de tags visés à 20 à 50 ms, NON VÉRIFIÉ, à mesurer en phase 0.
 
 ## 11. Communauté et sécurité
@@ -199,8 +199,8 @@ Spikes (0b), confiés à researcher, un rapport par sujet dans docs/spikes :
 1. Conversion STEP vers maillage, licence et faisabilité.
 2. Rapier headless sous Node.
 3. Choix du pont : Python ou Node, avec mesure.
-4. Échange Modbus TCP réel avec un SoftPLC CODESYS Control Win V3.
-5. Conversion ZW3D vers glTF avec pivots corrects, sur une vraie pièce de l'utilisateur.
+4. Échange Modbus TCP réel avec un SoftPLC CODESYS Control Win V3, simulateur en esclave. Mesurer la configuration du port et de l'IP par module simulé.
+5. Conversion ZW3D vers glTF avec pivots corrects, sur une vraie pièce de l'utilisateur (STEP avec noms conservés, fournie séparément, rangée dans private/ qui n'est jamais versionné).
 6. Gain de tokens réel de Graphify sur ce dépôt.
 7. Disponibilité du nom Pantin : dépôt GitHub, portée npm @pantin, nom PyPI, nom de domaine, et INPI (classes logicielles). Une recherche superficielle n'a rien remonté de pertinent, ce qui ne garantit rien. Rapport à écrire, avec l'alternative envisagée si le nom est pris (Homunculus, alias homunc, a été évoqué comme second choix).
 
