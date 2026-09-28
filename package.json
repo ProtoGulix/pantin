@@ -7,5 +7,24 @@
   "packageManager": "pnpm@12.6.0",
   "engines": {
     "node": ">=24"
+  },
+  "scripts": {
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run boundaries && pnpm run deadcode",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "boundaries": "depcruise packages tests",
+    "deadcode": "knip"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/node": "24.19.0",
+    "dependency-cruiser": "18.4.0",
+    "knip": "6.38.0",
+    "lefthook": "2.1.14",
+    "typescript": "6.0.3",
+    "vitest": "5.0.2"
   }
 }

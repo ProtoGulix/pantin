@@ -1,0 +1,11 @@
+{
+  "name": "@pantin/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Headless simulation core: model, fixed-step loop, API, physics.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

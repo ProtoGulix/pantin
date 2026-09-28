@@ -1,0 +1,14 @@
+# Git hooks. Installed automatically by `pnpm install` (lefthook postinstall).
+pre-commit:
+  jobs:
+    - name: check
+      run: pnpm check
+
+commit-msg:
+  jobs:
+    - name: conventional-commits
+      # Header must follow Conventional Commits: type(optional scope)!: description
+      run: >-
+        head -n1 {1} | grep -qE
+        '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9-]+\))?!?: .+'
+        || { echo "Commit header must follow Conventional Commits, e.g. 'feat(core): add prismatic joint'"; exit 1; }

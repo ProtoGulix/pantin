@@ -1,0 +1,11 @@
+{
+  "name": "@pantin/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Command line: validator, CAD conversion, CODESYS variable generator.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

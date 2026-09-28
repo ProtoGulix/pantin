@@ -1,0 +1,11 @@
+{
+  "name": "@pantin/protocol",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zod schemas (source of truth), derived types and exported JSON Schema. No logic.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
