@@ -31,7 +31,7 @@ Exigences fortes :
 4. L'UI est un client de l'API. Aucun écran ne touche l'état interne du coeur, tout passe par la même API (REST plus WebSocket) que les outils en ligne de commande et les tests.
 5. Tout est en fichiers texte versionnables (JSON), dans un dossier de projet compatible git.
 6. Sécurité par défaut : les services écoutent sur localhost, l'ouverture réseau est un choix explicite, limité au réseau local privé (ADR 0004). Aucun code communautaire n'est exécuté sans bac à sable (voir section 11).
-7. Déterminisme : le coeur tourne à pas fixe, indépendant du taux d'images. Le rendu s'adapte.
+7. Déterminisme : le coeur tourne à pas fixe, indépendant du taux d'images, 1/120 s par défaut (ADR 0005). Le rendu s'adapte.
 
 ## 4. Architecture
 
@@ -53,7 +53,7 @@ Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer
 
 Stack proposée (à confirmer en phase 0) :
 
-1. Coeur : TypeScript sous Node. Physique : Rapier en WASM (build compat ou déterministe), utilisé uniquement pour produits, collisions et capteurs de présence. La cinématique des machines n'est PAS de la physique, elle est calculée directement.
+1. Coeur : TypeScript sous Node. Physique : Rapier en WASM, @dimforge/rapier3d-deterministic-compat 0.21.0 épinglé, jamais la build SIMD, pour garder la reproductibilité bit à bit utile aux tests et à la remise à zéro (ADR 0005). Utilisé uniquement pour produits, collisions et capteurs de présence. La cinématique des machines n'est PAS de la physique, elle est calculée directement.
 2. Viewer : Babylon.js (Apache 2.0, PBR, inspecteur, WebGPU et WebGL2). Le viewer n'a pas besoin de Havok puisqu'il ne simule rien. La licence d'usage de Havok n'est de toute façon pas vérifiée.
 3. Pont PLC : par défaut un sidecar Python (asyncua pour OPC UA, pymodbus pour Modbus TCP), qui parle au coeur via le tag bus en WebSocket. Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Alternative à comparer : node-opcua et une bibliothèque Modbus Node, pour rester en un seul langage. Si Python est retenu, il suit les mêmes exigences de propreté que le TypeScript (section 8).
 4. Distribution : docker compose pour le mode serveur, même code lancé en local pour les amateurs.
@@ -74,7 +74,7 @@ Un projet contient des instances de pièces. Une pièce est composée de :
 4. Capteur (Sensor), attaché à un corps ou à un repère de la scène. Deux familles :
    1. capteurs de liaison, sans physique : détecteur de plage de position d'une liaison (fin de course), codeur d'impulsions.
    2. capteurs de présence : barrière ou rayon photoélectrique, inductif filtré par matériau, portée réglable, inversion NO ou NF, retard.
-5. Produit (Product) : boîte ou pièce avec dimensions, masse, matériau, créée par un émetteur sur commande et détruite par un absorbeur. Les convoyeurs transportent les produits à la vitesse de surface (méthode de transport dans Rapier NON VÉRIFIÉE, à prototyper).
+5. Produit (Product) : boîte ou pièce avec dimensions, masse, matériau, créée par un émetteur sur commande et détruite par un absorbeur. Les convoyeurs transportent les produits à la vitesse de surface. Méthode vérifiée pour une bande droite (spike 0002) : la bande est un corps cinématique animé par le code à la vitesse de surface, ramené à sa position d'origine après chaque pas. Les capteurs de présence sont des lancers de rayon exécutés après chaque pas, pas des colliders capteurs de Rapier (retard de 1 à 2 pas). Restent NON VÉRIFIÉS : convoyeurs courbes, rouleaux, transferts entre bandes, longues simulations, mise en veille des corps, reproductibilité entre machines différentes.
 6. Tag : nom, type (bit, entier, flottant), direction vue de l'automate (commande ou retour). Le nom de l'instance est le préfixe de ses tags : instance.tag.
 
 Exemple de manifeste de pièce (à valider contre le schéma en phase 1) :
