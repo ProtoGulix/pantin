@@ -7,5 +7,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "node src/main.ts"
+  },
+  "dependencies": {
+    "@pantin/protocol": "workspace:*"
   }
 }

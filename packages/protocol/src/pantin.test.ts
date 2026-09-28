@@ -1,0 +1,66 @@
+import { describe, expect, it } from "vitest";
+import { PANTIN_SCHEMA_VERSION, PantinDocumentSchema, PantinIdSchema } from "./pantin.ts";
+
+describe("PantinIdSchema", () => {
+  it.each(["linear-axis", "a", "axis-800", "0"])("accepts %s", (id) => {
+    expect(PantinIdSchema.safeParse(id).success).toBe(true);
+  });
+
+  it.each([
+    "..",
+    "../../etc",
+    "a/b",
+    "/etc",
+    "a\\b",
+    ".hidden",
+    "",
+    "Upper",
+    "-dash",
+    "dash-",
+    "x".repeat(65),
+  ])("rejects %j", (id) => {
+    expect(PantinIdSchema.safeParse(id).success).toBe(false);
+  });
+});
+
+describe("PantinDocumentSchema", () => {
+  const validDocument = {
+    schema_version: PANTIN_SCHEMA_VERSION,
+    name: "Linear axis",
+    bodies: [
+      {
+        id: "rail",
+        name: "Rail",
+        source: {
+          fileName: "axis.glb",
+          format: "glb",
+          unit: "m",
+          upAxis: "z",
+          nodes: [{ name: "3630.00.0800N_0_1", path: [0, 0] }],
+        },
+        mesh: "meshes/rail.glb",
+      },
+    ],
+  };
+
+  it("accepts a complete document", () => {
+    expect(PantinDocumentSchema.parse(validDocument)).toEqual(validDocument);
+  });
+
+  it("rejects an unknown schema version", () => {
+    expect(PantinDocumentSchema.safeParse({ ...validDocument, schema_version: 2 }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects two bodies with the same id", () => {
+    const [body] = validDocument.bodies;
+    const duplicated = { ...validDocument, bodies: [body, { ...body, name: "Copy" }] };
+
+    expect(PantinDocumentSchema.safeParse(duplicated).success).toBe(false);
+  });
+
+  it("rejects an empty display name", () => {
+    expect(PantinDocumentSchema.safeParse({ ...validDocument, name: "  " }).success).toBe(false);
+  });
+});
