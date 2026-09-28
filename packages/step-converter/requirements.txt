@@ -1,0 +1,2 @@
+# Runtime dependency of the STEP converter (ADR 0009). Pinned exactly.
+cadquery-ocp-novtk==8.0.1.0.0

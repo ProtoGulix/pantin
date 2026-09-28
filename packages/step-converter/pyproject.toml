@@ -1,0 +1,64 @@
+# The converter is not published: it runs from its own virtual environment
+# (setup.sh), so there is no [build-system] and no build backend dependency.
+[project]
+name = "pantin-step-converter"
+version = "0.1.0"
+description = "Converts a STEP assembly into one GLB per leaf component for Pantin (ADR 0009)."
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = ["cadquery-ocp-novtk==8.0.1.0.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "F",    # pyflakes
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "I",    # import sorting
+    "N",    # pep8 naming
+    "UP",   # pyupgrade
+    "ANN",  # type annotations everywhere
+    "B",    # bugbear
+    "A",    # shadowed builtins
+    "C4",   # comprehensions
+    "SIM",  # simplifications
+    "RET",  # return statements
+    "PTH",  # pathlib over os.path
+    "PL",   # pylint
+    "RUF",  # ruff specific
+    "S",    # security (bandit)
+    "BLE",  # blind except
+    "T20",  # stray print calls
+    "PT",   # pytest style
+    "ERA",  # commented-out code
+]
+ignore = [
+    # Magic numbers are fine in tests and in small geometric constants that are named anyway.
+    "PLR2004",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests run the converter as a child process on purpose and use plain asserts.
+"tests/**" = ["S101", "S603"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"
+
+# OCP (the OpenCascade bindings) ships compiled modules without type stubs or
+# py.typed, so mypy cannot see its API. Only OCP is exempted; every other import
+# must be typed. Values coming from OCP are Any, which is why the code converts
+# them to Python types (str, float, int) at the boundary.
+[[tool.mypy.overrides]]
+module = ["OCP", "OCP.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["--strict-markers", "--strict-config"]
