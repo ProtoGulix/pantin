@@ -1,4 +1,5 @@
-import type { LengthUnit, MeshFormat, UpAxis } from "@pantin/protocol";
+import type { LengthUnit, UpAxis } from "@pantin/protocol";
+import type { MeshFileFormat } from "./mesh-format.ts";
 
 // The ONLY module of the viewer that converts between coordinate frames
 // (CLAUDE.md section 5). Everything else speaks either "core" or "Babylon" and
@@ -9,7 +10,9 @@ import type { LengthUnit, MeshFormat, UpAxis } from "@pantin/protocol";
 //   Babylon  left-handed, Y up (Babylon.js default scene).
 //   file     right-handed (glTF by specification, STL by convention), either
 //            Y up (glTF specification) or Z up (CAD exports, spike 0001), in
-//            the body's source unit.
+//            the body's source unit. STEP files never reach the viewer: the
+//            core converts them into GLB files in metres, Z up (ADR 0009),
+//            so they are read here as a GLB with upAxis "z" and unit "m".
 //
 // Matrices are 3x3, row-major, acting on column vectors: p' = M * p.
 
@@ -71,7 +74,7 @@ export const GLTF_LOADER_ROOT_MAPPING: Matrix3 = [
 // that default on purpose: changing it means mutating a global static.
 export const STL_LOADER_MAPPING: Matrix3 = CORE_TO_BABYLON;
 
-function loaderMapping(format: MeshFormat): Matrix3 {
+function loaderMapping(format: MeshFileFormat): Matrix3 {
   return format === "glb" ? GLTF_LOADER_ROOT_MAPPING : STL_LOADER_MAPPING;
 }
 
@@ -135,7 +138,11 @@ export function fileToCoreMatrix(upAxis: UpAxis, unit: LengthUnit): Matrix3 {
  * positive uniform scale (determinant > 0, see frames.test.ts), so Babylon's
  * back-face culling, already right for the loader's output, stays right.
  */
-export function bodyNodeTransform(format: MeshFormat, upAxis: UpAxis, unit: LengthUnit): Matrix3 {
+export function bodyNodeTransform(
+  format: MeshFileFormat,
+  upAxis: UpAxis,
+  unit: LengthUnit,
+): Matrix3 {
   const wanted = multiplyMatrix3(CORE_TO_BABYLON, fileToCoreMatrix(upAxis, unit));
   return multiplyMatrix3(wanted, transposeMatrix3(loaderMapping(format)));
 }

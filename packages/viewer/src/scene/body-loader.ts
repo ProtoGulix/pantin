@@ -11,6 +11,7 @@ import "@babylonjs/loaders/glTF/2.0/glTFLoader.js";
 import "@babylonjs/loaders/STL/stlFileLoader.js";
 import type { Body } from "@pantin/protocol";
 import { bodyNodeTransform, toBabylonMatrixArray } from "../frames.ts";
+import { type MeshFileFormat, meshFormatFromPath } from "../mesh-format.ts";
 
 export interface LoadedBody {
   // Parent of everything the loader produced; carries the frame conversion.
@@ -30,8 +31,8 @@ function applyDefaultMaterial(scene: Scene, body: Body, meshes: AbstractMesh[]):
   }
 }
 
-function applyFrameConversion(node: TransformNode, body: Body): void {
-  const { format, upAxis, unit } = body.source;
+function applyFrameConversion(node: TransformNode, body: Body, format: MeshFileFormat): void {
+  const { upAxis, unit } = body.source;
   const matrix = Matrix.FromArray(toBabylonMatrixArray(bodyNodeTransform(format, upAxis, unit)));
   const scaling = new Vector3();
   const rotation = new Quaternion();
@@ -54,15 +55,19 @@ function parentLoaderRoots(container: AssetContainer, node: TransformNode): void
 }
 
 export async function loadBody(scene: Scene, body: Body, bytes: ArrayBuffer): Promise<LoadedBody> {
+  const format = meshFormatFromPath(body.mesh);
+  if (format === null) {
+    throw new Error(`mesh file "${body.mesh}" is neither .glb nor .stl.`);
+  }
   const container = await LoadAssetContainerAsync(new Uint8Array(bytes), scene, {
-    pluginExtension: `.${body.source.format}`,
-    name: body.source.fileName,
+    pluginExtension: `.${format}`,
+    name: body.mesh,
   });
   const node = new TransformNode(`body:${body.id}`, scene);
-  applyFrameConversion(node, body);
+  applyFrameConversion(node, body, format);
   parentLoaderRoots(container, node);
   const meshes = container.meshes.filter((mesh) => mesh.getTotalVertices() > 0);
-  if (body.source.format === "stl") {
+  if (format === "stl") {
     applyDefaultMaterial(scene, body, meshes);
   }
   for (const mesh of meshes) {

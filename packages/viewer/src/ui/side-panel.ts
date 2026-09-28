@@ -43,7 +43,7 @@ function openPantinSection(panel: PanelView, intents: PanelIntents): HTMLElement
   const importArea =
     panel.importForm === null
       ? renderImportButton(intents, panel.busy)
-      : renderImportForm(panel.importForm, intents, panel.busy);
+      : renderImportForm(panel.importForm, intents);
   const empty =
     view.emptyBodiesMessage === null
       ? null

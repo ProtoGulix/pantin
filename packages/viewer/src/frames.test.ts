@@ -1,4 +1,4 @@
-import type { LengthUnit, MeshFormat, UpAxis } from "@pantin/protocol";
+import type { LengthUnit, UpAxis } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   applyMatrix3,
@@ -14,6 +14,7 @@ import {
   toBabylonMatrixArray,
   type Vector3Tuple,
 } from "./frames.ts";
+import type { MeshFileFormat } from "./mesh-format.ts";
 
 function expectClose(actual: Vector3Tuple, expected: Vector3Tuple): void {
   for (const axis of [0, 1, 2] as const) {
@@ -27,12 +28,17 @@ function determinant(matrix: Matrix3): number {
 }
 
 // What a loaded vertex ends up at in Babylon: loader mapping, then our parent.
-function fileToBabylon(format: MeshFormat, upAxis: UpAxis, unit: LengthUnit, point: Vector3Tuple) {
+function fileToBabylon(
+  format: MeshFileFormat,
+  upAxis: UpAxis,
+  unit: LengthUnit,
+  point: Vector3Tuple,
+) {
   const loader = format === "glb" ? GLTF_LOADER_ROOT_MAPPING : STL_LOADER_MAPPING;
   return applyMatrix3(bodyNodeTransform(format, upAxis, unit), applyMatrix3(loader, point));
 }
 
-const formats: MeshFormat[] = ["glb", "stl"];
+const formats: MeshFileFormat[] = ["glb", "stl"];
 const upAxes: UpAxis[] = ["y", "z"];
 const units: LengthUnit[] = ["m", "mm", "cm", "in"];
 
@@ -121,7 +127,7 @@ describe("body node transform compensates the Babylon loaders", () => {
     expectClose(fileToBabylon("glb", "y", "m", [0, 1, 0]), [0, 1, 0]);
   });
 
-  it("stands a Z-up CAD glTF upright", () => {
+  it("stands a Z-up CAD glTF upright, such as a STEP-derived body", () => {
     expectClose(fileToBabylon("glb", "z", "m", [0, 0, 1]), [0, 1, 0]);
   });
 });

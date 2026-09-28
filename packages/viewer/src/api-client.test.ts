@@ -105,26 +105,39 @@ describe("PantinApiClient requests", () => {
     expect(requests[0]?.init?.method).toBe("PATCH");
     expect(requests[0]?.init?.body).toBe(JSON.stringify({ name: "Press" }));
   });
+});
 
-  it("sends import bytes raw, with the query in the URL", async () => {
-    const body = {
-      id: "rail",
-      name: "rail",
-      source: { fileName: "rail part.stl", format: "stl", unit: "mm", upAxis: "z", nodes: [] },
-      mesh: "meshes/rail.stl",
-    };
-    const { fetchFunction, requests } = fakeFetch(jsonResponse({ body }, 201));
+describe("PantinApiClient import", () => {
+  it("sends import bytes raw, with the query in the URL, and returns every body", async () => {
+    const component = (id: string) => ({
+      id,
+      name: id,
+      source: { fileName: "rail part.step", format: "step", unit: "m", upAxis: "z", nodes: [] },
+      mesh: `meshes/${id}.glb`,
+    });
+    const bodies = [component("rail"), component("carriage")];
+    const { fetchFunction, requests } = fakeFetch(jsonResponse({ bodies }, 201));
     const bytes = new ArrayBuffer(8);
-    const imported = await createPantinApiClient(fetchFunction).importBody(
+    const imported = await createPantinApiClient(fetchFunction).importBodies(
       "press",
-      { fileName: "rail part.stl", unit: "mm", upAxis: "z" },
+      { fileName: "rail part.step", upAxis: "z" },
       bytes,
     );
-    expect(imported).toEqual(body);
-    expect(requests[0]?.url).toBe(
-      "/api/pantins/press/bodies?fileName=rail+part.stl&unit=mm&upAxis=z",
-    );
+    expect(imported).toEqual(bodies);
+    expect(requests[0]?.url).toBe("/api/pantins/press/bodies?fileName=rail+part.step&upAxis=z");
     expect(requests[0]?.init?.body).toBe(bytes);
+  });
+
+  it("rejects an import answer without any body", async () => {
+    const { fetchFunction } = fakeFetch(jsonResponse({ bodies: [] }, 201));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).importBodies(
+        "press",
+        { fileName: "a.stl" },
+        new ArrayBuffer(0),
+      ),
+    );
+    expect(error.kind).toBe("invalid_response");
   });
 
   it("fetches mesh bytes from the meshes route", async () => {

@@ -101,6 +101,16 @@
   overflow-wrap: anywhere;
 }
 
+.import-progress {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 6px;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -147,6 +157,11 @@
   color: var(--text-muted);
   background: var(--surface-3);
   border-radius: 999px;
+}
+
+.badge--format {
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* Original CAD names: read-only, monospace, on a recessed background. */

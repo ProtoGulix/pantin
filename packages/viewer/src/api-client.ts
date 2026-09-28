@@ -5,6 +5,7 @@ import {
   type Body,
   BodyResponseSchema,
   CreatePantinRequestSchema,
+  ImportBodiesResponseSchema,
   type ImportBodyQuery,
   ImportBodyQuerySchema,
   PANTIN_MESHES_DIRECTORY_NAME,
@@ -64,7 +65,8 @@ export interface PantinApiClient {
   getPantin(pantinId: string): Promise<PantinResponse>;
   renamePantin(pantinId: string, name: string): Promise<PantinResponse>;
   savePantin(pantinId: string): Promise<PantinResponse>;
-  importBody(pantinId: string, query: ImportBodyQuery, fileBytes: ArrayBuffer): Promise<Body>;
+  // One body for GLB and STL, one per assembly component for STEP (ADR 0009).
+  importBodies(pantinId: string, query: ImportBodyQuery, fileBytes: ArrayBuffer): Promise<Body[]>;
   renameBody(pantinId: string, bodyId: string, name: string): Promise<Body>;
   fetchMeshBytes(pantinId: string, meshPath: string): Promise<ArrayBuffer>;
 }
@@ -205,11 +207,11 @@ function pantinRoutes(send: SendJson): PantinRoutes {
   };
 }
 
-type BodyRoutes = Pick<PantinApiClient, "importBody" | "renameBody" | "fetchMeshBytes">;
+type BodyRoutes = Pick<PantinApiClient, "importBodies" | "renameBody" | "fetchMeshBytes">;
 
 function bodyRoutes(send: SendJson, fetchFunction: FetchFunction): BodyRoutes {
   return {
-    importBody: async (pantinId, query, fileBytes) => {
+    importBodies: async (pantinId, query, fileBytes) => {
       const validQuery = validInputOrThrow(ImportBodyQuerySchema, query);
       const url = pantinUrl(pantinId, `/bodies?${importQueryString(validQuery)}`);
       const init: RequestInit = {
@@ -217,7 +219,7 @@ function bodyRoutes(send: SendJson, fetchFunction: FetchFunction): BodyRoutes {
         headers: { "Content-Type": "application/octet-stream" },
         body: fileBytes,
       };
-      return (await send(url, init, BodyResponseSchema)).body;
+      return (await send(url, init, ImportBodiesResponseSchema)).bodies;
     },
     renameBody: async (pantinId, bodyId, name) => {
       const request = validInputOrThrow(RenameRequestSchema, { name });

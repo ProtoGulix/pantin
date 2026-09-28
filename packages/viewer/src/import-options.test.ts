@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { buildImportQuery, createPendingImport, detectMeshFormat } from "./import-options.ts";
+import { buildImportQuery, createPendingImport, detectSourceFormat } from "./import-options.ts";
 
 describe("import options", () => {
   it("detects the format from the extension, case insensitive", () => {
-    expect(detectMeshFormat("rail.GLB")).toBe("glb");
-    expect(detectMeshFormat("carriage.stl")).toBe("stl");
-    expect(detectMeshFormat("part.step")).toBeNull();
-    expect(detectMeshFormat("noextension")).toBeNull();
+    expect(detectSourceFormat("rail.GLB")).toBe("glb");
+    expect(detectSourceFormat("carriage.stl")).toBe("stl");
+    expect(detectSourceFormat("assembly.STEP")).toBe("step");
+    expect(detectSourceFormat("assembly.stp")).toBe("step");
+    expect(detectSourceFormat("part.obj")).toBeNull();
+    expect(detectSourceFormat("noextension")).toBeNull();
+    expect(detectSourceFormat(".step")).toBeNull();
   });
 
   it("defaults a GLB to Y up and sends no unit", () => {
@@ -28,7 +31,16 @@ describe("import options", () => {
     });
   });
 
+  it("defaults a STEP to Z up and never sends a unit: STEP declares its own", () => {
+    const pendingImport = createPendingImport("assembly.step");
+    expect(pendingImport).toMatchObject({ format: "step", upAxis: "z" });
+    expect(pendingImport && buildImportQuery({ ...pendingImport, unit: "mm" })).toEqual({
+      fileName: "assembly.step",
+      upAxis: "z",
+    });
+  });
+
   it("refuses an unsupported file", () => {
-    expect(createPendingImport("part.step")).toBeNull();
+    expect(createPendingImport("part.obj")).toBeNull();
   });
 });

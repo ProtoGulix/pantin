@@ -1,4 +1,4 @@
-import { LengthUnitSchema, type PantinResponse, UpAxisSchema } from "@pantin/protocol";
+import { type Body, LengthUnitSchema, type PantinResponse, UpAxisSchema } from "@pantin/protocol";
 import type { PantinApiClient } from "./api-client.ts";
 import { buildImportQuery, createPendingImport } from "./import-options.ts";
 import type { Viewport } from "./scene/viewport.ts";
@@ -7,6 +7,9 @@ import { buildPanelView, describeFailure, type PanelView } from "./view-model.ts
 import {
   INITIAL_VIEWER_STATE,
   type ViewerState,
+  withImportedBodies,
+  withImportFailed,
+  withImportStarted,
   withOpenPantin,
   withRequestFinished,
   withRequestStarted,
@@ -160,7 +163,7 @@ export class ViewerController {
   private chooseImportFile(file: File): void {
     const pendingImport = createPendingImport(file.name);
     if (pendingImport === null) {
-      this.showError(`"${file.name}" is not supported. Choose a .glb or .stl file.`);
+      this.showError(`"${file.name}" is not supported. Choose a .glb, .stl, .stp or .step file.`);
       return;
     }
     this.pendingImportFile = file;
@@ -188,17 +191,28 @@ export class ViewerController {
   private async confirmImport(): Promise<void> {
     const file = this.pendingImportFile;
     const pendingImport = this.state.pendingImport;
-    if (file === null || pendingImport === null) {
+    // A STEP conversion can last minutes: a second click must not send it twice.
+    if (file === null || pendingImport === null || this.state.importInProgress) {
       return;
     }
-    const bytes = await file.arrayBuffer();
-    const importedBody = await this.editOpenPantin(
-      (pantinId) => this.ports.api.importBody(pantinId, buildImportQuery(pendingImport), bytes),
-      true,
-    );
-    if (importedBody !== undefined) {
+    this.update(withImportStarted(this.state));
+    let importedBodies: Body[] | undefined;
+    try {
+      const bytes = await file.arrayBuffer();
+      importedBodies = await this.editOpenPantin(
+        (pantinId) => this.ports.api.importBodies(pantinId, buildImportQuery(pendingImport), bytes),
+        true,
+      );
+    } finally {
+      // Whatever happened, the form must never stay stuck in progress.
+      this.update(
+        importedBodies === undefined
+          ? withImportFailed(this.state)
+          : withImportedBodies(this.state, importedBodies),
+      );
+    }
+    if (importedBodies !== undefined) {
       this.pendingImportFile = null;
-      this.update(withSelectedBody({ ...this.state, pendingImport: null }, importedBody.id));
     }
   }
 }

@@ -1,6 +1,6 @@
-import type { Body, LengthUnit, SourceNode, UpAxis } from "@pantin/protocol";
+import type { Body, LengthUnit, SourceFormat, SourceNode, UpAxis } from "@pantin/protocol";
 import { PantinApiError } from "./api-client.ts";
-import { importNeedsUnit } from "./import-options.ts";
+import { importNeedsUnit, SOURCE_FORMAT_LABELS } from "./import-options.ts";
 import type { ViewerState } from "./viewer-state.ts";
 
 // Display logic: turns ViewerState into exactly what the panel shows, as plain
@@ -23,6 +23,7 @@ export interface BodyRowView {
   id: string;
   displayName: string;
   sourceFileName: string;
+  sourceFormatLabel: string;
   sourceNodes: SourceNodeView[];
   unitLabel: string;
   upAxisLabel: string;
@@ -44,6 +45,9 @@ export interface ImportFormView {
   showUnit: boolean;
   unit: LengthUnit;
   upAxis: UpAxis;
+  // Shown instead of the buttons while the core works on the file.
+  progressMessage: string | null;
+  canSubmit: boolean;
 }
 
 export interface PanelView {
@@ -83,6 +87,7 @@ export function buildBodyRowView(body: Body, selectedBodyId: string | null): Bod
     id: body.id,
     displayName: body.name,
     sourceFileName: body.source.fileName,
+    sourceFormatLabel: SOURCE_FORMAT_LABELS[body.source.format],
     sourceNodes: body.source.nodes.map(sourceNodeView),
     unitLabel: UNIT_LABELS[body.source.unit],
     upAxisLabel: UP_AXIS_LABELS[body.source.upAxis],
@@ -107,6 +112,12 @@ function buildOpenPantinView(state: ViewerState, busy: boolean): OpenPantinView 
   };
 }
 
+function importProgressMessage(format: SourceFormat): string {
+  return format === "step"
+    ? "Converting the STEP file… This can take up to 2 minutes; keep this page open."
+    : "Importing…";
+}
+
 function buildImportFormView(state: ViewerState): ImportFormView | null {
   const pendingImport = state.pendingImport;
   if (pendingImport === null) {
@@ -114,10 +125,12 @@ function buildImportFormView(state: ViewerState): ImportFormView | null {
   }
   return {
     fileName: pendingImport.fileName,
-    formatLabel: pendingImport.format === "glb" ? "glTF binary (.glb)" : "STL (.stl)",
+    formatLabel: SOURCE_FORMAT_LABELS[pendingImport.format],
     showUnit: importNeedsUnit(pendingImport),
     unit: pendingImport.unit,
     upAxis: pendingImport.upAxis,
+    progressMessage: state.importInProgress ? importProgressMessage(pendingImport.format) : null,
+    canSubmit: !state.importInProgress && state.pendingRequestCount === 0,
   };
 }
 
@@ -138,12 +151,32 @@ export function buildPanelView(state: ViewerState): PanelView {
   };
 }
 
+function describeApiError(error: PantinApiError): string {
+  if (error.kind === "invalid_response") {
+    return `The core sent an unexpected answer. ${error.message}`;
+  }
+  switch (error.code) {
+    case "conversion_unavailable":
+      return (
+        `STEP import is not available on this core: ${error.message} ` +
+        "Start the core with --step-converter-python <path to the converter's Python>, " +
+        "or export the part as GLB or STL from your CAD."
+      );
+    case "conversion_failed":
+      return (
+        `The STEP file could not be converted: ${error.message} ` +
+        "Check that it opens in your CAD and re-export it as STEP (AP214 or AP242), " +
+        "or export it as GLB or STL."
+      );
+    default:
+      return error.message;
+  }
+}
+
 /** One actionable sentence for any failure, shown in the error banner. */
 export function describeFailure(error: unknown): string {
   if (error instanceof PantinApiError) {
-    return error.kind === "invalid_response"
-      ? `The core sent an unexpected answer. ${error.message}`
-      : error.message;
+    return describeApiError(error);
   }
   const reason = error instanceof Error ? error.message : String(error);
   return `Unexpected error: ${reason}`;

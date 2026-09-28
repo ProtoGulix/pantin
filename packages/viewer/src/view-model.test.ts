@@ -5,6 +5,9 @@ import { buildBodyRowView, buildPanelView, describeFailure } from "./view-model.
 import {
   INITIAL_VIEWER_STATE,
   type ViewerState,
+  withImportedBodies,
+  withImportFailed,
+  withImportStarted,
   withOpenPantin,
   withRequestFinished,
   withRequestStarted,
@@ -67,8 +70,9 @@ describe("body list view", () => {
     ]);
   });
 
-  it("labels unit and up axis", () => {
+  it("labels source format, unit and up axis", () => {
     const row = buildBodyRowView(rail, null);
+    expect(row.sourceFormatLabel).toBe("GLB");
     expect(row.unitLabel).toBe("m (metres)");
     expect(row.upAxisLabel).toBe("Z up (CAD)");
   });
@@ -127,5 +131,85 @@ describe("describeFailure", () => {
 
   it("never hides an unexpected error", () => {
     expect(describeFailure(new Error("boom"))).toBe("Unexpected error: boom");
+  });
+});
+
+const stepComponent = (id: string, nodeName: string): Body => ({
+  id,
+  name: nodeName,
+  source: {
+    fileName: "3630.step",
+    format: "step",
+    unit: "m",
+    upAxis: "z",
+    nodes: [{ name: nodeName, path: [0] }],
+  },
+  mesh: `meshes/${id}.glb`,
+});
+
+describe("STEP bodies", () => {
+  it("shows the STEP format and keeps the original node names", () => {
+    const row = buildBodyRowView(stepComponent("carriage", "3630.00.0800N_1"), null);
+    expect(row.sourceFormatLabel).toBe("STEP");
+    expect(row.sourceNodes).toEqual([{ label: "3630.00.0800N_1", pathLabel: "0" }]);
+  });
+});
+
+describe("import state", () => {
+  const importing = (state: ViewerState): ViewerState =>
+    withImportStarted({
+      ...state,
+      pendingImport: { fileName: "3630.step", format: "step", unit: "m", upAxis: "z" },
+    });
+
+  it("shows a conversion message and blocks a second submission during a STEP import", () => {
+    const form = buildPanelView(importing(stateWith(pantinResponse(false)))).importForm;
+    expect(form?.progressMessage).toContain("Converting the STEP file");
+    expect(form?.canSubmit).toBe(false);
+    expect(form?.showUnit).toBe(false);
+  });
+
+  it("closes the form and selects the first of several imported bodies", () => {
+    const bodies = [stepComponent("rail", "3630_0"), stepComponent("carriage", "3630_1")];
+    const refreshed = withOpenPantin(importing(stateWith(pantinResponse(false))), {
+      ...pantinResponse(true, bodies),
+    });
+    const done = withImportedBodies(refreshed, bodies);
+    expect(done).toMatchObject({
+      importInProgress: false,
+      pendingImport: null,
+      selectedBodyId: "rail",
+    });
+    expect(buildPanelView(done).openPantin?.bodies.map((row) => row.id)).toEqual([
+      "rail",
+      "carriage",
+    ]);
+  });
+
+  it("keeps the form open, ready to retry, after a failed import", () => {
+    const failed = withImportFailed(importing(stateWith(pantinResponse(false))));
+    const form = buildPanelView(failed).importForm;
+    expect(form).toMatchObject({ progressMessage: null, canSubmit: true, fileName: "3630.step" });
+  });
+});
+
+describe("describeFailure for STEP conversion", () => {
+  it("explains how to enable STEP import when the converter is missing", () => {
+    const error = new PantinApiError(
+      "api",
+      "No converter configured.",
+      "conversion_unavailable",
+      503,
+    );
+    const message = describeFailure(error);
+    expect(message).toContain("No converter configured.");
+    expect(message).toContain("--step-converter-python");
+  });
+
+  it("keeps the core's reason and suggests a way out when the conversion fails", () => {
+    const error = new PantinApiError("api", "The file has no solid.", "conversion_failed", 422);
+    const message = describeFailure(error);
+    expect(message).toContain("The file has no solid.");
+    expect(message).toContain("GLB or STL");
   });
 });

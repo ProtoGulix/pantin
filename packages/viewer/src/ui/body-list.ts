@@ -31,6 +31,7 @@ function sourceBlock(row: BodyRowView): HTMLElement {
 
 function frameBadges(row: BodyRowView): HTMLElement {
   return element("div", { className: "badges" }, [
+    element("span", { className: "badge badge--format", text: row.sourceFormatLabel }),
     element("span", { className: "badge", text: row.unitLabel }),
     element("span", { className: "badge", text: row.upAxisLabel }),
   ]);
