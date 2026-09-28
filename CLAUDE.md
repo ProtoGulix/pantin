@@ -30,7 +30,7 @@ Exigences fortes :
 3. Une pièce est un dossier autonome. Ajouter une pièce ne doit jamais demander de modifier le coeur. Contre exemple à éviter : FactoryForge impose de toucher huit fichiers partagés par pièce, et l'Open Industry Project impose un fork custom de Godot. Ce sont les frictions qui tuent une communauté.
 4. L'UI est un client de l'API. Aucun écran ne touche l'état interne du coeur, tout passe par la même API (REST plus WebSocket) que les outils en ligne de commande et les tests.
 5. Tout est en fichiers texte versionnables (JSON), dans un dossier de projet compatible git.
-6. Sécurité par défaut : les services écoutent sur localhost, l'ouverture réseau est un choix explicite. Aucun code communautaire n'est exécuté sans bac à sable (voir section 11).
+6. Sécurité par défaut : les services écoutent sur localhost, l'ouverture réseau est un choix explicite, limité au réseau local privé (ADR 0004). Aucun code communautaire n'est exécuté sans bac à sable (voir section 11).
 7. Déterminisme : le coeur tourne à pas fixe, indépendant du taux d'images. Le rendu s'adapte.
 
 ## 4. Architecture
@@ -198,8 +198,8 @@ Spikes (0b), confiés à researcher, un rapport par sujet dans docs/spikes :
 
 1. Conversion STEP vers maillage, licence et faisabilité.
 2. Rapier headless sous Node.
-3. Choix du pont : Python ou Node, avec mesure.
-4. Échange Modbus TCP réel avec un SoftPLC CODESYS Control Win V3, simulateur en esclave. Mesurer la configuration du port et de l'IP par module simulé.
+3. Choix du pont : Python ou Node, avec mesure. Critère éliminatoire : pouvoir rejeter une connexion selon son IP source à l'acceptation, avant toute lecture (ADR 0004).
+4. Échange Modbus TCP réel avec un SoftPLC CODESYS Control Win V3, simulateur en esclave. Mesurer la configuration du port et de l'IP par module simulé, et comment le mode réseau de la VM (NAT ou pont) modifie les IP sources vues par Pantin.
 5. Conversion ZW3D vers glTF avec pivots corrects, sur une vraie pièce de l'utilisateur (STEP avec noms conservés, fournie séparément, rangée dans private/ qui n'est jamais versionné).
 6. Gain de tokens réel de Graphify sur ce dépôt.
 7. Disponibilité du nom Pantin : dépôt GitHub, portée npm @pantin, nom PyPI, nom de domaine, et INPI (classes logicielles). Une recherche superficielle n'a rien remonté de pertinent, ce qui ne garantit rien. Rapport à écrire, avec l'alternative envisagée si le nom est pris (Homunculus, alias homunc, a été évoqué comme second choix).
@@ -211,7 +211,7 @@ Sortie de la phase 0 : pnpm check vert, subagents opérationnels, graphe constru
 Ne passe à la phase suivante que si le critère de sortie est validé par un test automatique ou une démonstration reproductible.
 
 1. Contrat : schémas Zod et JSON Schema (pièce, scène, mapping I/O, tag bus), validateur en ligne de commande avec erreurs lisibles. Sortie : le manifeste d'exemple est valide, un manifeste cassé produit une erreur claire.
-2. Coeur cinématique : corps, quatre types de liaison, boucle à pas fixe, API, tags manuels. Sortie : un axe animé par écriture de tag, testé sans viewer.
+2. Coeur cinématique : corps, quatre types de liaison, boucle à pas fixe, API, tags manuels. Sortie : un axe animé par écriture de tag, testé sans viewer, et un test qui prouve le refus de démarrer sur une adresse d'écoute publique ou 0.0.0.0 (ADR 0004).
 3. Viewer : Babylon.js, chargement glTF et STL, animation depuis les snapshots, sélection d'objets. Sortie : une pièce custom de l'utilisateur s'anime correctement à l'écran.
 4. Drives : discret, position, vitesse, défauts injectables. Sortie : un vérin double effet se comporte comme décrit, y compris sans rappel ressort.
 5. Capteurs de liaison. Sortie : fins de course qui basculent aux bonnes positions.
