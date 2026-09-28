@@ -8,8 +8,8 @@ dist/
 # Test and coverage output
 coverage/
 
-# Graphify: the graph is rebuilt locally, only the cache is heavy
-graphify-out/cache/
+# Graphify: local knowledge graph, rebuilt after each commit by lefthook
+graphify-out/
 
 # Python (bridge sidecar, if retained)
 __pycache__/

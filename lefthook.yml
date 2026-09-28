@@ -12,3 +12,9 @@ commit-msg:
         head -n1 {1} | grep -qE
         '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9-]+\))?!?: .+'
         || { echo "Commit header must follow Conventional Commits, e.g. 'feat(core): add prismatic joint'"; exit 1; }
+
+post-commit:
+  jobs:
+    - name: graphify-update
+      # Incremental, AST only: no LLM call, no token cost. Skipped when graphify is absent.
+      run: command -v graphify >/dev/null 2>&1 && graphify update . >/dev/null 2>&1 || true
