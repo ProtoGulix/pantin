@@ -1,2 +1,6 @@
-// Public entry point of @pantin/core. Intentionally empty until its phase starts.
-export {};
+// Public entry point of @pantin/core.
+export {
+  type PantinServerOptions,
+  type RunningPantinServer,
+  startPantinServer,
+} from "./http/server.ts";

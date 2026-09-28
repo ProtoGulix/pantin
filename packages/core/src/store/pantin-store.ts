@@ -1,0 +1,148 @@
+import { randomUUID } from "node:crypto";
+import { createReadStream, type ReadStream } from "node:fs";
+import { lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import {
+  PANTIN_DOCUMENT_FILE_NAME,
+  PANTIN_MESHES_DIRECTORY_NAME,
+  type PantinId,
+} from "@pantin/protocol";
+import { ApiError } from "../errors.ts";
+import { assertRealPathInside, isErrorWithCode, resolveInside } from "./safe-paths.ts";
+
+// File system side of the Pantins: one folder per Pantin inside the pantins
+// directory. Every path is checked twice (defence in depth, ids are already
+// validated): lexically, then after following symbolic links.
+
+export type MeshFile = { stream: ReadStream; sizeInBytes: number };
+
+export type PantinStore = {
+  listFolderNames(): Promise<string[]>;
+  createPantinFolder(pantinId: PantinId): Promise<void>;
+  readDocumentText(pantinId: PantinId): Promise<string | undefined>;
+  writeDocumentAtomically(pantinId: PantinId, text: string): Promise<void>;
+  listMeshFileNames(pantinId: PantinId): Promise<string[]>;
+  writeMesh(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
+  openMesh(pantinId: PantinId, meshPath: string): Promise<MeshFile>;
+  describeDocumentLocation(pantinId: PantinId): string;
+};
+
+type Paths = { pantinsDirectory: string };
+
+function pathInPantin(paths: Paths, pantinId: PantinId, relativePath: string): string {
+  return resolveInside(resolveInside(paths.pantinsDirectory, pantinId), relativePath);
+}
+
+function meshesDirectory(paths: Paths, pantinId: PantinId): string {
+  return pathInPantin(paths, pantinId, PANTIN_MESHES_DIRECTORY_NAME);
+}
+
+async function listFolderNames(paths: Paths): Promise<string[]> {
+  const entries = await readdir(resolve(paths.pantinsDirectory), { withFileTypes: true });
+  return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+}
+
+async function createPantinFolder(paths: Paths, pantinId: PantinId): Promise<void> {
+  try {
+    await mkdir(resolveInside(paths.pantinsDirectory, pantinId));
+  } catch (error) {
+    if (isErrorWithCode(error, "EEXIST")) {
+      throw new ApiError("conflict", `A folder "${pantinId}" already exists. Retry the creation.`);
+    }
+    throw error;
+  }
+  await mkdir(meshesDirectory(paths, pantinId));
+}
+
+async function readDocumentText(paths: Paths, pantinId: PantinId): Promise<string | undefined> {
+  const path = pathInPantin(paths, pantinId, PANTIN_DOCUMENT_FILE_NAME);
+  try {
+    await assertRealPathInside(paths.pantinsDirectory, path);
+    return await readFile(path, "utf8");
+  } catch (error) {
+    if (isErrorWithCode(error, "ENOENT")) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+// Writes a temporary file in the same folder (so the rename stays on one file
+// system), then renames it: readers never see a half written pantin.json.
+async function writeDocumentAtomically(paths: Paths, pantinId: PantinId, text: string) {
+  await assertRealPathInside(
+    paths.pantinsDirectory,
+    resolveInside(paths.pantinsDirectory, pantinId),
+  );
+  const temporaryName = `.${PANTIN_DOCUMENT_FILE_NAME}.${randomUUID()}.tmp`;
+  const temporaryPath = pathInPantin(paths, pantinId, temporaryName);
+  try {
+    await writeFile(temporaryPath, text, { encoding: "utf8", flag: "wx" });
+    await rename(temporaryPath, pathInPantin(paths, pantinId, PANTIN_DOCUMENT_FILE_NAME));
+  } catch (error) {
+    await rm(temporaryPath, { force: true });
+    throw error;
+  }
+}
+
+async function listMeshFileNames(paths: Paths, pantinId: PantinId): Promise<string[]> {
+  const directory = meshesDirectory(paths, pantinId);
+  try {
+    await assertRealPathInside(paths.pantinsDirectory, directory);
+    return await readdir(directory);
+  } catch (error) {
+    if (isErrorWithCode(error, "ENOENT")) {
+      return [];
+    }
+    throw error;
+  }
+}
+
+// "wx": never overwrite an existing file, nor follow a symbolic link planted there.
+async function writeMesh(paths: Paths, pantinId: PantinId, meshPath: string, bytes: Uint8Array) {
+  const directory = meshesDirectory(paths, pantinId);
+  await mkdir(directory, { recursive: true });
+  await assertRealPathInside(paths.pantinsDirectory, directory);
+  try {
+    await writeFile(pathInPantin(paths, pantinId, meshPath), bytes, { flag: "wx" });
+  } catch (error) {
+    if (isErrorWithCode(error, "EEXIST")) {
+      throw new ApiError("conflict", `Mesh file "${meshPath}" already exists. Retry the import.`);
+    }
+    throw error;
+  }
+}
+
+async function openMesh(paths: Paths, pantinId: PantinId, meshPath: string): Promise<MeshFile> {
+  const path = pathInPantin(paths, pantinId, meshPath);
+  const missing = new ApiError(
+    "not_found",
+    `Mesh file "${meshPath}" is missing. Re-import the body.`,
+  );
+  try {
+    await assertRealPathInside(paths.pantinsDirectory, meshesDirectory(paths, pantinId));
+    // lstat, not stat: a symbolic link is never served, wherever it points.
+    const stats = await lstat(path);
+    if (!stats.isFile()) {
+      throw missing;
+    }
+    return { stream: createReadStream(path), sizeInBytes: stats.size };
+  } catch (error) {
+    throw isErrorWithCode(error, "ENOENT") ? missing : error;
+  }
+}
+
+export function createPantinStore(pantinsDirectory: string): PantinStore {
+  const paths: Paths = { pantinsDirectory };
+  return {
+    listFolderNames: () => listFolderNames(paths),
+    createPantinFolder: (pantinId) => createPantinFolder(paths, pantinId),
+    readDocumentText: (pantinId) => readDocumentText(paths, pantinId),
+    writeDocumentAtomically: (pantinId, text) => writeDocumentAtomically(paths, pantinId, text),
+    listMeshFileNames: (pantinId) => listMeshFileNames(paths, pantinId),
+    writeMesh: (pantinId, meshPath, bytes) => writeMesh(paths, pantinId, meshPath, bytes),
+    openMesh: (pantinId, meshPath) => openMesh(paths, pantinId, meshPath),
+    // Relative to the pantins directory: error messages never reveal absolute paths.
+    describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
+  };
+}
