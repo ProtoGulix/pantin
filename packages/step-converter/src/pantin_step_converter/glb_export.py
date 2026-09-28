@@ -16,6 +16,7 @@ from OCP.TopoDS import TopoDS_Shape
 
 from pantin_step_converter.assembly import LeafComponent
 from pantin_step_converter.errors import ConverterError
+from pantin_step_converter.glb_materials import apply_cad_material_defaults
 
 # Tessellation tolerances measured as good enough on a real part in spike 0001:
 # 0.2 mm chordal error, 0.3 rad (about 17 degrees) between adjacent facets.
@@ -58,3 +59,4 @@ def export_component_glb(
     )
     if not written or not output_path.is_file():
         raise ConverterError(f"OpenCascade could not write {output_path.name}.")
+    apply_cad_material_defaults(output_path)
