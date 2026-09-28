@@ -35,7 +35,7 @@ rename, save and reopen. The product word is "Pantin" (user decision,
 
 | Package | Version (pinned) | Licence | Used by |
 | --- | --- | --- | --- |
-| zod | 4.6.5 | MIT | protocol |
+| zod | 4.6.5 | MIT | protocol, core (converter output, ADR 0009) |
 | @babylonjs/core | 9.28.0 | Apache-2.0 | viewer |
 | @babylonjs/loaders | 9.28.0 | Apache-2.0 | viewer |
 | vite | 8.3.1 | MIT | viewer (development and build) |

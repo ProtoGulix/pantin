@@ -17,7 +17,8 @@ import {
 //   PATCH  /api/pantins/:pantinId    RenameRequest    -> PantinResponse
 //   POST   /api/pantins/:pantinId/save                -> PantinResponse
 //   POST   /api/pantins/:pantinId/bodies?<ImportBodyQuery>
-//          raw file bytes (application/octet-stream)  -> 201 BodyResponse
+//          raw file bytes (application/octet-stream)  -> 201 ImportBodiesResponse
+//          (one body for GLB and STL, one body per assembly component for STEP)
 //   PATCH  /api/pantins/:pantinId/bodies/:bodyId  RenameRequest -> BodyResponse
 //   GET    /api/pantins/:pantinId/meshes/:fileName    -> raw mesh bytes
 //
@@ -36,9 +37,10 @@ export type RenameRequest = z.infer<typeof RenameRequestSchema>;
 
 export const ImportBodyQuerySchema = z.object({
   fileName: z.string().min(1).max(255),
-  // Required for STL, which carries no unit. GLB is metres by specification.
+  // Required for STL, which carries no unit. GLB is metres by specification;
+  // STEP declares its unit and is converted to metres.
   unit: LengthUnitSchema.optional(),
-  // Defaults: "y" for GLB (glTF specification), "z" for STL (CAD convention).
+  // Defaults: "y" for GLB (glTF specification), "z" for STL and STEP (CAD convention).
   upAxis: UpAxisSchema.optional(),
 });
 export type ImportBodyQuery = z.infer<typeof ImportBodyQuerySchema>;
@@ -64,12 +66,19 @@ export type PantinResponse = z.infer<typeof PantinResponseSchema>;
 export const BodyResponseSchema = z.object({ body: BodySchema });
 export type BodyResponse = z.infer<typeof BodyResponseSchema>;
 
+export const ImportBodiesResponseSchema = z.object({ bodies: z.array(BodySchema).min(1) });
+export type ImportBodiesResponse = z.infer<typeof ImportBodiesResponseSchema>;
+
 export const ApiErrorCodeSchema = z.enum([
   "invalid_request",
   "not_found",
   "conflict",
   "unsupported_file",
   "payload_too_large",
+  // The STEP converter is not installed or not configured on this core.
+  "conversion_unavailable",
+  // The STEP converter ran but could not convert this file (invalid, empty, too slow).
+  "conversion_failed",
   "internal_error",
 ]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;

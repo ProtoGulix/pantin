@@ -33,8 +33,11 @@ export const DisplayNameSchema = z
   .min(1, "Name must not be empty.")
   .max(200, "Name must be at most 200 characters.");
 
-export const MeshFormatSchema = z.enum(["glb", "stl"]);
-export type MeshFormat = z.infer<typeof MeshFormatSchema>;
+// Format of the file the user imported. STEP is converted by the core into one
+// GLB per assembly component, so a body's mesh file is always GLB or STL: read
+// the mesh format from the extension of `mesh`, not from `source.format`.
+export const SourceFormatSchema = z.enum(["glb", "stl", "step"]);
+export type SourceFormat = z.infer<typeof SourceFormatSchema>;
 
 export const LengthUnitSchema = z.enum(["m", "mm", "cm", "in"]);
 export type LengthUnit = z.infer<typeof LengthUnitSchema>;
@@ -58,12 +61,12 @@ export const BodySchema = z.object({
   name: DisplayNameSchema,
   source: z.object({
     fileName: z.string().min(1),
-    format: MeshFormatSchema,
+    format: SourceFormatSchema,
     unit: LengthUnitSchema,
     upAxis: UpAxisSchema,
     nodes: z.array(SourceNodeSchema),
   }),
-  // Path relative to the Pantin folder, e.g. "meshes/rail.glb".
+  // Path relative to the Pantin folder, e.g. "meshes/rail.glb"; ends in .glb or .stl.
   mesh: z.string().min(1),
 });
 export type Body = z.infer<typeof BodySchema>;

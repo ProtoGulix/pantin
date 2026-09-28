@@ -41,7 +41,8 @@ Monorepo :
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
     packages/bridge      pont vers les automates (protocoles industriels)
-    packages/cli         validateur, conversion CAO, générateur de variables CODESYS
+    packages/cli         validateur, générateur de variables CODESYS
+    packages/step-converter  conversion STEP vers GLB (Python, OpenCascade, processus séparé, ADR 0009)
     parts/               pièces incluses (dossiers autonomes)
     examples/            projets de démonstration complets
     docs/decisions       une note courte par décision d'architecture (ADR)
