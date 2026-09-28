@@ -4,7 +4,8 @@
 - Question: can the core turn a STEP assembly into named glTF bodies, with the
   right units, and can a joint be defined on the result?
 - Verdict: **feasible** with OpenCascade through the `cadquery-ocp` Python
-  wheel. Licensing of the OpenCascade kernel itself remains NOT VERIFIED.
+  wheel. Kernel licence verified on 2026-09-28: LGPL 2.1 with the Open CASCADE
+  exception 1.0 (see below).
 
 ## Test case
 
@@ -89,12 +90,29 @@ the part editor, far too slow for the simulation loop.
 - One primitive per B-rep face: 400 primitives for the rail, 225 for the
   carriage. Merging primitives per body is needed to keep draw calls low.
 
+## Licence of the OpenCascade kernel
+
+Verified on 2026-09-28 from the official repository
+(https://github.com/Open-Cascade-SAS/OCCT, files `LICENSE_LGPL_21.txt` and
+`OCCT_LGPL_EXCEPTION.txt`): GNU LGPL version 2.1 with the "Open CASCADE
+exception (version 1.0)". The exception lets object code that incorporates
+material from OpenCascade header files be distributed "under terms of your
+choice, provided that you give prominent notice in supporting documentation
+[...] that it makes use of or is based on facilities provided by the Open
+CASCADE Technology software". The Python bindings of `cadquery-ocp` are
+Apache-2.0 (wheel metadata).
+
+For Pantin (Apache-2.0): using OpenCascade as a separate, unmodified library
+installed as a dependency is compatible. Obligations when Pantin distributes
+OpenCascade binaries itself: keep them replaceable (LGPL dynamic linking),
+ship the LGPL text, give access to the corresponding source, and add the
+notice required by the exception in the documentation.
+
 ## What remains NOT VERIFIED
 
-- Licence of the OpenCascade kernel as shipped in the wheel. The wheel
-  metadata says Apache-2.0 for the bindings, and no OpenCascade licence file is
-  bundled. OpenCascade is commonly described as LGPL 2.1 with an additional
-  exception; to confirm from dev.opencascade.org before any redistribution.
+- Whether the `cadquery-ocp` wheel ships the OpenCascade libraries unmodified
+  and where their corresponding source is published (needed if Pantin ever
+  redistributes the wheel, e.g. in a Docker image).
 - opencascade.js (WASM, would keep the core in one language) was not tested.
 - Behaviour on a STEP from ZW3D (spike 5): this file comes from CADENAS.
 - Nested sub-assemblies: this file has only one level.
