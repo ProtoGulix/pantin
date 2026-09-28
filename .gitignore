@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test and coverage output
+coverage/
+
+# Graphify: the graph is rebuilt locally, only the cache is heavy
+graphify-out/cache/
+
+# Python (bridge sidecar, if retained)
+__pycache__/
+.venv/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Claude Code local settings
+.claude/settings.local.json

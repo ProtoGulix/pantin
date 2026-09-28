@@ -1,0 +1,11 @@
+{
+  "name": "pantin",
+  "private": true,
+  "description": "Open source industrial machine simulator driven by a real PLC program.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24"
+  }
+}
