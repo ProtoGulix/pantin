@@ -15,7 +15,7 @@ export function resolveInside(baseDirectory: string, ...segments: string[]): str
   const base = resolve(baseDirectory);
   const target = resolve(base, ...segments);
   if (!isSameOrInside(base, target)) {
-    throw new ApiError("invalid_request", "The requested path leaves the pantins directory.");
+    throw new ApiError("invalid_request", "The requested path leaves the served directory.");
   }
   return target;
 }
@@ -27,7 +27,7 @@ export async function assertRealPathInside(baseDirectory: string, path: string):
   if (!isSameOrInside(realBase, realTarget)) {
     throw new ApiError(
       "invalid_request",
-      "A symbolic link leads outside the pantins directory. Replace it with a real file or folder.",
+      "A symbolic link leads outside the served directory. Replace it with a real file or folder.",
     );
   }
 }

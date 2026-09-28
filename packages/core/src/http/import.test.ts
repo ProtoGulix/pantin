@@ -21,7 +21,9 @@ let server: RunningPantinServer;
 
 beforeEach(async () => {
   workspace = await createTestWorkspace();
-  server = await startTestServer(workspace.pantinsDirectory, SMALL_IMPORT_LIMIT);
+  server = await startTestServer(workspace.pantinsDirectory, {
+    maxImportBytes: SMALL_IMPORT_LIMIT,
+  });
   await sendJsonRequest(server, "POST", "/api/pantins", { name: "Imports" });
 });
 

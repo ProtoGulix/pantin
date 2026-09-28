@@ -2,7 +2,11 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { request as httpRequest } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type RunningPantinServer, startPantinServer } from "../http/server.ts";
+import {
+  type PantinServerOptions,
+  type RunningPantinServer,
+  startPantinServer,
+} from "../http/server.ts";
 
 // A temporary workspace: the pantins directory plus a sentinel file next to it
 // that no request may ever read or overwrite.
@@ -24,16 +28,21 @@ export async function createTestWorkspace(): Promise<TestWorkspace> {
   return { root, pantinsDirectory, sentinelPath, remove: () => rm(root, { recursive: true }) };
 }
 
+// Unexpected server errors fail the test loudly; rejected sources are
+// collected so tests can assert on them.
 export function startTestServer(
   pantinsDirectory: string,
-  maxImportBytes?: number,
+  overrides: Partial<PantinServerOptions> = {},
 ): Promise<RunningPantinServer> {
-  const reportError = (error: unknown): void => {
-    throw new Error(`Unexpected server error in test: ${String(error)}`);
-  };
-  return maxImportBytes === undefined
-    ? startPantinServer({ pantinsDirectory, port: 0, reportError })
-    : startPantinServer({ pantinsDirectory, port: 0, reportError, maxImportBytes });
+  return startPantinServer({
+    pantinsDirectory,
+    port: 0,
+    reportError: (error: unknown) => {
+      throw new Error(`Unexpected server error in test: ${String(error)}`);
+    },
+    reportRejectedSource: () => undefined,
+    ...overrides,
+  });
 }
 
 export type RawResponse = {

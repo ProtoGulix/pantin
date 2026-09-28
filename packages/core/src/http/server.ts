@@ -1,115 +1,86 @@
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import type { AddressInfo } from "node:net";
-import { API_PREFIX, MAX_IMPORT_BYTES } from "@pantin/protocol";
-import { ApiError } from "../errors.ts";
-import { createPantinService, type PantinService } from "../service/pantin-service.ts";
+import { createServer, type Server } from "node:http";
+import type { AddressInfo, Socket } from "node:net";
+import { MAX_IMPORT_BYTES } from "@pantin/protocol";
+import {
+  isSourceAccepted,
+  type NetworkConfig,
+  resolveNetworkConfig,
+} from "../domain/network-config.ts";
+import { createPantinService } from "../service/pantin-service.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
-import { sendApiError } from "./responses.ts";
-import { matchPattern, parseRequestTarget } from "./route-matching.ts";
-import { methodNotAllowed, ROUTES } from "./routes.ts";
-
-// Local mode of ADR 0004: the only address this slice ever listens on.
-const LOCAL_HOST = "127.0.0.1";
+import { createRequestHandler } from "./request-handler.ts";
 
 export type PantinServerOptions = {
   pantinsDirectory: string;
   port: number;
+  // Listen address (ADR 0004, ADR 0008): loopback by default, else one private address.
+  listen?: string;
+  // IPs or CIDRs that narrow the accepted connection sources.
+  allow?: readonly string[];
+  // Built viewer to serve next to /api (ADR 0008).
+  viewerDirectory?: string;
   maxImportBytes?: number;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;
+  // Receives the source address of every connection closed by the filter.
+  reportRejectedSource: (source: string) => void;
 };
 
 export type RunningPantinServer = {
   server: Server;
   address: AddressInfo;
+  network: NetworkConfig;
   close(): Promise<void>;
 };
 
-type HandlerOptions = { service: PantinService; maxImportBytes: number };
-
-// Against DNS rebinding: a hostile web page whose domain resolves to
-// 127.0.0.1 still sends its own name as Host, so only local names pass.
-function assertLocalHost(request: IncomingMessage): void {
-  const port = request.socket.localPort;
-  const allowedHosts = [`${LOCAL_HOST}:${port}`, `localhost:${port}`];
-  const host = request.headers.host;
-  if (host === undefined || !allowedHosts.includes(host.toLowerCase())) {
-    throw new ApiError(
-      "invalid_request",
-      `Host "${host ?? ""}" is not accepted. Open the core at http://${allowedHosts[0]} or http://${allowedHosts[1]}.`,
-      421,
-    );
+// Thrown before any socket is opened when the network options are unsafe.
+export class StartupRefusedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StartupRefusedError";
   }
 }
 
-async function dispatch(
-  options: HandlerOptions,
-  request: IncomingMessage,
-  response: ServerResponse,
-): Promise<void> {
-  assertLocalHost(request);
-  const { segments, query } = parseRequestTarget(request.url ?? "/");
-  const [prefix, ...routeSegments] = segments;
-  const method = request.method ?? "GET";
-  const candidates =
-    `/${prefix}` === API_PREFIX
-      ? ROUTES.map((route) => ({ route, parameters: matchPattern(route.pattern, routeSegments) }))
-      : [];
-  const matching = candidates.filter((candidate) => candidate.parameters !== undefined);
-  if (matching.length === 0) {
-    throw new ApiError(
-      "not_found",
-      `No API route for ${method} ${request.url}. See ${API_PREFIX}/pantins.`,
-    );
-  }
-  const match = matching.find((candidate) => candidate.route.method === method);
-  if (match === undefined || match.parameters === undefined) {
-    throw methodNotAllowed(
-      method,
-      matching.map((candidate) => candidate.route.method),
-    );
-  }
-  await match.route.handle({ ...options, request, response, parameters: match.parameters, query });
+// Registered before Node's own HTTP listener, and destroying synchronously:
+// a rejected socket is closed before a single byte of it is read.
+function installSourceFilter(server: Server, options: PantinServerOptions, network: NetworkConfig) {
+  server.prependListener("connection", (socket: Socket) => {
+    if (!isSourceAccepted(network, socket.remoteAddress)) {
+      socket.destroy();
+      options.reportRejectedSource(socket.remoteAddress ?? "unknown");
+    }
+  });
 }
 
-function toApiError(error: unknown, reportError: (error: unknown) => void): ApiError {
-  if (error instanceof ApiError) {
-    return error;
-  }
-  reportError(error);
-  return new ApiError("internal_error", "Unexpected server error; see the core logs for details.");
-}
-
-function createPantinRequestHandler(
-  options: HandlerOptions & Pick<PantinServerOptions, "reportError">,
-) {
-  return (request: IncomingMessage, response: ServerResponse): void => {
-    // Browsers must never guess another type than the declared one (e.g. a
-    // mesh file rendered as HTML).
-    response.setHeader("x-content-type-options", "nosniff");
-    dispatch(options, request, response).catch((error: unknown) => {
-      sendApiError(response, toApiError(error, options.reportError));
+function listen(server: Server, port: number, address: string): Promise<void> {
+  return new Promise((resolveListen, rejectListen) => {
+    server.once("error", rejectListen);
+    server.listen(port, address, () => {
+      server.off("error", rejectListen);
+      resolveListen();
     });
-  };
+  });
 }
 
 export async function startPantinServer(
   options: PantinServerOptions,
 ): Promise<RunningPantinServer> {
-  const service = createPantinService(createPantinStore(options.pantinsDirectory));
-  const handler = createPantinRequestHandler({
-    service,
-    maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
-    reportError: options.reportError,
-  });
-  const server = createServer(handler);
-  await new Promise<void>((resolveListen, rejectListen) => {
-    server.once("error", rejectListen);
-    server.listen(options.port, LOCAL_HOST, () => {
-      server.off("error", rejectListen);
-      resolveListen();
-    });
-  });
+  const result = resolveNetworkConfig(options.listen, options.allow);
+  if (!result.ok) {
+    throw new StartupRefusedError(result.message);
+  }
+  const network = result.config;
+  const server = createServer(
+    createRequestHandler({
+      service: createPantinService(createPantinStore(options.pantinsDirectory)),
+      network,
+      maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
+      viewerDirectory: options.viewerDirectory,
+      reportError: options.reportError,
+    }),
+  );
+  installSourceFilter(server, options, network);
+  await listen(server, options.port, network.listenAddress);
   // listen() on a TCP host and port always yields an AddressInfo, never a string.
   const address = server.address() as AddressInfo;
   const close = () =>
@@ -117,5 +88,5 @@ export async function startPantinServer(
       server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
       server.closeAllConnections();
     });
-  return { server, address, close };
+  return { server, address, network, close };
 }

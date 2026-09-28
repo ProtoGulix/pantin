@@ -36,7 +36,7 @@ describe("resolveInside", () => {
   it.each([["../etc"], ["axe/../../etc"], ["/etc/passwd"], ["../pantins-evil"]])(
     "refuses %s",
     (segment) => {
-      expect(() => resolveInside("/data/pantins", segment)).toThrow(/leaves the pantins directory/);
+      expect(() => resolveInside("/data/pantins", segment)).toThrow(/leaves the served directory/);
     },
   );
 });

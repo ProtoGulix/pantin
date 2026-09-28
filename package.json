@@ -16,7 +16,8 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "boundaries": "depcruise packages tests",
-    "deadcode": "knip"
+    "deadcode": "knip",
+    "serve": "pnpm --filter @pantin/viewer build && node packages/core/src/main.ts --viewer-dir packages/viewer/dist"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
