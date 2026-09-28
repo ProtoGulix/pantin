@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pantin</title>
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/panel.css" />
+    <link rel="stylesheet" href="/src/styles/viewport.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside id="side-panel" class="side-panel" aria-label="Pantin editor"></aside>
+      <main class="viewport">
+        <canvas id="viewport-canvas" class="viewport__canvas" aria-label="3D view"></canvas>
+        <p class="viewport__hint">
+          Click a body to select it · drag to orbit · right-drag to pan · wheel to zoom
+        </p>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

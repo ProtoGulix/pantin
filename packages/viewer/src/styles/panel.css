@@ -1,0 +1,206 @@
+/* Side panel content: lists, bodies, import form, errors. Tokens in base.css. */
+/* Pantin list */
+.pantin-list,
+.body-list,
+.source-node-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pantin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.list-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.list-row:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.list-row--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.list-row__title {
+  font-weight: 500;
+}
+
+.list-row__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Open Pantin */
+.pantin-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pantin-header .text-input {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pantin-header__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status {
+  font-size: 12px;
+}
+
+.status--unsaved {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.status--saved {
+  color: var(--success);
+}
+
+/* Import */
+.import-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.import-form__file {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.import-form__name {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field__label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Bodies */
+.body-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.body-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.body-card--selected {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  padding: 2px 7px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+
+/* Original CAD names: read-only, monospace, on a recessed background. */
+.body-source {
+  padding: 8px;
+  background: var(--surface-0);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+
+.body-source__label {
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+.source-node {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-source);
+  font-size: 12px;
+  color: var(--text-muted);
+  user-select: text;
+}
+
+.source-node__name {
+  overflow-wrap: anywhere;
+}
+
+.source-node__path {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.source-node--none {
+  font-style: italic;
+}
+
+/* Errors */
+.error-banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 10px 16px 0;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+.error-banner__message {
+  overflow-wrap: anywhere;
+}
