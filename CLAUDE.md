@@ -55,7 +55,7 @@ Stack proposée (à confirmer en phase 0) :
 
 1. Coeur : TypeScript sous Node. Physique : Rapier en WASM, @dimforge/rapier3d-deterministic-compat 0.21.0 épinglé, jamais la build SIMD, pour garder la reproductibilité bit à bit utile aux tests et à la remise à zéro (ADR 0005). Utilisé uniquement pour produits, collisions et capteurs de présence. La cinématique des machines n'est PAS de la physique, elle est calculée directement.
 2. Viewer : Babylon.js (Apache 2.0, PBR, inspecteur, WebGPU et WebGL2). Le viewer n'a pas besoin de Havok puisqu'il ne simule rien. La licence d'usage de Havok n'est de toute façon pas vérifiée.
-3. Pont PLC : par défaut un sidecar Python (asyncua pour OPC UA, pymodbus pour Modbus TCP), qui parle au coeur via le tag bus en WebSocket. Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Alternative à comparer : node-opcua et une bibliothèque Modbus Node, pour rester en un seul langage. Si Python est retenu, il suit les mêmes exigences de propreté que le TypeScript (section 8).
+3. Pont PLC : par défaut un sidecar Python (asyncua pour OPC UA, pymodbus pour Modbus TCP), qui parle au coeur via le tag bus en WebSocket. Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python avec pymodbus, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE.
 4. Distribution : docker compose pour le mode serveur, même code lancé en local pour les amateurs.
 
 ## 5. Modèle de données
