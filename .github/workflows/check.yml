@@ -19,5 +19,11 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
       - run: pnpm install --frozen-lockfile
+      # STEP converter environment (ADR 0009), needed by the Python checks and
+      # by the core's end to end STEP import test.
+      - run: pnpm setup:python
       - run: pnpm check

@@ -9,15 +9,17 @@
     "node": ">=24"
   },
   "scripts": {
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run boundaries && pnpm run deadcode",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run check:python && pnpm run boundaries && pnpm run deadcode",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",
-    "typecheck": "tsc -b --noEmit",
-    "test": "vitest run",
+    "typecheck": "tsc -b --noEmit --force",
+    "test": "PANTIN_STEP_CONVERTER_PYTHON=\"$PWD/packages/step-converter/.venv/bin/python\" vitest run",
+    "check:python": "packages/step-converter/check.sh",
     "boundaries": "depcruise packages tests",
     "deadcode": "knip",
-    "serve": "pnpm --filter @pantin/viewer build && node packages/core/src/main.ts --viewer-dir packages/viewer/dist"
+    "setup:python": "packages/step-converter/setup.sh",
+    "serve": "pnpm --filter @pantin/viewer build && node packages/core/src/main.ts --viewer-dir packages/viewer/dist --step-converter-python packages/step-converter/.venv/bin/python"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
