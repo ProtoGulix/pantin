@@ -1,4 +1,5 @@
 import type { PantinDocument, PantinId, PantinResponse } from "@pantin/protocol";
+import type { StepConverter } from "../converter/step-converter.ts";
 import { parsePantinDocument, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
@@ -12,6 +13,8 @@ export type OpenPantin = { document: PantinDocument; savedText: string };
 export type ServiceContext = {
   store: PantinStore;
   openPantins: Map<PantinId, Promise<OpenPantin>>;
+  // Undefined when the core was started without --step-converter-python.
+  stepConverter: StepConverter | undefined;
 };
 
 export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinResponse {

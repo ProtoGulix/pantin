@@ -94,7 +94,9 @@ describe("path traversal", () => {
       buildAsciiStl(),
     );
     expect(imported.status).toBe(201);
-    expect(imported.json).toMatchObject({ body: { id: "sentinel", mesh: "meshes/sentinel.stl" } });
+    expect(imported.json).toMatchObject({
+      bodies: [{ id: "sentinel", mesh: "meshes/sentinel.stl" }],
+    });
     await expectWorkspaceUntouched();
   });
 

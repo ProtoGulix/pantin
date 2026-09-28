@@ -17,12 +17,15 @@ export function renamePantinDocument(document: PantinDocument, name: string): Pa
   return { ...document, name };
 }
 
-export function addBody(document: PantinDocument, body: Body): PantinDocument {
-  return { ...document, bodies: [...document.bodies, body] };
+export function addBodies(document: PantinDocument, bodies: readonly Body[]): PantinDocument {
+  return { ...document, bodies: [...document.bodies, ...bodies] };
 }
 
-export function removeBody(document: PantinDocument, bodyId: string): PantinDocument {
-  return { ...document, bodies: document.bodies.filter((body) => body.id !== bodyId) };
+export function removeBodies(
+  document: PantinDocument,
+  bodyIds: ReadonlySet<string>,
+): PantinDocument {
+  return { ...document, bodies: document.bodies.filter((body) => !bodyIds.has(body.id)) };
 }
 
 export function findBody(document: PantinDocument, bodyId: string): Body | undefined {

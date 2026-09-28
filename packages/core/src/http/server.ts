@@ -1,6 +1,9 @@
+import { spawn } from "node:child_process";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo, Socket } from "node:net";
 import { MAX_IMPORT_BYTES } from "@pantin/protocol";
+import type { ProcessLimits } from "../converter/process-runner.ts";
+import { createStepConverter, type StepConverter } from "../converter/step-converter.ts";
 import {
   isSourceAccepted,
   type NetworkConfig,
@@ -20,6 +23,10 @@ export type PantinServerOptions = {
   // Built viewer to serve next to /api (ADR 0008).
   viewerDirectory?: string;
   maxImportBytes?: number;
+  // Python interpreter of the STEP converter's environment (ADR 0009); without
+  // it, STEP imports answer conversion_unavailable.
+  stepConverterPython?: string;
+  stepConverterLimits?: Partial<ProcessLimits>;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;
   // Receives the source address of every connection closed by the filter.
@@ -52,6 +59,18 @@ function installSourceFilter(server: Server, options: PantinServerOptions, netwo
   });
 }
 
+function createConfiguredStepConverter(options: PantinServerOptions): StepConverter | undefined {
+  if (options.stepConverterPython === undefined) {
+    return undefined;
+  }
+  return createStepConverter({
+    pythonPath: options.stepConverterPython,
+    spawn,
+    reportDetail: (detail) => options.reportError(new Error(detail)),
+    ...(options.stepConverterLimits === undefined ? {} : { limits: options.stepConverterLimits }),
+  });
+}
+
 function listen(server: Server, port: number, address: string): Promise<void> {
   return new Promise((resolveListen, rejectListen) => {
     server.once("error", rejectListen);
@@ -72,7 +91,10 @@ export async function startPantinServer(
   const network = result.config;
   const server = createServer(
     createRequestHandler({
-      service: createPantinService(createPantinStore(options.pantinsDirectory)),
+      service: createPantinService(
+        createPantinStore(options.pantinsDirectory),
+        createConfiguredStepConverter(options),
+      ),
       network,
       maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
       viewerDirectory: options.viewerDirectory,

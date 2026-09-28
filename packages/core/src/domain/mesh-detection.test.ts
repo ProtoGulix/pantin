@@ -6,31 +6,45 @@ import {
   buildSampleGlb,
 } from "../test-support/mesh-fixtures.ts";
 import { extractGlbNodes } from "./glb.ts";
-import { detectMeshFormat } from "./import-body.ts";
+import { detectImportFormat } from "./import-body.ts";
 
-describe("detectMeshFormat", () => {
+describe("detectImportFormat", () => {
   it("recognises GLB, binary STL and ASCII STL by content", () => {
-    expect(detectMeshFormat(buildSampleGlb())).toBe("glb");
-    expect(detectMeshFormat(buildBinaryStl(0))).toBe("stl");
-    expect(detectMeshFormat(buildBinaryStl(3))).toBe("stl");
-    expect(detectMeshFormat(buildAsciiStl())).toBe("stl");
+    expect(detectImportFormat(buildSampleGlb())).toBe("glb");
+    expect(detectImportFormat(buildBinaryStl(0))).toBe("stl");
+    expect(detectImportFormat(buildBinaryStl(3))).toBe("stl");
+    expect(detectImportFormat(buildAsciiStl())).toBe("stl");
   });
 
   it("detects a binary STL whose header starts with solid as binary", () => {
     const bytes = buildBinaryStl(1);
     bytes.set(new TextEncoder().encode("solid exported by a CAD tool"));
-    expect(detectMeshFormat(bytes)).toBe("stl");
+    expect(detectImportFormat(bytes)).toBe("stl");
   });
+
+  it.each(["ISO-10303-21;\nHEADER;", "\uFEFFISO-10303-21;\nHEADER;", "  \r\n\tISO-10303-21;"])(
+    "recognises STEP %j by its ISO 10303-21 header",
+    (text) => {
+      expect(detectImportFormat(new TextEncoder().encode(text))).toBe("step");
+    },
+  );
+
+  it.each(["HEADER;\nISO-10303-21;", "ISO-10303-21\n", "iso-10303-21;", "ISO-10303-28;"])(
+    "does not take %j for STEP",
+    (text) => {
+      expect(detectImportFormat(new TextEncoder().encode(text))).toBeUndefined();
+    },
+  );
 
   it("rejects look-alikes", () => {
     const glbVersionOne = buildSampleGlb();
     glbVersionOne[4] = 1;
     const truncatedBinaryStl = buildBinaryStl(3).subarray(0, 150);
     const solidWithoutFacet = new TextEncoder().encode("solid nothing here\nendsolid");
-    expect(detectMeshFormat(glbVersionOne)).toBeUndefined();
-    expect(detectMeshFormat(truncatedBinaryStl)).toBeUndefined();
-    expect(detectMeshFormat(solidWithoutFacet)).toBeUndefined();
-    expect(detectMeshFormat(new Uint8Array())).toBeUndefined();
+    expect(detectImportFormat(glbVersionOne)).toBeUndefined();
+    expect(detectImportFormat(truncatedBinaryStl)).toBeUndefined();
+    expect(detectImportFormat(solidWithoutFacet)).toBeUndefined();
+    expect(detectImportFormat(new Uint8Array())).toBeUndefined();
   });
 });
 

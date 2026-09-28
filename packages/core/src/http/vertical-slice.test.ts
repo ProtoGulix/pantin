@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  type BodyResponse,
+  type Body,
   BodyResponseSchema,
   PantinDocumentSchema,
   PantinListResponseSchema,
@@ -15,6 +15,7 @@ import {
   importMesh,
   sendJsonRequest,
   sendRaw,
+  singleImportedBody,
   startTestServer,
   type TestWorkspace,
 } from "../test-support/test-server.ts";
@@ -48,7 +49,7 @@ async function startServer(): Promise<RunningPantinServer> {
   return server;
 }
 
-async function createPantinWithGlb(server: RunningPantinServer): Promise<BodyResponse> {
+async function createPantinWithGlb(server: RunningPantinServer): Promise<Body> {
   const created = await sendJsonRequest(server, "POST", "/api/pantins", { name: "Axe 800" });
   expect(created.status).toBe(201);
   expect(PantinResponseSchema.parse(created.json).id).toBe("axe-800");
@@ -59,7 +60,7 @@ async function createPantinWithGlb(server: RunningPantinServer): Promise<BodyRes
     buildSampleGlb(),
   );
   expect(imported.status).toBe(201);
-  return BodyResponseSchema.parse(imported.json);
+  return singleImportedBody(imported);
 }
 
 async function getPantin(server: RunningPantinServer, pantinId: string): Promise<PantinResponse> {
@@ -77,7 +78,7 @@ describe("vertical slice", () => {
 
   it("creates, imports, renames, saves and reopens an identical Pantin", async () => {
     const firstServer = await startServer();
-    const { body } = await createPantinWithGlb(firstServer);
+    const body = await createPantinWithGlb(firstServer);
     expect(body).toMatchObject({ id: "3630-00-0800n", mesh: "meshes/3630-00-0800n.glb" });
     expect(body.source).toMatchObject({ format: "glb", unit: "m", upAxis: "y" });
 
@@ -104,7 +105,7 @@ describe("vertical slice", () => {
 describe("original node names", () => {
   it("keeps the original GLB node names after a rename, in memory and on disk", async () => {
     const firstServer = await startServer();
-    const { body } = await createPantinWithGlb(firstServer);
+    const body = await createPantinWithGlb(firstServer);
     expect(body.source.nodes).toEqual(EXPECTED_NODES);
 
     const renamed = await sendJsonRequest(
@@ -144,12 +145,12 @@ describe("ids and meshes", () => {
       "fileName=3630.00.0800N.glb",
       buildSampleGlb(),
     );
-    expect(BodyResponseSchema.parse(again.json).body.id).toBe("3630-00-0800n-2");
+    expect(singleImportedBody(again).id).toBe("3630-00-0800n-2");
   });
 
   it("serves an imported mesh with its content type", async () => {
     const server = await startServer();
-    const { body } = await createPantinWithGlb(server);
+    const body = await createPantinWithGlb(server);
     const mesh = await sendRaw(server, "GET", `/api/pantins/axe-800/${body.mesh}`);
     expect(mesh.status).toBe(200);
     expect(mesh.contentType).toBe("model/gltf-binary");

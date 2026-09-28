@@ -6,6 +6,8 @@ const HTTP_STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   conflict: 409,
   unsupported_file: 415,
   payload_too_large: 413,
+  conversion_unavailable: 503,
+  conversion_failed: 422,
   internal_error: 500,
 };
 

@@ -3,7 +3,6 @@ import {
   BodyIdSchema,
   CreatePantinRequestSchema,
   ImportBodyQuerySchema,
-  MeshFormatSchema,
   PANTIN_MESHES_DIRECTORY_NAME,
   type PantinId,
   PantinIdSchema,
@@ -30,21 +29,29 @@ type Route = {
   handle: (context: RouteContext) => Promise<void>;
 };
 
-const MESH_CONTENT_TYPES = { glb: "model/gltf-binary", stl: "model/stl" } as const;
+const MESH_CONTENT_TYPES: Readonly<Record<string, string>> = {
+  glb: "model/gltf-binary",
+  stl: "model/stl",
+};
 
 function pantinIdOf(context: RouteContext): PantinId {
   return parseWithSchema(PantinIdSchema, context.parameters.pantinId, "The Pantin id in the URL");
 }
 
-// A mesh file name is "<bodyId>.<format>": nothing else can name a file.
-function meshPathOf(context: RouteContext): string {
+// A mesh file name is "<bodyId>.glb" or "<bodyId>.stl": nothing else can name a file.
+function meshPathOf(context: RouteContext): { meshPath: string; contentType: string } {
   const fileName = context.parameters.fileName ?? "";
   const dotIndex = fileName.lastIndexOf(".");
   const stem = dotIndex === -1 ? fileName : fileName.slice(0, dotIndex);
   const extension = dotIndex === -1 ? "" : fileName.slice(dotIndex + 1);
   parseWithSchema(BodyIdSchema, stem, "The mesh file name in the URL");
-  parseWithSchema(MeshFormatSchema, extension, "The mesh file extension in the URL");
-  return `${PANTIN_MESHES_DIRECTORY_NAME}/${stem}.${extension}`;
+  const contentType = Object.hasOwn(MESH_CONTENT_TYPES, extension)
+    ? MESH_CONTENT_TYPES[extension]
+    : undefined;
+  if (contentType === undefined) {
+    throw new ApiError("invalid_request", `Mesh file "${fileName}" must end in .glb or .stl.`);
+  }
+  return { meshPath: `${PANTIN_MESHES_DIRECTORY_NAME}/${stem}.${extension}`, contentType };
 }
 
 async function readRenameRequest(context: RouteContext): Promise<string> {
@@ -61,15 +68,16 @@ async function importBody(context: RouteContext): Promise<void> {
   );
   requireContentType(context.request, "application/octet-stream");
   const bytes = await readBodyBytes(context.request, context.maxImportBytes);
-  const body = await context.service.importBody(pantinId, query, bytes);
-  sendJson(context.response, 201, { body });
+  const bodies = await context.service.importBodies(pantinId, query, bytes);
+  sendJson(context.response, 201, { bodies });
 }
 
 async function sendMesh(context: RouteContext): Promise<void> {
   const pantinId = pantinIdOf(context);
-  const { file, format } = await context.service.openBodyMesh(pantinId, meshPathOf(context));
+  const { meshPath, contentType } = meshPathOf(context);
+  const file = await context.service.openBodyMesh(pantinId, meshPath);
   context.response.writeHead(200, {
-    "content-type": MESH_CONTENT_TYPES[format],
+    "content-type": contentType,
     "content-length": file.sizeInBytes,
   });
   file.stream.on("error", (error) => context.response.destroy(error));

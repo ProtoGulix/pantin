@@ -2,7 +2,6 @@ import { mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promis
 import { request as httpRequest } from "node:http";
 import { connect } from "node:net";
 import { join } from "node:path";
-import { BodyResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildAsciiStl, buildSampleGlb } from "../test-support/mesh-fixtures.ts";
 import {
@@ -11,6 +10,7 @@ import {
   SENTINEL_CONTENT,
   sendJsonRequest,
   sendRaw,
+  singleImportedBody,
   startTestServer,
   type TestWorkspace,
 } from "../test-support/test-server.ts";
@@ -111,7 +111,7 @@ describe("concurrent imports", () => {
       importMesh(server, "secret-machine", "fileName=rail.glb", glb),
       importMesh(server, "secret-machine", "fileName=rail.glb", glb),
     ]);
-    const ids = responses.map((response) => BodyResponseSchema.parse(response.json).body.id);
+    const ids = responses.map((response) => singleImportedBody(response).id);
     expect(ids.sort()).toEqual(["rail", "rail-2"]);
     const meshes = join(workspace.pantinsDirectory, "secret-machine", "meshes");
     expect((await readdir(meshes)).sort()).toEqual(["rail-2.glb", "rail.glb"]);

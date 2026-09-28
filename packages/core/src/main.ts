@@ -8,6 +8,7 @@ const DEFAULT_PORT = 4800;
 const USAGE = [
   "Usage: node packages/core/src/main.ts [--pantins-dir <path>] [--port <0-65535>]",
   "  [--listen <127.0.0.1 or one private address>] [--allow <ip or cidr>]... [--viewer-dir <path>]",
+  "  [--step-converter-python <python of the step-converter venv>]",
 ].join("\n");
 
 function parsePort(text: string | undefined): number {
@@ -61,12 +62,14 @@ async function main(): Promise<void> {
       listen: { type: "string" },
       allow: { type: "string", multiple: true },
       "viewer-dir": { type: "string" },
+      "step-converter-python": { type: "string" },
     },
     strict: true,
   });
   const pantinsDirectory = resolve(values["pantins-dir"] ?? join(homedir(), "pantin-projects"));
   const port = parsePort(values.port);
   const viewerDirectory = await resolveViewerDirectory(values["viewer-dir"]);
+  const stepConverterPython = values["step-converter-python"];
   await mkdir(pantinsDirectory, { recursive: true });
   const running = await startPantinServer({
     pantinsDirectory,
@@ -74,6 +77,7 @@ async function main(): Promise<void> {
     ...(values.listen === undefined ? {} : { listen: values.listen }),
     allow: values.allow ?? [],
     ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
+    ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
     reportError,
     reportRejectedSource: (source) =>
       writeLine(process.stderr, `Rejected connection from ${source}`),
@@ -82,6 +86,12 @@ async function main(): Promise<void> {
   const host = address.family === "IPv6" ? `[${address.address}]` : address.address;
   writeLine(process.stdout, `Pantin core (${network.mode} mode) on http://${host}:${address.port}`);
   writeLine(process.stdout, `Pantins in ${pantinsDirectory}`);
+  writeLine(
+    process.stdout,
+    stepConverterPython === undefined
+      ? "STEP import disabled (no --step-converter-python)"
+      : `STEP converter: ${stepConverterPython}`,
+  );
   if (viewerDirectory !== undefined) {
     writeLine(process.stdout, `Viewer served from ${viewerDirectory}`);
   }

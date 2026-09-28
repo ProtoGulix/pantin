@@ -1,34 +1,10 @@
-import type { Body, ImportBodyQuery, PantinId } from "@pantin/protocol";
-import { fileNameStem } from "../domain/ids.ts";
-import { buildImportedBody } from "../domain/import-body.ts";
-import { addBody, findBody, removeBody, renameBody } from "../domain/pantin-document.ts";
+import type { Body, PantinId } from "@pantin/protocol";
+import { findBody, renameBody } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import type { MeshFile } from "../store/pantin-store.ts";
 import { loadPantin, type ServiceContext, updateDocument } from "./open-pantins.ts";
 
-// Body operations of a Pantin: import, rename, mesh access.
-
-export async function importBody(
-  context: ServiceContext,
-  pantinId: PantinId,
-  query: ImportBodyQuery,
-  bytes: Uint8Array,
-): Promise<Body> {
-  const openPantin = await loadPantin(context, pantinId);
-  const meshStems = (await context.store.listMeshFileNames(pantinId)).map(fileNameStem);
-  // No await between building the body and adding it: the id is reserved
-  // before a concurrent import can pick the same one.
-  const body = buildImportedBody(openPantin.document, query, bytes, meshStems);
-  openPantin.document = addBody(openPantin.document, body);
-  try {
-    // The mesh is written now; the body joins pantin.json on the next save.
-    await context.store.writeMesh(pantinId, body.mesh, bytes);
-  } catch (error) {
-    openPantin.document = removeBody(openPantin.document, body.id);
-    throw error;
-  }
-  return body;
-}
+// Body operations of a Pantin: rename, mesh access.
 
 export async function renameBodyOf(
   context: ServiceContext,
@@ -54,11 +30,11 @@ export async function openBodyMesh(
   context: ServiceContext,
   pantinId: PantinId,
   meshPath: string,
-): Promise<{ file: MeshFile; format: Body["source"]["format"] }> {
+): Promise<MeshFile> {
   const { document } = await loadPantin(context, pantinId);
   const body = document.bodies.find((candidate) => candidate.mesh === meshPath);
   if (body === undefined) {
     throw new ApiError("not_found", `Pantin "${pantinId}" has no mesh "${meshPath}".`);
   }
-  return { file: await context.store.openMesh(pantinId, body.mesh), format: body.source.format };
+  return context.store.openMesh(pantinId, body.mesh);
 }

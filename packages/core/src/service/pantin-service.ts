@@ -1,5 +1,6 @@
 import type { ImportBodyQuery, PantinId, PantinResponse, PantinSummary } from "@pantin/protocol";
 import { PantinIdSchema } from "@pantin/protocol";
+import type { StepConverter } from "../converter/step-converter.ts";
 import { makeUniqueId, slugifyDisplayName } from "../domain/ids.ts";
 import {
   createPantinDocument,
@@ -8,7 +9,8 @@ import {
 } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
-import { importBody, openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { importBodies } from "./import-operations.ts";
 import { loadPantin, type ServiceContext, toResponse, updateDocument } from "./open-pantins.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
@@ -62,8 +64,8 @@ async function savePantin(context: ServiceContext, pantinId: PantinId): Promise<
   return toResponse(pantinId, openPantin);
 }
 
-export function createPantinService(store: PantinStore) {
-  const context: ServiceContext = { store, openPantins: new Map() };
+export function createPantinService(store: PantinStore, stepConverter: StepConverter | undefined) {
+  const context: ServiceContext = { store, openPantins: new Map(), stepConverter };
   return {
     listPantins: () => listPantins(context),
     createPantin: (name: string) => createPantin(context, name),
@@ -72,8 +74,8 @@ export function createPantinService(store: PantinStore) {
     renamePantin: (pantinId: PantinId, name: string) =>
       updateDocument(context, pantinId, (document) => renamePantinDocument(document, name)),
     savePantin: (pantinId: PantinId) => savePantin(context, pantinId),
-    importBody: (pantinId: PantinId, query: ImportBodyQuery, bytes: Uint8Array) =>
-      importBody(context, pantinId, query, bytes),
+    importBodies: (pantinId: PantinId, query: ImportBodyQuery, bytes: Uint8Array) =>
+      importBodies(context, pantinId, query, bytes),
     renameBody: (pantinId: PantinId, bodyId: string, name: string) =>
       renameBodyOf(context, pantinId, bodyId, name),
     openBodyMesh: (pantinId: PantinId, meshPath: string) =>

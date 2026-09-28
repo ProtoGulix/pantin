@@ -24,6 +24,7 @@ export type PantinStore = {
   listMeshFileNames(pantinId: PantinId): Promise<string[]>;
   writeMesh(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
   openMesh(pantinId: PantinId, meshPath: string): Promise<MeshFile>;
+  deleteMesh(pantinId: PantinId, meshPath: string): Promise<void>;
   describeDocumentLocation(pantinId: PantinId): string;
 };
 
@@ -132,6 +133,12 @@ async function openMesh(paths: Paths, pantinId: PantinId, meshPath: string): Pro
   }
 }
 
+// Used to roll back a failed import; a missing file is not an error.
+async function deleteMesh(paths: Paths, pantinId: PantinId, meshPath: string): Promise<void> {
+  await assertRealPathInside(paths.pantinsDirectory, meshesDirectory(paths, pantinId));
+  await rm(pathInPantin(paths, pantinId, meshPath), { force: true });
+}
+
 export function createPantinStore(pantinsDirectory: string): PantinStore {
   const paths: Paths = { pantinsDirectory };
   return {
@@ -142,6 +149,7 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     listMeshFileNames: (pantinId) => listMeshFileNames(paths, pantinId),
     writeMesh: (pantinId, meshPath, bytes) => writeMesh(paths, pantinId, meshPath, bytes),
     openMesh: (pantinId, meshPath) => openMesh(paths, pantinId, meshPath),
+    deleteMesh: (pantinId, meshPath) => deleteMesh(paths, pantinId, meshPath),
     // Relative to the pantins directory: error messages never reveal absolute paths.
     describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
   };

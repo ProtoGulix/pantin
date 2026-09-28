@@ -3,8 +3,8 @@ import { ApiError } from "../errors.ts";
 
 type ValidationIssue = { readonly path: readonly PropertyKey[]; readonly message: string };
 
-// The subset of a Zod schema this module relies on, so that the core does not
-// depend on zod directly: schemas come from @pantin/protocol.
+// The subset of a Zod schema this module relies on, so that it works with any
+// schema: those of @pantin/protocol and the core's own converter output schema.
 type Parser<Output> = {
   safeParse(
     value: unknown,

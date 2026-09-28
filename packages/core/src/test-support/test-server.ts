@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { request as httpRequest } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { type Body, ImportBodiesResponseSchema } from "@pantin/protocol";
 import {
   type PantinServerOptions,
   type RunningPantinServer,
@@ -102,4 +103,14 @@ export function importMesh(
 ): Promise<RawResponse> {
   const path = `/api/pantins/${pantinId}/bodies?${query}`;
   return sendRaw(server, "POST", path, { contentType: "application/octet-stream", bytes });
+}
+
+// GLB and STL imports answer { bodies: [oneBody] }.
+export function singleImportedBody(response: RawResponse): Body {
+  const { bodies } = ImportBodiesResponseSchema.parse(response.json);
+  const [body, ...others] = bodies;
+  if (body === undefined || others.length > 0) {
+    throw new Error(`Expected exactly one imported body, got ${bodies.length}.`);
+  }
+  return body;
 }

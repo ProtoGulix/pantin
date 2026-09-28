@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { request as httpRequest } from "node:http";
 import { join } from "node:path";
-import { BodyResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildAsciiStl, buildBinaryStl, buildGlb } from "../test-support/mesh-fixtures.ts";
 import {
@@ -9,6 +8,7 @@ import {
   importMesh,
   sendJsonRequest,
   sendRaw,
+  singleImportedBody,
   startTestServer,
   type TestWorkspace,
 } from "../test-support/test-server.ts";
@@ -66,7 +66,7 @@ describe("body import", () => {
       buildAsciiStl(),
     );
     expect(response.status).toBe(201);
-    const { body } = BodyResponseSchema.parse(response.json);
+    const body = singleImportedBody(response);
     expect(body).toEqual({
       id: "bracket",
       name: "Bracket",
@@ -85,7 +85,7 @@ describe("body import", () => {
       buildBinaryStl(2),
     );
     expect(response.status).toBe(201);
-    expect(BodyResponseSchema.parse(response.json).body).toMatchObject({
+    expect(singleImportedBody(response)).toMatchObject({
       mesh: "meshes/plate.stl",
       source: { format: "stl", unit: "cm", upAxis: "y" },
     });

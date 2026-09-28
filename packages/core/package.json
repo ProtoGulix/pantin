@@ -12,6 +12,7 @@
     "start": "node src/main.ts"
   },
   "dependencies": {
-    "@pantin/protocol": "workspace:*"
+    "@pantin/protocol": "workspace:*",
+    "zod": "4.6.5"
   }
 }
