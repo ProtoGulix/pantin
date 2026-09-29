@@ -1,0 +1,84 @@
+import { infoMessage } from "../messages.ts";
+import { parseNodeId } from "../tree/node-ids.ts";
+import { withOpenPantin } from "../viewer-state.ts";
+import type { ViewerStore } from "./viewer-store.ts";
+
+// Pantin and body operations that go through the API. Every edit is followed
+// by a fresh read of the Pantin: the core owns unsavedChanges.
+
+export async function refreshPantinList(store: ViewerStore): Promise<void> {
+  await store.run(
+    () => store.ports.api.listPantins(),
+    (current, pantins) => ({ ...current, pantins }),
+  );
+}
+
+export async function openPantin(store: ViewerStore, pantinId: string): Promise<void> {
+  store.requestedPantinId = pantinId;
+  await store.run(
+    () => store.ports.api.getPantin(pantinId),
+    (current, response) => store.applyIfStillRequested(current, response),
+  );
+}
+
+export async function createPantin(store: ViewerStore, name: string): Promise<void> {
+  const created = await store.run(
+    () => store.ports.api.createPantin(name),
+    (current, response) => {
+      store.requestedPantinId = response.id;
+      store.pendingImportFile = null;
+      return { ...withOpenPantin(current, response), creatingPantin: false };
+    },
+  );
+  if (created !== undefined) {
+    await refreshPantinList(store);
+  }
+}
+
+/** Runs an edit on a Pantin, then shows its fresh state. Undefined on failure. */
+export async function editPantin<Result>(
+  store: ViewerStore,
+  pantinId: string,
+  edit: (pantinId: string) => Promise<Result>,
+): Promise<Result | undefined> {
+  const outcome = await store.run(
+    async () => {
+      const result = await edit(pantinId);
+      return { result, pantin: await store.ports.api.getPantin(pantinId) };
+    },
+    (current, { pantin }) => store.applyIfStillRequested(current, pantin),
+  );
+  await refreshPantinList(store);
+  return outcome?.result;
+}
+
+export async function savePantin(store: ViewerStore): Promise<void> {
+  const open = store.state.openPantin;
+  if (open === null) {
+    return;
+  }
+  const saved = await editPantin(store, open.id, (pantinId) =>
+    store.ports.api.savePantin(pantinId),
+  );
+  if (saved !== undefined) {
+    store.update({
+      ...store.state,
+      message: infoMessage("message.saved", { name: saved.document.name }),
+    });
+  }
+}
+
+/** Renames a Pantin or a body, whichever the tree node stands for. */
+export async function renameNode(store: ViewerStore, nodeId: string, name: string): Promise<void> {
+  const ref = parseNodeId(nodeId);
+  store.update({ ...store.state, renamingNodeId: null });
+  if (ref?.kind === "pantin") {
+    await editPantin(store, ref.pantinId, (pantinId) =>
+      store.ports.api.renamePantin(pantinId, name),
+    );
+  } else if (ref?.kind === "body") {
+    await editPantin(store, ref.pantinId, (pantinId) =>
+      store.ports.api.renameBody(pantinId, ref.bodyId, name),
+    );
+  }
+}

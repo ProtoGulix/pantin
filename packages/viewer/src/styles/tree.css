@@ -1,0 +1,130 @@
+/* Tree (CODESYS device tree / SolidWorks FeatureManager) and its context menu. */
+.tree-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tree {
+  flex: 1;
+  padding: 2px 0;
+  overflow: auto;
+}
+
+.tree:focus-visible {
+  box-shadow: inset var(--focus-ring);
+}
+
+.tree-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: var(--row-height);
+  padding-right: 6px;
+  padding-left: calc(4px + var(--depth, 0) * 14px);
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.tree-row:hover {
+  background: var(--hover);
+}
+
+.tree-row--selected,
+.tree-row--selected:hover {
+  background: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.tree:focus-visible .tree-row--selected {
+  background: rgb(240 160 48 / 24%);
+}
+
+.tree-row__chevron {
+  display: inline-flex;
+  width: 14px;
+  color: var(--text-faint);
+}
+
+.tree-row__chevron .icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.1s;
+}
+
+.tree-row__chevron--open .icon {
+  transform: rotate(90deg);
+}
+
+.tree-row__icon {
+  color: var(--text-muted);
+}
+
+.tree-row--selected .tree-row__icon {
+  color: var(--accent);
+}
+
+.tree-row__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-row__detail {
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Original CAD nodes: read-only, greyed, in the source font. */
+.tree-row--muted .tree-row__label {
+  font-family: var(--font-source);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.tree-row--muted .tree-row__icon {
+  color: var(--text-faint);
+}
+
+.tree-row .text-input {
+  flex: 1;
+  height: 18px;
+}
+
+/* Context menu */
+.menu-host {
+  position: fixed;
+  z-index: 10;
+}
+
+.context-menu {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 3px 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 45%);
+}
+
+.context-menu__item {
+  height: var(--row-height);
+  padding: 0 12px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.context-menu__item:hover,
+.context-menu__item:focus-visible {
+  background: var(--accent-soft);
+  box-shadow: none;
+}

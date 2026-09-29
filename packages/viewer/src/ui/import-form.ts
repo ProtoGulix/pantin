@@ -1,66 +1,87 @@
-import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
-import { type ImportFormView, UNIT_LABELS, UP_AXIS_LABELS } from "../view-model.ts";
+import type { Translate } from "../i18n/translate.ts";
+import type { ImportFormView } from "../view-model.ts";
 import { button, element, selectInput } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
-export function renderImportButton(intents: PanelIntents, busy: boolean): HTMLElement {
-  const fileInput = element("input", {
-    className: "visually-hidden",
-    attributes: { type: "file", accept: IMPORT_FILE_ACCEPT, "aria-label": "Mesh file to import" },
-  });
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (file !== undefined) {
-      intents.chooseImportFile(file);
-    }
-    // Lets the user pick the same file again after a cancel.
-    fileInput.value = "";
-  });
-  const trigger = button("Import mesh…", "button", () => fileInput.click());
-  trigger.disabled = busy;
-  return element("div", { className: "import-trigger" }, [trigger, fileInput]);
-}
+// Compact inline form under the toolbar: file, format-dependent options, and
+// either the buttons or the progress line while the core works.
 
 function field(label: string, control: HTMLElement): HTMLElement {
-  return element("label", { className: "field" }, [
-    element("span", { className: "field__label", text: label }),
+  return element("label", { className: "inline-field" }, [
+    element("span", { className: "inline-field__label", text: label }),
     control,
   ]);
 }
 
-function importActions(view: ImportFormView, intents: PanelIntents): HTMLElement {
+function actions(view: ImportFormView, translate: Translate, intents: PanelIntents): HTMLElement {
   if (view.progressMessage !== null) {
-    return element("div", { className: "import-progress", attributes: { role: "status" } }, [
+    return element("div", { className: "inline-form__progress", attributes: { role: "status" } }, [
       element("span", { className: "spinner" }),
       element("span", { text: view.progressMessage }),
     ]);
   }
-  const confirm = button("Import", "button button--primary", intents.confirmImport);
+  const confirm = button(
+    translate("import.confirm"),
+    "button button--primary",
+    intents.confirmImport,
+  );
   confirm.disabled = !view.canSubmit;
-  return element("div", { className: "button-row" }, [
-    button("Cancel", "button button--ghost", intents.cancelImport),
+  return element("div", { className: "inline-form__actions" }, [
+    button(translate("import.cancel"), "button", intents.cancelImport),
     confirm,
   ]);
 }
 
-export function renderImportForm(view: ImportFormView, intents: PanelIntents): HTMLElement {
+function optionSelects(view: ImportFormView, translate: Translate, intents: PanelIntents) {
   const locked = view.progressMessage !== null;
-  const unitSelect = selectInput(UNIT_LABELS, view.unit, "Unit", intents.changeImportUnit);
-  const upAxisSelect = selectInput(
-    UP_AXIS_LABELS,
+  const unit = selectInput(
+    view.unitOptions,
+    view.unit,
+    translate("import.unit"),
+    intents.changeImportUnit,
+  );
+  const upAxis = selectInput(
+    view.upAxisOptions,
     view.upAxis,
-    "Up axis",
+    translate("import.upAxis"),
     intents.changeImportUpAxis,
   );
-  unitSelect.disabled = locked;
-  upAxisSelect.disabled = locked;
-  return element("div", { className: "import-form", attributes: { "aria-busy": String(locked) } }, [
-    element("div", { className: "import-form__file" }, [
-      element("span", { className: "import-form__name", text: view.fileName }),
-      element("span", { className: "badge", text: view.formatLabel }),
-    ]),
-    view.showUnit ? field("Unit of the file", unitSelect) : null,
-    field("Up axis in the file", upAxisSelect),
-    importActions(view, intents),
+  // Options cannot change while the core is working on the file.
+  unit.disabled = locked;
+  upAxis.disabled = locked;
+  return { unit, upAxis };
+}
+
+function fileLine(view: ImportFormView): HTMLElement {
+  return element("div", { className: "inline-form__file" }, [
+    element("span", {
+      className: "inline-form__file-name",
+      text: view.fileName,
+      attributes: { title: view.fileName },
+    }),
+    element("span", { className: "badge", text: view.formatLabel }),
   ]);
+}
+
+export function renderImportForm(
+  view: ImportFormView,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLElement {
+  const { unit, upAxis } = optionSelects(view, translate, intents);
+  const busy = String(view.progressMessage !== null);
+  return element(
+    "div",
+    {
+      className: "inline-form",
+      attributes: { role: "group", "aria-label": view.title, "aria-busy": busy },
+    },
+    [
+      element("div", { className: "inline-form__title", text: view.title }),
+      fileLine(view),
+      view.showUnit ? field(translate("import.unit"), unit) : null,
+      field(translate("import.upAxis"), upAxis),
+      actions(view, translate, intents),
+    ],
+  );
 }

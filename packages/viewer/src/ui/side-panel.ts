@@ -1,125 +1,155 @@
-import type { OpenPantinView, PanelView } from "../view-model.ts";
-import { renderBodyList, scrollSelectedBodyIntoView } from "./body-list.ts";
-import { button, committingTextInput, element } from "./dom.ts";
-import { renderImportButton, renderImportForm } from "./import-form.ts";
+import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
+import type { PanelView } from "../view-model.ts";
+import { renderContextMenu } from "./context-menu.ts";
+import { element } from "./dom.ts";
+import { renderImportForm } from "./import-form.ts";
+import { renderMessageLine } from "./message-line.ts";
+import { type PaneLayout, setUpPaneLayout } from "./pane-layout.ts";
 import type { PanelIntents } from "./panel-intents.ts";
-import { renderPantinListSection } from "./pantin-list-section.ts";
+import { renderPropertiesGrid } from "./properties-grid.ts";
+import { renderCreatePantinForm, renderToolbar, type ToolbarCallbacks } from "./toolbar.ts";
+import { createTreeView, type TreeView } from "./tree-view.ts";
 
-// Renders the whole side panel from a PanelView. Rebuilding the DOM on each
-// update keeps the component stateless; the panel is small enough for that.
-
-function errorBanner(message: string | null, intents: PanelIntents): HTMLElement | null {
-  if (message === null) {
-    return null;
-  }
-  return element("div", { className: "error-banner", attributes: { role: "alert" } }, [
-    element("span", { className: "error-banner__message", text: message }),
-    button("Dismiss", "button button--ghost button--small", intents.dismissError),
-  ]);
-}
-
-function pantinHeader(view: OpenPantinView, intents: PanelIntents): HTMLElement {
-  const save = button("Save", "button button--primary", intents.savePantin);
-  save.disabled = !view.saveEnabled;
-  const status = view.hasUnsavedChanges
-    ? element("span", { className: "status status--unsaved", text: "● Unsaved changes" })
-    : element("span", { className: "status status--saved", text: "Saved" });
-  return element("div", { className: "pantin-header" }, [
-    committingTextInput(view.name, "Pantin name", intents.renamePantin),
-    element("div", { className: "pantin-header__actions" }, [status, save]),
-  ]);
-}
-
-function openPantinSection(panel: PanelView, intents: PanelIntents): HTMLElement {
-  const view = panel.openPantin;
-  if (view === null) {
-    return element("section", { className: "panel-section" }, [
-      element("p", {
-        className: "empty-message",
-        text: "Open or create a Pantin to see its bodies.",
-      }),
-    ]);
-  }
-  const importArea =
-    panel.importForm === null
-      ? renderImportButton(intents, panel.busy)
-      : renderImportForm(panel.importForm, intents);
-  const empty =
-    view.emptyBodiesMessage === null
-      ? null
-      : element("p", { className: "empty-message", text: view.emptyBodiesMessage });
-  return element("section", { className: "panel-section panel-section--grow" }, [
-    element("h2", { className: "panel-section__title", text: `Pantin · ${view.id}` }),
-    pantinHeader(view, intents),
-    element("h3", { className: "panel-section__subtitle", text: "Bodies" }),
-    importArea,
-    empty,
-    renderBodyList(view.bodies, intents),
-  ]);
-}
+// The left panel: toolbar, inline forms, tree, properties, message line. The
+// skeleton is built once (so the tree keeps keyboard focus); each region is
+// redrawn from the PanelView on every change.
 
 interface FocusSnapshot {
-  label: string;
+  key: string;
   value: string;
   selectionStart: number | null;
   selectionEnd: number | null;
 }
 
-// Text inputs are recognised across renders by their aria-label, which is
-// unique in the panel; what the user was typing survives the rebuild.
-function captureFocus(container: HTMLElement): FocusSnapshot | null {
+function captureFocus(root: HTMLElement): FocusSnapshot | null {
   const active = document.activeElement;
-  const label = active?.getAttribute("aria-label");
-  if (
-    !(active instanceof HTMLInputElement) ||
-    active.type !== "text" ||
-    !container.contains(active) ||
-    !label
-  ) {
+  const key = active?.getAttribute("data-focus-key");
+  if (!(active instanceof HTMLInputElement) || !root.contains(active) || !key) {
     return null;
   }
-  return {
-    label,
-    value: active.value,
-    selectionStart: active.selectionStart,
-    selectionEnd: active.selectionEnd,
-  };
+  const { value, selectionStart, selectionEnd } = active;
+  return { key, value, selectionStart, selectionEnd };
 }
 
-function restoreFocus(container: HTMLElement, snapshot: FocusSnapshot | null): void {
-  if (snapshot === null) {
-    return;
-  }
-  const input = [...container.querySelectorAll("input")].find(
-    (candidate) =>
-      candidate.type === "text" && candidate.getAttribute("aria-label") === snapshot.label,
+// What the user was typing survives the rebuild of its region.
+function restoreFocus(root: HTMLElement, snapshot: FocusSnapshot | null): void {
+  const input = [...root.querySelectorAll("input")].find(
+    (candidate) => candidate.getAttribute("data-focus-key") === snapshot?.key,
   );
-  if (input !== undefined) {
+  if (snapshot !== null && input !== undefined && document.activeElement !== input) {
     input.value = snapshot.value;
     input.focus();
     input.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);
   }
 }
 
-export function renderSidePanel(
-  container: HTMLElement,
-  view: PanelView,
-  intents: PanelIntents,
-): void {
-  const focus = captureFocus(container);
-  container.replaceChildren(
-    ...[
-      element("header", { className: "brand" }, [
-        element("span", { className: "brand__name", text: "Pantin" }),
-        view.busy
-          ? element("span", { className: "spinner", attributes: { "aria-label": "Working" } })
-          : null,
-      ]),
-      errorBanner(view.errorMessage, intents),
-      renderPantinListSection(view, intents),
-      openPantinSection(view, intents),
-    ].filter((child) => child !== null),
-  );
-  restoreFocus(container, focus);
-  scrollSelectedBodyIntoView(container);
+export class SidePanel {
+  private readonly panel: HTMLElement;
+  private readonly toolbarHost = element("div", { className: "panel-header" });
+  private readonly formHost = element("div", { className: "form-host" });
+  private readonly treeView: TreeView = createTreeView();
+  private readonly propertiesTitle = element("h2", { className: "pane__title" });
+  private readonly propertiesBody = element("div", { className: "pane__body" });
+  private readonly messageHost = element("div", { className: "message-host" });
+  private readonly menuHost = element("div", { className: "menu-host" });
+  private readonly fileInput = element("input", {
+    className: "visually-hidden",
+    attributes: { type: "file", accept: IMPORT_FILE_ACCEPT, tabindex: "-1" },
+  });
+  private readonly layout: PaneLayout;
+  private intents: PanelIntents | null = null;
+  private importTarget: string | null = null;
+  // Focus moves into the create form or the menu only when they appear.
+  private wasCreating = false;
+  private previousMenuKey: string | null = null;
+  private readonly callbacks: ToolbarCallbacks = {
+    openFilePicker: (targetPantinId) => {
+      this.importTarget = targetPantinId;
+      this.fileInput.click();
+    },
+  };
+
+  constructor(panel: HTMLElement, layoutRoot: HTMLElement) {
+    this.panel = panel;
+    const treePane = element("section", { className: "pane pane--tree" }, [this.treeView.element]);
+    const propertiesPane = element("section", { className: "pane pane--properties" }, [
+      this.propertiesTitle,
+      this.propertiesBody,
+    ]);
+    const paneStack = element("div", { className: "pane-stack" }, [treePane, propertiesPane]);
+    panel.replaceChildren(
+      this.toolbarHost,
+      this.formHost,
+      paneStack,
+      this.messageHost,
+      this.menuHost,
+      this.fileInput,
+    );
+    this.layout = setUpPaneLayout({ layoutRoot, panel, paneStack, treePane });
+    this.fileInput.addEventListener("change", () => this.onFileChosen());
+    document.addEventListener("pointerdown", (event) => this.closeMenuOnOutsidePointer(event));
+  }
+
+  render(view: PanelView, intents: PanelIntents): void {
+    this.intents = intents;
+    const focus = captureFocus(this.panel);
+    const { translate } = view;
+    this.toolbarHost.replaceChildren(renderToolbar(view, intents, this.callbacks));
+    this.renderForms(view, intents);
+    this.treeView.render(view.treeRows, view.language, translate, intents);
+    this.propertiesTitle.textContent = translate("properties.label");
+    this.propertiesBody.replaceChildren(renderPropertiesGrid(view.properties, translate, intents));
+    const message = renderMessageLine(view.message, translate, intents);
+    this.messageHost.replaceChildren(...(message === null ? [] : [message]));
+    this.renderMenu(view, intents);
+    this.fileInput.setAttribute("aria-label", translate("import.fileInputLabel"));
+    this.layout.translateLabels(translate);
+    restoreFocus(this.panel, focus);
+  }
+
+  private renderForms(view: PanelView, intents: PanelIntents): void {
+    const { translate } = view;
+    const createForm = view.toolbar.creatingPantin
+      ? renderCreatePantinForm(translate, intents)
+      : null;
+    const importForm =
+      view.importForm === null ? null : renderImportForm(view.importForm, translate, intents);
+    this.formHost.replaceChildren(...[createForm, importForm].filter((form) => form !== null));
+    if (createForm !== null && !this.wasCreating) {
+      createForm.querySelector("input")?.focus();
+    }
+    this.wasCreating = createForm !== null;
+  }
+
+  private renderMenu(view: PanelView, intents: PanelIntents): void {
+    const menu = view.contextMenu;
+    const menuKey = menu === null ? null : `${menu.nodeId}@${menu.x},${menu.y}`;
+    const isNew = menuKey !== this.previousMenuKey;
+    this.menuHost.replaceChildren(
+      ...(menu === null ? [] : [renderContextMenu(menu, intents, this.callbacks, isNew)]),
+    );
+    const menuJustClosed = menuKey === null && this.previousMenuKey !== null;
+    if (menuJustClosed && document.activeElement === document.body) {
+      // The menu closed with focus inside it: give focus back to the tree.
+      this.treeView.tree.focus();
+    }
+    this.previousMenuKey = menuKey;
+  }
+
+  private onFileChosen(): void {
+    const file = this.fileInput.files?.[0];
+    if (file !== undefined) {
+      this.intents?.chooseImportFile(file, this.importTarget);
+    }
+    // Lets the user pick the same file again after a cancel.
+    this.fileInput.value = "";
+  }
+
+  private closeMenuOnOutsidePointer(event: PointerEvent): void {
+    const target = event.target;
+    const menuOpen = this.menuHost.childElementCount > 0;
+    if (menuOpen && target instanceof Node && !this.menuHost.contains(target)) {
+      this.intents?.closeContextMenu();
+    }
+  }
 }

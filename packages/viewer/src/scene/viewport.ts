@@ -20,12 +20,15 @@ export type MeshBytesLoader = (pantinId: string, body: Body) => Promise<ArrayBuf
 
 export interface ViewportCallbacks {
   onBodyPicked(bodyId: string | null): void;
-  onLoadError(message: string): void;
+  // Raw reason in English; the caller translates the message around it.
+  onLoadError(bodyName: string, reason: string): void;
 }
 
 export interface Viewport {
   showBodies(pantinId: string | null, bodies: readonly Body[]): void;
   setSelectedBody(bodyId: string | null): void;
+  /** null frames every body; otherwise only the listed bodies. */
+  frameBodies(bodyIds: readonly string[] | null): void;
 }
 
 const SELECTION_COLOR = Color3.FromHexString("#f0a030");
@@ -58,13 +61,17 @@ function toTuple(vector: Vector3): Vector3Tuple {
   return [vector.x, vector.y, vector.z];
 }
 
-function frameAllBodies(context: ViewportContext): void {
+// null frames every loaded body and resizes the ground around them; a list
+// frames only those bodies and leaves the ground as it is.
+function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null): void {
   const minimum = new Vector3(Infinity, Infinity, Infinity);
   const maximum = new Vector3(-Infinity, -Infinity, -Infinity);
-  for (const loaded of context.loadedBodies.values()) {
-    const bounds = loaded.node.getHierarchyBoundingVectors(true);
-    minimum.minimizeInPlace(bounds.min);
-    maximum.maximizeInPlace(bounds.max);
+  for (const [bodyId, loaded] of context.loadedBodies) {
+    if (bodyIds === null || bodyIds.includes(bodyId)) {
+      const bounds = loaded.node.getHierarchyBoundingVectors(true);
+      minimum.minimizeInPlace(bounds.min);
+      maximum.maximizeInPlace(bounds.max);
+    }
   }
   const framing = frameBounds(toTuple(minimum), toTuple(maximum), context.camera.fov);
   const { camera } = context;
@@ -74,8 +81,9 @@ function frameAllBodies(context: ViewportContext): void {
   camera.minZ = framing.radius * 0.001;
   camera.maxZ = framing.radius * 100;
   camera.panningSensibility = 1000 / framing.radius;
-  const coreCentre = babylonToCorePosition(framing.target);
-  context.stage.fitToBodies(coreCentre, framing.radius / 2);
+  if (bodyIds === null) {
+    context.stage.fitToBodies(babylonToCorePosition(framing.target), framing.radius / 2);
+  }
 }
 
 function applySelection(context: ViewportContext): void {
@@ -138,11 +146,7 @@ function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): 
   });
 }
 
-export function createViewport(
-  canvas: HTMLCanvasElement,
-  loadBytes: MeshBytesLoader,
-  callbacks: ViewportCallbacks,
-): Viewport {
+function createEngine(canvas: HTMLCanvasElement): Engine {
   const engine = new Engine(canvas, true, { stencil: true }, true);
   // Loading progress is shown by the panel; Babylon's full-page overlay would hide it.
   engine.loadingScreen = {
@@ -151,6 +155,43 @@ export function createViewport(
     loadingUIBackgroundColor: "",
     loadingUIText: "",
   };
+  new ResizeObserver(() => engine.resize()).observe(canvas);
+  return engine;
+}
+
+function showBodies(
+  context: ViewportContext,
+  pantinId: string | null,
+  bodies: readonly Body[],
+  loadBytes: MeshBytesLoader,
+  callbacks: ViewportCallbacks,
+): void {
+  const plan = planSceneSync(context.wantedKeys, pantinId, bodies);
+  for (const bodyId of plan.bodyIdsToRemove) {
+    removeBody(context, bodyId);
+  }
+  if (pantinId === null || plan.bodiesToLoad.length === 0) {
+    return;
+  }
+  const loads = plan.bodiesToLoad.map((body) => {
+    context.wantedKeys.set(body.id, bodyRenderKey(pantinId, body));
+    return loadAndShow(context, pantinId, body, loadBytes).catch((error: unknown) => {
+      context.wantedKeys.delete(body.id);
+      callbacks.onLoadError(body.name, error instanceof Error ? error.message : String(error));
+    });
+  });
+  void Promise.all(loads).then(() => {
+    applySelection(context);
+    frameBodies(context, null);
+  });
+}
+
+export function createViewport(
+  canvas: HTMLCanvasElement,
+  loadBytes: MeshBytesLoader,
+  callbacks: ViewportCallbacks,
+): Viewport {
+  const engine = createEngine(canvas);
   const scene = new Scene(engine);
   const context: ViewportContext = {
     scene,
@@ -162,31 +203,10 @@ export function createViewport(
     selectedBodyId: null,
   };
   listenToPicks(context, callbacks);
-  new ResizeObserver(() => engine.resize()).observe(canvas);
   engine.runRenderLoop(() => scene.render());
-
   return {
-    showBodies: (pantinId, bodies) => {
-      const plan = planSceneSync(context.wantedKeys, pantinId, bodies);
-      for (const bodyId of plan.bodyIdsToRemove) {
-        removeBody(context, bodyId);
-      }
-      if (pantinId === null || plan.bodiesToLoad.length === 0) {
-        return;
-      }
-      const loads = plan.bodiesToLoad.map((body) => {
-        context.wantedKeys.set(body.id, bodyRenderKey(pantinId, body));
-        return loadAndShow(context, pantinId, body, loadBytes).catch((error: unknown) => {
-          context.wantedKeys.delete(body.id);
-          const reason = error instanceof Error ? error.message : String(error);
-          callbacks.onLoadError(`Cannot display body "${body.name}": ${reason}`);
-        });
-      });
-      void Promise.all(loads).then(() => {
-        applySelection(context);
-        frameAllBodies(context);
-      });
-    },
+    showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
+    frameBodies: (bodyIds) => frameBodies(context, bodyIds),
     setSelectedBody: (bodyId) => {
       context.selectedBodyId = bodyId;
       applySelection(context);

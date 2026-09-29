@@ -1,0 +1,93 @@
+/* CODESYS-like "Property | Value" grid. */
+.property-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.property-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--row-height);
+  padding: 0 8px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: left;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.property-grid thead th:first-child {
+  width: 42%;
+}
+
+.property-grid td,
+.property-grid tbody th {
+  height: var(--row-height);
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.property-grid__name {
+  font-weight: 400;
+  color: var(--text-muted);
+  text-align: left;
+  border-right: 1px solid var(--surface-2);
+}
+
+.property-grid__value--source {
+  font-family: var(--font-source);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.property-grid__value--editable {
+  padding: 0 2px;
+}
+
+.property-grid__value--editable .text-input {
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  border-color: transparent;
+}
+
+.property-grid__value--editable .text-input:hover {
+  border-color: var(--border);
+}
+
+.property-grid__value--editable .text-input:focus {
+  background: var(--surface-0);
+  border-color: var(--accent);
+}
+
+.property-grid .property-grid__group th {
+  padding: 0;
+  background: var(--surface-2);
+}
+
+.property-grid__group-toggle {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  height: var(--row-height);
+  padding: 0 4px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.property-grid__group-toggle .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-faint);
+}

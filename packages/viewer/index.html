@@ -6,16 +6,17 @@
     <title>Pantin</title>
     <link rel="stylesheet" href="/src/styles/base.css" />
     <link rel="stylesheet" href="/src/styles/panel.css" />
+    <link rel="stylesheet" href="/src/styles/tree.css" />
+    <link rel="stylesheet" href="/src/styles/properties.css" />
     <link rel="stylesheet" href="/src/styles/viewport.css" />
   </head>
   <body>
+    <!-- Texts and labels are set from the translation files at start-up (ADR 0010). -->
     <div class="layout">
-      <aside id="side-panel" class="side-panel" aria-label="Pantin editor"></aside>
+      <aside id="side-panel" class="side-panel"></aside>
       <main class="viewport">
-        <canvas id="viewport-canvas" class="viewport__canvas" aria-label="3D view"></canvas>
-        <p class="viewport__hint">
-          Click a body to select it · drag to orbit · right-drag or Ctrl + drag to pan · wheel to zoom
-        </p>
+        <canvas id="viewport-canvas" class="viewport__canvas"></canvas>
+        <p id="viewport-hint" class="viewport__hint"></p>
       </main>
     </div>
     <script type="module" src="/src/main.ts"></script>

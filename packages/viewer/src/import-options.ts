@@ -18,12 +18,6 @@ const EXTENSION_TO_FORMAT: Readonly<Record<string, SourceFormat>> = {
 
 export const IMPORT_FILE_ACCEPT = ".glb,.stl,.stp,.step";
 
-export const SOURCE_FORMAT_LABELS: Readonly<Record<SourceFormat, string>> = {
-  glb: "GLB",
-  stl: "STL",
-  step: "STEP",
-};
-
 export function detectSourceFormat(fileName: string): SourceFormat | null {
   const dotIndex = fileName.lastIndexOf(".");
   if (dotIndex <= 0) {

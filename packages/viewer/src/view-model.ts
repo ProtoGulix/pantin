@@ -1,183 +1,174 @@
-import type { Body, LengthUnit, SourceFormat, SourceNode, UpAxis } from "@pantin/protocol";
-import { PantinApiError } from "./api-client.ts";
-import { importNeedsUnit, SOURCE_FORMAT_LABELS } from "./import-options.ts";
+import type { LengthUnit, SourceFormat, UpAxis } from "@pantin/protocol";
+import { createTranslator, LANGUAGES, type Language, type Translate } from "./i18n/translate.ts";
+import { importNeedsUnit } from "./import-options.ts";
+import type { MessageLevel } from "./messages.ts";
+import { buildPropertyGroups, type PropertyGroup } from "./properties/properties-model.ts";
+import { parseNodeId } from "./tree/node-ids.ts";
+import { buildTree, findNode, flattenTree, type TreeRow } from "./tree/tree-model.ts";
 import type { ViewerState } from "./viewer-state.ts";
 
 // Display logic: turns ViewerState into exactly what the panel shows, as plain
 // data. No DOM here, so every rule is unit tested under Node.
 
-export interface PantinListRowView {
-  id: string;
-  name: string;
-  bodyCountLabel: string;
-  isOpen: boolean;
-}
-
-interface SourceNodeView {
-  label: string;
-  // Index path from the file root, telling apart nodes that share a name.
-  pathLabel: string;
-}
-
-export interface BodyRowView {
-  id: string;
-  displayName: string;
-  sourceFileName: string;
-  sourceFormatLabel: string;
-  sourceNodes: SourceNodeView[];
-  unitLabel: string;
-  upAxisLabel: string;
-  isSelected: boolean;
-}
-
-export interface OpenPantinView {
-  id: string;
-  name: string;
-  hasUnsavedChanges: boolean;
+interface ToolbarView {
+  busy: boolean;
+  creatingPantin: boolean;
   saveEnabled: boolean;
-  bodies: BodyRowView[];
-  emptyBodiesMessage: string | null;
+  hasUnsavedChanges: boolean;
+  importEnabled: boolean;
+  frameAllEnabled: boolean;
+  frameSelectionEnabled: boolean;
 }
 
 export interface ImportFormView {
+  title: string;
   fileName: string;
   formatLabel: string;
   showUnit: boolean;
   unit: LengthUnit;
   upAxis: UpAxis;
+  unitOptions: Readonly<Record<LengthUnit, string>>;
+  upAxisOptions: Readonly<Record<UpAxis, string>>;
   // Shown instead of the buttons while the core works on the file.
   progressMessage: string | null;
   canSubmit: boolean;
 }
 
+export type ContextAction = "rename" | "frame" | "importInto";
+
+export interface ContextMenuView {
+  nodeId: string;
+  title: string;
+  x: number;
+  y: number;
+  entries: { action: ContextAction; label: string }[];
+}
+
+export interface MessageView {
+  level: MessageLevel;
+  levelLabel: string;
+  text: string;
+  detail: string | null;
+}
+
 export interface PanelView {
-  busy: boolean;
-  errorMessage: string | null;
-  pantins: PantinListRowView[];
-  emptyListMessage: string | null;
-  openPantin: OpenPantinView | null;
+  // For the fixed labels of components (column headers, tooltips).
+  translate: Translate;
+  language: Language;
+  languageOptions: Readonly<Record<Language, string>>;
+  toolbar: ToolbarView;
+  treeRows: TreeRow[];
+  properties: PropertyGroup[];
   importForm: ImportFormView | null;
+  contextMenu: ContextMenuView | null;
+  message: MessageView | null;
 }
 
-export const UNIT_LABELS: Readonly<Record<LengthUnit, string>> = {
-  m: "m (metres)",
-  mm: "mm (millimetres)",
-  cm: "cm (centimetres)",
-  in: "in (inches)",
-};
-
-export const UP_AXIS_LABELS: Readonly<Record<UpAxis, string>> = {
-  y: "Y up (glTF standard)",
-  z: "Z up (CAD)",
-};
-
-function bodyCountLabel(count: number): string {
-  return count === 1 ? "1 body" : `${count} bodies`;
+function importProgressMessage(format: SourceFormat, translate: Translate): string {
+  return translate(format === "step" ? "import.converting" : "import.inProgress");
 }
 
-function sourceNodeView(node: SourceNode): SourceNodeView {
-  return {
-    label: node.name === "" ? "(unnamed node)" : node.name,
-    pathLabel: node.path.length === 0 ? "root" : node.path.join(" / "),
-  };
-}
-
-export function buildBodyRowView(body: Body, selectedBodyId: string | null): BodyRowView {
-  return {
-    id: body.id,
-    displayName: body.name,
-    sourceFileName: body.source.fileName,
-    sourceFormatLabel: SOURCE_FORMAT_LABELS[body.source.format],
-    sourceNodes: body.source.nodes.map(sourceNodeView),
-    unitLabel: UNIT_LABELS[body.source.unit],
-    upAxisLabel: UP_AXIS_LABELS[body.source.upAxis],
-    isSelected: body.id === selectedBodyId,
-  };
-}
-
-function buildOpenPantinView(state: ViewerState, busy: boolean): OpenPantinView | null {
-  const openPantin = state.openPantin;
-  if (openPantin === null) {
-    return null;
-  }
-  const bodies = openPantin.document.bodies;
-  return {
-    id: openPantin.id,
-    name: openPantin.document.name,
-    hasUnsavedChanges: openPantin.unsavedChanges,
-    saveEnabled: openPantin.unsavedChanges && !busy,
-    bodies: bodies.map((body) => buildBodyRowView(body, state.selectedBodyId)),
-    emptyBodiesMessage:
-      bodies.length === 0 ? "No body yet. Import a .glb or .stl file to add one." : null,
-  };
-}
-
-function importProgressMessage(format: SourceFormat): string {
-  return format === "step"
-    ? "Converting the STEP file… This can take up to 2 minutes; keep this page open."
-    : "Importing…";
-}
-
-function buildImportFormView(state: ViewerState): ImportFormView | null {
+function buildImportFormView(state: ViewerState, t: Translate): ImportFormView | null {
   const pendingImport = state.pendingImport;
-  if (pendingImport === null) {
+  if (pendingImport === null || state.openPantin === null) {
     return null;
   }
   return {
+    title: t("import.target", { pantinName: state.openPantin.document.name }),
     fileName: pendingImport.fileName,
-    formatLabel: SOURCE_FORMAT_LABELS[pendingImport.format],
+    formatLabel: t(`format.${pendingImport.format}`),
     showUnit: importNeedsUnit(pendingImport),
     unit: pendingImport.unit,
     upAxis: pendingImport.upAxis,
-    progressMessage: state.importInProgress ? importProgressMessage(pendingImport.format) : null,
+    unitOptions: { m: t("unit.m"), mm: t("unit.mm"), cm: t("unit.cm"), in: t("unit.in") },
+    upAxisOptions: { y: t("upAxis.y"), z: t("upAxis.z") },
+    progressMessage: state.importInProgress ? importProgressMessage(pendingImport.format, t) : null,
     canSubmit: !state.importInProgress && state.pendingRequestCount === 0,
   };
 }
 
-export function buildPanelView(state: ViewerState): PanelView {
+function buildToolbarView(state: ViewerState): ToolbarView {
   const busy = state.pendingRequestCount > 0;
+  const hasBodies = (state.openPantin?.document.bodies.length ?? 0) > 0;
+  // Framing needs the selected node to belong to the Pantin shown in 3D.
+  const selectedPantinId = parseNodeId(state.selectedNodeId ?? "")?.pantinId;
   return {
     busy,
-    errorMessage: state.errorMessage,
-    pantins: state.pantins.map((summary) => ({
-      id: summary.id,
-      name: summary.name,
-      bodyCountLabel: bodyCountLabel(summary.bodyCount),
-      isOpen: summary.id === state.openPantin?.id,
-    })),
-    emptyListMessage: state.pantins.length === 0 ? "No Pantin yet. Create one below." : null,
-    openPantin: buildOpenPantinView(state, busy),
-    importForm: buildImportFormView(state),
+    creatingPantin: state.creatingPantin,
+    saveEnabled: (state.openPantin?.unsavedChanges ?? false) && !busy,
+    hasUnsavedChanges: state.openPantin?.unsavedChanges ?? false,
+    importEnabled: state.openPantin !== null && !busy && !state.importInProgress,
+    frameAllEnabled: hasBodies,
+    frameSelectionEnabled: hasBodies && selectedPantinId === state.openPantin?.id,
   };
 }
 
-function describeApiError(error: PantinApiError): string {
-  if (error.kind === "invalid_response") {
-    return `The core sent an unexpected answer. ${error.message}`;
+/** Menu entries depend on the node: only Pantins accept an import. */
+export function contextEntries(kind: TreeRow["kind"], renamable: boolean): ContextAction[] {
+  const entries: ContextAction[] = renamable ? ["rename"] : [];
+  entries.push("frame");
+  if (kind === "pantin") {
+    entries.push("importInto");
   }
-  switch (error.code) {
-    case "conversion_unavailable":
-      return (
-        `STEP import is not available on this core: ${error.message} ` +
-        "Start the core with --step-converter-python <path to the converter's Python>, " +
-        "or export the part as GLB or STL from your CAD."
-      );
-    case "conversion_failed":
-      return (
-        `The STEP file could not be converted: ${error.message} ` +
-        "Check that it opens in your CAD and re-export it as STEP (AP214 or AP242), " +
-        "or export it as GLB or STL."
-      );
-    default:
-      return error.message;
-  }
+  return entries;
 }
 
-/** One actionable sentence for any failure, shown in the error banner. */
-export function describeFailure(error: unknown): string {
-  if (error instanceof PantinApiError) {
-    return describeApiError(error);
+const CONTEXT_LABELS = {
+  rename: "menu.rename",
+  frame: "menu.frame",
+  importInto: "menu.importInto",
+} as const;
+
+function buildContextMenuView(state: ViewerState, t: Translate): ContextMenuView | null {
+  const menu = state.contextMenu;
+  const node = menu === null ? null : findNode(buildTree(state, t), menu.nodeId);
+  if (menu === null || node === null) {
+    return null;
   }
-  const reason = error instanceof Error ? error.message : String(error);
-  return `Unexpected error: ${reason}`;
+  return {
+    nodeId: node.id,
+    title: t("menu.label", { name: node.label }),
+    x: menu.x,
+    y: menu.y,
+    entries: contextEntries(node.kind, node.renamable).map((action) => ({
+      action,
+      label: t(CONTEXT_LABELS[action]),
+    })),
+  };
+}
+
+function buildMessageView(state: ViewerState, t: Translate): MessageView | null {
+  const message = state.message;
+  if (message === null) {
+    return null;
+  }
+  return {
+    level: message.level,
+    levelLabel: t(`message.level.${message.level}`),
+    text: t(message.key, message.parameters),
+    detail: message.detail,
+  };
+}
+
+export function buildPanelView(state: ViewerState): PanelView {
+  const translate = createTranslator(state.language);
+  return {
+    translate,
+    language: state.language,
+    // Cast: Object.fromEntries loses key types; the entries come from LANGUAGES.
+    languageOptions: Object.fromEntries(
+      LANGUAGES.map((value) => [value, translate(`language.${value}`)]),
+    ) as Record<Language, string>,
+    toolbar: buildToolbarView(state),
+    treeRows: flattenTree(buildTree(state, translate), state),
+    properties: buildPropertyGroups(
+      state,
+      state.selectedNodeId,
+      state.collapsedPropertyGroups,
+      translate,
+    ),
+    importForm: buildImportFormView(state, translate),
+    contextMenu: buildContextMenuView(state, translate),
+    message: buildMessageView(state, translate),
+  };
 }
