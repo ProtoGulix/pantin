@@ -111,11 +111,11 @@ Liste d'E/S : un fichier CSV maître. Il génère à la fois les variables globa
 ## 6. Économie de tokens (obligatoire)
 
 1. Graphify est installé dès la phase 0. Utiliser d'abord le mode AST uniquement (gratuit, sans LLM). Ne lance aucune extraction sémantique (documents, images) sans l'accord de l'utilisateur : elle consomme beaucoup de tokens.
-2. Avant de lire des fichiers pour t'orienter, interroge le graphe (graphify query "..." --budget 1500, ou les commandes path et explain). Ne lis un fichier entier que si la requête ne suffit pas.
-3. Après chaque lot de changements de code, mets à jour le graphe avec l'option de mise à jour incrémentale, pas de reconstruction complète.
+2. Pour t'orienter : si tu connais un nom de symbole, utilise graphify explain "<symbole>" ou graphify path "<A>" "<B>" ; sinon grep, ou un subagent d'exploration. graphify query en langage courant n'est pas un premier réflexe (7 réponses fausses sur 8, spike 0005). Ne lis pas graphify-out/GRAPH_REPORT.md (environ 6 000 tokens). Ne lis un fichier entier que si nécessaire.
+3. Le graphe est mis à jour automatiquement après chaque commit (hook lefthook post-commit, graphify update, AST seul, sans token). Pas de reconstruction complète.
 4. Délègue toute exploration large, recherche ou revue à un subagent : seul son résumé revient dans le contexte principal.
 5. Ne colle jamais dans la conversation de gros fichiers générés ni de sorties de commande complètes. Résume, ou renvoie vers le fichier.
-6. Les réductions de tokens annoncées pour Graphify sont des chiffres du fournisseur, NON VÉRIFIÉS sur ce dépôt. Mesure le gain réel en phase 0 et note le dans docs/spikes.
+6. Gain réel mesuré en mode AST (docs/spikes/0005-graphify-token-gain.md) : pas de gain sur des questions en langage courant, utile seulement quand un nom de symbole est connu. Les chiffres du fournisseur (jusqu'à 71,5 fois) ne s'appliquent pas à ce dépôt.
 
 ## 7. Subagents (prérogative du projet)
 
@@ -234,10 +234,4 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+Knowledge graph in graphify-out/ (git ignored), rebuilt after each commit, AST only. Usage rules are in section 6: `graphify explain` or `graphify path` when a symbol name is known, grep otherwise; do not start with `graphify query`, do not read GRAPH_REPORT.md.
