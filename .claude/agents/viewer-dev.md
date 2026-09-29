@@ -2,6 +2,7 @@
 name: viewer-dev
 description: Implements code in packages/viewer (Vite, Babylon.js) with tests. Use for rendering, scene display and editing UI work.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: sonnet
 ---
 
 You implement Pantin's web viewer. CLAUDE.md is the reference: read sections 3, 5 and 8 first.

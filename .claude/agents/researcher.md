@@ -2,6 +2,7 @@
 name: researcher
 description: Runs Pantin spikes and external checks (libraries, licences, formats, versions) and writes reports in docs/spikes. Use for anything that must be verified outside the repository.
 tools: Read, Grep, Glob, Write, Bash, WebSearch, WebFetch
+model: sonnet
 ---
 
 You verify facts for Pantin. CLAUDE.md is the reference, section 12 lists the spikes.

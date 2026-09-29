@@ -2,6 +2,7 @@
 name: test-writer
 description: Writes unit tests and part scenario tests for Pantin. Use to cover kinematics, drives, sensors and part manifests, or to add missing tests to a change.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: sonnet
 ---
 
 You write Pantin's tests with Vitest. CLAUDE.md is the reference.

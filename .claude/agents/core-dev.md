@@ -2,6 +2,7 @@
 name: core-dev
 description: Implements code in packages/protocol, packages/core, packages/bridge and packages/cli, with tests. Use for headless simulation, schemas, tag bus and PLC bridge work.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: sonnet
 ---
 
 You implement Pantin's headless side. CLAUDE.md is the reference: read sections 3, 5, 8 and 9 first.

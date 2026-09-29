@@ -121,7 +121,7 @@ Liste d'E/S : un fichier CSV maître. Il génère à la fois les variables globa
 
 Le travail se fait par délégation. L'agent principal planifie, orchestre et intègre. Il lance en parallèle les tâches indépendantes, par exemple un chantier coeur et un chantier viewer qui ne partagent que le contrat protocol. Chaque subagent reçoit les outils minimum nécessaires.
 
-À créer en phase 0 dans .claude/agents/<nom>.md (frontmatter : name et description obligatoires, tools et model optionnels) :
+À créer en phase 0 dans .claude/agents/<nom>.md (frontmatter : name et description obligatoires, tools et model optionnels). Modèle par rôle : sonnet pour core-dev, viewer-dev, test-writer et researcher ; opus seulement pour architect et reviewer. Un agent neuf par tranche, avec une consigne ciblée, plutôt que la reprise d'un agent chargé de tout son historique ; les petites corrections se font sans agent.
 
 1. architect : conçoit, rédige les ADR, tranche les questions de découpage. Lecture seule (Read, Grep, Glob).
 2. core-dev : implémente dans packages/core, protocol et bridge. Outils de lecture et d'édition, Bash.
