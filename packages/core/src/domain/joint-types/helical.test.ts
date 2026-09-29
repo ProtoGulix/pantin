@@ -7,6 +7,7 @@ import { HELICAL_BEHAVIOUR } from "./helical.ts";
 // A 5 mm pitch ball screw along Z, through (1, 0, 0), with 100 mm of travel.
 const screw: Extract<Joint, { type: "helical" }> = {
   id: "screw",
+  tagKey: "screw",
   type: "helical",
   name: "Screw",
   parent: "frame",

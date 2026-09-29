@@ -5,6 +5,7 @@ import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
 
 const slide: Joint = {
   id: "slide",
+  tagKey: "slide",
   name: "Slide",
   type: "prismatic",
   parent: "rail",
@@ -32,7 +33,7 @@ describe("PantinApiClient joints", () => {
 
   it("creates a joint with POST and returns it", async () => {
     const { fetchFunction, requests } = fakeFetch(jsonResponse({ joint: slide }, 201));
-    const { id: _id, ...request } = slide;
+    const { id: _id, tagKey: _tagKey, ...request } = slide;
     const joint = await createPantinApiClient(fetchFunction).createJoint("press", request);
     expect(joint).toEqual(slide);
     expect(requests[0]?.init?.method).toBe("POST");
@@ -41,7 +42,7 @@ describe("PantinApiClient joints", () => {
 
   it("refuses to send a joint whose lower limit exceeds the upper one", async () => {
     const { fetchFunction, requests } = fakeFetch(jsonResponse({ joint: slide }, 201));
-    const { id: _id, ...request } = slide;
+    const { id: _id, tagKey: _tagKey, ...request } = slide;
     const error = await captureError(
       createPantinApiClient(fetchFunction).createJoint("press", { ...request, limits: [1, 0] }),
     );
@@ -53,7 +54,13 @@ describe("PantinApiClient joints", () => {
     const pantin = {
       id: "press",
       unsavedChanges: true,
-      document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies: [], joints: [] },
+      document: {
+        schema_version: PANTIN_SCHEMA_VERSION,
+        name: "Press",
+        assemblies: [],
+        bodies: [],
+        joints: [],
+      },
     };
     const { fetchFunction, requests } = fakeFetch(jsonResponse(pantin));
     const response = await createPantinApiClient(fetchFunction).deleteJoint("press", "slide");
@@ -94,7 +101,7 @@ describe("PantinApiClient pose", () => {
 });
 
 describe("PantinApiClient updateJoint", () => {
-  const { id: _id, ...request } = slide;
+  const { id: _id, tagKey: _tagKey, ...request } = slide;
 
   it("patches the joint by id and returns the answer", async () => {
     const renamed = { ...slide, name: "Slider" };

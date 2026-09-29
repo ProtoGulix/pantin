@@ -6,6 +6,7 @@ function body(id: string) {
   return {
     id,
     name: id,
+    assembly: "axis",
     source: { fileName: "axis.step", format: "step", unit: "m", upAxis: "z", nodes: [] },
     mesh: `meshes/${id}.glb`,
   };
@@ -13,6 +14,7 @@ function body(id: string) {
 
 const slide = {
   id: "stroke",
+  tagKey: "stroke",
   name: "Stroke",
   type: "prismatic",
   parent: "rail",
@@ -26,6 +28,7 @@ function documentWith(joints: unknown[], bodyIds = ["rail", "carriage", "tool"])
   return {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Axis",
+    assemblies: [{ key: "axis", name: "Axis" }],
     bodies: bodyIds.map(body),
     joints,
   };
@@ -61,14 +64,21 @@ describe("JointSchema", () => {
   });
 
   it("parses a creation request without id", () => {
-    const { id: _id, ...request } = slide;
+    const { id: _id, tagKey: _tagKey, ...request } = slide;
     expect(CreateJointRequestSchema.parse(request)).toEqual(request);
   });
 });
 
 describe("PantinDocumentSchema joints", () => {
   it("accepts a chain of joints", () => {
-    const tool = { ...slide, id: "tool-mount", type: "fixed", parent: "carriage", child: "tool" };
+    const tool = {
+      ...slide,
+      id: "tool-mount",
+      tagKey: "tool-mount",
+      type: "fixed",
+      parent: "carriage",
+      child: "tool",
+    };
     expect(PantinDocumentSchema.safeParse(documentWith([slide, tool])).success).toBe(true);
   });
 

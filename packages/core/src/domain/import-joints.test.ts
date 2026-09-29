@@ -7,13 +7,20 @@ function body(id: string, name = id): Body {
   return {
     id,
     name,
+    assembly: "main",
     source: { fileName: "rail.step", format: "step", unit: "m", upAxis: "z", nodes: [] },
     mesh: `meshes/${id}.glb`,
   };
 }
 
 function documentWith(bodies: Body[]): PantinDocument {
-  return { schema_version: PANTIN_SCHEMA_VERSION, name: "Test", bodies, joints: [] };
+  return {
+    schema_version: PANTIN_SCHEMA_VERSION,
+    name: "Test",
+    assemblies: [{ key: "main", name: "main" }],
+    bodies,
+    joints: [],
+  };
 }
 
 describe("addStarJoints", () => {
@@ -29,6 +36,7 @@ describe("addStarJoints", () => {
     expect(joints).toEqual([
       {
         id: "carriage",
+        tagKey: "carriage",
         type: "fixed",
         name: "Carriage",
         parent: "rail",
@@ -38,6 +46,7 @@ describe("addStarJoints", () => {
       },
       {
         id: "stop",
+        tagKey: "stop",
         type: "fixed",
         name: "Stop",
         parent: "rail",

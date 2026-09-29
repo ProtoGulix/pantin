@@ -73,7 +73,11 @@ describe("prismatic joint exit test (ADR 0011)", () => {
   it("moves, clamps, saves and comes back at position 0 after a restart", async () => {
     const created = await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
     expect(created.status).toBe(201);
-    expect(JointResponseSchema.parse(created.json).joint).toEqual({ id: "axe-x", ...PRISMATIC });
+    expect(JointResponseSchema.parse(created.json).joint).toEqual({
+      id: "axe-x",
+      tagKey: "axe-x",
+      ...PRISMATIC,
+    });
 
     const middle = await setPosition(server, 0.4);
     expect(middle.status).toBe(200);
@@ -99,7 +103,7 @@ describe("prismatic joint exit test (ADR 0011)", () => {
     await sendRaw(server, "POST", "/api/pantins/axis/save");
     const restarted = await startServer();
     const joints = await sendRaw(restarted, "GET", "/api/pantins/axis/joints");
-    expect(joints.json).toEqual({ joints: [{ id: "axe-x", ...PRISMATIC }] });
+    expect(joints.json).toEqual({ joints: [{ id: "axe-x", tagKey: "axe-x", ...PRISMATIC }] });
     const pose = await sendRaw(restarted, "GET", "/api/pantins/axis/pose");
     expect(PoseResponseSchema.parse(pose.json).jointPositions).toEqual([
       { jointId: "axe-x", position: 0 },
@@ -223,6 +227,7 @@ describe("schema version 1 on disk", () => {
     expect(onDisk).toEqual({
       schema_version: PANTIN_SCHEMA_VERSION,
       name: "Legacy",
+      assemblies: [{ key: "main", name: "main" }],
       bodies: [],
       joints: [],
     });
@@ -255,7 +260,11 @@ describe("joint update", () => {
       narrower,
     );
     expect(updated.status).toBe(200);
-    expect(JointResponseSchema.parse(updated.json).joint).toEqual({ id: "axe-x", ...narrower });
+    expect(JointResponseSchema.parse(updated.json).joint).toEqual({
+      id: "axe-x",
+      tagKey: "axe-x",
+      ...narrower,
+    });
 
     const pose = await sendRaw(server, "GET", "/api/pantins/axis/pose");
     expect(PoseResponseSchema.parse(pose.json).jointPositions).toEqual([

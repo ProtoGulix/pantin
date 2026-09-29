@@ -16,21 +16,45 @@ const V1_DOCUMENT = {
   ],
 };
 
+const V4_OF_V1 = {
+  schema_version: PANTIN_SCHEMA_VERSION,
+  name: "Axis",
+  assemblies: [{ key: "main", name: "main" }],
+  bodies: V1_DOCUMENT.bodies.map((body) => ({ ...body, assembly: "main" })),
+  joints: [],
+};
+
 describe("migratePantinDocument", () => {
   it("migrates version 1 to the current version, with an empty joint list", () => {
-    expect(migratePantinDocument(V1_DOCUMENT, "axis/pantin.json")).toEqual({
-      ...V1_DOCUMENT,
-      schema_version: PANTIN_SCHEMA_VERSION,
-      joints: [],
+    expect(migratePantinDocument(V1_DOCUMENT, "axis/pantin.json")).toEqual(V4_OF_V1);
+  });
+
+  it("migrates version 2 to the current version, adding only what later versions need", () => {
+    const v2 = { ...V1_DOCUMENT, schema_version: 2, joints: [] };
+    expect(migratePantinDocument(v2, "p")).toEqual(V4_OF_V1);
+  });
+
+  it("puts every body in one assembly main, each joint keeping its id as tag key (ADR 0019)", () => {
+    const joint = { id: "stroke", name: "Stroke", type: "fixed", parent: "rail", child: "tool" };
+    const v3 = { ...V1_DOCUMENT, schema_version: 3, joints: [joint] };
+    expect(migratePantinDocument(v3, "p")).toEqual({
+      ...V4_OF_V1,
+      joints: [{ ...joint, tagKey: "stroke" }],
     });
   });
 
-  it("migrates version 2 to the current version without changing its content", () => {
-    const v2 = { ...V1_DOCUMENT, schema_version: 2, joints: [] };
-    expect(migratePantinDocument(v2, "p")).toEqual({
-      ...v2,
-      schema_version: PANTIN_SCHEMA_VERSION,
-    });
+  it("leaves malformed bodies and joints to the schema, which reports them", () => {
+    const malformed = {
+      ...V1_DOCUMENT,
+      schema_version: 3,
+      bodies: "x",
+      joints: [7, { name: "j" }],
+    };
+    const migrated = migratePantinDocument(malformed, "p");
+    expect(migrated).toMatchObject({ bodies: "x", joints: [7, { name: "j", tagKey: undefined }] });
+    expect(() => parsePantinDocument(JSON.stringify(malformed), "axis/pantin.json")).toThrow(
+      /axis\/pantin\.json/,
+    );
   });
 
   it("leaves a current document and non documents unchanged", () => {

@@ -11,6 +11,7 @@ import {
 export const railBody: Body = {
   id: "rail",
   name: "Linear rail",
+  assembly: "main",
   source: {
     fileName: "3630.glb",
     format: "glb",
@@ -28,6 +29,7 @@ export function stepBody(id: string, nodeName: string): Body {
   return {
     id,
     name: nodeName,
+    assembly: "main",
     source: {
       fileName: "3630.step",
       format: "step",
@@ -48,7 +50,13 @@ export function pantinResponse(
   return {
     id,
     unsavedChanges,
-    document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies, joints },
+    document: {
+      schema_version: PANTIN_SCHEMA_VERSION,
+      name: "Press",
+      assemblies: [{ key: "main", name: "main" }],
+      bodies,
+      joints,
+    },
   };
 }
 
@@ -68,6 +76,7 @@ const placement = {
 export const hingeJoint: Joint = {
   ...placement,
   id: "hinge",
+  tagKey: "hinge",
   name: "Hinge",
   type: "revolute",
   limits: [-Math.PI / 2, Math.PI / 2],
@@ -76,6 +85,7 @@ export const hingeJoint: Joint = {
 export const slideJoint: Joint = {
   ...placement,
   id: "slide",
+  tagKey: "slide",
   name: "Slide",
   type: "prismatic",
   limits: [0, 0.1],
@@ -84,12 +94,25 @@ export const slideJoint: Joint = {
 export const screwJoint: Joint = {
   ...placement,
   id: "screw",
+  tagKey: "screw",
   name: "Screw",
   type: "helical",
   limits: [0, 0.05],
   pitch: 0.002,
 };
 
-export const spinJoint: Joint = { ...placement, id: "spin", name: "Spin", type: "continuous" };
+export const spinJoint: Joint = {
+  ...placement,
+  id: "spin",
+  tagKey: "spin",
+  name: "Spin",
+  type: "continuous",
+};
 
-export const weldJoint: Joint = { ...placement, id: "weld", name: "Weld", type: "fixed" };
+export const weldJoint: Joint = {
+  ...placement,
+  id: "weld",
+  tagKey: "weld",
+  name: "Weld",
+  type: "fixed",
+};

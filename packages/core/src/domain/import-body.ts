@@ -81,6 +81,7 @@ export function buildImportedBody(
   format: DirectMeshFormat,
   bytes: Uint8Array,
   otherTakenIds: Iterable<string>,
+  assemblyKey: string,
 ): Body {
   const stem = fileNameStem(query.fileName);
   const takenIds = new Set([...document.bodies.map((body) => body.id), ...otherTakenIds]);
@@ -88,6 +89,7 @@ export function buildImportedBody(
   const body: Body = {
     id,
     name: toDisplayName(stem, "Body"),
+    assembly: assemblyKey,
     source: buildSource(format, query, bytes),
     mesh: `${PANTIN_MESHES_DIRECTORY_NAME}/${id}.${format}`,
   };

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JointIdSchema } from "./ids.ts";
+import { JointIdSchema, KeySchema } from "./ids.ts";
 import type { JointCoordinateUnit, JointParameter } from "./joint-types/common.ts";
 import {
   CONTINUOUS_COORDINATE_UNIT,
@@ -51,8 +51,10 @@ export const CreateJointRequestSchema = z.discriminatedUnion("type", [
 ]);
 export type CreateJointRequest = z.infer<typeof CreateJointRequestSchema>;
 
+// The core adds the id and the tag key (ADR 0019): the key names the joint's
+// tags inside its child's assembly and changes only when explicitly renamed.
 export const JointSchema = z.intersection(
-  z.object({ id: JointIdSchema }),
+  z.object({ id: JointIdSchema, tagKey: KeySchema }),
   CreateJointRequestSchema,
 );
 export type Joint = z.infer<typeof JointSchema>;

@@ -15,11 +15,24 @@ const shared: Pick<Joint, "name" | "parent" | "child" | "origin" | "axis"> = {
 };
 
 const EXAMPLES: { readonly [Type in JointType]: Extract<Joint, { type: Type }> } = {
-  fixed: { id: "fixed", type: "fixed", ...shared },
-  prismatic: { id: "prismatic", type: "prismatic", ...shared, limits: [-0.1, 0.4] },
-  revolute: { id: "revolute", type: "revolute", ...shared, limits: [-1, 2] },
-  continuous: { id: "continuous", type: "continuous", ...shared },
-  helical: { id: "helical", type: "helical", ...shared, limits: [-0.02, 0.3], pitch: -0.005 },
+  fixed: { id: "fixed", tagKey: "fixed", type: "fixed", ...shared },
+  prismatic: {
+    id: "prismatic",
+    tagKey: "prismatic",
+    type: "prismatic",
+    ...shared,
+    limits: [-0.1, 0.4],
+  },
+  revolute: { id: "revolute", tagKey: "revolute", type: "revolute", ...shared, limits: [-1, 2] },
+  continuous: { id: "continuous", tagKey: "continuous", type: "continuous", ...shared },
+  helical: {
+    id: "helical",
+    tagKey: "helical",
+    type: "helical",
+    ...shared,
+    limits: [-0.02, 0.3],
+    pitch: -0.005,
+  },
 };
 
 const SAMPLE_COORDINATES = [-7, -0.3, 0, 0.05, 1.2, 25];

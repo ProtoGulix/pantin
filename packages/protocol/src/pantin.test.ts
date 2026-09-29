@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PantinIdSchema } from "./ids.ts";
+import { KeySchema, PantinIdSchema } from "./ids.ts";
 import { PANTIN_SCHEMA_VERSION, PantinDocumentSchema } from "./pantin.ts";
 
 describe("PantinIdSchema", () => {
@@ -24,14 +24,26 @@ describe("PantinIdSchema", () => {
   });
 });
 
+describe("KeySchema (ADR 0019)", () => {
+  it.each(["verin_pince", "tige", "axis-800", "0"])("accepts %s", (key) => {
+    expect(KeySchema.safeParse(key).success).toBe(true);
+  });
+
+  it.each(["a.b", "_tige", "tige_", "Upper", "", "x".repeat(65)])("rejects %j", (key) => {
+    expect(KeySchema.safeParse(key).success).toBe(false);
+  });
+});
+
 describe("PantinDocumentSchema", () => {
   const validDocument = {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Linear axis",
+    assemblies: [{ key: "axis", name: "Axis 800" }],
     bodies: [
       {
         id: "rail",
         name: "Rail",
+        assembly: "axis",
         source: {
           fileName: "axis.glb",
           format: "glb",

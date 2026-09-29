@@ -14,6 +14,7 @@ function body(id: string, unit: Body["source"]["unit"] = "mm"): Body {
   return {
     id,
     name: id,
+    assembly: "main",
     source: { fileName: `${id}.stl`, format: "stl", unit, upAxis: "z", nodes: [] },
     mesh: `meshes/${id}.stl`,
   };

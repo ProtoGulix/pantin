@@ -8,6 +8,7 @@ function body(id: string) {
   return {
     id,
     name: id,
+    assembly: "main",
     source: {
       fileName: `${id}.stl`,
       format: "stl" as const,
@@ -20,11 +21,18 @@ function body(id: string) {
 }
 
 function documentWith(joints: Joint[], bodyIds = ["base", "arm", "slider"]): PantinDocument {
-  return { schema_version: PANTIN_SCHEMA_VERSION, name: "Test", bodies: bodyIds.map(body), joints };
+  return {
+    schema_version: PANTIN_SCHEMA_VERSION,
+    name: "Test",
+    assemblies: [{ key: "main", name: "main" }],
+    bodies: bodyIds.map(body),
+    joints,
+  };
 }
 
 const prismatic: Joint = {
   id: "slide",
+  tagKey: "slide",
   type: "prismatic",
   name: "Slide",
   parent: "base",
@@ -36,6 +44,7 @@ const prismatic: Joint = {
 
 const revolute: Joint = {
   id: "hinge",
+  tagKey: "hinge",
   type: "revolute",
   name: "Hinge",
   parent: "base",

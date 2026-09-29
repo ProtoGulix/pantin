@@ -17,10 +17,28 @@ function migrateV2ToV3(document: JsonObject): JsonObject {
   return { ...document, schema_version: 3 };
 }
 
+// Version 4 adds assemblies and tag keys (ADR 0019 point 12): every body goes
+// into one assembly "main", and each joint's tag key is its id, unique per
+// Pantin hence per assembly. Grouping by import is not reliable (ADR 0019).
+function migrateV3ToV4(document: JsonObject): JsonObject {
+  const withField = (items: unknown, field: (item: JsonObject) => JsonObject) =>
+    Array.isArray(items)
+      ? items.map((item: unknown) => (isJsonObject(item) ? field(item) : item))
+      : items;
+  return {
+    ...document,
+    schema_version: 4,
+    assemblies: [{ key: "main", name: "main" }],
+    bodies: withField(document.bodies, (body) => ({ ...body, assembly: "main" })),
+    joints: withField(document.joints, (joint) => ({ ...joint, tagKey: joint.id })),
+  };
+}
+
 // Key: the version a step starts from.
 const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject> = new Map([
   [1, migrateV1ToV2],
   [2, migrateV2ToV3],
+  [3, migrateV3ToV4],
 ]);
 
 function isJsonObject(value: unknown): value is JsonObject {

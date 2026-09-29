@@ -7,7 +7,13 @@ import { type FetchFunction, PantinApiError } from "./api-transport.ts";
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
-  document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies: [], joints: [] },
+  document: {
+    schema_version: PANTIN_SCHEMA_VERSION,
+    name: "Press",
+    assemblies: [],
+    bodies: [],
+    joints: [],
+  },
 };
 
 describe("PantinApiClient responses", () => {
@@ -71,6 +77,7 @@ describe("PantinApiClient requests", () => {
 const STL_BODY = {
   id: "rail",
   name: "rail",
+  assembly: "rail",
   source: { fileName: "rail.stl", format: "stl", unit: "mm", upAxis: "z", nodes: [] },
   mesh: "meshes/rail.stl",
 };
@@ -80,6 +87,7 @@ describe("PantinApiClient import", () => {
     const component = (id: string) => ({
       id,
       name: id,
+      assembly: "rail-part",
       source: { fileName: "rail part.step", format: "step", unit: "m", upAxis: "z", nodes: [] },
       mesh: `meshes/${id}.glb`,
     });

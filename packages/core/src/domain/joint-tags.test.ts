@@ -6,6 +6,7 @@ import { applyQueuedSetpoints } from "./simulation-step.ts";
 
 const stroke: Joint = {
   id: "stroke",
+  tagKey: "stroke",
   name: "Stroke",
   type: "prismatic",
   parent: "rail",
@@ -17,6 +18,7 @@ const stroke: Joint = {
 
 const clamp: Joint = {
   id: "clamp",
+  tagKey: "clamp",
   name: "Clamp",
   type: "fixed",
   parent: "carriage",
@@ -29,6 +31,7 @@ const clamp: Joint = {
 const document: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Axis",
+  assemblies: [],
   bodies: [],
   joints: [stroke, clamp],
 };

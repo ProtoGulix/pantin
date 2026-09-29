@@ -10,6 +10,7 @@ function body(id: string) {
   return {
     id,
     name: id,
+    assembly: "main",
     source: {
       fileName: `${id}.stl`,
       format: "stl" as const,
@@ -24,6 +25,7 @@ function body(id: string) {
 const EMPTY: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Test",
+  assemblies: [{ key: "main", name: "main" }],
   bodies: ["a", "b", "c"].map(body),
   joints: [],
 };
@@ -78,14 +80,14 @@ describe("updateJointInDocument", () => {
   it("changes every field but the id, and keeps the joint's place", () => {
     const moved = { ...link("a", "b", "Renamed"), origin: [0.1, 0, 0] as [number, number, number] };
     const { document, joint } = updateJointInDocument(chain, "link", moved);
-    expect(joint).toEqual({ id: "link", ...moved });
+    expect(joint).toEqual({ id: "link", tagKey: "link", ...moved });
     expect(document.joints.map((candidate) => candidate.id)).toEqual(["link", "link-2"]);
   });
 
   it("changes the type, keeping the id and the place in the list (ADR 0018)", () => {
     const slider: CreateJointRequest = { ...link("a", "b"), type: "prismatic", limits: [0, 0.1] };
     const { document, joint } = updateJointInDocument(chain, "link", slider);
-    expect(joint).toEqual({ id: "link", ...slider });
+    expect(joint).toEqual({ id: "link", tagKey: "link", ...slider });
     expect(document.joints.map((candidate) => candidate.id)).toEqual(["link", "link-2"]);
   });
 

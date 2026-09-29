@@ -6,6 +6,7 @@ import { REVOLUTE_BEHAVIOUR } from "./revolute.ts";
 
 const hinge: Extract<Joint, { type: "revolute" }> = {
   id: "hinge",
+  tagKey: "hinge",
   type: "revolute",
   name: "Hinge",
   parent: "base",

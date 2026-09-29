@@ -5,6 +5,7 @@ import { PRISMATIC_BEHAVIOUR } from "./prismatic.ts";
 
 const slide: Extract<Joint, { type: "prismatic" }> = {
   id: "slide",
+  tagKey: "slide",
   type: "prismatic",
   name: "Slide",
   parent: "base",

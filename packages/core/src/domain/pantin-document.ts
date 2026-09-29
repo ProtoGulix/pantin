@@ -1,4 +1,5 @@
 import {
+  type Assembly,
   type Body,
   type Joint,
   PANTIN_SCHEMA_VERSION,
@@ -12,11 +13,22 @@ import { formatIssues } from "./validation.ts";
 // Pure edits of a Pantin document: each returns a new document.
 
 export function createPantinDocument(name: string): PantinDocument {
-  return { schema_version: PANTIN_SCHEMA_VERSION, name, bodies: [], joints: [] };
+  return { schema_version: PANTIN_SCHEMA_VERSION, name, assemblies: [], bodies: [], joints: [] };
 }
 
 export function renamePantinDocument(document: PantinDocument, name: string): PantinDocument {
   return { ...document, name };
+}
+
+export function addAssembly(document: PantinDocument, assembly: Assembly): PantinDocument {
+  return { ...document, assemblies: [...document.assemblies, assembly] };
+}
+
+export function removeAssembly(document: PantinDocument, key: string): PantinDocument {
+  return {
+    ...document,
+    assemblies: document.assemblies.filter((assembly) => assembly.key !== key),
+  };
 }
 
 export function addBodies(document: PantinDocument, bodies: readonly Body[]): PantinDocument {

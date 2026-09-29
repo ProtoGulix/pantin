@@ -52,7 +52,7 @@ function storeFailingOnSecondWrite(): PantinStore {
 }
 
 describe("importBodies rollback", () => {
-  it("removes the joints, the bodies and the mesh already written when a later write fails", async () => {
+  it("removes the joints, the bodies, the assembly and the mesh already written when a later write fails", async () => {
     const service = createPantinService(storeFailingOnSecondWrite(), twoComponents);
     await service.createPantin("Axis");
     await expect(
@@ -61,6 +61,7 @@ describe("importBodies rollback", () => {
     const pantin = await service.getPantin("axis");
     expect(pantin.document.joints).toEqual([]);
     expect(pantin.document.bodies).toEqual([]);
+    expect(pantin.document.assemblies).toEqual([]);
     expect(pantin.unsavedChanges).toBe(false);
     expect(await readdir(join(pantinsDirectory, "axis", "meshes"))).toEqual([]);
   });

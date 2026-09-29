@@ -1,22 +1,31 @@
-import type { Body, ImportBodyQuery, Joint, PantinId } from "@pantin/protocol";
+import type { Assembly, Body, ImportBodyQuery, Joint, PantinId } from "@pantin/protocol";
 import { stepConverterUnavailable } from "../converter/step-converter.ts";
 import { fileNameStem } from "../domain/ids.ts";
 import {
   buildImportedBody,
   detectImportFormat,
+  toDisplayName,
   unsupportedFileError,
 } from "../domain/import-body.ts";
+import { newAssembly } from "../domain/assemblies.ts";
 import { addStarJoints } from "../domain/import-joints.ts";
-import { addBodies, removeBodies, removeJoints } from "../domain/pantin-document.ts";
-import { buildStepBodies } from "../domain/step-bodies.ts";
+import {
+  addAssembly,
+  addBodies,
+  removeAssembly,
+  removeBodies,
+  removeJoints,
+} from "../domain/pantin-document.ts";
+import { buildStepBodies, stepAssemblyName } from "../domain/step-bodies.ts";
 import { forgetJointRuntimeState } from "./joint-operations.ts";
 import { releaseMesh } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
 // Import of one uploaded file: one body for GLB and STL, one body per
-// assembly component for STEP, joined by fixed joints (ADR 0017). All or
-// nothing: on any failure, the joints then the bodies of this import leave
-// the document and their mesh files are deleted.
+// assembly component for STEP, joined by fixed joints (ADR 0017), all in one
+// new assembly (ADR 0019). All or nothing: on any failure, the joints, the
+// bodies then the assembly of this import leave the document and their mesh
+// files are deleted.
 
 type PlannedMesh = { body: Body; bytes: Uint8Array };
 
@@ -29,7 +38,7 @@ async function takenMeshStems(context: ServiceContext, pantinId: PantinId): Prom
 async function writeAllOrNothing(
   context: ServiceContext,
   pantinId: PantinId,
-  { openPantin, planned, joints }: Reservation,
+  { openPantin, assembly, planned, joints }: Reservation,
 ): Promise<ImportedBodies> {
   const written: string[] = [];
   try {
@@ -47,6 +56,7 @@ async function writeAllOrNothing(
     }
     const plannedIds = new Set(planned.map(({ body }) => body.id));
     openPantin.document = removeBodies(openPantin.document, plannedIds);
+    openPantin.document = removeAssembly(openPantin.document, assembly.key);
     for (const meshPath of written) {
       await releaseMesh(context, pantinId, openPantin, meshPath);
     }
@@ -57,19 +67,21 @@ async function writeAllOrNothing(
 
 type Reservation = {
   openPantin: OpenPantin;
+  assembly: Assembly;
   planned: PlannedMesh[];
   joints: Joint[];
   settle: () => void;
 };
 
-// The ids are reserved synchronously (no await between building the bodies
-// and adding them with their joints), so a concurrent import or joint
-// creation cannot pick the same ones. The
-// import is registered in the same step, so a save waits for its meshes;
-// `settle` must be called once the meshes are written or rolled back.
-function reserve(openPantin: OpenPantin, planned: PlannedMesh[]): Reservation {
+// The ids and keys are reserved synchronously (no await between building the
+// assembly and the bodies and adding them with their joints), so a concurrent
+// import or joint creation cannot pick the same ones. The import is
+// registered in the same step, so a save waits for its meshes; `settle` must
+// be called once the meshes are written or rolled back.
+function reserve(openPantin: OpenPantin, assembly: Assembly, planned: PlannedMesh[]): Reservation {
   const bodies = planned.map(({ body }) => body);
-  const { document, joints } = addStarJoints(addBodies(openPantin.document, bodies), bodies);
+  const withBodies = addBodies(addAssembly(openPantin.document, assembly), bodies);
+  const { document, joints } = addStarJoints(withBodies, bodies);
   openPantin.document = document;
   let resolveImport = (): void => undefined;
   const inFlight = new Promise<void>((resolve) => {
@@ -80,7 +92,7 @@ function reserve(openPantin: OpenPantin, planned: PlannedMesh[]): Reservation {
     openPantin.inFlightImports.delete(inFlight);
     resolveImport();
   };
-  return { openPantin, planned, joints, settle };
+  return { openPantin, assembly, planned, joints, settle };
 }
 
 async function planStepImport(
@@ -96,10 +108,12 @@ async function planStepImport(
   const meshes = await context.stepConverter(bytes);
   const openPantin = await loadPantin(context, pantinId);
   const stems = await takenMeshStems(context, pantinId);
-  const planned = buildStepBodies(openPantin.document, query, meshes, stems).map(
+  const { document } = openPantin;
+  const assembly = newAssembly(document, stepAssemblyName(query, meshes));
+  const planned = buildStepBodies(document, query, meshes, stems, assembly.key).map(
     ({ body, component }) => ({ body, bytes: component.glbBytes }),
   );
-  return reserve(openPantin, planned);
+  return reserve(openPantin, assembly, planned);
 }
 
 async function planDirectImport(
@@ -111,9 +125,10 @@ async function planDirectImport(
 ): Promise<Reservation> {
   const openPantin = await loadPantin(context, pantinId);
   const stems = await takenMeshStems(context, pantinId);
-  const body = buildImportedBody(openPantin.document, query, format, bytes, stems);
-  const planned = [{ body, bytes }];
-  return reserve(openPantin, planned);
+  const { document } = openPantin;
+  const assembly = newAssembly(document, toDisplayName(fileNameStem(query.fileName), "Assembly"));
+  const body = buildImportedBody(document, query, format, bytes, stems, assembly.key);
+  return reserve(openPantin, assembly, [{ body, bytes }]);
 }
 
 export async function importBodies(

@@ -72,9 +72,10 @@ describe("DELETE a body", () => {
     const rail = await importRail();
     const response = await deleteBody(rail.id);
     expect(response.status).toBe(200);
+    // The import's assembly stays, now empty (ADR 0019 point 2): still unsaved.
     expect(PantinResponseSchema.parse(response.json)).toMatchObject({
-      unsavedChanges: false,
-      document: { bodies: [] },
+      unsavedChanges: true,
+      document: { assemblies: [{ key: rail.assembly }], bodies: [] },
     });
     expect(await meshExists(rail.mesh)).toBe(false);
   });

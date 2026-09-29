@@ -83,6 +83,7 @@ describe("STEP import success", () => {
     expect(bodies[0]).toEqual({
       id: "carriage-3630-00",
       name: "Carriage 3630.00",
+      assembly: "axis-800",
       source: {
         fileName: "axis 800.stp",
         format: "step",
@@ -96,6 +97,7 @@ describe("STEP import success", () => {
     expect(joints).toEqual([
       {
         id: "carriage-3630-00",
+        tagKey: "carriage-3630-00",
         type: "fixed",
         name: "Carriage 3630.00",
         parent: "carriage-3630-00",

@@ -56,6 +56,18 @@ function validatedJoint(document: PantinDocument, id: string, context: string) {
   return { document: updated, joint: stored };
 }
 
+// Tag keys already used by the joints whose child body is in the same
+// assembly as `childId` (ADR 0019): a tag key is unique there only.
+function tagKeysNextTo(document: PantinDocument, childId: string): Set<string> {
+  const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
+  const assembly = assemblyOf.get(childId);
+  return new Set(
+    document.joints
+      .filter((joint) => assemblyOf.get(joint.child) === assembly)
+      .map((joint) => joint.tagKey),
+  );
+}
+
 export function addJointToDocument(
   document: PantinDocument,
   request: CreateJointRequest,
@@ -65,27 +77,38 @@ export function addJointToDocument(
     throw new ApiError("invalid_request", problem);
   }
   const takenIds = new Set(document.joints.map((joint) => joint.id));
-  const id = makeUniqueId(slugifyDisplayName(request.name, "joint"), takenIds);
-  const joint: Joint = { id, ...request };
+  const baseKey = slugifyDisplayName(request.name, "joint");
+  const id = makeUniqueId(baseKey, takenIds);
+  const tagKey = makeUniqueId(baseKey, tagKeysNextTo(document, request.child));
+  const joint: Joint = { id, tagKey, ...request };
   return validatedJoint(addJoint(document, joint), id, "The Pantin with the new joint");
 }
 
-// Every field but the id may change, the type included (ADR 0018); the id,
-// hence the tag names, stays.
+// Every field of the request may change, the type included (ADR 0018); the
+// id and the tag key, hence the tag names, stay.
 export function updateJointInDocument(
   document: PantinDocument,
   jointId: string,
   request: CreateJointRequest,
 ): { document: PantinDocument; joint: Joint } {
-  if (!document.joints.some((joint) => joint.id === jointId)) {
+  const existing = document.joints.find((joint) => joint.id === jointId);
+  if (existing === undefined) {
     throw new ApiError("not_found", `This Pantin has no joint "${jointId}".`);
   }
   // Checked against the other joints only: the joint may keep its own link.
-  const problem = linkProblem(removeJoint(document, jointId), request);
+  const others = removeJoint(document, jointId);
+  const problem = linkProblem(others, request);
   if (problem !== undefined) {
     throw new ApiError("invalid_request", problem);
   }
-  const joint: Joint = { id: jointId, ...request };
+  // A new child in another assembly may already use this tag key there.
+  if (tagKeysNextTo(others, request.child).has(existing.tagKey)) {
+    throw new ApiError(
+      "invalid_request",
+      `Tag key "${existing.tagKey}" of joint "${jointId}" is already used in the assembly of body "${request.child}". Rename one of the tag keys first.`,
+    );
+  }
+  const joint: Joint = { id: jointId, tagKey: existing.tagKey, ...request };
   return validatedJoint(
     replaceJoint(document, joint),
     jointId,

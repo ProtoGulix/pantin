@@ -6,6 +6,7 @@ import { CONTINUOUS_BEHAVIOUR } from "./continuous.ts";
 
 const spin: Extract<Joint, { type: "continuous" }> = {
   id: "spin",
+  tagKey: "spin",
   type: "continuous",
   name: "Spin",
   parent: "base",

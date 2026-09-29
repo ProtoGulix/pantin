@@ -4,7 +4,7 @@ import { hingeJoint, railBody, stepBody, weldJoint } from "../test-fixtures.ts";
 import { buildJointEditRequest, jointFormFor, jointFormSubmission } from "./joint-edit-form.ts";
 import { initialJointForm, withJointFormType, withJointFormValue } from "./joint-form.ts";
 
-function withoutId({ id: _id, ...request }: Joint) {
+function withoutId({ id: _id, tagKey: _tagKey, ...request }: Joint) {
   return request;
 }
 
@@ -36,6 +36,7 @@ describe("buildJointEditRequest", () => {
   it("sends back the stored values of the fields left as shown, not their rounded text", () => {
     const precise: Joint = {
       id: "screw",
+      tagKey: "screw",
       name: "Screw",
       type: "helical",
       parent: "rail",

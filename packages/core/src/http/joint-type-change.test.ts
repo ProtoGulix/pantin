@@ -53,7 +53,11 @@ describe("joint type change", () => {
     await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", FIXED);
     const response = await patchJoint(PRISMATIC);
     expect(response.status).toBe(200);
-    expect(JointResponseSchema.parse(response.json).joint).toEqual({ id: "axe-x", ...PRISMATIC });
+    expect(JointResponseSchema.parse(response.json).joint).toEqual({
+      id: "axe-x",
+      tagKey: "axe-x",
+      ...PRISMATIC,
+    });
     const moved = await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/axe-x/position", {
       position: 0.3,
     });
@@ -79,7 +83,10 @@ describe("joint type change", () => {
       ],
     });
   });
+});
 
+// ADR 0020: a position in another unit means nothing any more.
+describe("joint type change across units", () => {
   it("starts over from 0 when the unit changes, slider to pivot (ADR 0020)", async () => {
     await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
     await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/axe-x/position", {

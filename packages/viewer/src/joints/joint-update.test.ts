@@ -11,8 +11,8 @@ function requestOf(joint: Joint, fieldId: string, text: string) {
   return built.request;
 }
 
-const { id: _hingeId, ...hingeRequest } = hingeJoint;
-const { id: _screwId, ...screwRequest } = screwJoint;
+const { id: _hingeId, tagKey: _hingeKey, ...hingeRequest } = hingeJoint;
+const { id: _screwId, tagKey: _screwKey, ...screwRequest } = screwJoint;
 
 describe("buildJointUpdate", () => {
   it("picks the fixtures by declared unit and parameter, not by name", () => {

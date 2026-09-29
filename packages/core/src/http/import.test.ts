@@ -70,6 +70,7 @@ describe("body import", () => {
     expect(body).toEqual({
       id: "bracket",
       name: "Bracket",
+      assembly: "bracket",
       source: { fileName: "Bracket.stl", format: "stl", unit: "mm", upAxis: "z", nodes: [] },
       mesh: "meshes/bracket.stl",
     });
