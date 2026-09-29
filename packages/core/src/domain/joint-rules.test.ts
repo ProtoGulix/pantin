@@ -4,7 +4,7 @@ import {
   type PantinDocument,
 } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { addJointToDocument } from "./joint-rules.ts";
+import { addJointToDocument, updateJointInDocument } from "./joint-rules.ts";
 
 function body(id: string) {
   return {
@@ -68,5 +68,41 @@ describe("addJointToDocument", () => {
     const before = structuredClone(EMPTY);
     addJointToDocument(EMPTY, link("a", "b"));
     expect(EMPTY).toEqual(before);
+  });
+});
+
+describe("updateJointInDocument", () => {
+  // a -> b (id "link"), b -> c (id "link-2")
+  const chain = withLinks(["a", "b"], ["b", "c"]);
+
+  it("changes every field but the id, and keeps the joint's place", () => {
+    const moved = { ...link("a", "b", "Renamed"), origin: [0.1, 0, 0] as [number, number, number] };
+    const { document, joint } = updateJointInDocument(chain, "link", moved);
+    expect(joint).toEqual({ id: "link", ...moved });
+    expect(document.joints.map((candidate) => candidate.id)).toEqual(["link", "link-2"]);
+  });
+
+  it("lets a joint keep its own child without counting it as a second parent", () => {
+    expect(() => updateJointInDocument(chain, "link", link("a", "b"))).not.toThrow();
+  });
+
+  it.each<[string, string, CreateJointRequest, RegExp]>([
+    ["an unknown joint", "ghost", link("a", "b"), /no joint "ghost"/],
+    [
+      "a type change",
+      "link",
+      { ...link("a", "b"), type: "continuous" },
+      /cannot become continuous/,
+    ],
+    ["a cycle", "link", link("c", "b"), /would make a cycle/],
+    ["a child that already has a parent", "link", link("a", "c"), /already has the parent joint/],
+  ])("refuses %s", (_label, jointId, request, message) => {
+    expect(() => updateJointInDocument(chain, jointId, request)).toThrow(message);
+  });
+
+  it("does not modify the document it is given", () => {
+    const before = structuredClone(chain);
+    updateJointInDocument(chain, "link", link("a", "b", "Renamed"));
+    expect(chain).toEqual(before);
   });
 });

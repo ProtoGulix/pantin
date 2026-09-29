@@ -240,3 +240,49 @@ describe("schema version 1 on disk", () => {
     expect(response.body).toContain("newer than this core supports");
   });
 });
+
+describe("joint update", () => {
+  it("changes the fields but not the id, clamps the position to the new limits, and is unsaved", async () => {
+    await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
+    await sendRaw(server, "POST", "/api/pantins/axis/save");
+    await setPosition(server, 0.6);
+
+    const narrower = { ...PRISMATIC, name: "Axe X court", limits: [0, 0.2] };
+    const updated = await sendJsonRequest(
+      server,
+      "PATCH",
+      "/api/pantins/axis/joints/axe-x",
+      narrower,
+    );
+    expect(updated.status).toBe(200);
+    expect(JointResponseSchema.parse(updated.json).joint).toEqual({ id: "axe-x", ...narrower });
+
+    const pose = await sendRaw(server, "GET", "/api/pantins/axis/pose");
+    expect(PoseResponseSchema.parse(pose.json).jointPositions).toEqual([
+      { jointId: "axe-x", position: 0.2 },
+    ]);
+    const pantin = await sendRaw(server, "GET", "/api/pantins/axis");
+    expect(pantin.json).toMatchObject({ unsavedChanges: true });
+  });
+
+  it("refuses a type change with an actionable message", async () => {
+    await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
+    const { limits: _limits, ...withoutLimits } = PRISMATIC;
+    const response = await sendJsonRequest(server, "PATCH", "/api/pantins/axis/joints/axe-x", {
+      ...withoutLimits,
+      type: "continuous",
+    });
+    expect(response.status).toBe(400);
+    expect(response.body).toContain("Delete it and create a new one");
+  });
+
+  it("answers 404 for an unknown joint", async () => {
+    const response = await sendJsonRequest(
+      server,
+      "PATCH",
+      "/api/pantins/axis/joints/ghost",
+      PRISMATIC,
+    );
+    expect(response.status).toBe(404);
+  });
+});

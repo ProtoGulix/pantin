@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { BodyIdSchema, DisplayNameSchema, JointIdSchema, PantinIdSchema } from "./ids.ts";
-import { JointSchema, Vector3Schema } from "./joint.ts";
+import {
+  type CreateJointRequest,
+  CreateJointRequestSchema,
+  JointSchema,
+  Vector3Schema,
+} from "./joint.ts";
 import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from "./pantin.ts";
 
 // REST contract between the core and its clients (viewer, CLI, tests).
@@ -26,6 +31,9 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //   GET    /api/pantins/:pantinId/meshes/:fileName    -> raw mesh bytes
 //   GET    /api/pantins/:pantinId/joints              -> JointListResponse
 //   POST   /api/pantins/:pantinId/joints  CreateJointRequest -> 201 JointResponse
+//   PATCH  /api/pantins/:pantinId/joints/:jointId  UpdateJointRequest -> JointResponse
+//          (replaces every field but the id; the type cannot change: delete
+//          the joint and create a new one instead)
 //   DELETE /api/pantins/:pantinId/joints/:jointId     -> PantinResponse
 //   GET    /api/pantins/:pantinId/pose                -> PoseResponse
 //   PUT    /api/pantins/:pantinId/joints/:jointId/position
@@ -115,6 +123,11 @@ export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>;
 
 export const JointResponseSchema = z.object({ joint: JointSchema });
 export type JointResponse = z.infer<typeof JointResponseSchema>;
+
+// The whole joint without its id, as for creation: the id, hence the names of
+// its tags, stays the same even when the joint is renamed.
+export const UpdateJointRequestSchema = CreateJointRequestSchema;
+export type UpdateJointRequest = CreateJointRequest;
 
 export const JointListResponseSchema = z.object({ joints: z.array(JointSchema) });
 export type JointListResponse = z.infer<typeof JointListResponseSchema>;

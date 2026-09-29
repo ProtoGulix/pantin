@@ -6,11 +6,12 @@ import {
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { makeUniqueId, slugifyDisplayName } from "./ids.ts";
-import { addJoint } from "./pantin-document.ts";
+import { addJoint, removeJoint, replaceJoint } from "./pantin-document.ts";
 import { parseWithSchema } from "./validation.ts";
 
-// Adding a joint to a document (ADR 0011 point 3): the joints must stay a
-// forest of known bodies. Pure: returns the new document and the new joint.
+// Adding or changing a joint in a document (ADR 0011 point 3): the joints
+// must stay a forest of known bodies. Pure: returns the new document and the
+// stored joint.
 
 function isAncestor(document: PantinDocument, candidate: string, bodyId: string): boolean {
   const parentOf = new Map(document.joints.map((joint) => [joint.child, joint.parent]));
@@ -45,6 +46,16 @@ function linkProblem(document: PantinDocument, request: CreateJointRequest): str
   return undefined;
 }
 
+function validatedJoint(document: PantinDocument, id: string, context: string) {
+  const updated = parseWithSchema(PantinDocumentSchema, document, context);
+  const stored = updated.joints.find((candidate) => candidate.id === id);
+  if (stored === undefined) {
+    throw new Error(`Joint "${id}" vanished while validating the document.`);
+  }
+  // The validated copy, e.g. with its name trimmed.
+  return { document: updated, joint: stored };
+}
+
 export function addJointToDocument(
   document: PantinDocument,
   request: CreateJointRequest,
@@ -56,12 +67,34 @@ export function addJointToDocument(
   const takenIds = new Set(document.joints.map((joint) => joint.id));
   const id = makeUniqueId(slugifyDisplayName(request.name, "joint"), takenIds);
   const joint: Joint = { id, ...request };
-  const updated = parseWithSchema(
-    PantinDocumentSchema,
-    addJoint(document, joint),
-    "The Pantin with the new joint",
+  return validatedJoint(addJoint(document, joint), id, "The Pantin with the new joint");
+}
+
+// Every field but the id may change; the id, hence the tag names, stays.
+export function updateJointInDocument(
+  document: PantinDocument,
+  jointId: string,
+  request: CreateJointRequest,
+): { document: PantinDocument; joint: Joint } {
+  const existing = document.joints.find((joint) => joint.id === jointId);
+  if (existing === undefined) {
+    throw new ApiError("not_found", `This Pantin has no joint "${jointId}".`);
+  }
+  if (request.type !== existing.type) {
+    throw new ApiError(
+      "invalid_request",
+      `Joint "${jointId}" is ${existing.type} and cannot become ${request.type}. Delete it and create a new one.`,
+    );
+  }
+  // Checked against the other joints only: the joint may keep its own link.
+  const problem = linkProblem(removeJoint(document, jointId), request);
+  if (problem !== undefined) {
+    throw new ApiError("invalid_request", problem);
+  }
+  const joint: Joint = { id: jointId, ...request };
+  return validatedJoint(
+    replaceJoint(document, joint),
+    jointId,
+    "The Pantin with the changed joint",
   );
-  // The validated copy, e.g. with its name trimmed.
-  const stored = updated.joints.find((candidate) => candidate.id === id) ?? joint;
-  return { document: updated, joint: stored };
 }

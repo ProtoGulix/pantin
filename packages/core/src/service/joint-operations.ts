@@ -6,7 +6,7 @@ import type {
   PoseResponse,
   PoseSnapshot,
 } from "@pantin/protocol";
-import { addJointToDocument } from "../domain/joint-rules.ts";
+import { addJointToDocument, updateJointInDocument } from "../domain/joint-rules.ts";
 import { clampJointPosition } from "../domain/joint-types/registry.ts";
 import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
 import { removeJoint } from "../domain/pantin-document.ts";
@@ -61,6 +61,24 @@ export async function createJoint(
   await waitForImports(openPantin);
   const { document, joint } = addJointToDocument(openPantin.document, request);
   openPantin.document = document;
+  return joint;
+}
+
+export async function updateJoint(
+  context: ServiceContext,
+  pantinId: PantinId,
+  jointId: string,
+  request: CreateJointRequest,
+): Promise<Joint> {
+  const openPantin = await loadPantin(context, pantinId);
+  await waitForImports(openPantin);
+  const { document, joint } = updateJointInDocument(openPantin.document, jointId, request);
+  openPantin.document = document;
+  // New limits may exclude the current position: bring it back inside.
+  const position = openPantin.jointPositions.get(jointId);
+  if (position !== undefined) {
+    openPantin.jointPositions.set(jointId, clampJointPosition(joint, position));
+  }
   return joint;
 }
 

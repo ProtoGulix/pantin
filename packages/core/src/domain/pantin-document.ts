@@ -34,6 +34,14 @@ export function addJoint(document: PantinDocument, joint: Joint): PantinDocument
   return { ...document, joints: [...document.joints, joint] };
 }
 
+// Keeps the joint at its place in the list, so pantin.json diffs stay small.
+export function replaceJoint(document: PantinDocument, joint: Joint): PantinDocument {
+  return {
+    ...document,
+    joints: document.joints.map((existing) => (existing.id === joint.id ? joint : existing)),
+  };
+}
+
 export function removeJoint(document: PantinDocument, jointId: string): PantinDocument {
   return { ...document, joints: document.joints.filter((joint) => joint.id !== jointId) };
 }

@@ -1,4 +1,8 @@
-import { CreateJointRequestSchema, SetJointPositionRequestSchema } from "@pantin/protocol";
+import {
+  CreateJointRequestSchema,
+  SetJointPositionRequestSchema,
+  UpdateJointRequestSchema,
+} from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { readJsonBody } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
@@ -23,6 +27,18 @@ export const JOINT_ROUTES: readonly Route[] = [
       const request = parseWithSchema(CreateJointRequestSchema, body, "The joint");
       const joint = await context.service.createJoint(pantinId, request);
       sendJson(context.response, 201, { joint });
+    },
+  },
+  {
+    method: "PATCH",
+    pattern: ["pantins", ":pantinId", "joints", ":jointId"],
+    handle: async (context) => {
+      const pantinId = pantinIdOf(context);
+      const jointId = jointIdOf(context);
+      const body = await readJsonBody(context.request);
+      const request = parseWithSchema(UpdateJointRequestSchema, body, "The joint");
+      const joint = await context.service.updateJoint(pantinId, jointId, request);
+      sendJson(context.response, 200, { joint });
     },
   },
   {

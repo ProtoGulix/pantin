@@ -25,6 +25,7 @@ import {
   listJoints,
   setJointPosition,
   toPoseSnapshot,
+  updateJoint,
 } from "./joint-operations.ts";
 import { deleteBody, discardPantin, savePantin } from "./mesh-lifecycle.ts";
 import {
@@ -113,6 +114,8 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     listJoints: (pantinId: PantinId) => listJoints(context, pantinId),
     createJoint: (pantinId: PantinId, request: CreateJointRequest) =>
       createJoint(context, pantinId, request),
+    updateJoint: (pantinId: PantinId, jointId: string, request: CreateJointRequest) =>
+      updateJoint(context, pantinId, jointId, request),
     deleteJoint: (pantinId: PantinId, jointId: string) => deleteJoint(context, pantinId, jointId),
     getPose: (pantinId: PantinId) => getPose(context, pantinId),
     getPoseSnapshot: (pantinId: PantinId) => getPoseSnapshot(context, pantinId),
