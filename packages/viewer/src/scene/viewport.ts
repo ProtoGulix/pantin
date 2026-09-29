@@ -2,25 +2,17 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js";
 import "@babylonjs/core/Culling/ray.js";
 import { Engine } from "@babylonjs/core/Engines/engine.js";
 import { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
-import { Color3 } from "@babylonjs/core/Maths/math.color.js";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
-import { babylonToCorePosition, coreDisplacementToBabylon, type Vector3Tuple } from "../frames.ts";
+import { babylonToCorePosition, type Vector3Tuple } from "../frames.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
+import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
-import { createJointArrow, type JointArrow } from "./joint-arrow.ts";
-import {
-  type BodyHighlight,
-  bodyHighlight,
-  bodyRenderKey,
-  frameBounds,
-  placeJointArrow,
-  planSceneSync,
-} from "./scene-plan.ts";
+import { bodyRenderKey, frameBounds, planSceneSync } from "./scene-plan.ts";
 import { createStage, type Stage } from "./stage.ts";
 
 // The Babylon canvas: shows the bodies it is given and reports clicks. It
@@ -47,14 +39,6 @@ export interface Viewport {
   showJointPreview(preview: JointPreview | null): void;
 }
 
-// Parent and child match the swatches of the joint form (--joint-parent and
-// --joint-child in base.css); the child is the body that moves.
-const SELECTION_COLOR = Color3.FromHexString("#f0a030");
-const HIGHLIGHT_COLORS: Readonly<Record<BodyHighlight, Color3>> = {
-  selected: SELECTION_COLOR,
-  parent: Color3.FromHexString("#a371f7"),
-  child: SELECTION_COLOR,
-};
 const RIGHT_MOUSE_BUTTON = 2;
 
 interface ViewportContext {
@@ -65,10 +49,8 @@ interface ViewportContext {
   wantedKeys: Map<string, string>;
   loadedBodies: Map<string, LoadedBody>;
   bodyIdByMesh: Map<AbstractMesh, string>;
-  selectedBodyId: string | null;
   poses: PoseInterpolator;
-  preview: JointPreview | null;
-  arrow: JointArrow;
+  highlights: BodyHighlights;
 }
 
 function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
@@ -110,30 +92,6 @@ function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null
   if (bodyIds === null) {
     context.stage.fitToBodies(babylonToCorePosition(framing.target), framing.radius / 2);
   }
-}
-
-function applySelection(context: ViewportContext): void {
-  for (const [bodyId, loaded] of context.loadedBodies) {
-    const highlight = bodyHighlight(bodyId, context.selectedBodyId, context.preview);
-    for (const mesh of loaded.meshes) {
-      mesh.renderOverlay = highlight !== null;
-      mesh.overlayColor = HIGHLIGHT_COLORS[highlight ?? "selected"];
-      mesh.overlayAlpha = 0.35;
-    }
-  }
-}
-
-// Sized on the child body, so it waits for that body's mesh.
-function drawJointArrow(context: ViewportContext): void {
-  const { preview, arrow } = context;
-  const child = preview === null ? undefined : context.loadedBodies.get(preview.childBodyId);
-  if (preview === null || preview.origin === null || preview.axis === null || child === undefined) {
-    arrow.hide();
-    return;
-  }
-  const bounds = child.node.getHierarchyBoundingVectors(true);
-  const extent = bounds.max.subtract(bounds.min).length();
-  arrow.show(placeJointArrow(preview.origin, preview.axis, extent));
 }
 
 function removeBody(context: ViewportContext, bodyId: string): void {
@@ -221,8 +179,7 @@ function showBodies(
     });
   });
   void Promise.all(loads).then(() => {
-    applySelection(context);
-    drawJointArrow(context);
+    context.highlights.redraw();
     frameBodies(context, null);
   });
 }
@@ -233,30 +190,16 @@ function showBodies(
 function applyPosesEachFrame(context: ViewportContext): void {
   const visit = (bodyId: string, pose: InterpolatedPose): void => {
     context.loadedBodies.get(bodyId)?.setDisplacement(pose.translation, pose.rotation);
-    if (bodyId === context.preview?.parentBodyId) {
-      context.arrow.follow(coreDisplacementToBabylon(pose.translation, pose.rotation));
-    }
+    context.highlights.followPose(bodyId, pose.translation, pose.rotation);
   };
   context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
 }
 
-const NO_DISPLACEMENT = { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } as const;
-
 function resetPlacements(context: ViewportContext): void {
   for (const loaded of context.loadedBodies.values()) {
-    loaded.setDisplacement(NO_DISPLACEMENT.translation, NO_DISPLACEMENT.rotation);
+    loaded.setDisplacement([0, 0, 0], [0, 0, 0, 1]);
   }
-  context.arrow.follow(NO_DISPLACEMENT);
-}
-
-function showJointPreview(context: ViewportContext, preview: JointPreview | null): void {
-  // Until the next frame, in case the new parent has no pose at all.
-  if (preview?.parentBodyId !== context.preview?.parentBodyId) {
-    context.arrow.follow(NO_DISPLACEMENT);
-  }
-  context.preview = preview;
-  applySelection(context);
-  drawJointArrow(context);
+  context.highlights.resetPose();
 }
 
 export function createViewport(
@@ -266,17 +209,16 @@ export function createViewport(
 ): Viewport {
   const engine = createEngine(canvas);
   const scene = new Scene(engine);
+  const loadedBodies = new Map<string, LoadedBody>();
   const context: ViewportContext = {
     scene,
     camera: createCamera(scene, canvas),
     stage: createStage(scene),
     wantedKeys: new Map(),
-    loadedBodies: new Map(),
+    loadedBodies,
     bodyIdByMesh: new Map(),
-    selectedBodyId: null,
     poses: new PoseInterpolator(),
-    preview: null,
-    arrow: createJointArrow(scene),
+    highlights: createBodyHighlights(scene, loadedBodies),
   };
   listenToPicks(context, callbacks);
   applyPosesEachFrame(context);
@@ -289,10 +231,7 @@ export function createViewport(
       context.poses.reset();
       resetPlacements(context);
     },
-    setSelectedBody: (bodyId) => {
-      context.selectedBodyId = bodyId;
-      applySelection(context);
-    },
-    showJointPreview: (preview) => showJointPreview(context, preview),
+    setSelectedBody: (bodyId) => context.highlights.setSelectedBody(bodyId),
+    showJointPreview: (preview) => context.highlights.setJointPreview(preview),
   };
 }
