@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-29
+- Partly superseded by: ADR 0019 (point 1, tag names)
 
 ## Context
 
