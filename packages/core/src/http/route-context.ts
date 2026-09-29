@@ -1,5 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { BodyIdSchema, JointIdSchema, type PantinId, PantinIdSchema } from "@pantin/protocol";
+import {
+  BodyIdSchema,
+  JointIdSchema,
+  type PantinId,
+  PantinIdSchema,
+  TagNameSchema,
+} from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import type { PantinService } from "../service/pantin-service.ts";
 
@@ -30,4 +36,8 @@ export function bodyIdOf(context: RouteContext): string {
 
 export function jointIdOf(context: RouteContext): string {
   return parseWithSchema(JointIdSchema, context.parameters.jointId, "The joint id in the URL");
+}
+
+export function tagNameOf(context: RouteContext): string {
+  return parseWithSchema(TagNameSchema, context.parameters.tagName, "The tag name in the URL");
 }

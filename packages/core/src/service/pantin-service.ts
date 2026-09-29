@@ -34,6 +34,7 @@ import {
   toResponse,
   updateDocument,
 } from "./open-pantins.ts";
+import { listTags, runSimulationSteps, writeTag } from "./simulation.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
 // only on save. One service per server instance, no shared state.
@@ -80,11 +81,17 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
   await context.store.writeDocumentAtomically(pantinId, serializePantinDocument(document));
   const openPantin = newOpenPantin(document);
   context.openPantins.set(pantinId, Promise.resolve(openPantin));
+  context.loadedPantins.set(pantinId, openPantin);
   return toResponse(pantinId, openPantin);
 }
 
 export function createPantinService(store: PantinStore, stepConverter: StepConverter | undefined) {
-  const context: ServiceContext = { store, openPantins: new Map(), stepConverter };
+  const context: ServiceContext = {
+    store,
+    openPantins: new Map(),
+    loadedPantins: new Map(),
+    stepConverter,
+  };
   return {
     listPantins: () => listPantins(context),
     createPantin: (name: string) => createPantin(context, name),
@@ -108,6 +115,10 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     getPose: (pantinId: PantinId) => getPose(context, pantinId),
     setJointPosition: (pantinId: PantinId, jointId: string, position: number) =>
       setJointPosition(context, pantinId, jointId, position),
+    listTags: (pantinId: PantinId) => listTags(context, pantinId),
+    writeTag: (pantinId: PantinId, tagName: string, value: number) =>
+      writeTag(context, pantinId, tagName, value),
+    runSimulationSteps: (steps: number) => runSimulationSteps(context, steps),
   };
 }
 

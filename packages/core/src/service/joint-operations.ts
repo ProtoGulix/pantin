@@ -60,6 +60,8 @@ export async function deleteJoint(
   findJoint(pantinId, openPantin, jointId);
   openPantin.document = removeJoint(openPantin.document, jointId);
   openPantin.jointPositions.delete(jointId);
+  openPantin.setpoints.delete(jointId);
+  openPantin.queuedSetpoints.delete(jointId);
   return toResponse(pantinId, openPantin);
 }
 

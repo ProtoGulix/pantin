@@ -10,6 +10,11 @@ import {
   resolveNetworkConfig,
 } from "../domain/network-config.ts";
 import { createPantinService } from "../service/pantin-service.ts";
+import {
+  createRealSimulationTimer,
+  type SimulationTimer,
+  startSimulationLoop,
+} from "../service/simulation-loop.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
 import { createRequestHandler } from "./request-handler.ts";
 
@@ -27,6 +32,8 @@ export type PantinServerOptions = {
   // it, STEP imports answer conversion_unavailable.
   stepConverterPython?: string;
   stepConverterLimits?: Partial<ProcessLimits>;
+  // Clock of the fixed-step loop (ADR 0012); the real one by default.
+  simulationTimer?: SimulationTimer;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;
   // Receives the source address of every connection closed by the filter.
@@ -89,12 +96,13 @@ export async function startPantinServer(
     throw new StartupRefusedError(result.message);
   }
   const network = result.config;
+  const service = createPantinService(
+    createPantinStore(options.pantinsDirectory),
+    createConfiguredStepConverter(options),
+  );
   const server = createServer(
     createRequestHandler({
-      service: createPantinService(
-        createPantinStore(options.pantinsDirectory),
-        createConfiguredStepConverter(options),
-      ),
+      service,
       network,
       maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
       viewerDirectory: options.viewerDirectory,
@@ -103,10 +111,16 @@ export async function startPantinServer(
   );
   installSourceFilter(server, options, network);
   await listen(server, options.port, network.listenAddress);
+  const loop = startSimulationLoop(
+    options.simulationTimer ?? createRealSimulationTimer(),
+    service.runSimulationSteps,
+    options.reportError,
+  );
   // listen() on a TCP host and port always yields an AddressInfo, never a string.
   const address = server.address() as AddressInfo;
   const close = () =>
     new Promise<void>((resolveClose, rejectClose) => {
+      loop.stop();
       server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
       server.closeAllConnections();
     });

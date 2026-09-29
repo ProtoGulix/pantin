@@ -11,6 +11,7 @@ import { JOINT_ROUTES } from "./joint-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
 import { bodyIdOf, pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
+import { TAG_ROUTES } from "./tag-routes.ts";
 
 const MESH_CONTENT_TYPES: Readonly<Record<string, string>> = {
   glb: "model/gltf-binary",
@@ -131,7 +132,7 @@ const PANTIN_ROUTES: readonly Route[] = [
   { method: "GET", pattern: ["pantins", ":pantinId", "meshes", ":fileName"], handle: sendMesh },
 ];
 
-export const ROUTES: readonly Route[] = [...PANTIN_ROUTES, ...JOINT_ROUTES];
+export const ROUTES: readonly Route[] = [...PANTIN_ROUTES, ...JOINT_ROUTES, ...TAG_ROUTES];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {
   return new ApiError(

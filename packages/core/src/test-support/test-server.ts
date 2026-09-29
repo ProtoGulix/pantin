@@ -8,6 +8,7 @@ import {
   type RunningPantinServer,
   startPantinServer,
 } from "../http/server.ts";
+import { createManualTimer } from "./manual-timer.ts";
 
 // A temporary workspace: the pantins directory plus a sentinel file next to it
 // that no request may ever read or overwrite.
@@ -30,7 +31,8 @@ export async function createTestWorkspace(): Promise<TestWorkspace> {
 }
 
 // Unexpected server errors fail the test loudly; rejected sources are
-// collected so tests can assert on them.
+// collected so tests can assert on them. The simulation clock stands still
+// unless a test passes its own manual timer.
 export function startTestServer(
   pantinsDirectory: string,
   overrides: Partial<PantinServerOptions> = {},
@@ -42,6 +44,7 @@ export function startTestServer(
       throw new Error(`Unexpected server error in test: ${String(error)}`);
     },
     reportRejectedSource: () => undefined,
+    simulationTimer: createManualTimer().timer,
     ...overrides,
   });
 }

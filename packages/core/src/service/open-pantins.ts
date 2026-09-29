@@ -24,6 +24,12 @@ export type OpenPantin = {
   inFlightImports: Set<Promise<void>>;
   // Runtime joint positions (ADR 0011 point 5): never saved, 0 when absent.
   jointPositions: Map<string, number>;
+  // Setpoint tags (ADR 0012): last written value per joint, and the writes
+  // the next simulation step has not consumed yet. Never saved.
+  setpoints: Map<string, number>;
+  queuedSetpoints: Map<string, number>;
+  // Simulation steps run since the Pantin was opened.
+  stepCount: number;
 };
 
 export function meshPathsOf(document: PantinDocument): Set<string> {
@@ -41,6 +47,9 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
     saveQueue: Promise.resolve(),
     inFlightImports: new Set(),
     jointPositions: new Map(),
+    setpoints: new Map(),
+    queuedSetpoints: new Map(),
+    stepCount: 0,
   };
 }
 // Promises, not values: two requests loading the same Pantin at once share
@@ -48,6 +57,8 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
 export type ServiceContext = {
   store: PantinStore;
   openPantins: Map<PantinId, Promise<OpenPantin>>;
+  // The same Pantins once loaded, for the simulation loop, which cannot wait.
+  loadedPantins: Map<PantinId, OpenPantin>;
   // Undefined when the core was started without --step-converter-python.
   stepConverter: StepConverter | undefined;
 };
@@ -62,7 +73,10 @@ export function loadPantin(context: ServiceContext, pantinId: PantinId): Promise
   if (alreadyOpen !== undefined) {
     return alreadyOpen;
   }
-  const loading = readPantinFromDisk(context, pantinId);
+  const loading = readPantinFromDisk(context, pantinId).then((openPantin) => {
+    context.loadedPantins.set(pantinId, openPantin);
+    return openPantin;
+  });
   context.openPantins.set(pantinId, loading);
   // A failed load is not cached: the file may be fixed and read again.
   loading.catch(() => context.openPantins.delete(pantinId));
