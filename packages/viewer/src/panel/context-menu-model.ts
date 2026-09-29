@@ -1,10 +1,11 @@
 import type { Translate } from "../i18n/translate.ts";
-import { buildTree, findNode, type TreeRow } from "../tree/tree-model.ts";
+import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
+import { buildTree, findNode } from "../tree/tree-model.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
 // Entries of the tree's right-click menu, as data.
 
-export type ContextAction = "rename" | "frame" | "importInto" | "delete";
+export type ContextAction = "rename" | "frame" | "importInto" | "newJoint" | "delete";
 
 export interface ContextMenuView {
   nodeId: string;
@@ -14,14 +15,20 @@ export interface ContextMenuView {
   entries: { action: ContextAction; label: string }[];
 }
 
-/** Entries depend on the node: only Pantins accept an import, only bodies a deletion. */
-export function contextEntries(kind: TreeRow["kind"], renamable: boolean): ContextAction[] {
+/**
+ * Entries depend on the node: only Pantins accept an import, only the joints
+ * folder a new joint, only bodies and joints a deletion.
+ */
+export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
   const entries: ContextAction[] = renamable ? ["rename"] : [];
   entries.push("frame");
-  if (kind === "pantin") {
+  if (ref.kind === "pantin") {
     entries.push("importInto");
   }
-  if (kind === "body") {
+  if (ref.kind === "folder" && ref.folder === "joints") {
+    entries.push("newJoint");
+  }
+  if (ref.kind === "body" || ref.kind === "joint") {
     entries.push("delete");
   }
   return entries;
@@ -31,13 +38,15 @@ const CONTEXT_LABELS = {
   rename: "menu.rename",
   frame: "menu.frame",
   importInto: "menu.importInto",
+  newJoint: "menu.newJoint",
   delete: "menu.delete",
 } as const;
 
 export function buildContextMenuView(state: ViewerState, t: Translate): ContextMenuView | null {
   const menu = state.contextMenu;
   const node = menu === null ? null : findNode(buildTree(state, t), menu.nodeId);
-  if (menu === null || node === null) {
+  const ref = menu === null ? null : parseNodeId(menu.nodeId);
+  if (menu === null || node === null || ref === null) {
     return null;
   }
   return {
@@ -45,7 +54,7 @@ export function buildContextMenuView(state: ViewerState, t: Translate): ContextM
     title: t("menu.label", { name: node.label }),
     x: menu.x,
     y: menu.y,
-    entries: contextEntries(node.kind, node.renamable).map((action) => ({
+    entries: contextEntries(ref, node.renamable).map((action) => ({
       action,
       label: t(CONTEXT_LABELS[action]),
     })),

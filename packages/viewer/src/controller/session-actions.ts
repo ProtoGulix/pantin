@@ -8,6 +8,7 @@ import {
   withEditsDiscarded,
   withPantinClosed,
 } from "../session-state.ts";
+import { confirmDeleteJoint } from "./joint-actions.ts";
 import { refreshPantinList, savePantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -85,7 +86,9 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
       store.update(withCloseCancelled(store.state));
       return;
     case "confirmDelete":
-      void confirmDelete(store);
+      void (store.state.pendingDeleteJointId === null
+        ? confirmDelete(store)
+        : confirmDeleteJoint(store));
       return;
     case "cancelDelete":
       store.update(withDeleteCancelled(store.state));

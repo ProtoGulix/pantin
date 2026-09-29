@@ -37,6 +37,14 @@ export interface PanelIntents {
   confirmImport(): void;
   cancelImport(): void;
 
+  // Joints: the creation form, and the sliders (position in SI).
+  openJointForm(): void;
+  editJointField(fieldId: string, value: string): void;
+  changeJointType(type: string): void;
+  submitJointForm(): void;
+  cancelJointForm(): void;
+  moveJoint(pantinId: string, jointId: string, position: number): void;
+
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;
   changeLanguage(language: string): void;

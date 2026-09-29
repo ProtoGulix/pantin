@@ -202,3 +202,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Number inputs of the "New joint" form */
+.joint-form__inputs {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.joint-form__inputs .text-input--number {
+  flex: 1;
+  min-width: 0;
+}
+
+.joint-form__unit {
+  color: var(--text-faint);
+}

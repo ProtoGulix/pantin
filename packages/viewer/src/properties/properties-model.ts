@@ -1,13 +1,16 @@
-import type { Body, PantinResponse } from "@pantin/protocol";
+import type { Body, Joint, PantinResponse } from "@pantin/protocol";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
+import { jointTypeLabelKey } from "../joints/joint-labels.ts";
+import { displayUnitLabel, parameterRows } from "../joints/joint-parameters.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import type { TreeSource } from "../tree/tree-model.ts";
+import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
+import { formatDisplayNumber, metresToMillimetres } from "../units.ts";
 
 // The CODESYS-like "Property | Value" grid for the selected tree node, as
 // plain data. Groups keep a stable id so their collapsed state survives a
 // change of selection.
 
-type PropertyGroupId = "general" | "source" | "mesh" | "sourceNodes";
+type PropertyGroupId = "general" | "source" | "mesh" | "sourceNodes" | "placement" | "parameters";
 
 export interface PropertyRow {
   id: string;
@@ -33,6 +36,8 @@ const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   source: "properties.group.source",
   mesh: "properties.group.mesh",
   sourceNodes: "properties.group.sourceNodes",
+  placement: "properties.group.placement",
+  parameters: "properties.group.parameters",
 };
 
 function row(
@@ -101,6 +106,62 @@ function bodyGroups(body: Body, nodeId: string, t: Translate): GroupDraft[] {
   ];
 }
 
+function vectorText(vector: readonly number[], convert: (component: number) => number): string {
+  return vector.map((component) => formatDisplayNumber(convert(component))).join(", ");
+}
+
+function jointGroups(joint: Joint, pantin: PantinResponse, t: Translate): GroupDraft[] {
+  const bodyName = (bodyId: string) =>
+    pantin.document.bodies.find((body) => body.id === bodyId)?.name ?? bodyId;
+  const groups: GroupDraft[] = [
+    {
+      id: "general",
+      rows: [
+        row("name", t("properties.name"), joint.name),
+        row("id", t("properties.id"), joint.id),
+        row("type", t("properties.jointType"), t(jointTypeLabelKey(joint.type))),
+        row("parent", t("properties.parent"), bodyName(joint.parent)),
+        row("child", t("properties.child"), bodyName(joint.child)),
+      ],
+    },
+    {
+      id: "placement",
+      rows: [
+        row(
+          "origin",
+          `${t("properties.origin")} (${displayUnitLabel("mm", t)})`,
+          vectorText(joint.origin, metresToMillimetres),
+        ),
+        row(
+          "axis",
+          t("properties.axis"),
+          vectorText(joint.axis, (component) => component),
+        ),
+      ],
+    },
+  ];
+  const parameters = parameterRows(joint, t).map((entry) =>
+    row(`parameter-${entry.field}`, entry.label, entry.value),
+  );
+  return parameters.length === 0 ? groups : [...groups, { id: "parameters", rows: parameters }];
+}
+
+function folderGroups(source: TreeSource, nodeId: string, t: Translate): GroupDraft[] {
+  // The folder's own label and size come from the tree, so a new folder needs nothing here.
+  const node = findNode(buildTree(source, t), nodeId);
+  return node === null
+    ? []
+    : [
+        {
+          id: "general",
+          rows: [
+            row("name", t("properties.name"), node.label),
+            row("count", t("properties.itemCount"), String(node.children.length)),
+          ],
+        },
+      ];
+}
+
 function sourceNodeGroups(body: Body, index: number, t: Translate): GroupDraft[] {
   const node = body.source.nodes[index];
   if (node === undefined) {
@@ -131,16 +192,11 @@ function groupsFor(source: TreeSource, nodeId: string, t: Translate): GroupDraft
     return pantinGroups(open, nodeId, t);
   }
   if (ref.kind === "folder") {
-    const count = String(open.document.bodies.length);
-    return [
-      {
-        id: "general",
-        rows: [
-          row("name", t("properties.name"), t("tree.bodies")),
-          row("count", t("properties.itemCount"), count),
-        ],
-      },
-    ];
+    return folderGroups(source, nodeId, t);
+  }
+  if (ref.kind === "joint") {
+    const joint = open.document.joints.find((candidate) => candidate.id === ref.jointId);
+    return joint === undefined ? [] : jointGroups(joint, open, t);
   }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {

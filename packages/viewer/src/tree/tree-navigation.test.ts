@@ -8,6 +8,7 @@ import { commandForKey } from "./tree-navigation.ts";
 const press = pantinNodeId("press");
 const carriage = bodyNodeId("press", "carriage");
 const folder = folderNodeId("press", "bodies");
+const jointsFolder = folderNodeId("press", "joints");
 const rail = bodyNodeId("press", "rail");
 const firstSource = sourceNodeNodeId("press", "rail", 0);
 
@@ -39,15 +40,18 @@ describe("commandForKey", () => {
       type: "select",
       nodeId: press,
     });
-    expect(commandForKey(expandedRows, carriage, "ArrowDown")).toEqual({
+    expect(commandForKey(expandedRows, jointsFolder, "ArrowDown")).toEqual({
       type: "select",
-      nodeId: carriage,
+      nodeId: jointsFolder,
     });
   });
 
   it("jumps to the first and last rows", () => {
     expect(commandForKey(expandedRows, rail, "Home")).toEqual({ type: "select", nodeId: press });
-    expect(commandForKey(expandedRows, press, "End")).toEqual({ type: "select", nodeId: carriage });
+    expect(commandForKey(expandedRows, press, "End")).toEqual({
+      type: "select",
+      nodeId: jointsFolder,
+    });
   });
 
   it("selects the first or last row when nothing is selected", () => {
@@ -57,7 +61,7 @@ describe("commandForKey", () => {
     });
     expect(commandForKey(expandedRows, null, "ArrowUp")).toEqual({
       type: "select",
-      nodeId: carriage,
+      nodeId: jointsFolder,
     });
     expect(commandForKey(expandedRows, null, "Enter")).toEqual({ type: "none" });
   });

@@ -1,4 +1,5 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
+import { openJointForm } from "./joint-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
 import { requestClose, requestDelete } from "./session-actions.ts";
 import { frameNode, startRename } from "./tree-actions.ts";
@@ -28,6 +29,9 @@ export function runMenuCommand(
       void savePantin(store);
       return;
     case "import":
+      return;
+    case "newJoint":
+      openJointForm(store);
       return;
     case "rename":
       withSelection(store, (nodeId) => startRename(store, nodeId));

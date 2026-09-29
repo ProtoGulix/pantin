@@ -2,15 +2,16 @@
 // letters, digits and dashes (PantinIdSchema), so ":" can never be part of
 // them and is a safe separator.
 
-export type FolderKey = "bodies";
+export type FolderKey = "bodies" | "joints";
 
 export type NodeRef =
   | { kind: "pantin"; pantinId: string }
   | { kind: "folder"; pantinId: string; folder: FolderKey }
   | { kind: "body"; pantinId: string; bodyId: string }
+  | { kind: "joint"; pantinId: string; jointId: string }
   | { kind: "sourceNode"; pantinId: string; bodyId: string; index: number };
 
-const FOLDER_KEYS: readonly FolderKey[] = ["bodies"];
+const FOLDER_KEYS: readonly FolderKey[] = ["bodies", "joints"];
 
 export function pantinNodeId(pantinId: string): string {
   return `pantin:${pantinId}`;
@@ -22,6 +23,10 @@ export function folderNodeId(pantinId: string, folder: FolderKey): string {
 
 export function bodyNodeId(pantinId: string, bodyId: string): string {
   return `body:${pantinId}:${bodyId}`;
+}
+
+export function jointNodeId(pantinId: string, jointId: string): string {
+  return `joint:${pantinId}:${jointId}`;
 }
 
 export function sourceNodeNodeId(pantinId: string, bodyId: string, index: number): string {
@@ -46,6 +51,9 @@ export function parseNodeId(nodeId: string): NodeRef | null {
   }
   if (kind === "body" && second && third === undefined) {
     return { kind, pantinId, bodyId: second };
+  }
+  if (kind === "joint" && second && third === undefined) {
+    return { kind, pantinId, jointId: second };
   }
   if (kind === "source" && second && third !== undefined && /^\d+$/.test(third)) {
     return { kind: "sourceNode", pantinId, bodyId: second, index: Number(third) };

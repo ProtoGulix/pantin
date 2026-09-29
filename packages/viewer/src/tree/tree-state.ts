@@ -16,6 +16,9 @@ export function nodeExists(source: TreeSource, nodeId: string): boolean {
   if (ref.kind === "pantin" || ref.kind === "folder") {
     return true;
   }
+  if (ref.kind === "joint") {
+    return source.openPantin.document.joints.some((joint) => joint.id === ref.jointId);
+  }
   const body = source.openPantin.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   return ref.kind === "body" ? body !== undefined : body?.source.nodes[ref.index] !== undefined;
 }
@@ -30,6 +33,8 @@ function ancestorsOf(ref: NodeRef): string[] {
       return [pantin];
     case "body":
       return [pantin, folderNodeId(ref.pantinId, "bodies")];
+    case "joint":
+      return [pantin, folderNodeId(ref.pantinId, "joints")];
     case "sourceNode":
       return [pantin, folderNodeId(ref.pantinId, "bodies"), bodyNodeId(ref.pantinId, ref.bodyId)];
   }

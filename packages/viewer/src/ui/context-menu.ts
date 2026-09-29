@@ -17,6 +17,8 @@ function runAction(
     intents.startRename(nodeId);
   } else if (action === "frame") {
     intents.frameNode(nodeId);
+  } else if (action === "newJoint") {
+    intents.openJointForm();
   } else if (action === "delete") {
     intents.requestDelete(nodeId);
   } else {

@@ -30,6 +30,7 @@ function requireElement<Kind extends HTMLElement>(selector: string, kind: new ()
 interface Screen {
   canvas: HTMLCanvasElement;
   render(view: PanelView, intents: PanelIntents): void;
+  showJointPositions(positions: ReadonlyMap<string, number>): void;
 }
 
 // Everything drawn from the view: menu bar, left panel, texts of index.html.
@@ -49,6 +50,7 @@ function createScreen(): Screen {
       menuBar.render(view.menus, view.translate, intents);
       sidePanel.render(view, intents);
     },
+    showJointPositions: (positions) => sidePanel.showJointPositions(positions),
   };
 }
 
@@ -65,6 +67,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
           screen.render(view, intents);
         }
       },
+      showJointPositions: (positions) => screen.showJointPositions(positions),
       viewport: () => {
         if (viewport === null) {
           throw new Error("The viewport is used before it was created.");
@@ -72,7 +75,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
         return viewport;
       },
       poseStream: createPoseStreamClient((url) => new EventSource(url), {
-        onSnapshot: (snapshot) => viewport?.pushPoses(snapshot),
+        onSnapshot: (snapshot) => store.receivePose(snapshot),
         onInvalid: (detail) =>
           store.update({
             ...store.state,

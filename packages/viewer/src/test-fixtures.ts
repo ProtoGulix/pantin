@@ -1,5 +1,6 @@
 import {
   type Body,
+  type Joint,
   PANTIN_SCHEMA_VERSION,
   type PantinResponse,
   type PantinSummary,
@@ -42,11 +43,12 @@ export function pantinResponse(
   unsavedChanges: boolean,
   bodies: Body[] = [railBody],
   id = "press",
+  joints: Joint[] = [],
 ): PantinResponse {
   return {
     id,
     unsavedChanges,
-    document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies, joints: [] },
+    document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies, joints },
   };
 }
 
@@ -54,3 +56,40 @@ export const pantinSummaries: PantinSummary[] = [
   { id: "press", name: "Press", bodyCount: 1 },
   { id: "robot", name: "Robot", bodyCount: 4 },
 ];
+
+const placement = {
+  parent: "rail",
+  child: "carriage",
+  origin: [0.01, 0, 0.02] as [number, number, number],
+  axis: [0, 0, 1] as [number, number, number],
+};
+
+// Metres and radians, as the core sends them.
+export const hingeJoint: Joint = {
+  ...placement,
+  id: "hinge",
+  name: "Hinge",
+  type: "revolute",
+  limits: [-Math.PI / 2, Math.PI / 2],
+};
+
+export const slideJoint: Joint = {
+  ...placement,
+  id: "slide",
+  name: "Slide",
+  type: "prismatic",
+  limits: [0, 0.1],
+};
+
+export const screwJoint: Joint = {
+  ...placement,
+  id: "screw",
+  name: "Screw",
+  type: "helical",
+  limits: [0, 0.05],
+  pitch: 0.002,
+};
+
+export const spinJoint: Joint = { ...placement, id: "spin", name: "Spin", type: "continuous" };
+
+export const weldJoint: Joint = { ...placement, id: "weld", name: "Weld", type: "fixed" };

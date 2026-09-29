@@ -16,11 +16,12 @@ function listed(): ViewerState {
 }
 
 describe("withOpenPantin", () => {
-  it("expands the newly opened Pantin and its Corps folder, and selects it", () => {
+  it("expands the newly opened Pantin and its Corps and Liaisons folders, and selects it", () => {
     const state = withOpenPantin(listed(), pantinResponse(false));
     expect([...state.expandedNodeIds]).toEqual([
       pantinNodeId("press"),
       folderNodeId("press", "bodies"),
+      folderNodeId("press", "joints"),
     ]);
     expect(state.selectedNodeId).toBe(pantinNodeId("press"));
   });

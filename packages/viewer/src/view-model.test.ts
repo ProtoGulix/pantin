@@ -60,9 +60,35 @@ describe("toolbar", () => {
 
 describe("context menu", () => {
   it("offers import only on a Pantin, deletion only on a body, rename only when possible", () => {
-    expect(contextEntries("pantin", true)).toEqual(["rename", "frame", "importInto"]);
-    expect(contextEntries("body", true)).toEqual(["rename", "frame", "delete"]);
-    expect(contextEntries("sourceNode", false)).toEqual(["frame"]);
+    const pantinId = "press";
+    expect(contextEntries({ kind: "pantin", pantinId }, true)).toEqual([
+      "rename",
+      "frame",
+      "importInto",
+    ]);
+    expect(contextEntries({ kind: "body", pantinId, bodyId: "rail" }, true)).toEqual([
+      "rename",
+      "frame",
+      "delete",
+    ]);
+    expect(
+      contextEntries({ kind: "sourceNode", pantinId, bodyId: "rail", index: 0 }, false),
+    ).toEqual(["frame"]);
+  });
+
+  it("offers a new joint only on the joints folder, deletion on a joint", () => {
+    const pantinId = "press";
+    expect(contextEntries({ kind: "folder", pantinId, folder: "joints" }, false)).toEqual([
+      "frame",
+      "newJoint",
+    ]);
+    expect(contextEntries({ kind: "folder", pantinId, folder: "bodies" }, false)).toEqual([
+      "frame",
+    ]);
+    expect(contextEntries({ kind: "joint", pantinId, jointId: "hinge" }, false)).toEqual([
+      "frame",
+      "delete",
+    ]);
   });
 
   it("is translated and titled with the node name", () => {
@@ -78,7 +104,9 @@ describe("context menu", () => {
       "Importer dans ce Pantin",
     ]);
   });
+});
 
+describe("context menu lifetime", () => {
   it("disappears when its node no longer exists", () => {
     const state = {
       ...opened(false),

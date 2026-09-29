@@ -64,3 +64,8 @@ export function pluralKey<Base extends string>(
 ): `${Base}.one` | `${Base}.other` {
   return count === 1 ? `${base}.one` : `${base}.other`;
 }
+
+/** For keys built from protocol data (a parameter field name) that the type system cannot see. */
+export function isMessageKey(value: string): value is MessageKey {
+  return Object.hasOwn(LOCALE_CATALOGS.fr, value);
+}

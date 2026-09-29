@@ -10,6 +10,7 @@ export type MenuCommand =
   | "save"
   | "import"
   | "close"
+  | "newJoint"
   | "rename"
   | "delete"
   | "frameAll"
@@ -104,6 +105,12 @@ const MENUS: readonly MenuDefinition[] = [
     labelKey: "menubar.edit",
     entries: [
       item(
+        "newJoint",
+        "menubar.edit.newJoint",
+        (context) => context.editing && context.hasBodies && !context.busy,
+      ),
+      "separator",
+      item(
         "rename",
         "menubar.edit.rename",
         (context) => context.selectedKind === "pantin" || context.selectedKind === "body",
@@ -112,7 +119,8 @@ const MENUS: readonly MenuDefinition[] = [
       item(
         "delete",
         "menubar.edit.delete",
-        (context) => context.selectedKind === "body" && !context.busy,
+        (context) =>
+          (context.selectedKind === "body" || context.selectedKind === "joint") && !context.busy,
         {
           key: "Delete",
           primaryModifier: false,

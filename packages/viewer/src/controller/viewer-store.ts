@@ -1,4 +1,4 @@
-import type { PantinResponse } from "@pantin/protocol";
+import type { JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import type { Language } from "../i18n/translate.ts";
 import { describeFailure } from "../messages.ts";
@@ -21,6 +21,9 @@ import {
 export interface StorePorts {
   api: PantinApiClient;
   renderPanel(view: PanelView): void;
+  // Joint sliders follow the poses without redrawing the panel: a redraw
+  // would interrupt a drag.
+  showJointPositions(positions: ReadonlyMap<string, number>): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -35,6 +38,8 @@ export class ViewerStore {
   pendingImportFile: File | null = null;
   // Last Pantin the user asked to open, to ignore answers that arrive late.
   requestedPantinId: string | null = null;
+  // Latest position of every joint (metres or radians), from the pose stream.
+  jointPositions: ReadonlyMap<string, number> = new Map();
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
 
@@ -46,6 +51,7 @@ export class ViewerStore {
   update(next: ViewerState): void {
     this.state = next;
     this.ports.renderPanel(buildPanelView(next));
+    this.ports.showJointPositions(this.jointPositions);
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
@@ -60,7 +66,17 @@ export class ViewerStore {
     }
     this.followedPantinId = pantinId;
     viewport.clearPoses();
+    this.jointPositions = new Map();
     this.ports.poseStream.follow(pantinId);
+  }
+
+  /** A snapshot of the pose stream: the bodies move, the joint sliders follow. */
+  receivePose(snapshot: PoseSnapshot): void {
+    this.ports.viewport().pushPoses(snapshot);
+    this.jointPositions = new Map(
+      snapshot.jointPositions.map(({ jointId, position }: JointPosition) => [jointId, position]),
+    );
+    this.ports.showJointPositions(this.jointPositions);
   }
 
   /**

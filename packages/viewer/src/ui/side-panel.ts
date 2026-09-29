@@ -3,6 +3,8 @@ import type { PanelView } from "../view-model.ts";
 import { renderContextMenu } from "./context-menu.ts";
 import { element } from "./dom.ts";
 import { renderImportForm } from "./import-form.ts";
+import { renderJointForm } from "./joint-form.ts";
+import { JointSliderControl } from "./joint-slider.ts";
 import { renderMessageLine } from "./message-line.ts";
 import { type PaneLayout, setUpPaneLayout } from "./pane-layout.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -55,6 +57,7 @@ export class SidePanel {
   private readonly paneStack: HTMLElement;
   private readonly promptHost = element("div", { className: "prompt-host" });
   private readonly propertiesTitle = element("h2", { className: "pane__title" });
+  private readonly jointSlider = new JointSliderControl();
   private readonly propertiesBody = element("div", { className: "pane__body" });
   private readonly messageHost = element("div", { className: "message-host" });
   private readonly menuHost = element("div", { className: "menu-host" });
@@ -82,6 +85,7 @@ export class SidePanel {
     const treePane = element("section", { className: "pane pane--tree" }, [this.treeView.tree]);
     const propertiesPane = element("section", { className: "pane pane--properties" }, [
       this.propertiesTitle,
+      this.jointSlider.element,
       this.propertiesBody,
     ]);
     const paneStack = element("div", { className: "pane-stack" }, [treePane, propertiesPane]);
@@ -132,7 +136,12 @@ export class SidePanel {
     this.pantinList.render(view.listRows, translate, intents);
     this.treeView.render(view.treeRows, view.language, translate, intents);
     this.propertiesTitle.textContent = translate("properties.label");
+    this.jointSlider.render(view.jointSlider, translate, intents);
     this.propertiesBody.replaceChildren(renderPropertiesGrid(view.properties, translate, intents));
+  }
+
+  showJointPositions(positions: ReadonlyMap<string, number>): void {
+    this.jointSlider.showPositions(positions);
   }
 
   private renderPrompt(view: PanelView, intents: PanelIntents): void {
@@ -152,7 +161,11 @@ export class SidePanel {
       : null;
     const importForm =
       view.importForm === null ? null : renderImportForm(view.importForm, translate, intents);
-    this.formHost.replaceChildren(...[createForm, importForm].filter((form) => form !== null));
+    const jointForm =
+      view.jointForm === null ? null : renderJointForm(view.jointForm, translate, intents);
+    this.formHost.replaceChildren(
+      ...[createForm, importForm, jointForm].filter((form) => form !== null),
+    );
     if (createForm !== null && !this.wasCreating) {
       createForm.querySelector("input")?.focus();
     }

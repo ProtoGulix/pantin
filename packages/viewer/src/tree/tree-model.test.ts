@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { pantinResponse, railBody } from "../test-fixtures.ts";
+import { hingeJoint, pantinResponse, railBody, slideJoint } from "../test-fixtures.ts";
 import {
   bodyIdOfNode,
   bodyNodeId,
   folderNodeId,
+  jointNodeId,
   pantinNodeId,
   parseNodeId,
   sourceNodeNodeId,
@@ -25,6 +26,8 @@ describe("node ids", () => {
     pantinNodeId("press"),
     folderNodeId("press", "bodies"),
     bodyNodeId("press", "rail"),
+    jointNodeId("press", "hinge"),
+    folderNodeId("press", "joints"),
     sourceNodeNodeId("press", "rail", 1),
   ])("round trips %s", (nodeId) => {
     expect(parseNodeId(nodeId)).not.toBeNull();
@@ -35,7 +38,7 @@ describe("node ids", () => {
     "pantin:",
     "body:press",
     "source:press:rail:x",
-    "folder:press:joints",
+    "folder:press:drives",
     "pantin:a:b",
   ])("refuses %s", (nodeId) => {
     expect(parseNodeId(nodeId)).toBeNull();
@@ -58,8 +61,8 @@ describe("buildTree", () => {
     expect(tree.map((node) => [node.label, node.detail])).toEqual([["Press", "1 corps"]]);
   });
 
-  it("puts a Corps folder under the Pantin", () => {
-    expect(tree[0]?.children.map((node) => node.label)).toEqual(["Corps"]);
+  it("puts the Corps and Liaisons folders under the Pantin", () => {
+    expect(tree[0]?.children.map((node) => node.label)).toEqual(["Corps", "Liaisons"]);
   });
 
   it("puts the bodies in the Corps folder with an icon per source format", () => {
@@ -74,6 +77,46 @@ describe("buildTree", () => {
     ).toEqual([
       ["3630.00.0800N_0", "0/0", true, false],
       ["(nœud sans nom)", "0/1", true, false],
+    ]);
+  });
+});
+
+describe("joints folder", () => {
+  const withJoints = buildTree(
+    { openPantin: pantinResponse(false, [railBody], "press", [hingeJoint, slideJoint]) },
+    translate,
+  );
+
+  it("comes after the bodies, with the number of joints", () => {
+    expect(withJoints[0]?.children.map((node) => [node.label, node.detail])).toEqual([
+      ["Corps", "1"],
+      ["Liaisons", "2"],
+    ]);
+  });
+
+  it("lists each joint with its type, read-only", () => {
+    const joint = findNode(withJoints, jointNodeId("press", "hinge"));
+    expect(joint).toMatchObject({
+      kind: "joint",
+      icon: "joint",
+      label: "Hinge",
+      detail: "Pivot limité",
+      renamable: false,
+    });
+  });
+
+  it("shows joints when the folder is expanded", () => {
+    const rows = flattenTree(
+      withJoints,
+      view([...openAndBodiesExpanded, folderNodeId("press", "joints")]),
+    );
+    expect(rows.map((row) => row.label)).toEqual([
+      "Press",
+      "Corps",
+      "Linear rail",
+      "Liaisons",
+      "Hinge",
+      "Slide",
     ]);
   });
 });
@@ -96,6 +139,7 @@ describe("flattenTree", () => {
       [2, "Linear rail", folderNodeId("press", "bodies")],
       [3, "3630.00.0800N_0", bodyNodeId("press", "rail")],
       [3, "(nœud sans nom)", bodyNodeId("press", "rail")],
+      [1, "Liaisons", pantinNodeId("press")],
     ]);
     expect(rows[4]).toMatchObject({ positionInSet: 2, setSize: 2, expandable: false });
   });

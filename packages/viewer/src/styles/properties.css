@@ -91,3 +91,38 @@
   height: 14px;
   color: var(--text-faint);
 }
+
+/* Position slider of the selected joint */
+.joint-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.joint-slider[hidden] {
+  display: none;
+}
+
+.joint-slider__caption {
+  color: var(--text-muted);
+}
+
+.joint-slider__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.joint-slider__input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.joint-slider__value {
+  min-width: 64px;
+  font-family: var(--font-source);
+  text-align: right;
+}

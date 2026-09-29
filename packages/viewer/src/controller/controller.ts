@@ -9,6 +9,14 @@ import {
   chooseImportFile,
   confirmImport,
 } from "./import-actions.ts";
+import {
+  cancelJointForm,
+  changeJointType,
+  editJointField,
+  moveJoint,
+  openJointForm,
+  submitJointForm,
+} from "./joint-actions.ts";
 import { runMenuCommand } from "./menu-commands.ts";
 import {
   createPantin,
@@ -94,6 +102,18 @@ function importIntents(store: ViewerStore) {
   };
 }
 
+function jointIntents(store: ViewerStore) {
+  return {
+    openJointForm: () => openJointForm(store),
+    editJointField: (fieldId: string, value: string) => editJointField(store, fieldId, value),
+    changeJointType: (type: string) => changeJointType(store, type),
+    submitJointForm: () => void submitJointForm(store),
+    cancelJointForm: () => cancelJointForm(store),
+    moveJoint: (pantinId: string, jointId: string, position: number) =>
+      moveJoint(store, pantinId, jointId, position),
+  };
+}
+
 export function createPanelIntents(store: ViewerStore): PanelIntents {
   const changeLanguage = (language: string) => {
     if (isLanguage(language)) {
@@ -106,6 +126,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...treeIntents(store),
     ...editIntents(store),
     ...importIntents(store),
+    ...jointIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     togglePropertyGroup: (groupId) =>
       store.update({

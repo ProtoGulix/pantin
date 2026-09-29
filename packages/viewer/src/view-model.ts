@@ -1,11 +1,14 @@
 import { createTranslator, type Language, pluralKey, type Translate } from "./i18n/translate.ts";
+import { buildJointSlider, type JointSliderSpec } from "./joints/slider-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
 import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
 import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
+import { buildJointFormView, type JointFormView } from "./panel/joint-form-model.ts";
 import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
 import { buildPropertyGroups, type PropertyGroup } from "./properties/properties-model.ts";
 import { type ViewMode, viewModeOf } from "./session-state.ts";
+import { parseNodeId } from "./tree/node-ids.ts";
 import { buildTree, flattenTree, type TreeRow } from "./tree/tree-model.ts";
 import type { ViewerState } from "./viewer-state.ts";
 
@@ -51,6 +54,9 @@ export interface PanelView {
   treeRows: TreeRow[];
   properties: PropertyGroup[];
   importForm: ImportFormView | null;
+  jointForm: JointFormView | null;
+  // The slider of the selected joint, when it can move.
+  jointSlider: JointSliderSpec | null;
   contextMenu: ContextMenuView | null;
   prompt: PromptView | null;
   message: MessageView | null;
@@ -101,6 +107,18 @@ function buildMessageView(state: ViewerState, t: Translate): MessageView | null 
   };
 }
 
+function selectedJointSlider(state: ViewerState): JointSliderSpec | null {
+  const ref = state.selectedNodeId === null ? null : parseNodeId(state.selectedNodeId);
+  if (ref?.kind !== "joint") {
+    return null;
+  }
+  const pantin = state.openPantin;
+  const joint = pantin?.document.joints.find((candidate) => candidate.id === ref.jointId);
+  return pantin === null || pantin === undefined || joint === undefined
+    ? null
+    : buildJointSlider(pantin.id, joint);
+}
+
 export function buildPanelView(state: ViewerState): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
@@ -119,6 +137,8 @@ export function buildPanelView(state: ViewerState): PanelView {
       translate,
     ),
     importForm: buildImportFormView(state, translate),
+    jointForm: buildJointFormView(state, translate),
+    jointSlider: selectedJointSlider(state),
     contextMenu: buildContextMenuView(state, translate),
     prompt: buildPromptView(state, translate),
     message: buildMessageView(state, translate),

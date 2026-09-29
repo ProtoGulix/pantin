@@ -1,6 +1,7 @@
 import type { Body, PantinResponse, PantinSummary } from "@pantin/protocol";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
+import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
 import { bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { nodeExists, withRevealedNode } from "./tree/tree-state.ts";
@@ -38,6 +39,10 @@ export interface ViewerState {
   closePrompt: boolean;
   // Edit view: a body waiting for the user to confirm its deletion.
   pendingDeleteBodyId: string | null;
+  // Same for a joint.
+  pendingDeleteJointId: string | null;
+  // The open "New joint" form, or null.
+  jointForm: JointFormState | null;
 }
 
 export function initialViewerState(language: Language): ViewerState {
@@ -58,6 +63,8 @@ export function initialViewerState(language: Language): ViewerState {
     listSelectedPantinId: null,
     closePrompt: false,
     pendingDeleteBodyId: null,
+    pendingDeleteJointId: null,
+    jointForm: null,
   };
 }
 
@@ -67,7 +74,11 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
   return {
     ...state,
     openPantin,
-    expandedNodeIds: new Set([pantinNodeId(openPantin.id), folderNodeId(openPantin.id, "bodies")]),
+    expandedNodeIds: new Set([
+      pantinNodeId(openPantin.id),
+      folderNodeId(openPantin.id, "bodies"),
+      folderNodeId(openPantin.id, "joints"),
+    ]),
     selectedNodeId: pantinNodeId(openPantin.id),
     renamingNodeId: null,
     contextMenu: null,
@@ -75,6 +86,8 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     importInProgress: false,
     closePrompt: false,
     pendingDeleteBodyId: null,
+    pendingDeleteJointId: null,
+    jointForm: null,
   };
 }
 

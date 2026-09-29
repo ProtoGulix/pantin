@@ -1,7 +1,8 @@
 # Adding a joint type
 
-A joint type is two files and a few registration lines (ADR 0013). Nothing
-else in the core tests a joint type by name: kinematics, tags and the REST
+A joint type is two files, a few registration lines and its labels in the
+viewer (ADR 0013, ADR 0016). Nothing
+else in the core or the viewer tests a joint type by name: kinematics, tags and the REST
 API pick the new type up from the registry. The steps below use a
 hypothetical `example` type; replace it with the real name.
 
@@ -107,7 +108,27 @@ A new type changes what `pantin.json` may contain, so:
 
 Tests elsewhere use `PANTIN_SCHEMA_VERSION` and need no change.
 
-## 5. Finish
+## 5. The viewer labels
+
+The viewer builds the tree, the properties, the "New joint" form and the
+slider from the registry (`JOINT_PARAMETERS`, `JOINT_COORDINATE_UNITS`); it
+never tests a joint type. The only thing it needs is text, in both catalogues
+`packages/viewer/src/i18n/locales/fr.json` and `en.json`:
+
+1. `joint.type.example`: the label of the type (the compiler refuses a
+   missing one: `jointTypeLabelKey` builds the key from the protocol's
+   `JointType`);
+2. `joint.parameter.<field>` for each field the type declares in
+   `EXAMPLE_PARAMETERS` that no other type declares yet (for instance
+   `joint.parameter.pitch`); the key type is built from the union of the
+   request schemas' fields, so the compiler refuses a missing one too.
+
+Run `pnpm typecheck`: it lists the missing keys. A parameter of a new kind
+(an angle, a vector) also needs the viewer's form and properties to handle
+that kind once (`packages/viewer/src/joints/joint-form.ts`,
+`joint-parameters.ts`); that is the ADR mentioned in step 1.
+
+## 6. Finish
 
 1. If the type brings a new concept (a coordinate that is neither a
    translation nor a rotation, a coupling, a new parameter unit), write an

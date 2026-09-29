@@ -1,9 +1,11 @@
-import type { Body, PantinResponse } from "@pantin/protocol";
+import type { Body, Joint, PantinResponse } from "@pantin/protocol";
 import { type MessageKey, pluralKey, type Translate } from "../i18n/translate.ts";
+import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import {
   bodyNodeId,
   type FolderKey,
   folderNodeId,
+  jointNodeId,
   type NodeRef,
   pantinNodeId,
   sourceNodeNodeId,
@@ -13,7 +15,14 @@ import {
 // then the flat list of visible rows the DOM draws. Pure, so it is tested
 // without a browser.
 
-export type TreeIcon = "pantin" | "folder" | "body-glb" | "body-stl" | "body-step" | "source-node";
+export type TreeIcon =
+  | "pantin"
+  | "folder"
+  | "body-glb"
+  | "body-stl"
+  | "body-step"
+  | "joint"
+  | "source-node";
 
 export interface TreeNode {
   id: string;
@@ -32,8 +41,8 @@ export interface TreeSource {
   openPantin: PantinResponse | null;
 }
 
-// Folders under an open Pantin, in display order. Joints, drives, sensors and
-// tags will each be one more entry here, with no change to the rest.
+// Folders under an open Pantin, in display order. Drives, sensors and tags
+// will each be one more entry here, with no change to the rest.
 interface FolderDefinition {
   key: FolderKey;
   labelKey: MessageKey;
@@ -66,12 +75,31 @@ function bodyNode(pantinId: string, body: Body, translate: Translate): TreeNode 
   };
 }
 
+function jointNode(pantinId: string, joint: Joint, translate: Translate): TreeNode {
+  return {
+    id: jointNodeId(pantinId, joint.id),
+    kind: "joint",
+    icon: "joint",
+    label: joint.name,
+    detail: translate(jointTypeLabelKey(joint.type)),
+    muted: false,
+    renamable: false,
+    children: [],
+  };
+}
+
 const PANTIN_FOLDERS: readonly FolderDefinition[] = [
   {
     key: "bodies",
     labelKey: "tree.bodies",
     children: (pantin, translate) =>
       pantin.document.bodies.map((body) => bodyNode(pantin.id, body, translate)),
+  },
+  {
+    key: "joints",
+    labelKey: "tree.joints",
+    children: (pantin, translate) =>
+      pantin.document.joints.map((joint) => jointNode(pantin.id, joint, translate)),
   },
 ];
 

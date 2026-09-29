@@ -9,11 +9,18 @@ import {
   withDeleteCancelled,
   withDeleteRequested,
   withEditsDiscarded,
+  withJointDeleted,
   withListSelection,
   withPantinClosed,
 } from "./session-state.ts";
-import { pantinResponse, pantinSummaries, railBody, stepBody } from "./test-fixtures.ts";
-import { bodyNodeId, pantinNodeId, sourceNodeNodeId } from "./tree/node-ids.ts";
+import {
+  hingeJoint,
+  pantinResponse,
+  pantinSummaries,
+  railBody,
+  stepBody,
+} from "./test-fixtures.ts";
+import { bodyNodeId, jointNodeId, pantinNodeId, sourceNodeNodeId } from "./tree/node-ids.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "./viewer-state.ts";
 
 const translate = createTranslator("fr");
@@ -137,5 +144,45 @@ describe("deleting a body", () => {
   it("disables the prompt buttons while the request runs", () => {
     const asking = withDeleteRequested(editing(false), bodyNodeId("press", "rail"));
     expect(buildPromptView({ ...asking, pendingRequestCount: 1 }, translate)?.enabled).toBe(false);
+  });
+});
+
+describe("deleting a joint", () => {
+  const withJoint = withOpenPantin(
+    listing,
+    pantinResponse(false, [railBody, stepBody("carriage", "N_1")], "press", [hingeJoint]),
+  );
+
+  it("asks to confirm, naming the joint, without touching the body request", () => {
+    const asking = withDeleteRequested(withJoint, jointNodeId("press", "hinge"));
+    expect(asking).toMatchObject({ pendingDeleteJointId: "hinge", pendingDeleteBodyId: null });
+    expect(buildPromptView(asking, translate)?.text).toBe("Supprimer la liaison « Hinge » ?");
+  });
+
+  it("refuses a joint that does not exist", () => {
+    expect(
+      withDeleteRequested(withJoint, jointNodeId("press", "ghost")).pendingDeleteJointId,
+    ).toBeNull();
+  });
+
+  it("forgets the request on cancel", () => {
+    const asking = withDeleteRequested(withJoint, jointNodeId("press", "hinge"));
+    expect(withDeleteCancelled(asking).pendingDeleteJointId).toBeNull();
+  });
+
+  it("shows the core's answer: joint gone, unsaved changes on, Pantin selected", () => {
+    const asking = withDeleteRequested(withJoint, jointNodeId("press", "hinge"));
+    const deleted = withJointDeleted(
+      asking,
+      pantinResponse(true, [railBody, stepBody("carriage", "N_1")]),
+      "Hinge",
+    );
+    expect(deleted.openPantin?.document.joints).toEqual([]);
+    expect(deleted.openPantin?.unsavedChanges).toBe(true);
+    expect(deleted).toMatchObject({
+      selectedNodeId: pantinNodeId("press"),
+      pendingDeleteJointId: null,
+    });
+    expect(deleted.message?.key).toBe("message.jointDeleted");
   });
 });
