@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { type JointCoordinateUnit, jointFields, LimitsSchema } from "./common.ts";
+import {
+  type JointCoordinateUnit,
+  type JointParameter,
+  jointFields,
+  LimitsSchema,
+} from "./common.ts";
 
 // Hélicoïdale (screw and nut): translation along the axis, with the rotation
 // that the pitch imposes (ADR 0013 point 7). The coordinate is the
@@ -21,3 +26,8 @@ export const HelicalJointRequestSchema = z.object({
 });
 
 export const HELICAL_COORDINATE_UNIT: JointCoordinateUnit = "metre";
+
+export const HELICAL_PARAMETERS: readonly JointParameter[] = [
+  { field: "limits", kind: "coordinateRange" },
+  { field: "pitch", kind: "length" },
+];

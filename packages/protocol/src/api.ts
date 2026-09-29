@@ -30,6 +30,10 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //   GET    /api/pantins/:pantinId/pose                -> PoseResponse
 //   PUT    /api/pantins/:pantinId/joints/:jointId/position
 //          SetJointPositionRequest                    -> PoseResponse
+//   GET    /api/pantins/:pantinId/pose/stream         -> text/event-stream
+//          (ADR 0015: events named "pose" whose data is a PoseSnapshot, sent
+//          on connection then at most every 1/30 s of simulated time when
+//          something moved; ": keep-alive" comments every 15 s)
 //
 // Joints (ADR 0011) are part of the document: creating or deleting one is an
 // unsaved change. Joint positions are runtime state held by the core, never
@@ -115,7 +119,7 @@ export type JointResponse = z.infer<typeof JointResponseSchema>;
 export const JointListResponseSchema = z.object({ joints: z.array(JointSchema) });
 export type JointListResponse = z.infer<typeof JointListResponseSchema>;
 
-// Metres for a prismatic joint, radians for revolute and continuous ones.
+// In the unit of the joint's coordinate (JOINT_COORDINATE_UNITS).
 export const SetJointPositionRequestSchema = z.object({
   position: z.number().refine(Number.isFinite, "The position must be a finite number."),
 });
@@ -145,3 +149,12 @@ export const PoseResponseSchema = z.object({
   bodies: z.array(BodyPoseSchema),
 });
 export type PoseResponse = z.infer<typeof PoseResponseSchema>;
+
+// One event of the pose stream (ADR 0015).
+export const PoseSnapshotSchema = PoseResponseSchema.extend({
+  // Simulation steps run since the Pantin was opened.
+  stepCount: z.number().int().nonnegative(),
+});
+export type PoseSnapshot = z.infer<typeof PoseSnapshotSchema>;
+
+export const POSE_STREAM_EVENT_NAME = "pose";

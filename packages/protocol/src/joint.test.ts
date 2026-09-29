@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CreateJointRequestSchema, JointSchema } from "./joint.ts";
+import { CreateJointRequestSchema, JOINT_PARAMETERS, JointSchema } from "./joint.ts";
 import { PANTIN_SCHEMA_VERSION, PantinDocumentSchema } from "./pantin.ts";
 
 function body(id: string) {
@@ -80,5 +80,23 @@ describe("PantinDocumentSchema joints", () => {
     ["two joints with the same id", [slide, { ...slide, child: "tool" }]],
   ])("rejects %s", (_label, joints) => {
     expect(PantinDocumentSchema.safeParse(documentWith(joints)).success).toBe(false);
+  });
+});
+
+describe("JOINT_PARAMETERS", () => {
+  it.each(CreateJointRequestSchema.options)("names real fields of $shape.type.value", (schema) => {
+    const type = schema.shape.type.value;
+    for (const parameter of JOINT_PARAMETERS[type]) {
+      expect(Object.keys(schema.shape)).toContain(parameter.field);
+    }
+  });
+
+  it("declares limits as a coordinate range exactly for the types that have limits", () => {
+    for (const schema of CreateJointRequestSchema.options) {
+      const declaresLimits = JOINT_PARAMETERS[schema.shape.type.value].some(
+        (parameter) => parameter.field === "limits" && parameter.kind === "coordinateRange",
+      );
+      expect(declaresLimits).toBe("limits" in schema.shape);
+    }
   });
 });

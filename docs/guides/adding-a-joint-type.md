@@ -15,7 +15,12 @@ Create `packages/protocol/src/joint-types/example.ts`:
 
 ```ts
 import { z } from "zod";
-import { type JointCoordinateUnit, jointFields, LimitsSchema } from "./common.ts";
+import {
+  type JointCoordinateUnit,
+  type JointParameter,
+  jointFields,
+  LimitsSchema,
+} from "./common.ts";
 
 // One line saying what the joint does mechanically.
 export const ExampleJointRequestSchema = z.object({
@@ -26,13 +31,22 @@ export const ExampleJointRequestSchema = z.object({
 });
 
 export const EXAMPLE_COORDINATE_UNIT: JointCoordinateUnit = "metre"; // or "radian", or null
+
+// Type-specific fields, for the viewer's form (ADR 0016). Kinds:
+// "coordinateRange" (the limits) and "length" (metres).
+export const EXAMPLE_PARAMETERS: readonly JointParameter[] = [
+  { field: "limits", kind: "coordinateRange" },
+];
 ```
 
 Then register it in `packages/protocol/src/joint.ts`:
 
 1. add `ExampleJointRequestSchema` to the list in `CreateJointRequestSchema`;
-2. add `example: EXAMPLE_COORDINATE_UNIT` to `JOINT_COORDINATE_UNITS` (the
-   compiler asks for it as soon as step 1 is done).
+2. add `example: EXAMPLE_COORDINATE_UNIT` to `JOINT_COORDINATE_UNITS` and
+   `example: EXAMPLE_PARAMETERS` to `JOINT_PARAMETERS` (the compiler asks for
+   both as soon as step 1 is done). A protocol test checks that every
+   declared field exists in the schema. A parameter of a new kind (an angle,
+   a vector) needs the viewer to handle that kind once: write an ADR.
 
 ## 2. The behaviour, in the core
 

@@ -35,3 +35,14 @@ export const jointFields = {
 
 // SI unit of a joint's single coordinate; null for a joint that cannot move.
 export type JointCoordinateUnit = "metre" | "radian" | null;
+
+// A type-specific parameter, described as data so that clients build their
+// forms without testing the joint type (ADR 0016). Shared fields (name,
+// parent, child, origin, axis) are not listed.
+export type JointParameterKind =
+  // [lower, upper] in the unit of the joint's coordinate.
+  | "coordinateRange"
+  // One length in metres.
+  | "length";
+
+export type JointParameter = { field: string; kind: JointParameterKind };

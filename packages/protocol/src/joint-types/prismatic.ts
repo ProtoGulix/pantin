@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { type JointCoordinateUnit, jointFields, LimitsSchema } from "./common.ts";
+import {
+  type JointCoordinateUnit,
+  type JointParameter,
+  jointFields,
+  LimitsSchema,
+} from "./common.ts";
 
 // Glissière: translation along the axis, within the limits.
 export const PrismaticJointRequestSchema = z.object({
@@ -9,3 +14,7 @@ export const PrismaticJointRequestSchema = z.object({
 });
 
 export const PRISMATIC_COORDINATE_UNIT: JointCoordinateUnit = "metre";
+
+export const PRISMATIC_PARAMETERS: readonly JointParameter[] = [
+  { field: "limits", kind: "coordinateRange" },
+];
