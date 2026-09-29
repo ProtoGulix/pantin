@@ -36,6 +36,8 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 // saved, reset to 0 when a Pantin is opened, and clamped by the core to the
 // joint limits. Deleting a body used by a joint answers `conflict`.
 //
+// Tag routes (ADR 0012) are listed in tag.ts.
+//
 // Edits stay in the core's memory until `save` writes pantin.json; imported
 // mesh files are written to meshes/ at import time. Listing Pantins reads
 // their summaries only: it never opens them.
