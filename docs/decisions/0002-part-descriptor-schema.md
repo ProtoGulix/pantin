@@ -2,6 +2,7 @@
 
 - Status: proposed (schema itself is written and validated in phase 1)
 - Date: 2026-09-28
+- Partly superseded by: ADR 0021 (the Pantin document is the phase 1 contract; part manifests move to phase 9)
 
 ## Context
 
