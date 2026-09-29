@@ -113,6 +113,44 @@ describe("axis driven by a tag (phase 2 exit criterion)", () => {
   });
 });
 
+describe("helical joint through tags (ADR 0013)", () => {
+  it("advances and turns the nut at the next step", async () => {
+    await importMesh(server, "axis", "fileName=nut.stl&unit=mm", buildAsciiStl());
+    const created = await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
+      type: "helical",
+      name: "Screw",
+      parent: "rail",
+      child: "nut",
+      origin: [0, 0, 0],
+      axis: [0, 0, 1],
+      limits: [0, 0.1],
+      pitch: 0.004,
+    });
+    expect(created.status).toBe(201);
+
+    await writeTag("screw.setpoint", 0.001);
+    clock.advance(STEP_SECONDS);
+
+    const position = (await readTags()).tags.find((tag) => tag.name === "screw.position");
+    expect(position?.value).toBe(0.001);
+    const pose = PoseResponseSchema.parse(
+      (await sendRaw(server, "GET", "/api/pantins/axis/pose")).json,
+    ).bodies.find((body) => body.bodyId === "nut");
+    if (pose === undefined) {
+      throw new Error("No pose for the nut.");
+    }
+    // A quarter pitch: a quarter turn about Z, and 1 mm up.
+    const quarterTurnAboutZ = [0, 0, Math.SQRT1_2, Math.SQRT1_2];
+    pose.rotation.forEach((value, index) => {
+      expect(value).toBeCloseTo(quarterTurnAboutZ[index] ?? Number.NaN, 12);
+    });
+    const oneMillimetreUp = [0, 0, 0.001];
+    pose.translation.forEach((value, index) => {
+      expect(value).toBeCloseTo(oneMillimetreUp[index] ?? Number.NaN, 12);
+    });
+  });
+});
+
 describe("tag write refusals", () => {
   it("refuses to write a feedback tag", async () => {
     const response = await writeTag("stroke.position", 0.05);

@@ -25,6 +25,14 @@ describe("migratePantinDocument", () => {
     });
   });
 
+  it("migrates version 2 to the current version without changing its content", () => {
+    const v2 = { ...V1_DOCUMENT, schema_version: 2, joints: [] };
+    expect(migratePantinDocument(v2, "p")).toEqual({
+      ...v2,
+      schema_version: PANTIN_SCHEMA_VERSION,
+    });
+  });
+
   it("leaves a current document and non documents unchanged", () => {
     const current = { ...V1_DOCUMENT, schema_version: PANTIN_SCHEMA_VERSION, joints: [] };
     expect(migratePantinDocument(current, "p")).toBe(current);

@@ -12,9 +12,15 @@ function migrateV1ToV2(document: JsonObject): JsonObject {
   return { ...document, schema_version: 2, joints: [] };
 }
 
+// Version 3 adds the helical joint type (ADR 0013): existing documents stay valid.
+function migrateV2ToV3(document: JsonObject): JsonObject {
+  return { ...document, schema_version: 3 };
+}
+
 // Key: the version a step starts from.
 const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject> = new Map([
   [1, migrateV1ToV2],
+  [2, migrateV2ToV3],
 ]);
 
 function isJsonObject(value: unknown): value is JsonObject {

@@ -3,6 +3,7 @@ import type { RigidTransform } from "../rigid-transform.ts";
 import type { JointBehaviour } from "./behaviour.ts";
 import { CONTINUOUS_BEHAVIOUR } from "./continuous.ts";
 import { FIXED_BEHAVIOUR } from "./fixed.ts";
+import { HELICAL_BEHAVIOUR } from "./helical.ts";
 import { PRISMATIC_BEHAVIOUR } from "./prismatic.ts";
 import { REVOLUTE_BEHAVIOUR } from "./revolute.ts";
 
@@ -18,6 +19,7 @@ const JOINT_BEHAVIOURS: {
   prismatic: PRISMATIC_BEHAVIOUR,
   revolute: REVOLUTE_BEHAVIOUR,
   continuous: CONTINUOUS_BEHAVIOUR,
+  helical: HELICAL_BEHAVIOUR,
 };
 
 // The entry for joint.type handles that type: the record's type above

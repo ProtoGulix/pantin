@@ -6,6 +6,7 @@ import {
   ContinuousJointRequestSchema,
 } from "./joint-types/continuous.ts";
 import { FIXED_COORDINATE_UNIT, FixedJointRequestSchema } from "./joint-types/fixed.ts";
+import { HELICAL_COORDINATE_UNIT, HelicalJointRequestSchema } from "./joint-types/helical.ts";
 import { PRISMATIC_COORDINATE_UNIT, PrismaticJointRequestSchema } from "./joint-types/prismatic.ts";
 import { REVOLUTE_COORDINATE_UNIT, RevoluteJointRequestSchema } from "./joint-types/revolute.ts";
 
@@ -27,6 +28,7 @@ export const CreateJointRequestSchema = z.discriminatedUnion("type", [
   PrismaticJointRequestSchema,
   RevoluteJointRequestSchema,
   ContinuousJointRequestSchema,
+  HelicalJointRequestSchema,
 ]);
 export type CreateJointRequest = z.infer<typeof CreateJointRequestSchema>;
 
@@ -45,4 +47,5 @@ export const JOINT_COORDINATE_UNITS: Readonly<Record<JointType, JointCoordinateU
   prismatic: PRISMATIC_COORDINATE_UNIT,
   revolute: REVOLUTE_COORDINATE_UNIT,
   continuous: CONTINUOUS_COORDINATE_UNIT,
+  helical: HELICAL_COORDINATE_UNIT,
 };

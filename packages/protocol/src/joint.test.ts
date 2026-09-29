@@ -32,13 +32,15 @@ function documentWith(joints: unknown[], bodyIds = ["rail", "carriage", "tool"])
 }
 
 describe("JointSchema", () => {
-  it("accepts the four joint types", () => {
+  it("accepts every joint type", () => {
     const { limits: _limits, ...withoutLimits } = slide;
     for (const joint of [
       slide,
       { ...slide, type: "revolute", limits: [-1.5, 1.5] },
       { ...withoutLimits, type: "fixed" },
       { ...withoutLimits, type: "continuous" },
+      { ...slide, type: "helical", pitch: 0.005 },
+      { ...slide, type: "helical", pitch: -0.005 },
     ]) {
       expect(JointSchema.safeParse(joint).success).toBe(true);
     }
@@ -50,6 +52,10 @@ describe("JointSchema", () => {
     ["an infinite origin", { ...slide, origin: [Number.POSITIVE_INFINITY, 0, 0] }],
     ["a prismatic joint without limits", { ...slide, limits: undefined }],
     ["an unknown type", { ...slide, type: "ball" }],
+    ["a helical joint without pitch", { ...slide, type: "helical" }],
+    ["a helical joint with a zero pitch", { ...slide, type: "helical", pitch: 0 }],
+    ["a helical joint with an infinite pitch", { ...slide, type: "helical", pitch: Infinity }],
+    ["a helical joint with a vanishing pitch", { ...slide, type: "helical", pitch: 1e-320 }],
   ])("rejects %s", (_label, joint) => {
     expect(JointSchema.safeParse(joint).success).toBe(false);
   });

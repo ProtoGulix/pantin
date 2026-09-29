@@ -5,8 +5,9 @@ import { JointSchema } from "./joint.ts";
 // A Pantin is a folder on disk: `pantin.json` plus a `meshes/` directory.
 // The folder name is the Pantin id; the display name lives in the document.
 
-// Version 2 added `joints` (ADR 0011); the core migrates older documents on read.
-export const PANTIN_SCHEMA_VERSION = 2;
+// Version 2 added `joints` (ADR 0011), version 3 the helical joint (ADR 0013).
+// The core migrates older documents on read.
+export const PANTIN_SCHEMA_VERSION = 3;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";
