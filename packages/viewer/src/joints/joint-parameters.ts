@@ -6,7 +6,7 @@ import {
   type JointParameter,
   LimitsSchema,
 } from "@pantin/protocol";
-import type { Translate } from "../i18n/translate.ts";
+import type { MessageKey, Translate } from "../i18n/translate.ts";
 import {
   coordinateToDisplay,
   type DisplayUnit,
@@ -14,12 +14,13 @@ import {
   formatDisplayNumber,
   metresToMillimetres,
 } from "../units.ts";
+import type { ParameterPart } from "./joint-form.ts";
 import { parameterLabelKey } from "./joint-labels.ts";
 
 // Reads the type-specific parameters of a joint through JOINT_PARAMETERS, so
 // that no code here knows a joint type (ADR 0016).
 
-type ParameterValue =
+export type ParameterValue =
   // In the unit of the joint's coordinate (metre or radian).
   | { field: string; kind: "coordinateRange"; lower: number; upper: number }
   // In metres.
@@ -50,7 +51,7 @@ function readParameter(joint: Joint, parameter: JointParameter): ParameterValue 
 }
 
 /** The declared parameters of a joint with their values, in declaration order. */
-function parameterValues(joint: Joint): ParameterValue[] {
+export function parameterValues(joint: Joint): ParameterValue[] {
   return JOINT_PARAMETERS[joint.type].flatMap((parameter) => readParameter(joint, parameter) ?? []);
 }
 
@@ -68,25 +69,48 @@ export function displayUnitLabel(unit: DisplayUnit, t: Translate): string {
   return t(unit === "mm" ? "unit.symbol.mm" : "unit.symbol.degree");
 }
 
-function displayText(value: ParameterValue, unit: JointCoordinateUnit, t: Translate): string {
-  if (value.kind === "length") {
-    return `${formatDisplayNumber(metresToMillimetres(value.metres))} ${displayUnitLabel("mm", t)}`;
-  }
-  const lower = formatDisplayNumber(coordinateToDisplay(unit, value.lower));
-  const upper = formatDisplayNumber(coordinateToDisplay(unit, value.upper));
-  const symbol = displayUnitOf(unit);
-  return `${lower} … ${upper}${symbol === null ? "" : ` ${displayUnitLabel(symbol, t)}`}`;
+function unitSuffix(symbol: DisplayUnit | null, t: Translate): string {
+  return symbol === null ? "" : ` (${displayUnitLabel(symbol, t)})`;
 }
 
-/** Label and value, in display units, of each declared parameter of a joint. */
-export function parameterRows(
-  joint: Joint,
-  t: Translate,
-): { field: string; label: string; value: string }[] {
-  const unit = coordinateUnitOf(joint);
-  return parameterValues(joint).map((value) => ({
-    field: value.field,
-    label: t(parameterLabelKey(value.field)),
-    value: displayText(value, unit, t),
+export interface ParameterRow {
+  // The form's input id ("limits.lower"), also the id of the edit target.
+  inputId: string;
+  label: string;
+  // Display units, no unit symbol: the label carries it.
+  value: string;
+}
+
+const PART_LABELS: Readonly<Record<Exclude<ParameterPart, "value">, MessageKey>> = {
+  lower: "properties.part.lower",
+  upper: "properties.part.upper",
+};
+
+function rowsOf(value: ParameterValue, unit: JointCoordinateUnit, t: Translate): ParameterRow[] {
+  const label = t(parameterLabelKey(value.field));
+  if (value.kind === "length") {
+    return [
+      {
+        inputId: `${value.field}.value`,
+        label: `${label}${unitSuffix("mm", t)}`,
+        value: formatDisplayNumber(metresToMillimetres(value.metres)),
+      },
+    ];
+  }
+  const suffix = unitSuffix(displayUnitOf(unit), t);
+  const bounds: readonly { part: "lower" | "upper"; number: number }[] = [
+    { part: "lower", number: value.lower },
+    { part: "upper", number: value.upper },
+  ];
+  return bounds.map(({ part, number }) => ({
+    inputId: `${value.field}.${part}`,
+    label: `${label}, ${t(PART_LABELS[part])}${suffix}`,
+    value: formatDisplayNumber(coordinateToDisplay(unit, number)),
   }));
+}
+
+/** One row per editable input of each declared parameter, in display units. */
+export function parameterRows(joint: Joint, t: Translate): ParameterRow[] {
+  const unit = coordinateUnitOf(joint);
+  return parameterValues(joint).flatMap((value) => rowsOf(value, unit, t));
 }

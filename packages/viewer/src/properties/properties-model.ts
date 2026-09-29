@@ -1,35 +1,20 @@
-import type { Body, Joint, PantinResponse } from "@pantin/protocol";
+import type { Body, PantinResponse } from "@pantin/protocol";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
-import { jointTypeLabelKey } from "../joints/joint-labels.ts";
-import { displayUnitLabel, parameterRows } from "../joints/joint-parameters.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
-import { formatDisplayNumber, metresToMillimetres } from "../units.ts";
+import { jointGroups } from "./joint-groups.ts";
+import {
+  type GroupDraft,
+  type PropertyGroup,
+  type PropertyGroupId,
+  type PropertyRow,
+  renameEditor,
+  row,
+} from "./property-rows.ts";
 
 // The CODESYS-like "Property | Value" grid for the selected tree node, as
-// plain data. Groups keep a stable id so their collapsed state survives a
-// change of selection.
-
-type PropertyGroupId = "general" | "source" | "mesh" | "sourceNodes" | "placement" | "parameters";
-
-export interface PropertyRow {
-  id: string;
-  label: string;
-  value: string;
-  // Read-only data from the CAD file: drawn greyed, in the source font.
-  muted: boolean;
-  // Node to rename when the value is edited; null for read-only rows.
-  renameNodeId: string | null;
-}
-
-export interface PropertyGroup {
-  id: PropertyGroupId;
-  title: string;
-  collapsed: boolean;
-  rows: PropertyRow[];
-}
-
-type GroupDraft = { id: PropertyGroupId; rows: PropertyRow[] };
+// plain data (shapes in property-rows.ts). Groups keep a stable id so their
+// collapsed state survives a change of selection.
 
 const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   general: "properties.group.general",
@@ -40,22 +25,13 @@ const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   parameters: "properties.group.parameters",
 };
 
-function row(
-  id: string,
-  label: string,
-  value: string,
-  renameNodeId: string | null = null,
-): PropertyRow {
-  return { id, label, value, muted: false, renameNodeId };
-}
-
 function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
   const { document } = pantin;
   return [
     {
       id: "general",
       rows: [
-        row("name", t("properties.name"), document.name, nodeId),
+        row("name", t("properties.name"), document.name, renameEditor(nodeId)),
         row("id", t("properties.id"), pantin.id),
         row("bodyCount", t("properties.bodyCount"), String(document.bodies.length)),
         row(
@@ -88,7 +64,7 @@ function bodyGroups(body: Body, nodeId: string, t: Translate): GroupDraft[] {
     {
       id: "general",
       rows: [
-        row("name", t("properties.name"), body.name, nodeId),
+        row("name", t("properties.name"), body.name, renameEditor(nodeId)),
         row("id", t("properties.id"), body.id),
       ],
     },
@@ -104,46 +80,6 @@ function bodyGroups(body: Body, nodeId: string, t: Translate): GroupDraft[] {
     { id: "mesh", rows: [row("meshFile", t("properties.meshFile"), body.mesh)] },
     { id: "sourceNodes", rows: sourceNodeRows(body, t) },
   ];
-}
-
-function vectorText(vector: readonly number[], convert: (component: number) => number): string {
-  return vector.map((component) => formatDisplayNumber(convert(component))).join(", ");
-}
-
-function jointGroups(joint: Joint, pantin: PantinResponse, t: Translate): GroupDraft[] {
-  const bodyName = (bodyId: string) =>
-    pantin.document.bodies.find((body) => body.id === bodyId)?.name ?? bodyId;
-  const groups: GroupDraft[] = [
-    {
-      id: "general",
-      rows: [
-        row("name", t("properties.name"), joint.name),
-        row("id", t("properties.id"), joint.id),
-        row("type", t("properties.jointType"), t(jointTypeLabelKey(joint.type))),
-        row("parent", t("properties.parent"), bodyName(joint.parent)),
-        row("child", t("properties.child"), bodyName(joint.child)),
-      ],
-    },
-    {
-      id: "placement",
-      rows: [
-        row(
-          "origin",
-          `${t("properties.origin")} (${displayUnitLabel("mm", t)})`,
-          vectorText(joint.origin, metresToMillimetres),
-        ),
-        row(
-          "axis",
-          t("properties.axis"),
-          vectorText(joint.axis, (component) => component),
-        ),
-      ],
-    },
-  ];
-  const parameters = parameterRows(joint, t).map((entry) =>
-    row(`parameter-${entry.field}`, entry.label, entry.value),
-  );
-  return parameters.length === 0 ? groups : [...groups, { id: "parameters", rows: parameters }];
 }
 
 function folderGroups(source: TreeSource, nodeId: string, t: Translate): GroupDraft[] {

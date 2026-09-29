@@ -6,7 +6,8 @@ import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu
 import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
 import { buildJointFormView, type JointFormView } from "./panel/joint-form-model.ts";
 import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
-import { buildPropertyGroups, type PropertyGroup } from "./properties/properties-model.ts";
+import { buildPropertyGroups } from "./properties/properties-model.ts";
+import type { PropertyGroup } from "./properties/property-rows.ts";
 import { type ViewMode, viewModeOf } from "./session-state.ts";
 import { parseNodeId } from "./tree/node-ids.ts";
 import { buildTree, flattenTree, type TreeRow } from "./tree/tree-model.ts";

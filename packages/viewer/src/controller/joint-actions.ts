@@ -5,7 +5,9 @@ import {
   withJointFormType,
   withJointFormValue,
 } from "../joints/joint-form.ts";
+import { buildJointUpdate } from "../joints/joint-update.ts";
 import { describeFailure, errorMessage, infoMessage } from "../messages.ts";
+import type { EditTarget } from "../properties/property-rows.ts";
 import { withJointDeleted } from "../session-state.ts";
 import { jointNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
@@ -82,6 +84,34 @@ export async function submitJointForm(store: ViewerStore): Promise<void> {
     jointForm: null,
     message: infoMessage("message.jointCreated", { name: created.name }),
   });
+}
+
+/**
+ * Applies one inline edit of a joint: the full request is built from the
+ * stored joint, validated, then sent. The joint stays selected (its id never
+ * changes) and the bodies move through the pose stream, never here.
+ */
+export async function updateJointField(
+  store: ViewerStore,
+  target: Extract<EditTarget, { kind: "jointField" }>,
+  text: string,
+): Promise<void> {
+  const open = store.state.openPantin;
+  const joint = open?.document.joints.find((candidate) => candidate.id === target.jointId);
+  if (open === null || open.id !== target.pantinId || joint === undefined) {
+    return;
+  }
+  const built = buildJointUpdate(joint, target.fieldId, text);
+  if (!built.ok) {
+    store.update({
+      ...store.state,
+      message: errorMessage("message.jointInvalid", {}, built.message),
+    });
+    return;
+  }
+  await editPantin(store, open.id, (pantinId) =>
+    store.ports.api.updateJoint(pantinId, joint.id, built.request),
+  );
 }
 
 export async function confirmDeleteJoint(store: ViewerStore): Promise<void> {

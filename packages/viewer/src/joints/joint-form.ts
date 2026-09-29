@@ -97,7 +97,7 @@ export function parseJointType(raw: string): JointType | null {
 }
 
 // French keyboards type a decimal comma; an empty field is not zero.
-function parseNumber(text: string | undefined): number {
+export function parseNumber(text: string | undefined): number {
   const trimmed = (text ?? "").trim().replace(",", ".");
   return trimmed === "" ? Number.NaN : Number(trimmed);
 }
@@ -125,6 +125,19 @@ function parameterFields(form: JointFormState): Record<string, unknown> {
   return fields;
 }
 
+/** The schema's own issues, one sentence each, prefixed by the field they concern. */
+export function schemaMessage(error: {
+  issues: readonly { path: readonly PropertyKey[]; message: string }[];
+}): string {
+  return error.issues
+    .map((issue) =>
+      issue.path.length === 0
+        ? issue.message
+        : `${issue.path.map(String).join(".")}: ${issue.message}`,
+    )
+    .join(" ");
+}
+
 export type JointRequestResult =
   | { ok: true; request: CreateJointRequest }
   // The schema's own message, in English, shown as the detail of the error.
@@ -144,10 +157,5 @@ export function buildJointRequest(form: JointFormState): JointRequestResult {
   if (parsed.success) {
     return { ok: true, request: parsed.data };
   }
-  const message = parsed.error.issues
-    .map((issue) =>
-      issue.path.length === 0 ? issue.message : `${issue.path.join(".")}: ${issue.message}`,
-    )
-    .join(" ");
-  return { ok: false, message };
+  return { ok: false, message: schemaMessage(parsed.error) };
 }

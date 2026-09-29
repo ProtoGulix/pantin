@@ -1,4 +1,5 @@
 import { isLanguage } from "../i18n/translate.ts";
+import type { EditTarget } from "../properties/property-rows.ts";
 import { withListSelection } from "../session-state.ts";
 import { bodyNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
@@ -25,6 +26,7 @@ import {
   renameNode,
   savePantin,
 } from "./pantin-actions.ts";
+import { commitPropertyEdit } from "./property-actions.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
 import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
@@ -63,6 +65,8 @@ function treeIntents(store: ViewerStore) {
     activateNode: (nodeId: string) => activateNode(store, nodeId),
     startRename: (nodeId: string) => startRename(store, nodeId),
     commitRename: (nodeId: string, name: string) => void renameNode(store, nodeId, name),
+    commitPropertyEdit: (target: EditTarget, value: string) =>
+      void commitPropertyEdit(store, target, value),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
     requestDelete: (nodeId: string) => requestDelete(store, nodeId),
     openContextMenu: (nodeId: string, x: number, y: number) =>

@@ -23,8 +23,11 @@ describe("buildJointFormView", () => {
 
   it("offers every joint type of the protocol and the bodies of the Pantin", () => {
     const view = buildJointFormView(stateWith(JOINT_TYPES[0] ?? "fixed"), translate);
-    expect(Object.keys(view?.typeOptions ?? {})).toEqual([...JOINT_TYPES]);
-    expect(view?.bodyOptions).toEqual({ rail: "Linear rail", carriage: "N_1" });
+    expect(view?.typeOptions.map((option) => option.value)).toEqual([...JOINT_TYPES]);
+    expect(view?.bodyOptions).toEqual([
+      { value: "rail", label: "Linear rail" },
+      { value: "carriage", label: "N_1" },
+    ]);
   });
 
   it("always has the origin in mm and the unitless axis first", () => {

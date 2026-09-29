@@ -1,6 +1,6 @@
 import type { Translate } from "../i18n/translate.ts";
-import type { PropertyGroup, PropertyRow } from "../properties/properties-model.ts";
-import { committingTextInput, element } from "./dom.ts";
+import type { PropertyGroup, PropertyRow } from "../properties/property-rows.ts";
+import { committingTextInput, element, selectInput } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
@@ -8,8 +8,8 @@ import type { PanelIntents } from "./panel-intents.ts";
 // a header row whose button folds the group.
 
 function valueCell(row: PropertyRow, translate: Translate, intents: PanelIntents): HTMLElement {
-  const renameNodeId = row.renameNodeId;
-  if (renameNodeId === null) {
+  const editor = row.edit;
+  if (editor === null) {
     return element("td", {
       className: row.muted
         ? "property-grid__value property-grid__value--source"
@@ -18,13 +18,23 @@ function valueCell(row: PropertyRow, translate: Translate, intents: PanelIntents
       attributes: { title: row.value },
     });
   }
-  const input = committingTextInput(row.value, {
-    label: translate("properties.editLabel", { property: row.label }),
-    focusKey: `property-${row.id}`,
-    onCommit: (value) => intents.commitRename(renameNodeId, value),
-  });
+  const commit = (value: string) => intents.commitPropertyEdit(editor.target, value);
+  // A select commits as soon as another option is chosen; there is nothing to type.
+  const control =
+    editor.input === "select"
+      ? selectInput(
+          editor.options,
+          editor.selected,
+          translate("properties.editSelectLabel", { property: row.label }),
+          (value) => (value === editor.selected ? undefined : commit(value)),
+        )
+      : committingTextInput(row.value, {
+          label: translate("properties.editLabel", { property: row.label }),
+          focusKey: `property-${row.id}`,
+          onCommit: commit,
+        });
   return element("td", { className: "property-grid__value property-grid__value--editable" }, [
-    input,
+    control,
   ]);
 }
 

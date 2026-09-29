@@ -34,7 +34,7 @@ export interface JointFormRowView {
 export interface JointFormView {
   title: string;
   type: JointType;
-  typeOptions: Readonly<Record<string, string>>;
+  typeOptions: readonly { value: string; label: string }[];
   name: string;
   nameFieldId: string;
   parentFieldId: string;
@@ -42,7 +42,7 @@ export interface JointFormView {
   parent: string;
   child: string;
   // Body id to body name.
-  bodyOptions: Readonly<Record<string, string>>;
+  bodyOptions: readonly { value: string; label: string }[];
   rows: JointFormRowView[];
   canSubmit: boolean;
 }
@@ -101,14 +101,14 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
   return {
     title: t("joint.form.title", { pantinName: open.document.name }),
     type: form.type,
-    typeOptions: Object.fromEntries(JOINT_TYPES.map((type) => [type, t(jointTypeLabelKey(type))])),
+    typeOptions: JOINT_TYPES.map((type) => ({ value: type, label: t(jointTypeLabelKey(type)) })),
     name: form.values[FIELD_NAME] ?? "",
     nameFieldId: FIELD_NAME,
     parentFieldId: FIELD_PARENT,
     childFieldId: FIELD_CHILD,
     parent: form.values[FIELD_PARENT] ?? "",
     child: form.values[FIELD_CHILD] ?? "",
-    bodyOptions: Object.fromEntries(open.document.bodies.map((body) => [body.id, body.name])),
+    bodyOptions: open.document.bodies.map((body) => ({ value: body.id, label: body.name })),
     rows: [
       vectorRow("origin", form, displayUnitLabel("mm", t), t),
       vectorRow("axis", form, null, t),

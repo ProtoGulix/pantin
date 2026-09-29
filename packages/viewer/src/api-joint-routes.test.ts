@@ -92,3 +92,32 @@ describe("PantinApiClient pose", () => {
     expect(requests).toHaveLength(0);
   });
 });
+
+describe("PantinApiClient updateJoint", () => {
+  const { id: _id, ...request } = slide;
+
+  it("patches the joint by id and returns the answer", async () => {
+    const renamed = { ...slide, name: "Slider" };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse({ joint: renamed }));
+    const joint = await createPantinApiClient(fetchFunction).updateJoint("press", "slide", {
+      ...request,
+      name: "Slider",
+    });
+    expect(joint).toEqual(renamed);
+    expect(requests[0]?.url).toBe("/api/pantins/press/joints/slide");
+    expect(requests[0]?.init?.method).toBe("PATCH");
+    expect(JSON.parse(String(requests[0]?.init?.body))).toEqual({ ...request, name: "Slider" });
+  });
+
+  it("refuses to send an invalid joint", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse({ joint: slide }));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).updateJoint("press", "slide", {
+        ...request,
+        limits: [1, 0],
+      }),
+    );
+    expect(error.kind).toBe("invalid_input");
+    expect(requests).toHaveLength(0);
+  });
+});

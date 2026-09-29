@@ -133,9 +133,11 @@ export function committingTextInput(value: string, options: CommitOptions): HTML
   return input;
 }
 
-export function selectInput<Value extends string>(
-  options: Readonly<Record<Value, string>>,
-  selected: Value,
+// A list, not a record: a record puts integer-like keys (a body named "2")
+// first, whatever the order the caller chose.
+export function selectInput(
+  options: readonly { value: string; label: string }[],
+  selected: string,
   label: string,
   onChange: (value: string) => void,
 ): HTMLSelectElement {
@@ -143,7 +145,7 @@ export function selectInput<Value extends string>(
     className: "select-input",
     attributes: { "aria-label": label, title: label },
   });
-  for (const [value, text] of Object.entries<string>(options)) {
+  for (const { value, label: text } of options) {
     const option = element("option", { text, attributes: { value } });
     option.selected = value === selected;
     select.append(option);

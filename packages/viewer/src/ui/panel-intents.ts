@@ -1,5 +1,6 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
+import type { EditTarget } from "../properties/property-rows.ts";
 
 // What the user asks for from the menu bar and the left panel. Components
 // only raise intents; the controller decides what to call and how the state
@@ -25,6 +26,8 @@ export interface PanelIntents {
   startRename(nodeId: string): void;
   commitRename(nodeId: string, name: string): void;
   cancelRename(): void;
+  // A committed edit of the properties grid (rename, joint field...).
+  commitPropertyEdit(target: EditTarget, value: string): void;
   requestDelete(nodeId: string): void;
   openContextMenu(nodeId: string, x: number, y: number): void;
   closeContextMenu(): void;

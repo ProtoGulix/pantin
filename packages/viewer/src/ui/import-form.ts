@@ -32,16 +32,20 @@ function actions(view: ImportFormView, translate: Translate, intents: PanelInten
   ]);
 }
 
+function optionList(options: Readonly<Record<string, string>>) {
+  return Object.entries(options).map(([value, label]) => ({ value, label }));
+}
+
 function optionSelects(view: ImportFormView, translate: Translate, intents: PanelIntents) {
   const locked = view.progressMessage !== null;
   const unit = selectInput(
-    view.unitOptions,
+    optionList(view.unitOptions),
     view.unit,
     translate("import.unit"),
     intents.changeImportUnit,
   );
   const upAxis = selectInput(
-    view.upAxisOptions,
+    optionList(view.upAxisOptions),
     view.upAxis,
     translate("import.upAxis"),
     intents.changeImportUpAxis,

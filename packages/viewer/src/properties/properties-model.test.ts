@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { hingeJoint, pantinResponse, screwJoint, spinJoint, stepBody } from "../test-fixtures.ts";
-import {
-  bodyNodeId,
-  folderNodeId,
-  jointNodeId,
-  pantinNodeId,
-  sourceNodeNodeId,
-} from "../tree/node-ids.ts";
-import { buildPropertyGroups, type PropertyGroup } from "./properties-model.ts";
+import { pantinResponse, stepBody } from "../test-fixtures.ts";
+import { bodyNodeId, folderNodeId, pantinNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
+import { buildPropertyGroups } from "./properties-model.ts";
+import type { PropertyGroup } from "./property-rows.ts";
 
 const translate = createTranslator("fr");
 const source = { openPantin: pantinResponse(true) };
@@ -35,8 +30,11 @@ describe("buildPropertyGroups", () => {
         ],
       ],
     ]);
-    expect(groups[0]?.rows[0]?.renameNodeId).toBe(pantinNodeId("press"));
-    expect(groups[0]?.rows[1]?.renameNodeId).toBeNull();
+    expect(groups[0]?.rows[0]?.edit).toEqual({
+      input: "text",
+      target: { kind: "rename", nodeId: pantinNodeId("press") },
+    });
+    expect(groups[0]?.rows[1]?.edit).toBeNull();
   });
 
   it("is empty for a Pantin that is not the open one", () => {
@@ -73,7 +71,7 @@ describe("buildPropertyGroups for bodies and nodes", () => {
         ],
       ],
     ]);
-    expect(groups[3]?.rows.every((row) => row.muted && row.renameNodeId === null)).toBe(true);
+    expect(groups[3]?.rows.every((row) => row.muted && row.edit === null)).toBe(true);
   });
 });
 
@@ -143,75 +141,5 @@ describe("buildPropertyGroups for folders and group state", () => {
     expect(buildPropertyGroups(source, bodyNodeId("press", "ghost"), new Set(), translate)).toEqual(
       [],
     );
-  });
-});
-
-const jointSource = {
-  openPantin: pantinResponse(
-    false,
-    [stepBody("rail", "Rail"), stepBody("carriage", "Carriage")],
-    "press",
-    [hingeJoint, screwJoint, spinJoint],
-  ),
-};
-const groupsOf = (jointId: string) =>
-  table(buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate));
-
-describe("joint properties", () => {
-  it("shows the type, the bodies by name, and origin and axis in millimetres", () => {
-    expect(groupsOf("hinge").slice(0, 2)).toEqual([
-      [
-        "Général",
-        [
-          ["Nom", "Hinge"],
-          ["Identifiant", "hinge"],
-          ["Type", "Pivot limité"],
-          ["Corps parent", "Rail"],
-          ["Corps enfant", "Carriage"],
-        ],
-      ],
-      [
-        "Position",
-        [
-          ["Origine (mm)", "10, 0, 20"],
-          ["Axe", "0, 0, 1"],
-        ],
-      ],
-    ]);
-  });
-});
-
-describe("joint parameters and folder", () => {
-  it("shows each declared parameter in display units", () => {
-    expect(groupsOf("hinge")[2]).toEqual(["Paramètres", [["Limites", "-90 … 90 °"]]]);
-    expect(groupsOf("screw")[2]).toEqual([
-      "Paramètres",
-      [
-        ["Limites", "0 … 50 mm"],
-        ["Pas (course par tour)", "2 mm"],
-      ],
-    ]);
-  });
-
-  it("has no parameter group for a joint without parameters", () => {
-    expect(groupsOf("spin")).toHaveLength(2);
-  });
-
-  it("describes the joints folder by its own label and count", () => {
-    const groups = buildPropertyGroups(
-      jointSource,
-      folderNodeId("press", "joints"),
-      new Set(),
-      translate,
-    );
-    expect(table(groups)).toEqual([
-      [
-        "Général",
-        [
-          ["Nom", "Liaisons"],
-          ["Nombre d'éléments", "3"],
-        ],
-      ],
-    ]);
   });
 });
