@@ -113,3 +113,28 @@ describe("importBodies joints (ADR 0017)", () => {
     expect((await service.getPantin("axis")).document.joints).toEqual([]);
   });
 });
+
+describe("assembly edits during an import (ADR 0019)", () => {
+  it("wait until the import settles, since its rollback finds its assembly by key", async () => {
+    const held = storeHoldingMeshWrites(pantinsDirectory, true);
+    const service = createPantinService(held.store, twoComponents);
+    await service.createPantin("Axis");
+    const importing = service.importBodies("axis", { fileName: "axis.step" }, STEP_BYTES);
+    await held.meshWriteStarted;
+    const [assembly] = (await service.getPantin("axis")).document.assemblies;
+    let renamed = false;
+    const renaming = service
+      .renameAssemblyKey("axis", assembly?.key ?? "", "verin_pince")
+      .then(() => {
+        renamed = true;
+      })
+      .catch(() => undefined);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(renamed).toBe(false);
+    held.release();
+    await expect(importing).rejects.toThrow("disk full");
+    await renaming;
+    // The failed import took its assembly away: nothing is left to rename.
+    expect((await service.getPantin("axis")).document.assemblies).toEqual([]);
+  });
+});

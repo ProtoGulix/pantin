@@ -1,8 +1,11 @@
 import { z } from "zod";
+import { KEY_PATTERN_SOURCE } from "./ids.ts";
 
 // Tags seen from the PLC (CLAUDE.md section 5.6, ADR 0012). In this phase the
-// core derives them from the joints: "<jointId>.setpoint" (command) and
-// "<jointId>.position" (feedback), in SI units.
+// core derives them from the joints (ADR 0019 point 6):
+// "<assemblyKey>.<tagKey>.setpoint" (command) and
+// "<assemblyKey>.<tagKey>.position" (feedback), in SI units, where the
+// assembly is the one of the joint's child body.
 //
 //   GET /api/pantins/:pantinId/tags                      -> TagListResponse
 //   PUT /api/pantins/:pantinId/tags/:tagName  WriteTagRequest -> TagResponse
@@ -17,13 +20,13 @@ export type TagType = z.infer<typeof TagTypeSchema>;
 export const TagDirectionSchema = z.enum(["command", "feedback"]);
 export type TagDirection = z.infer<typeof TagDirectionSchema>;
 
-// "<owner id>.<member>": the owner is a safe id (no dot), the member a
-// lowercase word, so a tag name never contains a slash.
+// "<assembly key>.<tag key>.<member>": keys never contain a dot, the member
+// is a lowercase word, so a tag name never contains a slash.
 export const TagNameSchema = z
   .string()
   .regex(
-    /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?\.[a-z][a-z_]{0,31}$/,
-    'A tag name is "<id>.<member>", for example "stroke.setpoint".',
+    new RegExp(`^${KEY_PATTERN_SOURCE}\\.${KEY_PATTERN_SOURCE}\\.[a-z][a-z_]{0,31}$`),
+    'A tag name is "<assembly>.<tag key>.<member>", for example "verin_pince.tige.setpoint".',
   );
 
 // Every value is a number: a bit will be 0 or 1, as in a PLC's process

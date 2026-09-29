@@ -13,6 +13,11 @@ export function slugifyDisplayName(displayName: string, fallback: string): strin
   return slug === "" ? fallback : slug;
 }
 
+// A valid key close to what the user typed, to suggest when a key is refused.
+export function suggestedKey(typed: string): string {
+  return slugifyDisplayName(typed, "key");
+}
+
 // Returns `baseId` if free, else `baseId-2`, `baseId-3`... shortened so the
 // result never exceeds the id length limit.
 export function makeUniqueId(baseId: string, takenIds: ReadonlySet<string>): string {

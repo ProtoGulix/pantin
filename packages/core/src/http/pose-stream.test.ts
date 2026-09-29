@@ -70,7 +70,9 @@ async function flush(client: SseClient): Promise<void> {
 }
 
 function writeSetpoint(value: number) {
-  return sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/stroke.setpoint", { value });
+  return sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/carriage.stroke.setpoint", {
+    value,
+  });
 }
 
 function advanceSteps(steps: number): void {

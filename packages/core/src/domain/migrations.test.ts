@@ -42,7 +42,9 @@ describe("migratePantinDocument", () => {
       joints: [{ ...joint, tagKey: "stroke" }],
     });
   });
+});
 
+describe("migratePantinDocument on unusual input", () => {
   it("leaves malformed bodies and joints to the schema, which reports them", () => {
     const malformed = {
       ...V1_DOCUMENT,

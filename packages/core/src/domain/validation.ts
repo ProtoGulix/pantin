@@ -5,7 +5,7 @@ type ValidationIssue = { readonly path: readonly PropertyKey[]; readonly message
 
 // The subset of a Zod schema this module relies on, so that it works with any
 // schema: those of @pantin/protocol and the core's own converter output schema.
-type Parser<Output> = {
+export type Parser<Output> = {
   safeParse(
     value: unknown,
   ):

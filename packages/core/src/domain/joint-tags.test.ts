@@ -27,12 +27,32 @@ const clamp: Joint = {
   axis: [1, 0, 0],
 };
 
-// Bodies do not matter to tags: the joints alone are read.
+function body(id: string, assembly: string) {
+  return {
+    id,
+    name: id,
+    assembly,
+    source: {
+      fileName: "axis.stl",
+      format: "stl" as const,
+      unit: "mm" as const,
+      upAxis: "z" as const,
+      nodes: [],
+    },
+    mesh: `meshes/${id}.stl`,
+  };
+}
+
+// Tags take the key of the child's assembly (ADR 0019): "carriage" is in
+// "axis_800", so the stroke's tags start with "axis_800.stroke".
 const document: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Axis",
-  assemblies: [],
-  bodies: [],
+  assemblies: [
+    { key: "frame", name: "Frame" },
+    { key: "axis_800", name: "Axis 800" },
+  ],
+  bodies: [body("rail", "frame"), body("carriage", "axis_800"), body("tool", "axis_800")],
   joints: [stroke, clamp],
 };
 
@@ -53,8 +73,8 @@ function apiErrorOf(action: () => unknown): ApiError {
 describe("describeJointTags", () => {
   it("gives a setpoint and a position to each movable joint, none to a fixed one", () => {
     expect(describeJointTags(document, noRuntime)).toEqual([
-      { name: "stroke.setpoint", type: "float", direction: "command", value: 0 },
-      { name: "stroke.position", type: "float", direction: "feedback", value: 0 },
+      { name: "axis_800.stroke.setpoint", type: "float", direction: "command", value: 0 },
+      { name: "axis_800.stroke.position", type: "float", direction: "feedback", value: 0 },
     ]);
   });
 
@@ -69,16 +89,21 @@ describe("describeJointTags", () => {
 
 describe("jointOfCommandTag", () => {
   it("finds the joint of a setpoint tag", () => {
-    expect(jointOfCommandTag(document, "stroke.setpoint")).toBe(stroke);
+    expect(jointOfCommandTag(document, "axis_800.stroke.setpoint")).toBe(stroke);
   });
 
   it("refuses to write a feedback tag", () => {
-    expect(apiErrorOf(() => jointOfCommandTag(document, "stroke.position")).code).toBe(
+    expect(apiErrorOf(() => jointOfCommandTag(document, "axis_800.stroke.position")).code).toBe(
       "invalid_request",
     );
   });
 
-  it.each(["stroke.speed", "missing.setpoint", "clamp.setpoint"])("does not know %s", (name) => {
+  it.each([
+    "axis_800.stroke.speed",
+    "axis_800.missing.setpoint",
+    "axis_800.clamp.setpoint",
+    "frame.stroke.setpoint",
+  ])("does not know %s", (name) => {
     expect(apiErrorOf(() => jointOfCommandTag(document, name)).code).toBe("not_found");
   });
 });

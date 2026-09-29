@@ -15,6 +15,7 @@ import {
 } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
+import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
 import { importBodies } from "./import-operations.ts";
 import {
@@ -131,6 +132,7 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     writeTag: (pantinId: PantinId, tagName: string, value: number) =>
       writeTag(context, pantinId, tagName, value),
     runSimulationSteps: (steps: number) => runSimulationSteps(context, steps),
+    ...assemblyOperations(context),
   };
 }
 

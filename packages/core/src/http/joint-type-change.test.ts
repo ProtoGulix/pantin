@@ -69,7 +69,9 @@ describe("joint type change", () => {
     await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/axe-x/position", {
       position: 0.3,
     });
-    await sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/axe-x.setpoint", { value: 0.5 });
+    await sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/carriage.axe-x.setpoint", {
+      value: 0.5,
+    });
     await patchJoint(FIXED);
     const tags = await sendRaw(server, "GET", "/api/pantins/axis/tags");
     expect(tags.json).toMatchObject({ tags: [] });
@@ -78,8 +80,8 @@ describe("joint type change", () => {
     const again = await sendRaw(server, "GET", "/api/pantins/axis/tags");
     expect(again.json).toMatchObject({
       tags: [
-        { name: "axe-x.setpoint", value: 0 },
-        { name: "axe-x.position", value: 0 },
+        { name: "carriage.axe-x.setpoint", value: 0 },
+        { name: "carriage.axe-x.position", value: 0 },
       ],
     });
   });
@@ -92,13 +94,15 @@ describe("joint type change across units", () => {
     await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/axe-x/position", {
       position: 0.5,
     });
-    await sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/axe-x.setpoint", { value: 0.6 });
+    await sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/carriage.axe-x.setpoint", {
+      value: 0.6,
+    });
     await patchJoint({ ...FIXED_FIELDS, type: "revolute", limits: [-3, 3] });
     const tags = await sendRaw(server, "GET", "/api/pantins/axis/tags");
     expect(tags.json).toMatchObject({
       tags: [
-        { name: "axe-x.setpoint", value: 0 },
-        { name: "axe-x.position", value: 0 },
+        { name: "carriage.axe-x.setpoint", value: 0 },
+        { name: "carriage.axe-x.position", value: 0 },
       ],
     });
   });
@@ -110,6 +114,8 @@ describe("joint type change across units", () => {
     });
     await patchJoint({ ...FIXED_FIELDS, type: "helical", limits: [0, 0.3], pitch: 0.002 });
     const tags = await sendRaw(server, "GET", "/api/pantins/axis/tags");
-    expect(tags.json).toMatchObject({ tags: [{}, { name: "axe-x.position", value: 0.3 }] });
+    expect(tags.json).toMatchObject({
+      tags: [{}, { name: "carriage.axe-x.position", value: 0.3 }],
+    });
   });
 });

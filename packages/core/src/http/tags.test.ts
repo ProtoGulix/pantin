@@ -67,10 +67,10 @@ function errorCodeOf(response: RawResponse): string {
 
 describe("axis driven by a tag (phase 2 exit criterion)", () => {
   it("moves the axis at the next simulation step after the setpoint is written", async () => {
-    const written = await writeTag("stroke.setpoint", 0.05);
+    const written = await writeTag("carriage.stroke.setpoint", 0.05);
     expect(written.status).toBe(200);
     expect(TagResponseSchema.parse(written.json).tag).toEqual({
-      name: "stroke.setpoint",
+      name: "carriage.stroke.setpoint",
       type: "float",
       direction: "command",
       value: 0.05,
@@ -82,17 +82,17 @@ describe("axis driven by a tag (phase 2 exit criterion)", () => {
     const tags = await readTags();
     expect(tags.stepCount).toBe(1);
     expect(tags.tags).toEqual([
-      { name: "stroke.setpoint", type: "float", direction: "command", value: 0.05 },
-      { name: "stroke.position", type: "float", direction: "feedback", value: 0.05 },
+      { name: "carriage.stroke.setpoint", type: "float", direction: "command", value: 0.05 },
+      { name: "carriage.stroke.position", type: "float", direction: "feedback", value: 0.05 },
     ]);
     const translation = await carriageTranslation();
     expect(translation[0]).toBeCloseTo(0.05, 12);
   });
 
   it("clamps a setpoint beyond the limits", async () => {
-    await writeTag("stroke.setpoint", 3);
+    await writeTag("carriage.stroke.setpoint", 3);
     clock.advance(STEP_SECONDS);
-    const position = (await readTags()).tags.find((tag) => tag.name === "stroke.position");
+    const position = (await readTags()).tags.find((tag) => tag.name === "carriage.stroke.position");
     expect(position?.value).toBe(0.1);
   });
 
@@ -103,7 +103,7 @@ describe("axis driven by a tag (phase 2 exit criterion)", () => {
   });
 
   it("does not overwrite a direct position set after the setpoint was applied", async () => {
-    await writeTag("stroke.setpoint", 0.05);
+    await writeTag("carriage.stroke.setpoint", 0.05);
     clock.advance(STEP_SECONDS);
     await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/stroke/position", {
       position: 0.02,
@@ -128,10 +128,10 @@ describe("helical joint through tags (ADR 0013)", () => {
     });
     expect(created.status).toBe(201);
 
-    await writeTag("screw.setpoint", 0.001);
+    await writeTag("nut.screw.setpoint", 0.001);
     clock.advance(STEP_SECONDS);
 
-    const position = (await readTags()).tags.find((tag) => tag.name === "screw.position");
+    const position = (await readTags()).tags.find((tag) => tag.name === "nut.screw.position");
     expect(position?.value).toBe(0.001);
     const pose = PoseResponseSchema.parse(
       (await sendRaw(server, "GET", "/api/pantins/axis/pose")).json,
@@ -153,18 +153,18 @@ describe("helical joint through tags (ADR 0013)", () => {
 
 describe("tag write refusals", () => {
   it("refuses to write a feedback tag", async () => {
-    const response = await writeTag("stroke.position", 0.05);
+    const response = await writeTag("carriage.stroke.position", 0.05);
     expect(response.status).toBe(400);
     expect(errorCodeOf(response)).toBe("invalid_request");
   });
 
   it("answers not_found for an unknown tag", async () => {
-    const response = await writeTag("missing.setpoint", 0);
+    const response = await writeTag("carriage.missing.setpoint", 0);
     expect(response.status).toBe(404);
   });
 
   it("refuses a value that is not a number", async () => {
-    const response = await writeTag("stroke.setpoint", "0.05");
+    const response = await writeTag("carriage.stroke.setpoint", "0.05");
     expect(response.status).toBe(400);
   });
 
@@ -174,7 +174,7 @@ describe("tag write refusals", () => {
   });
 
   it("forgets the setpoint of a deleted joint", async () => {
-    await writeTag("stroke.setpoint", 0.05);
+    await writeTag("carriage.stroke.setpoint", 0.05);
     const deleted = await sendRaw(server, "DELETE", "/api/pantins/axis/joints/stroke");
     expect(deleted.status).toBe(200);
     clock.advance(STEP_SECONDS);
@@ -184,7 +184,7 @@ describe("tag write refusals", () => {
 
   it("forgets setpoints on discard", async () => {
     await sendRaw(server, "POST", "/api/pantins/axis/save");
-    await writeTag("stroke.setpoint", 0.05);
+    await writeTag("carriage.stroke.setpoint", 0.05);
     await sendRaw(server, "POST", "/api/pantins/axis/discard");
     clock.advance(STEP_SECONDS);
     const tags = (await readTags()).tags.map((tag) => tag.value);

@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   BodyIdSchema,
   JointIdSchema,
+  KeySchema,
   type PantinId,
   PantinIdSchema,
   TagNameSchema,
@@ -38,6 +39,10 @@ export function bodyIdOf(context: RouteContext): string {
 
 export function jointIdOf(context: RouteContext): string {
   return parseWithSchema(JointIdSchema, context.parameters.jointId, "The joint id in the URL");
+}
+
+export function assemblyKeyOf(context: RouteContext): string {
+  return parseWithSchema(KeySchema, context.parameters.assemblyKey, "The assembly key in the URL");
 }
 
 export function tagNameOf(context: RouteContext): string {

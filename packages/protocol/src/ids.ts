@@ -25,7 +25,8 @@ export type JointId = z.infer<typeof JointIdSchema>;
 // Keys name the segments of a tag (ADR 0019): like ids, plus "_" so that a
 // tag reads like a PLC variable, "verin_pince.tige.position". Never a dot:
 // it separates the segments.
-const KEY_PATTERN = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
+export const KEY_PATTERN_SOURCE = "[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?";
+const KEY_PATTERN = new RegExp(`^${KEY_PATTERN_SOURCE}$`);
 
 export const KeySchema = z
   .string()

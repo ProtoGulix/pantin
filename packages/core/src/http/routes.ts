@@ -7,6 +7,7 @@ import {
 } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
+import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
@@ -136,6 +137,7 @@ const PANTIN_ROUTES: readonly Route[] = [
 export const ROUTES: readonly Route[] = [
   ...PANTIN_ROUTES,
   ...JOINT_ROUTES,
+  ...ASSEMBLY_ROUTES,
   ...POSE_STREAM_ROUTES,
   ...TAG_ROUTES,
 ];
