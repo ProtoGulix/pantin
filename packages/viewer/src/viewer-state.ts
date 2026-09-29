@@ -1,4 +1,5 @@
 import type { Body, PantinResponse, PantinSummary } from "@pantin/protocol";
+import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
@@ -46,6 +47,8 @@ export interface ViewerState {
   pendingDeleteJointId: string | null;
   // The open "New joint" form, or null.
   jointForm: JointFormState | null;
+  // Hidden and isolated assemblies of the 3D view (ADR 0019): never saved.
+  assemblyDisplay: AssemblyDisplay;
 }
 
 export function initialViewerState(language: Language): ViewerState {
@@ -69,6 +72,7 @@ export function initialViewerState(language: Language): ViewerState {
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     jointForm: null,
+    assemblyDisplay: NO_ASSEMBLY_DISPLAY,
   };
 }
 
@@ -95,6 +99,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     pendingDeleteJointId: null,
     jointForm: null,
     customAxisJointIds: new Set(),
+    assemblyDisplay: NO_ASSEMBLY_DISPLAY,
   };
 }
 

@@ -13,9 +13,9 @@ import {
   type JointFormState,
   parameterInputs,
   parseJointType,
-  withJointFormType,
   withJointAxisDirection,
   withJointAxisReversed,
+  withJointFormType,
   withJointFormValue,
 } from "./joint-form.ts";
 import { JOINT_TYPES } from "./joint-labels.ts";

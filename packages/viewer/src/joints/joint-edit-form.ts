@@ -6,6 +6,7 @@ import {
   type Joint,
 } from "@pantin/protocol";
 import { coordinateToDisplay, formatDisplayNumber, metresToMillimetres } from "../units.ts";
+import { axisChoiceOf } from "./axis-choice.ts";
 import {
   buildJointRequest,
   FIELD_CHILD,
@@ -19,7 +20,6 @@ import {
   vectorFieldId,
 } from "./joint-form.ts";
 import { parameterValues } from "./joint-parameters.ts";
-import { axisChoiceOf } from "./axis-choice.ts";
 
 // The joint form prefilled with a stored joint, to change its type
 // (ADR 0018). Fields show rounded display text; a field the user left as

@@ -1,10 +1,15 @@
-import { parseNodeId } from "../tree/node-ids.ts";
+import { pickedNodeId } from "../assembly-display.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { withListSelection } from "../session-state.ts";
-import { bodyNodeId } from "../tree/node-ids.ts";
+import { parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
+import {
+  createAssembly,
+  toggleAssemblyHidden,
+  toggleAssemblyIsolated,
+} from "./assembly-actions.ts";
 import {
   cancelImport,
   changeImportOptions,
@@ -32,7 +37,6 @@ import {
 } from "./pantin-actions.ts";
 import { commitPropertyEdit } from "./property-actions.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
-import { createAssembly } from "./assembly-actions.ts";
 import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -76,6 +80,8 @@ function treeIntents(store: ViewerStore) {
       void commitPropertyEdit(store, target, value),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
     requestDelete: (nodeId: string) => requestDelete(store, nodeId),
+    toggleAssemblyHidden: (nodeId: string) => toggleAssemblyHidden(store, nodeId),
+    toggleAssemblyIsolated: (nodeId: string) => toggleAssemblyIsolated(store, nodeId),
     createAssembly: (nodeId: string) => {
       const pantinId = parseNodeId(nodeId)?.pantinId;
       if (pantinId !== undefined) {
@@ -158,14 +164,23 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
   };
 }
 
-/** A click in the 3D view selects the body and reveals it in the tree. */
-export function selectBodyFromViewport(store: ViewerStore, bodyId: string | null): void {
-  const pantinId = store.state.openPantin?.id;
-  if (bodyId === null || pantinId === undefined) {
+/**
+ * A click in the 3D view selects the body's assembly, a double click the body
+ * (ADR 0019 point 13); either is revealed in the tree.
+ */
+export function selectBodyFromViewport(
+  store: ViewerStore,
+  bodyId: string | null,
+  doubleClick: boolean,
+): void {
+  const open = store.state.openPantin;
+  if (bodyId === null || open === null) {
     store.update(withSelectedNode(store.state, null));
     return;
   }
-  store.update(withRevealedNode(store.state, bodyNodeId(pantinId, bodyId)));
+  store.update(
+    withRevealedNode(store.state, pickedNodeId(open.document, open.id, bodyId, doubleClick)),
+  );
 }
 
 export function startViewer(store: ViewerStore): void {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries } from "./test-fixtures.ts";
-import { bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { withSelectedNode } from "./tree/tree-state.ts";
 import { buildPanelView } from "./view-model.ts";
 import {
@@ -86,6 +86,8 @@ describe("context menu", () => {
       "rename",
       "frame",
       "newJoint",
+      "toggleAssemblyHidden",
+      "toggleAssemblyIsolated",
       "delete",
     ]);
     expect(
@@ -196,5 +198,24 @@ describe("list and edit views", () => {
       "Édition",
       "Affichage",
     ]);
+  });
+});
+
+describe("context menu of an assembly (ADR 0019)", () => {
+  const menuOf = (state: ViewerState) =>
+    buildPanelView({
+      ...state,
+      contextMenu: { nodeId: assemblyNodeId("press", "main"), x: 0, y: 0 },
+    }).contextMenu?.entries.map((entry) => entry.label);
+
+  it("says what hiding and isolating will do", () => {
+    expect(menuOf(opened(false))).toContain("Masquer dans la vue 3D");
+    const hidden = {
+      ...opened(false),
+      assemblyDisplay: { hiddenAssemblyKeys: new Set(["main"]), isolatedAssemblyKey: "main" },
+    };
+    expect(menuOf(hidden)).toEqual(
+      expect.arrayContaining(["Afficher dans la vue 3D", "Afficher tous les assemblages"]),
+    );
   });
 });

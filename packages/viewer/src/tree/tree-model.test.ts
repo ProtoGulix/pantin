@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
-import { nodeExists, withRevealedNode, withTreeStateCarried } from "./tree-state.ts";
 import {
   assemblyNodeId,
   bodyIdOfNode,
@@ -13,6 +12,7 @@ import {
   sourceNodeNodeId,
 } from "./node-ids.ts";
 import { buildTree, findNode, flattenTree, type TreeViewState } from "./tree-model.ts";
+import { nodeExists, withRevealedNode, withTreeStateCarried } from "./tree-state.ts";
 
 const translate = createTranslator("fr");
 const source = { openPantin: pantinResponse(false) };
@@ -234,5 +234,13 @@ describe("withTreeStateCarried", () => {
     const carried = withTreeStateCarried(before, fresh, from, to);
     expect([...carried.expandedNodeIds]).toEqual([pantinNodeId("press"), to]);
     expect(carried.selectedNodeId).toBe(to);
+  });
+});
+
+describe("hidden assemblies in the tree", () => {
+  it("marks an assembly the 3D view hides, after its key", () => {
+    const assemblyDisplay = { hiddenAssemblyKeys: new Set(["main"]), isolatedAssemblyKey: null };
+    const tree = buildTree({ ...source, assemblyDisplay }, translate);
+    expect(findNode(tree, assemblyNodeId("press", "main"))?.detail).toBe("main · masqué");
   });
 });

@@ -1,13 +1,13 @@
 import { JOINT_PARAMETERS } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
+import { jointFormFor } from "../joints/joint-edit-form.ts";
 import {
   initialJointForm,
   withJointAxisDirection,
   withJointFormType,
 } from "../joints/joint-form.ts";
 import { JOINT_TYPES } from "../joints/joint-labels.ts";
-import { jointFormFor } from "../joints/joint-edit-form.ts";
 import { pantinResponse, railBody, stepBody, weldJoint } from "../test-fixtures.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
 import { buildJointFormView } from "./joint-form-model.ts";

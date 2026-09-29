@@ -192,5 +192,10 @@
   "message.tagsRenamed.one": "{count} tag renommé.",
   "message.tagsRenamed.other": "{count} tags renommés.",
   "assembly.defaultName": "Nouvel assemblage",
-  "menu.newAssembly": "Nouvel assemblage"
+  "menu.newAssembly": "Nouvel assemblage",
+  "menu.hideAssembly": "Masquer dans la vue 3D",
+  "menu.showAssembly": "Afficher dans la vue 3D",
+  "menu.isolateAssembly": "Isoler dans la vue 3D",
+  "menu.showAllAssemblies": "Afficher tous les assemblages",
+  "tree.hidden": "masqué"
 }

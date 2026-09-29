@@ -94,7 +94,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
     screen.canvas,
     (pantinId, body) => api.fetchMeshBytes(pantinId, body.mesh),
     {
-      onBodyPicked: (bodyId) => selectBodyFromViewport(store, bodyId),
+      onBodyPicked: (bodyId, doubleClick) => selectBodyFromViewport(store, bodyId, doubleClick),
       onLoadError: (bodyName, reason) =>
         store.update({
           ...store.state,

@@ -6,12 +6,13 @@ import type { LoadedBody } from "./body-loader.ts";
 import { createJointArrow } from "./joint-arrow.ts";
 import { type BodyHighlight, bodyHighlight, placeJointArrow } from "./scene-plan.ts";
 
-// What the viewport draws over the bodies: the tint of the selected body, or
-// of a previewed joint's two bodies, and that joint's arrow. The bodies are
-// the viewport's own map, read here and never changed.
+// What the viewport draws over the bodies: the tint of the selected bodies
+// (one body, or an assembly's) or of a previewed joint's two bodies, and that
+// joint's arrow. The bodies are the viewport's own map, read here and never
+// changed.
 
 export interface BodyHighlights {
-  setSelectedBody(bodyId: string | null): void;
+  setSelectedBodies(bodyIds: ReadonlySet<string>): void;
   setJointPreview(preview: JointPreview | null): void;
   /** After bodies were loaded: new meshes get their tint, the arrow its size. */
   redraw(): void;
@@ -36,12 +37,12 @@ export function createBodyHighlights(
   loadedBodies: ReadonlyMap<string, LoadedBody>,
 ): BodyHighlights {
   const arrow = createJointArrow(scene);
-  let selectedBodyId: string | null = null;
+  let selectedBodyIds: ReadonlySet<string> = new Set();
   let preview: JointPreview | null = null;
 
   const tintBodies = () => {
     for (const [bodyId, loaded] of loadedBodies) {
-      const highlight = bodyHighlight(bodyId, selectedBodyId, preview);
+      const highlight = bodyHighlight(bodyId, selectedBodyIds, preview);
       for (const mesh of loaded.meshes) {
         mesh.renderOverlay = highlight !== null;
         mesh.overlayColor = HIGHLIGHT_COLORS[highlight ?? "selected"];
@@ -62,8 +63,8 @@ export function createBodyHighlights(
   };
 
   return {
-    setSelectedBody: (bodyId) => {
-      selectedBodyId = bodyId;
+    setSelectedBodies: (bodyIds) => {
+      selectedBodyIds = bodyIds;
       tintBodies();
     },
     setJointPreview: (next) => {

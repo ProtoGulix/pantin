@@ -1,8 +1,15 @@
 import type { RenamedTag, RenamedTagsResponse } from "@pantin/protocol";
+import {
+  type AssemblyDisplay,
+  withAssemblyHiddenToggled,
+  withAssemblyIsolationToggled,
+  withAssemblyKeyRenamed,
+  withAssemblyRemoved,
+} from "../assembly-display.ts";
 import { createTranslator, pluralKey } from "../i18n/translate.ts";
 import { infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
-import { assemblyNodeId, bodyNodeId, pantinNodeId } from "../tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, pantinNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelectedNode, withTreeStateCarried } from "../tree/tree-state.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { editPantin } from "./pantin-actions.ts";
@@ -31,8 +38,8 @@ function renamedTagsText(renamedTags: readonly RenamedTag[]): string {
   return renamedTags.map(({ from, to }) => `${from} → ${to}`).join(", ");
 }
 
-// A renamed assembly key renames its tree node: keep it unfolded and
-// selected. A moved body may land in a folded assembly: reveal it.
+// A renamed assembly key renames its tree node: keep it unfolded, selected,
+// hidden or isolated as it was. A moved body may land in a folded assembly: reveal it.
 function stateAfterKeyEdit(
   store: ViewerStore,
   before: ViewerState,
@@ -41,7 +48,14 @@ function stateAfterKeyEdit(
 ): ViewerState {
   if (target.kind === "assemblyKey") {
     const from = assemblyNodeId(target.pantinId, target.key);
-    return withTreeStateCarried(before, store.state, from, assemblyNodeId(target.pantinId, value));
+    const carried = withTreeStateCarried(
+      before,
+      store.state,
+      from,
+      assemblyNodeId(target.pantinId, value),
+    );
+    const assemblyDisplay = withAssemblyKeyRenamed(before.assemblyDisplay, target.key, value);
+    return { ...carried, assemblyDisplay };
   }
   return target.kind === "bodyAssembly"
     ? withRevealedNode(store.state, bodyNodeId(target.pantinId, target.bodyId))
@@ -68,6 +82,26 @@ export async function commitKeyEdit(
   });
 }
 
+function withDisplayOf(
+  store: ViewerStore,
+  nodeId: string,
+  change: (display: AssemblyDisplay, key: string) => AssemblyDisplay,
+): void {
+  const ref = parseNodeId(nodeId);
+  if (ref?.kind === "assembly") {
+    const assemblyDisplay = change(store.state.assemblyDisplay, ref.key);
+    store.update({ ...store.state, assemblyDisplay, contextMenu: null });
+  }
+}
+
+export function toggleAssemblyHidden(store: ViewerStore, nodeId: string): void {
+  withDisplayOf(store, nodeId, withAssemblyHiddenToggled);
+}
+
+export function toggleAssemblyIsolated(store: ViewerStore, nodeId: string): void {
+  withDisplayOf(store, nodeId, withAssemblyIsolationToggled);
+}
+
 /** A new assembly with a default name, selected and ready to be renamed. */
 export async function createAssembly(store: ViewerStore, pantinId: string): Promise<void> {
   const before = new Set(store.state.openPantin?.document.assemblies.map(({ key }) => key));
@@ -87,6 +121,7 @@ export async function createAssembly(store: ViewerStore, pantinId: string): Prom
 export async function deleteAssembly(store: ViewerStore, pantinId: string, key: string) {
   const pantin = await editPantin(store, pantinId, (id) => store.ports.api.deleteAssembly(id, key));
   if (pantin !== undefined) {
-    store.update(withSelectedNode(store.state, pantinNodeId(pantinId)));
+    const assemblyDisplay = withAssemblyRemoved(store.state.assemblyDisplay, key);
+    store.update({ ...withSelectedNode(store.state, pantinNodeId(pantinId)), assemblyDisplay });
   }
 }

@@ -23,6 +23,10 @@ function runAction(
     intents.openJointForm();
   } else if (action === "changeJointType") {
     intents.openJointEditForm(nodeId);
+  } else if (action === "toggleAssemblyHidden") {
+    intents.toggleAssemblyHidden(nodeId);
+  } else if (action === "toggleAssemblyIsolated") {
+    intents.toggleAssemblyIsolated(nodeId);
   } else if (action === "delete") {
     intents.requestDelete(nodeId);
   } else {

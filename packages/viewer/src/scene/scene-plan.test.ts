@@ -128,17 +128,17 @@ describe("bodyHighlight", () => {
   const preview = { parentBodyId: "rail", childBodyId: "carriage", origin: null, axis: null };
 
   it("tints the selected body when no joint is previewed", () => {
-    expect(bodyHighlight("rail", "rail", null)).toBe("selected");
-    expect(bodyHighlight("carriage", "rail", null)).toBeNull();
+    expect(bodyHighlight("rail", new Set(["rail"]), null)).toBe("selected");
+    expect(bodyHighlight("carriage", new Set(["rail"]), null)).toBeNull();
   });
 
   it("tints the previewed joint's bodies instead of the selection", () => {
-    expect(bodyHighlight("rail", "base", preview)).toBe("parent");
-    expect(bodyHighlight("carriage", "base", preview)).toBe("child");
-    expect(bodyHighlight("base", "base", preview)).toBeNull();
+    expect(bodyHighlight("rail", new Set(["base"]), preview)).toBe("parent");
+    expect(bodyHighlight("carriage", new Set(["base"]), preview)).toBe("child");
+    expect(bodyHighlight("base", new Set(["base"]), preview)).toBeNull();
   });
 
   it("lets the child win when a joint links a body to itself", () => {
-    expect(bodyHighlight("rail", null, { ...preview, childBodyId: "rail" })).toBe("child");
+    expect(bodyHighlight("rail", new Set(), { ...preview, childBodyId: "rail" })).toBe("child");
   });
 });

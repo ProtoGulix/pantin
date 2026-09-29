@@ -14,8 +14,8 @@ import {
   vectorFieldId,
 } from "../joints/joint-form.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
-import { AXIS_SENSES, FIELD_AXIS_DIRECTION, FIELD_AXIS_SENSE } from "../joints/joint-update.ts";
 import { displayUnitLabel, parameterRows } from "../joints/joint-parameters.ts";
+import { AXIS_SENSES, FIELD_AXIS_DIRECTION, FIELD_AXIS_SENSE } from "../joints/joint-update.ts";
 import { formatDisplayNumber, metresToMillimetres } from "../units.ts";
 import { type GroupDraft, type PropertyRow, type RowEditor, row } from "./property-rows.ts";
 

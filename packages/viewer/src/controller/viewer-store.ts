@@ -1,11 +1,11 @@
 import type { JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
+import { hiddenBodyIds, selectedBodyIds } from "../assembly-display.ts";
 import type { Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
-import { bodyIdOfNode } from "../tree/node-ids.ts";
 import { buildPanelView, type PanelView } from "../view-model.ts";
 import {
   initialViewerState,
@@ -56,7 +56,13 @@ export class ViewerStore {
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
-    viewport.setSelectedBody(bodyIdOfNode(next.selectedNodeId));
+    const document = next.openPantin?.document;
+    viewport.setSelectedBodies(
+      document === undefined ? new Set() : selectedBodyIds(document, next.selectedNodeId),
+    );
+    viewport.setHiddenBodies(
+      document === undefined ? new Set() : hiddenBodyIds(document, next.assemblyDisplay),
+    );
     viewport.showJointPreview(jointPreviewOf(next));
   }
 

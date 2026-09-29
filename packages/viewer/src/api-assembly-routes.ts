@@ -2,11 +2,11 @@ import {
   MoveBodyRequestSchema,
   type PantinResponse,
   PantinResponseSchema,
+  type RenamedTagsResponse,
+  RenamedTagsResponseSchema,
   type RenameKeyRequest,
   RenameRequestSchema,
   type RenameTagKeyRequest,
-  type RenamedTagsResponse,
-  RenamedTagsResponseSchema,
 } from "@pantin/protocol";
 import { jsonRequest, pantinUrl, type SendJson, validInputOrThrow } from "./api-transport.ts";
 

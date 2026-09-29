@@ -1,4 +1,5 @@
-import type { Translate } from "../i18n/translate.ts";
+import type { AssemblyDisplay } from "../assembly-display.ts";
+import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -12,6 +13,8 @@ export type ContextAction =
   | "newAssembly"
   | "newJoint"
   | "changeJointType"
+  | "toggleAssemblyHidden"
+  | "toggleAssemblyIsolated"
   | "delete";
 
 export interface ContextMenuView {
@@ -25,7 +28,8 @@ export interface ContextMenuView {
 /**
  * Entries depend on the node: only Pantins accept an import or a new
  * assembly, assemblies and the "between assemblies" folder a new joint, only
- * joints a type change, bodies, joints and assemblies a deletion.
+ * joints a type change, bodies, joints and assemblies a deletion. An
+ * assembly can also be hidden or isolated in the 3D view.
  */
 export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
   const entries: ContextAction[] = renamable ? ["rename"] : [];
@@ -35,6 +39,9 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
   }
   if (ref.kind === "assembly" || ref.kind === "folder") {
     entries.push("newJoint");
+  }
+  if (ref.kind === "assembly") {
+    entries.push("toggleAssemblyHidden", "toggleAssemblyIsolated");
   }
   if (ref.kind === "joint") {
     entries.push("changeJointType");
@@ -52,8 +59,24 @@ const CONTEXT_LABELS = {
   newAssembly: "menu.newAssembly",
   newJoint: "menu.newJoint",
   changeJointType: "menu.changeJointType",
+  toggleAssemblyHidden: "menu.hideAssembly",
+  toggleAssemblyIsolated: "menu.isolateAssembly",
   delete: "menu.delete",
 } as const;
+
+// The visibility entries say what they will do: show a hidden assembly, or
+// show every assembly again once one is isolated.
+function labelKeyOf(action: ContextAction, ref: NodeRef, display: AssemblyDisplay): MessageKey {
+  if (ref.kind === "assembly" && action === "toggleAssemblyHidden") {
+    return display.hiddenAssemblyKeys.has(ref.key) ? "menu.showAssembly" : "menu.hideAssembly";
+  }
+  if (ref.kind === "assembly" && action === "toggleAssemblyIsolated") {
+    return display.isolatedAssemblyKey === ref.key
+      ? "menu.showAllAssemblies"
+      : "menu.isolateAssembly";
+  }
+  return CONTEXT_LABELS[action];
+}
 
 export function buildContextMenuView(state: ViewerState, t: Translate): ContextMenuView | null {
   const menu = state.contextMenu;
@@ -69,7 +92,7 @@ export function buildContextMenuView(state: ViewerState, t: Translate): ContextM
     y: menu.y,
     entries: contextEntries(ref, node.renamable).map((action) => ({
       action,
-      label: t(CONTEXT_LABELS[action]),
+      label: t(labelKeyOf(action, ref, state.assemblyDisplay)),
     })),
   };
 }

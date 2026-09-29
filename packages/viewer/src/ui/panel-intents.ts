@@ -44,6 +44,9 @@ export interface PanelIntents {
 
   // A new empty assembly in the Pantin of this tree node (ADR 0019).
   createAssembly(nodeId: string): void;
+  // 3D display of the assembly of this tree node; never saved.
+  toggleAssemblyHidden(nodeId: string): void;
+  toggleAssemblyIsolated(nodeId: string): void;
 
   // Joints: the form (creation or type change), and the sliders (position in SI).
   openJointForm(): void;

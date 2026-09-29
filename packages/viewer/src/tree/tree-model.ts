@@ -1,4 +1,9 @@
 import type { Assembly, Body, Joint, PantinResponse } from "@pantin/protocol";
+import {
+  type AssemblyDisplay,
+  isAssemblyHidden,
+  NO_ASSEMBLY_DISPLAY,
+} from "../assembly-display.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import {
@@ -40,6 +45,8 @@ export interface TreeNode {
 
 export interface TreeSource {
   openPantin: PantinResponse | null;
+  // Absent means every assembly is shown.
+  assemblyDisplay?: AssemblyDisplay;
 }
 
 function sourceNodeChildren(pantinId: string, body: Body, translate: Translate): TreeNode[] {
@@ -112,7 +119,12 @@ function isInternal(pantin: PantinResponse, joint: Joint): boolean {
   return assemblyOf(pantin, joint.parent) === assemblyOf(pantin, joint.child);
 }
 
-function assemblyNode(pantin: PantinResponse, assembly: Assembly, translate: Translate): TreeNode {
+function assemblyNode(
+  pantin: PantinResponse,
+  assembly: Assembly,
+  display: AssemblyDisplay,
+  translate: Translate,
+): TreeNode {
   const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
   const joints = pantin.document.joints.filter(
     (joint) => isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === assembly.key,
@@ -123,7 +135,9 @@ function assemblyNode(pantin: PantinResponse, assembly: Assembly, translate: Tra
     icon: "assembly",
     label: assembly.name,
     // The key prefixes the tags: shown so that the user sees what the PLC sees.
-    detail: assembly.key,
+    detail: isAssemblyHidden(display, assembly.key)
+      ? `${assembly.key} · ${translate("tree.hidden")}`
+      : assembly.key,
     muted: false,
     renamable: true,
     children: [
@@ -147,7 +161,11 @@ function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): 
   };
 }
 
-function pantinNode(pantin: PantinResponse, translate: Translate): TreeNode {
+function pantinNode(
+  pantin: PantinResponse,
+  display: AssemblyDisplay,
+  translate: Translate,
+): TreeNode {
   const bodyCount = pantin.document.bodies.length;
   return {
     id: pantinNodeId(pantin.id),
@@ -158,7 +176,9 @@ function pantinNode(pantin: PantinResponse, translate: Translate): TreeNode {
     muted: false,
     renamable: true,
     children: [
-      ...pantin.document.assemblies.map((assembly) => assemblyNode(pantin, assembly, translate)),
+      ...pantin.document.assemblies.map((assembly) =>
+        assemblyNode(pantin, assembly, display, translate),
+      ),
       betweenAssembliesFolder(pantin, translate),
     ],
   };
@@ -166,7 +186,8 @@ function pantinNode(pantin: PantinResponse, translate: Translate): TreeNode {
 
 /** The edit view's tree: exactly one root, the open Pantin; empty in the list view. */
 export function buildTree(source: TreeSource, translate: Translate): TreeNode[] {
-  return source.openPantin === null ? [] : [pantinNode(source.openPantin, translate)];
+  const display = source.assemblyDisplay ?? NO_ASSEMBLY_DISPLAY;
+  return source.openPantin === null ? [] : [pantinNode(source.openPantin, display, translate)];
 }
 
 export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode | null {

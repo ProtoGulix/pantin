@@ -192,5 +192,10 @@
   "message.tagsRenamed.one": "{count} tag renamed.",
   "message.tagsRenamed.other": "{count} tags renamed.",
   "assembly.defaultName": "New assembly",
-  "menu.newAssembly": "New assembly"
+  "menu.newAssembly": "New assembly",
+  "menu.hideAssembly": "Hide in the 3D view",
+  "menu.showAssembly": "Show in the 3D view",
+  "menu.isolateAssembly": "Isolate in the 3D view",
+  "menu.showAllAssemblies": "Show every assembly",
+  "tree.hidden": "hidden"
 }

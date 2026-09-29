@@ -1,14 +1,14 @@
 import type { Assembly, Body, PantinResponse } from "@pantin/protocol";
-import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
+import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
 import { jointGroups } from "./joint-groups.ts";
 import {
   type GroupDraft,
+  linkRow,
   type PropertyGroup,
   type PropertyGroupId,
-  linkRow,
   type PropertyRow,
   renameEditor,
   row,

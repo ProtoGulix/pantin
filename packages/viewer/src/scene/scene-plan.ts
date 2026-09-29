@@ -128,11 +128,11 @@ export type BodyHighlight = "selected" | "parent" | "child";
  */
 export function bodyHighlight(
   bodyId: string,
-  selectedBodyId: string | null,
+  selectedBodyIds: ReadonlySet<string>,
   preview: JointPreview | null,
 ): BodyHighlight | null {
   if (preview === null) {
-    return bodyId === selectedBodyId ? "selected" : null;
+    return selectedBodyIds.has(bodyId) ? "selected" : null;
   }
   if (bodyId === preview.childBodyId) {
     return "child";

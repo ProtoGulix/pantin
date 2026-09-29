@@ -21,14 +21,19 @@ import { createStage, type Stage } from "./stage.ts";
 export type MeshBytesLoader = (pantinId: string, body: Body) => Promise<ArrayBuffer>;
 
 export interface ViewportCallbacks {
-  onBodyPicked(bodyId: string | null): void;
+  // doubleClick: the second click of a double click, which follows a first
+  // pick of the same body (ADR 0019: a click selects the assembly, a double
+  // click the body).
+  onBodyPicked(bodyId: string | null, doubleClick: boolean): void;
   // Raw reason in English; the caller translates the message around it.
   onLoadError(bodyName: string, reason: string): void;
 }
 
 export interface Viewport {
   showBodies(pantinId: string | null, bodies: readonly Body[]): void;
-  setSelectedBody(bodyId: string | null): void;
+  setSelectedBodies(bodyIds: ReadonlySet<string>): void;
+  // Hidden bodies stay loaded, so showing them again downloads nothing.
+  setHiddenBodies(bodyIds: ReadonlySet<string>): void;
   /** null frames every body; otherwise only the listed bodies. */
   frameBodies(bodyIds: readonly string[] | null): void;
   /** Feeds one snapshot of the pose stream; bodies follow it from the next frame. */
@@ -51,6 +56,7 @@ interface ViewportContext {
   bodyIdByMesh: Map<AbstractMesh, string>;
   poses: PoseInterpolator;
   highlights: BodyHighlights;
+  hiddenBodyIds: ReadonlySet<string>;
 }
 
 function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
@@ -69,19 +75,34 @@ function toTuple(vector: Vector3): Vector3Tuple {
   return [vector.x, vector.y, vector.z];
 }
 
-// null frames every loaded body and resizes the ground around them; a list
-// frames only those bodies and leaves the ground as it is.
-function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null): void {
+function framingOf(context: ViewportContext, framed: (bodyId: string) => boolean) {
   const minimum = new Vector3(Infinity, Infinity, Infinity);
   const maximum = new Vector3(-Infinity, -Infinity, -Infinity);
   for (const [bodyId, loaded] of context.loadedBodies) {
-    if (bodyIds === null || bodyIds.includes(bodyId)) {
+    if (framed(bodyId)) {
       const bounds = loaded.node.getHierarchyBoundingVectors(true);
       minimum.minimizeInPlace(bounds.min);
       maximum.maximizeInPlace(bounds.max);
     }
   }
-  const framing = frameBounds(toTuple(minimum), toTuple(maximum), context.camera.fov);
+  return frameBounds(toTuple(minimum), toTuple(maximum), context.camera.fov);
+}
+
+// null frames every visible body and resizes the ground around every loaded
+// body, hidden ones included, so hiding an assembly does not move the floor;
+// a list frames only its visible bodies and leaves the ground as it is.
+function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null): void {
+  if (bodyIds === null) {
+    const ground = framingOf(context, () => true);
+    context.stage.fitToBodies(babylonToCorePosition(ground.target), ground.radius / 2);
+  }
+  const visible = (bodyId: string) =>
+    !context.hiddenBodyIds.has(bodyId) && (bodyIds === null || bodyIds.includes(bodyId));
+  // Everything asked for is hidden: keep the camera where it is.
+  if (context.loadedBodies.size > 0 && ![...context.loadedBodies.keys()].some(visible)) {
+    return;
+  }
+  const framing = framingOf(context, visible);
   const { camera } = context;
   camera.setTarget(Vector3.FromArray(framing.target));
   camera.radius = framing.radius;
@@ -89,9 +110,6 @@ function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null
   camera.minZ = framing.radius * 0.001;
   camera.maxZ = framing.radius * 100;
   camera.panningSensibility = 1000 / framing.radius;
-  if (bodyIds === null) {
-    context.stage.fitToBodies(babylonToCorePosition(framing.target), framing.radius / 2);
-  }
 }
 
 function removeBody(context: ViewportContext, bodyId: string): void {
@@ -107,8 +125,15 @@ function removeBody(context: ViewportContext, bodyId: string): void {
   context.loadedBodies.delete(bodyId);
 }
 
+function applyVisibility(context: ViewportContext): void {
+  for (const [bodyId, loaded] of context.loadedBodies) {
+    loaded.node.setEnabled(!context.hiddenBodyIds.has(bodyId));
+  }
+}
+
 function addLoadedBody(context: ViewportContext, bodyId: string, loaded: LoadedBody): void {
   context.loadedBodies.set(bodyId, loaded);
+  loaded.node.setEnabled(!context.hiddenBodyIds.has(bodyId));
   for (const mesh of loaded.meshes) {
     context.bodyIdByMesh.set(mesh, bodyId);
     context.stage.shadowGenerator.addShadowCaster(mesh, false);
@@ -134,13 +159,17 @@ async function loadAndShow(
 function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): void {
   context.scene.onPointerObservable.add((pointerInfo) => {
     // A tap is a click without drag, so orbiting the camera never selects.
-    if (pointerInfo.type !== PointerEventTypes.POINTERTAP) {
+    const { type } = pointerInfo;
+    if (type !== PointerEventTypes.POINTERTAP && type !== PointerEventTypes.POINTERDOUBLETAP) {
       return;
     }
     const { scene, bodyIdByMesh } = context;
-    const pick = scene.pick(scene.pointerX, scene.pointerY, (mesh) => bodyIdByMesh.has(mesh));
+    // A hidden body cannot be picked.
+    const pickable = (mesh: AbstractMesh) => bodyIdByMesh.has(mesh) && mesh.isEnabled();
+    const pick = scene.pick(scene.pointerX, scene.pointerY, pickable);
     const pickedMesh = pick.hit ? pick.pickedMesh : null;
-    callbacks.onBodyPicked(pickedMesh === null ? null : (bodyIdByMesh.get(pickedMesh) ?? null));
+    const bodyId = pickedMesh === null ? null : (bodyIdByMesh.get(pickedMesh) ?? null);
+    callbacks.onBodyPicked(bodyId, type === PointerEventTypes.POINTERDOUBLETAP);
   });
 }
 
@@ -219,6 +248,7 @@ export function createViewport(
     bodyIdByMesh: new Map(),
     poses: new PoseInterpolator(),
     highlights: createBodyHighlights(scene, loadedBodies),
+    hiddenBodyIds: new Set(),
   };
   listenToPicks(context, callbacks);
   applyPosesEachFrame(context);
@@ -231,7 +261,11 @@ export function createViewport(
       context.poses.reset();
       resetPlacements(context);
     },
-    setSelectedBody: (bodyId) => context.highlights.setSelectedBody(bodyId),
+    setSelectedBodies: (bodyIds) => context.highlights.setSelectedBodies(bodyIds),
+    setHiddenBodies: (bodyIds) => {
+      context.hiddenBodyIds = bodyIds;
+      applyVisibility(context);
+    },
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
   };
 }
