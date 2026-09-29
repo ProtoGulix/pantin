@@ -1,4 +1,10 @@
-import type { ImportBodyQuery, PantinId, PantinResponse, PantinSummary } from "@pantin/protocol";
+import type {
+  CreateJointRequest,
+  ImportBodyQuery,
+  PantinId,
+  PantinResponse,
+  PantinSummary,
+} from "@pantin/protocol";
 import { PantinIdSchema } from "@pantin/protocol";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { makeUniqueId, slugifyDisplayName } from "../domain/ids.ts";
@@ -11,6 +17,13 @@ import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
 import { importBodies } from "./import-operations.ts";
+import {
+  createJoint,
+  deleteJoint,
+  getPose,
+  listJoints,
+  setJointPosition,
+} from "./joint-operations.ts";
 import { deleteBody, discardPantin, savePantin } from "./mesh-lifecycle.ts";
 import {
   loadPantin,
@@ -88,6 +101,13 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
       renameBodyOf(context, pantinId, bodyId, name),
     openBodyMesh: (pantinId: PantinId, meshPath: string) =>
       openBodyMesh(context, pantinId, meshPath),
+    listJoints: (pantinId: PantinId) => listJoints(context, pantinId),
+    createJoint: (pantinId: PantinId, request: CreateJointRequest) =>
+      createJoint(context, pantinId, request),
+    deleteJoint: (pantinId: PantinId, jointId: string) => deleteJoint(context, pantinId, jointId),
+    getPose: (pantinId: PantinId) => getPose(context, pantinId),
+    setJointPosition: (pantinId: PantinId, jointId: string, position: number) =>
+      setJointPosition(context, pantinId, jointId, position),
   };
 }
 

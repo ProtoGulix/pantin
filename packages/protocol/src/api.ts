@@ -1,12 +1,7 @@
 import { z } from "zod";
-import {
-  BodySchema,
-  DisplayNameSchema,
-  LengthUnitSchema,
-  PantinDocumentSchema,
-  PantinIdSchema,
-  UpAxisSchema,
-} from "./pantin.ts";
+import { BodyIdSchema, DisplayNameSchema, JointIdSchema, PantinIdSchema } from "./ids.ts";
+import { JointSchema, Vector3Schema } from "./joint.ts";
+import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from "./pantin.ts";
 
 // REST contract between the core and its clients (viewer, CLI, tests).
 // All routes live under API_PREFIX. Bodies are JSON unless stated otherwise.
@@ -29,6 +24,17 @@ import {
 //          its mesh file is deleted at once if pantin.json on disk does not
 //          reference it, otherwise when the Pantin is saved)
 //   GET    /api/pantins/:pantinId/meshes/:fileName    -> raw mesh bytes
+//   GET    /api/pantins/:pantinId/joints              -> JointListResponse
+//   POST   /api/pantins/:pantinId/joints  CreateJointRequest -> 201 JointResponse
+//   DELETE /api/pantins/:pantinId/joints/:jointId     -> PantinResponse
+//   GET    /api/pantins/:pantinId/pose                -> PoseResponse
+//   PUT    /api/pantins/:pantinId/joints/:jointId/position
+//          SetJointPositionRequest                    -> PoseResponse
+//
+// Joints (ADR 0011) are part of the document: creating or deleting one is an
+// unsaved change. Joint positions are runtime state held by the core, never
+// saved, reset to 0 when a Pantin is opened, and clamped by the core to the
+// joint limits. Deleting a body used by a joint answers `conflict`.
 //
 // Edits stay in the core's memory until `save` writes pantin.json; imported
 // mesh files are written to meshes/ at import time. Listing Pantins reads
@@ -100,3 +106,40 @@ export const ApiErrorResponseSchema = z.object({
   }),
 });
 export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>;
+
+export const JointResponseSchema = z.object({ joint: JointSchema });
+export type JointResponse = z.infer<typeof JointResponseSchema>;
+
+export const JointListResponseSchema = z.object({ joints: z.array(JointSchema) });
+export type JointListResponse = z.infer<typeof JointListResponseSchema>;
+
+// Metres for a prismatic joint, radians for revolute and continuous ones.
+export const SetJointPositionRequestSchema = z.object({
+  position: z.number().refine(Number.isFinite, "The position must be a finite number."),
+});
+export type SetJointPositionRequest = z.infer<typeof SetJointPositionRequestSchema>;
+
+// Unit quaternion [x, y, z, w].
+export const QuaternionSchema = z.tuple([z.number(), z.number(), z.number(), z.number()]);
+export type Quaternion = z.infer<typeof QuaternionSchema>;
+
+// Rigid displacement of a body from its reference placement (as imported),
+// in the Pantin frame: first rotate by `rotation` about the Pantin origin,
+// then translate by `translation` (metres).
+export const BodyPoseSchema = z.object({
+  bodyId: BodyIdSchema,
+  translation: Vector3Schema,
+  rotation: QuaternionSchema,
+});
+export type BodyPose = z.infer<typeof BodyPoseSchema>;
+
+export const JointPositionSchema = z.object({ jointId: JointIdSchema, position: z.number() });
+export type JointPosition = z.infer<typeof JointPositionSchema>;
+
+// Every body of the Pantin is listed; a body without a parent joint has the
+// identity displacement.
+export const PoseResponseSchema = z.object({
+  jointPositions: z.array(JointPositionSchema),
+  bodies: z.array(BodyPoseSchema),
+});
+export type PoseResponse = z.infer<typeof PoseResponseSchema>;

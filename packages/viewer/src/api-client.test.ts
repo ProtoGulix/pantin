@@ -34,7 +34,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
-  document: { schema_version: 1, name: "Press", bodies: [] },
+  document: { schema_version: 2, name: "Press", bodies: [], joints: [] },
 };
 
 async function captureError(promise: Promise<unknown>): Promise<PantinApiError> {

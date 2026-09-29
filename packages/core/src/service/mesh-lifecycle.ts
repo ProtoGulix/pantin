@@ -47,7 +47,7 @@ async function deletePendingMeshes(
 
 // Never serialise nor replace a document whose bodies' meshes are still being
 // written: wait until every import in flight has written its meshes or rolled back.
-async function waitForImports(openPantin: OpenPantin): Promise<void> {
+export async function waitForImports(openPantin: OpenPantin): Promise<void> {
   while (openPantin.inFlightImports.size > 0) {
     await Promise.all(openPantin.inFlightImports);
   }
@@ -104,6 +104,7 @@ async function reloadDocument(
   openPantin.savedText = serializePantinDocument(saved);
   openPantin.savedMeshPaths = savedMeshPaths;
   openPantin.pendingMeshDeletions.clear();
+  openPantin.jointPositions.clear();
   for (const meshPath of unsavedMeshes) {
     await context.store.deleteMesh(pantinId, meshPath);
   }
@@ -135,6 +136,15 @@ export async function deleteBody(
   const body = findBody(openPantin.document, bodyId);
   if (body === undefined) {
     throw new ApiError("not_found", `Pantin "${pantinId}" has no body "${bodyId}".`);
+  }
+  const joint = openPantin.document.joints.find(
+    (candidate) => candidate.parent === bodyId || candidate.child === bodyId,
+  );
+  if (joint !== undefined) {
+    throw new ApiError(
+      "conflict",
+      `Body "${bodyId}" is used by joint "${joint.id}". Delete the joint first.`,
+    );
   }
   openPantin.document = removeBodies(openPantin.document, new Set([bodyId]));
   await releaseMesh(context, pantinId, openPantin, body.mesh);

@@ -38,7 +38,7 @@ export function pantinResponse(
   bodies: Body[] = [railBody],
   id = "press",
 ): PantinResponse {
-  return { id, unsavedChanges, document: { schema_version: 1, name: "Press", bodies } };
+  return { id, unsavedChanges, document: { schema_version: 2, name: "Press", bodies, joints: [] } };
 }
 
 export const pantinSummaries: PantinSummary[] = [

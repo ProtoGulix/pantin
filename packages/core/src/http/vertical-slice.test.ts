@@ -162,7 +162,7 @@ describe("invalid pantin.json", () => {
   it("reports an invalid pantin.json with a clear error instead of crashing", async () => {
     const folder = join(workspace.pantinsDirectory, "broken");
     await mkdir(folder);
-    await writeFile(join(folder, "pantin.json"), '{"schema_version": 99}');
+    await writeFile(join(folder, "pantin.json"), '{"schema_version": 2}');
     const server = await startServer();
     const response = await sendRaw(server, "GET", "/api/pantins/broken");
     expect(response.status).toBe(409);

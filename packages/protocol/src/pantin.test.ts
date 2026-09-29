@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { PANTIN_SCHEMA_VERSION, PantinDocumentSchema, PantinIdSchema } from "./pantin.ts";
+import { PantinIdSchema } from "./ids.ts";
+import { PANTIN_SCHEMA_VERSION, PantinDocumentSchema } from "./pantin.ts";
 
 describe("PantinIdSchema", () => {
   it.each(["linear-axis", "a", "axis-800", "0"])("accepts %s", (id) => {
@@ -41,6 +42,7 @@ describe("PantinDocumentSchema", () => {
         mesh: "meshes/rail.glb",
       },
     ],
+    joints: [],
   };
 
   it("accepts a complete document", () => {
@@ -48,7 +50,7 @@ describe("PantinDocumentSchema", () => {
   });
 
   it("rejects an unknown schema version", () => {
-    expect(PantinDocumentSchema.safeParse({ ...validDocument, schema_version: 2 }).success).toBe(
+    expect(PantinDocumentSchema.safeParse({ ...validDocument, schema_version: 1 }).success).toBe(
       false,
     );
   });

@@ -1,16 +1,18 @@
 import {
   type Body,
+  type Joint,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
   PantinDocumentSchema,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
+import { migratePantinDocument } from "./migrations.ts";
 import { formatIssues } from "./validation.ts";
 
 // Pure edits of a Pantin document: each returns a new document.
 
 export function createPantinDocument(name: string): PantinDocument {
-  return { schema_version: PANTIN_SCHEMA_VERSION, name, bodies: [] };
+  return { schema_version: PANTIN_SCHEMA_VERSION, name, bodies: [], joints: [] };
 }
 
 export function renamePantinDocument(document: PantinDocument, name: string): PantinDocument {
@@ -26,6 +28,14 @@ export function removeBodies(
   bodyIds: ReadonlySet<string>,
 ): PantinDocument {
   return { ...document, bodies: document.bodies.filter((body) => !bodyIds.has(body.id)) };
+}
+
+export function addJoint(document: PantinDocument, joint: Joint): PantinDocument {
+  return { ...document, joints: [...document.joints, joint] };
+}
+
+export function removeJoint(document: PantinDocument, jointId: string): PantinDocument {
+  return { ...document, joints: document.joints.filter((joint) => joint.id !== jointId) };
 }
 
 export function findBody(document: PantinDocument, bodyId: string): Body | undefined {
@@ -54,7 +64,7 @@ export function parsePantinDocument(text: string, location: string): PantinDocum
     const reason = error instanceof Error ? error.message : String(error);
     throw new ApiError("conflict", `${location} is not valid JSON (${reason}). Fix or restore it.`);
   }
-  const result = PantinDocumentSchema.safeParse(json);
+  const result = PantinDocumentSchema.safeParse(migratePantinDocument(json, location));
   if (!result.success) {
     const issues = formatIssues(result.error.issues);
     throw new ApiError(

@@ -22,6 +22,8 @@ export type OpenPantin = {
   // One promise per import whose bodies are in the document but whose mesh
   // files are still being written; resolves when the import settles.
   inFlightImports: Set<Promise<void>>;
+  // Runtime joint positions (ADR 0011 point 5): never saved, 0 when absent.
+  jointPositions: Map<string, number>;
 };
 
 export function meshPathsOf(document: PantinDocument): Set<string> {
@@ -38,6 +40,7 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
     pendingMeshDeletions: new Set(),
     saveQueue: Promise.resolve(),
     inFlightImports: new Set(),
+    jointPositions: new Map(),
   };
 }
 // Promises, not values: two requests loading the same Pantin at once share

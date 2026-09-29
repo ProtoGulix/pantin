@@ -1,46 +1,21 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   BodyIdSchema,
   CreatePantinRequestSchema,
   ImportBodyQuerySchema,
   PANTIN_MESHES_DIRECTORY_NAME,
-  type PantinId,
-  PantinIdSchema,
   RenameRequestSchema,
 } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
-import type { PantinService } from "../service/pantin-service.ts";
+import { JOINT_ROUTES } from "./joint-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
-
-type RouteContext = {
-  service: PantinService;
-  maxImportBytes: number;
-  request: IncomingMessage;
-  response: ServerResponse;
-  parameters: Record<string, string>;
-  query: URLSearchParams;
-};
-
-type Route = {
-  method: string;
-  pattern: readonly string[];
-  handle: (context: RouteContext) => Promise<void>;
-};
+import { bodyIdOf, pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
 
 const MESH_CONTENT_TYPES: Readonly<Record<string, string>> = {
   glb: "model/gltf-binary",
   stl: "model/stl",
 };
-
-function pantinIdOf(context: RouteContext): PantinId {
-  return parseWithSchema(PantinIdSchema, context.parameters.pantinId, "The Pantin id in the URL");
-}
-
-function bodyIdOf(context: RouteContext): string {
-  return parseWithSchema(BodyIdSchema, context.parameters.bodyId, "The body id in the URL");
-}
 
 // A mesh file name is "<bodyId>.glb" or "<bodyId>.stl": nothing else can name a file.
 function meshPathOf(context: RouteContext): { meshPath: string; contentType: string } {
@@ -88,7 +63,7 @@ async function sendMesh(context: RouteContext): Promise<void> {
   file.stream.pipe(context.response);
 }
 
-export const ROUTES: readonly Route[] = [
+const PANTIN_ROUTES: readonly Route[] = [
   {
     method: "GET",
     pattern: ["pantins"],
@@ -155,6 +130,8 @@ export const ROUTES: readonly Route[] = [
   },
   { method: "GET", pattern: ["pantins", ":pantinId", "meshes", ":fileName"], handle: sendMesh },
 ];
+
+export const ROUTES: readonly Route[] = [...PANTIN_ROUTES, ...JOINT_ROUTES];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {
   return new ApiError(
