@@ -44,6 +44,8 @@ export interface PanelIntents {
 
   // A new empty assembly in the Pantin of this tree node (ADR 0019).
   createAssembly(nodeId: string): void;
+  // A body dragged onto an assembly, or onto a body of it, in the tree.
+  dropBody(draggedNodeId: string, targetNodeId: string): void;
   // 3D display of the assembly of this tree node; never saved.
   toggleAssemblyHidden(nodeId: string): void;
   toggleAssemblyIsolated(nodeId: string): void;

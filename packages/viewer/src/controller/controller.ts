@@ -7,6 +7,7 @@ import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
 import {
   createAssembly,
+  dropBody,
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
@@ -80,6 +81,7 @@ function treeIntents(store: ViewerStore) {
       void commitPropertyEdit(store, target, value),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
     requestDelete: (nodeId: string) => requestDelete(store, nodeId),
+    dropBody: (dragged: string, target: string) => dropBody(store, dragged, target),
     toggleAssemblyHidden: (nodeId: string) => toggleAssemblyHidden(store, nodeId),
     toggleAssemblyIsolated: (nodeId: string) => toggleAssemblyIsolated(store, nodeId),
     createAssembly: (nodeId: string) => {

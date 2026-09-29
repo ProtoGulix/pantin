@@ -1,9 +1,11 @@
 import type { Translate } from "../i18n/translate.ts";
+import { isDraggableNode } from "../tree/tree-drop.ts";
 import type { TreeRow } from "../tree/tree-model.ts";
 import { commandForKey, type TreeCommand } from "../tree/tree-navigation.ts";
 import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { listenToDrags } from "./tree-drag.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -101,6 +103,11 @@ function rowAttributes(row: TreeRow, index: number): Record<string, string> {
   };
   if (row.expandable) {
     attributes["aria-expanded"] = String(row.expanded);
+  }
+  // A body can be dropped on another assembly (tree-drag.ts); not while its
+  // name is edited, where a drag would select text.
+  if (isDraggableNode(row.id) && !row.renaming) {
+    attributes.draggable = "true";
   }
   return attributes;
 }
@@ -263,6 +270,7 @@ export function createTreeView(): TreeView {
   const current: Current = { rows: [], intents: null, elements: new Map() };
   listenToKeys(tree, current);
   listenToPointer(tree, current);
+  listenToDrags(tree, (dragged, target) => current.intents?.dropBody(dragged, target));
   return {
     tree,
     render: (rows, language, translate, intents) => {

@@ -10,6 +10,7 @@ import { createTranslator, pluralKey } from "../i18n/translate.ts";
 import { infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId, parseNodeId } from "../tree/node-ids.ts";
+import { bodyMoveOf } from "../tree/tree-drop.ts";
 import { withRevealedNode, withSelectedNode, withTreeStateCarried } from "../tree/tree-state.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { editPantin } from "./pantin-actions.ts";
@@ -100,6 +101,16 @@ export function toggleAssemblyHidden(store: ViewerStore, nodeId: string): void {
 
 export function toggleAssemblyIsolated(store: ViewerStore, nodeId: string): void {
   withDisplayOf(store, nodeId, withAssemblyIsolationToggled);
+}
+
+/** A body dropped in the tree: the same move as the properties' select. */
+export function dropBody(store: ViewerStore, draggedNodeId: string, targetNodeId: string): void {
+  const open = store.state.openPantin;
+  const move = open === null ? null : bodyMoveOf(open.document, draggedNodeId, targetNodeId);
+  if (open !== null && move !== null) {
+    const target = { kind: "bodyAssembly" as const, pantinId: open.id, bodyId: move.bodyId };
+    void commitKeyEdit(store, target, move.assembly);
+  }
 }
 
 /** A new assembly with a default name, selected and ready to be renamed. */
