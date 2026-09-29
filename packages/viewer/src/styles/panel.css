@@ -124,6 +124,12 @@
   overflow: hidden;
 }
 
+/* Their display: flex would otherwise override the hidden attribute. */
+.pane-stack[hidden],
+.pane[hidden] {
+  display: none;
+}
+
 .pane--tree {
   flex: var(--tree-fraction, 0.6) 1 0;
 }
