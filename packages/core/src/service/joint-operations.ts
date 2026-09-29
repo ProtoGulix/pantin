@@ -7,7 +7,7 @@ import type {
   PoseSnapshot,
 } from "@pantin/protocol";
 import { addJointToDocument, updateJointInDocument } from "../domain/joint-rules.ts";
-import { clampJointPosition } from "../domain/joint-types/registry.ts";
+import { clampJointPosition, isMovableJoint } from "../domain/joint-types/registry.ts";
 import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
 import { removeJoint } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
@@ -74,6 +74,11 @@ export async function updateJoint(
   await waitForImports(openPantin);
   const { document, joint } = updateJointInDocument(openPantin.document, jointId, request);
   openPantin.document = document;
+  // A joint that became fixed has no position nor setpoint (ADR 0018).
+  if (!isMovableJoint(joint)) {
+    forgetJointRuntimeState(openPantin, jointId);
+    return joint;
+  }
   // New limits may exclude the current position: bring it back inside.
   const position = openPantin.jointPositions.get(jointId);
   if (position !== undefined) {

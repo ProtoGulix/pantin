@@ -265,17 +265,6 @@ describe("joint update", () => {
     expect(pantin.json).toMatchObject({ unsavedChanges: true });
   });
 
-  it("refuses a type change with an actionable message", async () => {
-    await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
-    const { limits: _limits, ...withoutLimits } = PRISMATIC;
-    const response = await sendJsonRequest(server, "PATCH", "/api/pantins/axis/joints/axe-x", {
-      ...withoutLimits,
-      type: "continuous",
-    });
-    expect(response.status).toBe(400);
-    expect(response.body).toContain("Delete it and create a new one");
-  });
-
   it("answers 404 for an unknown joint", async () => {
     const response = await sendJsonRequest(
       server,

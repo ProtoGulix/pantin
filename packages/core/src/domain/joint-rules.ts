@@ -70,21 +70,15 @@ export function addJointToDocument(
   return validatedJoint(addJoint(document, joint), id, "The Pantin with the new joint");
 }
 
-// Every field but the id may change; the id, hence the tag names, stays.
+// Every field but the id may change, the type included (ADR 0018); the id,
+// hence the tag names, stays.
 export function updateJointInDocument(
   document: PantinDocument,
   jointId: string,
   request: CreateJointRequest,
 ): { document: PantinDocument; joint: Joint } {
-  const existing = document.joints.find((joint) => joint.id === jointId);
-  if (existing === undefined) {
+  if (!document.joints.some((joint) => joint.id === jointId)) {
     throw new ApiError("not_found", `This Pantin has no joint "${jointId}".`);
-  }
-  if (request.type !== existing.type) {
-    throw new ApiError(
-      "invalid_request",
-      `Joint "${jointId}" is ${existing.type} and cannot become ${request.type}. Delete it and create a new one.`,
-    );
   }
   // Checked against the other joints only: the joint may keep its own link.
   const problem = linkProblem(removeJoint(document, jointId), request);

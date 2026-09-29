@@ -82,18 +82,19 @@ describe("updateJointInDocument", () => {
     expect(document.joints.map((candidate) => candidate.id)).toEqual(["link", "link-2"]);
   });
 
+  it("changes the type, keeping the id and the place in the list (ADR 0018)", () => {
+    const slider: CreateJointRequest = { ...link("a", "b"), type: "prismatic", limits: [0, 0.1] };
+    const { document, joint } = updateJointInDocument(chain, "link", slider);
+    expect(joint).toEqual({ id: "link", ...slider });
+    expect(document.joints.map((candidate) => candidate.id)).toEqual(["link", "link-2"]);
+  });
+
   it("lets a joint keep its own child without counting it as a second parent", () => {
     expect(() => updateJointInDocument(chain, "link", link("a", "b"))).not.toThrow();
   });
 
   it.each<[string, string, CreateJointRequest, RegExp]>([
     ["an unknown joint", "ghost", link("a", "b"), /no joint "ghost"/],
-    [
-      "a type change",
-      "link",
-      { ...link("a", "b"), type: "continuous" },
-      /cannot become continuous/,
-    ],
     ["a cycle", "link", link("c", "b"), /would make a cycle/],
     ["a child that already has a parent", "link", link("a", "c"), /already has the parent joint/],
   ])("refuses %s", (_label, jointId, request, message) => {

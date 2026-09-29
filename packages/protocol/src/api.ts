@@ -33,8 +33,8 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //   GET    /api/pantins/:pantinId/joints              -> JointListResponse
 //   POST   /api/pantins/:pantinId/joints  CreateJointRequest -> 201 JointResponse
 //   PATCH  /api/pantins/:pantinId/joints/:jointId  UpdateJointRequest -> JointResponse
-//          (replaces every field but the id; the type cannot change: delete
-//          the joint and create a new one instead)
+//          (replaces every field but the id, the type included, ADR 0018;
+//          a joint that becomes fixed loses its position and setpoint)
 //   DELETE /api/pantins/:pantinId/joints/:jointId     -> PantinResponse
 //   GET    /api/pantins/:pantinId/pose                -> PoseResponse
 //   PUT    /api/pantins/:pantinId/joints/:jointId/position
