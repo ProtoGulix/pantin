@@ -1,6 +1,6 @@
 # 0017. STEP import creates the fixed joints of the assembly
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-09-29
 - Extends: ADR 0009 (STEP import), ADR 0011 (kinematic joints)
 
@@ -80,7 +80,8 @@ NOT VERIFIED: an import of a real nested assembly (spike 0001 had one level).
 
 ## Consequences
 
-- The import response is a public API change: it needs the user's approval.
+- The import response is a public API change, approved by the user on
+  2026-09-29.
 - Deleting the root body requires deleting its N-1 joints first (ADR 0011
   point 7 unchanged). A cascading delete would contradict that point and
   needs a separate agreement.
