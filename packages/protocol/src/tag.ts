@@ -29,6 +29,15 @@ export const TagNameSchema = z
     'A tag name is "<assembly>.<tag key>.<member>", for example "verin_pince.tige.setpoint".',
   );
 
+// The format of a joint's tag names, part of the contract like the pattern
+// above: the core names tags with it, clients show the same names (ADR 0019
+// point 6). Only a joint that can move has tags.
+export type JointTagMember = "setpoint" | "position";
+
+export function jointTagName(assemblyKey: string, tagKey: string, member: JointTagMember): string {
+  return `${assemblyKey}.${tagKey}.${member}`;
+}
+
 // Every value is a number: a bit will be 0 or 1, as in a PLC's process
 // image (not enforced yet: only float tags exist, ADR 0012 point 2).
 const TagValueSchema = z.number().refine(Number.isFinite, "A tag value must be a finite number.");

@@ -108,6 +108,14 @@ describe("jointOfCommandTag", () => {
   });
 });
 
+describe("jointOfCommandTag messages", () => {
+  it("names the tags of a joint whose member is wrong", () => {
+    expect(apiErrorOf(() => jointOfCommandTag(document, "axis_800.stroke.speed")).message).toBe(
+      'No tag "axis_800.stroke.speed". This joint has "axis_800.stroke.setpoint" and "axis_800.stroke.position".',
+    );
+  });
+});
+
 describe("applyQueuedSetpoints", () => {
   it("moves a joint to its queued setpoint, clamped to its limits", () => {
     const positions = applyQueuedSetpoints(document, new Map(), new Map([["stroke", 0.5]]));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TagNameSchema, TagSchema, WriteTagRequestSchema } from "./tag.ts";
+import { jointTagName, TagNameSchema, TagSchema, WriteTagRequestSchema } from "./tag.ts";
 
 describe("TagNameSchema", () => {
   it.each(["verin_pince.tige.setpoint", "axis-1.stroke.position", "a.b.c"])(
@@ -38,5 +38,13 @@ describe("TagSchema", () => {
 describe("WriteTagRequestSchema", () => {
   it.each([Number.NaN, Number.POSITIVE_INFINITY, "1", null])("refuses %s", (value) => {
     expect(WriteTagRequestSchema.safeParse({ value }).success).toBe(false);
+  });
+});
+
+describe("jointTagName", () => {
+  it("builds a name the schema accepts: assembly key, tag key, member", () => {
+    const name = jointTagName("verin_pince", "tige", "setpoint");
+    expect(name).toBe("verin_pince.tige.setpoint");
+    expect(TagNameSchema.safeParse(name).success).toBe(true);
   });
 });
