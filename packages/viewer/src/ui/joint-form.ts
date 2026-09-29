@@ -142,11 +142,7 @@ export function renderJointForm(
   const child = selectInput(view.bodyOptions, view.child, translate("joint.form.child"), (id) =>
     intents.editJointField(view.childFieldId, id),
   );
-  const create = button(
-    translate("joint.form.confirm"),
-    "button button--primary",
-    intents.submitJointForm,
-  );
+  const create = button(view.confirmLabel, "button button--primary", intents.submitJointForm);
   create.disabled = !view.canSubmit;
   return element(
     "div",

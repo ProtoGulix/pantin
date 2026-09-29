@@ -76,7 +76,7 @@ describe("context menu", () => {
     ).toEqual(["frame"]);
   });
 
-  it("offers a new joint only on the joints folder, deletion on a joint", () => {
+  it("offers a new joint only on the joints folder, a type change and deletion on a joint", () => {
     const pantinId = "press";
     expect(contextEntries({ kind: "folder", pantinId, folder: "joints" }, false)).toEqual([
       "frame",
@@ -87,7 +87,7 @@ describe("context menu", () => {
     ]);
     expect(
       contextEntries({ kind: "joint", pantinId, jointId: "hinge", underBodyId: null }, false),
-    ).toEqual(["frame", "delete"]);
+    ).toEqual(["frame", "changeJointType", "delete"]);
   });
 
   it("is translated and titled with the node name", () => {

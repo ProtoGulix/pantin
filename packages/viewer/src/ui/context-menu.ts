@@ -19,6 +19,8 @@ function runAction(
     intents.frameNode(nodeId);
   } else if (action === "newJoint") {
     intents.openJointForm();
+  } else if (action === "changeJointType") {
+    intents.openJointEditForm(nodeId);
   } else if (action === "delete") {
     intents.requestDelete(nodeId);
   } else {

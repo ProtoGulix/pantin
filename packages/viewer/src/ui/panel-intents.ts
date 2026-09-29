@@ -42,8 +42,10 @@ export interface PanelIntents {
   confirmImport(): void;
   cancelImport(): void;
 
-  // Joints: the creation form, and the sliders (position in SI).
+  // Joints: the form (creation or type change), and the sliders (position in SI).
   openJointForm(): void;
+  // The form prefilled with the joint of this tree node (ADR 0018).
+  openJointEditForm(nodeId: string): void;
   editJointField(fieldId: string, value: string): void;
   changeJointType(type: string): void;
   // "x", "y", "z" or "custom".

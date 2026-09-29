@@ -5,7 +5,13 @@ import type { ViewerState } from "../viewer-state.ts";
 
 // Entries of the tree's right-click menu, as data.
 
-export type ContextAction = "rename" | "frame" | "importInto" | "newJoint" | "delete";
+export type ContextAction =
+  | "rename"
+  | "frame"
+  | "importInto"
+  | "newJoint"
+  | "changeJointType"
+  | "delete";
 
 export interface ContextMenuView {
   nodeId: string;
@@ -17,7 +23,8 @@ export interface ContextMenuView {
 
 /**
  * Entries depend on the node: only Pantins accept an import, only the joints
- * folder a new joint, only bodies and joints a deletion.
+ * folder a new joint, only joints a type change, only bodies and joints a
+ * deletion.
  */
 export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
   const entries: ContextAction[] = renamable ? ["rename"] : [];
@@ -27,6 +34,9 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
   }
   if (ref.kind === "folder" && ref.folder === "joints") {
     entries.push("newJoint");
+  }
+  if (ref.kind === "joint") {
+    entries.push("changeJointType");
   }
   if (ref.kind === "body" || ref.kind === "joint") {
     entries.push("delete");
@@ -39,6 +49,7 @@ const CONTEXT_LABELS = {
   frame: "menu.frame",
   importInto: "menu.importInto",
   newJoint: "menu.newJoint",
+  changeJointType: "menu.changeJointType",
   delete: "menu.delete",
 } as const;
 

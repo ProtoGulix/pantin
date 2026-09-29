@@ -7,7 +7,8 @@ import {
   withJointFormType,
 } from "../joints/joint-form.ts";
 import { JOINT_TYPES } from "../joints/joint-labels.ts";
-import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
+import { jointFormFor } from "../joints/joint-edit-form.ts";
+import { pantinResponse, railBody, stepBody, weldJoint } from "../test-fixtures.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
 import { buildJointFormView } from "./joint-form-model.ts";
 
@@ -85,5 +86,23 @@ describe("buildJointFormView, axis", () => {
     const components = buildJointFormView(custom, translate)?.axis.components;
     expect([components?.unit, components?.inputs.length]).toEqual([null, 3]);
     expect(buildJointFormView(custom, translate)?.axis.reversed).toBeNull();
+  });
+});
+
+describe("buildJointFormView, type change", () => {
+  it("titles the form after the joint it changes (ADR 0018)", () => {
+    const opened = withOpenPantin(initialViewerState("en"), pantinResponse(false, bodies));
+    const withJoint = {
+      ...opened,
+      openPantin: opened.openPantin && {
+        ...opened.openPantin,
+        document: { ...opened.openPantin.document, joints: [weldJoint] },
+      },
+    };
+    const view = buildJointFormView(
+      { ...withJoint, jointForm: jointFormFor(weldJoint) },
+      translate,
+    );
+    expect([view?.title, view?.confirmLabel]).toEqual(['Change joint "Weld"', "Apply"]);
   });
 });

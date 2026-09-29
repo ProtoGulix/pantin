@@ -1,6 +1,6 @@
 import { parseAxisDirection } from "../joints/axis-choice.ts";
+import { jointFormFor, jointFormSubmission } from "../joints/joint-edit-form.ts";
 import {
-  buildJointRequest,
   initialJointForm,
   parseJointType,
   withJointAxisDirection,
@@ -16,12 +16,13 @@ import {
 import { describeFailure, errorMessage, infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { withJointDeleted } from "../session-state.ts";
-import { jointNodeId } from "../tree/node-ids.ts";
+import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
 import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
-// Joint editing: the creation form, deletion and the sliders' requests.
+// Joint editing: the form (creation or type change), deletion and the
+// sliders' requests.
 // Like every edit, each one is followed by a fresh read of the Pantin.
 
 export function openJointForm(store: ViewerStore): void {
@@ -32,6 +33,25 @@ export function openJointForm(store: ViewerStore): void {
   store.update({
     ...store.state,
     jointForm: initialJointForm(open.document.bodies),
+    contextMenu: null,
+    message: null,
+  });
+}
+
+/** The form prefilled with a stored joint, to change its type (ADR 0018). */
+export function openJointEditForm(store: ViewerStore, nodeId: string): void {
+  const open = store.state.openPantin;
+  const ref = parseNodeId(nodeId);
+  const joint =
+    ref?.kind === "joint"
+      ? open?.document.joints.find((candidate) => candidate.id === ref.jointId)
+      : undefined;
+  if (joint === undefined) {
+    return;
+  }
+  store.update({
+    ...store.state,
+    jointForm: jointFormFor(joint),
     contextMenu: null,
     message: null,
   });
@@ -86,26 +106,33 @@ export async function submitJointForm(store: ViewerStore): Promise<void> {
   if (form === null || open === null) {
     return;
   }
-  const built = buildJointRequest(form);
-  if (!built.ok) {
+  const submission = jointFormSubmission(form, open.document.joints);
+  if (submission.kind === "gone") {
+    store.update({ ...store.state, jointForm: null, message: errorMessage("message.jointGone") });
+    return;
+  }
+  if (submission.kind === "invalid") {
     // The contract's own message, so the user learns which rule was broken.
     store.update({
       ...store.state,
-      message: errorMessage("message.jointInvalid", {}, built.message),
+      message: errorMessage("message.jointInvalid", {}, submission.message),
     });
     return;
   }
-  const created = await editPantin(store, open.id, (pantinId) =>
-    store.ports.api.createJoint(pantinId, built.request),
+  const saved = await editPantin(store, open.id, (pantinId) =>
+    submission.kind === "create"
+      ? store.ports.api.createJoint(pantinId, submission.request)
+      : store.ports.api.updateJoint(pantinId, submission.jointId, submission.request),
   );
   // Refused by the core: the message line shows why and the form stays open.
-  if (created === undefined) {
+  if (saved === undefined) {
     return;
   }
+  const messageKey = submission.kind === "create" ? "message.jointCreated" : "message.jointUpdated";
   store.update({
-    ...withRevealedNode(store.state, jointNodeId(open.id, created.id)),
+    ...withRevealedNode(store.state, jointNodeId(open.id, saved.id)),
     jointForm: null,
-    message: infoMessage("message.jointCreated", { name: created.name }),
+    message: infoMessage(messageKey, { name: saved.name }),
   });
 }
 

@@ -11,12 +11,15 @@ import { coordinateFromDisplay, millimetresToMetres } from "../units.ts";
 import { type AxisDirection, axisChoiceOf, axisVectorOf } from "./axis-choice.ts";
 import { JOINT_TYPES } from "./joint-labels.ts";
 
-// The state of the "New joint" form and the building of its request, as pure
-// functions. The form is generated from JOINT_PARAMETERS: this module never
-// tests a joint type (ADR 0016). The user types display units (mm, degrees);
+// The state of the joint form and the building of its request, as pure
+// functions. It creates a joint, or replaces a stored one (ADR 0018). The
+// form is generated from JOINT_PARAMETERS: this module never tests a joint
+// type (ADR 0016). The user types display units (mm, degrees);
 // the request is built in SI and validated by the contract's schema.
 
 export interface JointFormState {
+  // The joint this form replaces, or null when it creates one.
+  jointId: string | null;
   type: JointType;
   // Raw text of every input, by field id: what the user typed, unvalidated.
   values: Readonly<Record<string, string>>;
@@ -69,6 +72,7 @@ const DEFAULT_TYPE: JointType = CreateJointRequestSchema.options[0].shape.type.v
 export function initialJointForm(bodies: readonly Body[]): JointFormState {
   const firstBody = bodies[0]?.id ?? "";
   return {
+    jointId: null,
     type: DEFAULT_TYPE,
     values: {
       [FIELD_NAME]: "",

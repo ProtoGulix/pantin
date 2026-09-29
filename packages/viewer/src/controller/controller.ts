@@ -16,6 +16,7 @@ import {
   chooseJointAxis,
   editJointField,
   moveJoint,
+  openJointEditForm,
   openJointForm,
   reverseJointAxis,
   submitJointForm,
@@ -113,6 +114,7 @@ function importIntents(store: ViewerStore) {
 function jointIntents(store: ViewerStore) {
   return {
     openJointForm: () => openJointForm(store),
+    openJointEditForm: (nodeId: string) => openJointEditForm(store, nodeId),
     editJointField: (fieldId: string, value: string) => editJointField(store, fieldId, value),
     changeJointType: (type: string) => changeJointType(store, type),
     chooseJointAxis: (direction: string) => chooseJointAxis(store, direction),

@@ -17,8 +17,9 @@ import { displayUnitLabel } from "../joints/joint-parameters.ts";
 import { displayUnitOf } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
-// The inline "New joint" form as data. Its rows after the shared ones come
-// from JOINT_PARAMETERS, so a new joint type needs nothing here.
+// The inline joint form as data, to create a joint or change a stored one.
+// Its rows after the shared ones come from JOINT_PARAMETERS, so a new joint
+// type needs nothing here.
 
 interface JointFormInputView {
   id: string;
@@ -35,6 +36,7 @@ export interface JointFormRowView {
 
 export interface JointFormView {
   title: string;
+  confirmLabel: string;
   type: JointType;
   typeOptions: readonly { value: string; label: string }[];
   name: string;
@@ -137,8 +139,13 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
   if (form === null || open === null) {
     return null;
   }
+  const creating = form.jointId === null;
   return {
-    title: t("joint.form.title", { pantinName: open.document.name }),
+    // The name typed in the form: the joint may have been deleted meanwhile.
+    title: creating
+      ? t("joint.form.title", { pantinName: open.document.name })
+      : t("joint.form.editTitle", { name: form.values[FIELD_NAME] ?? "" }),
+    confirmLabel: t(creating ? "joint.form.confirm" : "joint.form.apply"),
     type: form.type,
     typeOptions: JOINT_TYPES.map((type) => ({ value: type, label: t(jointTypeLabelKey(type)) })),
     name: form.values[FIELD_NAME] ?? "",
