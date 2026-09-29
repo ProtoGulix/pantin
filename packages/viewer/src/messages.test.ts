@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PantinApiError } from "./api-client.ts";
+import { PantinApiError } from "./api-transport.ts";
 import { createTranslator } from "./i18n/translate.ts";
 import { describeFailure } from "./messages.ts";
 

@@ -1,5 +1,5 @@
 import type { ApiErrorCode } from "@pantin/protocol";
-import { PantinApiError } from "./api-client.ts";
+import { PantinApiError } from "./api-transport.ts";
 import type { MessageKey, MessageParameters } from "./i18n/translate.ts";
 
 // The one message line of the panel. Stored untranslated (key + parameters),

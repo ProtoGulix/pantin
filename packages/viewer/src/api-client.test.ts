@@ -1,53 +1,14 @@
 import type { PantinResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import {
-  createPantinApiClient,
-  type FetchFunction,
-  meshFileNameFromPath,
-  PantinApiError,
-} from "./api-client.ts";
-
-interface RecordedRequest {
-  url: string;
-  init: RequestInit | undefined;
-}
-
-function fakeFetch(response: Response): {
-  fetchFunction: FetchFunction;
-  requests: RecordedRequest[];
-} {
-  const requests: RecordedRequest[] = [];
-  const fetchFunction: FetchFunction = async (url, init) => {
-    requests.push({ url, init });
-    return response;
-  };
-  return { fetchFunction, requests };
-}
-
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
+import { createPantinApiClient, meshFileNameFromPath } from "./api-client.ts";
+import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
+import { type FetchFunction, PantinApiError } from "./api-transport.ts";
 
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
   document: { schema_version: 2, name: "Press", bodies: [], joints: [] },
 };
-
-async function captureError(promise: Promise<unknown>): Promise<PantinApiError> {
-  try {
-    await promise;
-  } catch (error) {
-    if (error instanceof PantinApiError) {
-      return error;
-    }
-    throw error;
-  }
-  throw new Error("Expected the call to fail.");
-}
 
 describe("PantinApiClient responses", () => {
   it("returns a validated Pantin list", async () => {
