@@ -63,6 +63,8 @@ function treeIntents(store: ViewerStore) {
         store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: null });
       }
     },
+    revealNode: (nodeId: string) =>
+      store.update({ ...withRevealedNode(store.state, nodeId), contextMenu: null }),
     setExpanded: (nodeId: string, expanded: boolean) => setExpanded(store, nodeId, expanded),
     activateNode: (nodeId: string) => activateNode(store, nodeId),
     startRename: (nodeId: string) => startRename(store, nodeId),

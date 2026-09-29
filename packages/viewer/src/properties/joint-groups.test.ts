@@ -2,7 +2,7 @@ import { JOINT_COORDINATE_UNITS } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { hingeJoint, pantinResponse, screwJoint, spinJoint, stepBody } from "../test-fixtures.ts";
-import { folderNodeId, jointNodeId } from "../tree/node-ids.ts";
+import { bodyNodeId, folderNodeId, jointNodeId } from "../tree/node-ids.ts";
 import { buildPropertyGroups } from "./properties-model.ts";
 import type { PropertyGroup } from "./property-rows.ts";
 
@@ -173,5 +173,28 @@ describe("joint values in display units", () => {
     expect(limitsOf("hinge")).toEqual(["-90", "90"]);
     expect(limitsOf("screw")).toEqual(["0", "50"]);
     expect(rowsOf("screw").find((r) => r.id === "parameter-pitch.value")?.value).toBe("2");
+  });
+});
+
+describe("joints of a body", () => {
+  const bodyRows = (bodyId: string) =>
+    buildPropertyGroups(jointSource, bodyNodeId("press", bodyId), new Set(), translate).find(
+      (group) => group.id === "joints",
+    )?.rows ?? [];
+
+  it("lists every joint holding the body, with its type and the other body", () => {
+    const rows = bodyRows("rail");
+    expect(rows.map((r) => [r.label, r.value])).toEqual([
+      ["Hinge", "Pivot limité, parent de « Carriage »"],
+      ["Screw", "Hélicoïdale (vis et écrou), parent de « Carriage »"],
+      ["Spin", "Pivot continu, parent de « Carriage »"],
+    ]);
+    expect(bodyRows("carriage")[0]?.value).toBe("Pivot limité, enfant de « Rail »");
+  });
+
+  it("links each row to its joint in the tree, read-only", () => {
+    const hinge = bodyRows("carriage")[0];
+    expect(hinge?.link).toBe(jointNodeId("press", "hinge"));
+    expect(hinge?.edit).toBeNull();
   });
 });

@@ -21,6 +21,8 @@ export interface PanelIntents {
   frameSelection(): void;
   frameNode(nodeId: string): void;
   selectNode(nodeId: string): void;
+  // Selects a node that may sit in a folded branch, unfolding its ancestors.
+  revealNode(nodeId: string): void;
   setExpanded(nodeId: string, expanded: boolean): void;
   activateNode(nodeId: string): void;
   startRename(nodeId: string): void;

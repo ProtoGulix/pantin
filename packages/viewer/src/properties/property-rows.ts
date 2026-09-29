@@ -8,7 +8,8 @@ export type PropertyGroupId =
   | "mesh"
   | "sourceNodes"
   | "placement"
-  | "parameters";
+  | "parameters"
+  | "joints";
 
 export type EditTarget =
   // A Pantin or a body, named by its tree node.
@@ -35,6 +36,8 @@ export interface PropertyRow {
   muted: boolean;
   // Null for read-only rows.
   edit: RowEditor | null;
+  // Tree node the value leads to when clicked (a body's joints), or null.
+  link: string | null;
 }
 
 export interface PropertyGroup {
@@ -52,7 +55,11 @@ export function row(
   value: string,
   edit: RowEditor | null = null,
 ): PropertyRow {
-  return { id, label, value, muted: false, edit };
+  return { id, label, value, muted: false, edit, link: null };
+}
+
+export function linkRow(id: string, label: string, value: string, nodeId: string): PropertyRow {
+  return { ...row(id, label, value), link: nodeId };
 }
 
 export function renameEditor(nodeId: string): RowEditor {

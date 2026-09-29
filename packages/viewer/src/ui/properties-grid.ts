@@ -7,8 +7,22 @@ import type { PanelIntents } from "./panel-intents.ts";
 // CODESYS-like two-column grid, as a real table: one <tbody> per group, with
 // a header row whose button folds the group.
 
+// The value names another tree node (a joint of a body): a click selects it.
+function linkCell(row: PropertyRow, nodeId: string, intents: PanelIntents): HTMLElement {
+  const link = element("button", {
+    className: "property-grid__link",
+    text: row.value,
+    attributes: { type: "button", title: row.value },
+  });
+  link.addEventListener("click", () => intents.revealNode(nodeId));
+  return element("td", { className: "property-grid__value" }, [link]);
+}
+
 function valueCell(row: PropertyRow, translate: Translate, intents: PanelIntents): HTMLElement {
   const editor = row.edit;
+  if (row.link !== null) {
+    return linkCell(row, row.link, intents);
+  }
   if (editor === null) {
     return element("td", {
       className: row.muted

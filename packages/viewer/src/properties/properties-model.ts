@@ -1,12 +1,14 @@
 import type { Body, PantinResponse } from "@pantin/protocol";
+import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
-import { parseNodeId } from "../tree/node-ids.ts";
+import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
 import { jointGroups } from "./joint-groups.ts";
 import {
   type GroupDraft,
   type PropertyGroup,
   type PropertyGroupId,
+  linkRow,
   type PropertyRow,
   renameEditor,
   row,
@@ -23,6 +25,7 @@ const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   sourceNodes: "properties.group.sourceNodes",
   placement: "properties.group.placement",
   parameters: "properties.group.parameters",
+  joints: "properties.group.joints",
 };
 
 function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
@@ -58,7 +61,32 @@ function sourceNodeRows(body: Body, t: Translate): PropertyRow[] {
   }));
 }
 
-function bodyGroups(body: Body, nodeId: string, t: Translate): GroupDraft[] {
+// Every joint that holds the body, as parent or as child; a click selects it.
+function bodyJointRows(body: Body, pantin: PantinResponse, t: Translate): PropertyRow[] {
+  const { bodies, joints } = pantin.document;
+  const bodyName = (bodyId: string) =>
+    bodies.find((candidate) => candidate.id === bodyId)?.name ?? bodyId;
+  const rows = joints.flatMap((joint): PropertyRow[] => {
+    if (joint.child !== body.id && joint.parent !== body.id) {
+      return [];
+    }
+    // A joint linking the body to itself reads as "child of", like the 3D tint.
+    const isChild = joint.child === body.id;
+    const role = t(isChild ? "properties.jointRole.childOf" : "properties.jointRole.parentOf", {
+      type: t(jointTypeLabelKey(joint.type)),
+      body: bodyName(isChild ? joint.parent : joint.child),
+    });
+    return [linkRow(`joint-${joint.id}`, joint.name, role, jointNodeId(pantin.id, joint.id))];
+  });
+  return rows.length > 0 ? rows : [{ ...row("none", t("properties.noJoint"), ""), muted: true }];
+}
+
+function bodyGroups(
+  body: Body,
+  pantin: PantinResponse,
+  nodeId: string,
+  t: Translate,
+): GroupDraft[] {
   const { source } = body;
   return [
     {
@@ -68,6 +96,7 @@ function bodyGroups(body: Body, nodeId: string, t: Translate): GroupDraft[] {
         row("id", t("properties.id"), body.id),
       ],
     },
+    { id: "joints", rows: bodyJointRows(body, pantin, t) },
     {
       id: "source",
       rows: [
@@ -138,7 +167,9 @@ function groupsFor(source: TreeSource, nodeId: string, t: Translate): GroupDraft
   if (body === undefined) {
     return [];
   }
-  return ref.kind === "body" ? bodyGroups(body, nodeId, t) : sourceNodeGroups(body, ref.index, t);
+  return ref.kind === "body"
+    ? bodyGroups(body, open, nodeId, t)
+    : sourceNodeGroups(body, ref.index, t);
 }
 
 /** Groups for the selected node, or an empty list when nothing is selected. */

@@ -43,7 +43,7 @@ describe("buildPropertyGroups", () => {
 });
 
 describe("buildPropertyGroups for bodies and nodes", () => {
-  it("describes a body: general, source, mesh and original nodes", () => {
+  it("describes a body: general, joints, source, mesh and original nodes", () => {
     const groups = buildPropertyGroups(source, bodyNodeId("press", "rail"), new Set(), translate);
     expect(table(groups)).toEqual([
       [
@@ -53,6 +53,7 @@ describe("buildPropertyGroups for bodies and nodes", () => {
           ["Identifiant", "rail"],
         ],
       ],
+      ["Liaisons", [["Aucune liaison", ""]]],
       [
         "Source",
         [
@@ -71,7 +72,7 @@ describe("buildPropertyGroups for bodies and nodes", () => {
         ],
       ],
     ]);
-    expect(groups[3]?.rows.every((row) => row.muted && row.edit === null)).toBe(true);
+    expect(groups[4]?.rows.every((row) => row.muted && row.edit === null)).toBe(true);
   });
 });
 
@@ -86,7 +87,7 @@ describe("buildPropertyGroups for other nodes", () => {
       new Set(),
       translate,
     );
-    expect(groups[1]?.rows[1]?.value).toBe("STEP");
+    expect(groups[2]?.rows[1]?.value).toBe("STEP");
   });
 
   it("describes a source node, read-only", () => {
@@ -134,7 +135,7 @@ describe("buildPropertyGroups for folders and group state", () => {
       new Set(["source"]),
       translate,
     );
-    expect(groups.map((group) => group.collapsed)).toEqual([false, true, false, false]);
+    expect(groups.map((group) => group.collapsed)).toEqual([false, false, true, false, false]);
   });
 
   it("is empty for a node that no longer exists", () => {

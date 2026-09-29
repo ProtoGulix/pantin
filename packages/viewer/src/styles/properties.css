@@ -45,6 +45,29 @@
   color: var(--text-faint);
 }
 
+.property-grid__link {
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  color: var(--accent);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.property-grid__link:hover {
+  text-decoration: underline;
+}
+
+.property-grid__link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .property-grid__value--editable {
   padding: 0 2px;
 }
