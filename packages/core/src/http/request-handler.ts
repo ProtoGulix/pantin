@@ -7,6 +7,7 @@ import {
 } from "../domain/network-config.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinService } from "../service/pantin-service.ts";
+import type { PoseStreamRegistry } from "./pose-stream-registry.ts";
 import { sendApiError } from "./responses.ts";
 import { matchPattern, parseRequestTarget } from "./route-matching.ts";
 import { methodNotAllowed, ROUTES } from "./routes.ts";
@@ -14,6 +15,7 @@ import { serveViewerFile } from "./static-files.ts";
 
 export type RequestHandlerOptions = {
   service: PantinService;
+  poseStreams: PoseStreamRegistry;
   network: NetworkConfig;
   maxImportBytes: number;
   viewerDirectory: string | undefined;

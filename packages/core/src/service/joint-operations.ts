@@ -4,6 +4,7 @@ import type {
   PantinId,
   PantinResponse,
   PoseResponse,
+  PoseSnapshot,
 } from "@pantin/protocol";
 import { addJointToDocument } from "../domain/joint-rules.ts";
 import { clampJointPosition } from "../domain/joint-types/registry.ts";
@@ -32,6 +33,17 @@ function toPoseResponse(openPantin: OpenPantin): PoseResponse {
     })),
     bodies: computePoses(document, jointPositions),
   };
+}
+
+export function toPoseSnapshot(openPantin: OpenPantin): PoseSnapshot {
+  return { stepCount: openPantin.stepCount, ...toPoseResponse(openPantin) };
+}
+
+export async function getPoseSnapshot(
+  context: ServiceContext,
+  pantinId: PantinId,
+): Promise<PoseSnapshot> {
+  return toPoseSnapshot(await loadPantin(context, pantinId));
 }
 
 export async function listJoints(context: ServiceContext, pantinId: PantinId): Promise<Joint[]> {

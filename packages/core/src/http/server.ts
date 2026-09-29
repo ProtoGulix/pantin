@@ -16,6 +16,7 @@ import {
   startSimulationLoop,
 } from "../service/simulation-loop.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
+import { createPoseStreamRegistry } from "./pose-stream-registry.ts";
 import { createRequestHandler } from "./request-handler.ts";
 
 export type PantinServerOptions = {
@@ -34,6 +35,8 @@ export type PantinServerOptions = {
   stepConverterLimits?: Partial<ProcessLimits>;
   // Clock of the fixed-step loop (ADR 0012); the real one by default.
   simulationTimer?: SimulationTimer;
+  // Clock of the pose streams' keep-alive comments (ADR 0015); the real one by default.
+  streamTimer?: SimulationTimer;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;
   // Receives the source address of every connection closed by the filter.
@@ -100,9 +103,14 @@ export async function startPantinServer(
     createPantinStore(options.pantinsDirectory),
     createConfiguredStepConverter(options),
   );
+  const poseStreams = createPoseStreamRegistry({
+    source: { stepCount: service.peekStepCount, snapshot: service.peekPoseSnapshot },
+    keepAliveTimer: options.streamTimer ?? createRealSimulationTimer(),
+  });
   const server = createServer(
     createRequestHandler({
       service,
+      poseStreams,
       network,
       maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
       viewerDirectory: options.viewerDirectory,
@@ -113,7 +121,10 @@ export async function startPantinServer(
   await listen(server, options.port, network.listenAddress);
   const loop = startSimulationLoop(
     options.simulationTimer ?? createRealSimulationTimer(),
-    service.runSimulationSteps,
+    (steps) => {
+      service.runSimulationSteps(steps);
+      poseStreams.notifyTick();
+    },
     options.reportError,
   );
   // listen() on a TCP host and port always yields an AddressInfo, never a string.
@@ -121,6 +132,7 @@ export async function startPantinServer(
   const close = () =>
     new Promise<void>((resolveClose, rejectClose) => {
       loop.stop();
+      poseStreams.closeAll();
       server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
       server.closeAllConnections();
     });

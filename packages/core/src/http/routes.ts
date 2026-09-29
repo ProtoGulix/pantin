@@ -8,6 +8,7 @@ import {
 import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
+import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
 import { bodyIdOf, pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
@@ -132,7 +133,12 @@ const PANTIN_ROUTES: readonly Route[] = [
   { method: "GET", pattern: ["pantins", ":pantinId", "meshes", ":fileName"], handle: sendMesh },
 ];
 
-export const ROUTES: readonly Route[] = [...PANTIN_ROUTES, ...JOINT_ROUTES, ...TAG_ROUTES];
+export const ROUTES: readonly Route[] = [
+  ...PANTIN_ROUTES,
+  ...JOINT_ROUTES,
+  ...POSE_STREAM_ROUTES,
+  ...TAG_ROUTES,
+];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {
   return new ApiError(

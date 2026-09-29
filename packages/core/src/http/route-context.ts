@@ -8,11 +8,13 @@ import {
 } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import type { PantinService } from "../service/pantin-service.ts";
+import type { PoseStreamRegistry } from "./pose-stream-registry.ts";
 
 // What a route handler receives, and the URL parameter parsers they share.
 
 export type RouteContext = {
   service: PantinService;
+  poseStreams: PoseStreamRegistry;
   maxImportBytes: number;
   request: IncomingMessage;
   response: ServerResponse;

@@ -21,8 +21,10 @@ import {
   createJoint,
   deleteJoint,
   getPose,
+  getPoseSnapshot,
   listJoints,
   setJointPosition,
+  toPoseSnapshot,
 } from "./joint-operations.ts";
 import { deleteBody, discardPantin, savePantin } from "./mesh-lifecycle.ts";
 import {
@@ -113,6 +115,13 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
       createJoint(context, pantinId, request),
     deleteJoint: (pantinId: PantinId, jointId: string) => deleteJoint(context, pantinId, jointId),
     getPose: (pantinId: PantinId) => getPose(context, pantinId),
+    getPoseSnapshot: (pantinId: PantinId) => getPoseSnapshot(context, pantinId),
+    // Sync, for the simulation tick: only Pantins already loaded.
+    peekStepCount: (pantinId: PantinId) => context.loadedPantins.get(pantinId)?.stepCount,
+    peekPoseSnapshot: (pantinId: PantinId) => {
+      const openPantin = context.loadedPantins.get(pantinId);
+      return openPantin === undefined ? undefined : toPoseSnapshot(openPantin);
+    },
     setJointPosition: (pantinId: PantinId, jointId: string, position: number) =>
       setJointPosition(context, pantinId, jointId, position),
     listTags: (pantinId: PantinId) => listTags(context, pantinId),
