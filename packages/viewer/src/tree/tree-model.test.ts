@@ -238,9 +238,18 @@ describe("withTreeStateCarried", () => {
 });
 
 describe("hidden assemblies in the tree", () => {
-  it("marks an assembly the 3D view hides, after its key", () => {
+  it("gives assemblies an eye, closed when the 3D view hides them, and nothing else", () => {
     const assemblyDisplay = { hiddenAssemblyKeys: new Set(["main"]), isolatedAssemblyKey: null };
     const tree = buildTree({ ...source, assemblyDisplay }, translate);
-    expect(findNode(tree, assemblyNodeId("press", "main"))?.detail).toBe("main · masqué");
+    const main = findNode(tree, assemblyNodeId("press", "main"));
+    expect([main?.detail, main?.visibility, main?.stateLabel]).toEqual([
+      "main",
+      "hidden",
+      "masqué",
+    ]);
+    expect(
+      findNode(buildTree(source, translate), assemblyNodeId("press", "main"))?.visibility,
+    ).toBe("shown");
+    expect(findNode(tree, bodyNodeId("press", "rail"))?.visibility).toBeNull();
   });
 });

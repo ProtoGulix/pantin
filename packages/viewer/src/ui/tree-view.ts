@@ -6,6 +6,7 @@ import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { listenToDrags } from "./tree-drag.ts";
+import { chevron, visibilityEye } from "./tree-row-parts.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -56,18 +57,6 @@ function dispatch(command: TreeCommand, intents: PanelIntents, tree: HTMLElement
     case "none":
       return;
   }
-}
-
-function chevron(row: TreeRow): HTMLElement {
-  if (!row.expandable) {
-    return element("span", { className: "tree-row__chevron" });
-  }
-  const open = row.expanded ? " tree-row__chevron--open" : "";
-  return element(
-    "span",
-    { className: `tree-row__chevron${open}`, attributes: { "data-action": "toggle" } },
-    [icon("chevron")],
-  );
 }
 
 function labelOrRenameInput(
@@ -128,6 +117,7 @@ function rowElement(
     row.detail === null
       ? null
       : element("span", { className: "tree-row__detail", text: row.detail }),
+    visibilityEye(row, translate),
   ]);
 }
 
@@ -140,6 +130,7 @@ function rowSignature(row: TreeRow, index: number, language: string): string {
 interface Hit {
   row: TreeRow;
   onToggle: boolean;
+  onEye: boolean;
   inInput: boolean;
 }
 
@@ -156,6 +147,7 @@ function hitOf(event: Event, current: Current): Hit | null {
   return {
     row,
     onToggle: target.closest("[data-action=toggle]") !== null,
+    onEye: target.closest("[data-action=visibility]") !== null,
     inInput: target.closest("input") !== null,
   };
 }
@@ -173,7 +165,8 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
   // is never lost to the redraw that ends the rename.
   tree.addEventListener("pointerdown", (event) => {
     const hit = hitOf(event, current);
-    if (hit === null || hit.inInput || hit.onToggle || (event.button !== 0 && event.button !== 2)) {
+    const onControl = hit !== null && (hit.onToggle || hit.onEye);
+    if (hit === null || hit.inInput || onControl || (event.button !== 0 && event.button !== 2)) {
       return;
     }
     finishOpenRename(tree);
@@ -183,11 +176,13 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
     const hit = hitOf(event, current);
     if (hit?.onToggle) {
       current.intents?.setExpanded(hit.row.id, !hit.row.expanded);
+    } else if (hit?.onEye) {
+      current.intents?.toggleAssemblyHidden(hit.row.id);
     }
   });
   tree.addEventListener("dblclick", (event) => {
     const hit = hitOf(event, current);
-    if (hit === null || hit.inInput || hit.onToggle) {
+    if (hit === null || hit.inInput || hit.onToggle || hit.onEye) {
       return;
     }
     if (hit.row.renamable) {

@@ -56,12 +56,21 @@ export function pickedNodeId(
     : assemblyNodeId(pantinId, assembly);
 }
 
-export function withAssemblyHiddenToggled(display: AssemblyDisplay, key: string): AssemblyDisplay {
-  const hidden = new Set(display.hiddenAssemblyKeys);
+/**
+ * Shows a hidden assembly or hides a shown one, as seen on screen: an
+ * isolation in force becomes the equivalent hidden set first, so the eye of
+ * the tree always matches the 3D view.
+ */
+export function withAssemblyHiddenToggled(
+  display: AssemblyDisplay,
+  key: string,
+  allKeys: readonly string[],
+): AssemblyDisplay {
+  const hidden = new Set(allKeys.filter((candidate) => isAssemblyHidden(display, candidate)));
   if (!hidden.delete(key)) {
     hidden.add(key);
   }
-  return { ...display, hiddenAssemblyKeys: hidden };
+  return { hiddenAssemblyKeys: hidden, isolatedAssemblyKey: null };
 }
 
 /** Isolating the isolated assembly again shows every assembly. */

@@ -15,7 +15,9 @@ type ToolIcon =
   | "error"
   | "info"
   | "close"
-  | "check";
+  | "check"
+  | "eye"
+  | "eye-off";
 
 export type IconName = TreeIcon | ToolIcon;
 
@@ -46,6 +48,9 @@ const PATHS: Readonly<Record<IconName, string>> = {
   info: `${CIRCLE} M8 7.2v4 M8 4.8v.7`,
   close: "M4 4l8 8 M12 4l-8 8",
   check: "M3 8.5 6.5 12 13 4.5",
+  eye: "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
+  "eye-off":
+    "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M2.5 13.5l11-11",
 };
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";

@@ -1,4 +1,4 @@
-import type { AssemblyDisplay } from "../assembly-display.ts";
+import { type AssemblyDisplay, isAssemblyHidden } from "../assembly-display.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
@@ -68,7 +68,7 @@ const CONTEXT_LABELS = {
 // show every assembly again once one is isolated.
 function labelKeyOf(action: ContextAction, ref: NodeRef, display: AssemblyDisplay): MessageKey {
   if (ref.kind === "assembly" && action === "toggleAssemblyHidden") {
-    return display.hiddenAssemblyKeys.has(ref.key) ? "menu.showAssembly" : "menu.hideAssembly";
+    return isAssemblyHidden(display, ref.key) ? "menu.showAssembly" : "menu.hideAssembly";
   }
   if (ref.kind === "assembly" && action === "toggleAssemblyIsolated") {
     return display.isolatedAssemblyKey === ref.key

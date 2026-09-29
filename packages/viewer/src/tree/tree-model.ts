@@ -40,6 +40,10 @@ export interface TreeNode {
   // Read-only data from the source file: drawn greyed.
   muted: boolean;
   renamable: boolean;
+  // Only assemblies can be hidden in the 3D view: an eye button, not text.
+  visibility: "shown" | "hidden" | null;
+  // Read by screen readers only, since the eye is an icon ("hidden"), or null.
+  stateLabel: string | null;
   children: readonly TreeNode[];
 }
 
@@ -58,6 +62,8 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
     detail: node.path.join("/"),
     muted: true,
     renamable: false,
+    visibility: null,
+    stateLabel: null,
     children: [],
   }));
 }
@@ -89,6 +95,8 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
     detail: null,
     muted: false,
     renamable: true,
+    visibility: null,
+    stateLabel: null,
     children: [
       ...bodyJointChildren(pantin, body, translate),
       ...sourceNodeChildren(pantin.id, body, translate),
@@ -105,6 +113,8 @@ function jointNode(pantinId: string, joint: Joint, translate: Translate): TreeNo
     detail: translate(jointTypeLabelKey(joint.type)),
     muted: false,
     renamable: false,
+    visibility: null,
+    stateLabel: null,
     children: [],
   };
 }
@@ -126,6 +136,7 @@ function assemblyNode(
   translate: Translate,
 ): TreeNode {
   const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
+  const hidden = isAssemblyHidden(display, assembly.key);
   const joints = pantin.document.joints.filter(
     (joint) => isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === assembly.key,
   );
@@ -135,11 +146,11 @@ function assemblyNode(
     icon: "assembly",
     label: assembly.name,
     // The key prefixes the tags: shown so that the user sees what the PLC sees.
-    detail: isAssemblyHidden(display, assembly.key)
-      ? `${assembly.key} · ${translate("tree.hidden")}`
-      : assembly.key,
+    detail: assembly.key,
     muted: false,
     renamable: true,
+    visibility: hidden ? "hidden" : "shown",
+    stateLabel: hidden ? translate("tree.hidden") : null,
     children: [
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
       ...joints.map((joint) => jointNode(pantin.id, joint, translate)),
@@ -157,6 +168,8 @@ function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): 
     detail: String(joints.length),
     muted: false,
     renamable: false,
+    visibility: null,
+    stateLabel: null,
     children: joints.map((joint) => jointNode(pantin.id, joint, translate)),
   };
 }
@@ -175,6 +188,8 @@ function pantinNode(
     detail: translate(pluralKey("tree.bodyCount", bodyCount), { count: bodyCount }),
     muted: false,
     renamable: true,
+    visibility: null,
+    stateLabel: null,
     children: [
       ...pantin.document.assemblies.map((assembly) =>
         assemblyNode(pantin, assembly, display, translate),
@@ -211,6 +226,8 @@ export interface TreeRow {
   detail: string | null;
   muted: boolean;
   renamable: boolean;
+  visibility: TreeNode["visibility"];
+  stateLabel: string | null;
   depth: number;
   parentId: string | null;
   expandable: boolean;
@@ -245,6 +262,8 @@ export function flattenTree(nodes: readonly TreeNode[], view: TreeViewState): Tr
         detail: node.detail,
         muted: node.muted,
         renamable: node.renamable,
+        visibility: node.visibility,
+        stateLabel: node.stateLabel,
         depth,
         parentId,
         expandable: isExpandable(node),

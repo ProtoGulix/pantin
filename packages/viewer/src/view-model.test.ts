@@ -208,14 +208,19 @@ describe("context menu of an assembly (ADR 0019)", () => {
       contextMenu: { nodeId: assemblyNodeId("press", "main"), x: 0, y: 0 },
     }).contextMenu?.entries.map((entry) => entry.label);
 
-  it("says what hiding and isolating will do", () => {
-    expect(menuOf(opened(false))).toContain("Masquer dans la vue 3D");
+  it("says what hiding and isolating will do, as the screen shows it", () => {
+    expect(menuOf(opened(false))).toEqual(
+      expect.arrayContaining(["Masquer dans la vue 3D", "Isoler dans la vue 3D"]),
+    );
     const hidden = {
       ...opened(false),
-      assemblyDisplay: { hiddenAssemblyKeys: new Set(["main"]), isolatedAssemblyKey: "main" },
+      assemblyDisplay: { hiddenAssemblyKeys: new Set(["main"]), isolatedAssemblyKey: null },
     };
-    expect(menuOf(hidden)).toEqual(
-      expect.arrayContaining(["Afficher dans la vue 3D", "Afficher tous les assemblages"]),
-    );
+    expect(menuOf(hidden)).toContain("Afficher dans la vue 3D");
+    const isolated = {
+      ...opened(false),
+      assemblyDisplay: { hiddenAssemblyKeys: new Set<string>(), isolatedAssemblyKey: "main" },
+    };
+    expect(menuOf(isolated)).toContain("Afficher tous les assemblages");
   });
 });

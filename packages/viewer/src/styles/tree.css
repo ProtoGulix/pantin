@@ -31,6 +31,27 @@
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
+/* The eye of an assembly, after its key at the end of the row: hides it in
+   the 3D view. The key's auto margin already pushes both to the right. */
+.tree-row__eye-slot {
+  display: inline-flex;
+}
+
+.tree-row__eye {
+  display: inline-flex;
+  padding: 0 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tree-row__eye:hover {
+  color: var(--text);
+}
+
+.tree-row__eye--hidden {
+  opacity: 0.6;
+}
+
 /* A body dragged over an assembly, or over a body standing for it. */
 .tree-row--drop-target {
   box-shadow: inset 0 0 0 1px var(--accent);

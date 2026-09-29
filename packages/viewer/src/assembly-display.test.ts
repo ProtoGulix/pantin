@@ -19,6 +19,8 @@ const { document } = pantinResponse(false, [
   { ...stepBody("jaw", "Jaw"), assembly: "gripper" },
 ]);
 
+const KEYS = ["main", "gripper"];
+
 describe("selectedBodyIds", () => {
   it("is the body of a body or source node, every body of an assembly, none otherwise", () => {
     expect(selectedBodyIds(document, bodyNodeId("press", "jaw"))).toEqual(new Set(["jaw"]));
@@ -41,14 +43,14 @@ describe("pickedNodeId", () => {
 
 describe("hiding and isolating assemblies", () => {
   it("hides the bodies of a hidden assembly, and shows them again on a second toggle", () => {
-    const hidden = withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "main");
+    const hidden = withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "main", KEYS);
     expect(hiddenBodyIds(document, hidden)).toEqual(new Set(["rail", "carriage"]));
-    const shown = withAssemblyHiddenToggled(hidden, "main");
+    const shown = withAssemblyHiddenToggled(hidden, "main", KEYS);
     expect(hiddenBodyIds(document, shown)).toEqual(new Set());
   });
 
   it("shows only an isolated assembly, whatever is hidden, until it is isolated again", () => {
-    const hidden = withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "gripper");
+    const hidden = withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "gripper", KEYS);
     const isolated = withAssemblyIsolationToggled(hidden, "gripper");
     expect(hiddenBodyIds(document, isolated)).toEqual(new Set(["rail", "carriage"]));
     expect(withAssemblyIsolationToggled(isolated, "gripper").isolatedAssemblyKey).toBeNull();
@@ -56,7 +58,7 @@ describe("hiding and isolating assemblies", () => {
 
   it("follows a renamed assembly key", () => {
     const display = withAssemblyIsolationToggled(
-      withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "main"),
+      withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "main", KEYS),
       "main",
     );
     expect(withAssemblyKeyRenamed(display, "main", "frame")).toEqual({
@@ -69,11 +71,21 @@ describe("hiding and isolating assemblies", () => {
 describe("withAssemblyRemoved", () => {
   it("forgets a deleted assembly, so that its isolation cannot hide every body", () => {
     const isolated = withAssemblyIsolationToggled(
-      withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "spare"),
+      withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "spare", [...KEYS, "spare"]),
       "spare",
     );
     const removed = withAssemblyRemoved(isolated, "spare");
     expect(removed).toEqual(NO_ASSEMBLY_DISPLAY);
     expect(hiddenBodyIds(document, removed)).toEqual(new Set());
+  });
+});
+
+describe("the eye of an assembly during an isolation", () => {
+  it("turns the isolation into hidden assemblies, then shows the one clicked", () => {
+    const isolated = withAssemblyIsolationToggled(NO_ASSEMBLY_DISPLAY, "gripper");
+    const shown = withAssemblyHiddenToggled(isolated, "main", KEYS);
+    expect(shown).toEqual({ hiddenAssemblyKeys: new Set(), isolatedAssemblyKey: null });
+    const hidden = withAssemblyHiddenToggled(isolated, "gripper", KEYS);
+    expect(hiddenBodyIds(document, hidden)).toEqual(new Set(["rail", "carriage", "jaw"]));
   });
 });
