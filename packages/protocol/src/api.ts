@@ -16,14 +16,23 @@ import {
 //   GET    /api/pantins/:pantinId                     -> PantinResponse
 //   PATCH  /api/pantins/:pantinId    RenameRequest    -> PantinResponse
 //   POST   /api/pantins/:pantinId/save                -> PantinResponse
+//   POST   /api/pantins/:pantinId/discard             -> PantinResponse
+//          (throws away unsaved edits: the document is reloaded from
+//          pantin.json, meshes imported since the last save are deleted and
+//          pending mesh deletions are cancelled)
 //   POST   /api/pantins/:pantinId/bodies?<ImportBodyQuery>
 //          raw file bytes (application/octet-stream)  -> 201 ImportBodiesResponse
 //          (one body for GLB and STL, one body per assembly component for STEP)
 //   PATCH  /api/pantins/:pantinId/bodies/:bodyId  RenameRequest -> BodyResponse
+//   DELETE /api/pantins/:pantinId/bodies/:bodyId  -> PantinResponse
+//          (removes the body from the in-memory document: an unsaved change;
+//          its mesh file is deleted at once if pantin.json on disk does not
+//          reference it, otherwise when the Pantin is saved)
 //   GET    /api/pantins/:pantinId/meshes/:fileName    -> raw mesh bytes
 //
 // Edits stay in the core's memory until `save` writes pantin.json; imported
-// mesh files are written to meshes/ at import time.
+// mesh files are written to meshes/ at import time. Listing Pantins reads
+// their summaries only: it never opens them.
 
 export const API_PREFIX = "/api";
 
