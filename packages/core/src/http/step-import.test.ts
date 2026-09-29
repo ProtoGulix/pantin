@@ -61,7 +61,10 @@ const meshesDirectory = () => join(workspace.pantinsDirectory, "axis", "meshes")
 
 async function expectNothingImported(running: RunningPantinServer): Promise<void> {
   const pantin = await sendRaw(running, "GET", "/api/pantins/axis");
-  expect(pantin.json).toMatchObject({ document: { bodies: [] }, unsavedChanges: false });
+  expect(pantin.json).toMatchObject({
+    document: { bodies: [], joints: [] },
+    unsavedChanges: false,
+  });
   expect(await readdir(meshesDirectory())).toEqual([]);
 }
 
@@ -75,7 +78,7 @@ describe("STEP import success", () => {
     const running = await startWith("success");
     const response = await importStep(running);
     expect(response.status).toBe(201);
-    const { bodies } = ImportBodiesResponseSchema.parse(response.json);
+    const { bodies, joints } = ImportBodiesResponseSchema.parse(response.json);
     expect(bodies.map((body) => body.id)).toEqual(["carriage-3630-00", "carriage-3630-00-2"]);
     expect(bodies[0]).toEqual({
       id: "carriage-3630-00",
@@ -90,6 +93,17 @@ describe("STEP import success", () => {
       mesh: "meshes/carriage-3630-00.glb",
     });
     expect(bodies[1]?.source.nodes).toEqual(TWO_COMPONENTS.components[1]?.nodes);
+    expect(joints).toEqual([
+      {
+        id: "carriage-3630-00",
+        type: "fixed",
+        name: "Carriage 3630.00",
+        parent: "carriage-3630-00",
+        child: "carriage-3630-00-2",
+        origin: [0, 0, 0],
+        axis: [0, 0, 1],
+      },
+    ]);
     expect((await readdir(meshesDirectory())).sort()).toEqual([
       "carriage-3630-00-2.glb",
       "carriage-3630-00.glb",

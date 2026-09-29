@@ -52,11 +52,9 @@ describe("deleting a body while a save is in flight", () => {
     const gated = gatedStore();
     const service = createPantinService(gated.store, undefined);
     await service.createPantin("Axis");
-    const [body] = await service.importBodies(
-      "axis",
-      { fileName: "b.stl", unit: "mm" },
-      buildAsciiStl(),
-    );
+    const {
+      bodies: [body],
+    } = await service.importBodies("axis", { fileName: "b.stl", unit: "mm" }, buildAsciiStl());
     if (body === undefined) {
       throw new Error("import returned no body");
     }

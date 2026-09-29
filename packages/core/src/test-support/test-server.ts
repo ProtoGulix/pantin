@@ -109,12 +109,15 @@ export function importMesh(
   return sendRaw(server, "POST", path, { contentType: "application/octet-stream", bytes });
 }
 
-// GLB and STL imports answer { bodies: [oneBody] }.
+// GLB and STL imports answer { bodies: [oneBody], joints: [] } (ADR 0017).
 export function singleImportedBody(response: RawResponse): Body {
-  const { bodies } = ImportBodiesResponseSchema.parse(response.json);
+  const { bodies, joints } = ImportBodiesResponseSchema.parse(response.json);
   const [body, ...others] = bodies;
   if (body === undefined || others.length > 0) {
     throw new Error(`Expected exactly one imported body, got ${bodies.length}.`);
+  }
+  if (joints.length > 0) {
+    throw new Error(`Expected no joint for a single body, got ${joints.length}.`);
   }
   return body;
 }

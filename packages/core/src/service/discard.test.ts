@@ -39,7 +39,9 @@ describe("discarding while an import is writing its meshes", () => {
     // held; a correct one keeps waiting for the import.
     await Promise.race([discarding, new Promise((resolve) => setTimeout(resolve, 100))]);
     held.release();
-    const [body] = await importing;
+    const {
+      bodies: [body],
+    } = await importing;
     const discarded = await discarding;
     expect(discarded).toMatchObject({ unsavedChanges: false, document: { bodies: [] } });
     expect(body === undefined ? true : await meshExists(body.mesh)).toBe(false);

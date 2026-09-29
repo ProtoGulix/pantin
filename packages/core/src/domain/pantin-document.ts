@@ -46,6 +46,13 @@ export function removeJoint(document: PantinDocument, jointId: string): PantinDo
   return { ...document, joints: document.joints.filter((joint) => joint.id !== jointId) };
 }
 
+export function removeJoints(
+  document: PantinDocument,
+  jointIds: ReadonlySet<string>,
+): PantinDocument {
+  return { ...document, joints: document.joints.filter((joint) => !jointIds.has(joint.id)) };
+}
+
 export function findBody(document: PantinDocument, bodyId: string): Body | undefined {
   return document.bodies.find((body) => body.id === bodyId);
 }

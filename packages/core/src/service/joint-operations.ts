@@ -88,12 +88,21 @@ export async function deleteJoint(
   jointId: string,
 ): Promise<PantinResponse> {
   const openPantin = await loadPantin(context, pantinId);
+  // An import in flight may still roll back its joints by id: deleting one
+  // now would free that id for another import, whose joint the rollback
+  // would then remove (ADR 0017 point 4).
+  await waitForImports(openPantin);
   findJoint(pantinId, openPantin, jointId);
   openPantin.document = removeJoint(openPantin.document, jointId);
+  forgetJointRuntimeState(openPantin, jointId);
+  return toResponse(pantinId, openPantin);
+}
+
+// A joint created later under the same id must start from position 0.
+export function forgetJointRuntimeState(openPantin: OpenPantin, jointId: string): void {
   openPantin.jointPositions.delete(jointId);
   openPantin.setpoints.delete(jointId);
   openPantin.queuedSetpoints.delete(jointId);
-  return toResponse(pantinId, openPantin);
 }
 
 export async function getPose(context: ServiceContext, pantinId: PantinId): Promise<PoseResponse> {

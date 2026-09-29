@@ -22,7 +22,8 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //          pending mesh deletions are cancelled)
 //   POST   /api/pantins/:pantinId/bodies?<ImportBodyQuery>
 //          raw file bytes (application/octet-stream)  -> 201 ImportBodiesResponse
-//          (one body for GLB and STL, one body per assembly component for STEP)
+//          (one body for GLB and STL, one body per assembly component for STEP;
+//          several components are also joined by fixed joints, ADR 0017)
 //   PATCH  /api/pantins/:pantinId/bodies/:bodyId  RenameRequest -> BodyResponse
 //   DELETE /api/pantins/:pantinId/bodies/:bodyId  -> PantinResponse
 //          (removes the body from the in-memory document: an unsaved change;
@@ -95,7 +96,12 @@ export type PantinResponse = z.infer<typeof PantinResponseSchema>;
 export const BodyResponseSchema = z.object({ body: BodySchema });
 export type BodyResponse = z.infer<typeof BodyResponseSchema>;
 
-export const ImportBodiesResponseSchema = z.object({ bodies: z.array(BodySchema).min(1) });
+// The joints link the bodies of a multi-component STEP import (ADR 0017);
+// empty for GLB, STL and a single-component STEP file.
+export const ImportBodiesResponseSchema = z.object({
+  bodies: z.array(BodySchema).min(1),
+  joints: z.array(JointSchema),
+});
 export type ImportBodiesResponse = z.infer<typeof ImportBodiesResponseSchema>;
 
 export const ApiErrorCodeSchema = z.enum([

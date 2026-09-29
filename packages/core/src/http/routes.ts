@@ -49,8 +49,8 @@ async function importBody(context: RouteContext): Promise<void> {
   );
   requireContentType(context.request, "application/octet-stream");
   const bytes = await readBodyBytes(context.request, context.maxImportBytes);
-  const bodies = await context.service.importBodies(pantinId, query, bytes);
-  sendJson(context.response, 201, { bodies });
+  const imported = await context.service.importBodies(pantinId, query, bytes);
+  sendJson(context.response, 201, imported);
 }
 
 async function sendMesh(context: RouteContext): Promise<void> {
