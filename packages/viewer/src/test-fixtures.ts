@@ -1,4 +1,9 @@
-import type { Body, PantinResponse, PantinSummary } from "@pantin/protocol";
+import {
+  type Body,
+  PANTIN_SCHEMA_VERSION,
+  type PantinResponse,
+  type PantinSummary,
+} from "@pantin/protocol";
 
 // Sample data shared by the unit tests of the display logic.
 
@@ -38,7 +43,11 @@ export function pantinResponse(
   bodies: Body[] = [railBody],
   id = "press",
 ): PantinResponse {
-  return { id, unsavedChanges, document: { schema_version: 2, name: "Press", bodies, joints: [] } };
+  return {
+    id,
+    unsavedChanges,
+    document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies, joints: [] },
+  };
 }
 
 export const pantinSummaries: PantinSummary[] = [

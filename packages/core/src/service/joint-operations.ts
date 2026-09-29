@@ -6,7 +6,8 @@ import type {
   PoseResponse,
 } from "@pantin/protocol";
 import { addJointToDocument } from "../domain/joint-rules.ts";
-import { clampJointPosition, computePoses, currentJointPosition } from "../domain/kinematics.ts";
+import { clampJointPosition } from "../domain/joint-types/registry.ts";
+import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
 import { removeJoint } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";

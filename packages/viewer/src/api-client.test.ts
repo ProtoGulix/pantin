@@ -1,4 +1,4 @@
-import type { PantinResponse } from "@pantin/protocol";
+import { PANTIN_SCHEMA_VERSION, type PantinResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createPantinApiClient, meshFileNameFromPath } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
@@ -7,7 +7,7 @@ import { type FetchFunction, PantinApiError } from "./api-transport.ts";
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
-  document: { schema_version: 2, name: "Press", bodies: [], joints: [] },
+  document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies: [], joints: [] },
 };
 
 describe("PantinApiClient responses", () => {

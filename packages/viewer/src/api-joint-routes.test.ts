@@ -1,4 +1,4 @@
-import type { Joint, PoseResponse } from "@pantin/protocol";
+import { type Joint, PANTIN_SCHEMA_VERSION, type PoseResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createPantinApiClient } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
@@ -53,7 +53,7 @@ describe("PantinApiClient joints", () => {
     const pantin = {
       id: "press",
       unsavedChanges: true,
-      document: { schema_version: 2, name: "Press", bodies: [], joints: [] },
+      document: { schema_version: PANTIN_SCHEMA_VERSION, name: "Press", bodies: [], joints: [] },
     };
     const { fetchFunction, requests } = fakeFetch(jsonResponse(pantin));
     const response = await createPantinApiClient(fetchFunction).deleteJoint("press", "slide");

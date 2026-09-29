@@ -1,4 +1,8 @@
-import type { CreateJointRequest, PantinDocument } from "@pantin/protocol";
+import {
+  type CreateJointRequest,
+  PANTIN_SCHEMA_VERSION,
+  type PantinDocument,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { addJointToDocument } from "./joint-rules.ts";
 
@@ -18,7 +22,7 @@ function body(id: string) {
 }
 
 const EMPTY: PantinDocument = {
-  schema_version: 2,
+  schema_version: PANTIN_SCHEMA_VERSION,
   name: "Test",
   bodies: ["a", "b", "c"].map(body),
   joints: [],

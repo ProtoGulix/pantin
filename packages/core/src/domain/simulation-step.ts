@@ -1,5 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
-import { clampJointPosition } from "./kinematics.ts";
+import { clampJointPosition } from "./joint-types/registry.ts";
 
 // One simulation step (ADR 0012 point 4). Until drives exist (phase 4), a
 // joint moves straight to its queued setpoint, clamped to its limits.

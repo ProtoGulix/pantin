@@ -1,5 +1,6 @@
 import type { Joint, PantinDocument, Tag } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
+import { isMovableJoint } from "./joint-types/registry.ts";
 import { currentJointPosition } from "./kinematics.ts";
 
 // Tags derived from the joints (ADR 0012 point 1): every joint that can move
@@ -13,10 +14,6 @@ export type JointRuntime = {
   // Last value written to each setpoint tag.
   setpoints: ReadonlyMap<string, number>;
 };
-
-function isMovable(joint: Joint): boolean {
-  return joint.type !== "fixed";
-}
 
 function tagsOfJoint(joint: Joint, runtime: JointRuntime): Tag[] {
   return [
@@ -36,7 +33,7 @@ function tagsOfJoint(joint: Joint, runtime: JointRuntime): Tag[] {
 }
 
 export function describeJointTags(document: PantinDocument, runtime: JointRuntime): Tag[] {
-  return document.joints.filter(isMovable).flatMap((joint) => tagsOfJoint(joint, runtime));
+  return document.joints.filter(isMovableJoint).flatMap((joint) => tagsOfJoint(joint, runtime));
 }
 
 // The joint whose setpoint `tagName` is. Throws an actionable ApiError when
@@ -44,7 +41,7 @@ export function describeJointTags(document: PantinDocument, runtime: JointRuntim
 export function jointOfCommandTag(document: PantinDocument, tagName: string): Joint {
   const [jointId, member] = tagName.split(".");
   const joint = document.joints.find((candidate) => candidate.id === jointId);
-  if (joint === undefined || !isMovable(joint)) {
+  if (joint === undefined || !isMovableJoint(joint)) {
     throw new ApiError(
       "not_found",
       `No tag "${tagName}". List the tags with GET /api/pantins/<id>/tags.`,

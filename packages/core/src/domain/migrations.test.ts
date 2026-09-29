@@ -17,17 +17,16 @@ const V1_DOCUMENT = {
 };
 
 describe("migratePantinDocument", () => {
-  it("migrates version 1 to the current version by adding an empty joint list", () => {
-    expect(PANTIN_SCHEMA_VERSION).toBe(2);
+  it("migrates version 1 to the current version, with an empty joint list", () => {
     expect(migratePantinDocument(V1_DOCUMENT, "axis/pantin.json")).toEqual({
       ...V1_DOCUMENT,
-      schema_version: 2,
+      schema_version: PANTIN_SCHEMA_VERSION,
       joints: [],
     });
   });
 
   it("leaves a current document and non documents unchanged", () => {
-    const current = { ...V1_DOCUMENT, schema_version: 2, joints: [] };
+    const current = { ...V1_DOCUMENT, schema_version: PANTIN_SCHEMA_VERSION, joints: [] };
     expect(migratePantinDocument(current, "p")).toBe(current);
     expect(migratePantinDocument([1], "p")).toEqual([1]);
     expect(migratePantinDocument({ name: "x" }, "p")).toEqual({ name: "x" });
@@ -40,10 +39,11 @@ describe("migratePantinDocument", () => {
   });
 
   it("refuses a newer version with an actionable message", () => {
+    const newer = PANTIN_SCHEMA_VERSION + 1;
     expect(() =>
-      migratePantinDocument({ ...V1_DOCUMENT, schema_version: 3 }, "axis/pantin.json"),
+      migratePantinDocument({ ...V1_DOCUMENT, schema_version: newer }, "axis/pantin.json"),
     ).toThrow(
-      /axis\/pantin.json has schema_version 3, newer than this core supports \(2\)\. Update Pantin/,
+      `axis/pantin.json has schema_version ${newer}, newer than this core supports (${PANTIN_SCHEMA_VERSION}). Update Pantin.`,
     );
   });
 
@@ -55,6 +55,10 @@ describe("migratePantinDocument", () => {
 
   it("is applied when a pantin.json is parsed", () => {
     const document = parsePantinDocument(JSON.stringify(V1_DOCUMENT), "axis/pantin.json");
-    expect(document).toMatchObject({ schema_version: 2, joints: [], bodies: [{ id: "rail" }] });
+    expect(document).toMatchObject({
+      schema_version: PANTIN_SCHEMA_VERSION,
+      joints: [],
+      bodies: [{ id: "rail" }],
+    });
   });
 });

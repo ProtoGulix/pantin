@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { JointResponseSchema, PoseResponseSchema } from "@pantin/protocol";
+import { JointResponseSchema, PANTIN_SCHEMA_VERSION, PoseResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildAsciiStl } from "../test-support/mesh-fixtures.ts";
 import {
@@ -206,7 +206,7 @@ describe("joints in the document lifecycle", () => {
 });
 
 describe("schema version 1 on disk", () => {
-  it("opens a version 1 pantin.json and saves it as version 2", async () => {
+  it("opens a version 1 pantin.json and saves it in the current version", async () => {
     const folder = join(workspace.pantinsDirectory, "legacy");
     await mkdir(join(folder, "meshes"), { recursive: true });
     await writeFile(
@@ -216,11 +216,16 @@ describe("schema version 1 on disk", () => {
     const opened = await sendRaw(server, "GET", "/api/pantins/legacy");
     expect(opened.json).toMatchObject({
       unsavedChanges: false,
-      document: { schema_version: 2, joints: [] },
+      document: { schema_version: PANTIN_SCHEMA_VERSION, joints: [] },
     });
     await sendRaw(server, "POST", "/api/pantins/legacy/save");
     const onDisk: unknown = JSON.parse(await readFile(join(folder, "pantin.json"), "utf8"));
-    expect(onDisk).toEqual({ schema_version: 2, name: "Legacy", bodies: [], joints: [] });
+    expect(onDisk).toEqual({
+      schema_version: PANTIN_SCHEMA_VERSION,
+      name: "Legacy",
+      bodies: [],
+      joints: [],
+    });
   });
 
   it("answers 409 for a newer schema version", async () => {

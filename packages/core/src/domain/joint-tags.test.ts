@@ -1,4 +1,4 @@
-import type { Joint, PantinDocument } from "@pantin/protocol";
+import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
 import { describeJointTags, jointOfCommandTag } from "./joint-tags.ts";
@@ -27,7 +27,7 @@ const clamp: Joint = {
 
 // Bodies do not matter to tags: the joints alone are read.
 const document: PantinDocument = {
-  schema_version: 2,
+  schema_version: PANTIN_SCHEMA_VERSION,
   name: "Axis",
   bodies: [],
   joints: [stroke, clamp],

@@ -1,12 +1,8 @@
-import type { Joint, PantinDocument } from "@pantin/protocol";
+import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import {
-  clampJointPosition,
-  computePoses,
-  currentJointPosition,
-  jointMotion,
-} from "./kinematics.ts";
-import { apply, type RigidTransform, type Vector3 } from "./rigid-transform.ts";
+import { expectPoint } from "../test-support/expect-point.ts";
+import { computePoses, currentJointPosition } from "./kinematics.ts";
+import { apply, type RigidTransform } from "./rigid-transform.ts";
 
 function body(id: string) {
   return {
@@ -24,7 +20,7 @@ function body(id: string) {
 }
 
 function documentWith(joints: Joint[], bodyIds = ["base", "arm", "slider"]): PantinDocument {
-  return { schema_version: 2, name: "Test", bodies: bodyIds.map(body), joints };
+  return { schema_version: PANTIN_SCHEMA_VERSION, name: "Test", bodies: bodyIds.map(body), joints };
 }
 
 const prismatic: Joint = {
@@ -49,32 +45,6 @@ const revolute: Joint = {
   limits: [-Math.PI, Math.PI],
 };
 
-const continuous: Joint = {
-  id: "spin",
-  type: "continuous",
-  name: "Spin",
-  parent: "base",
-  child: "arm",
-  origin: [1, 0, 0],
-  axis: [0, 0, 1],
-};
-
-const fixed: Joint = {
-  id: "weld",
-  type: "fixed",
-  name: "Weld",
-  parent: "base",
-  child: "arm",
-  origin: [0, 0, 0],
-  axis: [1, 0, 0],
-};
-
-function expectPoint(actual: Vector3, expected: Vector3): void {
-  actual.forEach((value, index) => {
-    expect(value).toBeCloseTo(expected[index] ?? Number.NaN, 12);
-  });
-}
-
 function poseMap(document: PantinDocument, positions: [string, number][]) {
   const poses = computePoses(document, new Map(positions));
   return new Map(
@@ -93,20 +63,6 @@ function transformOf(poses: Map<string, RigidTransform>, bodyId: string): RigidT
   return pose;
 }
 
-describe("clampJointPosition", () => {
-  it.each<[Joint, number, number]>([
-    [prismatic, 0.4, 0.4],
-    [prismatic, 1, 0.8],
-    [prismatic, -0.1, 0],
-    [revolute, 4, Math.PI],
-    [revolute, -4, -Math.PI],
-    [continuous, 100, 100],
-    [fixed, 5, 0],
-  ])("%#: clamps to the joint limits", (joint, requested, expected) => {
-    expect(clampJointPosition(joint, requested)).toBe(expected);
-  });
-});
-
 describe("currentJointPosition", () => {
   it("clamps the default position when the limits exclude 0", () => {
     const raised: Joint = { ...prismatic, limits: [0.1, 0.2] };
@@ -119,34 +75,6 @@ describe("currentJointPosition", () => {
 
   it("keeps a position already written", () => {
     expect(currentJointPosition(prismatic, new Map([["slide", 0.4]]))).toBe(0.4);
-  });
-});
-
-describe("jointMotion", () => {
-  it("translates a prismatic joint along its normalised axis", () => {
-    const motion = jointMotion(prismatic, 0.4);
-    expect(motion.rotation).toEqual([0, 0, 0, 1]);
-    expectPoint(motion.translation, [0.4, 0, 0]);
-  });
-
-  it("rotates a revolute joint about the axis through its origin", () => {
-    const motion = jointMotion(revolute, Math.PI / 2);
-    expectPoint(apply(motion, [1, 0, 0]), [1, 0, 0]); // the origin does not move
-    expectPoint(apply(motion, [2, 0, 0]), [1, 1, 0]);
-    expectPoint(apply(motion, [1, 0, 5]), [1, 0, 5]); // a point on the axis
-  });
-
-  it("does not bound a continuous joint", () => {
-    expectPoint(apply(jointMotion(continuous, 2 * Math.PI + Math.PI / 2), [2, 0, 0]), [1, 1, 0]);
-  });
-
-  it("is the identity for a fixed joint", () => {
-    expect(jointMotion(fixed, 0)).toEqual({ rotation: [0, 0, 0, 1], translation: [0, 0, 0] });
-  });
-
-  it("normalises the axis of a rotation", () => {
-    const scaled: Joint = { ...revolute, axis: [0, 0, 7] };
-    expectPoint(apply(jointMotion(scaled, Math.PI / 2), [2, 0, 0]), [1, 1, 0]);
   });
 });
 
