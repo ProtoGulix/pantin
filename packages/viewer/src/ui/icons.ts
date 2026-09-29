@@ -26,6 +26,8 @@ const CIRCLE = "M14 8A6 6 0 1 1 2 8a6 6 0 0 1 12 0Z";
 const PATHS: Readonly<Record<IconName, string>> = {
   pantin: "M2 2.5h5v4H2Z M9 2.5h5v4H9Z M5.5 9.5h5v4h-5Z M4.5 6.5v3h3 M11.5 6.5v3h-3",
   folder: "M1.8 4.2v8.6h12.4V5.6H7.6L6.2 4.2Z",
+  // Two parts held in one frame: an assembly of bodies.
+  assembly: "M1.5 2.5h13v11h-13Z M3.5 5h4v6h-4Z M8.5 5h4v6h-4Z",
   "body-glb": CUBE,
   "body-stl": "M2 13.2 8 2.8l6 10.4Z M5 8 8 13.2 11 8Z",
   "body-step":

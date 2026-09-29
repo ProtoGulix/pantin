@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, stepBody } from "../test-fixtures.ts";
-import { bodyNodeId, folderNodeId, pantinNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, pantinNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
 import { buildPropertyGroups } from "./properties-model.ts";
 import type { PropertyGroup } from "./property-rows.ts";
 
@@ -51,6 +51,7 @@ describe("buildPropertyGroups for bodies and nodes", () => {
         [
           ["Nom", "Linear rail"],
           ["Identifiant", "rail"],
+          ["Assemblage", "main"],
         ],
       ],
       ["Liaisons", [["Aucune liaison", ""]]],
@@ -110,24 +111,6 @@ describe("buildPropertyGroups for other nodes", () => {
 });
 
 describe("buildPropertyGroups for folders and group state", () => {
-  it("describes the Corps folder", () => {
-    const groups = buildPropertyGroups(
-      source,
-      folderNodeId("press", "bodies"),
-      new Set(),
-      translate,
-    );
-    expect(table(groups)).toEqual([
-      [
-        "Général",
-        [
-          ["Nom", "Corps"],
-          ["Nombre d'éléments", "1"],
-        ],
-      ],
-    ]);
-  });
-
   it("marks collapsed groups by id, whatever the node", () => {
     const groups = buildPropertyGroups(
       source,
@@ -142,5 +125,42 @@ describe("buildPropertyGroups for folders and group state", () => {
     expect(buildPropertyGroups(source, bodyNodeId("press", "ghost"), new Set(), translate)).toEqual(
       [],
     );
+  });
+});
+
+describe("buildPropertyGroups for assemblies (ADR 0019)", () => {
+  it("describes an assembly: its name, its key, which prefixes tags, and its bodies", () => {
+    const groups = buildPropertyGroups(
+      source,
+      assemblyNodeId("press", "main"),
+      new Set(),
+      translate,
+    );
+    expect(table(groups)).toEqual([
+      [
+        "Général",
+        [
+          ["Nom", "main"],
+          ["Clé (préfixe des tags)", "main"],
+          ["Nombre de corps", "1"],
+        ],
+      ],
+    ]);
+    const key = groups[0]?.rows.find((entry) => entry.id === "key");
+    expect(key?.edit).toEqual({
+      input: "text",
+      target: { kind: "assemblyKey", pantinId: "press", key: "main" },
+    });
+  });
+
+  it("lets a body move to another assembly with a select", () => {
+    const groups = buildPropertyGroups(source, bodyNodeId("press", "rail"), new Set(), translate);
+    const assembly = groups[0]?.rows.find((entry) => entry.id === "assembly");
+    expect(assembly?.edit).toEqual({
+      input: "select",
+      target: { kind: "bodyAssembly", pantinId: "press", bodyId: "rail" },
+      options: [{ value: "main", label: "main" }],
+      selected: "main",
+    });
   });
 });

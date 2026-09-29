@@ -1,3 +1,5 @@
+import { deleteAssembly } from "./assembly-actions.ts";
+import { parseNodeId } from "../tree/node-ids.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import {
   withBodyDeleted,
@@ -97,5 +99,11 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
 }
 
 export function requestDelete(store: ViewerStore, nodeId: string): void {
+  const ref = parseNodeId(nodeId);
+  // Only an empty assembly can be deleted: nothing is lost, no prompt.
+  if (ref?.kind === "assembly") {
+    void deleteAssembly(store, ref.pantinId, ref.key);
+    return;
+  }
   store.update(withDeleteRequested(store.state, nodeId));
 }

@@ -1,4 +1,4 @@
-import type { Body, PantinResponse } from "@pantin/protocol";
+import type { Assembly, Body, PantinResponse } from "@pantin/protocol";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
@@ -45,6 +45,39 @@ function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): Gro
       ],
     },
   ];
+}
+
+function assemblyGroups(
+  assembly: Assembly,
+  pantin: PantinResponse,
+  nodeId: string,
+  t: Translate,
+): GroupDraft[] {
+  const bodyCount = pantin.document.bodies.filter((body) => body.assembly === assembly.key).length;
+  const target = { kind: "assemblyKey" as const, pantinId: pantin.id, key: assembly.key };
+  return [
+    {
+      id: "general",
+      rows: [
+        row("name", t("properties.name"), assembly.name, renameEditor(nodeId)),
+        // The key prefixes the tags: renaming it renames them (ADR 0019).
+        row("key", t("properties.assemblyKey"), assembly.key, { input: "text", target }),
+        row("bodyCount", t("properties.bodyCount"), String(bodyCount)),
+      ],
+    },
+  ];
+}
+
+// Moving a body to another assembly moves its parent joint, whose tags follow.
+function assemblyRow(body: Body, pantin: PantinResponse, t: Translate): PropertyRow {
+  const { assemblies } = pantin.document;
+  const current = assemblies.find((assembly) => assembly.key === body.assembly);
+  return row("assembly", t("properties.assembly"), current?.name ?? body.assembly, {
+    input: "select",
+    target: { kind: "bodyAssembly", pantinId: pantin.id, bodyId: body.id },
+    options: assemblies.map((assembly) => ({ value: assembly.key, label: assembly.name })),
+    selected: body.assembly,
+  });
 }
 
 function sourceNodeRows(body: Body, t: Translate): PropertyRow[] {
@@ -94,6 +127,7 @@ function bodyGroups(
       rows: [
         row("name", t("properties.name"), body.name, renameEditor(nodeId)),
         row("id", t("properties.id"), body.id),
+        assemblyRow(body, pantin, t),
       ],
     },
     { id: "joints", rows: bodyJointRows(body, pantin, t) },
@@ -163,6 +197,10 @@ function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupD
   }
   if (ref.kind === "folder") {
     return folderGroups(source, nodeId, t);
+  }
+  if (ref.kind === "assembly") {
+    const assembly = open.document.assemblies.find((candidate) => candidate.key === ref.key);
+    return assembly === undefined ? [] : assemblyGroups(assembly, open, nodeId, t);
   }
   if (ref.kind === "joint") {
     const joint = open.document.joints.find((candidate) => candidate.id === ref.jointId);

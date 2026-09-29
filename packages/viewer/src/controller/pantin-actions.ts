@@ -83,5 +83,10 @@ export async function renameNode(store: ViewerStore, nodeId: string, name: strin
     await editPantin(store, ref.pantinId, (pantinId) =>
       store.ports.api.renameBody(pantinId, ref.bodyId, name),
     );
+  } else if (ref?.kind === "assembly") {
+    // The display name only: the key, hence the tags, stay (ADR 0019).
+    await editPantin(store, ref.pantinId, (pantinId) =>
+      store.ports.api.renameAssembly(pantinId, ref.key, name),
+    );
   }
 }

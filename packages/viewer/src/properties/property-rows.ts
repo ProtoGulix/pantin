@@ -15,7 +15,11 @@ export type EditTarget =
   // A Pantin or a body, named by its tree node.
   | { kind: "rename"; nodeId: string }
   // One field of a joint, by the form's field id ("origin.x", "limits.lower", "parent").
-  | { kind: "jointField"; pantinId: string; jointId: string; fieldId: string };
+  | { kind: "jointField"; pantinId: string; jointId: string; fieldId: string }
+  // The keys that name tags, and a body's assembly: each may rename tags (ADR 0019).
+  | { kind: "assemblyKey"; pantinId: string; key: string }
+  | { kind: "tagKey"; pantinId: string; jointId: string }
+  | { kind: "bodyAssembly"; pantinId: string; bodyId: string };
 
 interface SelectOption {
   value: string;

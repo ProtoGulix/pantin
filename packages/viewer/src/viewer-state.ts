@@ -3,7 +3,7 @@ import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
-import { bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { nodeExists, withRevealedNode } from "./tree/tree-state.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
@@ -80,8 +80,10 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     openPantin,
     expandedNodeIds: new Set([
       pantinNodeId(openPantin.id),
-      folderNodeId(openPantin.id, "bodies"),
-      folderNodeId(openPantin.id, "joints"),
+      ...openPantin.document.assemblies.map((assembly) =>
+        assemblyNodeId(openPantin.id, assembly.key),
+      ),
+      folderNodeId(openPantin.id, "betweenAssemblies"),
     ]),
     selectedNodeId: pantinNodeId(openPantin.id),
     renamingNodeId: null,

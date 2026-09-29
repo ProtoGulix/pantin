@@ -11,8 +11,9 @@ export interface PanelMessage {
   level: MessageLevel;
   key: MessageKey;
   parameters: MessageParameters;
-  // Technical detail in English (from the core or the browser), shown under
-  // the translated text, never alone (ADR 0010).
+  // Technical detail in English or language-neutral identifiers (tag names),
+  // from the core or the browser, shown under the translated text, never
+  // alone (ADR 0010).
   detail: string | null;
 }
 

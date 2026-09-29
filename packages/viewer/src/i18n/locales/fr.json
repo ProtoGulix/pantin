@@ -14,7 +14,6 @@
   "language.fr": "FR",
   "language.en": "EN",
   "tree.label": "Arborescence des Pantins",
-  "tree.bodies": "Corps",
   "tree.bodyCount.one": "{count} corps",
   "tree.bodyCount.other": "{count} corps",
   "tree.unnamedNode": "(nœud sans nom)",
@@ -125,7 +124,6 @@
   "prompt.delete.confirm": "Supprimer",
   "prompt.delete.cancel": "Annuler",
   "message.deleted": "Corps « {name} » supprimé.",
-  "tree.joints": "Liaisons",
   "tree.jointRole.parent": "{type}, parent",
   "tree.jointRole.child": "{type}, enfant",
   "menu.newJoint": "Nouvelle liaison…",
@@ -184,5 +182,15 @@
   "joint.form.confirm": "Créer",
   "joint.form.apply": "Appliquer",
   "joint.form.cancel": "Annuler",
-  "joint.slider.label": "Position de « {name} »"
+  "joint.slider.label": "Position de « {name} »",
+  "tree.jointsBetweenAssemblies": "Liaisons entre assemblages",
+  "properties.assembly": "Assemblage",
+  "properties.assemblyKey": "Clé (préfixe des tags)",
+  "properties.tagKey": "Clé de tag",
+  "properties.tags": "Tags",
+  "properties.noTag": "Aucun tant que la liaison est fixe",
+  "message.tagsRenamed.one": "{count} tag renommé.",
+  "message.tagsRenamed.other": "{count} tags renommés.",
+  "assembly.defaultName": "Nouvel assemblage",
+  "menu.newAssembly": "Nouvel assemblage"
 }

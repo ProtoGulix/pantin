@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
-import { nodeExists, withRevealedNode } from "./tree-state.ts";
+import { nodeExists, withRevealedNode, withTreeStateCarried } from "./tree-state.ts";
 import {
+  assemblyNodeId,
   bodyIdOfNode,
   bodyNodeId,
   folderNodeId,
@@ -20,16 +21,17 @@ function view(expanded: string[], selected: string | null = null): TreeViewState
   return { expandedNodeIds: new Set(expanded), selectedNodeId: selected, renamingNodeId: null };
 }
 
-const openAndBodiesExpanded = [pantinNodeId("press"), folderNodeId("press", "bodies")];
+const BETWEEN = "Liaisons entre assemblages";
+const openAndBodiesExpanded = [pantinNodeId("press"), assemblyNodeId("press", "main")];
 
 describe("node ids", () => {
   it.each([
     pantinNodeId("press"),
-    folderNodeId("press", "bodies"),
+    assemblyNodeId("press", "verin_pince"),
     bodyNodeId("press", "rail"),
     jointNodeId("press", "hinge"),
     jointNodeId("press", "hinge", "rail"),
-    folderNodeId("press", "joints"),
+    folderNodeId("press", "betweenAssemblies"),
     sourceNodeNodeId("press", "rail", 1),
   ])("round trips %s", (nodeId) => {
     expect(parseNodeId(nodeId)).not.toBeNull();
@@ -41,6 +43,8 @@ describe("node ids", () => {
     "body:press",
     "source:press:rail:x",
     "folder:press:drives",
+    "folder:press:bodies",
+    "assembly:press",
     "pantin:a:b",
     "joint:press:hinge:",
   ])("refuses %s", (nodeId) => {
@@ -64,11 +68,14 @@ describe("buildTree", () => {
     expect(tree.map((node) => [node.label, node.detail])).toEqual([["Press", "1 corps"]]);
   });
 
-  it("puts the Corps and Liaisons folders under the Pantin", () => {
-    expect(tree[0]?.children.map((node) => node.label)).toEqual(["Corps", "Liaisons"]);
+  it("puts the assemblies under the Pantin, then the joints between them (ADR 0019)", () => {
+    expect(tree[0]?.children.map((node) => [node.label, node.detail])).toEqual([
+      ["main", "main"],
+      [BETWEEN, "0"],
+    ]);
   });
 
-  it("puts the bodies in the Corps folder with an icon per source format", () => {
+  it("puts the bodies under their assembly with an icon per source format", () => {
     const body = findNode(tree, bodyNodeId("press", "rail"));
     expect(body).toMatchObject({ label: "Linear rail", icon: "body-glb", renamable: true });
   });
@@ -84,16 +91,25 @@ describe("buildTree", () => {
   });
 });
 
-describe("joints folder", () => {
+describe("joints in assemblies", () => {
+  const carriage = stepBody("carriage", "Carriage");
   const withJoints = buildTree(
-    { openPantin: pantinResponse(false, [railBody], "press", [hingeJoint, slideJoint]) },
+    { openPantin: pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]) },
     translate,
   );
+  const tool = { ...stepBody("tool", "Tool"), assembly: "gripper" };
+  const between = pantinResponse(false, [railBody, carriage, tool], "press", [
+    { ...hingeJoint, parent: "carriage", child: "tool" },
+  ]);
 
-  it("comes after the bodies, with the number of joints", () => {
-    expect(withJoints[0]?.children.map((node) => [node.label, node.detail])).toEqual([
-      ["Corps", "1"],
-      ["Liaisons", "2"],
+  it("lists the joints of one assembly under it, after its bodies", () => {
+    const main = findNode(withJoints, assemblyNodeId("press", "main"));
+    expect(main).toMatchObject({ kind: "assembly", icon: "assembly", renamable: true });
+    expect(main?.children.map((node) => node.label)).toEqual([
+      "Linear rail",
+      "Carriage",
+      "Hinge",
+      "Slide",
     ]);
   });
 
@@ -108,19 +124,22 @@ describe("joints folder", () => {
     });
   });
 
-  it("shows joints when the folder is expanded", () => {
-    const rows = flattenTree(
-      withJoints,
-      view([...openAndBodiesExpanded, folderNodeId("press", "joints")]),
-    );
-    expect(rows.map((row) => row.label)).toEqual([
-      "Press",
-      "Corps",
-      "Linear rail",
-      "Liaisons",
-      "Hinge",
-      "Slide",
+  it("puts a joint whose bodies are in two assemblies in the folder", () => {
+    const openPantin = {
+      ...between,
+      document: {
+        ...between.document,
+        assemblies: [...between.document.assemblies, { key: "gripper", name: "Gripper" }],
+      },
+    };
+    const tree = buildTree({ openPantin }, translate);
+    const folder = findNode(tree, folderNodeId("press", "betweenAssemblies"));
+    expect([folder?.detail, folder?.children.map((node) => node.id)]).toEqual([
+      "1",
+      [jointNodeId("press", "hinge")],
     ]);
+    const main = findNode(tree, assemblyNodeId("press", "main"));
+    expect(main?.children.some((node) => node.kind === "joint")).toBe(false);
   });
 });
 
@@ -138,11 +157,11 @@ describe("flattenTree", () => {
     const rows = flattenTree(tree, view([...openAndBodiesExpanded, bodyNodeId("press", "rail")]));
     expect(rows.map((row) => [row.depth, row.label, row.parentId])).toEqual([
       [0, "Press", null],
-      [1, "Corps", pantinNodeId("press")],
-      [2, "Linear rail", folderNodeId("press", "bodies")],
+      [1, "main", pantinNodeId("press")],
+      [2, "Linear rail", assemblyNodeId("press", "main")],
       [3, "3630.00.0800N_0", bodyNodeId("press", "rail")],
       [3, "(nœud sans nom)", bodyNodeId("press", "rail")],
-      [1, "Liaisons", pantinNodeId("press")],
+      [1, BETWEEN, pantinNodeId("press")],
     ]);
     expect(rows[4]).toMatchObject({ positionInSet: 2, setSize: 2, expandable: false });
   });
@@ -193,11 +212,27 @@ describe("joints under their bodies", () => {
   });
 
   it("unfolds the body to reveal it", () => {
-    const revealed = withRevealedNode(view([]), jointNodeId("press", "hinge", "rail"));
+    const revealed = withRevealedNode(
+      { ...view([]), openPantin },
+      jointNodeId("press", "hinge", "rail"),
+    );
     expect([...revealed.expandedNodeIds]).toEqual([
       pantinNodeId("press"),
-      folderNodeId("press", "bodies"),
+      assemblyNodeId("press", "main"),
       bodyNodeId("press", "rail"),
     ]);
+  });
+});
+
+describe("withTreeStateCarried", () => {
+  it("restores the selection lost when the fresh Pantin dropped the old assembly node", () => {
+    const from = assemblyNodeId("press", "id1s0400125e-0");
+    const to = assemblyNodeId("press", "verin_pince");
+    const before = view([pantinNodeId("press"), from], from);
+    // What applying the fresh Pantin leaves: the old node gone, the Pantin selected.
+    const fresh = view([pantinNodeId("press"), from], pantinNodeId("press"));
+    const carried = withTreeStateCarried(before, fresh, from, to);
+    expect([...carried.expandedNodeIds]).toEqual([pantinNodeId("press"), to]);
+    expect(carried.selectedNodeId).toBe(to);
   });
 });

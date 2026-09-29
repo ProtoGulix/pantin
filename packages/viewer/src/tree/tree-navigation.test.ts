@@ -1,14 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
-import { bodyNodeId, folderNodeId, pantinNodeId, sourceNodeNodeId } from "./node-ids.ts";
+import {
+  assemblyNodeId,
+  bodyNodeId,
+  folderNodeId,
+  pantinNodeId,
+  sourceNodeNodeId,
+} from "./node-ids.ts";
 import { buildTree, flattenTree } from "./tree-model.ts";
 import { commandForKey } from "./tree-navigation.ts";
 
 const press = pantinNodeId("press");
 const carriage = bodyNodeId("press", "carriage");
-const folder = folderNodeId("press", "bodies");
-const jointsFolder = folderNodeId("press", "joints");
+const folder = assemblyNodeId("press", "main");
+const jointsFolder = folderNodeId("press", "betweenAssemblies");
 const rail = bodyNodeId("press", "rail");
 const firstSource = sourceNodeNodeId("press", "rail", 0);
 
@@ -100,13 +106,14 @@ describe("commandForKey in depth", () => {
     expect(commandForKey(rows([]), press, "ArrowLeft")).toEqual({ type: "none" });
   });
 
-  it("activates with Enter and renames with F2 only what can be renamed", () => {
+  it("activates with Enter and renames with F2 only what can be renamed, an assembly too", () => {
     expect(commandForKey(expandedRows, carriage, "Enter")).toEqual({
       type: "activate",
       nodeId: carriage,
     });
     expect(commandForKey(expandedRows, rail, "F2")).toEqual({ type: "rename", nodeId: rail });
-    expect(commandForKey(expandedRows, folder, "F2")).toEqual({ type: "none" });
+    expect(commandForKey(expandedRows, folder, "F2")).toEqual({ type: "rename", nodeId: folder });
+    expect(commandForKey(expandedRows, jointsFolder, "F2")).toEqual({ type: "none" });
   });
 
   it("opens the context menu from the keyboard", () => {

@@ -1,3 +1,4 @@
+import { parseNodeId } from "../tree/node-ids.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { withListSelection } from "../session-state.ts";
@@ -31,6 +32,7 @@ import {
 } from "./pantin-actions.ts";
 import { commitPropertyEdit } from "./property-actions.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
+import { createAssembly } from "./assembly-actions.ts";
 import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -74,6 +76,12 @@ function treeIntents(store: ViewerStore) {
       void commitPropertyEdit(store, target, value),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
     requestDelete: (nodeId: string) => requestDelete(store, nodeId),
+    createAssembly: (nodeId: string) => {
+      const pantinId = parseNodeId(nodeId)?.pantinId;
+      if (pantinId !== undefined) {
+        void createAssembly(store, pantinId);
+      }
+    },
     openContextMenu: (nodeId: string, x: number, y: number) =>
       store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: { nodeId, x, y } }),
     closeContextMenu: () => store.update({ ...store.state, contextMenu: null }),

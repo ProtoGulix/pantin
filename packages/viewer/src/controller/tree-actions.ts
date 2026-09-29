@@ -16,7 +16,7 @@ export function activateNode(store: ViewerStore, nodeId: string): void {
 
 export function startRename(store: ViewerStore, nodeId: string): void {
   const kind = parseNodeId(nodeId)?.kind;
-  if (kind === "pantin" || kind === "body") {
+  if (kind === "pantin" || kind === "body" || kind === "assembly") {
     store.update({
       ...withSelectedNode(store.state, nodeId),
       renamingNodeId: nodeId,
@@ -25,12 +25,20 @@ export function startRename(store: ViewerStore, nodeId: string): void {
   }
 }
 
-/** Frames the bodies a node stands for: one body, or the whole open Pantin. */
+/** Frames the bodies a node stands for: one body, an assembly, or the whole open Pantin. */
 export function frameNode(store: ViewerStore, nodeId: string): void {
   const ref = parseNodeId(nodeId);
-  if (ref === null || store.state.openPantin?.id !== ref.pantinId) {
+  const open = store.state.openPantin;
+  if (ref === null || open?.id !== ref.pantinId) {
     return;
   }
-  const bodyIds = ref.kind === "body" || ref.kind === "sourceNode" ? [ref.bodyId] : null;
+  const assemblyBodies = (key: string) =>
+    open.document.bodies.filter((body) => body.assembly === key).map((body) => body.id);
+  const bodyIds =
+    ref.kind === "body" || ref.kind === "sourceNode"
+      ? [ref.bodyId]
+      : ref.kind === "assembly"
+        ? assemblyBodies(ref.key)
+        : null;
   store.ports.viewport().frameBodies(bodyIds);
 }

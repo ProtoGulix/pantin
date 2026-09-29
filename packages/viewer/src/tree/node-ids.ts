@@ -1,19 +1,22 @@
-// Stable ids of tree nodes. Pantin and body ids only contain lowercase
-// letters, digits and dashes (PantinIdSchema), so ":" can never be part of
-// them and is a safe separator.
+// Stable ids of tree nodes. Ids and keys only contain lowercase letters,
+// digits, dashes and underscores (ids.ts in the protocol), so ":" can never be
+// part of them and is a safe separator.
 
-export type FolderKey = "bodies" | "joints";
+// Joints whose two bodies are in different assemblies (ADR 0019 point 13);
+// the others are listed under their assembly.
+export type FolderKey = "betweenAssemblies";
 
 export type NodeRef =
   | { kind: "pantin"; pantinId: string }
   | { kind: "folder"; pantinId: string; folder: FolderKey }
+  | { kind: "assembly"; pantinId: string; key: string }
   | { kind: "body"; pantinId: string; bodyId: string }
   // underBodyId: the body under which the joint is listed as well, or null
   // for its entry in the joints folder. Both nodes stand for the same joint.
   | { kind: "joint"; pantinId: string; jointId: string; underBodyId: string | null }
   | { kind: "sourceNode"; pantinId: string; bodyId: string; index: number };
 
-const FOLDER_KEYS: readonly FolderKey[] = ["bodies", "joints"];
+const FOLDER_KEYS: readonly FolderKey[] = ["betweenAssemblies"];
 
 export function pantinNodeId(pantinId: string): string {
   return `pantin:${pantinId}`;
@@ -21,6 +24,10 @@ export function pantinNodeId(pantinId: string): string {
 
 export function folderNodeId(pantinId: string, folder: FolderKey): string {
   return `folder:${pantinId}:${folder}`;
+}
+
+export function assemblyNodeId(pantinId: string, key: string): string {
+  return `assembly:${pantinId}:${key}`;
 }
 
 export function bodyNodeId(pantinId: string, bodyId: string): string {
@@ -56,6 +63,9 @@ export function parseNodeId(nodeId: string): NodeRef | null {
   }
   if (kind === "folder" && second !== undefined && third === undefined) {
     return parseFolder(pantinId, second);
+  }
+  if (kind === "assembly" && second && third === undefined) {
+    return { kind, pantinId, key: second };
   }
   if (kind === "body" && second && third === undefined) {
     return { kind, pantinId, bodyId: second };

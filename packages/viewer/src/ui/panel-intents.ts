@@ -42,6 +42,9 @@ export interface PanelIntents {
   confirmImport(): void;
   cancelImport(): void;
 
+  // A new empty assembly in the Pantin of this tree node (ADR 0019).
+  createAssembly(nodeId: string): void;
+
   // Joints: the form (creation or type change), and the sliders (position in SI).
   openJointForm(): void;
   // The form prefilled with the joint of this tree node (ADR 0018).

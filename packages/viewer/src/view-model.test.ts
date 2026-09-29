@@ -59,12 +59,13 @@ describe("toolbar", () => {
 });
 
 describe("context menu", () => {
-  it("offers import only on a Pantin, deletion only on a body, rename only when possible", () => {
+  it("offers import and a new assembly only on a Pantin, rename only when possible", () => {
     const pantinId = "press";
     expect(contextEntries({ kind: "pantin", pantinId }, true)).toEqual([
       "rename",
       "frame",
       "importInto",
+      "newAssembly",
     ]);
     expect(contextEntries({ kind: "body", pantinId, bodyId: "rail" }, true)).toEqual([
       "rename",
@@ -76,20 +77,24 @@ describe("context menu", () => {
     ).toEqual(["frame"]);
   });
 
-  it("offers a new joint only on the joints folder, a type change and deletion on a joint", () => {
+  it("offers a new joint on assemblies and the folder, a type change and deletion on a joint", () => {
     const pantinId = "press";
-    expect(contextEntries({ kind: "folder", pantinId, folder: "joints" }, false)).toEqual([
+    expect(
+      contextEntries({ kind: "folder", pantinId, folder: "betweenAssemblies" }, false),
+    ).toEqual(["frame", "newJoint"]);
+    expect(contextEntries({ kind: "assembly", pantinId, key: "main" }, true)).toEqual([
+      "rename",
       "frame",
       "newJoint",
-    ]);
-    expect(contextEntries({ kind: "folder", pantinId, folder: "bodies" }, false)).toEqual([
-      "frame",
+      "delete",
     ]);
     expect(
       contextEntries({ kind: "joint", pantinId, jointId: "hinge", underBodyId: null }, false),
     ).toEqual(["frame", "changeJointType", "delete"]);
   });
+});
 
+describe("context menu labels", () => {
   it("is translated and titled with the node name", () => {
     const state = {
       ...opened(false),
@@ -101,6 +106,7 @@ describe("context menu", () => {
       "Renommer",
       "Cadrer la vue sur l'élément",
       "Importer dans ce Pantin",
+      "Nouvel assemblage",
     ]);
   });
 });

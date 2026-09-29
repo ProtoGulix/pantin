@@ -14,7 +14,6 @@
   "language.fr": "FR",
   "language.en": "EN",
   "tree.label": "Pantin tree",
-  "tree.bodies": "Bodies",
   "tree.bodyCount.one": "{count} body",
   "tree.bodyCount.other": "{count} bodies",
   "tree.unnamedNode": "(unnamed node)",
@@ -125,7 +124,6 @@
   "prompt.delete.confirm": "Delete",
   "prompt.delete.cancel": "Cancel",
   "message.deleted": "Body \"{name}\" deleted.",
-  "tree.joints": "Joints",
   "tree.jointRole.parent": "{type}, parent",
   "tree.jointRole.child": "{type}, child",
   "menu.newJoint": "New joint…",
@@ -184,5 +182,15 @@
   "joint.form.confirm": "Create",
   "joint.form.apply": "Apply",
   "joint.form.cancel": "Cancel",
-  "joint.slider.label": "Position of \"{name}\""
+  "joint.slider.label": "Position of \"{name}\"",
+  "tree.jointsBetweenAssemblies": "Joints between assemblies",
+  "properties.assembly": "Assembly",
+  "properties.assemblyKey": "Key (tag prefix)",
+  "properties.tagKey": "Tag key",
+  "properties.tags": "Tags",
+  "properties.noTag": "None while the joint is fixed",
+  "message.tagsRenamed.one": "{count} tag renamed.",
+  "message.tagsRenamed.other": "{count} tags renamed.",
+  "assembly.defaultName": "New assembly",
+  "menu.newAssembly": "New assembly"
 }

@@ -1,9 +1,9 @@
-import type { Body, Joint, PantinResponse } from "@pantin/protocol";
-import { type MessageKey, pluralKey, type Translate } from "../i18n/translate.ts";
+import type { Assembly, Body, Joint, PantinResponse } from "@pantin/protocol";
+import { pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import {
+  assemblyNodeId,
   bodyNodeId,
-  type FolderKey,
   folderNodeId,
   jointNodeId,
   type NodeRef,
@@ -17,6 +17,7 @@ import {
 
 export type TreeIcon =
   | "pantin"
+  | "assembly"
   | "folder"
   | "body-glb"
   | "body-stl"
@@ -39,14 +40,6 @@ export interface TreeNode {
 
 export interface TreeSource {
   openPantin: PantinResponse | null;
-}
-
-// Folders under an open Pantin, in display order. Drives, sensors and tags
-// will each be one more entry here, with no change to the rest.
-interface FolderDefinition {
-  key: FolderKey;
-  labelKey: MessageKey;
-  children(pantin: PantinResponse, translate: Translate): TreeNode[];
 }
 
 function sourceNodeChildren(pantinId: string, body: Body, translate: Translate): TreeNode[] {
@@ -109,35 +102,49 @@ function jointNode(pantinId: string, joint: Joint, translate: Translate): TreeNo
   };
 }
 
-const PANTIN_FOLDERS: readonly FolderDefinition[] = [
-  {
-    key: "bodies",
-    labelKey: "tree.bodies",
-    children: (pantin, translate) =>
-      pantin.document.bodies.map((body) => bodyNode(pantin, body, translate)),
-  },
-  {
-    key: "joints",
-    labelKey: "tree.joints",
-    children: (pantin, translate) =>
-      pantin.document.joints.map((joint) => jointNode(pantin.id, joint, translate)),
-  },
-];
+// A joint is internal when both its bodies share an assembly (ADR 0019
+// point 4): it is listed under that assembly, the others in one folder.
+function assemblyOf(pantin: PantinResponse, bodyId: string): string | undefined {
+  return pantin.document.bodies.find((body) => body.id === bodyId)?.assembly;
+}
 
-function folderNodes(pantin: PantinResponse, translate: Translate): TreeNode[] {
-  return PANTIN_FOLDERS.map((folder) => {
-    const children = folder.children(pantin, translate);
-    return {
-      id: folderNodeId(pantin.id, folder.key),
-      kind: "folder",
-      icon: "folder",
-      label: translate(folder.labelKey),
-      detail: String(children.length),
-      muted: false,
-      renamable: false,
-      children,
-    };
-  });
+function isInternal(pantin: PantinResponse, joint: Joint): boolean {
+  return assemblyOf(pantin, joint.parent) === assemblyOf(pantin, joint.child);
+}
+
+function assemblyNode(pantin: PantinResponse, assembly: Assembly, translate: Translate): TreeNode {
+  const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
+  const joints = pantin.document.joints.filter(
+    (joint) => isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === assembly.key,
+  );
+  return {
+    id: assemblyNodeId(pantin.id, assembly.key),
+    kind: "assembly",
+    icon: "assembly",
+    label: assembly.name,
+    // The key prefixes the tags: shown so that the user sees what the PLC sees.
+    detail: assembly.key,
+    muted: false,
+    renamable: true,
+    children: [
+      ...bodies.map((body) => bodyNode(pantin, body, translate)),
+      ...joints.map((joint) => jointNode(pantin.id, joint, translate)),
+    ],
+  };
+}
+
+function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): TreeNode {
+  const joints = pantin.document.joints.filter((joint) => !isInternal(pantin, joint));
+  return {
+    id: folderNodeId(pantin.id, "betweenAssemblies"),
+    kind: "folder",
+    icon: "folder",
+    label: translate("tree.jointsBetweenAssemblies"),
+    detail: String(joints.length),
+    muted: false,
+    renamable: false,
+    children: joints.map((joint) => jointNode(pantin.id, joint, translate)),
+  };
 }
 
 function pantinNode(pantin: PantinResponse, translate: Translate): TreeNode {
@@ -150,7 +157,10 @@ function pantinNode(pantin: PantinResponse, translate: Translate): TreeNode {
     detail: translate(pluralKey("tree.bodyCount", bodyCount), { count: bodyCount }),
     muted: false,
     renamable: true,
-    children: folderNodes(pantin, translate),
+    children: [
+      ...pantin.document.assemblies.map((assembly) => assemblyNode(pantin, assembly, translate)),
+      betweenAssembliesFolder(pantin, translate),
+    ],
   };
 }
 

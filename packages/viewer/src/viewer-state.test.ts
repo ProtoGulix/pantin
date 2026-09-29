@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { pantinResponse, pantinSummaries, stepBody } from "./test-fixtures.ts";
-import { bodyNodeId, folderNodeId, pantinNodeId, sourceNodeNodeId } from "./tree/node-ids.ts";
+import {
+  assemblyNodeId,
+  bodyNodeId,
+  folderNodeId,
+  pantinNodeId,
+  sourceNodeNodeId,
+} from "./tree/node-ids.ts";
 import { nodeExists, withExpanded, withRevealedNode, withSelectedNode } from "./tree/tree-state.ts";
 import {
   initialViewerState,
@@ -16,12 +22,12 @@ function listed(): ViewerState {
 }
 
 describe("withOpenPantin", () => {
-  it("expands the newly opened Pantin and its Corps and Liaisons folders, and selects it", () => {
+  it("expands the newly opened Pantin, its assemblies and the joints between them, and selects it", () => {
     const state = withOpenPantin(listed(), pantinResponse(false));
     expect([...state.expandedNodeIds]).toEqual([
       pantinNodeId("press"),
-      folderNodeId("press", "bodies"),
-      folderNodeId("press", "joints"),
+      assemblyNodeId("press", "main"),
+      folderNodeId("press", "betweenAssemblies"),
     ]);
     expect(state.selectedNodeId).toBe(pantinNodeId("press"));
   });
@@ -44,9 +50,9 @@ describe("withOpenPantin", () => {
 
   it("does not re-expand a folder the user collapsed, on a refresh", () => {
     const opened = withOpenPantin(listed(), pantinResponse(false));
-    const collapsed = withExpanded(opened, folderNodeId("press", "bodies"), false);
+    const collapsed = withExpanded(opened, assemblyNodeId("press", "main"), false);
     const refreshed = withOpenPantin(collapsed, pantinResponse(true));
-    expect(refreshed.expandedNodeIds.has(folderNodeId("press", "bodies"))).toBe(false);
+    expect(refreshed.expandedNodeIds.has(assemblyNodeId("press", "main"))).toBe(false);
   });
 });
 
@@ -56,7 +62,7 @@ describe("tree state", () => {
   it("knows which nodes exist", () => {
     expect(nodeExists(opened, pantinNodeId("press"))).toBe(true);
     expect(nodeExists(opened, pantinNodeId("robot"))).toBe(false);
-    expect(nodeExists(opened, folderNodeId("robot", "bodies"))).toBe(false);
+    expect(nodeExists(opened, assemblyNodeId("robot", "main"))).toBe(false);
     expect(nodeExists(opened, sourceNodeNodeId("press", "rail", 1))).toBe(true);
     expect(nodeExists(opened, sourceNodeNodeId("press", "rail", 2))).toBe(false);
   });
@@ -66,7 +72,7 @@ describe("tree state", () => {
     const revealed = withRevealedNode(collapsed, sourceNodeNodeId("press", "rail", 0));
     expect([...revealed.expandedNodeIds]).toEqual([
       pantinNodeId("press"),
-      folderNodeId("press", "bodies"),
+      assemblyNodeId("press", "main"),
       bodyNodeId("press", "rail"),
     ]);
     expect(revealed.selectedNodeId).toBe(sourceNodeNodeId("press", "rail", 0));
@@ -93,7 +99,7 @@ describe("multi-body import", () => {
       pendingImport: null,
       selectedNodeId: bodyNodeId("press", "rail"),
     });
-    expect(done.expandedNodeIds.has(folderNodeId("press", "bodies"))).toBe(true);
+    expect(done.expandedNodeIds.has(assemblyNodeId("press", "main"))).toBe(true);
   });
 
   it("keeps the form open, ready to retry, after a failure", () => {

@@ -31,6 +31,8 @@ describe("joint properties", () => {
         [
           ["Nom", "Hinge"],
           ["Identifiant", "hinge"],
+          ["Clé de tag", "hinge"],
+          ["Tags", "main.hinge.setpoint, main.hinge.position"],
           ["Type", "Pivot limité"],
           ["Corps parent", "Rail"],
           ["Corps enfant", "Carriage"],
@@ -121,10 +123,10 @@ describe("joint parameters and folder", () => {
     expect(groupsOf("spin")).toHaveLength(2);
   });
 
-  it("describes the joints folder by its own label and count", () => {
+  it("describes the folder of joints between assemblies by its own label and count", () => {
     const groups = buildPropertyGroups(
       jointSource,
-      folderNodeId("press", "joints"),
+      folderNodeId("press", "betweenAssemblies"),
       new Set(),
       translate,
     );
@@ -132,8 +134,8 @@ describe("joint parameters and folder", () => {
       [
         "Général",
         [
-          ["Nom", "Liaisons"],
-          ["Nombre d'éléments", "3"],
+          ["Nom", "Liaisons entre assemblages"],
+          ["Nombre d'éléments", "0"],
         ],
       ],
     ]);
@@ -152,11 +154,13 @@ describe("joint edit targets", () => {
     fieldId,
   });
 
-  it("edits everything but the id and the type", () => {
+  it("edits everything but the id, the tags and the type", () => {
     const edits = rowsOf("hinge").map((r) => [r.id, r.edit?.target ?? null]);
     expect(edits).toEqual([
       ["name", target("name")],
       ["id", null],
+      ["tagKey", { kind: "tagKey", pantinId: "press", jointId: "hinge" }],
+      ["tags", null],
       ["type", null],
       ["parent", target("parent")],
       ["child", target("child")],

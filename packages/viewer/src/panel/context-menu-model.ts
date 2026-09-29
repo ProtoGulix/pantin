@@ -9,6 +9,7 @@ export type ContextAction =
   | "rename"
   | "frame"
   | "importInto"
+  | "newAssembly"
   | "newJoint"
   | "changeJointType"
   | "delete";
@@ -22,23 +23,23 @@ export interface ContextMenuView {
 }
 
 /**
- * Entries depend on the node: only Pantins accept an import, only the joints
- * folder a new joint, only joints a type change, only bodies and joints a
- * deletion.
+ * Entries depend on the node: only Pantins accept an import or a new
+ * assembly, assemblies and the "between assemblies" folder a new joint, only
+ * joints a type change, bodies, joints and assemblies a deletion.
  */
 export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
   const entries: ContextAction[] = renamable ? ["rename"] : [];
   entries.push("frame");
   if (ref.kind === "pantin") {
-    entries.push("importInto");
+    entries.push("importInto", "newAssembly");
   }
-  if (ref.kind === "folder" && ref.folder === "joints") {
+  if (ref.kind === "assembly" || ref.kind === "folder") {
     entries.push("newJoint");
   }
   if (ref.kind === "joint") {
     entries.push("changeJointType");
   }
-  if (ref.kind === "body" || ref.kind === "joint") {
+  if (ref.kind === "body" || ref.kind === "joint" || ref.kind === "assembly") {
     entries.push("delete");
   }
   return entries;
@@ -48,6 +49,7 @@ const CONTEXT_LABELS = {
   rename: "menu.rename",
   frame: "menu.frame",
   importInto: "menu.importInto",
+  newAssembly: "menu.newAssembly",
   newJoint: "menu.newJoint",
   changeJointType: "menu.changeJointType",
   delete: "menu.delete",
