@@ -8,11 +8,14 @@ import { describe, expect, it } from "vitest";
 import { railBody, stepBody } from "../test-fixtures.ts";
 import {
   buildJointRequest,
+  formAxisChoice,
   initialJointForm,
   type JointFormState,
   parameterInputs,
   parseJointType,
   withJointFormType,
+  withJointAxisDirection,
+  withJointAxisReversed,
   withJointFormValue,
 } from "./joint-form.ts";
 import { JOINT_TYPES } from "./joint-labels.ts";
@@ -184,5 +187,47 @@ describe("buildJointRequest validation", () => {
     expect(!zeroAxis.ok && zeroAxis.message).toContain("The axis must not be the zero vector.");
     const empty = buildJointRequest(filled(typeWith("length"), { "pitch.value": "" }));
     expect(empty.ok).toBe(false);
+  });
+});
+
+describe("axis choice", () => {
+  const axisOf = (form: JointFormState) => [
+    form.values["axis.x"],
+    form.values["axis.y"],
+    form.values["axis.z"],
+  ];
+
+  it("starts on +Z", () => {
+    expect(formAxisChoice(initialJointForm(bodies))).toEqual({ direction: "z", reversed: false });
+  });
+
+  it("fills the components from X, Y or Z and keeps the sense", () => {
+    const reversed = withJointAxisReversed(initialJointForm(bodies));
+    const onX = withJointAxisDirection(reversed, "x");
+    expect(axisOf(onX)).toEqual(["-1", "0", "0"]);
+    expect(formAxisChoice(onX)).toEqual({ direction: "x", reversed: true });
+  });
+
+  it("reverses typed components and leaves unreadable text alone", () => {
+    const typed = withJointFormValue(
+      withJointFormValue(initialJointForm(bodies), "axis.x", "0,5"),
+      "axis.y",
+      "abc",
+    );
+    expect(axisOf(withJointAxisReversed(typed))).toEqual(["-0.5", "abc", "-1"]);
+  });
+
+  it("reveals the components on custom and hides them again on X, Y or Z", () => {
+    const custom = withJointAxisDirection(initialJointForm(bodies), "custom");
+    expect(formAxisChoice(custom).direction).toBe("custom");
+    expect(axisOf(custom)).toEqual(["0", "0", "1"]);
+    expect(withJointAxisDirection(custom, "y").customAxis).toBe(false);
+  });
+
+  it("shows an oblique or unreadable axis as custom", () => {
+    const oblique = withJointFormValue(initialJointForm(bodies), "axis.x", "1");
+    expect(formAxisChoice(oblique).direction).toBe("custom");
+    const unreadable = withJointFormValue(initialJointForm(bodies), "axis.z", "");
+    expect(formAxisChoice(unreadable).direction).toBe("custom");
   });
 });

@@ -1,5 +1,6 @@
 import type { Joint, PantinResponse } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { AXIS_DIRECTIONS, axisChoiceOf } from "../joints/axis-choice.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
@@ -8,6 +9,7 @@ import {
   vectorFieldId,
 } from "../joints/joint-form.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
+import { AXIS_SENSES, FIELD_AXIS_DIRECTION, FIELD_AXIS_SENSE } from "../joints/joint-update.ts";
 import { displayUnitLabel, parameterRows } from "../joints/joint-parameters.ts";
 import { formatDisplayNumber, metresToMillimetres } from "../units.ts";
 import { type GroupDraft, type PropertyRow, type RowEditor, row } from "./property-rows.ts";
@@ -23,12 +25,22 @@ function jointRows(joint: Joint, pantin: PantinResponse) {
     input: "text",
     target: { kind: "jointField", pantinId: pantin.id, jointId: joint.id, fieldId },
   });
-  const bodyEditor = (fieldId: string, selected: string): RowEditor => ({
+  const selectEditor = (
+    fieldId: string,
+    options: { value: string; label: string }[],
+    selected: string,
+  ): RowEditor => ({
     input: "select",
     target: { kind: "jointField", pantinId: pantin.id, jointId: joint.id, fieldId },
-    options: pantin.document.bodies.map((body) => ({ value: body.id, label: body.name })),
+    options,
     selected,
   });
+  const bodyEditor = (fieldId: string, selected: string): RowEditor =>
+    selectEditor(
+      fieldId,
+      pantin.document.bodies.map((body) => ({ value: body.id, label: body.name })),
+      selected,
+    );
   const bodyName = (bodyId: string) =>
     pantin.document.bodies.find((body) => body.id === bodyId)?.name ?? bodyId;
 
@@ -42,11 +54,47 @@ function jointRows(joint: Joint, pantin: PantinResponse) {
       const label = title.replace("{axis}", axis.toUpperCase());
       return [row(fieldId, label, formatDisplayNumber(convert(component)), textEditor(fieldId))];
     });
-  return { textEditor, bodyEditor, bodyName, vectorRows };
+  return { textEditor, selectEditor, bodyEditor, bodyName, vectorRows };
+}
+
+// The axis as in the creation form: X, Y or Z of the parent body and a sense.
+// Its components are listed only for a custom (oblique) direction.
+function axisRows(joint: Joint, rows: ReturnType<typeof jointRows>, t: Translate): PropertyRow[] {
+  const choice = axisChoiceOf(joint.axis);
+  const directions = AXIS_DIRECTIONS.map((direction) => ({
+    value: direction,
+    label: t(`joint.form.axis.${direction}`),
+  }));
+  // Offered only while the axis is custom: choosing it would change nothing.
+  const custom = { value: "custom", label: t("joint.form.axis.custom") };
+  const directionOptions = choice.direction === "custom" ? [...directions, custom] : directions;
+  const senses = AXIS_SENSES.map((sense) => ({
+    value: sense,
+    label: t(`properties.axisSense.${sense}`),
+  }));
+  const sense = choice.reversed ? "reversed" : "positive";
+  return [
+    row(
+      "axis-direction",
+      t("properties.axis"),
+      directionOptions.find((option) => option.value === choice.direction)?.label ?? "",
+      rows.selectEditor(FIELD_AXIS_DIRECTION, directionOptions, choice.direction),
+    ),
+    row(
+      "axis-sense",
+      t("properties.axisSense"),
+      senses.find((option) => option.value === sense)?.label ?? "",
+      rows.selectEditor(FIELD_AXIS_SENSE, senses, sense),
+    ),
+    ...(choice.direction === "custom"
+      ? rows.vectorRows("axis", `${t("properties.axis")} {axis}`, (component) => component)
+      : []),
+  ];
 }
 
 export function jointGroups(joint: Joint, pantin: PantinResponse, t: Translate): GroupDraft[] {
-  const { textEditor, bodyEditor, bodyName, vectorRows } = jointRows(joint, pantin);
+  const rows = jointRows(joint, pantin);
+  const { textEditor, bodyEditor, bodyName, vectorRows } = rows;
   const groups: GroupDraft[] = [
     {
       id: "general",
@@ -71,12 +119,12 @@ export function jointGroups(joint: Joint, pantin: PantinResponse, t: Translate):
     {
       id: "placement",
       rows: [
+        ...axisRows(joint, rows, t),
         ...vectorRows(
           "origin",
           `${t("properties.origin")} {axis} (${displayUnitLabel("mm", t)})`,
           metresToMillimetres,
         ),
-        ...vectorRows("axis", `${t("properties.axis")} {axis}`, (component) => component),
       ],
     },
   ];

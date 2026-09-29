@@ -1,6 +1,7 @@
 import type { JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import type { Language } from "../i18n/translate.ts";
+import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
@@ -56,6 +57,12 @@ export class ViewerStore {
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
     viewport.setSelectedBody(bodyIdOfNode(next.selectedNodeId));
+    viewport.showJointPreview(jointPreviewOf(next));
+  }
+
+  /** The 3D preview alone, for form edits that do not redraw the panel. */
+  refreshJointPreview(): void {
+    this.ports.viewport().showJointPreview(jointPreviewOf(this.state));
   }
 
   // Poses follow the open Pantin: closed or replaced, the stream stops and the

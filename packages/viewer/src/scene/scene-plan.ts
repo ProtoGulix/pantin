@@ -1,9 +1,11 @@
 import type { Body } from "@pantin/protocol";
-import type { Vector3Tuple } from "../frames.ts";
+import { coreToBabylonPosition, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
+import type { JointPreview } from "../joints/joint-preview.ts";
 
 // Pure decisions for the Babylon scene: what to (re)load, how to frame the
-// camera, how dense the ground grid is. Kept apart from Babylon so that they
-// run under Node in unit tests.
+// camera, how dense the ground grid is, which bodies are tinted and where the
+// joint arrow stands. Kept apart from Babylon so that they run under Node in
+// unit tests.
 
 export interface SceneSyncPlan {
   bodiesToLoad: Body[];
@@ -77,4 +79,63 @@ export function chooseGridStep(extentMetres: number): number {
   const normalized = rough / power;
   const factor = normalized < 1.5 ? 1 : normalized < 3.5 ? 2 : normalized < 7.5 ? 5 : 10;
   return factor * power;
+}
+
+export interface ArrowPlacement {
+  // Babylon frame: where the arrow starts, and the rotation taking Babylon's
+  // +Y (the axis of its cylinders) onto the joint's positive direction.
+  start: Vector3Tuple;
+  rotation: QuaternionTuple;
+  // Metres, from the tip to the start.
+  length: number;
+}
+
+// Shortest rotation from +Y to a unit vector: axis Y x d, half angle folded
+// into w = 1 + Y.d, then normalised. Opposite vectors have no shortest axis:
+// half a turn about X is one of them.
+function rotationFromUpTo([x, y, z]: Vector3Tuple): QuaternionTuple {
+  if (y < -1 + 1e-9) {
+    return [1, 0, 0, 0];
+  }
+  const norm = Math.hypot(z, -x, 1 + y);
+  return [z / norm, 0, -x / norm, (1 + y) / norm];
+}
+
+/**
+ * The arrow of a joint, from its origin along its axis (core frame, the axis
+ * need not be unit). Its length follows the child body's size, so that it
+ * reads at any scale without hiding a small part.
+ */
+export function placeJointArrow(
+  origin: Vector3Tuple,
+  axis: Vector3Tuple,
+  childExtentMetres: number,
+): ArrowPlacement {
+  const [x, y, z] = coreToBabylonPosition(axis);
+  const norm = Math.hypot(x, y, z);
+  return {
+    start: coreToBabylonPosition(origin),
+    rotation: rotationFromUpTo([x / norm, y / norm, z / norm]),
+    length: Math.max(childExtentMetres * 0.75, 0.02),
+  };
+}
+
+export type BodyHighlight = "selected" | "parent" | "child";
+
+/**
+ * A previewed joint replaces the selection: its bodies are what matters then.
+ * When a joint links a body to itself, the child wins.
+ */
+export function bodyHighlight(
+  bodyId: string,
+  selectedBodyId: string | null,
+  preview: JointPreview | null,
+): BodyHighlight | null {
+  if (preview === null) {
+    return bodyId === selectedBodyId ? "selected" : null;
+  }
+  if (bodyId === preview.childBodyId) {
+    return "child";
+  }
+  return bodyId === preview.parentBodyId ? "parent" : null;
 }

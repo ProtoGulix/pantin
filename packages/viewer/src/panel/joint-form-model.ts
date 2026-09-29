@@ -1,9 +1,11 @@
 import { JOINT_COORDINATE_UNITS, JOINT_PARAMETERS, type JointType } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { AXIS_DIRECTIONS, type AxisChoice } from "../joints/axis-choice.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
   FIELD_PARENT,
+  formAxisChoice,
   type JointFormState,
   type ParameterPart,
   parameterInputs,
@@ -43,8 +45,24 @@ export interface JointFormView {
   child: string;
   // Body id to body name.
   bodyOptions: readonly { value: string; label: string }[];
+  origin: JointFormRowView;
+  axis: JointFormAxisView;
+  // The type's parameters, from JOINT_PARAMETERS.
   rows: JointFormRowView[];
   canSubmit: boolean;
+}
+
+export interface JointFormAxisView {
+  label: string;
+  hint: string;
+  choice: AxisChoice;
+  // X, Y, Z then custom.
+  options: readonly { value: AxisChoice["direction"]; label: string }[];
+  // X, Y or Z only: a custom direction takes its sense from the typed signs,
+  // which change without a redraw, so a checkbox there would show stale state.
+  reversed: { label: string; checked: boolean } | null;
+  // The three components, shown only for a custom direction.
+  components: JointFormRowView | null;
 }
 
 const PART_LABELS = {
@@ -71,6 +89,27 @@ function vectorRow(
         value: form.values[id] ?? "",
       };
     }),
+  };
+}
+
+function axisView(form: JointFormState, t: Translate): JointFormAxisView {
+  const choice = formAxisChoice(form);
+  return {
+    label: t("joint.form.axis"),
+    hint: t("joint.form.axis.hint"),
+    choice,
+    options: [
+      ...AXIS_DIRECTIONS.map((direction) => ({
+        value: direction,
+        label: t(`joint.form.axis.${direction}`),
+      })),
+      { value: "custom", label: t("joint.form.axis.custom") },
+    ],
+    reversed:
+      choice.direction === "custom"
+        ? null
+        : { label: t("joint.form.axis.reversed"), checked: choice.reversed },
+    components: choice.direction === "custom" ? vectorRow("axis", form, null, t) : null,
   };
 }
 
@@ -109,11 +148,9 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
     parent: form.values[FIELD_PARENT] ?? "",
     child: form.values[FIELD_CHILD] ?? "",
     bodyOptions: open.document.bodies.map((body) => ({ value: body.id, label: body.name })),
-    rows: [
-      vectorRow("origin", form, displayUnitLabel("mm", t), t),
-      vectorRow("axis", form, null, t),
-      ...parameterRows(form, t),
-    ],
+    origin: vectorRow("origin", form, displayUnitLabel("mm", t), t),
+    axis: axisView(form, t),
+    rows: parameterRows(form, t),
     canSubmit: state.pendingRequestCount === 0,
   };
 }

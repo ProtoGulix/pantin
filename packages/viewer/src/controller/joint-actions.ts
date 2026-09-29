@@ -1,7 +1,10 @@
+import { parseAxisDirection } from "../joints/axis-choice.ts";
 import {
   buildJointRequest,
   initialJointForm,
   parseJointType,
+  withJointAxisDirection,
+  withJointAxisReversed,
   withJointFormType,
   withJointFormValue,
 } from "../joints/joint-form.ts";
@@ -42,6 +45,22 @@ export function editJointField(store: ViewerStore, fieldId: string, value: strin
   const form = store.state.jointForm;
   if (form !== null) {
     store.state = { ...store.state, jointForm: withJointFormValue(form, fieldId, value) };
+    store.refreshJointPreview();
+  }
+}
+
+export function chooseJointAxis(store: ViewerStore, rawDirection: string): void {
+  const form = store.state.jointForm;
+  const direction = rawDirection === "custom" ? "custom" : parseAxisDirection(rawDirection);
+  if (form !== null && direction !== null) {
+    store.update({ ...store.state, jointForm: withJointAxisDirection(form, direction) });
+  }
+}
+
+export function reverseJointAxis(store: ViewerStore): void {
+  const form = store.state.jointForm;
+  if (form !== null) {
+    store.update({ ...store.state, jointForm: withJointAxisReversed(form) });
   }
 }
 

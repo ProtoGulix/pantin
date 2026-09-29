@@ -14,6 +14,9 @@
   --danger: #f06c6c;
   --danger-soft: rgb(240 108 108 / 12%);
   --success: #6cc38a;
+  /* Bodies of a previewed joint; the same colours as in the 3D view (viewport.ts). */
+  --joint-parent: #a371f7;
+  --joint-child: #f0a030;
   --hover: rgb(255 255 255 / 5%);
   --focus-ring: 0 0 0 1px var(--accent);
   --row-height: 22px;

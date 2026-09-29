@@ -5,6 +5,7 @@ import {
   UpdateJointRequestSchema,
 } from "@pantin/protocol";
 import { coordinateFromDisplay, millimetresToMetres } from "../units.ts";
+import { axisChoiceOf, axisVectorOf, parseAxisDirection, reversedAxis } from "./axis-choice.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
@@ -39,6 +40,24 @@ function vectorReplacement(joint: Joint, fieldId: string, text: string): Replace
   return null;
 }
 
+// Field ids of the properties grid's direction and sense selects.
+export const FIELD_AXIS_DIRECTION = "axis.direction";
+export const FIELD_AXIS_SENSE = "axis.sense";
+export const AXIS_SENSES = ["positive", "reversed"] as const;
+
+function axisChoiceReplacement(joint: Joint, fieldId: string, text: string): Replacement | null {
+  const current = axisChoiceOf(joint.axis);
+  if (fieldId === FIELD_AXIS_DIRECTION) {
+    const direction = parseAxisDirection(text);
+    return direction === null ? null : { axis: axisVectorOf(direction, current.reversed) };
+  }
+  if (fieldId === FIELD_AXIS_SENSE && AXIS_SENSES.some((sense) => sense === text)) {
+    const reversed = text === "reversed";
+    return { axis: reversed === current.reversed ? joint.axis : reversedAxis(joint.axis) };
+  }
+  return null;
+}
+
 function parameterReplacement(joint: Joint, fieldId: string, text: string): Replacement | null {
   const unit = JOINT_COORDINATE_UNITS[joint.type];
   const typed = parseNumber(text);
@@ -67,7 +86,11 @@ function replacementFor(joint: Joint, fieldId: string, text: string): Replacemen
   if (fieldId === FIELD_NAME || fieldId === FIELD_PARENT || fieldId === FIELD_CHILD) {
     return { [fieldId]: text };
   }
-  return vectorReplacement(joint, fieldId, text) ?? parameterReplacement(joint, fieldId, text);
+  return (
+    vectorReplacement(joint, fieldId, text) ??
+    axisChoiceReplacement(joint, fieldId, text) ??
+    parameterReplacement(joint, fieldId, text)
+  );
 }
 
 /** The validated SI request replacing `fieldId` of `joint` by the typed text. */

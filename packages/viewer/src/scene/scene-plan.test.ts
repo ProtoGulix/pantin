@@ -1,6 +1,14 @@
 import type { Body } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { bodyRenderKey, chooseGridStep, frameBounds, planSceneSync } from "./scene-plan.ts";
+import { coreToBabylonPosition, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
+import {
+  bodyHighlight,
+  bodyRenderKey,
+  chooseGridStep,
+  frameBounds,
+  placeJointArrow,
+  planSceneSync,
+} from "./scene-plan.ts";
 
 function body(id: string, unit: Body["source"]["unit"] = "mm"): Body {
   return {
@@ -69,5 +77,67 @@ describe("chooseGridStep", () => {
     [40, 5],
   ])("extent %d m gives a %d m step", (extent, step) => {
     expect(chooseGridStep(extent)).toBeCloseTo(step, 12);
+  });
+});
+
+// Rotates v by the unit quaternion q (v' = q v q*), expanded.
+function rotate([qx, qy, qz, qw]: QuaternionTuple, [vx, vy, vz]: Vector3Tuple): Vector3Tuple {
+  const tx = 2 * (qy * vz - qz * vy);
+  const ty = 2 * (qz * vx - qx * vz);
+  const tz = 2 * (qx * vy - qy * vx);
+  return [
+    vx + qw * tx + (qy * tz - qz * ty),
+    vy + qw * ty + (qz * tx - qx * tz),
+    vz + qw * tz + (qx * ty - qy * tx),
+  ];
+}
+
+describe("placeJointArrow", () => {
+  const directions: Vector3Tuple[] = [
+    [1, 0, 0],
+    [0, -1, 0],
+    [0, 0, 1],
+    [0, 0, -1],
+    [1, 2, -2],
+  ];
+
+  it.each(directions)("points Babylon's +Y along the core axis (%s)", (...axis) => {
+    const placement = placeJointArrow([0, 0, 0], axis, 1);
+    const expected = coreToBabylonPosition(axis);
+    const norm = Math.hypot(...expected);
+    const tip = rotate(placement.rotation, [0, 1, 0]);
+    tip.forEach((component, index) => {
+      expect(component).toBeCloseTo((expected[index] ?? 0) / norm, 9);
+    });
+  });
+
+  it("starts at the origin, in Babylon coordinates", () => {
+    expect(placeJointArrow([0.1, 0.2, 0.3], [0, 0, 1], 1).start).toEqual(
+      coreToBabylonPosition([0.1, 0.2, 0.3]),
+    );
+  });
+
+  it("scales with the child body, with a floor for tiny ones", () => {
+    expect(placeJointArrow([0, 0, 0], [1, 0, 0], 0.4).length).toBeCloseTo(0.3);
+    expect(placeJointArrow([0, 0, 0], [1, 0, 0], 0).length).toBe(0.02);
+  });
+});
+
+describe("bodyHighlight", () => {
+  const preview = { parentBodyId: "rail", childBodyId: "carriage", origin: null, axis: null };
+
+  it("tints the selected body when no joint is previewed", () => {
+    expect(bodyHighlight("rail", "rail", null)).toBe("selected");
+    expect(bodyHighlight("carriage", "rail", null)).toBeNull();
+  });
+
+  it("tints the previewed joint's bodies instead of the selection", () => {
+    expect(bodyHighlight("rail", "base", preview)).toBe("parent");
+    expect(bodyHighlight("carriage", "base", preview)).toBe("child");
+    expect(bodyHighlight("base", "base", preview)).toBeNull();
+  });
+
+  it("lets the child win when a joint links a body to itself", () => {
+    expect(bodyHighlight("rail", null, { ...preview, childBodyId: "rail" })).toBe("child");
   });
 });

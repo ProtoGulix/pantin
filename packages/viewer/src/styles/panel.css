@@ -89,7 +89,49 @@
 }
 
 .inline-field__label {
+  display: flex;
+  gap: 5px;
+  align-items: center;
   color: var(--text-muted);
+}
+
+.inline-form__hint {
+  margin: 0;
+  color: var(--text-faint);
+}
+
+/* Radio buttons and checkboxes of the "New joint" form */
+.choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+
+.choice {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.choice__input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.body-swatch {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.body-swatch--parent {
+  background: var(--joint-parent);
+}
+
+.body-swatch--child {
+  background: var(--joint-child);
 }
 
 .inline-form__actions {

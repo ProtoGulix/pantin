@@ -8,6 +8,7 @@ import {
   type JointType,
 } from "@pantin/protocol";
 import { coordinateFromDisplay, millimetresToMetres } from "../units.ts";
+import { type AxisDirection, axisChoiceOf, axisVectorOf } from "./axis-choice.ts";
 import { JOINT_TYPES } from "./joint-labels.ts";
 
 // The state of the "New joint" form and the building of its request, as pure
@@ -19,6 +20,9 @@ export interface JointFormState {
   type: JointType;
   // Raw text of every input, by field id: what the user typed, unvalidated.
   values: Readonly<Record<string, string>>;
+  // The user asked to type the axis components; otherwise X, Y or Z is
+  // chosen and the components follow.
+  customAxis: boolean;
 }
 
 type Vector = "origin" | "axis";
@@ -74,6 +78,7 @@ export function initialJointForm(bodies: readonly Body[]): JointFormState {
       ...Object.fromEntries(VECTOR_AXES.map((axis) => [vectorFieldId("axis", axis), "0"])),
       [vectorFieldId("axis", "z")]: "1",
     },
+    customAxis: false,
   };
 }
 
@@ -88,7 +93,50 @@ export function withJointFormValue(
 /** Another type has other parameters, possibly in another unit: they start empty. */
 export function withJointFormType(form: JointFormState, type: JointType): JointFormState {
   const shared = Object.entries(form.values).filter(([id]) => SHARED_FIELD_IDS.includes(id));
-  return { type, values: Object.fromEntries(shared) };
+  return { ...form, type, values: Object.fromEntries(shared) };
+}
+
+function axisTexts(form: JointFormState): string[] {
+  return VECTOR_AXES.map((axis) => form.values[vectorFieldId("axis", axis)] ?? "");
+}
+
+function withAxisTexts(form: JointFormState, texts: readonly string[]): JointFormState {
+  const values = { ...form.values };
+  for (const [index, axis] of VECTOR_AXES.entries()) {
+    values[vectorFieldId("axis", axis)] = texts[index] ?? "";
+  }
+  return { ...form, values };
+}
+
+/** The axis as chosen in the form; an unreadable component counts as custom. */
+export function formAxisChoice(form: JointFormState) {
+  const components = axisTexts(form).map(parseNumber);
+  const choice = axisChoiceOf(
+    components.map((component) => (Number.isFinite(component) ? component : 0)),
+  );
+  const readable = components.every(Number.isFinite);
+  return form.customAxis || !readable ? { ...choice, direction: "custom" as const } : choice;
+}
+
+/** X, Y or Z keeps the current sense; "custom" only reveals the components. */
+export function withJointAxisDirection(
+  form: JointFormState,
+  direction: AxisDirection | "custom",
+): JointFormState {
+  if (direction === "custom") {
+    return { ...form, customAxis: true };
+  }
+  const vector = axisVectorOf(direction, formAxisChoice(form).reversed);
+  return { ...withAxisTexts(form, vector.map(String)), customAxis: false };
+}
+
+/** Runs the axis the other way; a component that is not a number is left as typed. */
+export function withJointAxisReversed(form: JointFormState): JointFormState {
+  const texts = axisTexts(form).map((text) => {
+    const component = parseNumber(text);
+    return Number.isFinite(component) ? String(0 - component) : text;
+  });
+  return withAxisTexts(form, texts);
 }
 
 /** A raw select value as a joint type, or null: form values are external input. */

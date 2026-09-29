@@ -44,6 +44,9 @@ export interface PanelIntents {
   openJointForm(): void;
   editJointField(fieldId: string, value: string): void;
   changeJointType(type: string): void;
+  // "x", "y", "z" or "custom".
+  chooseJointAxis(direction: string): void;
+  reverseJointAxis(): void;
   submitJointForm(): void;
   cancelJointForm(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;

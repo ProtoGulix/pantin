@@ -1,7 +1,11 @@
 import { JOINT_PARAMETERS } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { initialJointForm, withJointFormType } from "../joints/joint-form.ts";
+import {
+  initialJointForm,
+  withJointAxisDirection,
+  withJointFormType,
+} from "../joints/joint-form.ts";
 import { JOINT_TYPES } from "../joints/joint-labels.ts";
 import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
@@ -30,17 +34,22 @@ describe("buildJointFormView", () => {
     ]);
   });
 
-  it("always has the origin in mm and the unitless axis first", () => {
+  it("always has the origin in mm and the axis as a choice of direction", () => {
     const view = buildJointFormView(stateWith(JOINT_TYPES[0] ?? "fixed"), translate);
-    expect(view?.rows.slice(0, 2).map((row) => [row.label, row.unit, row.inputs.length])).toEqual([
-      ["Origin", "mm", 3],
-      ["Axis", null, 3],
+    expect([view?.origin.label, view?.origin.unit, view?.origin.inputs.length]).toEqual([
+      "Origin",
+      "mm",
+      3,
     ]);
+    expect(view?.axis.choice).toEqual({ direction: "z", reversed: false });
+    expect(view?.axis.options.map((option) => option.value)).toEqual(["x", "y", "z", "custom"]);
+    expect(view?.axis.components).toBeNull();
+    expect(view?.axis.reversed).toEqual({ label: "Reversed", checked: false });
   });
 
   it.each(JOINT_TYPES)("adds exactly the rows %s declares", (type) => {
     const view = buildJointFormView(stateWith(type), translate);
-    const parameterRows = view?.rows.slice(2) ?? [];
+    const parameterRows = view?.rows ?? [];
     expect(parameterRows.length).toBe(JOINT_PARAMETERS[type].length);
     for (const row of parameterRows) {
       expect(row.label).not.toBe("");
@@ -50,7 +59,7 @@ describe("buildJointFormView", () => {
 
   it("gives a range the unit of the coordinate and a length millimetres", () => {
     for (const type of JOINT_TYPES) {
-      const rows = buildJointFormView(stateWith(type), translate)?.rows.slice(2) ?? [];
+      const rows = buildJointFormView(stateWith(type), translate)?.rows ?? [];
       JOINT_PARAMETERS[type].forEach((parameter, index) => {
         const unit = rows[index]?.unit;
         expect(parameter.kind === "length" ? unit === "mm" : unit === "mm" || unit === "°").toBe(
@@ -63,5 +72,18 @@ describe("buildJointFormView", () => {
   it("disables the button while a request runs", () => {
     const busy = { ...stateWith(JOINT_TYPES[0] ?? "fixed"), pendingRequestCount: 1 };
     expect(buildJointFormView(busy, translate)?.canSubmit).toBe(false);
+  });
+});
+
+describe("buildJointFormView, axis", () => {
+  it("shows the three unitless axis components for a custom direction", () => {
+    const state = stateWith(JOINT_TYPES[0] ?? "fixed");
+    const custom = {
+      ...state,
+      jointForm: withJointAxisDirection(initialJointForm(bodies), "custom"),
+    };
+    const components = buildJointFormView(custom, translate)?.axis.components;
+    expect([components?.unit, components?.inputs.length]).toEqual([null, 3]);
+    expect(buildJointFormView(custom, translate)?.axis.reversed).toBeNull();
   });
 });

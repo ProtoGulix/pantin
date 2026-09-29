@@ -88,4 +88,20 @@ describe("buildJointUpdate failures", () => {
       message: "Unknown joint field: limits.lower.",
     });
   });
+
+  it("sets the axis from a direction, keeping its sense", () => {
+    const reversed: Joint = { ...hingeJoint, axis: [0, -1, 0] };
+    expect(requestOf(reversed, "axis.direction", "x").axis).toEqual([-1, 0, 0]);
+  });
+
+  it("reverses the axis only when the sense changes", () => {
+    const oblique: Joint = { ...hingeJoint, axis: [1, 1, 0] };
+    expect(requestOf(oblique, "axis.sense", "reversed").axis).toEqual([-1, -1, 0]);
+    expect(requestOf(oblique, "axis.sense", "positive").axis).toEqual([1, 1, 0]);
+  });
+
+  it("refuses an unknown direction or sense", () => {
+    expect(buildJointUpdate(hingeJoint, "axis.direction", "w").ok).toBe(false);
+    expect(buildJointUpdate(hingeJoint, "axis.sense", "up").ok).toBe(false);
+  });
 });

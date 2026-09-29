@@ -13,9 +13,11 @@ import {
 import {
   cancelJointForm,
   changeJointType,
+  chooseJointAxis,
   editJointField,
   moveJoint,
   openJointForm,
+  reverseJointAxis,
   submitJointForm,
 } from "./joint-actions.ts";
 import { runMenuCommand } from "./menu-commands.ts";
@@ -111,6 +113,8 @@ function jointIntents(store: ViewerStore) {
     openJointForm: () => openJointForm(store),
     editJointField: (fieldId: string, value: string) => editJointField(store, fieldId, value),
     changeJointType: (type: string) => changeJointType(store, type),
+    chooseJointAxis: (direction: string) => chooseJointAxis(store, direction),
+    reverseJointAxis: () => reverseJointAxis(store),
     submitJointForm: () => void submitJointForm(store),
     cancelJointForm: () => cancelJointForm(store),
     moveJoint: (pantinId: string, jointId: string, position: number) =>

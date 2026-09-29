@@ -24,7 +24,7 @@ const groupsOf = (jointId: string) =>
   table(buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate));
 
 describe("joint properties", () => {
-  it("shows the type, the bodies by name, and origin and axis by component", () => {
+  it("shows the type, the bodies by name, the axis as a direction and the origin", () => {
     expect(groupsOf("hinge").slice(0, 2)).toEqual([
       [
         "Général",
@@ -39,14 +39,30 @@ describe("joint properties", () => {
       [
         "Position",
         [
+          ["Axe", "Z"],
+          ["Sens", "Positif (+)"],
           ["Origine X (mm)", "10"],
           ["Origine Y (mm)", "0"],
           ["Origine Z (mm)", "20"],
-          ["Axe X", "0"],
-          ["Axe Y", "0"],
-          ["Axe Z", "1"],
         ],
       ],
+    ]);
+  });
+
+  it("lists the components of an oblique axis after its direction and sense", () => {
+    const oblique = { ...hingeJoint, axis: [0, -1, 1] satisfies [number, number, number] };
+    const source = {
+      openPantin: pantinResponse(false, [stepBody("rail", "Rail")], "press", [oblique]),
+    };
+    const placement = table(
+      buildPropertyGroups(source, jointNodeId("press", "hinge"), new Set(), translate),
+    )[1];
+    expect(placement?.[1]?.slice(0, 5)).toEqual([
+      ["Axe", "Autre"],
+      ["Sens", "Inversé (−)"],
+      ["Axe X", "0"],
+      ["Axe Y", "-1"],
+      ["Axe Z", "1"],
     ]);
   });
 });
@@ -113,12 +129,11 @@ describe("joint edit targets", () => {
       ["type", null],
       ["parent", target("parent")],
       ["child", target("child")],
+      ["axis-direction", target("axis.direction")],
+      ["axis-sense", target("axis.sense")],
       ["origin.x", target("origin.x")],
       ["origin.y", target("origin.y")],
       ["origin.z", target("origin.z")],
-      ["axis.x", target("axis.x")],
-      ["axis.y", target("axis.y")],
-      ["axis.z", target("axis.z")],
       ["parameter-limits.lower", target("limits.lower")],
       ["parameter-limits.upper", target("limits.upper")],
     ]);
