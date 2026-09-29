@@ -52,8 +52,15 @@ export const EXAMPLE_BEHAVIOUR: JointBehaviour<ExampleJoint> = {
 ```
 
 `behaviour.ts` provides `clampToLimits` and `rotationAboutAxis`;
-`rigid-transform.ts` provides the vector and quaternion algebra. Keep the
-functions pure.
+`rigid-transform.ts` provides the vector and quaternion algebra. A pure
+translation along the axis is
+`{ rotation: IDENTITY_ROTATION, translation: scale(normalize(joint.axis), coordinate) }`
+(see `prismatic.ts`), and `compose` chains two motions (see `helical.ts`).
+Keep the functions pure.
+
+Zod's `z.number()` accepts `Infinity`: refine every numeric parameter so that
+it is finite, and exclude the values that would make the motion blow up
+(for instance a zero pitch).
 
 Register it in `packages/core/src/domain/joint-types/registry.ts`
 (`example: EXAMPLE_BEHAVIOUR`); the compiler asks for it.
@@ -70,6 +77,9 @@ Register it in `packages/core/src/domain/joint-types/registry.ts`
    with nothing specific, like `fixed`, needs none.
 3. Add the specific validation rules of the new fields to
    `packages/protocol/src/joint.test.ts` (accepted and refused values).
+4. Optional but recommended for a type that can move: an end-to-end test in
+   `packages/core/src/http/tags.test.ts` that writes its setpoint tag and
+   reads the pose (see the helical joint test).
 
 ## 4. The schema version
 
