@@ -79,4 +79,30 @@ describe("joint type change", () => {
       ],
     });
   });
+
+  it("starts over from 0 when the unit changes, slider to pivot (ADR 0020)", async () => {
+    await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
+    await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/axe-x/position", {
+      position: 0.5,
+    });
+    await sendJsonRequest(server, "PUT", "/api/pantins/axis/tags/axe-x.setpoint", { value: 0.6 });
+    await patchJoint({ ...FIXED_FIELDS, type: "revolute", limits: [-3, 3] });
+    const tags = await sendRaw(server, "GET", "/api/pantins/axis/tags");
+    expect(tags.json).toMatchObject({
+      tags: [
+        { name: "axe-x.setpoint", value: 0 },
+        { name: "axe-x.position", value: 0 },
+      ],
+    });
+  });
+
+  it("keeps the position, clamped, when the unit stays: slider to helical", async () => {
+    await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", PRISMATIC);
+    await sendJsonRequest(server, "PUT", "/api/pantins/axis/joints/axe-x/position", {
+      position: 0.5,
+    });
+    await patchJoint({ ...FIXED_FIELDS, type: "helical", limits: [0, 0.3], pitch: 0.002 });
+    const tags = await sendRaw(server, "GET", "/api/pantins/axis/tags");
+    expect(tags.json).toMatchObject({ tags: [{}, { name: "axe-x.position", value: 0.3 }] });
+  });
 });

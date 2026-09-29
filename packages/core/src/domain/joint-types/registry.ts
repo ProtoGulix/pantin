@@ -33,6 +33,12 @@ export function isMovableJoint(joint: Joint): boolean {
   return JOINT_COORDINATE_UNITS[joint.type] !== null;
 }
 
+// Metres, radians or nothing: a position keeps its meaning only between two
+// types whose coordinate has the same unit (ADR 0020).
+export function haveSameCoordinateUnit(first: Joint, second: Joint): boolean {
+  return JOINT_COORDINATE_UNITS[first.type] === JOINT_COORDINATE_UNITS[second.type];
+}
+
 // The core, not the viewer, keeps positions inside the limits (ADR 0011 point 5).
 export function clampJointPosition(joint: Joint, position: number): number {
   return behaviourOf(joint).clamp(joint, position);

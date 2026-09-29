@@ -7,7 +7,7 @@ import type {
   PoseSnapshot,
 } from "@pantin/protocol";
 import { addJointToDocument, updateJointInDocument } from "../domain/joint-rules.ts";
-import { clampJointPosition, isMovableJoint } from "../domain/joint-types/registry.ts";
+import { clampJointPosition, haveSameCoordinateUnit } from "../domain/joint-types/registry.ts";
 import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
 import { removeJoint } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
@@ -72,10 +72,12 @@ export async function updateJoint(
 ): Promise<Joint> {
   const openPantin = await loadPantin(context, pantinId);
   await waitForImports(openPantin);
+  const before = findJoint(pantinId, openPantin, jointId);
   const { document, joint } = updateJointInDocument(openPantin.document, jointId, request);
   openPantin.document = document;
-  // A joint that became fixed has no position nor setpoint (ADR 0018).
-  if (!isMovableJoint(joint)) {
+  // A position or setpoint in another unit means nothing any more (ADR 0020),
+  // and a joint that became fixed has neither (ADR 0018).
+  if (!haveSameCoordinateUnit(before, joint)) {
     forgetJointRuntimeState(openPantin, jointId);
     return joint;
   }
