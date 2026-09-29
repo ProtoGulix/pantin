@@ -67,6 +67,37 @@ describe("joint properties", () => {
   });
 });
 
+describe("joint axis in the grid", () => {
+  const axisRowsOf = (customAxisJointIds: ReadonlySet<string>) =>
+    buildPropertyGroups(
+      { ...jointSource, customAxisJointIds },
+      jointNodeId("press", "hinge"),
+      new Set(),
+      translate,
+    )[1]?.rows ?? [];
+
+  it("always offers custom, to type an oblique axis", () => {
+    const direction = axisRowsOf(new Set())[0]?.edit;
+    expect(direction?.input === "select" && direction.options.map((o) => o.value)).toEqual([
+      "x",
+      "y",
+      "z",
+      "custom",
+    ]);
+  });
+
+  it("lists the components of an X, Y or Z axis once custom was chosen", () => {
+    const rows = axisRowsOf(new Set(["hinge"]));
+    expect(rows.slice(0, 5).map((r) => [r.label, r.value])).toEqual([
+      ["Axe", "Autre"],
+      ["Sens", "Positif (+)"],
+      ["Axe X", "0"],
+      ["Axe Y", "0"],
+      ["Axe Z", "1"],
+    ]);
+  });
+});
+
 describe("joint parameters and folder", () => {
   it("shows each declared parameter in display units, one row per input", () => {
     expect(groupsOf("hinge")[2]).toEqual([

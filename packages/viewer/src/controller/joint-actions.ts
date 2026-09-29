@@ -8,7 +8,11 @@ import {
   withJointFormType,
   withJointFormValue,
 } from "../joints/joint-form.ts";
-import { buildJointUpdate } from "../joints/joint-update.ts";
+import {
+  axisDirectionEdit,
+  buildJointUpdate,
+  FIELD_AXIS_DIRECTION,
+} from "../joints/joint-update.ts";
 import { describeFailure, errorMessage, infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { withJointDeleted } from "../session-state.ts";
@@ -105,6 +109,16 @@ export async function submitJointForm(store: ViewerStore): Promise<void> {
   });
 }
 
+function showAxisComponents(store: ViewerStore, jointId: string, shown: boolean): void {
+  const jointIds = new Set(store.state.customAxisJointIds);
+  if (shown) {
+    jointIds.add(jointId);
+  } else {
+    jointIds.delete(jointId);
+  }
+  store.update({ ...store.state, customAxisJointIds: jointIds });
+}
+
 /**
  * Applies one inline edit of a joint: the full request is built from the
  * stored joint, validated, then sent. The joint stays selected (its id never
@@ -119,6 +133,13 @@ export async function updateJointField(
   const joint = open?.document.joints.find((candidate) => candidate.id === target.jointId);
   if (open === null || open.id !== target.pantinId || joint === undefined) {
     return;
+  }
+  if (target.fieldId === FIELD_AXIS_DIRECTION) {
+    const { showComponents, send } = axisDirectionEdit(joint, text);
+    showAxisComponents(store, joint.id, showComponents);
+    if (!send) {
+      return;
+    }
   }
   const built = buildJointUpdate(joint, target.fieldId, text);
   if (!built.ok) {

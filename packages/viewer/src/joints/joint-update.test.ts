@@ -1,7 +1,7 @@
 import { JOINT_COORDINATE_UNITS, JOINT_PARAMETERS, type Joint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { hingeJoint, screwJoint, weldJoint } from "../test-fixtures.ts";
-import { buildJointUpdate } from "./joint-update.ts";
+import { axisDirectionEdit, buildJointUpdate } from "./joint-update.ts";
 
 function requestOf(joint: Joint, fieldId: string, text: string) {
   const built = buildJointUpdate(joint, fieldId, text);
@@ -103,5 +103,16 @@ describe("buildJointUpdate failures", () => {
   it("refuses an unknown direction or sense", () => {
     expect(buildJointUpdate(hingeJoint, "axis.direction", "w").ok).toBe(false);
     expect(buildJointUpdate(hingeJoint, "axis.sense", "up").ok).toBe(false);
+  });
+});
+
+describe("axisDirectionEdit", () => {
+  it("only reveals the components on custom", () => {
+    expect(axisDirectionEdit(hingeJoint, "custom")).toEqual({ showComponents: true, send: false });
+  });
+
+  it("sends X, Y or Z only when it changes the stored axis", () => {
+    expect(axisDirectionEdit(hingeJoint, "x")).toEqual({ showComponents: false, send: true });
+    expect(axisDirectionEdit(hingeJoint, "z")).toEqual({ showComponents: false, send: false });
   });
 });

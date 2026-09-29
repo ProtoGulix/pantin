@@ -144,7 +144,12 @@ function sourceNodeGroups(body: Body, index: number, t: Translate): GroupDraft[]
   ];
 }
 
-function groupsFor(source: TreeSource, nodeId: string, t: Translate): GroupDraft[] {
+export interface PropertySource extends TreeSource {
+  // See ViewerState; absent means none.
+  customAxisJointIds?: ReadonlySet<string>;
+}
+
+function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupDraft[] {
   const ref = parseNodeId(nodeId);
   if (ref === null) {
     return [];
@@ -161,7 +166,8 @@ function groupsFor(source: TreeSource, nodeId: string, t: Translate): GroupDraft
   }
   if (ref.kind === "joint") {
     const joint = open.document.joints.find((candidate) => candidate.id === ref.jointId);
-    return joint === undefined ? [] : jointGroups(joint, open, t);
+    const customAxis = source.customAxisJointIds?.has(ref.jointId) ?? false;
+    return joint === undefined ? [] : jointGroups(joint, open, customAxis, t);
   }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {
@@ -174,7 +180,7 @@ function groupsFor(source: TreeSource, nodeId: string, t: Translate): GroupDraft
 
 /** Groups for the selected node, or an empty list when nothing is selected. */
 export function buildPropertyGroups(
-  source: TreeSource,
+  source: PropertySource,
   selectedNodeId: string | null,
   collapsedGroups: ReadonlySet<string>,
   translate: Translate,

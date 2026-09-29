@@ -58,6 +58,19 @@ function axisChoiceReplacement(joint: Joint, fieldId: string, text: string): Rep
   return null;
 }
 
+/**
+ * What choosing a direction in the properties grid does: "custom" only
+ * reveals the components (nothing to send yet); X, Y or Z hides them and is
+ * sent only when it changes the stored axis.
+ */
+export function axisDirectionEdit(
+  joint: Joint,
+  text: string,
+): { showComponents: boolean; send: boolean } {
+  const typing = text === "custom";
+  return { showComponents: typing, send: !typing && text !== axisChoiceOf(joint.axis).direction };
+}
+
 function parameterReplacement(joint: Joint, fieldId: string, text: string): Replacement | null {
   const unit = JOINT_COORDINATE_UNITS[joint.type];
   const typed = parseNumber(text);

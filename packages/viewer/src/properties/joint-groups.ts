@@ -58,16 +58,23 @@ function jointRows(joint: Joint, pantin: PantinResponse) {
 }
 
 // The axis as in the creation form: X, Y or Z of the parent body and a sense.
-// Its components are listed only for a custom (oblique) direction.
-function axisRows(joint: Joint, rows: ReturnType<typeof jointRows>, t: Translate): PropertyRow[] {
-  const choice = axisChoiceOf(joint.axis);
-  const directions = AXIS_DIRECTIONS.map((direction) => ({
-    value: direction,
-    label: t(`joint.form.axis.${direction}`),
-  }));
-  // Offered only while the axis is custom: choosing it would change nothing.
-  const custom = { value: "custom", label: t("joint.form.axis.custom") };
-  const directionOptions = choice.direction === "custom" ? [...directions, custom] : directions;
+// Its components are listed for an oblique axis, or when the user chose
+// "custom" to type one (customAxis).
+function axisRows(
+  joint: Joint,
+  rows: ReturnType<typeof jointRows>,
+  customAxis: boolean,
+  t: Translate,
+): PropertyRow[] {
+  const stored = axisChoiceOf(joint.axis);
+  const choice = customAxis ? { ...stored, direction: "custom" as const } : stored;
+  const directionOptions = [
+    ...AXIS_DIRECTIONS.map((direction) => ({
+      value: direction,
+      label: t(`joint.form.axis.${direction}`),
+    })),
+    { value: "custom", label: t("joint.form.axis.custom") },
+  ];
   const senses = AXIS_SENSES.map((sense) => ({
     value: sense,
     label: t(`properties.axisSense.${sense}`),
@@ -92,7 +99,12 @@ function axisRows(joint: Joint, rows: ReturnType<typeof jointRows>, t: Translate
   ];
 }
 
-export function jointGroups(joint: Joint, pantin: PantinResponse, t: Translate): GroupDraft[] {
+export function jointGroups(
+  joint: Joint,
+  pantin: PantinResponse,
+  customAxis: boolean,
+  t: Translate,
+): GroupDraft[] {
   const rows = jointRows(joint, pantin);
   const { textEditor, bodyEditor, bodyName, vectorRows } = rows;
   const groups: GroupDraft[] = [
@@ -119,7 +131,7 @@ export function jointGroups(joint: Joint, pantin: PantinResponse, t: Translate):
     {
       id: "placement",
       rows: [
-        ...axisRows(joint, rows, t),
+        ...axisRows(joint, rows, customAxis, t),
         ...vectorRows(
           "origin",
           `${t("properties.origin")} {axis} (${displayUnitLabel("mm", t)})`,

@@ -24,6 +24,9 @@ export interface ViewerState {
   selectedNodeId: string | null;
   renamingNodeId: string | null;
   collapsedPropertyGroups: ReadonlySet<string>;
+  // Joints whose axis the user chose to type as components in the properties
+  // grid, although it is still along X, Y or Z: display state only.
+  customAxisJointIds: ReadonlySet<string>;
   creatingPantin: boolean;
   contextMenu: ContextMenuState | null;
   pendingImport: PendingImport | null;
@@ -54,6 +57,7 @@ export function initialViewerState(language: Language): ViewerState {
     selectedNodeId: null,
     renamingNodeId: null,
     collapsedPropertyGroups: new Set(),
+    customAxisJointIds: new Set(),
     creatingPantin: false,
     contextMenu: null,
     pendingImport: null,
@@ -88,6 +92,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     jointForm: null,
+    customAxisJointIds: new Set(),
   };
 }
 
