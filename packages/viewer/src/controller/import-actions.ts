@@ -4,16 +4,16 @@ import { pluralKey } from "../i18n/translate.ts";
 import { buildImportQuery, createPendingImport } from "../import-options.ts";
 import { errorMessage, infoMessage } from "../messages.ts";
 import { withImportedBodies, withImportFailed, withImportStarted } from "../viewer-state.ts";
-import { editPantin, openPantin } from "./pantin-actions.ts";
+import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The import flow: pick a file, adjust options in the inline form, send it.
 
-export async function chooseImportFile(
+export function chooseImportFile(
   store: ViewerStore,
   file: File,
   targetPantinId: string | null,
-): Promise<void> {
+): void {
   const pendingImport = createPendingImport(file.name);
   if (pendingImport === null) {
     store.update({
@@ -22,11 +22,9 @@ export async function chooseImportFile(
     });
     return;
   }
-  // From a context menu, the target Pantin may not be open yet.
-  if (targetPantinId !== null && store.state.openPantin?.id !== targetPantinId) {
-    await openPantin(store, targetPantinId);
-  }
-  if (store.state.openPantin === null) {
+  // Imports always go into the open Pantin, the only one the tree shows.
+  const open = store.state.openPantin;
+  if (open === null || (targetPantinId !== null && targetPantinId !== open.id)) {
     return;
   }
   store.pendingImportFile = file;

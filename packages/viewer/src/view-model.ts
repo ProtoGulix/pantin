@@ -1,18 +1,22 @@
-import type { LengthUnit, SourceFormat, UpAxis } from "@pantin/protocol";
-import { createTranslator, LANGUAGES, type Language, type Translate } from "./i18n/translate.ts";
-import { importNeedsUnit } from "./import-options.ts";
+import { createTranslator, type Language, pluralKey, type Translate } from "./i18n/translate.ts";
+import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
+import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
+import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
+import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
 import { buildPropertyGroups, type PropertyGroup } from "./properties/properties-model.ts";
-import { parseNodeId } from "./tree/node-ids.ts";
-import { buildTree, findNode, flattenTree, type TreeRow } from "./tree/tree-model.ts";
+import { type ViewMode, viewModeOf } from "./session-state.ts";
+import { buildTree, flattenTree, type TreeRow } from "./tree/tree-model.ts";
 import type { ViewerState } from "./viewer-state.ts";
 
-// Display logic: turns ViewerState into exactly what the panel shows, as plain
-// data. No DOM here, so every rule is unit tested under Node.
+// Display logic: turns ViewerState into exactly what the window shows, as
+// plain data. No DOM here, so every rule is unit tested under Node.
 
 interface ToolbarView {
+  mode: ViewMode;
   busy: boolean;
   creatingPantin: boolean;
+  openEnabled: boolean;
   saveEnabled: boolean;
   hasUnsavedChanges: boolean;
   importEnabled: boolean;
@@ -20,28 +24,11 @@ interface ToolbarView {
   frameSelectionEnabled: boolean;
 }
 
-export interface ImportFormView {
-  title: string;
-  fileName: string;
-  formatLabel: string;
-  showUnit: boolean;
-  unit: LengthUnit;
-  upAxis: UpAxis;
-  unitOptions: Readonly<Record<LengthUnit, string>>;
-  upAxisOptions: Readonly<Record<UpAxis, string>>;
-  // Shown instead of the buttons while the core works on the file.
-  progressMessage: string | null;
-  canSubmit: boolean;
-}
-
-export type ContextAction = "rename" | "frame" | "importInto";
-
-export interface ContextMenuView {
-  nodeId: string;
-  title: string;
-  x: number;
-  y: number;
-  entries: { action: ContextAction; label: string }[];
+export interface PantinListRowView {
+  id: string;
+  name: string;
+  detail: string;
+  selected: boolean;
 }
 
 export interface MessageView {
@@ -55,86 +42,50 @@ export interface PanelView {
   // For the fixed labels of components (column headers, tooltips).
   translate: Translate;
   language: Language;
-  languageOptions: Readonly<Record<Language, string>>;
+  mode: ViewMode;
+  menus: MenuView[];
   toolbar: ToolbarView;
+  // List view only.
+  listRows: PantinListRowView[];
+  // Edit view only.
   treeRows: TreeRow[];
   properties: PropertyGroup[];
   importForm: ImportFormView | null;
   contextMenu: ContextMenuView | null;
+  prompt: PromptView | null;
   message: MessageView | null;
-}
-
-function importProgressMessage(format: SourceFormat, translate: Translate): string {
-  return translate(format === "step" ? "import.converting" : "import.inProgress");
-}
-
-function buildImportFormView(state: ViewerState, t: Translate): ImportFormView | null {
-  const pendingImport = state.pendingImport;
-  if (pendingImport === null || state.openPantin === null) {
-    return null;
-  }
-  return {
-    title: t("import.target", { pantinName: state.openPantin.document.name }),
-    fileName: pendingImport.fileName,
-    formatLabel: t(`format.${pendingImport.format}`),
-    showUnit: importNeedsUnit(pendingImport),
-    unit: pendingImport.unit,
-    upAxis: pendingImport.upAxis,
-    unitOptions: { m: t("unit.m"), mm: t("unit.mm"), cm: t("unit.cm"), in: t("unit.in") },
-    upAxisOptions: { y: t("upAxis.y"), z: t("upAxis.z") },
-    progressMessage: state.importInProgress ? importProgressMessage(pendingImport.format, t) : null,
-    canSubmit: !state.importInProgress && state.pendingRequestCount === 0,
-  };
+  viewportHint: string;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
   const busy = state.pendingRequestCount > 0;
   const hasBodies = (state.openPantin?.document.bodies.length ?? 0) > 0;
-  // Framing needs the selected node to belong to the Pantin shown in 3D.
-  const selectedPantinId = parseNodeId(state.selectedNodeId ?? "")?.pantinId;
   return {
+    mode: viewModeOf(state),
     busy,
     creatingPantin: state.creatingPantin,
+    openEnabled: state.listSelectedPantinId !== null && !busy,
     saveEnabled: (state.openPantin?.unsavedChanges ?? false) && !busy,
     hasUnsavedChanges: state.openPantin?.unsavedChanges ?? false,
     importEnabled: state.openPantin !== null && !busy && !state.importInProgress,
     frameAllEnabled: hasBodies,
-    frameSelectionEnabled: hasBodies && selectedPantinId === state.openPantin?.id,
+    frameSelectionEnabled: hasBodies && state.selectedNodeId !== null,
   };
 }
 
-/** Menu entries depend on the node: only Pantins accept an import. */
-export function contextEntries(kind: TreeRow["kind"], renamable: boolean): ContextAction[] {
-  const entries: ContextAction[] = renamable ? ["rename"] : [];
-  entries.push("frame");
-  if (kind === "pantin") {
-    entries.push("importInto");
+function buildListRows(state: ViewerState, t: Translate): PantinListRowView[] {
+  if (viewModeOf(state) !== "list") {
+    return [];
   }
-  return entries;
-}
-
-const CONTEXT_LABELS = {
-  rename: "menu.rename",
-  frame: "menu.frame",
-  importInto: "menu.importInto",
-} as const;
-
-function buildContextMenuView(state: ViewerState, t: Translate): ContextMenuView | null {
-  const menu = state.contextMenu;
-  const node = menu === null ? null : findNode(buildTree(state, t), menu.nodeId);
-  if (menu === null || node === null) {
-    return null;
-  }
-  return {
-    nodeId: node.id,
-    title: t("menu.label", { name: node.label }),
-    x: menu.x,
-    y: menu.y,
-    entries: contextEntries(node.kind, node.renamable).map((action) => ({
-      action,
-      label: t(CONTEXT_LABELS[action]),
-    })),
-  };
+  return state.pantins.map((summary) => ({
+    id: summary.id,
+    name: summary.name,
+    detail: t("list.rowDetail", {
+      id: summary.id,
+      bodyCount: t(pluralKey("tree.bodyCount", summary.bodyCount), { count: summary.bodyCount }),
+    }),
+    selected: summary.id === state.listSelectedPantinId,
+  }));
 }
 
 function buildMessageView(state: ViewerState, t: Translate): MessageView | null {
@@ -152,14 +103,14 @@ function buildMessageView(state: ViewerState, t: Translate): MessageView | null 
 
 export function buildPanelView(state: ViewerState): PanelView {
   const translate = createTranslator(state.language);
+  const mode = viewModeOf(state);
   return {
     translate,
     language: state.language,
-    // Cast: Object.fromEntries loses key types; the entries come from LANGUAGES.
-    languageOptions: Object.fromEntries(
-      LANGUAGES.map((value) => [value, translate(`language.${value}`)]),
-    ) as Record<Language, string>,
+    mode,
+    menus: buildMenuBar(state, translate),
     toolbar: buildToolbarView(state),
+    listRows: buildListRows(state, translate),
     treeRows: flattenTree(buildTree(state, translate), state),
     properties: buildPropertyGroups(
       state,
@@ -169,6 +120,8 @@ export function buildPanelView(state: ViewerState): PanelView {
     ),
     importForm: buildImportFormView(state, translate),
     contextMenu: buildContextMenuView(state, translate),
+    prompt: buildPromptView(state, translate),
     message: buildMessageView(state, translate),
+    viewportHint: translate(mode === "list" ? "page.viewportEmpty" : "page.viewportHint"),
   };
 }

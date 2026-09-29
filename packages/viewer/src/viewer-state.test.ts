@@ -53,7 +53,8 @@ describe("tree state", () => {
   const opened = withOpenPantin(listed(), pantinResponse(false));
 
   it("knows which nodes exist", () => {
-    expect(nodeExists(opened, pantinNodeId("robot"))).toBe(true);
+    expect(nodeExists(opened, pantinNodeId("press"))).toBe(true);
+    expect(nodeExists(opened, pantinNodeId("robot"))).toBe(false);
     expect(nodeExists(opened, folderNodeId("robot", "bodies"))).toBe(false);
     expect(nodeExists(opened, sourceNodeNodeId("press", "rail", 1))).toBe(true);
     expect(nodeExists(opened, sourceNodeNodeId("press", "rail", 2))).toBe(false);

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { pantinResponse, pantinSummaries, stepBody } from "../test-fixtures.ts";
+import { pantinResponse, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId, folderNodeId, pantinNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
 import { buildPropertyGroups, type PropertyGroup } from "./properties-model.ts";
 
 const translate = createTranslator("fr");
-const source = { pantins: pantinSummaries, openPantin: pantinResponse(true) };
+const source = { openPantin: pantinResponse(true) };
 
 function table(groups: PropertyGroup[]) {
   return groups.map((group) => [group.title, group.rows.map((row) => [row.label, row.value])]);
@@ -33,9 +33,8 @@ describe("buildPropertyGroups", () => {
     expect(groups[0]?.rows[1]?.renameNodeId).toBeNull();
   });
 
-  it("says a closed Pantin's save state is unknown", () => {
-    const groups = buildPropertyGroups(source, pantinNodeId("robot"), new Set(), translate);
-    expect(groups[0]?.rows.at(-1)?.value).toBe("Pantin non ouvert");
+  it("is empty for a Pantin that is not the open one", () => {
+    expect(buildPropertyGroups(source, pantinNodeId("robot"), new Set(), translate)).toEqual([]);
   });
 });
 
@@ -75,7 +74,6 @@ describe("buildPropertyGroups for bodies and nodes", () => {
 describe("buildPropertyGroups for other nodes", () => {
   it("shows the STEP format of a converted body", () => {
     const stepSource = {
-      pantins: pantinSummaries,
       openPantin: pantinResponse(false, [stepBody("carriage", "N_1")]),
     };
     const groups = buildPropertyGroups(

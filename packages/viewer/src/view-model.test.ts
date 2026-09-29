@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { errorMessage } from "./messages.ts";
+import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries } from "./test-fixtures.ts";
 import { bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { withSelectedNode } from "./tree/tree-state.ts";
-import { buildPanelView, contextEntries } from "./view-model.ts";
+import { buildPanelView } from "./view-model.ts";
 import {
   initialViewerState,
   type ViewerState,
@@ -49,18 +50,18 @@ describe("toolbar", () => {
     });
   });
 
-  it("frames the selection only when it belongs to the open Pantin", () => {
+  it("frames the selection only when something is selected", () => {
     const onBody = withSelectedNode(opened(false), bodyNodeId("press", "rail"));
-    const onClosed = withSelectedNode(opened(false), pantinNodeId("robot"));
+    const nothing = withSelectedNode(opened(false), null);
     expect(buildPanelView(onBody).toolbar.frameSelectionEnabled).toBe(true);
-    expect(buildPanelView(onClosed).toolbar.frameSelectionEnabled).toBe(false);
+    expect(buildPanelView(nothing).toolbar.frameSelectionEnabled).toBe(false);
   });
 });
 
 describe("context menu", () => {
-  it("offers import only on a Pantin, and rename only on renamable nodes", () => {
+  it("offers import only on a Pantin, deletion only on a body, rename only when possible", () => {
     expect(contextEntries("pantin", true)).toEqual(["rename", "frame", "importInto"]);
-    expect(contextEntries("body", true)).toEqual(["rename", "frame"]);
+    expect(contextEntries("body", true)).toEqual(["rename", "frame", "delete"]);
     expect(contextEntries("sourceNode", false)).toEqual(["frame"]);
   });
 
@@ -123,13 +124,44 @@ describe("message line and language", () => {
     });
   });
 
-  it("lists the available languages", () => {
-    expect(buildPanelView(opened(false)).languageOptions).toEqual({ fr: "FR", en: "EN" });
-  });
-
   it("feeds the tree rows and the properties from the same selection", () => {
     const view = buildPanelView(withSelectedNode(opened(false), bodyNodeId("press", "rail")));
     expect(view.treeRows.find((row) => row.selected)?.label).toBe("Linear rail");
     expect(view.properties[0]?.rows[0]?.value).toBe("Linear rail");
+  });
+});
+
+describe("list and edit views", () => {
+  const listing: ViewerState = {
+    ...initialViewerState("fr"),
+    pantins: pantinSummaries,
+    listSelectedPantinId: "robot",
+  };
+
+  it("shows the Pantin list, and no tree, when no Pantin is open", () => {
+    const view = buildPanelView(listing);
+    expect(view.mode).toBe("list");
+    expect(view.treeRows).toEqual([]);
+    expect(view.listRows).toEqual([
+      { id: "press", name: "Press", detail: "press · 1 corps", selected: false },
+      { id: "robot", name: "Robot", detail: "robot · 4 corps", selected: true },
+    ]);
+    expect(view.toolbar.openEnabled).toBe(true);
+    expect(view.viewportHint).toContain("Ouvrez un Pantin");
+  });
+
+  it("shows the tree of the open Pantin, and no list, in the edit view", () => {
+    const view = buildPanelView(opened(false));
+    expect(view.mode).toBe("edit");
+    expect(view.listRows).toEqual([]);
+    expect(view.treeRows[0]?.label).toBe("Press");
+  });
+
+  it("builds the menu bar from the same state", () => {
+    expect(buildPanelView(listing).menus.map((menu) => menu.label)).toEqual([
+      "Fichier",
+      "Édition",
+      "Affichage",
+    ]);
   });
 });

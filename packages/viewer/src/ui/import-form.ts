@@ -1,5 +1,5 @@
 import type { Translate } from "../i18n/translate.ts";
-import type { ImportFormView } from "../view-model.ts";
+import type { ImportFormView } from "../panel/import-form-model.ts";
 import { button, element, selectInput } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 

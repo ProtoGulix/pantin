@@ -3,7 +3,7 @@ import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { PanelMessage } from "./messages.ts";
 import { bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { nodeExists, withExpanded, withRevealedNode } from "./tree/tree-state.ts";
+import { nodeExists, withRevealedNode } from "./tree/tree-state.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
 // truth: this is only the last answer it gave, plus purely local UI state.
@@ -32,6 +32,12 @@ export interface ViewerState {
   // Number of requests in flight; actions are disabled while it is not zero.
   pendingRequestCount: number;
   message: PanelMessage | null;
+  // List view: the Pantin highlighted in the list, not opened yet.
+  listSelectedPantinId: string | null;
+  // Edit view: closing with unsaved changes waits for the user's choice.
+  closePrompt: boolean;
+  // Edit view: a body waiting for the user to confirm its deletion.
+  pendingDeleteBodyId: string | null;
 }
 
 export function initialViewerState(language: Language): ViewerState {
@@ -49,26 +55,39 @@ export function initialViewerState(language: Language): ViewerState {
     importInProgress: false,
     pendingRequestCount: 0,
     message: null,
+    listSelectedPantinId: null,
+    closePrompt: false,
+    pendingDeleteBodyId: null,
+  };
+}
+
+// Entering the edit view: the tree starts expanded down to the bodies, with
+// the Pantin selected, and nothing left over from a previous Pantin.
+function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerState {
+  return {
+    ...state,
+    openPantin,
+    expandedNodeIds: new Set([pantinNodeId(openPantin.id), folderNodeId(openPantin.id, "bodies")]),
+    selectedNodeId: pantinNodeId(openPantin.id),
+    renamingNodeId: null,
+    contextMenu: null,
+    pendingImport: null,
+    importInProgress: false,
+    closePrompt: false,
+    pendingDeleteBodyId: null,
   };
 }
 
 /**
- * Shows the core's latest answer for the open Pantin. Opening another Pantin
- * expands it and its Bodies folder; a selection that no longer exists moves to
+ * Shows the core's latest answer for the open Pantin, or enters the edit
+ * view for a newly opened one. A selection that no longer exists moves to
  * the Pantin itself.
  */
 export function withOpenPantin(state: ViewerState, openPantin: PantinResponse): ViewerState {
-  const samePantin = state.openPantin?.id === openPantin.id;
-  let next: ViewerState = {
-    ...state,
-    openPantin,
-    pendingImport: samePantin ? state.pendingImport : null,
-    importInProgress: samePantin ? state.importInProgress : false,
-  };
-  if (!samePantin) {
-    next = withExpanded(next, pantinNodeId(openPantin.id), true);
-    next = withExpanded(next, folderNodeId(openPantin.id, "bodies"), true);
+  if (state.openPantin?.id !== openPantin.id) {
+    return freshEditView(state, openPantin);
   }
+  const next: ViewerState = { ...state, openPantin };
   const selectionExists = next.selectedNodeId !== null && nodeExists(next, next.selectedNodeId);
   return selectionExists ? next : { ...next, selectedNodeId: pantinNodeId(openPantin.id) };
 }

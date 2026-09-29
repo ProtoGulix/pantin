@@ -1,4 +1,4 @@
-import type { Body, PantinSummary } from "@pantin/protocol";
+import type { Body, PantinResponse } from "@pantin/protocol";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import type { TreeSource } from "../tree/tree-model.ts";
@@ -44,29 +44,20 @@ function row(
   return { id, label, value, muted: false, renameNodeId };
 }
 
-function pantinGroups(
-  source: TreeSource,
-  summary: PantinSummary,
-  nodeId: string,
-  t: Translate,
-): GroupDraft[] {
-  const open = source.openPantin?.id === summary.id ? source.openPantin : null;
-  const unsaved =
-    open === null
-      ? t("properties.notOpen")
-      : t(open.unsavedChanges ? "properties.yes" : "properties.no");
+function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
+  const { document } = pantin;
   return [
     {
       id: "general",
       rows: [
-        row("name", t("properties.name"), open?.document.name ?? summary.name, nodeId),
-        row("id", t("properties.id"), summary.id),
+        row("name", t("properties.name"), document.name, nodeId),
+        row("id", t("properties.id"), pantin.id),
+        row("bodyCount", t("properties.bodyCount"), String(document.bodies.length)),
         row(
-          "bodyCount",
-          t("properties.bodyCount"),
-          String(open?.document.bodies.length ?? summary.bodyCount),
+          "unsaved",
+          t("properties.unsaved"),
+          t(pantin.unsavedChanges ? "properties.yes" : "properties.no"),
         ),
-        row("unsaved", t("properties.unsaved"), unsaved),
       ],
     },
   ];
@@ -132,17 +123,12 @@ function groupsFor(source: TreeSource, nodeId: string, t: Translate): GroupDraft
   if (ref === null) {
     return [];
   }
-  if (ref.kind === "pantin") {
-    const summary =
-      source.pantins.find((candidate) => candidate.id === ref.pantinId) ??
-      (source.openPantin?.id === ref.pantinId
-        ? { id: ref.pantinId, name: source.openPantin.document.name, bodyCount: 0 }
-        : undefined);
-    return summary === undefined ? [] : pantinGroups(source, summary, nodeId, t);
-  }
   const open = source.openPantin?.id === ref.pantinId ? source.openPantin : null;
   if (open === null) {
     return [];
+  }
+  if (ref.kind === "pantin") {
+    return pantinGroups(open, nodeId, t);
   }
   if (ref.kind === "folder") {
     const count = String(open.document.bodies.length);

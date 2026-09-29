@@ -160,3 +160,39 @@ describe("meshFileNameFromPath", () => {
     expect(() => meshFileNameFromPath(path)).toThrow(PantinApiError);
   });
 });
+
+describe("PantinApiClient delete", () => {
+  it("deletes a body with DELETE and returns the validated Pantin", async () => {
+    const { fetchFunction, requests } = fakeFetch(
+      jsonResponse({ ...pantin, unsavedChanges: true }),
+    );
+    const response = await createPantinApiClient(fetchFunction).deleteBody("press", "rail");
+    expect(response.unsavedChanges).toBe(true);
+    expect(requests[0]?.url).toBe("/api/pantins/press/bodies/rail");
+    expect(requests[0]?.init?.method).toBe("DELETE");
+  });
+
+  it("rejects a delete answer that is not a Pantin", async () => {
+    const { fetchFunction } = fakeFetch(jsonResponse({ body: {} }));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).deleteBody("press", "rail"),
+    );
+    expect(error.kind).toBe("invalid_response");
+  });
+});
+
+describe("PantinApiClient discard", () => {
+  it("posts to /discard and returns the validated, saved-state Pantin", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(pantin));
+    const response = await createPantinApiClient(fetchFunction).discardPantin("press");
+    expect(response.unsavedChanges).toBe(false);
+    expect(requests[0]?.url).toBe("/api/pantins/press/discard");
+    expect(requests[0]?.init?.method).toBe("POST");
+  });
+
+  it("rejects an answer that is not a Pantin", async () => {
+    const { fetchFunction } = fakeFetch(jsonResponse({ pantins: [] }));
+    const error = await captureError(createPantinApiClient(fetchFunction).discardPantin("press"));
+    expect(error.kind).toBe("invalid_response");
+  });
+});

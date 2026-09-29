@@ -5,6 +5,8 @@ import type { TreeIcon } from "../tree/tree-model.ts";
 
 type ToolIcon =
   | "plus"
+  | "back"
+  | "open"
   | "save"
   | "import"
   | "frame-all"
@@ -30,6 +32,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
     "M3 4.5c0-1.1 2.2-2 5-2s5 .9 5 2v7c0 1.1-2.2 2-5 2s-5-.9-5-2Z M3 4.5c0 1.1 2.2 2 5 2s5-.9 5-2",
   "source-node": "M2.5 8h3.5 M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   plus: "M8 3v10 M3 8h10",
+  back: "M13 8H3.5 M7.5 4 3.5 8l4 4",
+  open: "M2.5 8h8 M7 4.5 10.5 8 7 11.5 M13.5 2.5v11",
   save: "M2.5 2.5h9l2 2v9h-11Z M5 2.5V6h5V2.5 M4.5 13.5v-4h7v4",
   import: "M8 2v8 M5 7l3 3 3-3 M2.5 11v2.5h11V11",
   "frame-all": CORNERS,

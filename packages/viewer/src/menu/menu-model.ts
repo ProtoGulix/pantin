@@ -1,0 +1,243 @@
+import { LANGUAGES, type Language, type MessageKey, type Translate } from "../i18n/translate.ts";
+import { parseNodeId } from "../tree/node-ids.ts";
+import type { ViewerState } from "../viewer-state.ts";
+
+// The menu bar as data: menus, items, enable rules and keyboard shortcuts.
+// Adding an item (e.g. Fichier > Exporter) is adding one entry to MENUS.
+
+export type MenuCommand =
+  | "open"
+  | "save"
+  | "import"
+  | "close"
+  | "rename"
+  | "delete"
+  | "frameAll"
+  | "frameSelection"
+  | `language:${Language}`;
+
+type MenuId = "file" | "edit" | "view";
+
+interface Shortcut {
+  key: string;
+  // Ctrl on Windows and Linux, Cmd on macOS.
+  primaryModifier: boolean;
+  labelKey: MessageKey;
+}
+
+// What the enable rules look at, computed once per state.
+interface MenuContext {
+  editing: boolean;
+  busy: boolean;
+  unsavedChanges: boolean;
+  importing: boolean;
+  hasBodies: boolean;
+  selectedKind: string | null;
+  language: Language;
+}
+
+interface MenuItemDefinition {
+  command: MenuCommand;
+  label(translate: Translate): string;
+  shortcut?: Shortcut;
+  enabled(context: MenuContext): boolean;
+  checked?(context: MenuContext): boolean;
+}
+
+type MenuEntryDefinition = MenuItemDefinition | "separator";
+
+interface MenuDefinition {
+  id: MenuId;
+  labelKey: MessageKey;
+  entries: readonly MenuEntryDefinition[];
+}
+
+const always = () => true;
+
+function item(
+  command: MenuCommand,
+  labelKey: MessageKey,
+  enabled: (context: MenuContext) => boolean,
+  shortcut?: Shortcut,
+): MenuItemDefinition {
+  const base = { command, label: (translate: Translate) => translate(labelKey), enabled };
+  return shortcut === undefined ? base : { ...base, shortcut };
+}
+
+function languageItem(language: Language): MenuItemDefinition {
+  return {
+    command: `language:${language}`,
+    label: (translate) =>
+      translate("menubar.view.language", { language: translate(`language.${language}`) }),
+    enabled: always,
+    checked: (context) => context.language === language,
+  };
+}
+
+const MENUS: readonly MenuDefinition[] = [
+  {
+    id: "file",
+    labelKey: "menubar.file",
+    entries: [
+      item("open", "menubar.file.open", (context) => !context.busy),
+      item(
+        "save",
+        "menubar.file.save",
+        (context) => context.editing && context.unsavedChanges && !context.busy,
+        {
+          key: "s",
+          primaryModifier: true,
+          labelKey: "shortcut.save",
+        },
+      ),
+      item(
+        "import",
+        "menubar.file.import",
+        (context) => context.editing && !context.busy && !context.importing,
+      ),
+      "separator",
+      item("close", "menubar.file.close", (context) => context.editing),
+    ],
+  },
+  {
+    id: "edit",
+    labelKey: "menubar.edit",
+    entries: [
+      item(
+        "rename",
+        "menubar.edit.rename",
+        (context) => context.selectedKind === "pantin" || context.selectedKind === "body",
+        { key: "F2", primaryModifier: false, labelKey: "shortcut.rename" },
+      ),
+      item(
+        "delete",
+        "menubar.edit.delete",
+        (context) => context.selectedKind === "body" && !context.busy,
+        {
+          key: "Delete",
+          primaryModifier: false,
+          labelKey: "shortcut.delete",
+        },
+      ),
+    ],
+  },
+  {
+    id: "view",
+    labelKey: "menubar.view",
+    entries: [
+      item("frameAll", "menubar.view.frameAll", (context) => context.hasBodies),
+      item(
+        "frameSelection",
+        "menubar.view.frameSelection",
+        (context) => context.hasBodies && context.selectedKind !== null,
+      ),
+      "separator",
+      ...LANGUAGES.map(languageItem),
+    ],
+  },
+];
+
+function menuContext(state: ViewerState): MenuContext {
+  return {
+    editing: state.openPantin !== null,
+    busy: state.pendingRequestCount > 0,
+    unsavedChanges: state.openPantin?.unsavedChanges ?? false,
+    importing: state.importInProgress,
+    hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
+    selectedKind:
+      state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null),
+    language: state.language,
+  };
+}
+
+export type MenuEntryView =
+  | {
+      type: "item";
+      command: MenuCommand;
+      label: string;
+      shortcutLabel: string | null;
+      enabled: boolean;
+      // null: not a checkable item.
+      checked: boolean | null;
+    }
+  | { type: "separator" };
+
+export interface MenuView {
+  id: MenuId;
+  label: string;
+  entries: MenuEntryView[];
+}
+
+function entryView(
+  entry: MenuEntryDefinition,
+  context: MenuContext,
+  translate: Translate,
+): MenuEntryView {
+  if (entry === "separator") {
+    return { type: "separator" };
+  }
+  return {
+    type: "item",
+    command: entry.command,
+    label: entry.label(translate),
+    shortcutLabel: entry.shortcut === undefined ? null : translate(entry.shortcut.labelKey),
+    enabled: entry.enabled(context),
+    checked: entry.checked === undefined ? null : entry.checked(context),
+  };
+}
+
+export function buildMenuBar(state: ViewerState, translate: Translate): MenuView[] {
+  const context = menuContext(state);
+  return MENUS.map((menu) => ({
+    id: menu.id,
+    label: translate(menu.labelKey),
+    entries: menu.entries.map((entry) => entryView(entry, context, translate)),
+  }));
+}
+
+export interface KeyPress {
+  key: string;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  altKey: boolean;
+  // True while the user types in a text field: shortcuts never fire then.
+  inEditableField: boolean;
+}
+
+function matches(shortcut: Shortcut, press: KeyPress): boolean {
+  const primary = press.ctrlKey || press.metaKey;
+  return (
+    !press.altKey &&
+    primary === shortcut.primaryModifier &&
+    press.key.toLowerCase() === shortcut.key.toLowerCase()
+  );
+}
+
+export interface ShortcutMatch {
+  command: MenuCommand;
+  // Ctrl/Cmd shortcuts: handled before the focused field sees them, and their
+  // browser default (Ctrl+S "save page") is always blocked, even when they do
+  // not run. F2 and Suppr keep their normal meaning in a text field.
+  primaryModifier: boolean;
+  // Run only when the command is enabled and the user is not typing.
+  run: boolean;
+}
+
+/** The shortcut a key press matches, whether or not it may run; null if none. */
+export function shortcutForKeyPress(state: ViewerState, press: KeyPress): ShortcutMatch | null {
+  const context = menuContext(state);
+  for (const menu of MENUS) {
+    for (const entry of menu.entries) {
+      if (entry !== "separator" && entry.shortcut !== undefined && matches(entry.shortcut, press)) {
+        const run = entry.enabled(context) && !press.inEditableField;
+        const { primaryModifier } = entry.shortcut;
+        return {
+          command: entry.command,
+          primaryModifier,
+          run,
+        };
+      }
+    }
+  }
+  return null;
+}

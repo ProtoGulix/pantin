@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { pantinResponse, pantinSummaries, railBody } from "../test-fixtures.ts";
+import { pantinResponse, railBody } from "../test-fixtures.ts";
 import {
   bodyIdOfNode,
   bodyNodeId,
@@ -12,7 +12,7 @@ import {
 import { buildTree, findNode, flattenTree, type TreeViewState } from "./tree-model.ts";
 
 const translate = createTranslator("fr");
-const source = { pantins: pantinSummaries, openPantin: pantinResponse(false) };
+const source = { openPantin: pantinResponse(false) };
 
 function view(expanded: string[], selected: string | null = null): TreeViewState {
   return { expandedNodeIds: new Set(expanded), selectedNodeId: selected, renamingNodeId: null };
@@ -50,16 +50,16 @@ describe("node ids", () => {
 describe("buildTree", () => {
   const tree = buildTree(source, translate);
 
-  it("lists every Pantin as a root with its body count", () => {
-    expect(tree.map((node) => [node.label, node.detail])).toEqual([
-      ["Press", "1 corps"],
-      ["Robot", "4 corps"],
-    ]);
+  it("has no root in the list view, when no Pantin is open", () => {
+    expect(buildTree({ openPantin: null }, translate)).toEqual([]);
   });
 
-  it("loads children only for the open Pantin", () => {
-    expect(tree[0]?.children?.map((node) => node.label)).toEqual(["Corps"]);
-    expect(tree[1]?.children).toBeNull();
+  it("starts at the open Pantin, with its body count", () => {
+    expect(tree.map((node) => [node.label, node.detail])).toEqual([["Press", "1 corps"]]);
+  });
+
+  it("puts a Corps folder under the Pantin", () => {
+    expect(tree[0]?.children.map((node) => node.label)).toEqual(["Corps"]);
   });
 
   it("puts the bodies in the Corps folder with an icon per source format", () => {
@@ -70,28 +70,21 @@ describe("buildTree", () => {
   it("keeps the verbatim source node names as greyed, read-only children", () => {
     const body = findNode(tree, bodyNodeId("press", "rail"));
     expect(
-      body?.children?.map((node) => [node.label, node.detail, node.muted, node.renamable]),
+      body?.children.map((node) => [node.label, node.detail, node.muted, node.renamable]),
     ).toEqual([
       ["3630.00.0800N_0", "0/0", true, false],
       ["(nœud sans nom)", "0/1", true, false],
     ]);
-  });
-
-  it("shows a freshly created Pantin before the list is refreshed", () => {
-    const created = { ...pantinResponse(false, [], "new-one") };
-    const roots = buildTree({ pantins: pantinSummaries, openPantin: created }, translate);
-    expect(roots.map((node) => node.id)).toContain(pantinNodeId("new-one"));
   });
 });
 
 describe("flattenTree", () => {
   const tree = buildTree(source, translate);
 
-  it("shows only roots when nothing is expanded; every Pantin is expandable", () => {
+  it("shows only the Pantin when nothing is expanded", () => {
     const rows = flattenTree(tree, view([]));
     expect(rows.map((row) => [row.id, row.expandable, row.expanded])).toEqual([
       [pantinNodeId("press"), true, false],
-      [pantinNodeId("robot"), true, false],
     ]);
   });
 
@@ -103,14 +96,8 @@ describe("flattenTree", () => {
       [2, "Linear rail", folderNodeId("press", "bodies")],
       [3, "3630.00.0800N_0", bodyNodeId("press", "rail")],
       [3, "(nœud sans nom)", bodyNodeId("press", "rail")],
-      [0, "Robot", null],
     ]);
     expect(rows[4]).toMatchObject({ positionInSet: 2, setSize: 2, expandable: false });
-  });
-
-  it("never expands a closed Pantin, even if asked, since its children are not loaded", () => {
-    const rows = flattenTree(tree, view([pantinNodeId("robot")]));
-    expect(rows.find((row) => row.id === pantinNodeId("robot"))?.expanded).toBe(false);
   });
 
   it("marks the selected and renaming rows", () => {

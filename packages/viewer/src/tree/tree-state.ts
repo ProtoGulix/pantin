@@ -9,16 +9,11 @@ export function nodeExists(source: TreeSource, nodeId: string): boolean {
   if (ref === null) {
     return false;
   }
-  if (ref.kind === "pantin") {
-    return (
-      source.pantins.some((summary) => summary.id === ref.pantinId) ||
-      source.openPantin?.id === ref.pantinId
-    );
-  }
+  // Only the open Pantin has nodes: the tree starts at it.
   if (source.openPantin?.id !== ref.pantinId) {
     return false;
   }
-  if (ref.kind === "folder") {
+  if (ref.kind === "pantin" || ref.kind === "folder") {
     return true;
   }
   const body = source.openPantin.document.bodies.find((candidate) => candidate.id === ref.bodyId);

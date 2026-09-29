@@ -65,9 +65,13 @@ export interface PantinApiClient {
   getPantin(pantinId: string): Promise<PantinResponse>;
   renamePantin(pantinId: string, name: string): Promise<PantinResponse>;
   savePantin(pantinId: string): Promise<PantinResponse>;
+  // Throws away the unsaved edits: the core reloads pantin.json.
+  discardPantin(pantinId: string): Promise<PantinResponse>;
   // One body for GLB and STL, one per assembly component for STEP (ADR 0009).
   importBodies(pantinId: string, query: ImportBodyQuery, fileBytes: ArrayBuffer): Promise<Body[]>;
   renameBody(pantinId: string, bodyId: string, name: string): Promise<Body>;
+  // The whole Pantin comes back: the body is gone and unsavedChanges is set.
+  deleteBody(pantinId: string, bodyId: string): Promise<PantinResponse>;
   fetchMeshBytes(pantinId: string, meshPath: string): Promise<ArrayBuffer>;
 }
 
@@ -186,7 +190,7 @@ type SendJson = <Output>(url: string, init: RequestInit, schema: Schema<Output>)
 
 type PantinRoutes = Pick<
   PantinApiClient,
-  "listPantins" | "createPantin" | "getPantin" | "renamePantin" | "savePantin"
+  "listPantins" | "createPantin" | "getPantin" | "renamePantin" | "savePantin" | "discardPantin"
 >;
 
 function pantinRoutes(send: SendJson): PantinRoutes {
@@ -204,10 +208,15 @@ function pantinRoutes(send: SendJson): PantinRoutes {
     },
     savePantin: (pantinId) =>
       send(pantinUrl(pantinId, "/save"), jsonRequest("POST"), PantinResponseSchema),
+    discardPantin: (pantinId) =>
+      send(pantinUrl(pantinId, "/discard"), jsonRequest("POST"), PantinResponseSchema),
   };
 }
 
-type BodyRoutes = Pick<PantinApiClient, "importBodies" | "renameBody" | "fetchMeshBytes">;
+type BodyRoutes = Pick<
+  PantinApiClient,
+  "importBodies" | "renameBody" | "deleteBody" | "fetchMeshBytes"
+>;
 
 function bodyRoutes(send: SendJson, fetchFunction: FetchFunction): BodyRoutes {
   return {
@@ -221,6 +230,12 @@ function bodyRoutes(send: SendJson, fetchFunction: FetchFunction): BodyRoutes {
       };
       return (await send(url, init, ImportBodiesResponseSchema)).bodies;
     },
+    deleteBody: (pantinId, bodyId) =>
+      send(
+        pantinUrl(pantinId, `/bodies/${encodeURIComponent(bodyId)}`),
+        jsonRequest("DELETE"),
+        PantinResponseSchema,
+      ),
     renameBody: async (pantinId, bodyId, name) => {
       const request = validInputOrThrow(RenameRequestSchema, { name });
       const url = pantinUrl(pantinId, `/bodies/${encodeURIComponent(bodyId)}`);

@@ -6,13 +6,16 @@ import { renderImportForm } from "./import-form.ts";
 import { renderMessageLine } from "./message-line.ts";
 import { type PaneLayout, setUpPaneLayout } from "./pane-layout.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { createPantinList, type PantinList } from "./pantin-list.ts";
+import { renderPromptLine } from "./prompt-line.ts";
 import { renderPropertiesGrid } from "./properties-grid.ts";
 import { renderCreatePantinForm, renderToolbar, type ToolbarCallbacks } from "./toolbar.ts";
 import { createTreeView, type TreeView } from "./tree-view.ts";
 
-// The left panel: toolbar, inline forms, tree, properties, message line. The
-// skeleton is built once (so the tree keeps keyboard focus); each region is
-// redrawn from the PanelView on every change.
+// The left panel: quick-access bar, inline forms, then either the Pantin list
+// (list view) or the tree and properties (edit view), a confirmation line and
+// the message line. The skeleton is built once (so the tree and the list keep
+// keyboard focus); each region is redrawn from the PanelView on every change.
 
 interface FocusSnapshot {
   key: string;
@@ -48,6 +51,9 @@ export class SidePanel {
   private readonly toolbarHost = element("div", { className: "panel-header" });
   private readonly formHost = element("div", { className: "form-host" });
   private readonly treeView: TreeView = createTreeView();
+  private readonly pantinList: PantinList = createPantinList();
+  private readonly paneStack: HTMLElement;
+  private readonly promptHost = element("div", { className: "prompt-host" });
   private readonly propertiesTitle = element("h2", { className: "pane__title" });
   private readonly propertiesBody = element("div", { className: "pane__body" });
   private readonly messageHost = element("div", { className: "message-host" });
@@ -62,7 +68,9 @@ export class SidePanel {
   // Focus moves into the create form or the menu only when they appear.
   private wasCreating = false;
   private previousMenuKey: string | null = null;
-  private readonly callbacks: ToolbarCallbacks = {
+  private hadPrompt = false;
+  // Shared with the menu bar, whose Importer… opens the same file picker.
+  readonly callbacks: ToolbarCallbacks = {
     openFilePicker: (targetPantinId) => {
       this.importTarget = targetPantinId;
       this.fileInput.click();
@@ -71,16 +79,19 @@ export class SidePanel {
 
   constructor(panel: HTMLElement, layoutRoot: HTMLElement) {
     this.panel = panel;
-    const treePane = element("section", { className: "pane pane--tree" }, [this.treeView.element]);
+    const treePane = element("section", { className: "pane pane--tree" }, [this.treeView.tree]);
     const propertiesPane = element("section", { className: "pane pane--properties" }, [
       this.propertiesTitle,
       this.propertiesBody,
     ]);
     const paneStack = element("div", { className: "pane-stack" }, [treePane, propertiesPane]);
+    this.paneStack = paneStack;
     panel.replaceChildren(
       this.toolbarHost,
       this.formHost,
+      this.pantinList.element,
       paneStack,
+      this.promptHost,
       this.messageHost,
       this.menuHost,
       this.fileInput,
@@ -94,17 +105,44 @@ export class SidePanel {
     this.intents = intents;
     const focus = captureFocus(this.panel);
     const { translate } = view;
-    this.toolbarHost.replaceChildren(renderToolbar(view, intents, this.callbacks));
+    const openSelected = () => {
+      const selected = view.listRows.find((row) => row.selected);
+      if (selected !== undefined) {
+        intents.openPantin(selected.id);
+      }
+    };
+    this.toolbarHost.replaceChildren(renderToolbar(view, intents, this.callbacks, openSelected));
     this.renderForms(view, intents);
-    this.treeView.render(view.treeRows, view.language, translate, intents);
-    this.propertiesTitle.textContent = translate("properties.label");
-    this.propertiesBody.replaceChildren(renderPropertiesGrid(view.properties, translate, intents));
+    this.renderViewContent(view, intents);
+    this.renderPrompt(view, intents);
     const message = renderMessageLine(view.message, translate, intents);
     this.messageHost.replaceChildren(...(message === null ? [] : [message]));
     this.renderMenu(view, intents);
     this.fileInput.setAttribute("aria-label", translate("import.fileInputLabel"));
     this.layout.translateLabels(translate);
     restoreFocus(this.panel, focus);
+  }
+
+  // Only one of the two views is visible; the hidden one keeps its elements.
+  private renderViewContent(view: PanelView, intents: PanelIntents): void {
+    const { translate } = view;
+    const listing = view.mode === "list";
+    this.pantinList.element.hidden = !listing;
+    this.paneStack.hidden = listing;
+    this.pantinList.render(view.listRows, translate, intents);
+    this.treeView.render(view.treeRows, view.language, translate, intents);
+    this.propertiesTitle.textContent = translate("properties.label");
+    this.propertiesBody.replaceChildren(renderPropertiesGrid(view.properties, translate, intents));
+  }
+
+  private renderPrompt(view: PanelView, intents: PanelIntents): void {
+    const prompt = renderPromptLine(view.prompt, intents);
+    this.promptHost.replaceChildren(...(prompt === null ? [] : [prompt]));
+    // A new question takes the keyboard, so Enter or Escape answer it at once.
+    if (prompt !== null && !this.hadPrompt) {
+      prompt.querySelector<HTMLButtonElement>(".button--primary")?.focus();
+    }
+    this.hadPrompt = prompt !== null;
   }
 
   private renderForms(view: PanelView, intents: PanelIntents): void {

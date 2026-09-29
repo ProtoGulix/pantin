@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { pantinResponse, pantinSummaries } from "../test-fixtures.ts";
+import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId, folderNodeId, pantinNodeId, sourceNodeNodeId } from "./node-ids.ts";
 import { buildTree, flattenTree } from "./tree-model.ts";
 import { commandForKey } from "./tree-navigation.ts";
 
 const press = pantinNodeId("press");
-const robot = pantinNodeId("robot");
+const carriage = bodyNodeId("press", "carriage");
 const folder = folderNodeId("press", "bodies");
 const rail = bodyNodeId("press", "rail");
 const firstSource = sourceNodeNodeId("press", "rail", 0);
 
 function rows(expanded: string[]) {
   const tree = buildTree(
-    { pantins: pantinSummaries, openPantin: pantinResponse(false) },
+    { openPantin: pantinResponse(false, [railBody, stepBody("carriage", "N_1")]) },
     createTranslator("en"),
   );
   return flattenTree(tree, {
@@ -39,15 +39,15 @@ describe("commandForKey", () => {
       type: "select",
       nodeId: press,
     });
-    expect(commandForKey(expandedRows, robot, "ArrowDown")).toEqual({
+    expect(commandForKey(expandedRows, carriage, "ArrowDown")).toEqual({
       type: "select",
-      nodeId: robot,
+      nodeId: carriage,
     });
   });
 
   it("jumps to the first and last rows", () => {
     expect(commandForKey(expandedRows, rail, "Home")).toEqual({ type: "select", nodeId: press });
-    expect(commandForKey(expandedRows, press, "End")).toEqual({ type: "select", nodeId: robot });
+    expect(commandForKey(expandedRows, press, "End")).toEqual({ type: "select", nodeId: carriage });
   });
 
   it("selects the first or last row when nothing is selected", () => {
@@ -55,7 +55,10 @@ describe("commandForKey", () => {
       type: "select",
       nodeId: press,
     });
-    expect(commandForKey(expandedRows, null, "ArrowUp")).toEqual({ type: "select", nodeId: robot });
+    expect(commandForKey(expandedRows, null, "ArrowUp")).toEqual({
+      type: "select",
+      nodeId: carriage,
+    });
     expect(commandForKey(expandedRows, null, "Enter")).toEqual({ type: "none" });
   });
 });
@@ -66,9 +69,9 @@ describe("commandForKey in depth", () => {
       type: "expand",
       nodeId: rail,
     });
-    expect(commandForKey(expandedRows, robot, "ArrowRight")).toEqual({
+    expect(commandForKey(expandedRows, carriage, "ArrowRight")).toEqual({
       type: "expand",
-      nodeId: robot,
+      nodeId: carriage,
     });
     expect(commandForKey(expandedRows, folder, "ArrowRight")).toEqual({
       type: "select",
@@ -90,13 +93,13 @@ describe("commandForKey in depth", () => {
       type: "select",
       nodeId: folder,
     });
-    expect(commandForKey(expandedRows, robot, "ArrowLeft")).toEqual({ type: "none" });
+    expect(commandForKey(rows([]), press, "ArrowLeft")).toEqual({ type: "none" });
   });
 
   it("activates with Enter and renames with F2 only what can be renamed", () => {
-    expect(commandForKey(expandedRows, robot, "Enter")).toEqual({
+    expect(commandForKey(expandedRows, carriage, "Enter")).toEqual({
       type: "activate",
-      nodeId: robot,
+      nodeId: carriage,
     });
     expect(commandForKey(expandedRows, rail, "F2")).toEqual({ type: "rename", nodeId: rail });
     expect(commandForKey(expandedRows, folder, "F2")).toEqual({ type: "none" });

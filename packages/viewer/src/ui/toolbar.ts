@@ -1,10 +1,10 @@
 import type { Translate } from "../i18n/translate.ts";
 import type { PanelView } from "../view-model.ts";
-import { committingTextInput, element, iconButton, selectInput } from "./dom.ts";
+import { committingTextInput, element, iconButton } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
-// Compact icon toolbar at the top of the panel, and the inline "new Pantin"
-// form it opens. No menu bar: every action is one click or a context menu.
+// Compact quick-access bar under the menu bar, with the buttons of the
+// current view, and the inline "new Pantin" form it opens.
 
 export interface ToolbarCallbacks {
   // Opens the browser's file picker; must run inside the click (user gesture).
@@ -21,17 +21,6 @@ function saveButton(view: PanelView, intents: PanelIntents): HTMLElement {
   return save;
 }
 
-function languageSelect(view: PanelView, intents: PanelIntents): HTMLElement {
-  const select = selectInput(
-    view.languageOptions,
-    view.language,
-    view.translate("language.label"),
-    intents.changeLanguage,
-  );
-  select.classList.add("select-input--compact");
-  return select;
-}
-
 function busyIndicator(view: PanelView): HTMLElement | null {
   if (!view.toolbar.busy) {
     return null;
@@ -43,17 +32,31 @@ function busyIndicator(view: PanelView): HTMLElement | null {
   });
 }
 
-function actionButtons(
+// List view: create a Pantin, open the selected one.
+function listButtons(
+  view: PanelView,
+  intents: PanelIntents,
+  openSelected: () => void,
+): HTMLElement[] {
+  const { toolbar, translate } = view;
+  const create = iconButton("plus", translate("toolbar.newPantin"), intents.toggleCreatePantin);
+  create.setAttribute("aria-pressed", String(toolbar.creatingPantin));
+  return [
+    create,
+    iconButton("open", translate("toolbar.open"), openSelected, !toolbar.openEnabled),
+  ];
+}
+
+// Edit view: back to the list, save, import, framing.
+function editButtons(
   view: PanelView,
   intents: PanelIntents,
   callbacks: ToolbarCallbacks,
 ): HTMLElement[] {
   const { toolbar, translate } = view;
-  const create = iconButton("plus", translate("toolbar.newPantin"), intents.toggleCreatePantin);
-  create.setAttribute("aria-pressed", String(toolbar.creatingPantin));
   const openPicker = () => callbacks.openFilePicker(null);
   return [
-    create,
+    iconButton("back", translate("toolbar.close"), intents.requestClose),
     saveButton(view, intents),
     iconButton("import", translate("toolbar.import"), openPicker, !toolbar.importEnabled),
     element("span", { className: "toolbar__separator", attributes: { role: "separator" } }),
@@ -76,19 +79,19 @@ export function renderToolbar(
   view: PanelView,
   intents: PanelIntents,
   callbacks: ToolbarCallbacks,
+  openSelected: () => void,
 ): HTMLElement {
+  const buttons =
+    view.mode === "list"
+      ? listButtons(view, intents, openSelected)
+      : editButtons(view, intents, callbacks);
   return element(
     "div",
     {
       className: "toolbar",
       attributes: { role: "toolbar", "aria-label": view.translate("toolbar.label") },
     },
-    [
-      ...actionButtons(view, intents, callbacks),
-      element("span", { className: "toolbar__spacer" }),
-      busyIndicator(view),
-      languageSelect(view, intents),
-    ],
+    [...buttons, element("span", { className: "toolbar__spacer" }), busyIndicator(view)],
   );
 }
 

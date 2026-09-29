@@ -1,4 +1,4 @@
-import type { Body, PantinResponse, PantinSummary } from "@pantin/protocol";
+import type { Body, PantinResponse } from "@pantin/protocol";
 import { type MessageKey, pluralKey, type Translate } from "../i18n/translate.ts";
 import {
   bodyNodeId,
@@ -25,12 +25,10 @@ export interface TreeNode {
   // Read-only data from the source file: drawn greyed.
   muted: boolean;
   renamable: boolean;
-  // null: the node has children that are not loaded yet (a closed Pantin).
-  children: readonly TreeNode[] | null;
+  children: readonly TreeNode[];
 }
 
 export interface TreeSource {
-  pantins: readonly PantinSummary[];
   openPantin: PantinResponse | null;
 }
 
@@ -93,31 +91,23 @@ function folderNodes(pantin: PantinResponse, translate: Translate): TreeNode[] {
   });
 }
 
-function pantinNode(summary: PantinSummary, source: TreeSource, translate: Translate): TreeNode {
-  const open = source.openPantin?.id === summary.id ? source.openPantin : null;
-  const bodyCount = open?.document.bodies.length ?? summary.bodyCount;
+function pantinNode(pantin: PantinResponse, translate: Translate): TreeNode {
+  const bodyCount = pantin.document.bodies.length;
   return {
-    id: pantinNodeId(summary.id),
+    id: pantinNodeId(pantin.id),
     kind: "pantin",
     icon: "pantin",
-    label: open?.document.name ?? summary.name,
+    label: pantin.document.name,
     detail: translate(pluralKey("tree.bodyCount", bodyCount), { count: bodyCount }),
     muted: false,
     renamable: true,
-    children: open === null ? null : folderNodes(open, translate),
+    children: folderNodes(pantin, translate),
   };
 }
 
+/** The edit view's tree: exactly one root, the open Pantin; empty in the list view. */
 export function buildTree(source: TreeSource, translate: Translate): TreeNode[] {
-  const { openPantin } = source;
-  // A Pantin just created may be open before the list is refreshed.
-  const missingOpen =
-    openPantin !== null && !source.pantins.some((summary) => summary.id === openPantin.id)
-      ? [{ id: openPantin.id, name: openPantin.document.name, bodyCount: 0 }]
-      : [];
-  return [...source.pantins, ...missingOpen].map((summary) =>
-    pantinNode(summary, source, translate),
-  );
+  return source.openPantin === null ? [] : [pantinNode(source.openPantin, translate)];
 }
 
 export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode | null {
@@ -125,7 +115,7 @@ export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode |
     if (node.id === nodeId) {
       return node;
     }
-    const inChildren = findNode(node.children ?? [], nodeId);
+    const inChildren = findNode(node.children, nodeId);
     if (inChildren !== null) {
       return inChildren;
     }
@@ -158,16 +148,15 @@ export interface TreeViewState {
 }
 
 function isExpandable(node: TreeNode): boolean {
-  return node.children === null || node.children.length > 0;
+  return node.children.length > 0;
 }
 
-/** Visible rows, depth first: children only under expanded, loaded nodes. */
+/** Visible rows, depth first: children only under expanded nodes. */
 export function flattenTree(nodes: readonly TreeNode[], view: TreeViewState): TreeRow[] {
   const rows: TreeRow[] = [];
   const visit = (siblings: readonly TreeNode[], depth: number, parentId: string | null) => {
     siblings.forEach((node, index) => {
-      const expanded =
-        node.children !== null && isExpandable(node) && view.expandedNodeIds.has(node.id);
+      const expanded = isExpandable(node) && view.expandedNodeIds.has(node.id);
       rows.push({
         id: node.id,
         kind: node.kind,
@@ -186,7 +175,7 @@ export function flattenTree(nodes: readonly TreeNode[], view: TreeViewState): Tr
         setSize: siblings.length,
       });
       if (expanded) {
-        visit(node.children ?? [], depth + 1, node.id);
+        visit(node.children, depth + 1, node.id);
       }
     });
   };

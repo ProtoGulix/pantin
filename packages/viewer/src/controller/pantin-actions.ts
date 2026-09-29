@@ -52,20 +52,23 @@ export async function editPantin<Result>(
   return outcome?.result;
 }
 
-export async function savePantin(store: ViewerStore): Promise<void> {
+/** Saves the open Pantin; resolves true when the core confirmed the save. */
+export async function savePantin(store: ViewerStore): Promise<boolean> {
   const open = store.state.openPantin;
   if (open === null) {
-    return;
+    return false;
   }
   const saved = await editPantin(store, open.id, (pantinId) =>
     store.ports.api.savePantin(pantinId),
   );
-  if (saved !== undefined) {
-    store.update({
-      ...store.state,
-      message: infoMessage("message.saved", { name: saved.document.name }),
-    });
+  if (saved === undefined) {
+    return false;
   }
+  store.update({
+    ...store.state,
+    message: infoMessage("message.saved", { name: saved.document.name }),
+  });
+  return true;
 }
 
 /** Renames a Pantin or a body, whichever the tree node stands for. */

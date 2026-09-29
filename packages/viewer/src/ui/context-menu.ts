@@ -1,5 +1,5 @@
+import type { ContextAction, ContextMenuView } from "../panel/context-menu-model.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import type { ContextAction, ContextMenuView } from "../view-model.ts";
 import { element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import type { ToolbarCallbacks } from "./toolbar.ts";
@@ -17,6 +17,8 @@ function runAction(
     intents.startRename(nodeId);
   } else if (action === "frame") {
     intents.frameNode(nodeId);
+  } else if (action === "delete") {
+    intents.requestDelete(nodeId);
   } else {
     // The file picker must open inside this click: browsers require a user gesture.
     intents.closeContextMenu();

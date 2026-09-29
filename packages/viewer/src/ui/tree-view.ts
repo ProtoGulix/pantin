@@ -11,8 +11,6 @@ import type { PanelIntents } from "./panel-intents.ts";
 // rebuilding rows can never lose a click or a double-click.
 
 export interface TreeView {
-  // The tree and, outside it, the empty-state message.
-  element: HTMLElement;
   tree: HTMLElement;
   render(
     rows: readonly TreeRow[],
@@ -262,13 +260,10 @@ function updateActiveDescendant(tree: HTMLElement, rows: readonly TreeRow[]): vo
 
 export function createTreeView(): TreeView {
   const tree = element("div", { className: "tree", attributes: { role: "tree", tabindex: "0" } });
-  const emptyMessage = element("p", { className: "pane-empty" });
-  const container = element("div", { className: "tree-container" }, [emptyMessage, tree]);
   const current: Current = { rows: [], intents: null, elements: new Map() };
   listenToKeys(tree, current);
   listenToPointer(tree, current);
   return {
-    element: container,
     tree,
     render: (rows, language, translate, intents) => {
       const hadRenameFocus =
@@ -277,8 +272,6 @@ export function createTreeView(): TreeView {
       current.intents = intents;
       tree.setAttribute("aria-label", translate("tree.label"));
       updateRows(tree, current, language, translate, intents);
-      emptyMessage.textContent = translate("tree.empty");
-      emptyMessage.hidden = rows.length > 0;
       updateActiveDescendant(tree, rows);
       focusAfterRender(tree, hadRenameFocus);
     },

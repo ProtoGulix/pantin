@@ -32,14 +32,18 @@
 }
 
 body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   margin: 0;
   overflow: hidden;
 }
 
 .layout {
   display: grid;
+  flex: 1;
   grid-template-columns: var(--panel-width, 320px) 4px minmax(0, 1fr);
-  height: 100vh;
+  min-height: 0;
 }
 
 :focus-visible {

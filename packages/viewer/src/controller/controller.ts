@@ -1,4 +1,5 @@
 import { isLanguage } from "../i18n/translate.ts";
+import { withListSelection } from "../session-state.ts";
 import { bodyNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
@@ -8,12 +9,20 @@ import {
   chooseImportFile,
   confirmImport,
 } from "./import-actions.ts";
-import { createPantin, refreshPantinList, renameNode, savePantin } from "./pantin-actions.ts";
+import { runMenuCommand } from "./menu-commands.ts";
+import {
+  createPantin,
+  openPantin,
+  refreshPantinList,
+  renameNode,
+  savePantin,
+} from "./pantin-actions.ts";
+import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
 import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
-// Maps every panel intent to an action. Async actions report their own
-// failures through the store, so their promises are deliberately not awaited.
+// Maps every intent to an action. Async actions report their own failures
+// through the store, so their promises are deliberately not awaited.
 
 function toggledSet(set: ReadonlySet<string>, value: string): Set<string> {
   const next = new Set(set);
@@ -21,6 +30,16 @@ function toggledSet(set: ReadonlySet<string>, value: string): Set<string> {
     next.add(value);
   }
   return next;
+}
+
+function listIntents(store: ViewerStore) {
+  return {
+    selectListPantin: (pantinId: string) => store.update(withListSelection(store.state, pantinId)),
+    openPantin: (pantinId: string) => void openPantin(store, pantinId),
+    toggleCreatePantin: () =>
+      store.update({ ...store.state, creatingPantin: !store.state.creatingPantin }),
+    createPantin: (name: string) => void createPantin(store, name),
+  };
 }
 
 function treeIntents(store: ViewerStore) {
@@ -32,41 +51,42 @@ function treeIntents(store: ViewerStore) {
         store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: null });
       }
     },
-    setExpanded: (nodeId: string, expanded: boolean) => void setExpanded(store, nodeId, expanded),
-    activateNode: (nodeId: string) => void activateNode(store, nodeId),
+    setExpanded: (nodeId: string, expanded: boolean) => setExpanded(store, nodeId, expanded),
+    activateNode: (nodeId: string) => activateNode(store, nodeId),
     startRename: (nodeId: string) => startRename(store, nodeId),
     commitRename: (nodeId: string, name: string) => void renameNode(store, nodeId, name),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
+    requestDelete: (nodeId: string) => requestDelete(store, nodeId),
     openContextMenu: (nodeId: string, x: number, y: number) =>
       store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: { nodeId, x, y } }),
     closeContextMenu: () => store.update({ ...store.state, contextMenu: null }),
   };
 }
 
-function toolbarIntents(store: ViewerStore) {
+function editIntents(store: ViewerStore) {
   return {
-    toggleCreatePantin: () =>
-      store.update({ ...store.state, creatingPantin: !store.state.creatingPantin }),
-    createPantin: (name: string) => void createPantin(store, name),
+    requestClose: () => requestClose(store),
     savePantin: () => void savePantin(store),
     frameAll: () => store.ports.viewport().frameBodies(null),
     frameSelection: () => {
       const selected = store.state.selectedNodeId;
       if (selected !== null) {
-        void frameNode(store, selected);
+        frameNode(store, selected);
       }
     },
     frameNode: (nodeId: string) => {
       store.update({ ...store.state, contextMenu: null });
-      void frameNode(store, nodeId);
+      frameNode(store, nodeId);
     },
+    resolvePrompt: (action: Parameters<PanelIntents["resolvePrompt"]>[0]) =>
+      resolvePrompt(store, action),
   };
 }
 
 function importIntents(store: ViewerStore) {
   return {
     chooseImportFile: (file: File, targetPantinId: string | null) =>
-      void chooseImportFile(store, file, targetPantinId),
+      chooseImportFile(store, file, targetPantinId),
     changeImportUnit: (unit: string) => changeImportOptions(store, unit, undefined),
     changeImportUpAxis: (upAxis: string) => changeImportOptions(store, undefined, upAxis),
     confirmImport: () => void confirmImport(store),
@@ -75,22 +95,25 @@ function importIntents(store: ViewerStore) {
 }
 
 export function createPanelIntents(store: ViewerStore): PanelIntents {
+  const changeLanguage = (language: string) => {
+    if (isLanguage(language)) {
+      store.ports.storeLanguage(language);
+      store.update({ ...store.state, language });
+    }
+  };
   return {
+    ...listIntents(store),
     ...treeIntents(store),
-    ...toolbarIntents(store),
+    ...editIntents(store),
     ...importIntents(store),
+    runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     togglePropertyGroup: (groupId) =>
       store.update({
         ...store.state,
         collapsedPropertyGroups: toggledSet(store.state.collapsedPropertyGroups, groupId),
       }),
     dismissMessage: () => store.update({ ...store.state, message: null }),
-    changeLanguage: (language) => {
-      if (isLanguage(language)) {
-        store.ports.storeLanguage(language);
-        store.update({ ...store.state, language });
-      }
-    },
+    changeLanguage,
   };
 }
 

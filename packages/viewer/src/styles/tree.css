@@ -1,11 +1,4 @@
 /* Tree (CODESYS device tree / SolidWorks FeatureManager) and its context menu. */
-.tree-container {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-}
-
 .tree {
   flex: 1;
   padding: 2px 0;
