@@ -2,6 +2,7 @@ import type { PantinResponse } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import type { Language } from "../i18n/translate.ts";
 import { describeFailure } from "../messages.ts";
+import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
 import { bodyIdOfNode } from "../tree/node-ids.ts";
 import { buildPanelView, type PanelView } from "../view-model.ts";
@@ -23,6 +24,7 @@ export interface StorePorts {
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
+  poseStream: PoseStreamClient;
   storeLanguage(language: Language): void;
 }
 
@@ -33,6 +35,8 @@ export class ViewerStore {
   pendingImportFile: File | null = null;
   // Last Pantin the user asked to open, to ignore answers that arrive late.
   requestedPantinId: string | null = null;
+  // Pantin whose poses are shown, to reset them only when it changes.
+  private followedPantinId: string | null = null;
 
   constructor(ports: StorePorts, language: Language) {
     this.ports = ports;
@@ -44,7 +48,19 @@ export class ViewerStore {
     this.ports.renderPanel(buildPanelView(next));
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
+    this.followPoses(next.openPantin?.id ?? null, viewport);
     viewport.setSelectedBody(bodyIdOfNode(next.selectedNodeId));
+  }
+
+  // Poses follow the open Pantin: closed or replaced, the stream stops and the
+  // bodies return to their reference placement.
+  private followPoses(pantinId: string | null, viewport: Viewport): void {
+    if (pantinId === this.followedPantinId) {
+      return;
+    }
+    this.followedPantinId = pantinId;
+    viewport.clearPoses();
+    this.ports.poseStream.follow(pantinId);
   }
 
   /**

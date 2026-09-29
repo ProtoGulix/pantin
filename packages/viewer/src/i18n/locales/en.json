@@ -75,6 +75,8 @@
   "message.unsupportedFile": "\"{fileName}\" is not supported. Choose a .glb, .stl, .stp or .step file.",
   "message.invalidImportOption": "Unknown unit or up axis; choose a value from the list.",
   "message.meshLoad": "Cannot display body \"{name}\".",
+  "message.poseInvalid": "The pose stream sent data that does not match the protocol.",
+  "message.poseClosed": "The pose stream stopped: the core refused it or no longer answers. If many tabs are open on this core, close one, then reopen the Pantin.",
   "error.network": "Cannot reach the Pantin core. Is it running on 127.0.0.1:4800?",
   "error.invalidResponse": "The core sent an unexpected answer.",
   "error.invalidInput": "Value refused.",

@@ -75,6 +75,8 @@
   "message.unsupportedFile": "« {fileName} » n'est pas pris en charge. Choisissez un fichier .glb, .stl, .stp ou .step.",
   "message.invalidImportOption": "Unité ou axe inconnu ; choisissez une valeur dans la liste.",
   "message.meshLoad": "Impossible d'afficher le corps « {name} ».",
+  "message.poseInvalid": "Le flux de poses a envoyé des données non conformes au protocole.",
+  "message.poseClosed": "Le flux de poses s'est arrêté : le cœur l'a refusé ou ne répond plus. S'il y a beaucoup d'onglets ouverts sur ce cœur, fermez-en un puis rouvrez le Pantin.",
   "error.network": "Impossible de joindre le cœur Pantin. Est-il lancé sur 127.0.0.1:4800 ?",
   "error.invalidResponse": "Le cœur a envoyé une réponse inattendue.",
   "error.invalidInput": "Valeur refusée.",

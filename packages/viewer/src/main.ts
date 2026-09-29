@@ -7,6 +7,7 @@ import {
 import { ViewerStore } from "./controller/viewer-store.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { errorMessage } from "./messages.ts";
+import { createPoseStreamClient } from "./pose-stream-client.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
@@ -70,6 +71,16 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
         }
         return viewport;
       },
+      poseStream: createPoseStreamClient((url) => new EventSource(url), {
+        onSnapshot: (snapshot) => viewport?.pushPoses(snapshot),
+        onInvalid: (detail) =>
+          store.update({
+            ...store.state,
+            message: errorMessage("message.poseInvalid", {}, detail),
+          }),
+        onClosed: () =>
+          store.update({ ...store.state, message: errorMessage("message.poseClosed") }),
+      }),
       storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     },
     language,

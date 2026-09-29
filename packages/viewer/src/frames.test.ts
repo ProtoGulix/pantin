@@ -4,12 +4,16 @@ import {
   applyMatrix3,
   babylonToCorePosition,
   bodyNodeTransform,
+  coreDisplacementToBabylon,
   coreToBabylonPosition,
+  displacedNodePlacement,
   fileToCoreMatrix,
   GLTF_LOADER_ROOT_MAPPING,
   LENGTH_UNIT_IN_METRES,
   type Matrix3,
   multiplyMatrix3,
+  multiplyQuaternions,
+  type QuaternionTuple,
   STL_LOADER_MAPPING,
   toBabylonMatrixArray,
   type Vector3Tuple,
@@ -148,3 +152,88 @@ describe("Babylon matrix layout", () => {
     expectClose(applyMatrix3(product, [1, 2, 3]), fileToBabylon("glb", "z", "mm", [1, 2, 3]));
   });
 });
+
+function rotateByQuaternion(q: QuaternionTuple, point: Vector3Tuple): Vector3Tuple {
+  // q * (0, p) * conjugate(q)
+  const conjugate: QuaternionTuple = [-q[0], -q[1], -q[2], q[3]];
+  const result = multiplyQuaternions(multiplyQuaternions(q, [...point, 0]), conjugate);
+  return [result[0], result[1], result[2]];
+}
+
+describe("core displacement in Babylon", () => {
+  const half = Math.SQRT1_2;
+  const quarterTurnAboutCoreZ: QuaternionTuple = [0, 0, half, half];
+
+  it("maps a 90 degree rotation about core Z to a -90 degree rotation about Babylon Y", () => {
+    const { rotation, translation } = coreDisplacementToBabylon([0, 0, 0], quarterTurnAboutCoreZ);
+    expect(rotation[0]).toBeCloseTo(0, 12);
+    expect(rotation[1]).toBeCloseTo(-half, 12);
+    expect(rotation[2]).toBeCloseTo(0, 12);
+    expect(rotation[3]).toBeCloseTo(half, 12);
+    expectClose(translation, [0, 0, 0]);
+  });
+
+  it("moves points exactly as the core rotation moves them, seen through the swap", () => {
+    const corePoint: Vector3Tuple = [1, 2, 3];
+    // Core: 90 degrees about Z sends (x, y, z) to (-y, x, z).
+    const expectedCore: Vector3Tuple = [-2, 1, 3];
+    const { rotation } = coreDisplacementToBabylon([0, 0, 0], quarterTurnAboutCoreZ);
+    const moved = rotateByQuaternion(rotation, coreToBabylonPosition(corePoint));
+    expectClose(moved, coreToBabylonPosition(expectedCore));
+  });
+
+  it("maps a translation along core X to Babylon X and core Z to Babylon Y", () => {
+    const identity: QuaternionTuple = [0, 0, 0, 1];
+    expectClose(coreDisplacementToBabylon([0.5, 0, 0], identity).translation, [0.5, 0, 0]);
+    expectClose(coreDisplacementToBabylon([0, 0, 0.5], identity).translation, [0, 0.5, 0]);
+  });
+
+  it("leaves the reference placement untouched for the identity displacement", () => {
+    const reference: QuaternionTuple = [0.5, 0.5, -0.5, 0.5];
+    const placed = displacedNodePlacement(reference, [0, 0, 0], [0, 0, 0, 1]);
+    expect(placed.rotation).toEqual(reference);
+    expectClose(placed.translation, [0, 0, 0]);
+  });
+});
+
+describe("core displacement composed with the reference placement", () => {
+  const half = Math.SQRT1_2;
+  const quarterTurnAboutCoreZ: QuaternionTuple = [0, 0, half, half];
+
+  it("composes so that the reference placement acts first, the displacement second", () => {
+    const reference: QuaternionTuple = [half, 0, 0, half];
+    const displacement = coreDisplacementToBabylon([0, 0, 0], quarterTurnAboutCoreZ).rotation;
+    const point: Vector3Tuple = [0.3, -0.7, 1.1];
+    const composed = displacedNodePlacement(reference, [0, 0, 0], quarterTurnAboutCoreZ).rotation;
+    expectClose(
+      rotateByQuaternion(composed, point),
+      rotateByQuaternion(displacement, rotateByQuaternion(reference, point)),
+    );
+  });
+
+  it("applies the displacement in world space on top of the reference placement", () => {
+    // A vertex at file (1, 0, 0) of a Z-up metre STL, displaced by 90 degrees
+    // about core Z then 0.25 m along core X: core (1,0,0) -> (0,1,0) -> (0.25,1,0).
+    const format = "stl";
+    const matrix = bodyNodeTransform(format, "z", "m");
+    // Rotation part of N, as body-loader decomposes it (uniform scale 1 here).
+    const reference = matrixToQuaternion(matrix);
+    const placed = displacedNodePlacement(reference, [0.25, 0, 0], quarterTurnAboutCoreZ);
+    const loaded = applyMatrix3(STL_LOADER_MAPPING, [1, 0, 0]);
+    const inBabylon = rotateByQuaternion(placed.rotation, applyMatrix3(matrix, loaded));
+    const world: Vector3Tuple = [
+      inBabylon[0] + placed.translation[0],
+      inBabylon[1] + placed.translation[1],
+      inBabylon[2] + placed.translation[2],
+    ];
+    expectClose(world, coreToBabylonPosition([0.25, 1, 0]));
+  });
+});
+
+// Enough for the identity-like STL mapping used above: N = C * I * C^T = identity.
+function matrixToQuaternion(matrix: Matrix3): QuaternionTuple {
+  expectClose(matrix[0], [1, 0, 0]);
+  expectClose(matrix[1], [0, 1, 0]);
+  expectClose(matrix[2], [0, 0, 1]);
+  return [0, 0, 0, 1];
+}

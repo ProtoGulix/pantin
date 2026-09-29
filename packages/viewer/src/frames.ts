@@ -161,3 +161,64 @@ export function toBabylonMatrixArray(matrix: Matrix3): number[] {
   ];
   return [...column(0), ...column(1), ...column(2), 0, 0, 0, 1];
 }
+
+export type QuaternionTuple = readonly [number, number, number, number];
+
+export interface BabylonDisplacement {
+  translation: Vector3Tuple;
+  rotation: QuaternionTuple;
+}
+
+/**
+ * A rigid displacement x' = R x + t of the core frame (quaternion [x, y, z, w])
+ * seen in Babylon: x'_B = C R C x_B + C t, with C the core -> Babylon swap.
+ *
+ * Why the vector part is swapped AND negated: C R C is a proper rotation with
+ * the same angle about the swapped axis, but C is a reflection, so it reverses
+ * the sense of the angle. Check: 90 degrees about core Z (0, 0, s, c) gives
+ * (0, -s, 0, c), a -90 degree rotation about Babylon Y, which is the matrix
+ * C R C worked out by hand (frames.test.ts).
+ */
+export function coreDisplacementToBabylon(
+  translation: Vector3Tuple,
+  rotation: QuaternionTuple,
+): BabylonDisplacement {
+  const [x, y, z, w] = rotation;
+  return { translation: coreToBabylonPosition(translation), rotation: [-x, -z, -y, w] };
+}
+
+/** Hamilton product: applies `right` first, then `left`. */
+export function multiplyQuaternions(
+  left: QuaternionTuple,
+  right: QuaternionTuple,
+): QuaternionTuple {
+  const [ax, ay, az, aw] = left;
+  const [bx, by, bz, bw] = right;
+  return [
+    aw * bx + ax * bw + ay * bz - az * by,
+    aw * by - ax * bz + ay * bw + az * bx,
+    aw * bz + ax * by - ay * bx + az * bw,
+    aw * bw - ax * bx - ay * by - az * bz,
+  ];
+}
+
+/**
+ * Rotation and position for the node that parents a body, given the rotation
+ * bodyNodeTransform gave it at load time (`referenceRotation`; that transform
+ * has no translation and a uniform positive scale, which stays untouched).
+ *
+ * The displacement acts in world space, after the reference placement:
+ * world = D * N with N = R_ref * S, so the node rotation is q_D * q_ref and its
+ * position is D's translation (N itself does not translate).
+ */
+export function displacedNodePlacement(
+  referenceRotation: QuaternionTuple,
+  translation: Vector3Tuple,
+  rotation: QuaternionTuple,
+): BabylonDisplacement {
+  const displacement = coreDisplacementToBabylon(translation, rotation);
+  return {
+    translation: displacement.translation,
+    rotation: multiplyQuaternions(displacement.rotation, referenceRotation),
+  };
+}

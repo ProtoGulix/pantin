@@ -7,8 +7,9 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
-import type { Body } from "@pantin/protocol";
+import type { Body, PoseSnapshot } from "@pantin/protocol";
 import { babylonToCorePosition, type Vector3Tuple } from "../frames.ts";
+import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { bodyRenderKey, frameBounds, planSceneSync } from "./scene-plan.ts";
 import { createStage, type Stage } from "./stage.ts";
@@ -29,6 +30,10 @@ export interface Viewport {
   setSelectedBody(bodyId: string | null): void;
   /** null frames every body; otherwise only the listed bodies. */
   frameBodies(bodyIds: readonly string[] | null): void;
+  /** Feeds one snapshot of the pose stream; bodies follow it from the next frame. */
+  pushPoses(snapshot: PoseSnapshot): void;
+  /** Forgets every pose: bodies go back to their reference placement. */
+  clearPoses(): void;
 }
 
 const SELECTION_COLOR = Color3.FromHexString("#f0a030");
@@ -43,6 +48,7 @@ interface ViewportContext {
   loadedBodies: Map<string, LoadedBody>;
   bodyIdByMesh: Map<AbstractMesh, string>;
   selectedBodyId: string | null;
+  poses: PoseInterpolator;
 }
 
 function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
@@ -186,6 +192,22 @@ function showBodies(
   });
 }
 
+// The displacement is set on the node just before drawing, so the frame shows
+// the pose of this instant. The visitor is built once; each body still costs
+// a few small tuples per frame.
+function applyPosesEachFrame(context: ViewportContext): void {
+  const visit = (bodyId: string, pose: InterpolatedPose): void => {
+    context.loadedBodies.get(bodyId)?.setDisplacement(pose.translation, pose.rotation);
+  };
+  context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
+}
+
+function resetPlacements(context: ViewportContext): void {
+  for (const loaded of context.loadedBodies.values()) {
+    loaded.setDisplacement([0, 0, 0], [0, 0, 0, 1]);
+  }
+}
+
 export function createViewport(
   canvas: HTMLCanvasElement,
   loadBytes: MeshBytesLoader,
@@ -201,12 +223,19 @@ export function createViewport(
     loadedBodies: new Map(),
     bodyIdByMesh: new Map(),
     selectedBodyId: null,
+    poses: new PoseInterpolator(),
   };
   listenToPicks(context, callbacks);
+  applyPosesEachFrame(context);
   engine.runRenderLoop(() => scene.render());
   return {
     showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
     frameBodies: (bodyIds) => frameBodies(context, bodyIds),
+    pushPoses: (snapshot) => context.poses.push(snapshot, performance.now()),
+    clearPoses: () => {
+      context.poses.reset();
+      resetPlacements(context);
+    },
     setSelectedBody: (bodyId) => {
       context.selectedBodyId = bodyId;
       applySelection(context);

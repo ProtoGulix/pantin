@@ -10,13 +10,21 @@ import type { Scene } from "@babylonjs/core/scene.js";
 import "@babylonjs/loaders/glTF/2.0/glTFLoader.js";
 import "@babylonjs/loaders/STL/stlFileLoader.js";
 import type { Body } from "@pantin/protocol";
-import { bodyNodeTransform, toBabylonMatrixArray } from "../frames.ts";
+import {
+  bodyNodeTransform,
+  displacedNodePlacement,
+  type QuaternionTuple,
+  toBabylonMatrixArray,
+  type Vector3Tuple,
+} from "../frames.ts";
 import { type MeshFileFormat, meshFormatFromPath } from "../mesh-format.ts";
 
 export interface LoadedBody {
   // Parent of everything the loader produced; carries the frame conversion.
   node: TransformNode;
   meshes: AbstractMesh[];
+  /** Moves the body by a core-frame rigid displacement from its reference placement. */
+  setDisplacement(translation: Vector3Tuple, rotation: QuaternionTuple): void;
   dispose(): void;
 }
 
@@ -31,7 +39,12 @@ function applyDefaultMaterial(scene: Scene, body: Body, meshes: AbstractMesh[]):
   }
 }
 
-function applyFrameConversion(node: TransformNode, body: Body, format: MeshFileFormat): void {
+// Returns the reference rotation: the displacement is composed on top of it.
+function applyFrameConversion(
+  node: TransformNode,
+  body: Body,
+  format: MeshFileFormat,
+): QuaternionTuple {
   const { upAxis, unit } = body.source;
   const matrix = Matrix.FromArray(toBabylonMatrixArray(bodyNodeTransform(format, upAxis, unit)));
   const scaling = new Vector3();
@@ -42,6 +55,7 @@ function applyFrameConversion(node: TransformNode, body: Body, format: MeshFileF
   node.scaling = scaling;
   node.rotationQuaternion = rotation;
   node.position = translation;
+  return [rotation.x, rotation.y, rotation.z, rotation.w];
 }
 
 function parentLoaderRoots(container: AssetContainer, node: TransformNode): void {
@@ -64,7 +78,7 @@ export async function loadBody(scene: Scene, body: Body, bytes: ArrayBuffer): Pr
     name: body.mesh,
   });
   const node = new TransformNode(`body:${body.id}`, scene);
-  applyFrameConversion(node, body, format);
+  const referenceRotation = applyFrameConversion(node, body, format);
   parentLoaderRoots(container, node);
   const meshes = container.meshes.filter((mesh) => mesh.getTotalVertices() > 0);
   if (format === "stl") {
@@ -77,6 +91,13 @@ export async function loadBody(scene: Scene, body: Body, bytes: ArrayBuffer): Pr
   return {
     node,
     meshes,
+    setDisplacement: (translation, rotation) => {
+      const placement = displacedNodePlacement(referenceRotation, translation, rotation);
+      // In place: called every frame for every body. The node was given a
+      // rotation quaternion by applyFrameConversion, so it is never null.
+      node.rotationQuaternion?.copyFromFloats(...placement.rotation);
+      node.position.copyFromFloats(...placement.translation);
+    },
     dispose: () => {
       container.dispose();
       node.dispose(false, true);
