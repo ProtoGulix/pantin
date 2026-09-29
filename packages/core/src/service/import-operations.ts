@@ -8,6 +8,7 @@ import {
 } from "../domain/import-body.ts";
 import { addBodies, removeBodies } from "../domain/pantin-document.ts";
 import { buildStepBodies } from "../domain/step-bodies.ts";
+import { releaseMesh } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
 // Import of one uploaded file: one body for GLB and STL, one body per
@@ -36,19 +37,35 @@ async function writeAllOrNothing(
   } catch (error) {
     const plannedIds = new Set(planned.map(({ body }) => body.id));
     openPantin.document = removeBodies(openPantin.document, plannedIds);
-    await Promise.all(written.map((meshPath) => context.store.deleteMesh(pantinId, meshPath)));
+    for (const meshPath of written) {
+      await releaseMesh(context, pantinId, openPantin, meshPath);
+    }
     throw error;
   }
   return planned.map(({ body }) => body);
 }
 
+type Reservation = { openPantin: OpenPantin; planned: PlannedMesh[]; settle: () => void };
+
 // The ids are reserved synchronously (no await between building the bodies
-// and adding them), so a concurrent import cannot pick the same ones.
-function reserve(openPantin: OpenPantin, planned: readonly PlannedMesh[]): void {
+// and adding them), so a concurrent import cannot pick the same ones. The
+// import is registered in the same step, so a save waits for its meshes;
+// `settle` must be called once the meshes are written or rolled back.
+function reserve(openPantin: OpenPantin, planned: PlannedMesh[]): Reservation {
   openPantin.document = addBodies(
     openPantin.document,
     planned.map(({ body }) => body),
   );
+  let resolveImport = (): void => undefined;
+  const inFlight = new Promise<void>((resolve) => {
+    resolveImport = resolve;
+  });
+  openPantin.inFlightImports.add(inFlight);
+  const settle = (): void => {
+    openPantin.inFlightImports.delete(inFlight);
+    resolveImport();
+  };
+  return { openPantin, planned, settle };
 }
 
 async function planStepImport(
@@ -56,7 +73,7 @@ async function planStepImport(
   pantinId: PantinId,
   query: ImportBodyQuery,
   bytes: Uint8Array,
-): Promise<{ openPantin: OpenPantin; planned: PlannedMesh[] }> {
+): Promise<Reservation> {
   if (context.stepConverter === undefined) {
     throw stepConverterUnavailable();
   }
@@ -67,8 +84,7 @@ async function planStepImport(
   const planned = buildStepBodies(openPantin.document, query, meshes, stems).map(
     ({ body, component }) => ({ body, bytes: component.glbBytes }),
   );
-  reserve(openPantin, planned);
-  return { openPantin, planned };
+  return reserve(openPantin, planned);
 }
 
 async function planDirectImport(
@@ -77,13 +93,12 @@ async function planDirectImport(
   query: ImportBodyQuery,
   bytes: Uint8Array,
   format: "glb" | "stl",
-): Promise<{ openPantin: OpenPantin; planned: PlannedMesh[] }> {
+): Promise<Reservation> {
   const openPantin = await loadPantin(context, pantinId);
   const stems = await takenMeshStems(context, pantinId);
   const body = buildImportedBody(openPantin.document, query, format, bytes, stems);
   const planned = [{ body, bytes }];
-  reserve(openPantin, planned);
-  return { openPantin, planned };
+  return reserve(openPantin, planned);
 }
 
 export async function importBodies(
@@ -96,10 +111,14 @@ export async function importBodies(
   if (format === undefined) {
     throw unsupportedFileError(query.fileName);
   }
-  const { openPantin, planned } =
+  const { openPantin, planned, settle } =
     format === "step"
       ? await planStepImport(context, pantinId, query, bytes)
       : await planDirectImport(context, pantinId, query, bytes, format);
   // The meshes are written now; the bodies join pantin.json on the next save.
-  return writeAllOrNothing(context, pantinId, openPantin, planned);
+  try {
+    return await writeAllOrNothing(context, pantinId, openPantin, planned);
+  } finally {
+    settle();
+  }
 }

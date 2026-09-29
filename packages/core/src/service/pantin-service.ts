@@ -11,7 +11,16 @@ import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
 import { importBodies } from "./import-operations.ts";
-import { loadPantin, type ServiceContext, toResponse, updateDocument } from "./open-pantins.ts";
+import { deleteBody, discardPantin, savePantin } from "./mesh-lifecycle.ts";
+import {
+  loadPantin,
+  newOpenPantin,
+  type OpenPantin,
+  readSavedDocument,
+  type ServiceContext,
+  toResponse,
+  updateDocument,
+} from "./open-pantins.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
 // only on save. One service per server instance, no shared state.
@@ -23,6 +32,13 @@ function ignoreApiError(error: unknown): undefined {
   throw error;
 }
 
+// Open Pantins show their in-memory document (unsaved renames included);
+// the others are read from disk without being opened.
+async function readSummaryDocument(context: ServiceContext, pantinId: PantinId) {
+  const open: Promise<OpenPantin> | undefined = context.openPantins.get(pantinId);
+  return open === undefined ? readSavedDocument(context, pantinId) : (await open).document;
+}
+
 async function listPantins(context: ServiceContext): Promise<PantinSummary[]> {
   const folderNames = await context.store.listFolderNames();
   const summaries: PantinSummary[] = [];
@@ -30,11 +46,10 @@ async function listPantins(context: ServiceContext): Promise<PantinSummary[]> {
     const idResult = PantinIdSchema.safeParse(folderName);
     // Folders that are not Pantins (bad name, no or invalid pantin.json) are
     // left out of the list; GET on one of them explains what is wrong.
-    const openPantin = idResult.success
-      ? await loadPantin(context, idResult.data).catch(ignoreApiError)
+    const document = idResult.success
+      ? await readSummaryDocument(context, idResult.data).catch(ignoreApiError)
       : undefined;
-    if (idResult.success && openPantin !== undefined) {
-      const { document } = openPantin;
+    if (idResult.success && document !== undefined) {
       summaries.push({ id: idResult.data, name: document.name, bodyCount: document.bodies.length });
     }
   }
@@ -49,18 +64,9 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
   const pantinId = makeUniqueId(slugifyDisplayName(name, "pantin"), takenIds);
   await context.store.createPantinFolder(pantinId);
   const document = createPantinDocument(name);
-  const savedText = serializePantinDocument(document);
-  await context.store.writeDocumentAtomically(pantinId, savedText);
-  const openPantin = { document, savedText };
+  await context.store.writeDocumentAtomically(pantinId, serializePantinDocument(document));
+  const openPantin = newOpenPantin(document);
   context.openPantins.set(pantinId, Promise.resolve(openPantin));
-  return toResponse(pantinId, openPantin);
-}
-
-async function savePantin(context: ServiceContext, pantinId: PantinId): Promise<PantinResponse> {
-  const openPantin = await loadPantin(context, pantinId);
-  const text = serializePantinDocument(openPantin.document);
-  await context.store.writeDocumentAtomically(pantinId, text);
-  openPantin.savedText = text;
   return toResponse(pantinId, openPantin);
 }
 
@@ -74,6 +80,8 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     renamePantin: (pantinId: PantinId, name: string) =>
       updateDocument(context, pantinId, (document) => renamePantinDocument(document, name)),
     savePantin: (pantinId: PantinId) => savePantin(context, pantinId),
+    discardPantin: (pantinId: PantinId) => discardPantin(context, pantinId),
+    deleteBody: (pantinId: PantinId, bodyId: string) => deleteBody(context, pantinId, bodyId),
     importBodies: (pantinId: PantinId, query: ImportBodyQuery, bytes: Uint8Array) =>
       importBodies(context, pantinId, query, bytes),
     renameBody: (pantinId: PantinId, bodyId: string, name: string) =>

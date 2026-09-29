@@ -68,11 +68,15 @@ describe("path traversal", () => {
     await expectWorkspaceUntouched();
   });
 
-  it.each(HOSTILE_PANTIN_IDS)("rejects body renames with body id %s", async (bodyId) => {
-    const path = `/api/pantins/safe/bodies/${bodyId}`;
-    expectRejected((await sendJsonRequest(server, "PATCH", path, { name: "x" })).status);
-    await expectWorkspaceUntouched();
-  });
+  it.each(HOSTILE_PANTIN_IDS)(
+    "rejects body renames and deletions with body id %s",
+    async (bodyId) => {
+      const path = `/api/pantins/safe/bodies/${bodyId}`;
+      expectRejected((await sendJsonRequest(server, "PATCH", path, { name: "x" })).status);
+      expectRejected((await sendRaw(server, "DELETE", path)).status);
+      await expectWorkspaceUntouched();
+    },
+  );
 
   it.each(HOSTILE_FILE_NAMES)("never serves mesh file name %s", async (fileName) => {
     const response = await sendRaw(server, "GET", `/api/pantins/safe/meshes/${fileName}`);

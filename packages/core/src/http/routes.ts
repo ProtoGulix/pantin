@@ -38,6 +38,10 @@ function pantinIdOf(context: RouteContext): PantinId {
   return parseWithSchema(PantinIdSchema, context.parameters.pantinId, "The Pantin id in the URL");
 }
 
+function bodyIdOf(context: RouteContext): string {
+  return parseWithSchema(BodyIdSchema, context.parameters.bodyId, "The body id in the URL");
+}
+
 // A mesh file name is "<bodyId>.glb" or "<bodyId>.stl": nothing else can name a file.
 function meshPathOf(context: RouteContext): { meshPath: string; contentType: string } {
   const fileName = context.parameters.fileName ?? "";
@@ -121,21 +125,32 @@ export const ROUTES: readonly Route[] = [
     handle: async (context) =>
       sendJson(context.response, 200, await context.service.savePantin(pantinIdOf(context))),
   },
+  {
+    method: "POST",
+    pattern: ["pantins", ":pantinId", "discard"],
+    handle: async (context) =>
+      sendJson(context.response, 200, await context.service.discardPantin(pantinIdOf(context))),
+  },
   { method: "POST", pattern: ["pantins", ":pantinId", "bodies"], handle: importBody },
   {
     method: "PATCH",
     pattern: ["pantins", ":pantinId", "bodies", ":bodyId"],
     handle: async (context) => {
       const pantinId = pantinIdOf(context);
-      const bodyId = parseWithSchema(
-        BodyIdSchema,
-        context.parameters.bodyId,
-        "The body id in the URL",
-      );
+      const bodyId = bodyIdOf(context);
       const name = await readRenameRequest(context);
       sendJson(context.response, 200, {
         body: await context.service.renameBody(pantinId, bodyId, name),
       });
+    },
+  },
+  {
+    method: "DELETE",
+    pattern: ["pantins", ":pantinId", "bodies", ":bodyId"],
+    handle: async (context) => {
+      const pantinId = pantinIdOf(context);
+      const bodyId = bodyIdOf(context);
+      sendJson(context.response, 200, await context.service.deleteBody(pantinId, bodyId));
     },
   },
   { method: "GET", pattern: ["pantins", ":pantinId", "meshes", ":fileName"], handle: sendMesh },
