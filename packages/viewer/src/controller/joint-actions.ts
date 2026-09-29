@@ -57,6 +57,24 @@ export function openJointEditForm(store: ViewerStore, nodeId: string): void {
   });
 }
 
+/**
+ * The type row of the properties: the joint form, already on the chosen type.
+ * Like "Change type…", it replaces a form left open, whose values are lost.
+ */
+export function openJointFormWithType(store: ViewerStore, jointId: string, rawType: string): void {
+  const joint = store.state.openPantin?.document.joints.find((item) => item.id === jointId);
+  const type = parseJointType(rawType);
+  if (joint === undefined || type === null || type === joint.type) {
+    return;
+  }
+  store.update({
+    ...store.state,
+    jointForm: withJointFormType(jointFormFor(joint), type),
+    contextMenu: null,
+    message: null,
+  });
+}
+
 export function cancelJointForm(store: ViewerStore): void {
   store.update({ ...store.state, jointForm: null });
 }

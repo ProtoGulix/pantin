@@ -13,14 +13,15 @@ import {
   VECTOR_AXES,
   vectorFieldId,
 } from "../joints/joint-form.ts";
-import { jointTypeLabelKey } from "../joints/joint-labels.ts";
+import { JOINT_TYPES, jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { displayUnitLabel, parameterRows } from "../joints/joint-parameters.ts";
 import { AXIS_SENSES, FIELD_AXIS_DIRECTION, FIELD_AXIS_SENSE } from "../joints/joint-update.ts";
 import { formatDisplayNumber, metresToMillimetres } from "../units.ts";
 import { type GroupDraft, type PropertyRow, type RowEditor, row } from "./property-rows.ts";
 
-// The properties of a joint. Everything but the type is editable here (the
-// type changes through the joint form, ADR 0018). Fields are named by the
+// The properties of a joint. Everything is editable here but the id; choosing
+// another type opens the joint form, since the new type's parameters must be
+// typed (ADR 0018). Fields are named by the
 // creation form's field ids so that one request builder serves both.
 
 type Vector = "origin" | "axis";
@@ -136,7 +137,12 @@ export function jointGroups(
         row("name", t("properties.name"), joint.name, textEditor(FIELD_NAME)),
         row("id", t("properties.id"), joint.id),
         ...tagRows(joint, pantin, t),
-        row("type", t("properties.jointType"), t(jointTypeLabelKey(joint.type))),
+        row("type", t("properties.jointType"), t(jointTypeLabelKey(joint.type)), {
+          input: "select",
+          target: { kind: "jointType", pantinId: pantin.id, jointId: joint.id },
+          options: JOINT_TYPES.map((type) => ({ value: type, label: t(jointTypeLabelKey(type)) })),
+          selected: joint.type,
+        }),
         row(
           "parent",
           t("properties.parent"),

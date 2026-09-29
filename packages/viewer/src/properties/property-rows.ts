@@ -19,6 +19,8 @@ export type EditTarget =
   // The keys that name tags, and a body's assembly: each may rename tags (ADR 0019).
   | { kind: "assemblyKey"; pantinId: string; key: string }
   | { kind: "tagKey"; pantinId: string; jointId: string }
+  // Choosing another type opens the joint form with it (ADR 0018).
+  | { kind: "jointType"; pantinId: string; jointId: string }
   | { kind: "bodyAssembly"; pantinId: string; bodyId: string };
 
 interface SelectOption {

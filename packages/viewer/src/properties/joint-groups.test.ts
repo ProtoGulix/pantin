@@ -154,14 +154,14 @@ describe("joint edit targets", () => {
     fieldId,
   });
 
-  it("edits everything but the id, the tags and the type", () => {
+  it("edits everything but the id and the tags; the type opens the joint form", () => {
     const edits = rowsOf("hinge").map((r) => [r.id, r.edit?.target ?? null]);
     expect(edits).toEqual([
       ["name", target("name")],
       ["id", null],
       ["tagKey", { kind: "tagKey", pantinId: "press", jointId: "hinge" }],
       ["tags", null],
-      ["type", null],
+      ["type", { kind: "jointType", pantinId: "press", jointId: "hinge" }],
       ["parent", target("parent")],
       ["child", target("child")],
       ["axis-direction", target("axis.direction")],
