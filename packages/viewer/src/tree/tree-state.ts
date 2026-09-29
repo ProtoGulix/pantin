@@ -17,7 +17,13 @@ export function nodeExists(source: TreeSource, nodeId: string): boolean {
     return true;
   }
   if (ref.kind === "joint") {
-    return source.openPantin.document.joints.some((joint) => joint.id === ref.jointId);
+    // Listed under a body only while it still holds that body.
+    const { underBodyId } = ref;
+    return source.openPantin.document.joints.some(
+      (joint) =>
+        joint.id === ref.jointId &&
+        (underBodyId === null || joint.parent === underBodyId || joint.child === underBodyId),
+    );
   }
   const body = source.openPantin.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   return ref.kind === "body" ? body !== undefined : body?.source.nodes[ref.index] !== undefined;
@@ -34,7 +40,9 @@ function ancestorsOf(ref: NodeRef): string[] {
     case "body":
       return [pantin, folderNodeId(ref.pantinId, "bodies")];
     case "joint":
-      return [pantin, folderNodeId(ref.pantinId, "joints")];
+      return ref.underBodyId === null
+        ? [pantin, folderNodeId(ref.pantinId, "joints")]
+        : [pantin, folderNodeId(ref.pantinId, "bodies"), bodyNodeId(ref.pantinId, ref.underBodyId)];
     case "sourceNode":
       return [pantin, folderNodeId(ref.pantinId, "bodies"), bodyNodeId(ref.pantinId, ref.bodyId)];
   }

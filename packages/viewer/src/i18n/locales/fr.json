@@ -126,6 +126,8 @@
   "prompt.delete.cancel": "Annuler",
   "message.deleted": "Corps « {name} » supprimé.",
   "tree.joints": "Liaisons",
+  "tree.jointRole.parent": "{type}, parent",
+  "tree.jointRole.child": "{type}, enfant",
   "menu.newJoint": "Nouvelle liaison…",
   "menubar.edit.newJoint": "Nouvelle liaison…",
   "prompt.deleteJoint.text": "Supprimer la liaison « {name} » ?",

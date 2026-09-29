@@ -126,6 +126,8 @@
   "prompt.delete.cancel": "Cancel",
   "message.deleted": "Body \"{name}\" deleted.",
   "tree.joints": "Joints",
+  "tree.jointRole.parent": "{type}, parent",
+  "tree.jointRole.child": "{type}, child",
   "menu.newJoint": "New joint…",
   "menubar.edit.newJoint": "New joint…",
   "prompt.deleteJoint.text": "Delete joint \"{name}\"?",

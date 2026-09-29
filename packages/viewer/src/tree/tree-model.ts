@@ -62,16 +62,37 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
   }));
 }
 
-function bodyNode(pantinId: string, body: Body, translate: Translate): TreeNode {
+// The joints holding a body, listed under it before the CAD nodes; the
+// detail says whether the body is the joint's parent or its child.
+function bodyJointChildren(pantin: PantinResponse, body: Body, translate: Translate): TreeNode[] {
+  return pantin.document.joints.flatMap((joint): TreeNode[] => {
+    if (joint.parent !== body.id && joint.child !== body.id) {
+      return [];
+    }
+    const role = joint.child === body.id ? "tree.jointRole.child" : "tree.jointRole.parent";
+    return [
+      {
+        ...jointNode(pantin.id, joint, translate),
+        id: jointNodeId(pantin.id, joint.id, body.id),
+        detail: translate(role, { type: translate(jointTypeLabelKey(joint.type)) }),
+      },
+    ];
+  });
+}
+
+function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): TreeNode {
   return {
-    id: bodyNodeId(pantinId, body.id),
+    id: bodyNodeId(pantin.id, body.id),
     kind: "body",
     icon: `body-${body.source.format}`,
     label: body.name,
     detail: null,
     muted: false,
     renamable: true,
-    children: sourceNodeChildren(pantinId, body, translate),
+    children: [
+      ...bodyJointChildren(pantin, body, translate),
+      ...sourceNodeChildren(pantin.id, body, translate),
+    ],
   };
 }
 
@@ -93,7 +114,7 @@ const PANTIN_FOLDERS: readonly FolderDefinition[] = [
     key: "bodies",
     labelKey: "tree.bodies",
     children: (pantin, translate) =>
-      pantin.document.bodies.map((body) => bodyNode(pantin.id, body, translate)),
+      pantin.document.bodies.map((body) => bodyNode(pantin, body, translate)),
   },
   {
     key: "joints",

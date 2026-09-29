@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { hingeJoint, pantinResponse, railBody, slideJoint } from "../test-fixtures.ts";
+import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
+import { nodeExists, withRevealedNode } from "./tree-state.ts";
 import {
   bodyIdOfNode,
   bodyNodeId,
@@ -27,6 +28,7 @@ describe("node ids", () => {
     folderNodeId("press", "bodies"),
     bodyNodeId("press", "rail"),
     jointNodeId("press", "hinge"),
+    jointNodeId("press", "hinge", "rail"),
     folderNodeId("press", "joints"),
     sourceNodeNodeId("press", "rail", 1),
   ])("round trips %s", (nodeId) => {
@@ -40,6 +42,7 @@ describe("node ids", () => {
     "source:press:rail:x",
     "folder:press:drives",
     "pantin:a:b",
+    "joint:press:hinge:",
   ])("refuses %s", (nodeId) => {
     expect(parseNodeId(nodeId)).toBeNull();
   });
@@ -153,5 +156,48 @@ describe("flattenTree", () => {
       bodyNodeId("press", "rail"),
     ]);
     expect(rows.find((row) => row.renaming)?.label).toBe(railBody.name);
+  });
+});
+
+describe("joints under their bodies", () => {
+  const openPantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")], "press", [
+    hingeJoint,
+  ]);
+  const tree = buildTree({ openPantin }, translate);
+
+  it("lists a joint under its parent and its child, before the CAD nodes", () => {
+    const rail = findNode(tree, bodyNodeId("press", "rail"));
+    expect(rail?.children[0]).toMatchObject({
+      id: jointNodeId("press", "hinge", "rail"),
+      kind: "joint",
+      label: "Hinge",
+      detail: "Pivot limité, parent",
+    });
+    expect(rail?.children.slice(1).every((node) => node.kind === "sourceNode")).toBe(true);
+    const carriage = findNode(tree, bodyNodeId("press", "carriage"));
+    expect(carriage?.children[0]?.detail).toBe("Pivot limité, enfant");
+  });
+
+  it("stands for the same joint as the folder entry", () => {
+    expect(parseNodeId(jointNodeId("press", "hinge", "rail"))).toEqual({
+      kind: "joint",
+      pantinId: "press",
+      jointId: "hinge",
+      underBodyId: "rail",
+    });
+  });
+
+  it("exists only while the joint still holds that body", () => {
+    expect(nodeExists({ openPantin }, jointNodeId("press", "hinge", "carriage"))).toBe(true);
+    expect(nodeExists({ openPantin }, jointNodeId("press", "hinge", "ghost"))).toBe(false);
+  });
+
+  it("unfolds the body to reveal it", () => {
+    const revealed = withRevealedNode(view([]), jointNodeId("press", "hinge", "rail"));
+    expect([...revealed.expandedNodeIds]).toEqual([
+      pantinNodeId("press"),
+      folderNodeId("press", "bodies"),
+      bodyNodeId("press", "rail"),
+    ]);
   });
 });

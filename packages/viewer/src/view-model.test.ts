@@ -85,10 +85,9 @@ describe("context menu", () => {
     expect(contextEntries({ kind: "folder", pantinId, folder: "bodies" }, false)).toEqual([
       "frame",
     ]);
-    expect(contextEntries({ kind: "joint", pantinId, jointId: "hinge" }, false)).toEqual([
-      "frame",
-      "delete",
-    ]);
+    expect(
+      contextEntries({ kind: "joint", pantinId, jointId: "hinge", underBodyId: null }, false),
+    ).toEqual(["frame", "delete"]);
   });
 
   it("is translated and titled with the node name", () => {
