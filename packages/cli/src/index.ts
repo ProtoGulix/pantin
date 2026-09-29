@@ -1,2 +1,3 @@
-// Public entry point of @pantin/cli. Intentionally empty until its phase starts.
-export {};
+// Public entry point of @pantin/cli; the command itself is main.ts.
+export { pantinJsonSchema, pantinJsonSchemaText } from "./json-schema.ts";
+export { type FolderReport, validatePantinFolder } from "./validate-folder.ts";

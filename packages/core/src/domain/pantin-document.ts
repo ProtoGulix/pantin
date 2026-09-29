@@ -83,21 +83,49 @@ export function serializePantinDocument(document: PantinDocument): string {
 }
 
 // `location` names the file in error messages, so the user knows what to fix.
-export function parsePantinDocument(text: string, location: string): PantinDocument {
+export type DocumentReading =
+  // migratedFrom: the version on disk when older than the current one.
+  | { kind: "valid"; document: PantinDocument; migratedFrom: number | null }
+  | { kind: "invalidJson"; reason: string }
+  // One sentence per broken rule, prefixed by where it is.
+  | { kind: "invalid"; problems: string[] };
+
+function versionOf(json: unknown): number | null {
+  const version: unknown =
+    typeof json === "object" && json !== null ? Reflect.get(json, "schema_version") : undefined;
+  return typeof version === "number" && version < PANTIN_SCHEMA_VERSION ? version : null;
+}
+
+// Reads a pantin.json text: migration, then validation. A version newer than
+// the core, or one no migration handles, throws an actionable ApiError.
+export function readPantinDocument(text: string, location: string): DocumentReading {
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    throw new ApiError("conflict", `${location} is not valid JSON (${reason}). Fix or restore it.`);
+    return { kind: "invalidJson", reason: error instanceof Error ? error.message : String(error) };
   }
   const result = PantinDocumentSchema.safeParse(migratePantinDocument(json, location));
   if (!result.success) {
-    const issues = formatIssues(result.error.issues);
+    return { kind: "invalid", problems: result.error.issues.map((issue) => formatIssues([issue])) };
+  }
+  return { kind: "valid", document: result.data, migratedFrom: versionOf(json) };
+}
+
+export function parsePantinDocument(text: string, location: string): PantinDocument {
+  const reading = readPantinDocument(text, location);
+  if (reading.kind === "invalidJson") {
+    throw new ApiError(
+      "conflict",
+      `${location} is not valid JSON (${reading.reason}). Fix or restore it.`,
+    );
+  }
+  if (reading.kind === "invalid") {
+    const issues = reading.problems.join("; ");
     throw new ApiError(
       "conflict",
       `${location} is not a valid Pantin: ${issues}. Fix or restore it.`,
     );
   }
-  return result.data;
+  return reading.document;
 }

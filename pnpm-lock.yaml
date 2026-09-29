@@ -190,7 +190,17 @@ importers:
 
   packages/bridge: {}
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      '@pantin/core':
+        specifier: workspace:*
+        version: link:../core
+      '@pantin/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
 
   packages/core:
     dependencies:

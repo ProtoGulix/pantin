@@ -1,0 +1,51 @@
+{
+  "schema_version": 4,
+  "name": "Axis",
+  "assemblies": [
+    {
+      "key": "axis",
+      "name": "Linear axis"
+    }
+  ],
+  "bodies": [
+    {
+      "id": "rail",
+      "name": "Rail",
+      "assembly": "axis",
+      "source": {
+        "fileName": "rail.stl",
+        "format": "stl",
+        "unit": "mm",
+        "upAxis": "z",
+        "nodes": []
+      },
+      "mesh": "meshes/rail.stl"
+    },
+    {
+      "id": "carriage",
+      "name": "Carriage",
+      "assembly": "axis",
+      "source": {
+        "fileName": "carriage.stl",
+        "format": "stl",
+        "unit": "mm",
+        "upAxis": "z",
+        "nodes": []
+      },
+      "mesh": "meshes/carriage.stl"
+    }
+  ],
+  "joints": [
+    {
+      "id": "stroke",
+      "tagKey": "stroke",
+      "type": "prismatic",
+      "name": "Stroke",
+      "parent": "rail",
+      "child": "carriage",
+      "origin": [0, 0, 0.02],
+      "axis": [1, 0, 0],
+      "limits": [0, 0.34]
+    }
+  ]
+}
