@@ -77,6 +77,7 @@ describe("menu bar model", () => {
       ["Tout cadrer", null],
       ["Cadrer la sélection", null],
       ["Panneau des préactionneurs, actionneurs et capteurs", true],
+      ["Schéma des chaînes", false],
       ["Langue : FR", true],
       ["Langue : EN", false],
     ]);
@@ -125,6 +126,11 @@ describe("keyboard shortcuts", () => {
     expect(inField).toMatchObject({ run: false, primaryModifier: false });
   });
 
+  it("maps F4 to the chain diagram only while a Pantin is open", () => {
+    expect(commandOf(onBody, press("F4"))).toBe("toggleDiagram");
+    expect(commandOf(listing, press("F4"))).toBeNull();
+  });
+
   it("needs the exact modifiers", () => {
     expect(shortcutForKeyPress(onBody, press("s"))).toBeNull();
     expect(shortcutForKeyPress(onBody, press("s", { ctrlKey: true, altKey: true }))).toBeNull();
@@ -137,6 +143,7 @@ describe("shortcut listing", () => {
       { keys: "Ctrl+S", action: "Enregistrer" },
       { keys: "F2", action: "Renommer" },
       { keys: "Suppr", action: "Supprimer" },
+      { keys: "F4", action: "Schéma des chaînes" },
     ]);
   });
 });

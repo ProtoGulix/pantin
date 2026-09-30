@@ -117,6 +117,12 @@ export interface PanelIntents {
   cancelJointForm(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;
 
+  // The chain diagram (ADR 0029): shown instead of the 3D view, a band folded,
+  // a node clicked (an id like "drive:valve").
+  setDiagramShown(shown: boolean): void;
+  toggleDiagramBand(bandKey: string): void;
+  selectDiagramNode(nodeId: string): void;
+
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;
   changeLanguage(language: string): void;

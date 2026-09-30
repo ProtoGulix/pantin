@@ -18,6 +18,7 @@ import {
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
+import { diagramIntents } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
 import {
   cancelImport,
@@ -169,6 +170,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...editIntents(store),
     ...importIntents(store),
     ...jointIntents(store),
+    ...diagramIntents(store),
     ...driveIntents(store),
     ...actuatorIntents(store),
     ...sensorIntents(store),

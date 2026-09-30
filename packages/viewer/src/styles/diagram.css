@@ -1,0 +1,227 @@
+/* The chain diagram (ADR 0029), drawn over the 3D view. Tokens in base.css. */
+:root {
+  /* One colour and one line style per kind of wire: colour is never the only cue. */
+  --edge-pneumatic: #5aa9e6;
+  --edge-ac-power: #f0a030;
+  --edge-servo: #b48ead;
+  --edge-mechanical: #9aa3b2;
+  --edge-observation: #6cc38a;
+}
+
+/* The canvas stays in place (its size, and the engine's, do not change); the diagram covers it. */
+.viewport--diagram .viewport__canvas {
+  visibility: hidden;
+}
+
+.viewport--diagram .viewport__hint {
+  display: none;
+}
+
+.diagram {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: auto;
+  background: var(--viewport-background);
+}
+
+.diagram[hidden] {
+  display: none;
+}
+
+.diagram__svg {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+.diagram__empty {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  max-width: 40ch;
+  margin: 0;
+  color: var(--text-muted);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+/* Bands */
+.diagram-band__background {
+  fill: var(--surface-0);
+  stroke: var(--border);
+}
+
+.diagram-band__toggle {
+  cursor: pointer;
+}
+
+.diagram-band__chevron {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.diagram-band__name {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--text);
+}
+
+.diagram-band__toggle:hover .diagram-band__name {
+  fill: var(--accent);
+}
+
+.diagram-band__toggle:focus-visible {
+  outline: 1px solid var(--accent);
+}
+
+/* Wires: colour, width and dash pattern together tell the kind. */
+.diagram-edge {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-opacity: 0.6;
+  stroke-width: 1.5;
+}
+
+.diagram-edge--pneumatic {
+  stroke: var(--edge-pneumatic);
+  stroke-dasharray: 7 4;
+}
+
+.diagram-edge--ac_power {
+  stroke: var(--edge-ac-power);
+  stroke-width: 2.5;
+}
+
+.diagram-edge--servo {
+  stroke: var(--edge-servo);
+  stroke-dasharray: 1.5 3.5;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.diagram-edge--mechanical {
+  stroke: var(--edge-mechanical);
+}
+
+.diagram-edge--observation {
+  stroke: var(--edge-observation);
+  stroke-dasharray: 9 3 2 3;
+}
+
+/* Under pressure or powered: full strength and thicker. */
+.diagram-edge.is-lit {
+  stroke-opacity: 1;
+  stroke-width: 3.5;
+}
+
+.diagram-edge.is-related {
+  stroke-opacity: 1;
+}
+
+/* The halo keeps a port label legible where a slant passes under it. */
+.diagram-edge__label {
+  font-size: 10px;
+  text-anchor: end;
+  fill: var(--text-muted);
+  stroke: var(--viewport-background);
+  stroke-linejoin: round;
+  stroke-width: 3px;
+  paint-order: stroke;
+}
+
+/* Nodes */
+.diagram-node {
+  cursor: pointer;
+}
+
+.diagram-node__box {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.diagram-node:hover .diagram-node__box {
+  stroke: var(--text-faint);
+}
+
+.diagram-node.is-related .diagram-node__box {
+  stroke: var(--accent);
+  stroke-opacity: 0.6;
+}
+
+.diagram-node.is-selected .diagram-node__box {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+/* With a selection, what is outside its chain steps back. */
+.diagram--focus .diagram-node:not(.is-selected, .is-related),
+.diagram--focus .diagram-edge:not(.is-related) {
+  opacity: 0.4;
+}
+
+.diagram-node.has-warning .diagram-node__box {
+  stroke: var(--danger);
+  stroke-dasharray: 4 2;
+  stroke-width: 2;
+}
+
+.diagram-node__title {
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--text);
+}
+
+.diagram-node__type {
+  font-size: 9.5px;
+  fill: var(--text-muted);
+}
+
+.diagram-node__warning {
+  font-size: 10px;
+  fill: var(--danger);
+}
+
+.diagram-socket {
+  fill: var(--surface-0);
+  stroke: var(--text-muted);
+  stroke-width: 1.2;
+}
+
+.diagram-socket--output,
+.diagram-socket--input,
+.diagram-socket--anchor {
+  fill: var(--text-muted);
+  stroke: none;
+}
+
+.diagram-socket.is-lit {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.diagram-socket__label {
+  font-size: 10px;
+  fill: var(--text-muted);
+  pointer-events: none;
+}
+
+.diagram-socket__label--right {
+  text-anchor: end;
+}
+
+.diagram-badge rect {
+  fill: var(--surface-3);
+  stroke: var(--border);
+}
+
+.diagram-badge__text {
+  font-size: 9px;
+  text-anchor: middle;
+  fill: var(--text);
+}

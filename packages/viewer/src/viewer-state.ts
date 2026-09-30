@@ -68,6 +68,11 @@ export interface ViewerState {
   // The sensor form of the same panel (ADR 0023).
   sensorForm: SensorFormState | null;
   faults: FaultsResponse;
+  // The chain diagram (ADR 0029) replaces the 3D view while shown; the bands
+  // the user folded, and the node last clicked in it. Display state only: never saved.
+  diagramShown: boolean;
+  collapsedDiagramBands: ReadonlySet<string>;
+  diagramNodeId: string | null;
 }
 
 // Faults are runtime state of the core, cleared when a Pantin opens.
@@ -104,6 +109,9 @@ export function initialViewerState(language: Language): ViewerState {
     actuatorForm: null,
     sensorForm: null,
     faults: NO_FAULTS,
+    diagramShown: false,
+    collapsedDiagramBands: new Set(),
+    diagramNodeId: null,
   };
 }
 
@@ -135,6 +143,9 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     actuatorForm: null,
     sensorForm: null,
     faults: NO_FAULTS,
+    diagramShown: false,
+    collapsedDiagramBands: new Set(),
+    diagramNodeId: null,
   };
 }
 

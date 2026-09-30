@@ -67,13 +67,17 @@ export async function writeFloatTag(store: ViewerStore, name: string, text: stri
 
 /**
  * Reads every tag value of the open Pantin, while the right-hand panel shows
- * them or its sensors light up in 3D (ADR 0024). A failed read changes
+ * them, its sensors light up in 3D (ADR 0024) or the chain diagram is
+ * shown (ADR 0029 point 8). A failed read changes
  * nothing on screen: the next one retries, and a core that went away is
  * already reported by the pose stream (message.poseClosed).
  */
 export async function refreshTagValues(store: ViewerStore): Promise<void> {
   const open = store.state.openPantin;
-  const shown = store.state.drivePanelOpen || (open?.document.sensors.length ?? 0) > 0;
+  const shown =
+    store.state.drivePanelOpen ||
+    store.state.diagramShown ||
+    (open?.document.sensors.length ?? 0) > 0;
   if (open === null || !shown || store.readingTags) {
     return;
   }
@@ -82,7 +86,9 @@ export async function refreshTagValues(store: ViewerStore): Promise<void> {
   store.readingTags = false;
   // An answer for a Pantin closed meanwhile is dropped.
   if (answer !== null && store.state.openPantin?.id === open.id) {
-    store.showTagValues(new Map(answer.tags.map((tag) => [tag.name, tag.value])));
-    store.showDriveRuntime(runtimeByDriveId(answer.drives));
+    store.showTagRead(
+      new Map(answer.tags.map((tag) => [tag.name, tag.value])),
+      runtimeByDriveId(answer.drives),
+    );
   }
 }

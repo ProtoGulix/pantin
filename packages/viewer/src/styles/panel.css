@@ -25,6 +25,36 @@
   background: var(--border);
 }
 
+/* The 3D / Diagram switch: a segmented control, the pressed side in the accent. */
+.view-switch {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.view-switch__button {
+  height: 20px;
+  padding: 0 8px;
+  font: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.view-switch__button + .view-switch__button {
+  border-left: 1px solid var(--border);
+}
+
+.view-switch__button:hover {
+  background: var(--hover);
+}
+
+.view-switch__button.is-pressed {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .toolbar__spacer {
   flex: 1;
 }

@@ -1,6 +1,8 @@
 import type { DriveRuntime, JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
-import { hiddenBodyIds, selectedBodyIds } from "../assembly-display.ts";
+import { hiddenBodyIds } from "../assembly-display.ts";
+import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
+import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
@@ -30,6 +32,13 @@ export interface StorePorts {
   showTagValues(values: ReadonlyMap<string, number>): void;
   // Drive diagnostics on the drive cards, in place too.
   showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void;
+  // The chain diagram (ADR 0029), redrawn from the model; the live state
+  // (tags and drive runtime) reaches it without a redraw.
+  renderDiagram(model: DiagramModel): void;
+  showDiagramLive(
+    tags: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+  ): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -55,6 +64,7 @@ export class ViewerStore {
   driveRuntime: ReadonlyMap<string, DriveRuntime> = new Map();
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
+  private readonly buildDiagramModel = createDiagramModelBuilder();
 
   constructor(ports: StorePorts, language: Language) {
     this.ports = ports;
@@ -70,9 +80,18 @@ export class ViewerStore {
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
+    // After followPoses: a Pantin just opened has no tag values yet.
+    this.ports.renderDiagram(this.buildDiagramModel(next));
+    this.ports.showDiagramLive(this.tagValues, this.driveRuntime);
     const document = next.openPantin?.document;
+    viewport.setRendering(!(next.diagramShown && next.openPantin !== null));
     viewport.setSelectedBodies(
-      document === undefined ? new Set() : selectedBodyIds(document, next.selectedNodeId),
+      document === undefined || next.openPantin === null
+        ? new Set()
+        : highlightedBodyIds(document, next.openPantin.id, {
+            selectedNodeId: next.selectedNodeId,
+            diagramNodeId: next.diagramNodeId,
+          }),
     );
     viewport.setHiddenBodies(
       document === undefined ? new Set() : hiddenBodyIds(document, next.assemblyDisplay),
@@ -129,17 +148,17 @@ export class ViewerStore {
     }
   }
 
-  /** Tag values from the core: the drives panel shows them without a redraw. */
-  showTagValues(values: ReadonlyMap<string, number>): void {
+  /**
+   * One tag read from the core: tag values and drive runtime reach the drives
+   * panel, the 3D markers and the diagram without a redraw, the diagram once.
+   */
+  showTagRead(values: ReadonlyMap<string, number>, runtime: ReadonlyMap<string, DriveRuntime>) {
     this.tagValues = values;
+    this.driveRuntime = runtime;
     this.ports.showTagValues(values);
     this.ports.viewport().showTagStates(values);
-  }
-
-  /** Port states and diagnostics from the core, shown without a redraw. */
-  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void {
-    this.driveRuntime = runtime;
     this.ports.showDriveRuntime(runtime);
+    this.ports.showDiagramLive(values, runtime);
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

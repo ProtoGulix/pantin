@@ -1,5 +1,6 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { withWelcomeShown } from "../session-state.ts";
+import { toggleDiagram } from "./diagram-actions.ts";
 import { toggleDrivePanel } from "./drive-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
@@ -50,6 +51,9 @@ export function runMenuCommand(
       return;
     case "delete":
       withSelection(store, (nodeId) => requestDelete(store, nodeId));
+      return;
+    case "toggleDiagram":
+      toggleDiagram(store);
       return;
     case "toggleDrives":
       toggleDrivePanel(store);

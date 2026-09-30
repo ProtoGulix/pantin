@@ -20,6 +20,32 @@ function saveButton(view: PanelView, intents: PanelIntents): HTMLElement {
   return save;
 }
 
+// "3D / Schéma": two toggle buttons, exactly one pressed (ADR 0029 point 10).
+function viewSwitch(view: PanelView, intents: PanelIntents): HTMLElement {
+  const { translate, toolbar } = view;
+  const choice = (text: string, title: string, diagram: boolean) => {
+    const pressed = toolbar.diagramShown === diagram;
+    const created = element("button", {
+      className: `view-switch__button${pressed ? " is-pressed" : ""}`,
+      text,
+      attributes: { type: "button", title, "aria-pressed": String(pressed) },
+    });
+    created.addEventListener("click", () => intents.setDiagramShown(diagram));
+    return created;
+  };
+  return element(
+    "div",
+    {
+      className: "view-switch",
+      attributes: { role: "group", "aria-label": translate("toolbar.viewSwitch") },
+    },
+    [
+      choice(translate("toolbar.view3d"), translate("page.viewportLabel"), false),
+      choice(translate("toolbar.viewDiagram"), translate("menubar.view.diagram"), true),
+    ],
+  );
+}
+
 function busyIndicator(view: PanelView): HTMLElement | null {
   if (!view.toolbar.busy) {
     return null;
@@ -56,6 +82,8 @@ function editButtons(
       intents.frameSelection,
       !toolbar.frameSelectionEnabled,
     ),
+    element("span", { className: "toolbar__separator", attributes: { role: "separator" } }),
+    viewSwitch(view, intents),
   ];
 }
 

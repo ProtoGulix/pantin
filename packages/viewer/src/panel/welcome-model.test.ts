@@ -116,6 +116,6 @@ describe("welcome view", () => {
   it("carries the tab, the name prompt state and the shortcuts", () => {
     const view = buildWelcomeView({ ...listing, welcomeTab: "all", creatingPantin: true }, t);
     expect(view).toMatchObject({ tab: "all", creating: true });
-    expect(view.shortcuts.map((entry) => entry.keys)).toEqual(["Ctrl+S", "F2", "Suppr"]);
+    expect(view.shortcuts.map((entry) => entry.keys)).toEqual(["Ctrl+S", "F2", "Suppr", "F4"]);
   });
 });

@@ -27,6 +27,8 @@ interface ToolbarView {
   importEnabled: boolean;
   frameAllEnabled: boolean;
   frameSelectionEnabled: boolean;
+  // The chain diagram replaces the 3D view (ADR 0029).
+  diagramShown: boolean;
 }
 
 export interface MessageView {
@@ -69,8 +71,10 @@ function buildToolbarView(state: ViewerState): ToolbarView {
     saveEnabled: (state.openPantin?.unsavedChanges ?? false) && !busy,
     hasUnsavedChanges: state.openPantin?.unsavedChanges ?? false,
     importEnabled: state.openPantin !== null && !busy && !state.importInProgress,
-    frameAllEnabled: hasBodies,
-    frameSelectionEnabled: hasBodies && state.selectedNodeId !== null,
+    // Framing moves the 3D camera, which the diagram hides.
+    frameAllEnabled: hasBodies && !state.diagramShown,
+    frameSelectionEnabled: hasBodies && state.selectedNodeId !== null && !state.diagramShown,
+    diagramShown: state.diagramShown,
   };
 }
 

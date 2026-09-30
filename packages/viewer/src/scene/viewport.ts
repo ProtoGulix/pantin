@@ -14,6 +14,7 @@ import type { SensorMarker } from "../sensors/sensor-markers.ts";
 import { boundsOfBodies } from "./body-bounds.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
+import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, floorHeight, frameBounds, planSceneSync } from "./scene-plan.ts";
 import { createSensorMarkers, type SensorMarkers } from "./sensor-markers.ts";
 import { createStage, type Stage } from "./stage.ts";
@@ -49,6 +50,12 @@ export interface Viewport {
   showSensorMarkers(markers: readonly SensorMarker[]): void;
   /** Tag values from the core: switch markers light up on 1. */
   showTagStates(values: ReadonlyMap<string, number>): void;
+  /**
+   * False stops the render loop while the chain diagram covers the view (ADR
+   * 0029 point 10); true restarts it. Poses keep arriving meanwhile, so the
+   * first frame after a restart shows the latest ones.
+   */
+  setRendering(active: boolean): void;
 }
 
 const RIGHT_MOUSE_BUTTON = 2;
@@ -262,7 +269,7 @@ export function createViewport(
   };
   listenToPicks(context, callbacks);
   applyPosesEachFrame(context);
-  engine.runRenderLoop(() => scene.render());
+  const setRendering = createRenderSwitch(engine, scene);
   return {
     showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
     frameBodies: (bodyIds) => frameBodies(context, bodyIds),
@@ -280,5 +287,6 @@ export function createViewport(
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
     showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
     showTagStates: (values) => context.sensorMarkers.setStates(values),
+    setRendering,
   };
 }

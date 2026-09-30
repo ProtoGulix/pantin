@@ -1,11 +1,11 @@
 import type { SwitchDiagramModel } from "../sensors/switch-diagram-model.ts";
 import { element } from "./dom.ts";
+import { svgElement as sharedSvgElement } from "./svg-dom.ts";
 
 // Draws a switch diagram model (ADR 0026) as inline SVG. Colours are the
 // viewer's CSS tokens, set in switch-diagram.css through classes, so the diagram
 // follows the theme. No layout decision is taken here.
 
-const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const BAR_HEIGHT = 12;
 const ARROW = 4;
 const SYMBOL_HEIGHT = 22;
@@ -15,14 +15,7 @@ function svgElement(
   attributes: Readonly<Record<string, string | number>>,
   text?: string,
 ): SVGElement {
-  const created = document.createElementNS(SVG_NAMESPACE, tag);
-  for (const [name, value] of Object.entries(attributes)) {
-    created.setAttribute(name, String(value));
-  }
-  if (text !== undefined) {
-    created.textContent = text;
-  }
-  return created;
+  return sharedSvgElement(tag, attributes, text === undefined ? [] : [text]);
 }
 
 const polygon = (className: string, points: readonly (readonly [number, number])[]) =>

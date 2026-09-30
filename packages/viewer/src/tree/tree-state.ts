@@ -97,11 +97,14 @@ export function withExpanded<State extends TreeViewState>(
   return { ...state, expandedNodeIds };
 }
 
-export function withSelectedNode<State extends TreeViewState>(
+// diagramNodeId: a selection made in the tree or the 3D view forgets the node
+// last clicked in the diagram, so that selecting the same row again later does
+// not bring that old diagram selection back.
+export function withSelectedNode<State extends TreeViewState & { diagramNodeId?: string | null }>(
   state: State,
   nodeId: string | null,
 ): State {
-  return { ...state, selectedNodeId: nodeId, renamingNodeId: null };
+  return { ...state, selectedNodeId: nodeId, renamingNodeId: null, diagramNodeId: null };
 }
 
 /** A node whose id changed (a renamed key) keeps its expansion and selection. */

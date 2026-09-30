@@ -17,6 +17,7 @@ export type MenuCommand =
   | "frameAll"
   | "frameSelection"
   | "toggleDrives"
+  | "toggleDiagram"
   | `language:${Language}`;
 
 type MenuId = "file" | "edit" | "view";
@@ -38,6 +39,7 @@ interface MenuContext {
   selectedKind: string | null;
   language: Language;
   drivePanelOpen: boolean;
+  diagramShown: boolean;
 }
 
 interface MenuItemDefinition {
@@ -137,16 +139,29 @@ const MENUS: readonly MenuDefinition[] = [
     id: "view",
     labelKey: "menubar.view",
     entries: [
-      item("frameAll", "menubar.view.frameAll", (context) => context.hasBodies),
+      item(
+        "frameAll",
+        "menubar.view.frameAll",
+        (context) => context.hasBodies && !context.diagramShown,
+      ),
       item(
         "frameSelection",
         "menubar.view.frameSelection",
-        (context) => context.hasBodies && context.selectedKind !== null,
+        (context) => context.hasBodies && context.selectedKind !== null && !context.diagramShown,
       ),
       {
         ...item("toggleDrives", "menubar.view.drives", (context) => context.editing),
         // Checked while the drives panel is shown (ADR 0022).
         checked: (context) => context.drivePanelOpen,
+      },
+      {
+        ...item("toggleDiagram", "menubar.view.diagram", (context) => context.editing, {
+          key: "F4",
+          primaryModifier: false,
+          labelKey: "shortcut.toggleDiagram",
+        }),
+        // Checked while the diagram replaces the 3D view (ADR 0029).
+        checked: (context) => context.diagramShown,
       },
       "separator",
       ...LANGUAGES.map(languageItem),
@@ -165,6 +180,7 @@ function menuContext(state: ViewerState): MenuContext {
       state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null),
     language: state.language,
     drivePanelOpen: state.drivePanelOpen,
+    diagramShown: state.diagramShown,
   };
 }
 

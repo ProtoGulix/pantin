@@ -7,12 +7,14 @@ import {
 } from "./controller/controller.ts";
 import { refreshTagValues } from "./controller/drive-commands.ts";
 import { ViewerStore } from "./controller/viewer-store.ts";
+import type { DiagramModel } from "./diagram/diagram-view-model.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { errorMessage } from "./messages.ts";
 import { createPoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
+import { DiagramView } from "./ui/diagram-view.ts";
 import { DrivePanel } from "./ui/drive-panel.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
 import type { PanelIntents } from "./ui/panel-intents.ts";
@@ -38,6 +40,11 @@ interface Screen {
   showJointPositions(positions: ReadonlyMap<string, number>): void;
   showTagValues(values: ReadonlyMap<string, number>): void;
   showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void;
+  renderDiagram(model: DiagramModel, intents: PanelIntents): void;
+  showDiagramLive(
+    tags: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+  ): void;
 }
 
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
@@ -53,6 +60,11 @@ function createScreen(): Screen {
       canvas.focus();
     }
   });
+  // Over the canvas, under the welcome dialog.
+  const diagram = new DiagramView(
+    requireElement(".viewport", HTMLElement),
+    requireElement("#welcome", HTMLElement),
+  );
   const drivePanel = new DrivePanel(requireElement("#drive-panel", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
@@ -70,6 +82,8 @@ function createScreen(): Screen {
     showJointPositions: (positions) => sidePanel.showJointPositions(positions),
     showTagValues: (values) => drivePanel.showTagValues(values),
     showDriveRuntime: (runtime) => drivePanel.showDriveRuntime(runtime),
+    renderDiagram: (model, intents) => diagram.render(model, intents),
+    showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
   };
 }
 
@@ -117,6 +131,12 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
       showJointPositions: (positions) => screen.showJointPositions(positions),
       showTagValues: (values) => screen.showTagValues(values),
       showDriveRuntime: (runtime) => screen.showDriveRuntime(runtime),
+      renderDiagram: (model) => {
+        if (intents !== null) {
+          screen.renderDiagram(model, intents);
+        }
+      },
+      showDiagramLive: (tags, runtime) => screen.showDiagramLive(tags, runtime),
       viewport: () => {
         if (viewport === null) {
           throw new Error("The viewport is used before it was created.");
