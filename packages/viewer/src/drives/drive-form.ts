@@ -36,6 +36,11 @@ export function movableJoints(document: PantinDocument) {
   return document.joints.filter((joint) => JOINT_COORDINATE_UNITS[joint.type] !== null);
 }
 
+/** The drive that moves a joint, if any: a joint has one drive at most. */
+export function driveOfJoint(document: PantinDocument, jointId: string): Drive | undefined {
+  return document.drives.find((drive) => drive.joints.includes(jointId));
+}
+
 /** The unit of the connected joints; metres until a joint is chosen. */
 export function driveCoordinateUnit(
   document: PantinDocument,
@@ -118,4 +123,31 @@ export function buildDriveRequest(
   return parsed.success
     ? { ok: true, request: parsed.data }
     : { ok: false, message: schemaMessage(parsed.error) };
+}
+
+/**
+ * The form a joint's context menu opens (ADR 0022): its drive if it has one,
+ * otherwise a new drive already connected to it, named after it, with its
+ * tags in the assembly of its child body. Null for a joint no drive can move.
+ */
+export function driveFormForJoint(
+  document: PantinDocument,
+  jointId: string,
+): DriveFormState | null {
+  const joint = movableJoints(document).find((candidate) => candidate.id === jointId);
+  if (joint === undefined) {
+    return null;
+  }
+  const drive = driveOfJoint(document, jointId);
+  if (drive !== undefined) {
+    return driveFormFor(drive, document);
+  }
+  const assembly = document.bodies.find((body) => body.id === joint.child)?.assembly;
+  const initial = initialDriveForm(document);
+  return {
+    ...initial,
+    name: joint.name,
+    assembly: assembly ?? initial.assembly,
+    joints: [jointId],
+  };
 }

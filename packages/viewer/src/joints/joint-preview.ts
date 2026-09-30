@@ -1,4 +1,5 @@
 import type { Vector3 } from "@pantin/protocol";
+import { driveOfJoint } from "../drives/drive-form.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -22,6 +23,8 @@ export interface JointPreview {
   origin: Vector3 | null;
   // Null as well for the zero vector, which has no direction.
   axis: Vector3 | null;
+  // A drive moves this joint (ADR 0022): the arrow says so by its colour.
+  driven: boolean;
 }
 
 function formVector(form: JointFormState, vector: "origin" | "axis"): Vector3 | null {
@@ -36,9 +39,17 @@ function formVector(form: JointFormState, vector: "origin" | "axis"): Vector3 | 
     : [x, y, z];
 }
 
-function formPreview(form: JointFormState): JointPreview {
+function isDriven(state: ViewerState, jointId: string | null): boolean {
+  const document = state.openPantin?.document;
+  return (
+    jointId !== null && document !== undefined && driveOfJoint(document, jointId) !== undefined
+  );
+}
+
+function formPreview(form: JointFormState, driven: boolean): JointPreview {
   const axis = formVector(form, "axis");
   return {
+    driven,
     parentBodyId: form.values[FIELD_PARENT] ?? "",
     childBodyId: form.values[FIELD_CHILD] ?? "",
     origin: formVector(form, "origin"),
@@ -49,7 +60,7 @@ function formPreview(form: JointFormState): JointPreview {
 /** The form wins over the selection: it is what the user is working on. */
 export function jointPreviewOf(state: ViewerState): JointPreview | null {
   if (state.jointForm !== null) {
-    return formPreview(state.jointForm);
+    return formPreview(state.jointForm, isDriven(state, state.jointForm.jointId));
   }
   const ref = state.selectedNodeId === null ? null : parseNodeId(state.selectedNodeId);
   const joint =
@@ -63,5 +74,6 @@ export function jointPreviewOf(state: ViewerState): JointPreview | null {
         childBodyId: joint.child,
         origin: joint.origin,
         axis: joint.axis,
+        driven: isDriven(state, joint.id),
       };
 }

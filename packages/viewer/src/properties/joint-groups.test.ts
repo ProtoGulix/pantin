@@ -20,8 +20,12 @@ const jointSource = {
     [hingeJoint, screwJoint, spinJoint],
   ),
 };
-const groupsOf = (jointId: string) =>
-  table(buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate));
+// The drive group has its own tests (drive-rows.test.ts): left out here.
+const jointGroupsOf = (jointId: string) =>
+  buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate).filter(
+    (group) => group.id !== "drive",
+  );
+const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 
 describe("joint properties", () => {
   it("shows the type, the bodies by name, the axis as a direction and the origin", () => {
@@ -57,8 +61,10 @@ describe("joint properties", () => {
       openPantin: pantinResponse(false, [stepBody("rail", "Rail")], "press", [oblique]),
     };
     const placement = table(
-      buildPropertyGroups(source, jointNodeId("press", "hinge"), new Set(), translate),
-    )[1];
+      buildPropertyGroups(source, jointNodeId("press", "hinge"), new Set(), translate).filter(
+        (group) => group.id === "placement",
+      ),
+    )[0];
     expect(placement?.[1]?.slice(0, 5)).toEqual([
       ["Axe", "Autre"],
       ["Sens", "Inversé (−)"],
@@ -76,7 +82,7 @@ describe("joint axis in the grid", () => {
       jointNodeId("press", "hinge"),
       new Set(),
       translate,
-    )[1]?.rows ?? [];
+    ).find((group) => group.id === "placement")?.rows ?? [];
 
   it("always offers custom, to type an oblique axis", () => {
     const direction = axisRowsOf(new Set())[0]?.edit;
@@ -143,10 +149,7 @@ describe("joint parameters and folder", () => {
 });
 
 describe("joint edit targets", () => {
-  const rowsOf = (jointId: string) =>
-    buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate).flatMap(
-      (group) => group.rows,
-    );
+  const rowsOf = (jointId: string) => jointGroupsOf(jointId).flatMap((group) => group.rows);
   const target = (fieldId: string) => ({
     kind: "jointField",
     pantinId: "press",

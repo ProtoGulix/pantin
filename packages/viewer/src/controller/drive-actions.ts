@@ -2,12 +2,14 @@ import { DRIVE_PARAMETERS, type DriveType } from "@pantin/protocol";
 import {
   buildDriveRequest,
   driveFormFor,
+  driveFormForJoint,
   initialDriveForm,
   withDriveFormJoint,
   withDriveFormType,
   withDriveFormValue,
 } from "../drives/drive-form.ts";
 import { errorMessage, infoMessage } from "../messages.ts";
+import { parseNodeId } from "../tree/node-ids.ts";
 import { refreshFaults } from "./drive-commands.ts";
 import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
@@ -36,6 +38,25 @@ export function openDriveForm(store: ViewerStore, driveId: string | null): void 
   const driveForm =
     drive === undefined ? initialDriveForm(document) : driveFormFor(drive, document);
   store.update({ ...store.state, driveForm, message: null });
+}
+
+/** Opens the panel on the joint's drive, or on a new drive connected to it. */
+export function openDriveFormForJoint(store: ViewerStore, nodeId: string): void {
+  const ref = parseNodeId(nodeId);
+  const document = store.state.openPantin?.document;
+  const driveForm =
+    ref?.kind === "joint" && document !== undefined
+      ? driveFormForJoint(document, ref.jointId)
+      : null;
+  if (driveForm !== null) {
+    store.update({
+      ...store.state,
+      drivePanelOpen: true,
+      driveForm,
+      contextMenu: null,
+      message: null,
+    });
+  }
 }
 
 export function cancelDriveForm(store: ViewerStore): void {

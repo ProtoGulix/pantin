@@ -45,6 +45,8 @@ export interface PanelIntents {
   // The drives panel on the right (ADR 0022): its form, faults and commands.
   toggleDrivePanel(): void;
   openDriveForm(driveId: string | null): void;
+  // From a joint's context menu: its drive, or a new one connected to it.
+  openDriveFormForJoint(nodeId: string): void;
   cancelDriveForm(): void;
   editDriveName(name: string): void;
   editDriveParameter(field: string, text: string): void;

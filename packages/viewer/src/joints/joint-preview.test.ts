@@ -23,6 +23,7 @@ describe("jointPreviewOf", () => {
       childBodyId: "carriage",
       origin: [0.01, 0, 0.02],
       axis: [0, 0, 1],
+      driven: false,
     });
   });
 
@@ -34,6 +35,7 @@ describe("jointPreviewOf", () => {
       childBodyId: "carriage",
       origin: [0.25, 0, 0],
       axis: [0, 0, 1],
+      driven: false,
     });
   });
 

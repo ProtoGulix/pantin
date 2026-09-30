@@ -1,4 +1,5 @@
 import { type AssemblyDisplay, isAssemblyHidden } from "../assembly-display.ts";
+import { driveOfJoint, movableJoints } from "../drives/drive-form.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
@@ -13,6 +14,7 @@ export type ContextAction =
   | "newAssembly"
   | "newJoint"
   | "changeJointType"
+  | "driveJoint"
   | "toggleAssemblyHidden"
   | "toggleAssemblyIsolated"
   | "delete";
@@ -44,7 +46,7 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
     entries.push("toggleAssemblyHidden", "toggleAssemblyIsolated");
   }
   if (ref.kind === "joint") {
-    entries.push("changeJointType");
+    entries.push("changeJointType", "driveJoint");
   }
   if (ref.kind === "body" || ref.kind === "joint" || ref.kind === "assembly") {
     entries.push("delete");
@@ -59,10 +61,31 @@ const CONTEXT_LABELS = {
   newAssembly: "menu.newAssembly",
   newJoint: "menu.newJoint",
   changeJointType: "menu.changeJointType",
+  driveJoint: "menu.addJointDrive",
   toggleAssemblyHidden: "menu.hideAssembly",
   toggleAssemblyIsolated: "menu.isolateAssembly",
   delete: "menu.delete",
 } as const;
+
+// A joint no drive can move (fixed) gets no drive entry (ADR 0022).
+function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boolean {
+  if (action !== "driveJoint" || ref.kind !== "joint") {
+    return true;
+  }
+  const document = state.openPantin?.document;
+  return (
+    document !== undefined && movableJoints(document).some((joint) => joint.id === ref.jointId)
+  );
+}
+
+function isDriven(ref: NodeRef, state: ViewerState): boolean {
+  const document = state.openPantin?.document;
+  return (
+    ref.kind === "joint" &&
+    document !== undefined &&
+    driveOfJoint(document, ref.jointId) !== undefined
+  );
+}
 
 // The visibility entries say what they will do: show a hidden assembly, or
 // show every assembly again once one is isolated.
@@ -90,9 +113,15 @@ export function buildContextMenuView(state: ViewerState, t: Translate): ContextM
     title: t("menu.label", { name: node.label }),
     x: menu.x,
     y: menu.y,
-    entries: contextEntries(ref, node.renamable).map((action) => ({
-      action,
-      label: t(labelKeyOf(action, ref, state.assemblyDisplay)),
-    })),
+    entries: contextEntries(ref, node.renamable)
+      .filter((action) => isOffered(action, ref, state))
+      .map((action) => ({
+        action,
+        label: t(
+          action === "driveJoint" && isDriven(ref, state)
+            ? "menu.editJointDrive"
+            : labelKeyOf(action, ref, state.assemblyDisplay),
+        ),
+      })),
   };
 }

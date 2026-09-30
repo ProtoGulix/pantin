@@ -6,6 +6,7 @@ import {
   editDriveName,
   editDriveParameter,
   openDriveForm,
+  openDriveFormForJoint,
   submitDriveForm,
   toggleDriveJoint,
   toggleDrivePanel,
@@ -23,6 +24,7 @@ export function driveIntents(store: ViewerStore) {
   return {
     toggleDrivePanel: () => toggleDrivePanel(store),
     openDriveForm: (driveId: string | null) => openDriveForm(store, driveId),
+    openDriveFormForJoint: (nodeId: string) => openDriveFormForJoint(store, nodeId),
     cancelDriveForm: () => cancelDriveForm(store),
     editDriveName: (name: string) => editDriveName(store, name),
     editDriveParameter: (field: string, text: string) => editDriveParameter(store, field, text),

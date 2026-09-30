@@ -59,7 +59,7 @@ export function createBodyHighlights(
     }
     const bounds = child.node.getHierarchyBoundingVectors(true);
     const extent = bounds.max.subtract(bounds.min).length();
-    arrow.show(placeJointArrow(preview.origin, preview.axis, extent));
+    arrow.show(placeJointArrow(preview.origin, preview.axis, extent), preview.driven);
   };
 
   return {

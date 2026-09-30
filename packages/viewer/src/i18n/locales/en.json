@@ -222,5 +222,11 @@
   "message.driveUpdated": "Drive \"{name}\" updated.",
   "message.driveDeleted": "Drive deleted.",
   "message.driveInvalid": "The drive is not valid: fix the fields and try again.",
-  "prompt.deleteDrive.text": "Delete drive \"{name}\"?"
+  "prompt.deleteDrive.text": "Delete drive \"{name}\"?",
+  "menu.addJointDrive": "Add a drive…",
+  "menu.editJointDrive": "Edit its drive…",
+  "properties.group.drive": "Drive",
+  "properties.drive": "Drive",
+  "properties.driveCommands": "Commands",
+  "properties.noDrive": "None: right-click the joint to add one"
 }

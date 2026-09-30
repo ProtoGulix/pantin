@@ -1,8 +1,9 @@
 import type { Assembly, Body, PantinResponse } from "@pantin/protocol";
-import type { MessageKey, Translate } from "../i18n/translate.ts";
+import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
+import { jointDriveGroup } from "./drive-rows.ts";
 import { jointGroups } from "./joint-groups.ts";
 import {
   type GroupDraft,
@@ -26,6 +27,7 @@ const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   placement: "properties.group.placement",
   parameters: "properties.group.parameters",
   joints: "properties.group.joints",
+  drive: "properties.group.drive",
 };
 
 function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
@@ -181,6 +183,9 @@ function sourceNodeGroups(body: Body, index: number, t: Translate): GroupDraft[]
 export interface PropertySource extends TreeSource {
   // See ViewerState; absent means none.
   customAxisJointIds?: ReadonlySet<string>;
+  // For labels that come from elsewhere than the translation files (drive
+  // types); absent means English.
+  language?: Language;
 }
 
 function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupDraft[] {
@@ -205,7 +210,13 @@ function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupD
   if (ref.kind === "joint") {
     const joint = open.document.joints.find((candidate) => candidate.id === ref.jointId);
     const customAxis = source.customAxisJointIds?.has(ref.jointId) ?? false;
-    return joint === undefined ? [] : jointGroups(joint, open, customAxis, t);
+    if (joint === undefined) {
+      return [];
+    }
+    // The drive comes right after the general group: it says what moves the joint.
+    const [general, ...others] = jointGroups(joint, open, customAxis, t);
+    const drive = jointDriveGroup(joint, open, source.language ?? "en", t);
+    return general === undefined ? [drive, ...others] : [general, drive, ...others];
   }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {

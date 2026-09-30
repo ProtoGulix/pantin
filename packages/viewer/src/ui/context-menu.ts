@@ -23,6 +23,8 @@ function runAction(
     intents.openJointForm();
   } else if (action === "changeJointType") {
     intents.openJointEditForm(nodeId);
+  } else if (action === "driveJoint") {
+    intents.openDriveFormForJoint(nodeId);
   } else if (action === "toggleAssemblyHidden") {
     intents.toggleAssemblyHidden(nodeId);
   } else if (action === "toggleAssemblyIsolated") {

@@ -14,20 +14,23 @@ import type { ArrowPlacement } from "./scene-plan.ts";
 // group 1), since the axis usually runs inside them. It hangs from a node
 // that takes the parent body's displacement, so it moves with that body.
 
+// Yellow for a free joint; green once a drive moves it (ADR 0022), which the
+// joint's properties also say in words.
 const ARROW_COLOR = Color3.FromHexString("#ffd33d");
+const DRIVEN_ARROW_COLOR = Color3.FromHexString("#3fb950");
 const OVERLAY_GROUP = 1;
 
 export interface JointArrow {
-  show(placement: ArrowPlacement): void;
+  show(placement: ArrowPlacement, driven: boolean): void;
   hide(): void;
   /** The parent body's displacement, already in the Babylon frame. */
   follow(displacement: BabylonDisplacement): void;
 }
 
-function arrowMaterial(scene: Scene): StandardMaterial {
-  const material = new StandardMaterial("joint-arrow-material", scene);
+function arrowMaterial(scene: Scene, name: string, color: Color3): StandardMaterial {
+  const material = new StandardMaterial(name, scene);
   material.disableLighting = true;
-  material.emissiveColor = ARROW_COLOR;
+  material.emissiveColor = color;
   return material;
 }
 
@@ -59,7 +62,8 @@ function arrowParts(scene: Scene, length: number, material: StandardMaterial): M
 export function createJointArrow(scene: Scene): JointArrow {
   const root = new TransformNode("joint-arrow", scene);
   root.rotationQuaternion = Quaternion.Identity();
-  const material = arrowMaterial(scene);
+  const freeMaterial = arrowMaterial(scene, "joint-arrow-material", ARROW_COLOR);
+  const drivenMaterial = arrowMaterial(scene, "joint-arrow-driven-material", DRIVEN_ARROW_COLOR);
   let geometry: TransformNode | null = null;
   // The store redraws on every change; the meshes are rebuilt only when the
   // arrow itself changes.
@@ -70,8 +74,8 @@ export function createJointArrow(scene: Scene): JointArrow {
     shownKey = null;
   };
   return {
-    show: (placement) => {
-      const key = JSON.stringify(placement);
+    show: (placement, driven) => {
+      const key = JSON.stringify([placement, driven]);
       if (key === shownKey) {
         return;
       }
@@ -81,6 +85,7 @@ export function createJointArrow(scene: Scene): JointArrow {
       geometry.parent = root;
       geometry.position = Vector3.FromArray(placement.start);
       geometry.rotationQuaternion = Quaternion.FromArray(placement.rotation);
+      const material = driven ? drivenMaterial : freeMaterial;
       for (const part of arrowParts(scene, placement.length, material)) {
         part.parent = geometry;
       }

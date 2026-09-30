@@ -125,7 +125,13 @@ describe("placeJointArrow", () => {
 });
 
 describe("bodyHighlight", () => {
-  const preview = { parentBodyId: "rail", childBodyId: "carriage", origin: null, axis: null };
+  const preview = {
+    parentBodyId: "rail",
+    childBodyId: "carriage",
+    origin: null,
+    axis: null,
+    driven: false,
+  };
 
   it("tints the selected body when no joint is previewed", () => {
     expect(bodyHighlight("rail", new Set(["rail"]), null)).toBe("selected");

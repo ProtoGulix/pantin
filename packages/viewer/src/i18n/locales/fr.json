@@ -222,5 +222,11 @@
   "message.driveUpdated": "Drive « {name} » modifié.",
   "message.driveDeleted": "Drive supprimé.",
   "message.driveInvalid": "Le drive n'est pas valide : corrigez les champs puis réessayez.",
-  "prompt.deleteDrive.text": "Supprimer le drive « {name} » ?"
+  "prompt.deleteDrive.text": "Supprimer le drive « {name} » ?",
+  "menu.addJointDrive": "Ajouter un drive…",
+  "menu.editJointDrive": "Modifier son drive…",
+  "properties.group.drive": "Drive",
+  "properties.drive": "Drive",
+  "properties.driveCommands": "Commandes",
+  "properties.noDrive": "Aucun : clic droit sur la liaison pour en ajouter un"
 }
