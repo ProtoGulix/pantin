@@ -9,6 +9,7 @@ import { ViewerStore } from "./controller/viewer-store.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { errorMessage } from "./messages.ts";
 import { createPoseStreamClient } from "./pose-stream-client.ts";
+import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
 import { DrivePanel } from "./ui/drive-panel.ts";
@@ -69,6 +70,34 @@ function createScreen(): Screen {
   };
 }
 
+// Without WebGL the rest of the viewer still works; startupError says why the
+// view is empty. The catch is deliberately broad: the engine is built first, so
+// any failure leaves no usable view, and the raw reason is kept for diagnosis.
+function createViewportOrInert(
+  canvas: HTMLCanvasElement,
+  api: PantinApiClient,
+  store: ViewerStore,
+): { viewport: Viewport; startupError: string | null } {
+  try {
+    const viewport = createViewport(
+      canvas,
+      (pantinId, body) => api.fetchMeshBytes(pantinId, body.mesh),
+      {
+        onBodyPicked: (bodyId, doubleClick) => selectBodyFromViewport(store, bodyId, doubleClick),
+        onLoadError: (bodyName, reason) =>
+          store.update({
+            ...store.state,
+            message: errorMessage("message.meshLoad", { name: bodyName }, reason),
+          }),
+      },
+    );
+    return { viewport, startupError: null };
+  } catch (error) {
+    const startupError = error instanceof Error ? error.message : String(error);
+    return { viewport: createInertViewport(), startupError };
+  }
+}
+
 function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   const language = chooseLanguage(navigator.languages, readStoredText(STORAGE_KEYS.language));
   // Both are created after the store, because their callbacks need it.
@@ -106,18 +135,12 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   );
   intents = createPanelIntents(store);
   listenToShortcuts(() => store.state, intents);
-  viewport = createViewport(
-    screen.canvas,
-    (pantinId, body) => api.fetchMeshBytes(pantinId, body.mesh),
-    {
-      onBodyPicked: (bodyId, doubleClick) => selectBodyFromViewport(store, bodyId, doubleClick),
-      onLoadError: (bodyName, reason) =>
-        store.update({
-          ...store.state,
-          message: errorMessage("message.meshLoad", { name: bodyName }, reason),
-        }),
-    },
-  );
+  const created = createViewportOrInert(screen.canvas, api, store);
+  viewport = created.viewport;
+  if (created.startupError !== null) {
+    const message = errorMessage("message.webglUnavailable", {}, created.startupError);
+    store.update({ ...store.state, message });
+  }
   return store;
 }
 
