@@ -65,7 +65,15 @@ export async function serveViewerFile(
       throw notFound(displayPath);
     }
     await assertRealPathInside(viewerDirectory, path);
-    response.writeHead(200, { "content-type": contentType, "content-length": stats.size });
+    // The page is checked again at every load, so that a rebuilt viewer is
+    // never hidden behind an old one; bundled assets carry a content hash in
+    // their name and may stay cached.
+    const cache = relativePath.endsWith(".html") ? { "cache-control": "no-cache" } : {};
+    response.writeHead(200, {
+      "content-type": contentType,
+      "content-length": stats.size,
+      ...cache,
+    });
     if (method === "HEAD") {
       response.end();
       return;

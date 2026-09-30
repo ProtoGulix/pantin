@@ -53,6 +53,11 @@ describe("static viewer files", () => {
     expect(response.contentType).toBe(contentType);
   });
 
+  it("has the page checked again at every load, but not the hashed assets", async () => {
+    expect((await sendRaw(server, "GET", "/")).cacheControl).toBe("no-cache");
+    expect((await sendRaw(server, "GET", "/assets/app.js")).cacheControl).toBeUndefined();
+  });
+
   it("answers HEAD without a body and refuses other methods", async () => {
     const head = await sendRaw(server, "HEAD", "/");
     expect(head.status).toBe(200);

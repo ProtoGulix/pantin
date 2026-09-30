@@ -53,6 +53,7 @@ export function startTestServer(
 export type RawResponse = {
   status: number;
   contentType: string;
+  cacheControl: string | undefined;
   bytes: Buffer;
   body: string;
   json: unknown;
@@ -80,7 +81,15 @@ export function sendRaw(
           const json: unknown = contentType.startsWith("application/json")
             ? JSON.parse(text)
             : undefined;
-          resolve({ status: incoming.statusCode ?? 0, contentType, bytes, body: text, json });
+          const cacheControl = incoming.headers["cache-control"];
+          resolve({
+            status: incoming.statusCode ?? 0,
+            contentType,
+            cacheControl,
+            bytes,
+            body: text,
+            json,
+          });
         });
       },
     );
