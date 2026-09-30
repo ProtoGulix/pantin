@@ -1,14 +1,18 @@
+import { type SensorFields, sensorPlacementProblem } from "@pantin/sensor-types/schemas";
 import type { z } from "zod";
 import { JOINT_COORDINATE_UNITS, type JointType } from "./joint.ts";
 
 // Document rules of sensors (ADR 0023 point 3): unique ids, a known assembly,
-// and a joint that exists and can move. Tag prefixes are checked with those
-// of joints and drives (pantin-assemblies.ts).
+// and a joint that exists and can move; a switch placed where its joint's
+// stroke allows (ADR 0026). Tag prefixes are checked with those of joints and
+// drives (pantin-assemblies.ts).
+
+type WatchedJoint = { id: string; type: JointType; limits?: readonly [number, number] };
 
 type DocumentShape = {
   assemblies: readonly { key: string }[];
-  joints: readonly { id: string; type: JointType }[];
-  sensors: readonly { id: string; assembly: string; joint: string }[];
+  joints: readonly WatchedJoint[];
+  sensors: readonly ({ id: string; assembly: string; joint: string } & SensorFields)[];
 };
 
 function issue(context: z.RefinementCtx, path: (string | number)[], message: string): void {
@@ -17,7 +21,7 @@ function issue(context: z.RefinementCtx, path: (string | number)[], message: str
 
 export function sensorIssues(document: DocumentShape, context: z.RefinementCtx): void {
   const assemblies = new Set(document.assemblies.map((assembly) => assembly.key));
-  const jointTypes = new Map(document.joints.map((joint) => [joint.id, joint.type]));
+  const joints = new Map(document.joints.map((joint) => [joint.id, joint]));
   const sensorIds = new Set<string>();
   for (const [index, sensor] of document.sensors.entries()) {
     if (sensorIds.has(sensor.id)) {
@@ -29,10 +33,16 @@ export function sensorIssues(document: DocumentShape, context: z.RefinementCtx):
       const message = `Sensor "${sensor.id}" is in assembly "${sensor.assembly}", which does not exist.`;
       issue(context, [index, "assembly"], message);
     }
-    const type = jointTypes.get(sensor.joint);
-    if (type === undefined || JOINT_COORDINATE_UNITS[type] === null) {
+    const joint = joints.get(sensor.joint);
+    if (joint === undefined || JOINT_COORDINATE_UNITS[joint.type] === null) {
       const message = `Sensor "${sensor.id}" watches "${sensor.joint}", which is not a movable joint of this Pantin.`;
       issue(context, [index, "joint"], message);
+      continue;
+    }
+    // A joint without limits (continuous) has no stroke.
+    const problem = sensorPlacementProblem(sensor, joint.limits ?? null);
+    if (problem !== null) {
+      issue(context, [index], `Sensor "${sensor.id}" on joint "${joint.id}": ${problem}`);
     }
   }
 }

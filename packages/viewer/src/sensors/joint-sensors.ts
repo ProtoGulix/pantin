@@ -55,17 +55,17 @@ export function endSwitchRequests(
     return [];
   }
   const width = (limits.upper - limits.lower) * END_SWITCH_SHARE;
+  // The side of each switch follows from where it stands in the stroke (ADR 0026).
   const ends = [
-    { end: "min", operatingPosition: limits.lower + width, actuation: "decreasing" },
-    { end: "max", operatingPosition: limits.upper - width, actuation: "increasing" },
+    { end: "min", operatingPosition: limits.lower + width },
+    { end: "max", operatingPosition: limits.upper - width },
   ] as const;
-  return ends.map(({ end, operatingPosition, actuation }) => ({
+  return ends.map(({ end, operatingPosition }) => ({
     name: `${joint.name} ${end}`,
     assembly,
     joint: jointId,
     type: "limit_switch",
     operatingPosition,
-    actuation,
     differentialTravel: width / 4,
     overtravel: width,
     normallyClosed: false,

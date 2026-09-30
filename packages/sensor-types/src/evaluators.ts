@@ -13,7 +13,7 @@ export type { SensorOutput } from "./evaluation-common.ts";
 /** The sensor's tag values and new state, for the joint at this position. */
 export function evaluateSensor(input: SensorInput<SensorFields>): SensorOutput {
   const { fields } = input;
-  const asSwitch = switchOf(fields);
+  const asSwitch = switchOf(fields, input.stroke);
   if (asSwitch !== null) {
     return evaluateSwitch(asSwitch, input.position, input.state);
   }

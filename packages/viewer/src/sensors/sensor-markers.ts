@@ -7,6 +7,7 @@ import {
 } from "@pantin/protocol";
 import { switchZonesOf } from "@pantin/sensor-types/zones";
 import type { Vector3Tuple } from "../frames.ts";
+import { strokeOf } from "../joints/joint-parameters.ts";
 
 // What the 3D view draws for each sensor (ADR 0024), as data in the core
 // frame. The shape follows the type's data, never its name: a switch is drawn
@@ -40,7 +41,7 @@ function markerOf(document: PantinDocument, sensor: Sensor): SensorMarker | null
     return null;
   }
   // The drawn zone of a switch (ADR 0025); none for another type.
-  const range = switchZonesOf(sensor)?.shown ?? null;
+  const range = switchZonesOf(sensor, strokeOf(joint))?.shown ?? null;
   const bit = SENSOR_TAGS[sensor.type].find((tag) => tag.type === "bit");
   return {
     sensorId: sensor.id,

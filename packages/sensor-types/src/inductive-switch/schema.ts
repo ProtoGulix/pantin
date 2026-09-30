@@ -1,18 +1,19 @@
 import { z } from "zod";
 import {
-  DIRECTIONS,
-  DirectionSchema,
   finiteNumber,
   NORMALLY_CLOSED_PARAMETER,
+  type PlacementRule,
   positiveNumber,
   type SensorParameter,
   SWITCH_TAGS,
+  towardsOutside,
 } from "../schema-common.ts";
 
 // An inductive proximity sensor, the target approaching its face along the
 // joint (axial approach). It switches when the gap falls to its nominal
 // distance Sn scaled by the target's material, and back once the gap exceeds
-// that by the hysteresis (spike 0006: typically 10 %).
+// that by the hysteresis (spike 0006: typically 10 %). The target is on the
+// side of the face where the stroke is (ADR 0026).
 
 export const MATERIALS = ["steel", "stainless_steel", "brass", "aluminium", "copper"] as const;
 
@@ -30,8 +31,6 @@ export const InductiveSwitchFieldsSchema = z.object({
   type: z.literal("inductive_switch"),
   // Where the target would touch the sensor's face.
   facePosition: finiteNumber("face position"),
-  // The way the joint moves to bring the target towards the face.
-  approach: DirectionSchema,
   nominalDistance: positiveNumber("nominal distance"),
   material: z.enum(MATERIALS),
   hysteresisPercent: finiteNumber("hysteresis").refine(
@@ -41,9 +40,23 @@ export const InductiveSwitchFieldsSchema = z.object({
   normallyClosed: z.boolean(),
 });
 
+type Fields = z.infer<typeof InductiveSwitchFieldsSchema>;
+
+// The face at one end of the stroke or beyond it: inside, the target would hit it.
+export const INDUCTIVE_SWITCH_PLACEMENT: PlacementRule<Fields> = {
+  problem({ facePosition }, stroke) {
+    if (stroke === null) {
+      return "An axial inductive sensor needs a joint with end stops.";
+    }
+    if (towardsOutside(facePosition, stroke) === null) {
+      return "The face is inside the stroke: the target would hit it. Move the face to an end of the stroke or beyond.";
+    }
+    return null;
+  },
+};
+
 export const INDUCTIVE_SWITCH_PARAMETERS = [
   { field: "facePosition", kind: "coordinate" },
-  { field: "approach", kind: "choice", options: DIRECTIONS },
   { field: "nominalDistance", kind: "coordinate" },
   { field: "material", kind: "choice", options: MATERIALS },
   { field: "hysteresisPercent", kind: "percent" },

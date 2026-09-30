@@ -15,6 +15,8 @@ export interface SensorLabels {
   tags: Readonly<Record<string, string>>;
   // Labels of the values of choice parameters.
   options?: Readonly<Record<string, string>>;
+  // Labels of the diagram's dimensions that are not parameters.
+  dimensions?: Readonly<Record<string, string>>;
 }
 
 export const SENSOR_LABELS: Readonly<

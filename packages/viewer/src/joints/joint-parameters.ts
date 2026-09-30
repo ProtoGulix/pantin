@@ -6,6 +6,7 @@ import {
   type JointParameter,
   LimitsSchema,
 } from "@pantin/protocol";
+import type { Stroke } from "@pantin/sensor-types/zones";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import {
   coordinateToDisplay,
@@ -63,6 +64,12 @@ export function coordinateLimits(joint: Joint): { lower: number; upper: number }
     }
   }
   return null;
+}
+
+/** The joint's limits as the sensors' stroke (metre or radian); null for a joint without limits. */
+export function strokeOf(joint: Joint): Stroke {
+  const limits = coordinateLimits(joint);
+  return limits === null ? null : [limits.lower, limits.upper];
 }
 
 export function displayUnitLabel(unit: DisplayUnit, t: Translate): string {

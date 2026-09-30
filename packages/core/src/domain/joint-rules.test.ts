@@ -111,3 +111,31 @@ describe("updateJointInDocument", () => {
     expect(chain).toEqual(before);
   });
 });
+
+describe("updateJointInDocument with sensors", () => {
+  it("refuses new limits that a switch on the joint cannot hold, naming it (ADR 0026)", () => {
+    const slider: CreateJointRequest = { ...link("a", "b"), type: "prismatic", limits: [0, 0.1] };
+    const withSlider = updateJointInDocument(withLinks(["a", "b"]), "link", slider).document;
+    const extended: PantinDocument = {
+      ...withSlider,
+      sensors: [
+        {
+          id: "extended",
+          tagKey: "extended",
+          name: "Extended",
+          assembly: "main",
+          joint: "link",
+          type: "limit_switch",
+          operatingPosition: 0.098,
+          differentialTravel: 0.0005,
+          overtravel: 0.002,
+          normallyClosed: false,
+        },
+      ],
+    };
+    const longer: CreateJointRequest = { ...slider, limits: [0, 0.2] };
+    expect(() => updateJointInDocument(extended, "link", longer)).toThrow(
+      /Sensor "extended" on joint "link": The stroke goes past the overtravel/,
+    );
+  });
+});

@@ -29,7 +29,9 @@ describe("parameter texts", () => {
   });
 
   it("starts a choice on its first option and a flag unset", () => {
-    expect(defaultTexts(parameter("approach"))).toEqual({ approach: "increasing" });
+    expect(defaultTexts(parameter("material"))).toEqual({
+      material: parameter("material").options?.[0],
+    });
     expect(defaultTexts(parameter("normallyClosed"))).toEqual({ normallyClosed: "false" });
     expect(defaultTexts(parameter("nominalDistance"))).toEqual({});
   });

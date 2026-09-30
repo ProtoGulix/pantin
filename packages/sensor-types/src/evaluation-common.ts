@@ -1,6 +1,8 @@
+import type { Stroke } from "./schema-common.ts";
+
 // What every sensor evaluation uses (ADR 0025 point 1): the joint position,
-// the sensor's state of the previous step, both plain numbers, so that a
-// folder depends on this package alone.
+// the joint's stroke, the sensor's state of the previous step, all plain
+// numbers, so that a folder depends on this package alone.
 
 type Values = Readonly<Record<string, number>>;
 
@@ -8,6 +10,8 @@ export interface SensorInput<Fields> {
   fields: Fields;
   // In the joint coordinate's unit (metre or radian).
   position: number;
+  // The joint's limits, or null for a joint without end stops (ADR 0026).
+  stroke: Stroke;
   // What the previous step returned; null before the first step.
   state: Values | null;
 }

@@ -17,8 +17,9 @@ Before you start:
   evaluation gives it hysteresis (ADR 0025). Start from the datasheet: which
   position switches it on, and how far back it must go to switch off.
 - **Anything else** (a counter, an analog value) writes its own pure
-  evaluation, like `src/encoder/evaluate.ts`. It receives the joint position
-  and the state it returned at the previous step (null before the first).
+  evaluation, like `src/encoder/evaluate.ts`. It receives the joint position,
+  the joint's stroke and the state it returned at the previous step (null
+  before the first).
 - Delays and contact bounce are not simulated (ADR 0025 point 5).
 
 ## 1. The schema: `schema.ts`
@@ -55,30 +56,46 @@ export const EXAMPLE_SWITCH_PARAMETERS = [
 export const EXAMPLE_SWITCH_TAGS = SWITCH_TAGS;
 ```
 
+If the joint's stroke constrains where the switch may sit (ADR 0026), add a
+placement rule here too: `problem(fields, stroke)` returns a message saying
+what to change, or null. `stroke` is the joint's limits, or null for a joint
+without end stops. See `LIMIT_SWITCH_PLACEMENT` in `src/limit-switch/schema.ts`.
+The protocol applies it whenever the document is validated.
+
 ## 2. The zones of a switch: `zone.ts`
 
-Pure geometry along the joint coordinate. `on`: where an off switch turns
-on; `hold`: where an on switch stays on (the hysteresis); `shown`: the finite
-stretch the 3D view draws. Bounds may be infinite (`beyond`).
+Pure geometry along the joint coordinate, given the joint's stroke. `on`:
+where an off switch turns on; `hold`: where an on switch stays on (the
+hysteresis); `shown`: the finite stretch the 3D view draws. Bounds may be
+infinite (`beyond`). A switch pressed from one side takes that side from the
+stroke with `actuationSide`; there is no direction field (ADR 0026).
 
 ```ts
 import type { z } from "zod";
+import { actuationSide, type Stroke } from "../schema-common.ts";
 import { beyond, type SwitchZones } from "../switch-zones.ts";
 import type { ExampleSwitchFieldsSchema } from "./schema.ts";
 
 type Fields = z.infer<typeof ExampleSwitchFieldsSchema>;
 
-// On past the threshold, off once back by the hysteresis; the band between
-// the two is what the 3D view draws.
-export function exampleSwitchZones(fields: Fields): SwitchZones {
-  const release = fields.threshold - fields.hysteresis;
+// On past the threshold towards the nearer end, off once back by the
+// hysteresis; the band between the two is what the 3D view draws.
+export function exampleSwitchZones(fields: Fields, stroke: Stroke): SwitchZones {
+  const side = actuationSide(fields.threshold, stroke);
+  const sign = side === "increasing" ? 1 : -1;
+  const release = fields.threshold - sign * fields.hysteresis;
   return {
-    on: beyond(fields.threshold, "increasing"),
-    hold: beyond(release, "increasing"),
-    shown: [release, fields.threshold],
+    on: beyond(fields.threshold, side),
+    hold: beyond(release, side),
+    shown: [Math.min(release, fields.threshold), Math.max(release, fields.threshold)],
   };
 }
 ```
+
+A switch also describes its diagram for the sensor form in `diagram.ts`: a
+symbol (`plunger`, `face`, `slot` or `range`) at a coordinate, looking one
+way, and its dimension lines, each labelled by a parameter (or by a key of
+`dimensions` in its labels). See `src/inductive-switch/diagram.ts`.
 
 A type that is not a switch writes `evaluate.ts` instead, returning its tag
 values and its state (see `src/encoder/evaluate.ts`).
@@ -115,9 +132,10 @@ Add the new entry to each; the records are keyed by type, so the compiler
 lists every place you missed:
 
 - `src/schemas.ts`: the schema in `SensorFieldsSchema`, then
-  `SENSOR_PARAMETERS` and `SENSOR_TAGS`;
-- `src/zones.ts`: `SWITCH_ZONES`, with the type's zones for a switch (a type
-  with a `normallyClosed` field), or `null` for any other type, which then
+  `SENSOR_PARAMETERS`, `SENSOR_TAGS` and `SENSOR_PLACEMENT` (its rule, or
+  null);
+- `src/zones.ts`: `SWITCH_ZONES`, with the type's zones and diagram for a
+  switch (a type with a `normallyClosed` field), or `null` for any other type, which then
   gets its evaluation in `src/evaluators.ts`;
 - `src/labels.ts`: `SENSOR_LABELS`.
 
@@ -126,9 +144,10 @@ A new parameter kind also needs the sensors panel to show and convert it
 
 ## 5. Tests, then the schema version
 
-- Step the sensor along positions with `statesAlong` (`src/test-support.ts`):
-  the switch-on point, the hysteresis both ways, and the schema's refusals.
-  See `src/switches.test.ts`.
+- Step the sensor along positions with `statesAlong` (`src/test-support.ts`,
+  on a 0 to 100 mm stroke unless you pass another): the switch-on point, the
+  hysteresis both ways, the schema's refusals and the placement rule. See
+  `src/switches.test.ts` and `src/placement.test.ts`.
 - Add a valid sample of the type to `SAMPLES` in `src/sensor-types.test.ts`
   (the compiler asks for it): the registry test then checks its labels, its
   zones and that it evaluates to every tag it declares.

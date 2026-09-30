@@ -1,4 +1,4 @@
-import type { DIRECTIONS, SensorTypeLabels } from "../schema-common.ts";
+import type { SensorTypeLabels } from "../schema-common.ts";
 import type { INDUCTIVE_SWITCH_PARAMETERS, INDUCTIVE_SWITCH_TAGS, MATERIALS } from "./schema.ts";
 
 // What the user reads; the tag members themselves stay in English (ADR 0023).
@@ -7,16 +7,14 @@ export const INDUCTIVE_SWITCH_LABELS = {
     name: "Inductive sensor (axial)",
     parameters: {
       facePosition: "Face position",
-      approach: "Target approaching",
       nominalDistance: "Nominal distance Sn",
       material: "Target material",
       hysteresisPercent: "Hysteresis",
       normallyClosed: "Normally closed",
     },
     tags: { state: "State" },
+    dimensions: { reach: "Effective distance (Sn × material)" },
     options: {
-      increasing: "Forwards (+)",
-      decreasing: "Backwards (−)",
       steel: "Steel (× 1)",
       stainless_steel: "Stainless steel (× 0.7)",
       brass: "Brass (× 0.4)",
@@ -28,16 +26,14 @@ export const INDUCTIVE_SWITCH_LABELS = {
     name: "Détecteur inductif (axial)",
     parameters: {
       facePosition: "Position de la face",
-      approach: "Cible arrivant",
       nominalDistance: "Portée nominale Sn",
       material: "Matière de la cible",
       hysteresisPercent: "Hystérésis",
       normallyClosed: "Normalement fermé",
     },
     tags: { state: "État" },
+    dimensions: { reach: "Portée réelle (Sn × matière)" },
     options: {
-      increasing: "Vers l'avant (+)",
-      decreasing: "Vers l'arrière (−)",
       steel: "Acier (× 1)",
       stainless_steel: "Inox (× 0,7)",
       brass: "Laiton (× 0,4)",
@@ -48,5 +44,5 @@ export const INDUCTIVE_SWITCH_LABELS = {
 } satisfies SensorTypeLabels<
   (typeof INDUCTIVE_SWITCH_PARAMETERS)[number]["field"],
   (typeof INDUCTIVE_SWITCH_TAGS)[number]["member"],
-  (typeof DIRECTIONS)[number] | (typeof MATERIALS)[number]
+  (typeof MATERIALS)[number]
 >;

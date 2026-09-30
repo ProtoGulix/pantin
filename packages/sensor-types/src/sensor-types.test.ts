@@ -8,9 +8,10 @@ import {
   type SensorFields,
   SensorFieldsSchema,
   type SensorType,
+  sensorPlacementProblem,
 } from "./schemas.ts";
 import { statesAlong } from "./test-support.ts";
-import { switchZonesOf } from "./zones.ts";
+import { switchDiagramOf, switchZonesOf } from "./zones.ts";
 
 // Sensor types: registries consistent with their schemas (ADR 0023), the
 // encoder, and the ideal switch; the realistic switches are in
@@ -20,14 +21,14 @@ const TYPES = SensorFieldsSchema.options.map((option) => option.shape.type.value
 // The member pattern of the protocol's tag names (tag.ts).
 const MEMBER = /^[a-z][a-z_]{0,31}$/;
 
-// One valid sensor per type, keyed by type: a new type does not compile
-// until it has a sample here.
+// One valid sensor per type on a stroke of 0 to 1, keyed by type: a new type
+// does not compile until it has a sample here.
+const SAMPLE_STROKE = [0, 1] as const;
 const SAMPLES: { readonly [Type in SensorType]: Extract<SensorFields, { type: Type }> } = {
   position_switch: { type: "position_switch", range: [0, 1], normallyClosed: false },
   limit_switch: {
     type: "limit_switch",
     operatingPosition: 1,
-    actuation: "increasing",
     differentialTravel: 0,
     overtravel: 1,
     normallyClosed: false,
@@ -42,7 +43,6 @@ const SAMPLES: { readonly [Type in SensorType]: Extract<SensorFields, { type: Ty
   inductive_switch: {
     type: "inductive_switch",
     facePosition: 1,
-    approach: "increasing",
     nominalDistance: 1,
     material: "steel",
     hysteresisPercent: 10,
@@ -77,12 +77,33 @@ describe("sensor type registries", () => {
   it.each(TYPES)("%s is valid, and evaluates to every tag it declares", (type) => {
     const fields = SAMPLES[type];
     expect(SensorFieldsSchema.safeParse(fields).success).toBe(true);
-    const { values } = evaluateSensor({ fields, position: 0.5, state: null });
+    expect(sensorPlacementProblem(fields, SAMPLE_STROKE)).toBeNull();
+    const { values } = evaluateSensor({
+      fields,
+      position: 0.5,
+      stroke: SAMPLE_STROKE,
+      state: null,
+    });
     expect(Object.keys(values)).toEqual(SENSOR_TAGS[type].map((tag) => tag.member));
   });
 
-  it("gives zones to every switch, and none to the encoder", () => {
-    expect(TYPES.filter((type) => switchZonesOf(SAMPLES[type]) === null)).toEqual(["encoder"]);
+  it("gives zones and a diagram to every switch, and none to the encoder", () => {
+    const withoutZones = TYPES.filter(
+      (type) => switchZonesOf(SAMPLES[type], SAMPLE_STROKE) === null,
+    );
+    const withoutDiagram = TYPES.filter(
+      (type) => switchDiagramOf(SAMPLES[type], SAMPLE_STROKE) === null,
+    );
+    expect([withoutZones, withoutDiagram]).toEqual([["encoder"], ["encoder"]]);
+  });
+
+  it.each(TYPES)("%s labels every dimension of its diagram", (type) => {
+    const dimensions = switchDiagramOf(SAMPLES[type], SAMPLE_STROKE)?.dimensions ?? [];
+    for (const labels of Object.values(SENSOR_LABELS[type])) {
+      for (const { label } of dimensions) {
+        expect(labels.parameters[label] ?? labels.dimensions?.[label]).toBeTruthy();
+      }
+    }
   });
 });
 
@@ -117,7 +138,7 @@ describe("ideal switch", () => {
 describe("encoder", () => {
   const encoder = { type: "encoder", pulsesPerUnit: 1000 } as const;
   const count = (fields: SensorFields, position: number) =>
-    evaluateSensor({ fields, position, state: null }).values.count;
+    evaluateSensor({ fields, position, stroke: null, state: null }).values.count;
 
   it("counts pulses from the reference position, to the nearest pulse, in both directions", () => {
     expect([count(encoder, 0.1234), count(encoder, -0.0126)]).toEqual([123, -13]);

@@ -117,3 +117,23 @@ describe("PantinDocumentSchema sensors", () => {
     expect(issuesOf(withoutSensors)).not.toEqual([]);
   });
 });
+
+describe("PantinDocumentSchema sensor placement", () => {
+  it("refuses a switch its joint's stroke cannot hold, naming both (ADR 0026)", () => {
+    const retracted = {
+      ...extended,
+      id: "retracted",
+      tagKey: "retracted",
+      type: "inductive_switch",
+      facePosition: 0.002,
+      nominalDistance: 0.005,
+      material: "steel",
+      hysteresisPercent: 10,
+    };
+    const { range: _range, ...inductive } = retracted;
+    expect(issuesOf({ ...press, sensors: [inductive] })).toEqual([
+      expect.stringMatching(/^Sensor "retracted" on joint "stroke": The face is inside the stroke/),
+    ]);
+    expect(issuesOf({ ...press, sensors: [{ ...inductive, facePosition: 0 }] })).toEqual([]);
+  });
+});

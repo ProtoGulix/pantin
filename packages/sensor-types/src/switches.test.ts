@@ -1,17 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { type SensorFields, SensorFieldsSchema } from "./schemas.ts";
-import { statesAlong } from "./test-support.ts";
+import { statesAlong, TEST_STROKE } from "./test-support.ts";
 import { switchZonesOf } from "./zones.ts";
 
 // The realistic switches (ADR 0025): each turns on at its datasheet point and
-// back off only past its hysteresis. Positions in metres, mm in the comments.
+// back off only past its hysteresis, on the side its stroke gives it (ADR
+// 0026). Positions in metres, mm in the comments; the stroke is 0 to 100 mm
+// unless a test says otherwise.
 
 describe("mechanical limit switch", () => {
-  // Pressed moving forwards at 98 mm, lets go at 97.5 mm, 2 mm of overtravel.
+  // Near the upper end: pressed moving forwards at 98 mm, lets go at 97.5 mm,
+  // 2 mm of overtravel.
   const limit: SensorFields = {
     type: "limit_switch",
     operatingPosition: 0.098,
-    actuation: "increasing",
     differentialTravel: 0.0005,
     overtravel: 0.002,
     normallyClosed: false,
@@ -25,13 +27,13 @@ describe("mechanical limit switch", () => {
 
   it("stays on pushed past its overtravel, which is only drawn", () => {
     expect(statesAlong(limit, [0.2])).toEqual([1]);
-    expect(switchZonesOf(limit)?.shown).toEqual([0.098, 0.1]);
+    expect(switchZonesOf(limit, TEST_STROKE)?.shown).toEqual([0.098, 0.1]);
   });
 
-  it("is pressed moving backwards the other way round", () => {
-    const back: SensorFields = { ...limit, operatingPosition: 0.002, actuation: "decreasing" };
+  it("is pressed moving backwards near the lower end", () => {
+    const back: SensorFields = { ...limit, operatingPosition: 0.002 };
     expect(statesAlong(back, [0.01, 0.002, 0, 0.0024, 0.0026])).toEqual([0, 1, 1, 1, 0]);
-    expect(switchZonesOf(back)?.shown).toEqual([0, 0.002]);
+    expect(switchZonesOf(back, TEST_STROKE)?.shown).toEqual([0, 0.002]);
   });
 });
 
@@ -53,11 +55,10 @@ describe("magnetic cylinder sensor", () => {
 });
 
 describe("inductive sensor", () => {
-  // Face at 100 mm, Sn 4 mm, 10 % hysteresis, the target coming forwards.
+  // Face at the upper end, 100 mm, Sn 4 mm, 10 % hysteresis: the target comes forwards.
   const inductive: SensorFields = {
     type: "inductive_switch",
     facePosition: 0.1,
-    approach: "increasing",
     nominalDistance: 0.004,
     material: "steel",
     hysteresisPercent: 10,
@@ -73,7 +74,7 @@ describe("inductive sensor", () => {
     const aluminium: SensorFields = { ...inductive, material: "aluminium" };
     // 0.35 × 4 mm = 1.4 mm: on from 98.6 mm.
     expect(statesAlong(aluminium, [0.098, 0.0987])).toEqual([0, 1]);
-    const shown = switchZonesOf(aluminium)?.shown ?? [];
+    const shown = switchZonesOf(aluminium, TEST_STROKE)?.shown ?? [];
     expect(shown[0]).toBeCloseTo(0.0986, 12);
     expect(shown[1]).toBe(0.1);
   });
@@ -91,11 +92,10 @@ describe("realistic switches, the other way round", () => {
     expect(statesAlong(reed, [0.047, 0.05, 0.0529, 0.0531])).toEqual([1, 0, 0, 1]);
   });
 
-  it("detects a target coming backwards onto an inductive face", () => {
+  it("detects a target coming backwards onto a face at the lower end", () => {
     const inductive: SensorFields = {
       type: "inductive_switch",
       facePosition: 0,
-      approach: "decreasing",
       nominalDistance: 0.004,
       material: "steel",
       hysteresisPercent: 10,
@@ -103,7 +103,7 @@ describe("realistic switches, the other way round", () => {
     };
     // On at 4 mm, off beyond 4.4 mm.
     expect(statesAlong(inductive, [0.005, 0.004, 0.0043, 0.0045])).toEqual([0, 1, 1, 0]);
-    expect(switchZonesOf(inductive)?.shown).toEqual([0, 0.004]);
+    expect(switchZonesOf(inductive, TEST_STROKE)?.shown).toEqual([0, 0.004]);
   });
 });
 
@@ -114,7 +114,6 @@ const REFUSED: [string, object][] = [
     {
       type: "limit_switch",
       operatingPosition: 0,
-      actuation: "increasing",
       differentialTravel: 0,
       overtravel: 0,
     },
@@ -124,7 +123,6 @@ const REFUSED: [string, object][] = [
     {
       type: "limit_switch",
       operatingPosition: 0,
-      actuation: "increasing",
       differentialTravel: -1,
       overtravel: 1,
     },
@@ -135,7 +133,6 @@ const REFUSED: [string, object][] = [
     {
       type: "inductive_switch",
       facePosition: 0,
-      approach: "increasing",
       nominalDistance: 0,
       material: "steel",
       hysteresisPercent: 10,
@@ -146,7 +143,6 @@ const REFUSED: [string, object][] = [
     {
       type: "inductive_switch",
       facePosition: 0,
-      approach: "increasing",
       nominalDistance: 1,
       material: "steel",
       hysteresisPercent: 60,
@@ -157,7 +153,6 @@ const REFUSED: [string, object][] = [
     {
       type: "inductive_switch",
       facePosition: 0,
-      approach: "increasing",
       nominalDistance: 1,
       material: "gold",
       hysteresisPercent: 10,

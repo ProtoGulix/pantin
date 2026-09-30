@@ -110,12 +110,11 @@ describe("end-of-stroke switches", () => {
       joint: "slide",
       type: "limit_switch",
       operatingPosition: 0.002,
-      actuation: "decreasing",
       differentialTravel: 0.0005,
       overtravel: 0.002,
       normallyClosed: false,
     });
-    expect(upper).toMatchObject({ name: "Slide max", actuation: "increasing" });
+    expect(upper).toMatchObject({ name: "Slide max" });
     expect(Reflect.get(upper ?? {}, "operatingPosition")).toBeCloseTo(0.098, 12);
   });
 

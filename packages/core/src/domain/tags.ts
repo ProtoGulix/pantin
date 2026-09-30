@@ -15,6 +15,7 @@ import { evaluateSensor, type SensorOutput } from "@pantin/sensor-types/evaluato
 import { ApiError } from "../errors.ts";
 import { isMovableJoint } from "./joint-types/registry.ts";
 import { currentJointPosition } from "./kinematics.ts";
+import { jointStroke } from "./sensor-step.ts";
 
 // Every tag of a Pantin, named "<assembly>.<tagKey>.<member>" (ADR 0019).
 // A movable joint has a "position" feedback, and a "setpoint" command while
@@ -130,7 +131,14 @@ function currentValue(entry: TagEntry, runtime: TagRuntime): number {
   if (owner.kind === "sensor") {
     const stepped = runtime.sensorOutputs.get(owner.sensor.id);
     const position = currentJointPosition(owner.joint, runtime.jointPositions);
-    const output = stepped ?? evaluateSensor({ fields: owner.sensor, position, state: null });
+    const output =
+      stepped ??
+      evaluateSensor({
+        fields: owner.sensor,
+        position,
+        stroke: jointStroke(owner.joint),
+        state: null,
+      });
     return output.values[member] ?? 0;
   }
   const values = entry.direction === "command" ? runtime.driveCommands : runtime.driveFeedback;
