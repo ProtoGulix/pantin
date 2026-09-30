@@ -225,6 +225,15 @@ importers:
       '@pantin/drive-types':
         specifier: workspace:*
         version: link:../drive-types
+      '@pantin/sensor-types':
+        specifier: workspace:*
+        version: link:../sensor-types
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
+  packages/sensor-types:
+    dependencies:
       zod:
         specifier: 4.6.5
         version: 4.6.5

@@ -33,6 +33,7 @@ describe("workspace packages", () => {
       "core",
       "drive-types",
       "protocol",
+      "sensor-types",
       "step-converter",
       "viewer",
     ]);

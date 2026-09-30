@@ -1,0 +1,16 @@
+{
+  "name": "@pantin/sensor-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "One folder per sensor type: schema, pure evaluation, labels (ADR 0023).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./schemas": "./src/schemas.ts",
+    "./evaluators": "./src/evaluators.ts",
+    "./labels": "./src/labels.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  }
+}

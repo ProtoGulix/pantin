@@ -19,12 +19,12 @@ module.exports = {
     {
       name: "protocol-has-no-workspace-dependency",
       comment:
-        "protocol is the shared contract: it imports no other Pantin package, but the drive type schemas (ADR 0022).",
+        "protocol is the shared contract: it imports no other Pantin package, but the drive and sensor type schemas (ADR 0022, 0023).",
       severity: "error",
       from: { path: "^packages/protocol/" },
       to: {
         path: "^packages/(?!protocol/)|^@pantin/(?!protocol$)",
-        pathNot: "^packages/drive-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$",
+        pathNot: "^packages/(drive|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$",
       },
     },
     {
@@ -48,6 +48,32 @@ module.exports = {
       from: { path: "^packages/drive-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$" },
       // Through any chain of imports, not only a direct one.
       to: { path: "behaviour", reachable: true },
+    },
+    {
+      name: "sensor-types-has-no-workspace-dependency",
+      comment: "A sensor type folder must be shareable alone: it depends on Zod only (ADR 0023).",
+      severity: "error",
+      from: { path: "^packages/sensor-types/" },
+      to: { path: "^packages/(?!sensor-types/)|^@pantin/" },
+    },
+    {
+      name: "viewer-runs-no-sensor-evaluation",
+      comment:
+        "The viewer shows sensor values read from the core, it never computes them (CLAUDE.md section 3.2).",
+      severity: "error",
+      from: { path: "^packages/viewer/" },
+      to: {
+        path: "^packages/sensor-types/src/(evaluators|evaluation-common|[^/]+/evaluate)\\.ts$",
+      },
+    },
+    {
+      name: "sensor-type-schemas-hold-no-logic",
+      comment:
+        "The protocol imports the schemas: they must never reach the evaluations (ADR 0023).",
+      severity: "error",
+      from: { path: "^packages/sensor-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$" },
+      // Through any chain of imports, not only a direct one.
+      to: { path: "evaluat", reachable: true },
     },
     {
       name: "no-circular",
