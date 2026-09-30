@@ -38,6 +38,7 @@ Exigences fortes :
 Monorepo :
 
     packages/protocol    schémas Zod (source de vérité), types dérivés, JSON Schema exporté. Aucune logique.
+    packages/drive-types un dossier par type de drive : schéma, comportement, libellés (ADR 0022)
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
     packages/bridge      pont vers les automates (protocoles industriels)
@@ -50,7 +51,7 @@ Monorepo :
 
 Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/bridge, @pantin/cli) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
 
-Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer, bridge et cli. core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API.
+Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer, bridge et cli. core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types (sans logique), jamais leurs comportements (ADR 0022).
 
 Stack proposée (à confirmer en phase 0) :
 
