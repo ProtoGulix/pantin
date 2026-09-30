@@ -1,39 +1,20 @@
 import type { CreateSensorRequest, PantinResponse, Sensor } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import type { PantinApiClient } from "../api-client.ts";
-import type { Viewport } from "../scene/viewport.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { jointNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
+import { testStore } from "./controller-test-helpers.ts";
 import { refreshTagValues } from "./drive-commands.ts";
 import { addEndSwitches } from "./sensor-actions.ts";
-import { ViewerStore } from "./viewer-store.ts";
+import type { ViewerStore } from "./viewer-store.ts";
 
 // End-of-stroke switches from a joint's context menu (ADR 0023 point 7): the
 // viewer must show every switch the core kept, even when the second fails.
 // And the tag reads that light the sensors in 3D (ADR 0024).
 
-// Every port method does nothing: this test reads the store's state only.
-function silent<Port extends object>(): Port {
-  // A Proxy has no static type: each property it returns is a no-op function,
-  // which is all the store calls on these ports.
-  return new Proxy({}, { get: () => () => undefined }) as Port;
-}
-
 function storeWith(api: Partial<PantinApiClient>, pantin: PantinResponse): ViewerStore {
-  const store = new ViewerStore(
-    {
-      // Only the calls this test makes: the others would fail loudly as undefined.
-      api: api as PantinApiClient,
-      renderPanel: () => undefined,
-      showJointPositions: () => undefined,
-      showTagValues: () => undefined,
-      viewport: () => silent<Viewport>(),
-      poseStream: { follow: () => undefined },
-      storeLanguage: () => undefined,
-    },
-    "fr",
-  );
+  const store = testStore(api);
   store.requestedPantinId = pantin.id;
   store.state = withOpenPantin(store.state, pantin);
   return store;

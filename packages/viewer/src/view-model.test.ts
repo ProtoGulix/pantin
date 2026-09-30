@@ -180,22 +180,23 @@ describe("list and edit views", () => {
     listSelectedPantinId: "robot",
   };
 
-  it("shows the Pantin list, and no tree, when no Pantin is open", () => {
+  it("shows the welcome dialog, and no tree, when no Pantin is open", () => {
     const view = buildPanelView(listing);
     expect(view.mode).toBe("list");
     expect(view.treeRows).toEqual([]);
-    expect(view.listRows).toEqual([
-      { id: "press", name: "Press", detail: "press · 1 corps", selected: false },
-      { id: "robot", name: "Robot", detail: "robot · 4 corps", selected: true },
+    expect(view.welcome.visible).toBe(true);
+    expect(view.welcome.rows.map((row) => [row.id, row.selected])).toEqual([
+      ["robot", true],
+      ["press", false],
     ]);
-    expect(view.toolbar.openEnabled).toBe(true);
     expect(view.viewportHint).toContain("Ouvrez un Pantin");
   });
 
-  it("shows the tree of the open Pantin, and no list, in the edit view", () => {
+  it("shows the tree of the open Pantin, and no welcome dialog, in the edit view", () => {
     const view = buildPanelView(opened(false));
     expect(view.mode).toBe("edit");
-    expect(view.listRows).toEqual([]);
+    expect(view.welcome.visible).toBe(false);
+    expect(view.welcome.rows).toEqual([]);
     expect(view.treeRows[0]?.label).toBe("Press");
   });
 

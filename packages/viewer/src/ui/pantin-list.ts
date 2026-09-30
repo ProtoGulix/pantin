@@ -1,11 +1,11 @@
 import type { Translate } from "../i18n/translate.ts";
 import { listCommandForKey } from "../panel/list-navigation.ts";
-import type { PantinListRowView } from "../view-model.ts";
+import type { PantinListRowView } from "../panel/welcome-model.ts";
 import { element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
-// The list view (role=listbox): every Pantin with its id and body count.
+// The "All Pantins" list (role=listbox): each Pantin with its id, body count and date.
 // Built once and fed by delegation, like the tree; a double-click, Enter or
 // the Open button opens a Pantin. A row is kept across redraws and only its
 // selection updated: pressing Open selects the row, and a row rebuilt
@@ -13,7 +13,6 @@ import type { PanelIntents } from "./panel-intents.ts";
 
 export interface PantinList {
   element: HTMLElement;
-  listbox: HTMLElement;
   render(rows: readonly PantinListRowView[], translate: Translate, intents: PanelIntents): void;
 }
 
@@ -123,26 +122,15 @@ export function createPantinList(): PantinList {
     className: "pantin-list",
     attributes: { role: "listbox", tabindex: "0" },
   });
-  const emptyMessage = element("p", { className: "pane-empty" });
-  const title = element("h2", { className: "pane__title" });
-  const container = element("section", { className: "pane pane--list" }, [
-    title,
-    emptyMessage,
-    listbox,
-  ]);
   const current: Current = { rows: [], intents: null, elements: new Map() };
   listen(listbox, current);
   return {
-    element: container,
-    listbox,
+    element: listbox,
     render: (rows, translate, intents) => {
       current.rows = rows;
       current.intents = intents;
-      title.textContent = translate("list.title");
       listbox.setAttribute("aria-label", translate("list.label"));
       updateRows(listbox, current, translate);
-      emptyMessage.textContent = translate("list.empty");
-      emptyMessage.hidden = rows.length > 0;
       const selectedIndex = rows.findIndex((row) => row.selected);
       listbox.toggleAttribute("aria-activedescendant", selectedIndex >= 0);
       if (selectedIndex >= 0) {

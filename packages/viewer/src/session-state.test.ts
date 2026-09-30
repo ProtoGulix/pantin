@@ -12,6 +12,10 @@ import {
   withJointDeleted,
   withListSelection,
   withPantinClosed,
+  withWelcomeFilter,
+  withWelcomeHidden,
+  withWelcomeShown,
+  withWelcomeTab,
 } from "./session-state.ts";
 import {
   hingeJoint,
@@ -184,5 +188,27 @@ describe("deleting a joint", () => {
       pendingDeleteJointId: null,
     });
     expect(deleted.message?.key).toBe("message.jointDeleted");
+  });
+});
+
+describe("welcome dialog state (ADR 0027)", () => {
+  it("hides, dropping a half-typed Pantin name, and shows again on the asked tab", () => {
+    const hidden = withWelcomeHidden({ ...listing, creatingPantin: true });
+    expect(hidden).toMatchObject({ welcomeHidden: true, creatingPantin: false });
+    expect(withWelcomeShown(hidden, "all")).toMatchObject({
+      welcomeHidden: false,
+      welcomeTab: "all",
+    });
+    expect(withWelcomeShown({ ...hidden, welcomeTab: "all" }).welcomeTab).toBe("all");
+  });
+
+  it("keeps the tab and the filter", () => {
+    const state = withWelcomeFilter(withWelcomeTab(listing, "all"), "rob");
+    expect(state).toMatchObject({ welcomeTab: "all", welcomeFilter: "rob" });
+  });
+
+  it("comes back when a Pantin is closed", () => {
+    const closed = withPantinClosed({ ...editing(false), welcomeHidden: true });
+    expect(closed.welcomeHidden).toBe(false);
   });
 });

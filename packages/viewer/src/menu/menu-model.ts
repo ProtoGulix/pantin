@@ -6,6 +6,7 @@ import type { ViewerState } from "../viewer-state.ts";
 // Adding an item (e.g. Fichier > Exporter) is adding one entry to MENUS.
 
 export type MenuCommand =
+  | "welcome"
   | "open"
   | "save"
   | "import"
@@ -82,6 +83,7 @@ const MENUS: readonly MenuDefinition[] = [
     id: "file",
     labelKey: "menubar.file",
     entries: [
+      item("welcome", "menubar.file.welcome", (context) => !context.editing),
       item("open", "menubar.file.open", (context) => !context.busy),
       item(
         "save",
@@ -256,4 +258,20 @@ export function shortcutForKeyPress(state: ViewerState, press: KeyPress): Shortc
     }
   }
   return null;
+}
+
+export interface ShortcutListing {
+  keys: string;
+  action: string;
+}
+
+/** The keyboard shortcuts of the menus, for the welcome dialog's resources. */
+export function listShortcuts(translate: Translate): ShortcutListing[] {
+  return MENUS.flatMap((menu) =>
+    menu.entries.flatMap((entry) =>
+      entry === "separator" || entry.shortcut === undefined
+        ? []
+        : [{ keys: translate(entry.shortcut.labelKey), action: entry.label(translate) }],
+    ),
+  );
 }

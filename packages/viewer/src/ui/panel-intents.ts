@@ -1,6 +1,7 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
+import type { WelcomeTab } from "../viewer-state.ts";
 
 // What the user asks for from the menu bar and the left panel. Components
 // only raise intents; the controller decides what to call and how the state
@@ -8,11 +9,16 @@ import type { EditTarget } from "../properties/property-rows.ts";
 export interface PanelIntents {
   runMenuCommand(command: MenuCommand): void;
 
-  // List view.
+  // The welcome dialog (ADR 0027), shown while no Pantin is open.
   selectListPantin(pantinId: string): void;
   openPantin(pantinId: string): void;
   toggleCreatePantin(): void;
   createPantin(name: string): void;
+  // Creates a Pantin named after the file, then starts importing it.
+  createPantinFromFile(file: File): void;
+  hideWelcome(): void;
+  selectWelcomeTab(tab: WelcomeTab): void;
+  setWelcomeFilter(text: string): void;
 
   // Edit view.
   requestClose(): void;

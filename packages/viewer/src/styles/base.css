@@ -47,6 +47,8 @@ body {
   flex: 1;
   /* The last column is the drives panel: nothing while it is hidden. */
   grid-template-columns: var(--panel-width, 320px) 4px minmax(0, 1fr) auto;
+  /* One row, the height left by the menu bar: the canvas never stretches it. */
+  grid-template-rows: minmax(0, 1fr);
   min-height: 0;
 }
 

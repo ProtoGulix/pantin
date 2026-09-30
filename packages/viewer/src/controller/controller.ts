@@ -1,10 +1,16 @@
 import { pickedNodeId } from "../assembly-display.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
-import { withListSelection } from "../session-state.ts";
+import {
+  withListSelection,
+  withWelcomeFilter,
+  withWelcomeHidden,
+  withWelcomeTab,
+} from "../session-state.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
+import type { WelcomeTab } from "../viewer-state.ts";
 import {
   createAssembly,
   dropBody,
@@ -17,6 +23,7 @@ import {
   changeImportOptions,
   chooseImportFile,
   confirmImport,
+  createPantinFromFile,
 } from "./import-actions.ts";
 import {
   cancelJointForm,
@@ -61,6 +68,10 @@ function listIntents(store: ViewerStore) {
     toggleCreatePantin: () =>
       store.update({ ...store.state, creatingPantin: !store.state.creatingPantin }),
     createPantin: (name: string) => void createPantin(store, name),
+    createPantinFromFile: (file: File) => void createPantinFromFile(store, file),
+    hideWelcome: () => store.update(withWelcomeHidden(store.state)),
+    selectWelcomeTab: (tab: WelcomeTab) => store.update(withWelcomeTab(store.state, tab)),
+    setWelcomeFilter: (text: string) => store.update(withWelcomeFilter(store.state, text)),
   };
 }
 

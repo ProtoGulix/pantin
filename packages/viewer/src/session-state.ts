@@ -1,10 +1,11 @@
 import type { PantinResponse } from "@pantin/protocol";
 import { infoMessage } from "./messages.ts";
 import { pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
-import { type ViewerState, withOpenPantin } from "./viewer-state.ts";
+import { type ViewerState, type WelcomeTab, withOpenPantin } from "./viewer-state.ts";
 
 // The two views and their transitions, as pure functions. List view: no
-// Pantin open (openPantin null). Edit view: exactly one open Pantin.
+// Pantin open (openPantin null; the welcome dialog, ADR 0027). Edit view:
+// exactly one open Pantin.
 
 export type ViewMode = "list" | "edit";
 
@@ -12,12 +13,13 @@ export function viewModeOf(state: ViewerState): ViewMode {
   return state.openPantin === null ? "list" : "edit";
 }
 
-/** Back to the list: nothing of the closed Pantin stays on screen. */
+/** Back to the welcome dialog: nothing of the closed Pantin stays on screen. */
 export function withPantinClosed(state: ViewerState): ViewerState {
   return {
     ...state,
     listSelectedPantinId: state.openPantin?.id ?? state.listSelectedPantinId,
     openPantin: null,
+    welcomeHidden: false,
     expandedNodeIds: new Set(),
     selectedNodeId: null,
     renamingNodeId: null,
@@ -57,6 +59,24 @@ export function withEditsDiscarded(state: ViewerState, saved: PantinResponse): V
 
 export function withCloseCancelled(state: ViewerState): ViewerState {
   return { ...state, closePrompt: false };
+}
+
+/** Escape or the close button: the empty workspace, without a half-typed name. */
+export function withWelcomeHidden(state: ViewerState): ViewerState {
+  return { ...state, welcomeHidden: true, creatingPantin: false };
+}
+
+/** File > Welcome (or Open… with nothing open): the dialog, on the given tab if any. */
+export function withWelcomeShown(state: ViewerState, tab?: WelcomeTab): ViewerState {
+  return { ...state, welcomeHidden: false, welcomeTab: tab ?? state.welcomeTab };
+}
+
+export function withWelcomeTab(state: ViewerState, welcomeTab: WelcomeTab): ViewerState {
+  return { ...state, welcomeTab };
+}
+
+export function withWelcomeFilter(state: ViewerState, welcomeFilter: string): ViewerState {
+  return { ...state, welcomeFilter };
 }
 
 export function withListSelection(state: ViewerState, pantinId: string | null): ViewerState {

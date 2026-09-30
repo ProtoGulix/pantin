@@ -1,4 +1,5 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
+import { withWelcomeShown } from "../session-state.ts";
 import { toggleDrivePanel } from "./drive-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
@@ -22,7 +23,17 @@ export function runMenuCommand(
   changeLanguage: (language: string) => void,
 ): void {
   switch (command) {
+    case "welcome":
+      store.update(withWelcomeShown(store.state));
+      return;
     case "open":
+      // With nothing open, "Ouvrir…" is the list of the welcome dialog.
+      if (store.state.openPantin === null) {
+        store.update(withWelcomeShown(store.state, "all"));
+      } else {
+        requestClose(store);
+      }
+      return;
     case "close":
       requestClose(store);
       return;

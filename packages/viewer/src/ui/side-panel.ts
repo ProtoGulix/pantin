@@ -9,24 +9,22 @@ import { JointSliderControl } from "./joint-slider.ts";
 import { renderMessageLine } from "./message-line.ts";
 import { type PaneLayout, setUpPaneLayout } from "./pane-layout.ts";
 import type { PanelIntents } from "./panel-intents.ts";
-import { createPantinList, type PantinList } from "./pantin-list.ts";
 import { renderPromptLine } from "./prompt-line.ts";
 import { renderPropertiesGrid } from "./properties-grid.ts";
-import { renderCreatePantinForm, renderToolbar, type ToolbarCallbacks } from "./toolbar.ts";
+import { renderToolbar, type ToolbarCallbacks } from "./toolbar.ts";
 import { createTreeView, type TreeView } from "./tree-view.ts";
 
-// The left panel: quick-access bar, inline forms, then either the Pantin list
-// (list view) or the tree and properties (edit view), a confirmation line and
-// the message line. The skeleton is built once (so the tree and the list keep
-// keyboard focus); each region is redrawn from the PanelView on every change.
+// The left panel: quick-access bar, inline forms, the tree and properties, a
+// confirmation line and the message line. It exists only while a Pantin is
+// open: with none, the welcome dialog replaces it (ADR 0027). The skeleton is
+// built once (so the tree keeps keyboard focus); each region is redrawn from
+// the PanelView on every change.
 
 export class SidePanel {
   private readonly panel: HTMLElement;
   private readonly toolbarHost = element("div", { className: "panel-header" });
   private readonly formHost = element("div", { className: "form-host" });
   private readonly treeView: TreeView = createTreeView();
-  private readonly pantinList: PantinList = createPantinList();
-  private readonly paneStack: HTMLElement;
   private readonly promptHost = element("div", { className: "prompt-host" });
   private readonly propertiesTitle = element("h2", { className: "pane__title" });
   private readonly jointSlider = new JointSliderControl();
@@ -37,11 +35,11 @@ export class SidePanel {
     className: "visually-hidden",
     attributes: { type: "file", accept: IMPORT_FILE_ACCEPT, tabindex: "-1" },
   });
+  private readonly layoutRoot: HTMLElement;
   private readonly layout: PaneLayout;
   private intents: PanelIntents | null = null;
   private importTarget: string | null = null;
-  // Focus moves into the create form or the menu only when they appear.
-  private wasCreating = false;
+  // Focus moves into the menu or the prompt only when they appear.
   private previousMenuKey: string | null = null;
   private hadPrompt = false;
   // Shared with the menu bar, whose Importer… opens the same file picker.
@@ -54,6 +52,7 @@ export class SidePanel {
 
   constructor(panel: HTMLElement, layoutRoot: HTMLElement) {
     this.panel = panel;
+    this.layoutRoot = layoutRoot;
     const treePane = element("section", { className: "pane pane--tree" }, [this.treeView.tree]);
     const propertiesPane = element("section", { className: "pane pane--properties" }, [
       this.propertiesTitle,
@@ -61,11 +60,9 @@ export class SidePanel {
       this.propertiesBody,
     ]);
     const paneStack = element("div", { className: "pane-stack" }, [treePane, propertiesPane]);
-    this.paneStack = paneStack;
     panel.replaceChildren(
       this.toolbarHost,
       this.formHost,
-      this.pantinList.element,
       paneStack,
       this.promptHost,
       this.messageHost,
@@ -81,13 +78,9 @@ export class SidePanel {
     this.intents = intents;
     const focus = captureFocus(this.panel);
     const { translate } = view;
-    const openSelected = () => {
-      const selected = view.listRows.find((row) => row.selected);
-      if (selected !== undefined) {
-        intents.openPantin(selected.id);
-      }
-    };
-    this.toolbarHost.replaceChildren(renderToolbar(view, intents, this.callbacks, openSelected));
+    // Without a Pantin the panel and its splitter leave the layout (welcome.css).
+    this.layoutRoot.classList.toggle("layout--welcome", view.mode === "list");
+    this.toolbarHost.replaceChildren(renderToolbar(view, intents, this.callbacks));
     this.renderForms(view, intents);
     this.renderViewContent(view, intents);
     this.renderPrompt(view, intents);
@@ -99,17 +92,16 @@ export class SidePanel {
     restoreFocus(this.panel, focus);
   }
 
-  // Only one of the two views is visible; the hidden one keeps its elements.
   private renderViewContent(view: PanelView, intents: PanelIntents): void {
     const { translate } = view;
-    const listing = view.mode === "list";
-    this.pantinList.element.hidden = !listing;
-    this.paneStack.hidden = listing;
-    this.pantinList.render(view.listRows, translate, intents);
     this.treeView.render(view.treeRows, view.language, translate, intents);
     this.propertiesTitle.textContent = translate("properties.label");
     this.jointSlider.render(view.jointSlider, translate, intents);
     this.propertiesBody.replaceChildren(renderPropertiesGrid(view.properties, translate, intents));
+  }
+
+  focusTree(): void {
+    this.treeView.tree.focus();
   }
 
   showJointPositions(positions: ReadonlyMap<string, number>): void {
@@ -128,20 +120,11 @@ export class SidePanel {
 
   private renderForms(view: PanelView, intents: PanelIntents): void {
     const { translate } = view;
-    const createForm = view.toolbar.creatingPantin
-      ? renderCreatePantinForm(translate, intents)
-      : null;
     const importForm =
       view.importForm === null ? null : renderImportForm(view.importForm, translate, intents);
     const jointForm =
       view.jointForm === null ? null : renderJointForm(view.jointForm, translate, intents);
-    this.formHost.replaceChildren(
-      ...[createForm, importForm, jointForm].filter((form) => form !== null),
-    );
-    if (createForm !== null && !this.wasCreating) {
-      createForm.querySelector("input")?.focus();
-    }
-    this.wasCreating = createForm !== null;
+    this.formHost.replaceChildren(...[importForm, jointForm].filter((form) => form !== null));
   }
 
   private renderMenu(view: PanelView, intents: PanelIntents): void {

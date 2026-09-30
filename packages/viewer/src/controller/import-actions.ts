@@ -1,10 +1,10 @@
 import type { Body } from "@pantin/protocol";
 import { LengthUnitSchema, UpAxisSchema } from "@pantin/protocol";
 import { pluralKey } from "../i18n/translate.ts";
-import { buildImportQuery, createPendingImport } from "../import-options.ts";
+import { buildImportQuery, createPendingImport, pantinNameFromFile } from "../import-options.ts";
 import { errorMessage, infoMessage } from "../messages.ts";
 import { withImportedBodies, withImportFailed, withImportStarted } from "../viewer-state.ts";
-import { editPantin } from "./pantin-actions.ts";
+import { createPantin, editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The import flow: pick a file, adjust options in the inline form, send it.
@@ -13,6 +13,7 @@ export function chooseImportFile(
   store: ViewerStore,
   file: File,
   targetPantinId: string | null,
+  keepMessage = false,
 ): void {
   const pendingImport = createPendingImport(file.name);
   if (pendingImport === null) {
@@ -28,7 +29,31 @@ export function chooseImportFile(
     return;
   }
   store.pendingImportFile = file;
-  store.update({ ...store.state, pendingImport, message: null });
+  store.update({
+    ...store.state,
+    pendingImport,
+    message: keepMessage ? store.state.message : null,
+  });
+}
+
+/**
+ * "Depuis un fichier 3D" of the welcome dialog (ADR 0027): a Pantin named
+ * after the file is created and opened, then the file goes through the usual
+ * import form (unit and up axis), so nothing is sent without the user's say.
+ */
+export async function createPantinFromFile(store: ViewerStore, file: File): Promise<void> {
+  const name = pantinNameFromFile(file.name);
+  if (createPendingImport(file.name) === null || name === "") {
+    store.update({
+      ...store.state,
+      message: errorMessage("message.unsupportedFile", { fileName: file.name }),
+    });
+    return;
+  }
+  if (await createPantin(store, name)) {
+    // Keeps an error of the list refresh that followed the creation.
+    chooseImportFile(store, file, null, true);
+  }
 }
 
 // Form values are external input: validated by the contract's schemas.

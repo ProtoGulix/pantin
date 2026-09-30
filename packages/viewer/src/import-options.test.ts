@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { buildImportQuery, createPendingImport, detectSourceFormat } from "./import-options.ts";
+import {
+  buildImportQuery,
+  createPendingImport,
+  detectSourceFormat,
+  pantinNameFromFile,
+} from "./import-options.ts";
 
 describe("import options", () => {
+  it("names a Pantin after its file, without the last extension", () => {
+    expect(pantinNameFromFile("3630 rail.step")).toBe("3630 rail");
+    expect(pantinNameFromFile("robot.v2.glb")).toBe("robot.v2");
+    expect(pantinNameFromFile("noextension")).toBe("noextension");
+    expect(pantinNameFromFile("  .glb")).toBe("");
+    expect(pantinNameFromFile(`${"a".repeat(250)}.stl`)).toBe("a".repeat(200));
+  });
+
   it("detects the format from the extension, case insensitive", () => {
     expect(detectSourceFormat("rail.GLB")).toBe("glb");
     expect(detectSourceFormat("carriage.stl")).toBe("stl");

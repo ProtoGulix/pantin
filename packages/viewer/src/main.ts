@@ -16,6 +16,7 @@ import { MenuBar } from "./ui/menu-bar.ts";
 import type { PanelIntents } from "./ui/panel-intents.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
 import { SidePanel } from "./ui/side-panel.ts";
+import { WelcomeDialog } from "./ui/welcome-dialog.ts";
 import type { PanelView } from "./view-model.ts";
 
 // Composition root: the only place that touches the page, the real fetch and
@@ -36,12 +37,19 @@ interface Screen {
   showTagValues(values: ReadonlyMap<string, number>): void;
 }
 
-// Everything drawn from the view: menu bar, left panel, texts of index.html.
+// Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
 function createScreen(): Screen {
   const panel = requireElement("#side-panel", HTMLElement);
   const canvas = requireElement("#viewport-canvas", HTMLCanvasElement);
   const hint = requireElement("#viewport-hint", HTMLElement);
   const sidePanel = new SidePanel(panel, requireElement(".layout", HTMLElement));
+  const welcome = new WelcomeDialog(requireElement("#welcome", HTMLElement), (mode) => {
+    if (mode === "edit") {
+      sidePanel.focusTree();
+    } else {
+      canvas.focus();
+    }
+  });
   const drivePanel = new DrivePanel(requireElement("#drive-panel", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
@@ -53,6 +61,7 @@ function createScreen(): Screen {
       hint.textContent = view.viewportHint;
       menuBar.render(view.menus, view.translate, intents);
       sidePanel.render(view, intents);
+      welcome.render(view, intents);
       drivePanel.render(view.drivePanel, view.translate, intents);
     },
     showJointPositions: (positions) => sidePanel.showJointPositions(positions),

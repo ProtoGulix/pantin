@@ -7,6 +7,7 @@ import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-
 import {
   buildMenuBar,
   type KeyPress,
+  listShortcuts,
   type MenuCommand,
   shortcutForKeyPress,
 } from "./menu-model.ts";
@@ -42,6 +43,7 @@ describe("menu bar model", () => {
       entry.type === "item" ? [[entry.label, entry.shortcutLabel]] : [],
     );
     expect(file).toEqual([
+      ["Accueil", null],
       ["Ouvrir…", null],
       ["Enregistrer", "Ctrl+S"],
       ["Importer…", null],
@@ -49,8 +51,9 @@ describe("menu bar model", () => {
     ]);
   });
 
-  it("in the list view, only opens, frames nothing and switches language", () => {
-    expect(enabledCommands(listing)).toEqual(["open", "language:fr", "language:en"]);
+  it("in the list view, shows the welcome dialog, opens, frames nothing and switches language", () => {
+    expect(enabledCommands(listing)).toEqual(["welcome", "open", "language:fr", "language:en"]);
+    expect(enabledCommands(editing(false))).not.toContain("welcome");
   });
 
   it("enables Enregistrer only with unsaved changes", () => {
@@ -125,5 +128,15 @@ describe("keyboard shortcuts", () => {
   it("needs the exact modifiers", () => {
     expect(shortcutForKeyPress(onBody, press("s"))).toBeNull();
     expect(shortcutForKeyPress(onBody, press("s", { ctrlKey: true, altKey: true }))).toBeNull();
+  });
+});
+
+describe("shortcut listing", () => {
+  it("names the keys and the action of every shortcut", () => {
+    expect(listShortcuts(translate)).toEqual([
+      { keys: "Ctrl+S", action: "Enregistrer" },
+      { keys: "F2", action: "Renommer" },
+      { keys: "Suppr", action: "Supprimer" },
+    ]);
   });
 });

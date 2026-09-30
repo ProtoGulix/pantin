@@ -18,6 +18,19 @@ const EXTENSION_TO_FORMAT: Readonly<Record<string, SourceFormat>> = {
 
 export const IMPORT_FILE_ACCEPT = ".glb,.stl,.stp,.step";
 
+// The core's limit for a display name (DisplayNameSchema).
+const PANTIN_NAME_MAX_LENGTH = 200;
+
+/**
+ * The name of the Pantin created from a file: its file name without the
+ * extension, cut to the core's limit. Empty when nothing is left.
+ */
+export function pantinNameFromFile(fileName: string): string {
+  const dotIndex = fileName.lastIndexOf(".");
+  const stem = (dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName).trim();
+  return stem.slice(0, PANTIN_NAME_MAX_LENGTH).trim();
+}
+
 export function detectSourceFormat(fileName: string): SourceFormat | null {
   const dotIndex = fileName.lastIndexOf(".");
   if (dotIndex <= 0) {

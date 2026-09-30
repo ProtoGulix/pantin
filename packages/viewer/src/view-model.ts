@@ -1,4 +1,4 @@
-import { createTranslator, type Language, pluralKey, type Translate } from "./i18n/translate.ts";
+import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildJointSlider, type JointSliderSpec } from "./joints/slider-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
@@ -7,6 +7,7 @@ import { buildDrivePanelView, type DrivePanelView } from "./panel/drive-panel-mo
 import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
 import { buildJointFormView, type JointFormView } from "./panel/joint-form-model.ts";
 import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
+import { buildWelcomeView, type WelcomeView } from "./panel/welcome-model.ts";
 import { buildPropertyGroups } from "./properties/properties-model.ts";
 import type { PropertyGroup } from "./properties/property-rows.ts";
 import { type ViewMode, viewModeOf } from "./session-state.ts";
@@ -21,20 +22,11 @@ import type { ViewerState } from "./viewer-state.ts";
 interface ToolbarView {
   mode: ViewMode;
   busy: boolean;
-  creatingPantin: boolean;
-  openEnabled: boolean;
   saveEnabled: boolean;
   hasUnsavedChanges: boolean;
   importEnabled: boolean;
   frameAllEnabled: boolean;
   frameSelectionEnabled: boolean;
-}
-
-export interface PantinListRowView {
-  id: string;
-  name: string;
-  detail: string;
-  selected: boolean;
 }
 
 export interface MessageView {
@@ -51,8 +43,8 @@ export interface PanelView {
   mode: ViewMode;
   menus: MenuView[];
   toolbar: ToolbarView;
-  // List view only.
-  listRows: PantinListRowView[];
+  // List view only: the welcome dialog (ADR 0027).
+  welcome: WelcomeView;
   // Edit view only.
   treeRows: TreeRow[];
   properties: PropertyGroup[];
@@ -74,29 +66,12 @@ function buildToolbarView(state: ViewerState): ToolbarView {
   return {
     mode: viewModeOf(state),
     busy,
-    creatingPantin: state.creatingPantin,
-    openEnabled: state.listSelectedPantinId !== null && !busy,
     saveEnabled: (state.openPantin?.unsavedChanges ?? false) && !busy,
     hasUnsavedChanges: state.openPantin?.unsavedChanges ?? false,
     importEnabled: state.openPantin !== null && !busy && !state.importInProgress,
     frameAllEnabled: hasBodies,
     frameSelectionEnabled: hasBodies && state.selectedNodeId !== null,
   };
-}
-
-function buildListRows(state: ViewerState, t: Translate): PantinListRowView[] {
-  if (viewModeOf(state) !== "list") {
-    return [];
-  }
-  return state.pantins.map((summary) => ({
-    id: summary.id,
-    name: summary.name,
-    detail: t("list.rowDetail", {
-      id: summary.id,
-      bodyCount: t(pluralKey("tree.bodyCount", summary.bodyCount), { count: summary.bodyCount }),
-    }),
-    selected: summary.id === state.listSelectedPantinId,
-  }));
 }
 
 function buildMessageView(state: ViewerState, t: Translate): MessageView | null {
@@ -133,7 +108,7 @@ export function buildPanelView(state: ViewerState): PanelView {
     mode,
     menus: buildMenuBar(state, translate),
     toolbar: buildToolbarView(state),
-    listRows: buildListRows(state, translate),
+    welcome: buildWelcomeView(state, translate),
     treeRows: flattenTree(buildTree(state, translate), state),
     properties: buildPropertyGroups(
       state,

@@ -21,7 +21,8 @@ export async function openPantin(store: ViewerStore, pantinId: string): Promise<
   );
 }
 
-export async function createPantin(store: ViewerStore, name: string): Promise<void> {
+/** Creates and opens a Pantin; resolves true when the core created it. */
+export async function createPantin(store: ViewerStore, name: string): Promise<boolean> {
   const created = await store.run(
     () => store.ports.api.createPantin(name),
     (current, response) => {
@@ -30,9 +31,11 @@ export async function createPantin(store: ViewerStore, name: string): Promise<vo
       return { ...withOpenPantin(current, response), creatingPantin: false };
     },
   );
-  if (created !== undefined) {
-    await refreshPantinList(store);
+  if (created === undefined) {
+    return false;
   }
+  await refreshPantinList(store);
+  return true;
 }
 
 /** Runs an edit on a Pantin, then shows its fresh state. Undefined on failure. */

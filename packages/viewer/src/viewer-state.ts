@@ -12,6 +12,8 @@ import { nodeExists, withRevealedNode } from "./tree/tree-state.ts";
 // Everything the viewer shows, as plain data. The core stays the source of
 // truth: this is only the last answer it gave, plus purely local UI state.
 
+export type WelcomeTab = "home" | "all";
+
 interface ContextMenuState {
   nodeId: string;
   // Viewport coordinates of the pointer, in CSS pixels.
@@ -39,8 +41,13 @@ export interface ViewerState {
   // Number of requests in flight; actions are disabled while it is not zero.
   pendingRequestCount: number;
   message: PanelMessage | null;
-  // List view: the Pantin highlighted in the list, not opened yet.
+  // "All Pantins" tab: the Pantin highlighted in the list, not opened yet.
   listSelectedPantinId: string | null;
+  // The welcome dialog (ADR 0027), shown while no Pantin is open: hidden by
+  // the user, the tab shown, and the filter typed in "All Pantins". Never persisted.
+  welcomeHidden: boolean;
+  welcomeTab: WelcomeTab;
+  welcomeFilter: string;
   // Edit view: closing with unsaved changes waits for the user's choice.
   closePrompt: boolean;
   // Edit view: a body waiting for the user to confirm its deletion.
@@ -80,6 +87,9 @@ export function initialViewerState(language: Language): ViewerState {
     pendingRequestCount: 0,
     message: null,
     listSelectedPantinId: null,
+    welcomeHidden: false,
+    welcomeTab: "home",
+    welcomeFilter: "",
     closePrompt: false,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,

@@ -1,0 +1,261 @@
+/* Welcome dialog over the empty 3D view (ADR 0027). Tokens in base.css. */
+
+/* No Pantin open: the left panel and its splitter leave the grid. */
+.layout--welcome {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.layout--welcome > .side-panel,
+.layout--welcome > .splitter {
+  display: none;
+}
+
+.welcome-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgb(10 11 14 / 55%);
+}
+
+.welcome-overlay[hidden] {
+  display: none;
+}
+
+.welcome {
+  display: flex;
+  flex-direction: column;
+  width: 760px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow: hidden;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
+}
+
+.welcome__header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.welcome__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.welcome__tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.welcome__tab {
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.welcome__tab:hover,
+.welcome__tab[aria-selected="true"] {
+  color: var(--text);
+}
+
+.welcome__tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+}
+
+.welcome__panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+}
+
+.welcome__panel[hidden] {
+  display: none;
+}
+
+.welcome__panel--all .pantin-list {
+  flex: 1;
+  min-height: 120px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.welcome__panel--all .pantin-list[hidden] {
+  display: none;
+}
+
+.welcome-home {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.welcome-section__title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.welcome-section__subtitle {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.welcome-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.welcome-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 16px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.welcome-tile:hover,
+.welcome-tile[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.welcome-tile__icon {
+  width: 32px;
+  height: 32px;
+  color: var(--accent);
+}
+
+.welcome-tile__label {
+  font-weight: 600;
+}
+
+.welcome-create {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.welcome-lower {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.welcome-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.welcome-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 10px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.welcome-card:hover {
+  border-color: var(--accent);
+}
+
+.welcome-card__icon {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+}
+
+.welcome-card__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome-card__detail {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.welcome-links,
+.welcome-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-link {
+  color: var(--accent);
+}
+
+.welcome-shortcut {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.welcome-shortcut__keys {
+  min-width: 56px;
+  padding: 1px 6px;
+  font-family: var(--font-source);
+  font-size: 11px;
+  text-align: center;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* The list rows, hidden Open button included, come from list-and-prompt.css. */
