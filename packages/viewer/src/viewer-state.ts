@@ -82,7 +82,8 @@ export function initialViewerState(language: Language): ViewerState {
     pendingDeleteJointId: null,
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
-    drivePanelOpen: false,
+    // Shown from the start: the panel is where drives are wired (ADR 0022).
+    drivePanelOpen: true,
     driveForm: null,
     faults: NO_FAULTS,
   };

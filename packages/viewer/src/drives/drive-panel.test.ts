@@ -74,9 +74,9 @@ describe("drive panel view", () => {
   const opened = withOpenPantin(initialViewerState("fr"), { ...response, document });
   const translate = createTranslator("fr");
 
-  it("is closed until asked for, and lists each drive with its tags and joints", () => {
-    expect(buildDrivePanelView(opened, translate).open).toBe(false);
-    const view = buildDrivePanelView({ ...opened, drivePanelOpen: true }, translate);
+  it("is open from the start, closes on demand, and lists each drive with its tags and joints", () => {
+    expect(buildDrivePanelView({ ...opened, drivePanelOpen: false }, translate).open).toBe(false);
+    const view = buildDrivePanelView(opened, translate);
     expect(view.open).toBe(true);
     const [card] = view.drives;
     expect(card).toMatchObject({
