@@ -14,5 +14,5 @@ export const SERVO_AXIS_PARAMETERS = [
 ] as const satisfies readonly DriveParameter[];
 
 export const SERVO_AXIS_TAGS = [
-  { member: "setpoint", type: "float", direction: "command" },
+  { member: "setpoint", type: "float", direction: "command", quantity: "position" },
 ] as const satisfies readonly DriveTag[];

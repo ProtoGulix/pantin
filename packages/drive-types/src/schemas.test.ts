@@ -18,6 +18,8 @@ describe("drive type registries", () => {
     expect(DRIVE_TAGS[type].length).toBeGreaterThan(0);
     for (const tag of DRIVE_TAGS[type]) {
       expect(tag.member).toMatch(MEMBER);
+      // A float tag says what it measures, so that clients can show its unit.
+      expect(tag.type === "float").toBe(tag.quantity !== undefined);
     }
   });
 

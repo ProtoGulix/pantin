@@ -17,5 +17,5 @@ export const MOTOR_ON_OFF_PARAMETERS = [
 export const MOTOR_ON_OFF_TAGS = [
   { member: "run", type: "bit", direction: "command" },
   { member: "reverse", type: "bit", direction: "command" },
-  { member: "speed", type: "float", direction: "feedback" },
+  { member: "speed", type: "float", direction: "feedback", quantity: "speed" },
 ] as const satisfies readonly DriveTag[];

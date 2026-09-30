@@ -19,6 +19,9 @@ export interface DriveTag {
   member: string;
   type: DriveTagType;
   direction: "command" | "feedback";
+  // What a float tag measures, in the joints' unit: a position, or a speed
+  // (per second). Clients show it in mm or degrees; a bit has none.
+  quantity?: "position" | "speed";
 }
 
 // "speed" is per second, "acceleration" per second squared, of the joints'

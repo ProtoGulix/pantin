@@ -12,6 +12,6 @@ export const MOTOR_ANALOG_PARAMETERS = [
 ] as const satisfies readonly DriveParameter[];
 
 export const MOTOR_ANALOG_TAGS = [
-  { member: "speed_setpoint", type: "float", direction: "command" },
-  { member: "speed", type: "float", direction: "feedback" },
+  { member: "speed_setpoint", type: "float", direction: "command", quantity: "speed" },
+  { member: "speed", type: "float", direction: "feedback", quantity: "speed" },
 ] as const satisfies readonly DriveTag[];
