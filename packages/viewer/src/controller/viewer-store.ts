@@ -1,6 +1,7 @@
 import type { DriveRuntime, JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
+import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { Language } from "../i18n/translate.ts";
@@ -64,7 +65,9 @@ export class ViewerStore {
   driveRuntime: ReadonlyMap<string, DriveRuntime> = new Map();
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
-  private readonly buildDiagramModel = createDiagramModelBuilder();
+  // Who is linked to whom in the open document, built once per answer of the core.
+  readonly chainLinksOf = createChainLinksCache();
+  private readonly buildDiagramModel = createDiagramModelBuilder(this.chainLinksOf);
 
   constructor(ports: StorePorts, language: Language) {
     this.ports = ports;
@@ -88,7 +91,7 @@ export class ViewerStore {
     viewport.setSelectedBodies(
       document === undefined || next.openPantin === null
         ? new Set()
-        : highlightedBodyIds(document, next.openPantin.id, {
+        : highlightedBodyIds(document, this.chainLinksOf(document), next.openPantin.id, {
             selectedNodeId: next.selectedNodeId,
             diagramNodeId: next.diagramNodeId,
           }),

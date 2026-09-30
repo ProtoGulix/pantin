@@ -55,3 +55,37 @@ export function defaultFeedPorts(
 export function drivesFeeding(document: PantinDocument, actuatorType: ActuatorType): Drive[] {
   return document.drives.filter((drive) => defaultFeedPorts(actuatorType, drive.type) !== null);
 }
+
+/**
+ * Reading another output port, as swapping two tubes on a machine: when
+ * another input port already reads it, that one takes the port this input
+ * read, so a feed never uses an output port twice.
+ */
+export function withPortSwapped(
+  ports: Readonly<Record<string, string>>,
+  inputPort: string,
+  outputPort: string,
+): Record<string, string> {
+  const previous = ports[inputPort];
+  const swapped: Record<string, string> = {};
+  for (const [name, used] of Object.entries(ports)) {
+    swapped[name] =
+      name === inputPort ? outputPort : used === outputPort && previous ? previous : used;
+  }
+  return swapped;
+}
+
+/**
+ * A whole feed from a drive in which one input port reads the given output
+ * port and the others keep their default; null when the drive cannot feed
+ * every input port of the type.
+ */
+export function feedReading(
+  actuatorType: ActuatorType,
+  driveType: DriveType,
+  inputPort: string,
+  outputPort: string,
+): Record<string, string> | null {
+  const defaults = defaultFeedPorts(actuatorType, driveType);
+  return defaults === null ? null : withPortSwapped(defaults, inputPort, outputPort);
+}

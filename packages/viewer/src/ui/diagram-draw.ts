@@ -15,8 +15,12 @@ export interface DrawnDiagram {
   svg: SVGElement;
   nodes: ReadonlyMap<string, DrawnNode>;
   edges: ReadonlyMap<string, SVGElement>;
+  // Everything that takes the keyboard focus, by its key ("band:", "node:",
+  // "port:", "edge:"), so that the focus survives a redraw without selectors.
+  focusables: ReadonlyMap<string, SVGElement>;
 }
 
+export const HELP_ID = "diagram-help";
 const HEADER_HEIGHT = 28;
 const BAND_INSET = 8;
 
@@ -41,6 +45,7 @@ function drawBand(
       tabindex: 0,
       "aria-expanded": String(!band.collapsed),
       "aria-label": label,
+      "data-focus": `band:${band.key}`,
       transform: `translate(${BAND_INSET} ${band.y})`,
     },
     [
@@ -74,6 +79,18 @@ function drawBand(
   ]);
 }
 
+// Read back from the drawing, which is the one place that says what is focusable.
+function focusablesOf(svg: SVGElement): Map<string, SVGElement> {
+  const found = new Map<string, SVGElement>();
+  for (const item of svg.querySelectorAll("[data-focus]")) {
+    const key = item.getAttribute("data-focus");
+    if (key !== null && item instanceof SVGElement) {
+      found.set(key, item);
+    }
+  }
+  return found;
+}
+
 export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiagram {
   const { diagram, typeLabels, translate: t } = model;
   const drawnNodes = new Map(
@@ -87,7 +104,10 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
     "svg",
     {
       class: "diagram__svg",
-      role: "group",
+      // The diagram has its own keys (arrows, Enter): an application, described by the help text.
+      role: "application",
+      "aria-roledescription": t("diagram.roleDescription"),
+      "aria-describedby": HELP_ID,
       "aria-label": t("diagram.label"),
       width: diagram.width,
       height: diagram.height,
@@ -97,6 +117,7 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
       ...diagram.bands.map((band) => drawBand(band, diagram.width, t, intents)),
       // Wires under the nodes, labels over the wires.
       ...drawnEdges.map(([, drawn]) => drawn.wire),
+      ...drawnEdges.map(([, drawn]) => drawn.hit),
       ...drawnEdges.flatMap(([, drawn]) => (drawn.label === null ? [] : [drawn.label])),
       ...[...drawnNodes.values()].map((drawn) => drawn.group),
     ],
@@ -105,5 +126,6 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
     svg,
     nodes: drawnNodes,
     edges: new Map(drawnEdges.map(([id, drawn]) => [id, drawn.wire])),
+    focusables: focusablesOf(svg),
   };
 }

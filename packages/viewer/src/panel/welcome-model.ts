@@ -1,4 +1,5 @@
 import type { PantinSummary } from "@pantin/protocol";
+import { diagramShortcuts } from "../diagram/diagram-texts.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { listShortcuts, type ShortcutListing } from "../menu/menu-model.ts";
 import { viewModeOf } from "../session-state.ts";
@@ -146,6 +147,6 @@ export function buildWelcomeView(state: ViewerState, t: Translate): WelcomeView 
     rows,
     filter: state.welcomeFilter,
     emptyText: visible ? emptyText(state, rows, t) : null,
-    shortcuts: listShortcuts(t),
+    shortcuts: [...listShortcuts(t), ...diagramShortcuts(t)],
   };
 }

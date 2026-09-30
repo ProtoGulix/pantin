@@ -1,3 +1,5 @@
+import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
+import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
@@ -122,6 +124,13 @@ export interface PanelIntents {
   setDiagramShown(shown: boolean): void;
   toggleDiagramBand(bandKey: string): void;
   selectDiagramNode(nodeId: string): void;
+  // Wiring (ADR 0029 points 6 and 7): two sockets linked, by drag or from
+  // "Relier à…"; the link between two nodes removed; a hint for a key that
+  // has nothing to do; the creation form of a column's "+".
+  linkDiagramNodes(from: Endpoint, to: Endpoint): void;
+  removeDiagramLink(fromNodeId: string, toNodeId: string): void;
+  showDiagramHint(hint: DiagramHint): void;
+  createDiagramElement(kind: DiagramElementKind): void;
 
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;

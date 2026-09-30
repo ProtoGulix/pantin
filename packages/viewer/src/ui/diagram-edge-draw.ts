@@ -9,6 +9,9 @@ import { svgElement } from "./svg-dom.ts";
 
 export interface DrawnEdge {
   wire: SVGElement;
+  // A wide invisible path over the wire: the wire is too thin to click, and it
+  // is what takes the focus and the selection of a link.
+  hit: SVGElement;
   label: SVGElement | null;
 }
 
@@ -22,6 +25,15 @@ export function drawEdge(edge: DiagramEdge, t: Translate): DrawnEdge {
   const wire = svgElement("path", { class: `diagram-edge diagram-edge--${edge.kind}`, d: path }, [
     svgElement("title", {}, [description]),
   ]);
+  const hit = svgElement("path", {
+    class: "diagram-edge__hit",
+    d: path,
+    role: "button",
+    tabindex: -1,
+    "aria-label": description,
+    "data-edge-id": edge.id,
+    "data-focus": `edge:${edge.id}`,
+  });
   const anchor = edge.labelAnchor;
   const label =
     edge.label === undefined || anchor === undefined
@@ -36,5 +48,5 @@ export function drawEdge(edge: DiagramEdge, t: Translate): DrawnEdge {
           },
           [edge.label],
         );
-  return { wire, label };
+  return { wire, hit, label };
 }

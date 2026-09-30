@@ -1,6 +1,7 @@
 import type { PantinResponse } from "@pantin/protocol";
 import { infoMessage } from "./messages.ts";
 import { pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
+import { withSelectedNode } from "./tree/tree-state.ts";
 import { type ViewerState, type WelcomeTab, withOpenPantin } from "./viewer-state.ts";
 
 // The two views and their transitions, as pure functions. List view: no
@@ -29,6 +30,7 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     closePrompt: false,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingFeedReplacement: null,
     jointForm: null,
   };
 }
@@ -45,6 +47,7 @@ export function withCloseRequested(state: ViewerState): ViewerState {
         contextMenu: null,
         pendingDeleteBodyId: null,
         pendingDeleteJointId: null,
+        pendingFeedReplacement: null,
       }
     : withPantinClosed(state);
 }
@@ -99,10 +102,11 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     return state;
   }
   return {
-    ...state,
+    // Through withSelectedNode: a node clicked in the diagram must not stay selected there.
+    ...withSelectedNode(state, nodeId),
     pendingDeleteBodyId: bodyExists ? bodyId : null,
     pendingDeleteJointId: jointExists ? jointId : null,
-    selectedNodeId: nodeId,
+    pendingFeedReplacement: null,
     contextMenu: null,
     closePrompt: false,
   };

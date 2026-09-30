@@ -1,6 +1,7 @@
 import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
+import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
@@ -20,6 +21,15 @@ interface ContextMenuState {
   // Viewport coordinates of the pointer, in CSS pixels.
   x: number;
   y: number;
+}
+
+// A link drawn in the diagram that replaces a whole feed, waiting for the
+// user to confirm (ADR 0029 point 6). The endpoints are kept, not the edit:
+// the edit is rebuilt from the document as it is when the user answers.
+interface PendingDiagramLink {
+  from: Endpoint;
+  to: Endpoint;
+  replaced: ReplacedFeed;
 }
 
 export interface ViewerState {
@@ -73,6 +83,7 @@ export interface ViewerState {
   diagramShown: boolean;
   collapsedDiagramBands: ReadonlySet<string>;
   diagramNodeId: string | null;
+  pendingFeedReplacement: PendingDiagramLink | null;
 }
 
 // Faults are runtime state of the core, cleared when a Pantin opens.
@@ -112,6 +123,7 @@ export function initialViewerState(language: Language): ViewerState {
     diagramShown: false,
     collapsedDiagramBands: new Set(),
     diagramNodeId: null,
+    pendingFeedReplacement: null,
   };
 }
 
@@ -146,6 +158,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     diagramShown: false,
     collapsedDiagramBands: new Set(),
     diagramNodeId: null,
+    pendingFeedReplacement: null,
   };
 }
 

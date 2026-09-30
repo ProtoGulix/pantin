@@ -1,5 +1,6 @@
 import { NODE_TITLE_HEIGHT, NODE_WIDTH } from "../diagram/diagram-constants.ts";
-import { truncateLabel } from "../diagram/diagram-texts.ts";
+import { focusKeyOf } from "../diagram/diagram-focus.ts";
+import { portLabel, truncateLabel } from "../diagram/diagram-texts.ts";
 import type { DiagramNode, Socket } from "../diagram/diagram-types.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { svgElement } from "./svg-dom.ts";
@@ -25,36 +26,78 @@ export interface DrawnNode {
   warningAnchor: { x: number; y: number };
   // The aria-label and tooltip without a warning; the warning is appended to them.
   baseLabel: string;
-  sockets: ReadonlyMap<string, SVGElement>;
+  sockets: ReadonlyMap<string, DrawnPort>;
+}
+
+// A socket as a group: the dot, its name, and a larger invisible area to
+// aim at when dragging a link. A port (not a tag) takes the keyboard focus.
+interface DrawnPort {
+  group: SVGElement;
+  // The accessible name without the lit state, which the view appends.
+  baseLabel: string;
 }
 
 function text(className: string, x: number, y: number, content: string): SVGElement {
   return svgElement("text", { class: className, x, y }, [content]);
 }
 
-interface DrawnSocket {
-  circle: SVGElement;
-  label: SVGElement | null;
+const HIT_HEIGHT = 18;
+const ANCHOR_HIT_RADIUS = 10;
+
+// The area to aim at: the socket's row up to mid-node, or round an anchor.
+function hitArea(node: DiagramNode, socket: Socket): SVGElement {
+  if (socket.label === "") {
+    return svgElement("circle", {
+      class: "diagram-port__hit",
+      cx: socket.x,
+      cy: socket.y,
+      r: ANCHOR_HIT_RADIUS,
+    });
+  }
+  const half = node.width / 2;
+  return svgElement("rect", {
+    class: "diagram-port__hit",
+    x: socket.side === "left" ? node.x : node.x + half,
+    y: socket.y - HIT_HEIGHT / 2,
+    width: half,
+    height: HIT_HEIGHT,
+  });
 }
 
-function drawSocket(socket: Socket): DrawnSocket {
-  const circle = svgElement("circle", {
+function drawSocket(node: DiagramNode, socket: Socket, t: Translate): DrawnPort {
+  const dot = svgElement("circle", {
     class: `diagram-socket diagram-socket--${socket.role}`,
     cx: socket.x,
     cy: socket.y,
     r: SOCKET_RADIUS,
   });
-  if (socket.label === "") {
-    return { circle, label: null };
-  }
   const left = socket.side === "left";
-  const label = text(
-    `diagram-socket__label${left ? "" : " diagram-socket__label--right"}`,
-    socket.x + (left ? PADDING : -PADDING),
-    socket.y + 3.5,
-    socket.label,
-  );
-  return { circle, label };
+  const label =
+    socket.label === ""
+      ? []
+      : [
+          text(
+            `diagram-socket__label${left ? "" : " diagram-socket__label--right"}`,
+            socket.x + (left ? PADDING : -PADDING),
+            socket.y + 3.5,
+            socket.label,
+          ),
+        ];
+  const focusable = socket.role !== "command" && socket.role !== "feedback";
+  const baseLabel = focusable ? portLabel(node, socket, t) : "";
+  const attributes = focusable
+    ? {
+        class: `diagram-port diagram-port--${socket.role}`,
+        role: "button",
+        tabindex: -1,
+        "aria-label": baseLabel,
+        "data-focus": focusKeyOf({ nodeId: node.id, socketId: socket.id }),
+        "data-node-id": node.id,
+        "data-socket-id": socket.id,
+      }
+    : { class: "diagram-port", "aria-hidden": "true" };
+  const parts = focusable ? [hitArea(node, socket), dot, ...label] : [dot, ...label];
+  return { group: svgElement("g", attributes, parts), baseLabel };
 }
 
 function badgeParts(node: DiagramNode, t: Translate): SVGElement[] {
@@ -109,15 +152,18 @@ export function drawNode(node: DiagramNode, typeLabel: string, t: Translate): Dr
     height: node.height,
     rx: 6,
   });
-  const drawnSockets = node.sockets.map((socket) => [socket.id, drawSocket(socket)] as const);
-  const socketParts = drawnSockets.flatMap(([, drawn]) =>
-    drawn.label === null ? [drawn.circle] : [drawn.circle, drawn.label],
+  const drawnSockets = node.sockets.map(
+    (socket) => [socket.id, drawSocket(node, socket, t)] as const,
   );
+  const socketParts = drawnSockets.map(([, drawn]) => drawn.group);
   const attributes = {
     class: `diagram-node diagram-node--${node.kind}`,
     role: "group",
+    "aria-roledescription": t("diagram.node.role"),
+    tabindex: -1,
     "aria-label": baseLabel,
     "data-node-id": node.id,
+    "data-focus": focusKeyOf({ nodeId: node.id, socketId: null }),
   };
   // The full label is in the tooltip, where the box shows it cut to fit.
   const title = svgElement("title", {}, [baseLabel]);
@@ -128,7 +174,7 @@ export function drawNode(node: DiagramNode, typeLabel: string, t: Translate): Dr
     ...socketParts,
     ...badgeParts(node, t),
   ]);
-  const sockets = new Map(drawnSockets.map(([id, drawn]) => [id, drawn.circle]));
+  const sockets = new Map(drawnSockets);
   const warningAnchor = { x: node.x + 2, y: node.y + node.height + WARNING_RISE };
   return { group, box, title, warning: null, warningAnchor, baseLabel, sockets };
 }

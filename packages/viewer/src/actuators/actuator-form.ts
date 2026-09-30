@@ -10,7 +10,7 @@ import {
 import { parameterConversionUnit } from "../drives/parameter-units.ts";
 import { parseNumber, schemaMessage } from "../joints/joint-form.ts";
 import { coordinateFromDisplay, coordinateToDisplay, formatDisplayNumber } from "../units.ts";
-import { defaultFeedPorts, drivesFeeding } from "./actuator-feed.ts";
+import { defaultFeedPorts, drivesFeeding, withPortSwapped } from "./actuator-feed.ts";
 import { actuatorOfJoint, jointsCoordinateUnit, movableJoints } from "./actuator-joints.ts";
 
 // The actuator form of the drives panel (ADR 0028 point 13) as pure
@@ -107,23 +107,13 @@ export function withActuatorFormDrive(
   return { ...form, driveId: ports === null ? null : driveId, ports: ports ?? {} };
 }
 
-/**
- * Reading another output port, as swapping two tubes on a machine: when
- * another input port already reads it, that one takes the port this input
- * read, so a feed never uses an output port twice.
- */
+/** See withPortSwapped: the form's port wiring is swapped, never duplicated. */
 export function withActuatorFormPort(
   form: ActuatorFormState,
   inputPort: string,
   outputPort: string,
 ): ActuatorFormState {
-  const previous = form.ports[inputPort];
-  const ports: Record<string, string> = {};
-  for (const [name, used] of Object.entries(form.ports)) {
-    ports[name] =
-      name === inputPort ? outputPort : used === outputPort && previous ? previous : used;
-  }
-  return { ...form, ports };
+  return { ...form, ports: withPortSwapped(form.ports, inputPort, outputPort) };
 }
 
 export function withActuatorFormJoint(

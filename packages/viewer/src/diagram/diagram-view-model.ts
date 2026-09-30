@@ -2,6 +2,7 @@ import type { PantinDocument } from "@pantin/protocol";
 import { createTranslator, type Language, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { layoutChainDiagram } from "./chain-layout.ts";
+import type { ChainLinks } from "./diagram-chains.ts";
 import { diagramHighlight, type NodeHighlight } from "./diagram-selection.ts";
 import { nodeTypeLabels } from "./diagram-texts.ts";
 import type { ChainDiagram } from "./diagram-types.ts";
@@ -32,7 +33,9 @@ interface Layout {
   typeLabels: ReadonlyMap<string, string>;
 }
 
-export function createDiagramModelBuilder(): (state: ViewerState) => DiagramModel {
+export function createDiagramModelBuilder(
+  linksOf: (document: PantinDocument) => ChainLinks,
+): (state: ViewerState) => DiagramModel {
   let last: Layout | null = null;
   const layoutFor = (document: PantinDocument, state: ViewerState): Layout => {
     const { collapsedDiagramBands: collapsed, language } = state;
@@ -65,7 +68,7 @@ export function createDiagramModelBuilder(): (state: ViewerState) => DiagramMode
       document: open.document,
       diagram,
       typeLabels,
-      highlight: diagramHighlight(open.document, open.id, {
+      highlight: diagramHighlight(open.document, linksOf(open.document), open.id, {
         selectedNodeId: state.selectedNodeId,
         diagramNodeId: state.diagramNodeId,
       }),

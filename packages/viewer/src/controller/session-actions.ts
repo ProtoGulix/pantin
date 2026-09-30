@@ -10,6 +10,7 @@ import {
 } from "../session-state.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { deleteAssembly } from "./assembly-actions.ts";
+import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { refreshPantinList, savePantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
@@ -94,6 +95,12 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
       return;
     case "cancelDelete":
       store.update(withDeleteCancelled(store.state));
+      return;
+    case "confirmReplaceFeed":
+      confirmFeedReplacement(store);
+      return;
+    case "cancelReplaceFeed":
+      cancelFeedReplacement(store);
       return;
   }
 }

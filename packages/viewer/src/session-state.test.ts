@@ -115,6 +115,13 @@ describe("deleting a body", () => {
     expect(buildPromptView(asking, translate)?.text).toBe("Supprimer le corps « N_1 » ?");
   });
 
+  it("forgets the node last clicked in the diagram, like any other selection", () => {
+    const state = { ...editing(false), diagramNodeId: "joint:slide" };
+    const asking = withDeleteRequested(state, bodyNodeId("press", "carriage"));
+    expect(asking.diagramNodeId).toBeNull();
+    expect(asking.selectedNodeId).toBe(bodyNodeId("press", "carriage"));
+  });
+
   it("refuses anything that is not an existing body", () => {
     const state = editing(false);
     expect(withDeleteRequested(state, pantinNodeId("press")).pendingDeleteBodyId).toBeNull();

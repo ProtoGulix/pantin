@@ -19,19 +19,20 @@ export const actuatorNode = (id: string) => `actuator:${id}`;
 export const jointNode = (id: string) => `joint:${id}`;
 export const sensorNode = (id: string) => `sensor:${id}`;
 
-// Several pure functions ask for the links of the same document at every store
-// update. A cache keyed by the document object (a fresh one per core answer,
-// never mutated) builds them once; the WeakMap lets old documents go.
-const LINKS_BY_DOCUMENT = new WeakMap<PantinDocument, ChainLinks>();
-
-export function chainLinks(document: PantinDocument): ChainLinks {
-  const known = LINKS_BY_DOCUMENT.get(document);
-  if (known !== undefined) {
-    return known;
-  }
-  const built = buildChainLinks(document);
-  LINKS_BY_DOCUMENT.set(document, built);
-  return built;
+/**
+ * Several pure functions ask for the links of the same document at every store
+ * update. The store keeps one of these: it builds them once per document object
+ * (a fresh one per core answer, never mutated) and hands them to the functions
+ * below, so that no module holds a cache of its own (CLAUDE.md section 8).
+ */
+export function createChainLinksCache(): (document: PantinDocument) => ChainLinks {
+  let last: { document: PantinDocument; links: ChainLinks } | null = null;
+  return (document) => {
+    if (last === null || last.document !== document) {
+      last = { document, links: buildChainLinks(document) };
+    }
+    return last.links;
+  };
 }
 
 function buildChainLinks(document: PantinDocument): ChainLinks {
@@ -81,8 +82,7 @@ function ancestorsOf(links: ChainLinks, nodeId: string): string[] {
 }
 
 /** The node, what feeds it and everything it feeds: one chain from drive to sensors. */
-export function chainOfNode(document: PantinDocument, nodeId: string): Set<string> {
-  const links = chainLinks(document);
+export function chainOfNode(links: ChainLinks, nodeId: string): Set<string> {
   return new Set([nodeId, ...ancestorsOf(links, nodeId), ...descendantsOf(links, nodeId)]);
 }
 
@@ -91,8 +91,7 @@ export function chainOfNode(document: PantinDocument, nodeId: string): Set<strin
  * child, an actuator the children of its joints, a drive those of all its
  * actuators. A sensor moves nothing, so it shows the body of the joint it watches.
  */
-export function downstreamBodyIds(document: PantinDocument, nodeId: string): Set<string> {
-  const links = chainLinks(document);
+export function downstreamBodyIds(links: ChainLinks, nodeId: string): Set<string> {
   const watched = links.parent.get(nodeId);
   const from = nodeId.startsWith("sensor:") && watched !== undefined ? watched : nodeId;
   const bodies = [from, ...descendantsOf(links, from)].flatMap(
@@ -105,11 +104,7 @@ export function downstreamBodyIds(document: PantinDocument, nodeId: string): Set
  * The nodes of the chains that move these bodies: their joints, what feeds
  * them and the sensors watching them.
  */
-export function chainNodeIdsOfBodies(
-  document: PantinDocument,
-  bodyIds: ReadonlySet<string>,
-): Set<string> {
-  const links = chainLinks(document);
+export function chainNodeIdsOfBodies(links: ChainLinks, bodyIds: ReadonlySet<string>): Set<string> {
   const joints = [...links.bodyOfJoint].filter(([, body]) => bodyIds.has(body)).map(([id]) => id);
   return new Set(
     joints.flatMap((joint) => [

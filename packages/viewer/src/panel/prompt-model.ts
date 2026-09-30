@@ -9,7 +9,9 @@ export type PromptAction =
   | "discardAndClose"
   | "cancelClose"
   | "confirmDelete"
-  | "cancelDelete";
+  | "cancelDelete"
+  | "confirmReplaceFeed"
+  | "cancelReplaceFeed";
 
 export interface PromptView {
   text: string;
@@ -42,6 +44,22 @@ export function buildPromptView(state: ViewerState, t: Translate): PromptView | 
         { action: "saveAndClose", label: t("prompt.close.save"), primary: true },
         { action: "discardAndClose", label: t("prompt.close.discard"), primary: false },
         { action: "cancelClose", label: t("prompt.close.cancel"), primary: false },
+      ],
+    };
+  }
+  const replacement = state.pendingFeedReplacement;
+  if (replacement !== null) {
+    const { actuatorName, fromDrive, toDrive } = replacement.replaced;
+    return {
+      text: t("prompt.replaceFeed.text", {
+        actuator: actuatorName,
+        from: fromDrive,
+        to: toDrive,
+      }),
+      enabled: state.pendingRequestCount === 0,
+      actions: [
+        { action: "confirmReplaceFeed", label: t("prompt.replaceFeed.confirm"), primary: true },
+        { action: "cancelReplaceFeed", label: t("prompt.replaceFeed.cancel"), primary: false },
       ],
     };
   }

@@ -2,9 +2,10 @@ import { ACTUATOR_LABELS } from "@pantin/actuator-types/labels";
 import { DRIVE_LABELS } from "@pantin/drive-types/labels";
 import type { PantinDocument } from "@pantin/protocol";
 import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
-import type { Language, Translate } from "../i18n/translate.ts";
+import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { actuatorNode, driveNode, jointNode, sensorNode } from "./diagram-chains.ts";
+import type { DiagramNode, Socket } from "./diagram-types.ts";
 
 // The words of the diagram that depend on the document: translated type labels.
 
@@ -40,4 +41,33 @@ export function truncateLabel(label: string, width: number): string {
   const capacity = Math.max(1, Math.floor(width / CHARACTER_WIDTH));
   const characters = [...label];
   return characters.length <= capacity ? label : `${characters.slice(0, capacity - 1).join("")}…`;
+}
+
+// Anchors have no name on the box: what they link to is their name.
+const ANCHOR_KEYS: Readonly<Record<string, MessageKey>> = {
+  "joint:in": "diagram.port.jointIn",
+  "joint:out": "diagram.port.jointOut",
+  "actuator:out": "diagram.port.actuatorOut",
+  "sensor:in": "diagram.port.sensorIn",
+};
+
+/** The accessible name of a port: its side and its name, or what its anchor links to. */
+export function portLabel(node: DiagramNode, socket: Socket, t: Translate): string {
+  if (socket.role === "output" || socket.role === "input") {
+    return t(`diagram.port.${socket.role}`, { name: socket.label });
+  }
+  const key = ANCHOR_KEYS[`${node.kind}:${socket.id}`];
+  return key === undefined ? socket.label : t(key);
+}
+
+/** The keys of the diagram, for the list of keyboard shortcuts of the welcome dialog. */
+export function diagramShortcuts(t: Translate): { keys: string; action: string }[] {
+  return [
+    { keys: t("diagram.shortcut.arrows.keys"), action: t("diagram.shortcut.arrows.action") },
+    { keys: t("diagram.shortcut.enter.keys"), action: t("diagram.shortcut.enter.action") },
+    { keys: t("diagram.shortcut.space.keys"), action: t("diagram.shortcut.space.action") },
+    { keys: t("diagram.shortcut.escape.keys"), action: t("diagram.shortcut.escape.action") },
+    { keys: t("diagram.shortcut.home.keys"), action: t("diagram.shortcut.home.action") },
+    { keys: t("shortcut.delete"), action: t("diagram.shortcut.delete.action") },
+  ];
 }

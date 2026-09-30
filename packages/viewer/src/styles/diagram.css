@@ -200,11 +200,6 @@
   stroke: none;
 }
 
-.diagram-socket.is-lit {
-  fill: var(--accent);
-  stroke: var(--accent);
-}
-
 .diagram-socket__label {
   font-size: 10px;
   fill: var(--text-muted);

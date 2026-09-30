@@ -1,0 +1,172 @@
+/* Editing in the chain diagram (ADR 0029 points 6 and 7): column heads, ports
+   as targets, the link being dragged, the selected link and the keyboard focus. */
+
+/* Column heads: they stay at the top while the diagram scrolls. */
+.diagram-columns {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 30px;
+  background: var(--viewport-background);
+  border-bottom: 1px solid var(--border);
+}
+
+.diagram-columns__head {
+  position: absolute;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.diagram-columns__name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.diagram-columns__add {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.diagram-columns__add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.diagram-columns__add:focus-visible,
+.diagram:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Ports: a larger invisible area to aim at, dragged from when they are a source. */
+.diagram__svg {
+  user-select: none;
+}
+
+.diagram-port__hit {
+  fill: transparent;
+}
+
+.diagram-port--output,
+.diagram-port--anchor {
+  touch-action: none;
+}
+
+.diagram-port:focus-visible,
+.diagram-node:focus-visible,
+.diagram-edge__hit:focus-visible {
+  outline: none;
+}
+
+.diagram-port:focus-visible .diagram-socket {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-opacity: 0.35;
+}
+
+.diagram-node:focus-visible > .diagram-node__box {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+/* Lit sockets are drawn on the port group since ports are groups now. */
+.diagram-port.is-lit .diagram-socket {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+/* Links are thin: a wide invisible path over each is what the pointer hits. */
+.diagram-edge__hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  cursor: pointer;
+  pointer-events: stroke;
+  touch-action: none;
+}
+
+.diagram-edge.is-selected {
+  stroke-opacity: 1;
+  stroke-width: 3;
+}
+
+.diagram-edge-remove {
+  cursor: pointer;
+}
+
+.diagram-edge-remove circle {
+  fill: var(--surface-3);
+  stroke: var(--danger);
+}
+
+.diagram-edge-remove path {
+  fill: none;
+  stroke: var(--danger);
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.diagram-edge-remove.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* While a link is dragged: what can receive it is lit, the rest steps back. */
+.diagram-link-preview {
+  fill: none;
+  stroke: var(--accent);
+  stroke-dasharray: 5 3;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.diagram--linking .diagram-node:not(.has-link-target),
+.diagram--linking .diagram-edge {
+  opacity: 0.35;
+}
+
+.diagram--linking .diagram-port:not(.is-link-target, .is-link-source) {
+  opacity: 0.35;
+}
+
+.diagram--linking .diagram-edge__hit {
+  pointer-events: none;
+}
+
+.diagram--linking .is-link-target .diagram-socket {
+  fill: var(--success);
+  stroke: var(--success);
+  stroke-width: 7;
+  stroke-opacity: 0.35;
+}
+
+.diagram--linking .diagram-node.is-link-target > .diagram-node__box {
+  stroke: var(--success);
+  stroke-width: 2;
+}
+
+.diagram--linking .is-link-hover .diagram-socket,
+.diagram--linking .diagram-node.is-link-hover > .diagram-node__box {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.diagram-link-menu {
+  z-index: 5;
+}

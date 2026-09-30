@@ -2,7 +2,7 @@ import type { PantinDocument } from "@pantin/protocol";
 import { selectedBodyIds } from "../assembly-display.ts";
 import { jointNodeId, pantinNodeId, parseNodeId } from "../tree/node-ids.ts";
 import {
-  chainLinks,
+  type ChainLinks,
   chainNodeIdsOfBodies,
   chainOfNode,
   descendantsOf,
@@ -24,11 +24,10 @@ const JOINT_PREFIX = "joint:";
 
 /** The tree row a click on a diagram node selects. */
 export function treeNodeForDiagramNode(
-  document: PantinDocument,
+  links: ChainLinks,
   pantinId: string,
   diagramNodeId: string,
 ): string {
-  const links = chainLinks(document);
   const start = diagramNodeId.startsWith("sensor:")
     ? (links.parent.get(diagramNodeId) ?? diagramNodeId)
     : diagramNodeId;
@@ -49,57 +48,59 @@ interface Selections {
  * chose; any other selection (tree, 3D view) takes over.
  */
 function activeDiagramNode(
-  document: PantinDocument,
+  links: ChainLinks,
   pantinId: string,
   selections: Selections,
 ): string | null {
   const { selectedNodeId, diagramNodeId } = selections;
-  if (diagramNodeId === null || !chainLinks(document).nodeIds.has(diagramNodeId)) {
+  if (diagramNodeId === null || !links.nodeIds.has(diagramNodeId)) {
     return null;
   }
-  const chosen = treeNodeForDiagramNode(document, pantinId, diagramNodeId);
+  const chosen = treeNodeForDiagramNode(links, pantinId, diagramNodeId);
   return chosen === selectedNodeId ? diagramNodeId : null;
 }
 
 // A joint selected in the tree is a node of the diagram too.
-function selectedJointNode(document: PantinDocument, selectedNodeId: string | null): string | null {
+function selectedJointNode(links: ChainLinks, selectedNodeId: string | null): string | null {
   const ref = selectedNodeId === null ? null : parseNodeId(selectedNodeId);
   const node = ref?.kind === "joint" ? jointNode(ref.jointId) : null;
-  return node !== null && chainLinks(document).nodeIds.has(node) ? node : null;
+  return node !== null && links.nodeIds.has(node) ? node : null;
 }
 
 /** What each diagram node looks like for the current selection. */
 export function diagramHighlight(
   document: PantinDocument,
+  links: ChainLinks,
   pantinId: string,
   selections: Selections,
 ): Map<string, NodeHighlight> {
   const chosen =
-    activeDiagramNode(document, pantinId, selections) ??
-    selectedJointNode(document, selections.selectedNodeId);
+    activeDiagramNode(links, pantinId, selections) ??
+    selectedJointNode(links, selections.selectedNodeId);
   if (chosen !== null) {
     const highlight = new Map<string, NodeHighlight>(
-      [...chainOfNode(document, chosen)].map((id) => [id, "related"]),
+      [...chainOfNode(links, chosen)].map((id) => [id, "related"]),
     );
     return highlight.set(chosen, "selected");
   }
   const bodies = selectedBodyIds(document, selections.selectedNodeId);
-  return new Map([...chainNodeIdsOfBodies(document, bodies)].map((id) => [id, "related"]));
+  return new Map([...chainNodeIdsOfBodies(links, bodies)].map((id) => [id, "related"]));
 }
 
 /** The bodies the 3D view tints: those moved downstream of a clicked diagram node, else the tree's. */
 export function highlightedBodyIds(
   document: PantinDocument,
+  links: ChainLinks,
   pantinId: string,
   selections: Selections,
 ): Set<string> {
   // A joint selected in the tree tints its child, like the same joint clicked in the diagram.
   const chosen =
-    activeDiagramNode(document, pantinId, selections) ??
-    selectedJointNode(document, selections.selectedNodeId);
+    activeDiagramNode(links, pantinId, selections) ??
+    selectedJointNode(links, selections.selectedNodeId);
   return chosen === null
     ? selectedBodyIds(document, selections.selectedNodeId)
-    : downstreamBodyIds(document, chosen);
+    : downstreamBodyIds(links, chosen);
 }
 
 /** The wires of a chain: both their ends are highlighted. */

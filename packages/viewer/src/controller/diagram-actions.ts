@@ -1,5 +1,14 @@
 import { treeNodeForDiagramNode } from "../diagram/diagram-selection.ts";
+import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
+import {
+  createDiagramElement,
+  type DiagramElementKind,
+  type DiagramHint,
+  linkDiagramNodes,
+  removeDiagramLink,
+  showDiagramHint,
+} from "./diagram-edit-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The chain diagram (ADR 0029): the switch with the 3D view, folding a band,
@@ -32,7 +41,11 @@ export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): vo
   if (open === null) {
     return;
   }
-  const treeNodeId = treeNodeForDiagramNode(open.document, open.id, diagramNodeId);
+  const treeNodeId = treeNodeForDiagramNode(
+    store.chainLinksOf(open.document),
+    open.id,
+    diagramNodeId,
+  );
   store.update({
     ...withRevealedNode(store.state, treeNodeId),
     diagramNodeId,
@@ -45,5 +58,10 @@ export function diagramIntents(store: ViewerStore) {
     setDiagramShown: (shown: boolean) => setDiagramShown(store, shown),
     toggleDiagramBand: (bandKey: string) => toggleDiagramBand(store, bandKey),
     selectDiagramNode: (nodeId: string) => selectDiagramNode(store, nodeId),
+    linkDiagramNodes: (from: Endpoint, to: Endpoint) => linkDiagramNodes(store, from, to),
+    removeDiagramLink: (fromNodeId: string, toNodeId: string) =>
+      removeDiagramLink(store, fromNodeId, toNodeId),
+    showDiagramHint: (hint: DiagramHint) => showDiagramHint(store, hint),
+    createDiagramElement: (kind: DiagramElementKind) => createDiagramElement(store, kind),
   };
 }

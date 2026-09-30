@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { chainNodeIdsOfBodies, chainOfNode, downstreamBodyIds } from "./diagram-chains.ts";
+import {
+  chainNodeIdsOfBodies,
+  chainOfNode,
+  createChainLinksCache,
+  downstreamBodyIds,
+} from "./diagram-chains.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, encoderOf, jointOf } from "./diagram-fixtures.ts";
 
 // v1 feeds two cylinders, each moving one slide; v2 feeds nothing; a fixed
@@ -17,31 +22,32 @@ const document = documentOf({
   actuators: [cylinderOf("c1", "a", "v1", ["j1"]), cylinderOf("c2", "a", "v1", ["j2"])],
   sensors: [encoderOf("e1", "a", "j1")],
 });
+const links = createChainLinksCache()(document);
 
 describe("downstreamBodyIds", () => {
   it("gives the bodies of every joint a drive's actuators move", () => {
-    expect(downstreamBodyIds(document, "drive:v1")).toEqual(new Set(["s1", "s2"]));
+    expect(downstreamBodyIds(links, "drive:v1")).toEqual(new Set(["s1", "s2"]));
   });
 
   it("gives the child of an actuator's joints, of a joint, and of a sensor's joint", () => {
-    expect(downstreamBodyIds(document, "actuator:c2")).toEqual(new Set(["s2"]));
-    expect(downstreamBodyIds(document, "joint:j3")).toEqual(new Set(["s3"]));
-    expect(downstreamBodyIds(document, "sensor:e1")).toEqual(new Set(["s1"]));
+    expect(downstreamBodyIds(links, "actuator:c2")).toEqual(new Set(["s2"]));
+    expect(downstreamBodyIds(links, "joint:j3")).toEqual(new Set(["s3"]));
+    expect(downstreamBodyIds(links, "sensor:e1")).toEqual(new Set(["s1"]));
   });
 
   it("gives nothing for a drive that feeds nothing or an unknown node", () => {
-    expect(downstreamBodyIds(document, "drive:v2").size).toBe(0);
-    expect(downstreamBodyIds(document, "joint:jf").size).toBe(0);
-    expect(downstreamBodyIds(document, "nope:x").size).toBe(0);
+    expect(downstreamBodyIds(links, "drive:v2").size).toBe(0);
+    expect(downstreamBodyIds(links, "joint:jf").size).toBe(0);
+    expect(downstreamBodyIds(links, "nope:x").size).toBe(0);
   });
 });
 
 describe("chainOfNode", () => {
   it("links a node with what feeds it and what it feeds, not its siblings", () => {
-    expect(chainOfNode(document, "joint:j1")).toEqual(
+    expect(chainOfNode(links, "joint:j1")).toEqual(
       new Set(["drive:v1", "actuator:c1", "joint:j1", "sensor:e1"]),
     );
-    expect(chainOfNode(document, "drive:v1")).toEqual(
+    expect(chainOfNode(links, "drive:v1")).toEqual(
       new Set(["drive:v1", "actuator:c1", "actuator:c2", "joint:j1", "joint:j2", "sensor:e1"]),
     );
   });
@@ -49,10 +55,23 @@ describe("chainOfNode", () => {
 
 describe("chainNodeIdsOfBodies", () => {
   it("finds the chains moving the bodies, and none for a body no joint moves", () => {
-    expect(chainNodeIdsOfBodies(document, new Set(["s2"]))).toEqual(
+    expect(chainNodeIdsOfBodies(links, new Set(["s2"]))).toEqual(
       new Set(["drive:v1", "actuator:c2", "joint:j2"]),
     );
-    expect(chainNodeIdsOfBodies(document, new Set(["frame"])).size).toBe(0);
-    expect(chainNodeIdsOfBodies(document, new Set(["s3"]))).toEqual(new Set(["joint:j3"]));
+    expect(chainNodeIdsOfBodies(links, new Set(["frame"])).size).toBe(0);
+    expect(chainNodeIdsOfBodies(links, new Set(["s3"]))).toEqual(new Set(["joint:j3"]));
+  });
+});
+
+describe("createChainLinksCache", () => {
+  it("builds the links once per document object", () => {
+    const linksOf = createChainLinksCache();
+    expect(linksOf(document)).toBe(linksOf(document));
+  });
+
+  it("builds them again for a new document object", () => {
+    const linksOf = createChainLinksCache();
+    const first = linksOf(document);
+    expect(linksOf({ ...document })).not.toBe(first);
   });
 });
