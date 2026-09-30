@@ -66,12 +66,23 @@ async function listPantins(context: ServiceContext): Promise<PantinSummary[]> {
     const idResult = PantinIdSchema.safeParse(folderName);
     // Folders that are not Pantins (bad name, no or invalid pantin.json) are
     // left out of the list; GET on one of them explains what is wrong.
-    const document = idResult.success
-      ? await readSummaryDocument(context, idResult.data).catch(ignoreApiError)
-      : undefined;
-    if (idResult.success && document !== undefined) {
-      summaries.push({ id: idResult.data, name: document.name, bodyCount: document.bodies.length });
+    if (!idResult.success) {
+      continue;
     }
+    const pantinId = idResult.data;
+    const document = await readSummaryDocument(context, pantinId).catch(ignoreApiError);
+    if (document === undefined) {
+      continue;
+    }
+    // An open Pantin whose pantin.json vanished from disk is still listed.
+    const modifiedAt =
+      (await context.store.readDocumentModifiedAt(pantinId).catch(ignoreApiError)) ?? new Date();
+    summaries.push({
+      id: pantinId,
+      name: document.name,
+      bodyCount: document.bodies.length,
+      modifiedAt: modifiedAt.toISOString(),
+    });
   }
   return summaries;
 }

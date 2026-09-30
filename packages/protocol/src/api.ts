@@ -79,6 +79,8 @@ export const PantinSummarySchema = z.object({
   id: PantinIdSchema,
   name: DisplayNameSchema,
   bodyCount: z.number().int().nonnegative(),
+  // When pantin.json last changed on disk, ISO 8601 (ADR 0027).
+  modifiedAt: z.iso.datetime(),
 });
 export type PantinSummary = z.infer<typeof PantinSummarySchema>;
 

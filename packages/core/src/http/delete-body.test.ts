@@ -1,4 +1,4 @@
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile, utimes, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PantinDocumentSchema, PantinResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -145,9 +145,20 @@ describe("listing Pantins", () => {
     expect(opened.json).toMatchObject({ document: { name: "Edited by hand" } });
   });
 
+  it("dates each Pantin by the last change of its pantin.json (ADR 0027)", async () => {
+    const saved = new Date("2026-09-28T07:30:00.000Z");
+    await utimes(join(pantinFolder(), "pantin.json"), saved, saved);
+    const listed = await sendRaw(server, "GET", "/api/pantins");
+    expect(listed.json).toMatchObject({
+      pantins: [{ id: "axis", modifiedAt: saved.toISOString() }],
+    });
+  });
+
   it("shows the unsaved name of an open Pantin", async () => {
     await sendJsonRequest(server, "PATCH", "/api/pantins/axis", { name: "Renamed" });
     const listed = await sendRaw(server, "GET", "/api/pantins");
-    expect(listed.json).toEqual({ pantins: [{ id: "axis", name: "Renamed", bodyCount: 0 }] });
+    expect(listed.json).toEqual({
+      pantins: [{ id: "axis", name: "Renamed", bodyCount: 0, modifiedAt: expect.any(String) }],
+    });
   });
 });

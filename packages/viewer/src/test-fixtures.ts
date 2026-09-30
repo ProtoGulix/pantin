@@ -63,8 +63,8 @@ export function pantinResponse(
 }
 
 export const pantinSummaries: PantinSummary[] = [
-  { id: "press", name: "Press", bodyCount: 1 },
-  { id: "robot", name: "Robot", bodyCount: 4 },
+  { id: "press", name: "Press", bodyCount: 1, modifiedAt: "2026-09-29T08:00:00.000Z" },
+  { id: "robot", name: "Robot", bodyCount: 4, modifiedAt: "2026-09-30T12:00:00.000Z" },
 ];
 
 const placement = {

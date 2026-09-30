@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createReadStream, type ReadStream } from "node:fs";
-import { lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
   PANTIN_DOCUMENT_FILE_NAME,
@@ -20,6 +20,8 @@ export type PantinStore = {
   listFolderNames(): Promise<string[]>;
   createPantinFolder(pantinId: PantinId): Promise<void>;
   readDocumentText(pantinId: PantinId): Promise<string | undefined>;
+  // When pantin.json last changed on disk; undefined when there is none.
+  readDocumentModifiedAt(pantinId: PantinId): Promise<Date | undefined>;
   writeDocumentAtomically(pantinId: PantinId, text: string): Promise<void>;
   listMeshFileNames(pantinId: PantinId): Promise<string[]>;
   writeMesh(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
@@ -60,6 +62,20 @@ async function readDocumentText(paths: Paths, pantinId: PantinId): Promise<strin
   try {
     await assertRealPathInside(paths.pantinsDirectory, path);
     return await readFile(path, "utf8");
+  } catch (error) {
+    if (isErrorWithCode(error, "ENOENT")) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function readDocumentModifiedAt(paths: Paths, pantinId: PantinId): Promise<Date | undefined> {
+  const path = pathInPantin(paths, pantinId, PANTIN_DOCUMENT_FILE_NAME);
+  try {
+    await assertRealPathInside(paths.pantinsDirectory, path);
+    // stat, not lstat: the date of the file the user edits, already checked to be inside.
+    return (await stat(path)).mtime;
   } catch (error) {
     if (isErrorWithCode(error, "ENOENT")) {
       return undefined;
@@ -145,6 +161,7 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     listFolderNames: () => listFolderNames(paths),
     createPantinFolder: (pantinId) => createPantinFolder(paths, pantinId),
     readDocumentText: (pantinId) => readDocumentText(paths, pantinId),
+    readDocumentModifiedAt: (pantinId) => readDocumentModifiedAt(paths, pantinId),
     writeDocumentAtomically: (pantinId, text) => writeDocumentAtomically(paths, pantinId, text),
     listMeshFileNames: (pantinId) => listMeshFileNames(paths, pantinId),
     writeMesh: (pantinId, meshPath, bytes) => writeMesh(paths, pantinId, meshPath, bytes),

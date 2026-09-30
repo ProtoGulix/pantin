@@ -97,7 +97,7 @@ describe("vertical slice", () => {
     expect(reopened).toEqual(savedResponse);
     const listed = await sendRaw(secondServer, "GET", "/api/pantins");
     expect(PantinListResponseSchema.parse(listed.json).pantins).toEqual([
-      { id: "axe-800", name: "Axe X", bodyCount: 1 },
+      { id: "axe-800", name: "Axe X", bodyCount: 1, modifiedAt: expect.any(String) },
     ]);
   });
 });

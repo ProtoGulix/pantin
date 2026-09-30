@@ -21,10 +21,16 @@ const pantin: PantinResponse = {
 describe("PantinApiClient responses", () => {
   it("returns a validated Pantin list", async () => {
     const { fetchFunction, requests } = fakeFetch(
-      jsonResponse({ pantins: [{ id: "press", name: "Press", bodyCount: 2 }] }),
+      jsonResponse({
+        pantins: [
+          { id: "press", name: "Press", bodyCount: 2, modifiedAt: "2026-09-30T12:00:00.000Z" },
+        ],
+      }),
     );
     const pantins = await createPantinApiClient(fetchFunction).listPantins();
-    expect(pantins).toEqual([{ id: "press", name: "Press", bodyCount: 2 }]);
+    expect(pantins).toEqual([
+      { id: "press", name: "Press", bodyCount: 2, modifiedAt: "2026-09-30T12:00:00.000Z" },
+    ]);
     expect(requests[0]?.url).toBe("/api/pantins");
   });
 

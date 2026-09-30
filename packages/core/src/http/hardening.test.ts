@@ -155,4 +155,15 @@ describe("symbolic links", () => {
     expect(response.body).toContain("symbolic link");
     expect(response.body).not.toContain("Outside");
   });
+
+  it("lists the other Pantins when one pantin.json links outside (ADR 0027)", async () => {
+    const outside = join(workspace.root, "outside.json");
+    await writeFile(outside, '{"schema_version":1,"name":"Outside","bodies":[]}');
+    await mkdir(join(workspace.pantinsDirectory, "linked"));
+    await symlink(outside, join(workspace.pantinsDirectory, "linked", "pantin.json"));
+    const response = await sendRaw(server, "GET", "/api/pantins");
+    expect(response.status).toBe(200);
+    expect(response.body).not.toContain("Outside");
+    expect(response.body).not.toContain("linked");
+  });
 });
