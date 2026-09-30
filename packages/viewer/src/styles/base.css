@@ -45,7 +45,8 @@ body {
 .layout {
   display: grid;
   flex: 1;
-  grid-template-columns: var(--panel-width, 320px) 4px minmax(0, 1fr);
+  /* The last column is the drives panel: nothing while it is hidden. */
+  grid-template-columns: var(--panel-width, 320px) 4px minmax(0, 1fr) auto;
   min-height: 0;
 }
 

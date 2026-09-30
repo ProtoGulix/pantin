@@ -2,6 +2,7 @@ import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
 import type { PanelView } from "../view-model.ts";
 import { renderContextMenu } from "./context-menu.ts";
 import { element } from "./dom.ts";
+import { captureFocus, restoreFocus } from "./focus.ts";
 import { renderImportForm } from "./import-form.ts";
 import { renderJointForm } from "./joint-form.ts";
 import { JointSliderControl } from "./joint-slider.ts";
@@ -18,35 +19,6 @@ import { createTreeView, type TreeView } from "./tree-view.ts";
 // (list view) or the tree and properties (edit view), a confirmation line and
 // the message line. The skeleton is built once (so the tree and the list keep
 // keyboard focus); each region is redrawn from the PanelView on every change.
-
-interface FocusSnapshot {
-  key: string;
-  value: string;
-  selectionStart: number | null;
-  selectionEnd: number | null;
-}
-
-function captureFocus(root: HTMLElement): FocusSnapshot | null {
-  const active = document.activeElement;
-  const key = active?.getAttribute("data-focus-key");
-  if (!(active instanceof HTMLInputElement) || !root.contains(active) || !key) {
-    return null;
-  }
-  const { value, selectionStart, selectionEnd } = active;
-  return { key, value, selectionStart, selectionEnd };
-}
-
-// What the user was typing survives the rebuild of its region.
-function restoreFocus(root: HTMLElement, snapshot: FocusSnapshot | null): void {
-  const input = [...root.querySelectorAll("input")].find(
-    (candidate) => candidate.getAttribute("data-focus-key") === snapshot?.key,
-  );
-  if (snapshot !== null && input !== undefined && document.activeElement !== input) {
-    input.value = snapshot.value;
-    input.focus();
-    input.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);
-  }
-}
 
 export class SidePanel {
   private readonly panel: HTMLElement;

@@ -15,6 +15,7 @@ export type MenuCommand =
   | "delete"
   | "frameAll"
   | "frameSelection"
+  | "toggleDrives"
   | `language:${Language}`;
 
 type MenuId = "file" | "edit" | "view";
@@ -35,6 +36,7 @@ interface MenuContext {
   hasBodies: boolean;
   selectedKind: string | null;
   language: Language;
+  drivePanelOpen: boolean;
 }
 
 interface MenuItemDefinition {
@@ -139,6 +141,11 @@ const MENUS: readonly MenuDefinition[] = [
         "menubar.view.frameSelection",
         (context) => context.hasBodies && context.selectedKind !== null,
       ),
+      {
+        ...item("toggleDrives", "menubar.view.drives", (context) => context.editing),
+        // Checked while the drives panel is shown (ADR 0022).
+        checked: (context) => context.drivePanelOpen,
+      },
       "separator",
       ...LANGUAGES.map(languageItem),
     ],
@@ -155,6 +162,7 @@ function menuContext(state: ViewerState): MenuContext {
     selectedKind:
       state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null),
     language: state.language,
+    drivePanelOpen: state.drivePanelOpen,
   };
 }
 

@@ -42,6 +42,23 @@ export interface PanelIntents {
   confirmImport(): void;
   cancelImport(): void;
 
+  // The drives panel on the right (ADR 0022): its form, faults and commands.
+  toggleDrivePanel(): void;
+  openDriveForm(driveId: string | null): void;
+  cancelDriveForm(): void;
+  editDriveName(name: string): void;
+  editDriveParameter(field: string, text: string): void;
+  changeDriveType(type: string): void;
+  changeDriveAssembly(assembly: string): void;
+  toggleDriveJoint(jointId: string, connected: boolean): void;
+  submitDriveForm(): void;
+  deleteDrive(driveId: string): void;
+  setDriveUnresponsive(driveId: string, on: boolean): void;
+  setJointJammed(jointId: string, on: boolean): void;
+  toggleBitTag(tagName: string): void;
+  // Typed in mm or degrees (per second).
+  writeFloatTag(tagName: string, text: string): void;
+
   // A new empty assembly in the Pantin of this tree node (ADR 0019).
   createAssembly(nodeId: string): void;
   // A body dragged onto an assembly, or onto a body of it, in the tree.

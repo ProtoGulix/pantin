@@ -35,6 +35,13 @@ module.exports = {
       to: { path: "^packages/(?!drive-types/)|^@pantin/" },
     },
     {
+      name: "viewer-runs-no-drive-behaviour",
+      comment: "The viewer shows drives but never simulates them (CLAUDE.md section 3.2).",
+      severity: "error",
+      from: { path: "^packages/viewer/" },
+      to: { path: "^packages/drive-types/src/(behaviours|behaviour-common|[^/]+/behaviour)\\.ts$" },
+    },
+    {
       name: "drive-type-schemas-hold-no-logic",
       comment: "The protocol imports the schemas: they must never reach the behaviours (ADR 0022).",
       severity: "error",

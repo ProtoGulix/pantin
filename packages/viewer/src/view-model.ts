@@ -3,6 +3,7 @@ import { buildJointSlider, type JointSliderSpec } from "./joints/slider-model.ts
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
 import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
+import { buildDrivePanelView, type DrivePanelView } from "./panel/drive-panel-model.ts";
 import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
 import { buildJointFormView, type JointFormView } from "./panel/joint-form-model.ts";
 import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
@@ -62,6 +63,8 @@ export interface PanelView {
   prompt: PromptView | null;
   message: MessageView | null;
   viewportHint: string;
+  // The drives panel on the right (ADR 0022).
+  drivePanel: DrivePanelView;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -144,5 +147,6 @@ export function buildPanelView(state: ViewerState): PanelView {
     prompt: buildPromptView(state, translate),
     message: buildMessageView(state, translate),
     viewportHint: translate(mode === "list" ? "page.viewportEmpty" : "page.viewportHint"),
+    drivePanel: buildDrivePanelView(state, translate),
   };
 }

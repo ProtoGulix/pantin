@@ -25,6 +25,8 @@ export interface StorePorts {
   // Joint sliders follow the poses without redrawing the panel: a redraw
   // would interrupt a drag.
   showJointPositions(positions: ReadonlyMap<string, number>): void;
+  // Tag values in the drives panel, written in place for the same reason.
+  showTagValues(values: ReadonlyMap<string, number>): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -41,6 +43,10 @@ export class ViewerStore {
   requestedPantinId: string | null = null;
   // Latest position of every joint (metres or radians), from the pose stream.
   jointPositions: ReadonlyMap<string, number> = new Map();
+  // Latest value of every tag (SI), read while the drives panel is open.
+  tagValues: ReadonlyMap<string, number> = new Map();
+  // One tag read at a time: a slow core must not pile requests up.
+  readingTags = false;
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
 
@@ -53,6 +59,7 @@ export class ViewerStore {
     this.state = next;
     this.ports.renderPanel(buildPanelView(next));
     this.ports.showJointPositions(this.jointPositions);
+    this.ports.showTagValues(this.tagValues);
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
@@ -80,6 +87,8 @@ export class ViewerStore {
     this.followedPantinId = pantinId;
     viewport.clearPoses();
     this.jointPositions = new Map();
+    // Another Pantin: the previous one's tag values must not flip a bit here.
+    this.tagValues = new Map();
     this.ports.poseStream.follow(pantinId);
   }
 
@@ -109,6 +118,12 @@ export class ViewerStore {
       this.update({ ...withRequestFinished(this.state), message: describeFailure(error) });
       return undefined;
     }
+  }
+
+  /** Tag values from the core: the drives panel shows them without a redraw. */
+  showTagValues(values: ReadonlyMap<string, number>): void {
+    this.tagValues = values;
+    this.ports.showTagValues(values);
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

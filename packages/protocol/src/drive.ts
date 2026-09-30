@@ -32,6 +32,7 @@ export {
   DRIVE_PARAMETERS,
   DRIVE_TAGS,
   type DriveParameter,
+  type DriveParameterKind,
   type DriveTag,
   type DriveType,
 } from "@pantin/drive-types/schemas";

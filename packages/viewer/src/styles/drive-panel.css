@@ -1,0 +1,92 @@
+/* The drives panel, on the right of the 3D view (ADR 0022). */
+.drive-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  padding: 8px;
+  overflow-y: auto;
+  background: var(--surface-1);
+  border-left: 1px solid var(--border);
+}
+
+.drive-panel[hidden] {
+  display: none;
+}
+
+.drive-panel__head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.drive-panel__title {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.drive-panel__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.drive-panel__card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.drive-panel__card-head {
+  display: flex;
+  flex-direction: column;
+}
+
+.drive-panel__detail,
+.drive-panel__label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.drive-panel__label {
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.drive-panel__actions,
+.drive-panel__row,
+.drive-panel__send {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.drive-panel__row > span:first-child {
+  flex: 1;
+}
+
+.drive-panel__value {
+  min-width: 56px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.drive-panel__bit[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.drive-panel__send .text-input {
+  width: 64px;
+}
+
+.drive-panel__check {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 12px;
+}

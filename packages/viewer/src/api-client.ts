@@ -14,6 +14,7 @@ import {
   RenameRequestSchema,
 } from "@pantin/protocol";
 import { type AssemblyRoutes, assemblyRoutes } from "./api-assembly-routes.ts";
+import { type DriveRoutes, driveRoutes } from "./api-drive-routes.ts";
 import { type JointRoutes, jointRoutes } from "./api-joint-routes.ts";
 import {
   type FetchFunction,
@@ -30,7 +31,7 @@ import {
 // The viewer's only door to the core (CLAUDE.md section 3.4). Every response
 // is validated against the protocol schemas: the network is never trusted.
 
-export interface PantinApiClient extends JointRoutes, AssemblyRoutes {
+export interface PantinApiClient extends JointRoutes, AssemblyRoutes, DriveRoutes {
   listPantins(): Promise<PantinSummary[]>;
   createPantin(name: string): Promise<PantinResponse>;
   getPantin(pantinId: string): Promise<PantinResponse>;
@@ -147,5 +148,6 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...bodyRoutes(send, fetchFunction),
     ...jointRoutes(send),
     ...assemblyRoutes(send),
+    ...driveRoutes(send),
   };
 }

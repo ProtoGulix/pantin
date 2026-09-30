@@ -1,5 +1,6 @@
-import type { Body, PantinResponse, PantinSummary } from "@pantin/protocol";
+import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
+import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
@@ -49,7 +50,15 @@ export interface ViewerState {
   jointForm: JointFormState | null;
   // Hidden and isolated assemblies of the 3D view (ADR 0019): never saved.
   assemblyDisplay: AssemblyDisplay;
+  // The drives panel on the right (ADR 0022), its form, and the faults the
+  // core reported last.
+  drivePanelOpen: boolean;
+  driveForm: DriveFormState | null;
+  faults: FaultsResponse;
 }
+
+// Faults are runtime state of the core, cleared when a Pantin opens.
+const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 
 export function initialViewerState(language: Language): ViewerState {
   return {
@@ -73,6 +82,9 @@ export function initialViewerState(language: Language): ViewerState {
     pendingDeleteJointId: null,
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
+    drivePanelOpen: false,
+    driveForm: null,
+    faults: NO_FAULTS,
   };
 }
 
@@ -100,6 +112,8 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     jointForm: null,
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
+    driveForm: null,
+    faults: NO_FAULTS,
   };
 }
 

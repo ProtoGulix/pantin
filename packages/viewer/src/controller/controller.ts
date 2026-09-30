@@ -11,6 +11,7 @@ import {
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
+import { driveIntents } from "./drive-intents.ts";
 import {
   cancelImport,
   changeImportOptions,
@@ -155,6 +156,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...editIntents(store),
     ...importIntents(store),
     ...jointIntents(store),
+    ...driveIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     togglePropertyGroup: (groupId) =>
       store.update({

@@ -237,6 +237,9 @@ importers:
       '@babylonjs/loaders':
         specifier: 9.28.0
         version: 9.28.0(@babylonjs/core@9.28.0)(babylonjs-gltf2interface@9.28.0)
+      '@pantin/drive-types':
+        specifier: workspace:*
+        version: link:../drive-types
       '@pantin/protocol':
         specifier: workspace:*
         version: link:../protocol

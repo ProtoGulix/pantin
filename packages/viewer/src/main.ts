@@ -4,12 +4,14 @@ import {
   selectBodyFromViewport,
   startViewer,
 } from "./controller/controller.ts";
+import { refreshTagValues } from "./controller/drive-commands.ts";
 import { ViewerStore } from "./controller/viewer-store.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { errorMessage } from "./messages.ts";
 import { createPoseStreamClient } from "./pose-stream-client.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
+import { DrivePanel } from "./ui/drive-panel.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
 import type { PanelIntents } from "./ui/panel-intents.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
@@ -31,6 +33,7 @@ interface Screen {
   canvas: HTMLCanvasElement;
   render(view: PanelView, intents: PanelIntents): void;
   showJointPositions(positions: ReadonlyMap<string, number>): void;
+  showTagValues(values: ReadonlyMap<string, number>): void;
 }
 
 // Everything drawn from the view: menu bar, left panel, texts of index.html.
@@ -39,6 +42,7 @@ function createScreen(): Screen {
   const canvas = requireElement("#viewport-canvas", HTMLCanvasElement);
   const hint = requireElement("#viewport-hint", HTMLElement);
   const sidePanel = new SidePanel(panel, requireElement(".layout", HTMLElement));
+  const drivePanel = new DrivePanel(requireElement("#drive-panel", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
     canvas,
@@ -49,8 +53,10 @@ function createScreen(): Screen {
       hint.textContent = view.viewportHint;
       menuBar.render(view.menus, view.translate, intents);
       sidePanel.render(view, intents);
+      drivePanel.render(view.drivePanel, view.translate, intents);
     },
     showJointPositions: (positions) => sidePanel.showJointPositions(positions),
+    showTagValues: (values) => drivePanel.showTagValues(values),
   };
 }
 
@@ -68,6 +74,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
         }
       },
       showJointPositions: (positions) => screen.showJointPositions(positions),
+      showTagValues: (values) => screen.showTagValues(values),
       viewport: () => {
         if (viewport === null) {
           throw new Error("The viewport is used before it was created.");
@@ -105,10 +112,17 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   return store;
 }
 
+// Tag values change at every simulation step: while the drives panel is open,
+// they are read four times a second (a stand-in until the tag bus, CLAUDE.md
+// section 9, pushes them).
+const TAG_REFRESH_MILLISECONDS = 250;
+
 function startApplication(): void {
   // Bound call: fetch invoked as a method of something else throws "Illegal invocation".
   const api = createPantinApiClient((url, init) => fetch(url, init));
-  startViewer(createStore(createScreen(), api));
+  const store = createStore(createScreen(), api);
+  startViewer(store);
+  window.setInterval(() => void refreshTagValues(store), TAG_REFRESH_MILLISECONDS);
 }
 
 startApplication();
