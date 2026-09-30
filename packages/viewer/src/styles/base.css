@@ -14,9 +14,11 @@
   --danger: #f06c6c;
   --danger-soft: rgb(240 108 108 / 12%);
   --success: #6cc38a;
-  /* Bodies of a previewed joint; the same colours as in the 3D view (viewport.ts). */
+  /* Bodies of a previewed joint; the same colours as in the 3D view (scene/body-highlights.ts). */
   --joint-parent: #a371f7;
   --joint-child: #f0a030;
+  /* The 3D view is a light studio; the same value as BACKGROUND in stage.ts. */
+  --viewport-background: #f4f4f4;
   --hover: rgb(255 255 255 / 5%);
   --focus-ring: 0 0 0 1px var(--accent);
   --row-height: 22px;

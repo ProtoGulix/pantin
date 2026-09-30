@@ -84,9 +84,6 @@ export async function loadBody(scene: Scene, body: Body, bytes: ArrayBuffer): Pr
   if (format === "stl") {
     applyDefaultMaterial(scene, body, meshes);
   }
-  for (const mesh of meshes) {
-    mesh.receiveShadows = true;
-  }
   container.addAllToScene();
   return {
     node,

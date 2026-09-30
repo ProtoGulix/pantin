@@ -7,13 +7,14 @@ import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
-import { babylonToCorePosition, type Vector3Tuple } from "../frames.ts";
+import { babylonToCorePosition } from "../frames.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
+import { boundsOfBodies } from "./body-bounds.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
-import { bodyRenderKey, frameBounds, planSceneSync } from "./scene-plan.ts";
+import { bodyRenderKey, floorHeight, frameBounds, planSceneSync } from "./scene-plan.ts";
 import { createSensorMarkers, type SensorMarkers } from "./sensor-markers.ts";
 import { createStage, type Stage } from "./stage.ts";
 
@@ -78,30 +79,28 @@ function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera 
   return camera;
 }
 
-function toTuple(vector: Vector3): Vector3Tuple {
-  return [vector.x, vector.y, vector.z];
-}
-
 function framingOf(context: ViewportContext, framed: (bodyId: string) => boolean) {
-  const minimum = new Vector3(Infinity, Infinity, Infinity);
-  const maximum = new Vector3(-Infinity, -Infinity, -Infinity);
-  for (const [bodyId, loaded] of context.loadedBodies) {
-    if (framed(bodyId)) {
-      const bounds = loaded.node.getHierarchyBoundingVectors(true);
-      minimum.minimizeInPlace(bounds.min);
-      maximum.maximizeInPlace(bounds.max);
-    }
-  }
-  return frameBounds(toTuple(minimum), toTuple(maximum), context.camera.fov);
+  const { minimum, maximum } = boundsOfBodies(context.loadedBodies, framed);
+  return frameBounds(minimum, maximum, context.camera.fov);
 }
 
-// null frames every visible body and resizes the ground around every loaded
-// body, hidden ones included, so hiding an assembly does not move the floor;
-// a list frames only its visible bodies and leaves the ground as it is.
+// Around every loaded body, hidden ones included, so hiding an assembly does
+// not move the floor.
+function fitStageToBodies(context: ViewportContext): void {
+  const { minimum, maximum } = boundsOfBodies(context.loadedBodies, () => true);
+  const ground = frameBounds(minimum, maximum, context.camera.fov);
+  context.stage.fitToBodies(
+    babylonToCorePosition(ground.target),
+    ground.radius / 2,
+    floorHeight(minimum[1]),
+  );
+}
+
+// null frames every visible body and refits the floor; a list frames only its
+// visible bodies and leaves the floor as it is.
 function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null): void {
   if (bodyIds === null) {
-    const ground = framingOf(context, () => true);
-    context.stage.fitToBodies(babylonToCorePosition(ground.target), ground.radius / 2);
+    fitStageToBodies(context);
   }
   const visible = (bodyId: string) =>
     !context.hiddenBodyIds.has(bodyId) && (bodyIds === null || bodyIds.includes(bodyId));

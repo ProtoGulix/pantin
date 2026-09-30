@@ -5,6 +5,7 @@ import {
   bodyHighlight,
   bodyRenderKey,
   chooseGridStep,
+  floorHeight,
   frameBounds,
   placeJointArrow,
   planSceneSync,
@@ -66,6 +67,20 @@ describe("frameBounds", () => {
   it("falls back to a default view for an empty box", () => {
     const empty = frameBounds([Infinity, Infinity, Infinity], [-Infinity, -Infinity, -Infinity], 1);
     expect(empty.target).toEqual([0, 0, 0]);
+  });
+});
+
+describe("floorHeight", () => {
+  it("stays at z = 0 under bodies standing above it", () => {
+    expect(floorHeight(0.25)).toBe(0);
+  });
+
+  it("drops to the lowest point of bodies going below z = 0", () => {
+    expect(floorHeight(-0.02)).toBe(-0.02);
+  });
+
+  it("stays at z = 0 without bodies", () => {
+    expect(floorHeight(Infinity)).toBe(0);
   });
 });
 

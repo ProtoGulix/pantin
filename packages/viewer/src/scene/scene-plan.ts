@@ -3,7 +3,7 @@ import { coreToBabylonPosition, type QuaternionTuple, type Vector3Tuple } from "
 import type { JointPreview } from "../joints/joint-preview.ts";
 
 // Pure decisions for the Babylon scene: what to (re)load, how to frame the
-// camera, how dense the ground grid is, which bodies are tinted and where the
+// camera, where the floor stands and how dense its grid is, which bodies are tinted and where the
 // joint arrow stands. Kept apart from Babylon so that they run under Node in
 // unit tests.
 
@@ -70,6 +70,15 @@ export function frameBounds(
     ],
     radius: (FRAMING_MARGIN * sphereRadius) / Math.sin(fieldOfViewRadians / 2),
   };
+}
+
+/**
+ * Height of the floor in the core frame: z = 0, unless bodies go below it
+ * (a part modelled around its centre, for instance); the floor then drops to
+ * their lowest point so that they rest on it instead of crossing it.
+ */
+export function floorHeight(lowestCoreZ: number): number {
+  return Number.isFinite(lowestCoreZ) ? Math.min(0, lowestCoreZ) : 0;
 }
 
 /** A 1-2-5 grid step giving about ten cells across the given extent (metres). */

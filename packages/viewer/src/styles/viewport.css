@@ -3,7 +3,7 @@
 .viewport {
   position: relative;
   min-width: 0;
-  background: var(--surface-1);
+  background: var(--viewport-background);
 }
 
 .viewport__canvas {

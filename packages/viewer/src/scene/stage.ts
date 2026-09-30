@@ -2,8 +2,8 @@ import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight.js";
 import { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator.js";
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent.js";
+import { BackgroundMaterial } from "@babylonjs/core/Materials/Background/backgroundMaterial.js";
 import { ImageProcessingConfiguration } from "@babylonjs/core/Materials/imageProcessingConfiguration.js";
-import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial.js";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color.js";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder.js";
@@ -16,19 +16,23 @@ import { chooseGridStep } from "./scene-plan.ts";
 // The fixed decor of the viewport: background, lights, ground, grid and the
 // world axes. Grid and axes are built from core coordinates and converted, so
 // they show the core frame (Z up) whatever Babylon uses internally.
+//
+// The look is a bright product studio: a light seamless background, soft
+// light from above, and a ground that shows nothing but the soft shadow of
+// the bodies, so they seem to rest on an endless floor.
 
-const BACKGROUND = Color4.FromHexString("#1b1e24ff");
-const GROUND_COLOR = Color3.FromHexString("#2a2e36");
-const GRID_MINOR_COLOR = Color4.FromHexString("#3a404bff");
-const GRID_MAJOR_COLOR = Color4.FromHexString("#4f5766ff");
+// Same value as --viewport-background in base.css, shown before the first frame.
+const BACKGROUND = Color4.FromHexString("#f4f4f4ff");
+const GRID_MINOR_COLOR = Color4.FromHexString("#e6e6e6ff");
+const GRID_MAJOR_COLOR = Color4.FromHexString("#d6d6d6ff");
 const AXIS_X_COLOR = Color4.FromHexString("#e5534bff");
 const AXIS_Y_COLOR = Color4.FromHexString("#57ab5aff");
 const AXIS_Z_COLOR = Color4.FromHexString("#539bf5ff");
 
 export interface Stage {
   shadowGenerator: ShadowGenerator;
-  /** Resizes ground, grid and axes around the bodies (sizes in metres). */
-  fitToBodies(centre: Vector3Tuple, extentMetres: number): void;
+  /** Resizes ground, grid and axes around the bodies; the floor stands at core z = floorZ (metres). */
+  fitToBodies(centre: Vector3Tuple, extentMetres: number, floorZ: number): void;
 }
 
 function setUpLighting(scene: Scene): ShadowGenerator {
@@ -38,19 +42,30 @@ function setUpLighting(scene: Scene): ShadowGenerator {
   scene.imageProcessingConfiguration.toneMappingType =
     ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
 
+  // A white sky and a light floor bounce: shaded sides stay light grey, never black.
   const sky = new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
-  sky.intensity = 0.7;
-  sky.diffuse = Color3.FromHexString("#dfe6f2");
-  sky.groundColor = Color3.FromHexString("#3a3530");
+  sky.intensity = 0.8;
+  sky.diffuse = Color3.White();
+  sky.groundColor = Color3.FromHexString("#8c8c8c");
 
-  const sun = new DirectionalLight("sun", new Vector3(-0.45, -1, 0.35), scene);
-  sun.intensity = 2.2;
+  // Nearly overhead, so the shadow sits under the bodies like on a studio floor.
+  const sun = new DirectionalLight("sun", new Vector3(-0.15, -1, 0.1), scene);
+  sun.intensity = 1.9;
   sun.autoCalcShadowZBounds = true;
 
+  // From the other side, without shadow, to separate the faces the sun leaves flat.
+  const fill = new DirectionalLight("fill", new Vector3(0.6, -0.4, -0.7), scene);
+  fill.intensity = 0.45;
+
   const shadowGenerator = new ShadowGenerator(2048, sun);
-  shadowGenerator.usePercentageCloserFiltering = true;
-  shadowGenerator.bias = 0.0005;
-  shadowGenerator.normalBias = 0.01;
+  // A blurred shadow on the floor only: cheap and available on WebGL 1 and 2,
+  // unlike contact hardening shadows, whose heavy shader can make a modest
+  // GPU reset and the browser then refuse WebGL for the whole session.
+  shadowGenerator.useBlurExponentialShadowMap = true;
+  shadowGenerator.useKernelBlur = true;
+  shadowGenerator.blurKernel = 64;
+  // Lower than the default 50: the shadow edge fades over a longer distance.
+  shadowGenerator.depthScale = 10;
   return shadowGenerator;
 }
 
@@ -58,8 +73,8 @@ function toBabylon(point: Vector3Tuple): Vector3 {
   return Vector3.FromArray(coreToBabylonPosition(point));
 }
 
-// Lines of the core XY plane (z = 0), a major line every five cells.
-function gridLines(centre: Vector3Tuple, halfSize: number, step: number) {
+// Lines of the floor plane, a major line every five cells.
+function gridLines(centre: Vector3Tuple, halfSize: number, step: number, floorZ: number) {
   const minor: Vector3[][] = [];
   const major: Vector3[][] = [];
   const cellCount = Math.ceil(halfSize / step);
@@ -70,12 +85,12 @@ function gridLines(centre: Vector3Tuple, halfSize: number, step: number) {
     const offset = index * step;
     const span = cellCount * step;
     target.push([
-      toBabylon([originX + offset, originY - span, 0]),
-      toBabylon([originX + offset, originY + span, 0]),
+      toBabylon([originX + offset, originY - span, floorZ]),
+      toBabylon([originX + offset, originY + span, floorZ]),
     ]);
     target.push([
-      toBabylon([originX - span, originY + offset, 0]),
-      toBabylon([originX + span, originY + offset, 0]),
+      toBabylon([originX - span, originY + offset, floorZ]),
+      toBabylon([originX + span, originY + offset, floorZ]),
     ]);
   }
   return { minor, major };
@@ -88,16 +103,22 @@ function uniformLines(scene: Scene, name: string, lines: Vector3[][], color: Col
   return mesh;
 }
 
-function createGroundMesh(scene: Scene, centre: Vector3Tuple, halfSize: number): Mesh {
+// Invisible but for the shadows it receives, so the background shows through.
+function createGroundMesh(
+  scene: Scene,
+  centre: Vector3Tuple,
+  halfSize: number,
+  floorZ: number,
+): Mesh {
   const ground = CreateGround("ground", { width: halfSize * 4, height: halfSize * 4 }, scene);
-  ground.position = toBabylon([centre[0], centre[1], 0]);
+  ground.position = toBabylon([centre[0], centre[1], floorZ]);
   ground.isPickable = false;
   ground.receiveShadows = true;
-  const material = new PBRMaterial("ground-material", scene);
-  material.albedoColor = GROUND_COLOR;
-  material.metallic = 0;
-  material.roughness = 1;
-  // Pushed back in depth so the grid lines drawn at z = 0 never flicker.
+  const material = new BackgroundMaterial("ground-material", scene);
+  material.shadowOnly = true;
+  material.primaryColor = Color3.Black();
+  material.alpha = 0.45;
+  // Pushed back in depth so the grid lines drawn on it never flicker.
   material.zOffset = 2;
   ground.material = material;
   return ground;
@@ -115,12 +136,17 @@ function createCoreAxes(scene: Scene, length: number): Mesh[] {
   );
 }
 
-function buildDecor(scene: Scene, centre: Vector3Tuple, extentMetres: number): Mesh[] {
+function buildDecor(
+  scene: Scene,
+  centre: Vector3Tuple,
+  extentMetres: number,
+  floorZ: number,
+): Mesh[] {
   const halfSize = Math.max(extentMetres * 1.5, 0.5);
   const step = chooseGridStep(halfSize * 2);
-  const { minor, major } = gridLines(centre, halfSize, step);
+  const { minor, major } = gridLines(centre, halfSize, step, floorZ);
   return [
-    createGroundMesh(scene, centre, halfSize),
+    createGroundMesh(scene, centre, halfSize, floorZ),
     uniformLines(scene, "grid-minor", minor, GRID_MINOR_COLOR),
     uniformLines(scene, "grid-major", major, GRID_MAJOR_COLOR),
     ...createCoreAxes(scene, step * 3),
@@ -129,14 +155,14 @@ function buildDecor(scene: Scene, centre: Vector3Tuple, extentMetres: number): M
 
 export function createStage(scene: Scene): Stage {
   const shadowGenerator = setUpLighting(scene);
-  let decor = buildDecor(scene, [0, 0, 0], 1);
+  let decor = buildDecor(scene, [0, 0, 0], 1, 0);
   return {
     shadowGenerator,
-    fitToBodies: (centre, extentMetres) => {
+    fitToBodies: (centre, extentMetres, floorZ) => {
       for (const mesh of decor) {
         mesh.dispose(false, true);
       }
-      decor = buildDecor(scene, centre, extentMetres);
+      decor = buildDecor(scene, centre, extentMetres, floorZ);
     },
   };
 }
