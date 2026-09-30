@@ -63,7 +63,7 @@ module.exports = {
       severity: "error",
       from: { path: "^packages/viewer/" },
       to: {
-        path: "^packages/sensor-types/src/(evaluators|evaluation-common|[^/]+/evaluate)\\.ts$",
+        path: "^packages/sensor-types/src/(evaluators|evaluation-common|switch-evaluation|[^/]+/evaluate)\\.ts$",
       },
     },
     {
@@ -73,6 +73,14 @@ module.exports = {
       severity: "error",
       from: { path: "^packages/sensor-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$" },
       // Through any chain of imports, not only a direct one.
+      to: { path: "evaluat", reachable: true },
+    },
+    {
+      name: "sensor-type-zones-hold-no-evaluation",
+      comment:
+        "Clients read the switch zones to draw them: zones never reach an evaluation (ADR 0025).",
+      severity: "error",
+      from: { path: "^packages/sensor-types/src/(zones|switch-zones|[^/]+/zone)\\.ts$" },
       to: { path: "evaluat", reachable: true },
     },
     {

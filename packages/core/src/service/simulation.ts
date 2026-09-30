@@ -1,11 +1,12 @@
 import type { PantinId, Tag, TagListResponse } from "@pantin/protocol";
 import { stepSimulation } from "../domain/drive-step.ts";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
+import { stepSensors } from "../domain/sensor-step.ts";
 import { commandTagOf, describeTags } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
-// Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022).
+// Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025).
 
 export async function listTags(
   context: ServiceContext,
@@ -50,6 +51,11 @@ function runSteps(openPantin: OpenPantin, steps: number): void {
     openPantin.jointVelocities = stepped.jointVelocities;
     openPantin.driveStates = stepped.driveStates;
     openPantin.driveFeedback = stepped.driveFeedback;
+    openPantin.sensorOutputs = stepSensors(
+      openPantin.document,
+      openPantin.jointPositions,
+      openPantin.sensorOutputs,
+    );
     // Joint setpoints are consumed by the first step (ADR 0012 point 3).
     openPantin.queuedSetpoints.clear();
   }

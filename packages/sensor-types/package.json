@@ -8,7 +8,8 @@
   "exports": {
     "./schemas": "./src/schemas.ts",
     "./evaluators": "./src/evaluators.ts",
-    "./labels": "./src/labels.ts"
+    "./labels": "./src/labels.ts",
+    "./zones": "./src/zones.ts"
   },
   "dependencies": {
     "zod": "4.6.5"

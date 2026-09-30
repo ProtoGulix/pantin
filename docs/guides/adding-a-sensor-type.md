@@ -1,22 +1,25 @@
 # Adding a sensor type
 
 A sensor type is one folder in `packages/sensor-types/src/` and one line in
-each of its three registries (ADR 0023). Nothing else in the core, the
-protocol or the viewer names a sensor type: the tags, the REST API and the
-sensors panel pick the new type up from the registries. The steps below use a
-hypothetical `example_sensor` type in `src/example-sensor/`; replace it with
-the real name.
+each of its registries (ADR 0023, ADR 0025). Nothing else in the core, the
+protocol or the viewer names a sensor type: the tags, the REST API, the
+sensors panel and the 3D markers pick the new type up from the registries.
+The steps below use a hypothetical `example_switch` type in
+`src/example-switch/`; replace it with the real name.
 
 Before you start:
 
 - A joint sensor watches one movable joint and has fixed tags, all feedback:
   the PLC reads them, never writes them. A variant with other tags is another
   type, not an option.
-- A sensor has no state: its values are a pure function of the joint's
-  position, computed whenever tags are read (ADR 0023 point 4). A sensor that
-  needs memory (a delay, a latch) is a new decision, not a new folder.
-- The evaluation is code. It is reviewed like any core change and never
-  loaded at run time from elsewhere (CLAUDE.md section 11.3).
+- **A switch** (an on/off output driven by where the joint is) needs no
+  evaluation code: it describes its zones in `zone.ts`, and one shared
+  evaluation gives it hysteresis (ADR 0025). Start from the datasheet: which
+  position switches it on, and how far back it must go to switch off.
+- **Anything else** (a counter, an analog value) writes its own pure
+  evaluation, like `src/encoder/evaluate.ts`. It receives the joint position
+  and the state it returned at the previous step (null before the first).
+- Delays and contact bounce are not simulated (ADR 0025 point 5).
 
 ## 1. The schema: `schema.ts`
 
@@ -25,60 +28,84 @@ of an evaluation from here.
 
 ```ts
 import { z } from "zod";
-import type { SensorParameter, SensorTag } from "../schema-common.ts";
+import {
+  finiteNumber,
+  NORMALLY_CLOSED_PARAMETER,
+  nonNegativeNumber,
+  SWITCH_TAGS,
+  type SensorParameter,
+} from "../schema-common.ts";
 
-// One line saying what the sensor detects.
-export const ExampleSensorFieldsSchema = z.object({
-  type: z.literal("example_sensor"),
-  threshold: z.number().refine(Number.isFinite, "The threshold must be a finite number."),
+// One line saying what the sensor detects, and where its values come from.
+export const ExampleSwitchFieldsSchema = z.object({
+  type: z.literal("example_switch"),
+  threshold: finiteNumber("threshold"),
+  hysteresis: nonNegativeNumber("hysteresis"),
+  normallyClosed: z.boolean(),
 });
 
-// Values are in the unit of the watched joint's coordinate (metre or radian);
-// the sensors panel shows them in mm or degrees.
-export const EXAMPLE_SENSOR_PARAMETERS = [
-  { field: "threshold", kind: "coordinateRange" },
+// Kinds: coordinateRange, coordinate (a position or length along the joint),
+// pulsesPerUnit, percent, choice (with `options`), flag.
+export const EXAMPLE_SWITCH_PARAMETERS = [
+  { field: "threshold", kind: "coordinate" },
+  { field: "hysteresis", kind: "coordinate" },
+  NORMALLY_CLOSED_PARAMETER,
 ] as const satisfies readonly SensorParameter[];
 
-// Members are lowercase English words ("state", "count").
-export const EXAMPLE_SENSOR_TAGS = [
-  { member: "state", type: "bit", direction: "feedback" },
-] as const satisfies readonly SensorTag[];
+export const EXAMPLE_SWITCH_TAGS = SWITCH_TAGS;
 ```
 
-## 2. The evaluation: `evaluate.ts`
+## 2. The zones of a switch: `zone.ts`
 
-A pure function from the joint position to the tag values, by member. Bits
-are 0 or 1; integers are whole numbers (use `wrapInt32` from
-`evaluation-common.ts` for a counter).
+Pure geometry along the joint coordinate. `on`: where an off switch turns
+on; `hold`: where an on switch stays on (the hysteresis); `shown`: the finite
+stretch the 3D view draws. Bounds may be infinite (`beyond`).
 
 ```ts
 import type { z } from "zod";
-import type { SensorEvaluator } from "../evaluation-common.ts";
-import type { ExampleSensorFieldsSchema } from "./schema.ts";
+import { beyond, type SwitchZones } from "../switch-zones.ts";
+import type { ExampleSwitchFieldsSchema } from "./schema.ts";
 
-type Fields = z.infer<typeof ExampleSensorFieldsSchema>;
+type Fields = z.infer<typeof ExampleSwitchFieldsSchema>;
 
-// Why it reads the way it does, in a comment.
-export const exampleSensor: SensorEvaluator<Fields> = {
-  evaluate: ({ fields, position }) => ({ state: position >= fields.threshold ? 1 : 0 }),
-};
+// On past the threshold, off once back by the hysteresis; the band between
+// the two is what the 3D view draws.
+export function exampleSwitchZones(fields: Fields): SwitchZones {
+  const release = fields.threshold - fields.hysteresis;
+  return {
+    on: beyond(fields.threshold, "increasing"),
+    hold: beyond(release, "increasing"),
+    shown: [release, fields.threshold],
+  };
+}
 ```
+
+A type that is not a switch writes `evaluate.ts` instead, returning its tag
+values and its state (see `src/encoder/evaluate.ts`).
 
 ## 3. The labels: `labels.ts`
 
-English and French. The type after `satisfies` makes a missing or misspelled
-label a compile error.
+English and French, choice options included. The type after `satisfies`
+makes a missing or misspelled label a compile error.
 
 ```ts
 import type { SensorTypeLabels } from "../schema-common.ts";
-import type { EXAMPLE_SENSOR_PARAMETERS, EXAMPLE_SENSOR_TAGS } from "./schema.ts";
+import type { EXAMPLE_SWITCH_PARAMETERS, EXAMPLE_SWITCH_TAGS } from "./schema.ts";
 
-export const EXAMPLE_SENSOR_LABELS = {
-  en: { name: "Example sensor", parameters: { threshold: "Threshold" }, tags: { state: "State" } },
-  fr: { name: "Capteur d'exemple", parameters: { threshold: "Seuil" }, tags: { state: "État" } },
+export const EXAMPLE_SWITCH_LABELS = {
+  en: {
+    name: "Example switch",
+    parameters: { threshold: "Threshold", hysteresis: "Hysteresis", normallyClosed: "Normally closed" },
+    tags: { state: "State" },
+  },
+  fr: {
+    name: "Contact d'exemple",
+    parameters: { threshold: "Seuil", hysteresis: "Hystérésis", normallyClosed: "Normalement fermé" },
+    tags: { state: "État" },
+  },
 } satisfies SensorTypeLabels<
-  (typeof EXAMPLE_SENSOR_PARAMETERS)[number]["field"],
-  (typeof EXAMPLE_SENSOR_TAGS)[number]["member"]
+  (typeof EXAMPLE_SWITCH_PARAMETERS)[number]["field"],
+  (typeof EXAMPLE_SWITCH_TAGS)[number]["member"]
 >;
 ```
 
@@ -89,18 +116,22 @@ lists every place you missed:
 
 - `src/schemas.ts`: the schema in `SensorFieldsSchema`, then
   `SENSOR_PARAMETERS` and `SENSOR_TAGS`;
-- `src/evaluators.ts`: `SENSOR_EVALUATORS`;
+- `src/zones.ts`: `SWITCH_ZONES`, with the type's zones for a switch (a type
+  with a `normallyClosed` field), or `null` for any other type, which then
+  gets its evaluation in `src/evaluators.ts`;
 - `src/labels.ts`: `SENSOR_LABELS`.
 
-A new parameter kind (other than `coordinateRange`, `pulsesPerUnit` and
-`flag`) also needs the sensors panel to know how to show and type it: that is
-a viewer change, to discuss first.
+A new parameter kind also needs the sensors panel to show and convert it
+(`packages/viewer/src/sensors/parameter-texts.ts`): discuss it first.
 
 ## 5. Tests, then the schema version
 
-- In `src/sensor-types.test.ts`, evaluate the type through `evaluateSensor`:
-  each side of every threshold, the bounds themselves, and the schema's
-  refusals. The registry test checks the labels and tags on its own.
+- Step the sensor along positions with `statesAlong` (`src/test-support.ts`):
+  the switch-on point, the hysteresis both ways, and the schema's refusals.
+  See `src/switches.test.ts`.
+- Add a valid sample of the type to `SAMPLES` in `src/sensor-types.test.ts`
+  (the compiler asks for it): the registry test then checks its labels, its
+  zones and that it evaluates to every tag it declares.
 - A new sensor type changes what `pantin.json` accepts: raise
   `PANTIN_SCHEMA_VERSION` with a migration step (CLAUDE.md section 14.6), then
   run `pnpm schema:generate` for the JSON Schema (ADR 0021).

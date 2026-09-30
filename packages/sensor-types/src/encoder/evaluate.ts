@@ -9,6 +9,7 @@ type Fields = z.infer<typeof EncoderFieldsSchema>;
 // (Math.round), whichever side of the reference it is on.
 export const encoder: SensorEvaluator<Fields> = {
   evaluate: ({ fields, position }) => ({
-    count: wrapInt32(Math.round(position * fields.pulsesPerUnit)),
+    values: { count: wrapInt32(Math.round(position * fields.pulsesPerUnit)) },
+    state: {},
   }),
 };

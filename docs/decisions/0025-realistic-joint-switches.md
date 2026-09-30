@@ -70,5 +70,7 @@ the model below on 2026-09-30.
 - The core keeps one more runtime map (sensor states), cleared like the
   drive states when a Pantin is opened or a sensor edited.
 - Tag values of sensors come from the last step, like drive feedback.
+- Any edit of a sensor (a rename included) forgets its state: a switch held
+  inside its hysteresis band starts released at the next step.
 - A community sensor type that switches only writes a `zone.ts`; one that
   does something else (the encoder) writes its own evaluation.

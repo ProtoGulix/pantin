@@ -1,8 +1,9 @@
 import { z } from "zod";
-import type { SensorParameter, SensorTag } from "../schema-common.ts";
+import { NORMALLY_CLOSED_PARAMETER, type SensorParameter, SWITCH_TAGS } from "../schema-common.ts";
 
-// A position switch (fin de course): on while the joint is within its range,
-// the other way round when normally closed.
+// An ideal switch: on while the joint is within its range, without hysteresis,
+// the other way round when normally closed. The realistic types sit next to it
+// (ADR 0025).
 export const PositionSwitchFieldsSchema = z.object({
   type: z.literal("position_switch"),
   // [lower, upper] of the joint's coordinate, where the switch is actuated.
@@ -15,9 +16,7 @@ export const PositionSwitchFieldsSchema = z.object({
 
 export const POSITION_SWITCH_PARAMETERS = [
   { field: "range", kind: "coordinateRange" },
-  { field: "normallyClosed", kind: "flag" },
+  NORMALLY_CLOSED_PARAMETER,
 ] as const satisfies readonly SensorParameter[];
 
-export const POSITION_SWITCH_TAGS = [
-  { member: "state", type: "bit", direction: "feedback" },
-] as const satisfies readonly SensorTag[];
+export const POSITION_SWITCH_TAGS = SWITCH_TAGS;

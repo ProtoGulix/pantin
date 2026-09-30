@@ -44,6 +44,11 @@ function migrateV5ToV6(document: JsonObject): JsonObject {
   return { ...document, schema_version: 6, sensors: [] };
 }
 
+// Version 7 adds the realistic switch types (ADR 0025): existing documents stay valid.
+function migrateV6ToV7(document: JsonObject): JsonObject {
+  return { ...document, schema_version: 7 };
+}
+
 // Key: the version a step starts from.
 const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject> = new Map([
   [1, migrateV1ToV2],
@@ -51,6 +56,7 @@ const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject>
   [3, migrateV3ToV4],
   [4, migrateV4ToV5],
   [5, migrateV5ToV6],
+  [6, migrateV6ToV7],
 ]);
 
 function isJsonObject(value: unknown): value is JsonObject {

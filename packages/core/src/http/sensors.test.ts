@@ -93,6 +93,49 @@ describe("end-of-stroke switches over REST (phase 5 exit)", () => {
   });
 });
 
+const STOP = {
+  name: "Stop",
+  assembly: "carriage",
+  joint: "stroke",
+  type: "limit_switch",
+  operatingPosition: 0.098,
+  actuation: "increasing",
+  differentialTravel: 0.001,
+  overtravel: 0.002,
+  normallyClosed: false,
+};
+
+describe("mechanical limit switch over REST (ADR 0025)", () => {
+  // Drives the joint by its setpoint, the drive being gone (ADR 0022), and
+  // reads the switch after one step.
+  const stateAt = async (position: number) => {
+    await axis.writeTag("carriage.stroke.setpoint", position);
+    axis.runSeconds(1 / 120);
+    return (await tagValues())["carriage.stop.state"];
+  };
+
+  beforeEach(async () => {
+    await sendJsonRequest(axis.server, "POST", "/api/pantins/axis/sensors", STOP);
+    await sendRaw(axis.server, "DELETE", "/api/pantins/axis/drives/valve");
+  });
+
+  it("changes over at its operating position and lets go only past its differential travel", async () => {
+    // 97 mm, 98 mm, back to 97.5 mm (held), then 96.9 mm (released).
+    expect([
+      await stateAt(0.097),
+      await stateAt(0.098),
+      await stateAt(0.0975),
+      await stateAt(0.0969),
+    ]).toEqual([0, 1, 1, 0]);
+  });
+
+  it("forgets its state when changed: held within its hysteresis, it starts released", async () => {
+    expect([await stateAt(0.098), await stateAt(0.0975)]).toEqual([1, 1]);
+    await sendJsonRequest(axis.server, "PATCH", "/api/pantins/axis/sensors/stop", STOP);
+    expect(await stateAt(0.0975)).toBe(0);
+  });
+});
+
 describe("encoder over REST", () => {
   it("counts in whole pulses as an integer feedback tag", async () => {
     await sendJsonRequest(axis.server, "POST", "/api/pantins/axis/sensors", {

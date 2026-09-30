@@ -1,17 +1,27 @@
-// What every sensor type's evaluate.ts uses (ADR 0023 point 4): a sensor has
-// no state, so its values are a pure function of the watched joint's
-// position. Plain numbers only, so that a folder depends on this package alone.
+// What every sensor evaluation uses (ADR 0025 point 1): the joint position,
+// the sensor's state of the previous step, both plain numbers, so that a
+// folder depends on this package alone.
+
+type Values = Readonly<Record<string, number>>;
 
 export interface SensorInput<Fields> {
   fields: Fields;
   // In the joint coordinate's unit (metre or radian).
   position: number;
+  // What the previous step returned; null before the first step.
+  state: Values | null;
+}
+
+export interface SensorOutput {
+  // Tag values, by member.
+  values: Record<string, number>;
+  state: Record<string, number>;
 }
 
 // A method, not a function type: the registry (evaluators.ts) relies on
 // method parameters being compared bivariantly, as for drive behaviours.
 export interface SensorEvaluator<Fields> {
-  evaluate(input: SensorInput<Fields>): Record<string, number>;
+  evaluate(input: SensorInput<Fields>): SensorOutput;
 }
 
 const INT32_RANGE = 2 ** 32;

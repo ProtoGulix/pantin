@@ -12,9 +12,9 @@ import { SensorSchema } from "./sensor.ts";
 
 // Version 2 added `joints` (ADR 0011), version 3 the helical joint (ADR 0013),
 // version 4 assemblies and tag keys (ADR 0019), version 5 drives (ADR 0022),
-// version 6 joint sensors (ADR 0023).
+// version 6 joint sensors (ADR 0023), version 7 realistic switches (ADR 0025).
 // The core migrates older documents on read.
-export const PANTIN_SCHEMA_VERSION = 6;
+export const PANTIN_SCHEMA_VERSION = 7;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";

@@ -4,12 +4,12 @@ import type { POSITION_SWITCH_PARAMETERS, POSITION_SWITCH_TAGS } from "./schema.
 // What the user reads; the tag members themselves stay in English (ADR 0023).
 export const POSITION_SWITCH_LABELS = {
   en: {
-    name: "Position switch",
+    name: "Ideal switch",
     parameters: { range: "Actuated between", normallyClosed: "Normally closed" },
     tags: { state: "State" },
   },
   fr: {
-    name: "Fin de course",
+    name: "Contact idéal",
     parameters: { range: "Actionné entre", normallyClosed: "Normalement fermé" },
     tags: { state: "État" },
   },

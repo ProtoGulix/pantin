@@ -63,6 +63,7 @@ const noRuntime = {
   setpoints: new Map(),
   driveCommands: new Map(),
   driveFeedback: new Map(),
+  sensorOutputs: new Map(),
 };
 
 function apiErrorOf(action: () => unknown): ApiError {

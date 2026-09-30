@@ -16,9 +16,8 @@ import { loadSettledPantin } from "./mesh-lifecycle.ts";
 import type { ServiceContext } from "./open-pantins.ts";
 import { toResponse } from "./open-pantins.ts";
 
-// Sensors of an open Pantin (ADR 0023). A sensor has no runtime state: its
-// values are computed from the joint positions when tags are read, so an edit
-// changes the document only.
+// Sensors of an open Pantin (ADR 0023). A changed or deleted sensor forgets
+// its last output (ADR 0025), so that a new type or new zones start afresh.
 
 export function sensorOperations(context: ServiceContext) {
   return {
@@ -32,11 +31,13 @@ export function sensorOperations(context: ServiceContext) {
       const openPantin = await loadSettledPantin(context, pantinId);
       const { document, sensor } = updateSensorInDocument(openPantin.document, sensorId, request);
       openPantin.document = document;
+      openPantin.sensorOutputs.delete(sensorId);
       return sensor;
     },
     deleteSensor: async (pantinId: PantinId, sensorId: string): Promise<PantinResponse> => {
       const openPantin = await loadSettledPantin(context, pantinId);
       openPantin.document = deleteSensorFromDocument(openPantin.document, sensorId);
+      openPantin.sensorOutputs.delete(sensorId);
       return toResponse(pantinId, openPantin);
     },
     renameSensorTagKey: async (pantinId: PantinId, sensorId: string, tagKey: string) => {

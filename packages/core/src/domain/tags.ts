@@ -11,7 +11,7 @@ import {
   type TagType,
   tagName,
 } from "@pantin/protocol";
-import { evaluateSensor } from "@pantin/sensor-types/evaluators";
+import { evaluateSensor, type SensorOutput } from "@pantin/sensor-types/evaluators";
 import { ApiError } from "../errors.ts";
 import { isMovableJoint } from "./joint-types/registry.ts";
 import { currentJointPosition } from "./kinematics.ts";
@@ -42,6 +42,8 @@ export type TagRuntime = {
   // Last value written to each drive command, and each drive's feedback.
   driveCommands: ReadonlyMap<string, Readonly<Record<string, number>>>;
   driveFeedback: ReadonlyMap<string, Readonly<Record<string, number>>>;
+  // Each sensor's output of the last step (ADR 0025).
+  sensorOutputs: ReadonlyMap<string, SensorOutput>;
 };
 
 export function drivenJointIds(document: PantinDocument): Set<string> {
@@ -124,10 +126,12 @@ function currentValue(entry: TagEntry, runtime: TagRuntime): number {
       ? (runtime.setpoints.get(owner.joint.id) ?? 0)
       : currentJointPosition(owner.joint, runtime.jointPositions);
   }
-  // Computed at each read, from the latest step: a sensor has no state (ADR 0023 point 4).
+  // From the last step; a sensor not stepped yet reads its position alone (ADR 0025 point 1).
   if (owner.kind === "sensor") {
+    const stepped = runtime.sensorOutputs.get(owner.sensor.id);
     const position = currentJointPosition(owner.joint, runtime.jointPositions);
-    return evaluateSensor({ fields: owner.sensor, position })[member] ?? 0;
+    const output = stepped ?? evaluateSensor({ fields: owner.sensor, position, state: null });
+    return output.values[member] ?? 0;
   }
   const values = entry.direction === "command" ? runtime.driveCommands : runtime.driveFeedback;
   return values.get(owner.drive.id)?.[member] ?? 0;

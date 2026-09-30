@@ -120,6 +120,7 @@ describe("tags with drives", () => {
     setpoints: new Map(),
     driveCommands: new Map([["valve", { extend: 1 }]]),
     driveFeedback: new Map(),
+    sensorOutputs: new Map(),
   };
 
   it("gives a driven joint its position only, and the drive its command bits", () => {

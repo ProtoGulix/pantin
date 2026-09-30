@@ -1,4 +1,5 @@
 import type { PantinDocument, PantinId, PantinResponse } from "@pantin/protocol";
+import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { parsePantinDocument, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
@@ -37,6 +38,9 @@ export type OpenPantin = {
   // An unresponsive drive runs on the commands it had when it failed.
   frozenDriveCommands: Map<string, Readonly<Record<string, number>>>;
   jammedJointIds: Set<string>;
+  // Joint sensors (ADR 0025): each one's tag values and state of the last
+  // step, never saved.
+  sensorOutputs: Map<string, SensorOutput>;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
 };
@@ -64,6 +68,7 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
     driveFeedback: new Map(),
     frozenDriveCommands: new Map(),
     jammedJointIds: new Set(),
+    sensorOutputs: new Map(),
     stepCount: 0,
   };
 }
@@ -79,6 +84,7 @@ export function resetRuntimeState(openPantin: OpenPantin): void {
   openPantin.driveFeedback.clear();
   openPantin.frozenDriveCommands.clear();
   openPantin.jammedJointIds.clear();
+  openPantin.sensorOutputs.clear();
 }
 // Promises, not values: two requests loading the same Pantin at once share
 // one load, hence one OpenPantin object that both edit.

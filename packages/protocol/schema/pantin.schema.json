@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 6
+      "const": 7
     },
     "name": {
       "type": "string",
@@ -798,6 +798,186 @@
               "joint",
               "type",
               "range",
+              "normallyClosed"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joint": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "type": {
+                "type": "string",
+                "const": "limit_switch"
+              },
+              "operatingPosition": {
+                "type": "number"
+              },
+              "actuation": {
+                "type": "string",
+                "enum": ["increasing", "decreasing"]
+              },
+              "differentialTravel": {
+                "type": "number"
+              },
+              "overtravel": {
+                "type": "number"
+              },
+              "normallyClosed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "joint",
+              "type",
+              "operatingPosition",
+              "actuation",
+              "differentialTravel",
+              "overtravel",
+              "normallyClosed"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joint": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "type": {
+                "type": "string",
+                "const": "cylinder_switch"
+              },
+              "position": {
+                "type": "number"
+              },
+              "windowWidth": {
+                "type": "number"
+              },
+              "hysteresis": {
+                "type": "number"
+              },
+              "normallyClosed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "joint",
+              "type",
+              "position",
+              "windowWidth",
+              "hysteresis",
+              "normallyClosed"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joint": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "type": {
+                "type": "string",
+                "const": "inductive_switch"
+              },
+              "facePosition": {
+                "type": "number"
+              },
+              "approach": {
+                "type": "string",
+                "enum": ["increasing", "decreasing"]
+              },
+              "nominalDistance": {
+                "type": "number"
+              },
+              "material": {
+                "type": "string",
+                "enum": ["steel", "stainless_steel", "brass", "aluminium", "copper"]
+              },
+              "hysteresisPercent": {
+                "type": "number"
+              },
+              "normallyClosed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "joint",
+              "type",
+              "facePosition",
+              "approach",
+              "nominalDistance",
+              "material",
+              "hysteresisPercent",
               "normallyClosed"
             ],
             "additionalProperties": false

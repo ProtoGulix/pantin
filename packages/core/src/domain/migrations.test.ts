@@ -62,6 +62,14 @@ describe("migratePantinDocument to version 6 (ADR 0023)", () => {
   });
 });
 
+describe("migratePantinDocument to version 7 (ADR 0025)", () => {
+  it("keeps a version 6 document as it is, but for its version", () => {
+    expect(migratePantinDocument({ ...CURRENT_OF_V1, schema_version: 6 }, "p")).toEqual(
+      CURRENT_OF_V1,
+    );
+  });
+});
+
 describe("migratePantinDocument on unusual input", () => {
   it("leaves malformed bodies and joints to the schema, which reports them", () => {
     const malformed = {

@@ -1,27 +1,24 @@
 import { encoder } from "./encoder/evaluate.ts";
-import type { SensorEvaluator, SensorInput } from "./evaluation-common.ts";
-import { positionSwitch } from "./position-switch/evaluate.ts";
-import type { SensorFields, SensorType } from "./schemas.ts";
+import type { SensorInput, SensorOutput } from "./evaluation-common.ts";
+import type { SensorFields } from "./schemas.ts";
+import { evaluateSwitch } from "./switch-evaluation.ts";
+import { switchOf } from "./zones.ts";
 
-// Registry of sensor evaluators (ADR 0023), for the core only. The record is
-// keyed by type, so a type declared in schemas.ts without an evaluator here
-// does not compile. The core calls evaluateSensor and never names a type.
+// Sensor evaluations (ADR 0023, ADR 0025), for the core only. A switch is
+// evaluated from its zones (zones.ts); any other type has its own evaluation
+// here. The core calls evaluateSensor and never names a type.
 
-const SENSOR_EVALUATORS: {
-  readonly [Type in SensorType]: SensorEvaluator<Extract<SensorFields, { type: Type }>>;
-} = {
-  position_switch: positionSwitch,
-  encoder,
-};
+export type { SensorOutput } from "./evaluation-common.ts";
 
-// The entry for fields.type handles that type: the record's type above
-// guarantees it. TypeScript accepts the lookup without a cast because method
-// parameters are compared bivariantly (see SensorEvaluator).
-function evaluatorOf(fields: SensorFields): SensorEvaluator<SensorFields> {
-  return SENSOR_EVALUATORS[fields.type];
-}
-
-/** The sensor's tag values, by member, for the joint at this position. */
-export function evaluateSensor(input: SensorInput<SensorFields>): Record<string, number> {
-  return evaluatorOf(input.fields).evaluate(input);
+/** The sensor's tag values and new state, for the joint at this position. */
+export function evaluateSensor(input: SensorInput<SensorFields>): SensorOutput {
+  const { fields } = input;
+  const asSwitch = switchOf(fields);
+  if (asSwitch !== null) {
+    return evaluateSwitch(asSwitch, input.position, input.state);
+  }
+  if (fields.type === "encoder") {
+    return encoder.evaluate({ ...input, fields });
+  }
+  throw new Error(`Sensor type "${fields.type}" has neither zones nor an evaluation.`);
 }
