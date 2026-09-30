@@ -125,8 +125,8 @@ describe("single-acting cylinder over REST, through the migration (phase 4 exit)
 });
 
 describe("motor over REST, through the migration", () => {
-  // A 0.5 m/s nominal motor on a 1 m/s^2 ramp, on a continuous joint: the
-  // speed and the ramp in joint units are those of ADR 0022.
+  // A 0.5 m/s nominal motor on a 1 m/s^2 ramp, on the prismatic stroke
+  // (0.1 m limit): the speed and the ramp in joint units are those of ADR 0022.
   it("ramps to its nominal speed at its acceleration, as before", async () => {
     const old = {
       ...OLD_DRIVE,
