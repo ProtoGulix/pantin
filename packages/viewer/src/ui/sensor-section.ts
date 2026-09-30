@@ -12,19 +12,20 @@ import type { PanelIntents } from "./panel-intents.ts";
 // joints, and reading their tags as a PLC would. Their values are written in
 // place by the panel's showTagValues, like the drives' feedback.
 
+function renderInput(input: SensorFormView["inputs"][number], intents: PanelIntents) {
+  const edit = (text: string) => intents.editSensorParameter(input.key, text);
+  switch (input.input) {
+    case "checkbox":
+      return checkbox(input.label, input.value === "true", (on) => edit(String(on)));
+    case "select":
+      return field(input.label, selectInput(input.options, input.value, input.label, edit));
+    case "text":
+      return field(input.label, formInput(`sensor-${input.key}`, input.value, input.label, edit));
+  }
+}
+
 function renderInputs(form: SensorFormView, intents: PanelIntents): HTMLElement[] {
-  return form.inputs.map((input) =>
-    input.input === "checkbox"
-      ? checkbox(input.label, input.value === "true", (on) =>
-          intents.editSensorParameter(input.key, String(on)),
-        )
-      : field(
-          input.label,
-          formInput(`sensor-${input.key}`, input.value, input.label, (text) =>
-            intents.editSensorParameter(input.key, text),
-          ),
-        ),
-  );
+  return form.inputs.map((input) => renderInput(input, intents));
 }
 
 function renderForm(form: SensorFormView, t: Translate, intents: PanelIntents): HTMLElement {

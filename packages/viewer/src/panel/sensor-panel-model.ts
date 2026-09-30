@@ -11,8 +11,8 @@ import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
 import { movableJoints } from "../drives/drive-form.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { displayUnitLabel } from "../joints/joint-parameters.ts";
+import { parameterKeys } from "../sensors/parameter-texts.ts";
 import {
-  parameterKeys,
   SENSOR_TYPES,
   type SensorFormState,
   sensorCoordinateUnit,
@@ -42,9 +42,20 @@ export interface SensorCardView {
 interface SensorInputView {
   key: string;
   label: string;
-  input: "text" | "checkbox";
+  input: "text" | "checkbox" | "select";
+  // The values a select offers, labelled.
+  options: { value: string; label: string }[];
   value: string;
 }
+
+const INPUTS: Readonly<Record<SensorParameter["kind"], SensorInputView["input"]>> = {
+  coordinateRange: "text",
+  coordinate: "text",
+  pulsesPerUnit: "text",
+  percent: "text",
+  choice: "select",
+  flag: "checkbox",
+};
 
 export interface SensorFormView {
   title: string;
@@ -84,7 +95,7 @@ function sensorCard(document: PantinDocument, sensor: Sensor, state: ViewerState
   return card;
 }
 
-// "Range, min (mm)", "Resolution (pulses/mm)", "Normally closed".
+// "Range, min (mm)", "Resolution (pulses/mm)", "Hysteresis (%)", "Normally closed".
 function inputLabels(
   parameter: SensorParameter,
   label: string,
@@ -97,7 +108,12 @@ function inputLabels(
     unitText === null ? text : `${text} (${unitText})`;
   switch (parameter.kind) {
     case "flag":
+    case "choice":
       return [label];
+    case "percent":
+      return [withUnit(label, "%")];
+    case "coordinate":
+      return [withUnit(label, base)];
     case "pulsesPerUnit":
       return [withUnit(label, base === null ? null : `${t("sensors.pulses")}/${base}`)];
     case "coordinateRange":
@@ -122,10 +138,15 @@ function formInputs(
       unit,
       t,
     );
+    const options = (parameter.options ?? []).map((value) => ({
+      value,
+      label: labels.options?.[value] ?? value,
+    }));
     return parameterKeys(parameter).map((key, index) => ({
       key,
       label: texts[index] ?? key,
-      input: parameter.kind === "flag" ? ("checkbox" as const) : ("text" as const),
+      input: INPUTS[parameter.kind],
+      options,
       value: form.values[key] ?? "",
     }));
   });

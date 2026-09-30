@@ -102,11 +102,21 @@ describe("sensor form", () => {
 });
 
 describe("end-of-stroke switches", () => {
-  it("puts one switch at each end, over 2 % of the stroke, in the child's assembly", () => {
+  it("puts a mechanical limit switch 2 % of the stroke before each end (ADR 0025)", () => {
     const [lower, upper] = endSwitchRequests(document, "slide");
-    expect([lower?.name, lower?.assembly, upper?.name]).toEqual(["Slide min", "main", "Slide max"]);
-    expect(Reflect.get(lower ?? {}, "range")).toEqual([0, 0.002]);
-    expect(Reflect.get(upper ?? {}, "range")).toEqual([0.098, 0.1]);
+    expect(lower).toEqual({
+      name: "Slide min",
+      assembly: "main",
+      joint: "slide",
+      type: "limit_switch",
+      operatingPosition: 0.002,
+      actuation: "decreasing",
+      differentialTravel: 0.0005,
+      overtravel: 0.002,
+      normallyClosed: false,
+    });
+    expect(upper).toMatchObject({ name: "Slide max", actuation: "increasing" });
+    expect(Reflect.get(upper ?? {}, "operatingPosition")).toBeCloseTo(0.098, 12);
   });
 
   it("offers none on a joint without limits", () => {
@@ -117,12 +127,26 @@ describe("end-of-stroke switches", () => {
 describe("sensor section and context menu", () => {
   const state = withOpenPantin(initialViewerState("fr"), { ...response, document });
 
+  it("offers a choice parameter as a select with its labelled options", () => {
+    const form = withSensorFormType(formForJoint("slide"), "inductive_switch");
+    const view = buildSensorSectionView({ ...state, sensorForm: form }, document, t).form;
+    const material = view?.inputs.find((input) => input.key === "material");
+    expect([material?.input, material?.value, material?.options[2]]).toEqual([
+      "select",
+      "steel",
+      { value: "brass", label: "Laiton (× 0,4)" },
+    ]);
+    expect(view?.inputs.find((input) => input.key === "hysteresisPercent")?.label).toBe(
+      "Hystérésis (%)",
+    );
+  });
+
   it("lists each sensor with its tags and the joint it watches", () => {
     expect(buildSensorSectionView(state, document, t).sensors).toEqual([
       {
         id: "extended",
         name: "Extended",
-        typeLabel: "Fin de course",
+        typeLabel: "Contact idéal",
         tagPrefix: "main.extended",
         watches: "Surveille « Slide »",
         tags: [{ name: "main.extended.state", label: "État" }],
@@ -156,7 +180,7 @@ describe("sensors in the joint properties", () => {
 
   it("lists each sensor watching the joint with its type and tags", () => {
     expect(groupOf("slide")?.rows.map((row) => [row.label, row.value])).toEqual([
-      ["Extended", "Fin de course · main.extended.state"],
+      ["Extended", "Contact idéal · main.extended.state"],
     ]);
   });
 

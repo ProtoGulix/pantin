@@ -6,18 +6,16 @@ import {
   type PantinDocument,
   SENSOR_PARAMETERS,
   type Sensor,
-  type SensorParameter,
   type SensorType,
 } from "@pantin/protocol";
 import { movableJoints } from "../drives/drive-form.ts";
-import { parseNumber, schemaMessage } from "../joints/joint-form.ts";
-import { coordinateFromDisplay, coordinateToDisplay, formatDisplayNumber } from "../units.ts";
+import { schemaMessage } from "../joints/joint-form.ts";
+import { defaultTexts, parameterKeys, parameterTexts, parameterValue } from "./parameter-texts.ts";
 
 // The sensor form of the right-hand panel (ADR 0023) as pure functions. Its
 // parameters come from SENSOR_PARAMETERS, so no sensor type is named here;
 // they are typed in the display unit of the watched joint (mm or degrees)
-// and sent in SI. Each parameter kind has its inputs, by key: a range has
-// "<field>.lower" and "<field>.upper", the others "<field>".
+// and sent in SI; parameter-texts.ts converts each kind of parameter.
 
 export interface SensorFormState {
   // The sensor this form changes, or null when it creates one.
@@ -47,51 +45,10 @@ export function sensorCoordinateUnit(
   return joint === undefined ? "metre" : JOINT_COORDINATE_UNITS[joint.type];
 }
 
-/** The input keys of one parameter, in the order the form shows them. */
-export function parameterKeys(parameter: SensorParameter): string[] {
-  return parameter.kind === "coordinateRange"
-    ? [`${parameter.field}.lower`, `${parameter.field}.upper`]
-    : [parameter.field];
-}
-
-// Pulses per metre or radian from pulses per mm or degree, and back: the
-// inverse of a coordinate conversion.
-const perUnitFromDisplay = (unit: JointCoordinateUnit, value: number) =>
-  value / coordinateFromDisplay(unit, 1);
-const perUnitToDisplay = (unit: JointCoordinateUnit, value: number) =>
-  value * coordinateFromDisplay(unit, 1);
-
-function displayTexts(parameter: SensorParameter, stored: unknown, unit: JointCoordinateUnit) {
-  const format = (value: number) => formatDisplayNumber(coordinateToDisplay(unit, value));
-  if (parameter.kind === "flag") {
-    return [String(stored === true)];
-  }
-  if (parameter.kind === "pulsesPerUnit") {
-    return typeof stored === "number" ? [formatDisplayNumber(perUnitToDisplay(unit, stored))] : [];
-  }
-  return Array.isArray(stored) ? stored.map((value) => format(Number(value))) : [];
-}
-
-function parameterValue(
-  parameter: SensorParameter,
-  values: Readonly<Record<string, string>>,
-  unit: JointCoordinateUnit,
-): unknown {
-  const [first = "", second = ""] = parameterKeys(parameter).map((key) => values[key] ?? "");
-  switch (parameter.kind) {
-    case "flag":
-      return first === "true";
-    case "pulsesPerUnit":
-      return perUnitFromDisplay(unit, parseNumber(first));
-    case "coordinateRange":
-      return [first, second].map((text) => coordinateFromDisplay(unit, parseNumber(text)));
-  }
-}
-
 function formValues(type: SensorType, fields: object, unit: JointCoordinateUnit) {
   const values: Record<string, string> = {};
   for (const parameter of SENSOR_PARAMETERS[type]) {
-    const texts = displayTexts(parameter, Reflect.get(fields, parameter.field), unit);
+    const texts = parameterTexts(parameter, Reflect.get(fields, parameter.field), unit);
     for (const [index, key] of parameterKeys(parameter).entries()) {
       values[key] = texts[index] ?? "";
     }
@@ -99,13 +56,8 @@ function formValues(type: SensorType, fields: object, unit: JointCoordinateUnit)
   return values;
 }
 
-// A new form starts with every flag unset, so that the checkbox shows the value sent.
 function emptyValues(type: SensorType): Record<string, string> {
-  return Object.fromEntries(
-    SENSOR_PARAMETERS[type]
-      .filter((parameter) => parameter.kind === "flag")
-      .map((parameter) => [parameter.field, "false"]),
-  );
+  return Object.assign({}, ...SENSOR_PARAMETERS[type].map(defaultTexts));
 }
 
 export function initialSensorForm(document: PantinDocument): SensorFormState {

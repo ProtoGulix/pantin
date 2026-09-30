@@ -6,7 +6,7 @@ import { initialSensorForm, type SensorFormState } from "./sensor-form.ts";
 // What a joint's context menu offers for sensors (ADR 0023 point 7): a new
 // sensor watching it, or its two end-of-stroke switches at once.
 
-// Each switch is on over this share of the stroke, at its end: 2 mm of a
+// Each switch is operated this share of the stroke before its end: 2 mm of a
 // 100 mm stroke, as in the manifest example of CLAUDE.md section 5.
 const END_SWITCH_SHARE = 0.02;
 
@@ -39,9 +39,10 @@ export function sensorFormForJoint(
 }
 
 /**
- * The two end-of-stroke switches of a joint with limits, at its lower then its
- * upper end, named "<joint> min" and "<joint> max"; empty for a joint without
- * limits (continuous or fixed).
+ * The two end-of-stroke switches of a joint with limits (ADR 0025 point 6):
+ * mechanical limit switches operated 2 % of the stroke before each end, with
+ * the remaining 2 % as overtravel and a quarter of it as differential travel,
+ * named "<joint> min" and "<joint> max"; empty for a joint without limits.
  */
 export function endSwitchRequests(
   document: PantinDocument,
@@ -54,16 +55,19 @@ export function endSwitchRequests(
     return [];
   }
   const width = (limits.upper - limits.lower) * END_SWITCH_SHARE;
-  const ends: [string, [number, number]][] = [
-    ["min", [limits.lower, limits.lower + width]],
-    ["max", [limits.upper - width, limits.upper]],
-  ];
-  return ends.map(([end, range]) => ({
+  const ends = [
+    { end: "min", operatingPosition: limits.lower + width, actuation: "decreasing" },
+    { end: "max", operatingPosition: limits.upper - width, actuation: "increasing" },
+  ] as const;
+  return ends.map(({ end, operatingPosition, actuation }) => ({
     name: `${joint.name} ${end}`,
     assembly,
     joint: jointId,
-    type: "position_switch",
-    range,
+    type: "limit_switch",
+    operatingPosition,
+    actuation,
+    differentialTravel: width / 4,
+    overtravel: width,
     normallyClosed: false,
   }));
 }
