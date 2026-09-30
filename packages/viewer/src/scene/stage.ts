@@ -17,14 +17,14 @@ import { chooseGridStep } from "./scene-plan.ts";
 // world axes. Grid and axes are built from core coordinates and converted, so
 // they show the core frame (Z up) whatever Babylon uses internally.
 //
-// The look is a bright product studio: a light seamless background, soft
-// light from above, and a ground that shows nothing but the soft shadow of
-// the bodies, so they seem to rest on an endless floor.
+// The look is a product studio: a dark seamless background, soft light from
+// above, and a ground that shows nothing but the soft shadow of the bodies,
+// so they seem to rest on an endless floor.
 
 // Same value as --viewport-background in base.css, shown before the first frame.
-const BACKGROUND = Color4.FromHexString("#f4f4f4ff");
-const GRID_MINOR_COLOR = Color4.FromHexString("#e6e6e6ff");
-const GRID_MAJOR_COLOR = Color4.FromHexString("#d6d6d6ff");
+const BACKGROUND = Color4.FromHexString("#1b1e24ff");
+const GRID_MINOR_COLOR = Color4.FromHexString("#3a404bff");
+const GRID_MAJOR_COLOR = Color4.FromHexString("#4f5766ff");
 const AXIS_X_COLOR = Color4.FromHexString("#e5534bff");
 const AXIS_Y_COLOR = Color4.FromHexString("#57ab5aff");
 const AXIS_Z_COLOR = Color4.FromHexString("#539bf5ff");
