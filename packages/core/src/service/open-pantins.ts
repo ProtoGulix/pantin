@@ -28,6 +28,15 @@ export type OpenPantin = {
   // the next simulation step has not consumed yet. Never saved.
   setpoints: Map<string, number>;
   queuedSetpoints: Map<string, number>;
+  // Drives (ADR 0022), never saved: joint velocities, the last value written
+  // to each drive command, each drive's state and feedback, and the faults.
+  jointVelocities: Map<string, number>;
+  driveCommands: Map<string, Readonly<Record<string, number>>>;
+  driveStates: Map<string, Readonly<Record<string, number>>>;
+  driveFeedback: Map<string, Readonly<Record<string, number>>>;
+  // An unresponsive drive runs on the commands it had when it failed.
+  frozenDriveCommands: Map<string, Readonly<Record<string, number>>>;
+  jammedJointIds: Set<string>;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
 };
@@ -49,8 +58,27 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
     jointPositions: new Map(),
     setpoints: new Map(),
     queuedSetpoints: new Map(),
+    jointVelocities: new Map(),
+    driveCommands: new Map(),
+    driveStates: new Map(),
+    driveFeedback: new Map(),
+    frozenDriveCommands: new Map(),
+    jammedJointIds: new Set(),
     stepCount: 0,
   };
+}
+
+/** Back to the reference configuration: no motion, no command, no fault. */
+export function resetRuntimeState(openPantin: OpenPantin): void {
+  openPantin.jointPositions.clear();
+  openPantin.setpoints.clear();
+  openPantin.queuedSetpoints.clear();
+  openPantin.jointVelocities.clear();
+  openPantin.driveCommands.clear();
+  openPantin.driveStates.clear();
+  openPantin.driveFeedback.clear();
+  openPantin.frozenDriveCommands.clear();
+  openPantin.jammedJointIds.clear();
 }
 // Promises, not values: two requests loading the same Pantin at once share
 // one load, hence one OpenPantin object that both edit.

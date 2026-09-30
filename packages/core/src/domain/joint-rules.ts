@@ -7,6 +7,7 @@ import {
 import { ApiError } from "../errors.ts";
 import { makeUniqueId, slugifyDisplayName } from "./ids.ts";
 import { addJoint, removeJoint, replaceJoint } from "./pantin-document.ts";
+import { tagKeyOwners } from "./tag-keys.ts";
 import { parseWithSchema } from "./validation.ts";
 
 // Adding or changing a joint in a document (ADR 0011 point 3): the joints
@@ -59,13 +60,8 @@ function validatedJoint(document: PantinDocument, id: string, context: string) {
 // Tag keys already used by the joints whose child body is in the same
 // assembly as `childId` (ADR 0019): a tag key is unique there only.
 function tagKeysNextTo(document: PantinDocument, childId: string): Set<string> {
-  const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
-  const assembly = assemblyOf.get(childId);
-  return new Set(
-    document.joints
-      .filter((joint) => assemblyOf.get(joint.child) === assembly)
-      .map((joint) => joint.tagKey),
-  );
+  const assembly = document.bodies.find((body) => body.id === childId)?.assembly;
+  return new Set(tagKeyOwners(document, assembly).keys());
 }
 
 export function addJointToDocument(
@@ -114,4 +110,17 @@ export function updateJointInDocument(
     jointId,
     "The Pantin with the changed joint",
   );
+}
+
+// A driven joint cannot go: its drive would move nothing, or a joint that is
+// no longer there (ADR 0022 point 4).
+export function deleteJointFromDocument(document: PantinDocument, jointId: string): PantinDocument {
+  const drive = document.drives.find((candidate) => candidate.joints.includes(jointId));
+  if (drive !== undefined) {
+    throw new ApiError(
+      "conflict",
+      `Joint "${jointId}" is moved by drive "${drive.id}". Remove it from the drive, or delete the drive, first.`,
+    );
+  }
+  return removeJoint(document, jointId);
 }

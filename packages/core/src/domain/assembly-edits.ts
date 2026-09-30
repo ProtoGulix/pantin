@@ -1,8 +1,8 @@
-import type { Assembly, PantinDocument, RenamedTag } from "@pantin/protocol";
+import type { Assembly, PantinDocument } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { newAssembly } from "./assemblies.ts";
 import { makeUniqueId } from "./ids.ts";
-import { tagNamesOf } from "./joint-tags.ts";
+import { tagKeyOwners } from "./tag-keys.ts";
 
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
 // Keys change only here, so these are the only edits that rename tags.
@@ -52,6 +52,13 @@ export function deleteAssembly(document: PantinDocument, key: string): PantinDoc
       `Assembly "${assembly.name}" still holds ${bodies}. Move or delete them first.`,
     );
   }
+  const drives = document.drives.filter((drive) => drive.assembly === key).map(({ id }) => id);
+  if (drives.length > 0) {
+    throw new ApiError(
+      "conflict",
+      `Assembly "${assembly.name}" still holds drive "${drives.join('", "')}". Move or delete it first.`,
+    );
+  }
   return { ...document, assemblies: document.assemblies.filter((item) => item.key !== key) };
 }
 
@@ -72,18 +79,8 @@ export function renameAssemblyKey(
     ...document,
     assemblies: document.assemblies.map((assembly) => ({ ...assembly, key: rekey(assembly.key) })),
     bodies: document.bodies.map((body) => ({ ...body, assembly: rekey(body.assembly) })),
+    drives: document.drives.map((drive) => ({ ...drive, assembly: rekey(drive.assembly) })),
   };
-}
-
-// Tag keys used in `assembly` by the joints whose child is there, but the
-// joint `exceptJointId`.
-function tagKeysIn(document: PantinDocument, assembly: string, exceptJointId: string | null) {
-  const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
-  return new Map(
-    document.joints
-      .filter((joint) => joint.id !== exceptJointId && assemblyOf.get(joint.child) === assembly)
-      .map((joint) => [joint.tagKey, joint.id]),
-  );
 }
 
 export function renameTagKey(
@@ -96,12 +93,12 @@ export function renameTagKey(
     throw new ApiError("not_found", `This Pantin has no joint "${jointId}".`);
   }
   const assembly = document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
-  const taken = tagKeysIn(document, assembly, jointId);
+  const taken = tagKeyOwners(document, assembly, { jointId });
   const owner = taken.get(tagKey);
   if (owner !== undefined) {
     // The joint's own key counts as taken: suggesting it back would not help.
     const takenKeys = new Set([...taken.keys(), joint.tagKey]);
-    throw keyTaken(tagKey, `joint "${owner}" in assembly "${assembly}"`, takenKeys);
+    throw keyTaken(tagKey, `${owner} in assembly "${assembly}"`, takenKeys);
   }
   return {
     ...document,
@@ -124,30 +121,13 @@ export function moveBody(
   const owner =
     parentJoint === undefined
       ? undefined
-      : tagKeysIn(document, assembly, parentJoint.id).get(parentJoint.tagKey);
+      : tagKeyOwners(document, assembly, { jointId: parentJoint.id }).get(parentJoint.tagKey);
   if (parentJoint !== undefined && owner !== undefined) {
     throw new ApiError(
       "conflict",
-      `Tag key "${parentJoint.tagKey}" of joint "${parentJoint.id}" is already used by joint "${owner}" in assembly "${assembly}". Rename one of the tag keys first.`,
+      `Tag key "${parentJoint.tagKey}" of joint "${parentJoint.id}" is already used by ${owner} in assembly "${assembly}". Rename one of the tag keys first.`,
     );
   }
   const bodies = document.bodies.map((body) => (body.id === bodyId ? { ...body, assembly } : body));
   return { ...document, bodies };
-}
-
-/**
- * Every tag whose name differs between two versions of a document, by joint.
- * Names are paired by position (setpoint, then position). A joint that became
- * fixed or movable gains or loses tags: that is not a rename, so it is not
- * listed.
- */
-export function renamedTags(before: PantinDocument, after: PantinDocument): RenamedTag[] {
-  return after.joints.flatMap((joint) => {
-    const old = before.joints.find((candidate) => candidate.id === joint.id);
-    const oldNames = old === undefined ? [] : tagNamesOf(before, old);
-    return tagNamesOf(after, joint).flatMap((to, index) => {
-      const from = oldNames[index];
-      return from === undefined || from === to ? [] : [{ from, to }];
-    });
-  });
 }

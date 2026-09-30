@@ -11,9 +11,9 @@ import {
   moveBody,
   renameAssembly,
   renameAssemblyKey,
-  renamedTags,
   renameTagKey,
 } from "./assembly-edits.ts";
+import { renamedTags } from "./tags.ts";
 
 // ADR 0019 points 8 to 10: keys change only through these edits.
 
@@ -163,6 +163,40 @@ describe("assembly display names and deletion", () => {
     expect(deleteAssembly(document, assembly.key).assemblies).toEqual(PRESS.assemblies);
     expect(() => deleteAssembly(PRESS, "id1s0400125e-0")).toThrow(
       'Assembly "ID1S0400125E_0" still holds 2 bodies. Move or delete them first.',
+    );
+  });
+});
+
+describe("assembly edits and drives (ADR 0022)", () => {
+  const valve = {
+    id: "valve",
+    tagKey: "valve",
+    name: "Valve",
+    assembly: "id1s0400125e-0",
+    joints: ["tige"],
+    type: "double_acting_cylinder" as const,
+    speed: 0.2,
+  };
+  const withValve: PantinDocument = { ...PRESS, drives: [valve] };
+
+  it("moves a drive with its assembly's key, and reports its renamed tags", () => {
+    const after = renameAssemblyKey(withValve, "id1s0400125e-0", "verin_pince");
+    expect(after.drives[0]?.assembly).toBe("verin_pince");
+    expect(renamedTags(withValve, after).map((tag) => tag.to)).toContain(
+      "verin_pince.valve.extend",
+    );
+  });
+
+  it("refuses to delete an assembly that still holds a drive", () => {
+    const emptied = { ...withValve, bodies: [], joints: [] };
+    expect(() => deleteAssembly(emptied, "id1s0400125e-0")).toThrow(
+      'Assembly "ID1S0400125E_0" still holds drive "valve". Move or delete it first.',
+    );
+  });
+
+  it("refuses a joint tag key taken by a drive of the same assembly", () => {
+    expect(() => renameTagKey(withValve, "tige", "valve")).toThrow(
+      /Key "valve" is already used by drive "valve"/,
     );
   });
 });

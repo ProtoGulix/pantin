@@ -1,9 +1,11 @@
 import type { PantinId, Tag, TagListResponse } from "@pantin/protocol";
-import { describeJointTags, jointOfCommandTag } from "../domain/joint-tags.ts";
-import { applyQueuedSetpoints } from "../domain/simulation-step.ts";
+import { stepSimulation } from "../domain/drive-step.ts";
+import { STEP_SECONDS } from "../domain/fixed-step.ts";
+import { commandTagOf, describeTags } from "../domain/tags.ts";
+import { ApiError } from "../errors.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
-// Tags and simulation steps of the open Pantins (ADR 0012).
+// Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022).
 
 export async function listTags(
   context: ServiceContext,
@@ -12,11 +14,12 @@ export async function listTags(
   const openPantin = await loadPantin(context, pantinId);
   return {
     stepCount: openPantin.stepCount,
-    tags: describeJointTags(openPantin.document, openPantin),
+    tags: describeTags(openPantin.document, openPantin),
   };
 }
 
-// The value is queued: the joint moves at the next simulation step.
+// A joint setpoint is queued and consumed by the next step; a drive command
+// is a level the drive reads at every step until it is written again.
 export async function writeTag(
   context: ServiceContext,
   pantinId: PantinId,
@@ -24,21 +27,31 @@ export async function writeTag(
   value: number,
 ): Promise<Tag> {
   const openPantin = await loadPantin(context, pantinId);
-  const joint = jointOfCommandTag(openPantin.document, tagName);
-  openPantin.setpoints.set(joint.id, value);
-  openPantin.queuedSetpoints.set(joint.id, value);
-  return { name: tagName, type: "float", direction: "command", value };
+  const entry = commandTagOf(openPantin.document, tagName);
+  if (entry.type === "bit" && value !== 0 && value !== 1) {
+    throw new ApiError("invalid_request", `Tag "${tagName}" is a bit: write 0 or 1.`);
+  }
+  const { owner } = entry;
+  if (owner.kind === "joint") {
+    openPantin.setpoints.set(owner.joint.id, value);
+    openPantin.queuedSetpoints.set(owner.joint.id, value);
+  } else {
+    const commands = openPantin.driveCommands.get(owner.drive.id) ?? {};
+    openPantin.driveCommands.set(owner.drive.id, { ...commands, [entry.member]: value });
+  }
+  return { name: tagName, type: entry.type, direction: "command", value };
 }
 
 function runSteps(openPantin: OpenPantin, steps: number): void {
-  // The queue is consumed by the first step; later steps change nothing
-  // until drives exist (phase 4), but they still count as simulated time.
-  openPantin.jointPositions = applyQueuedSetpoints(
-    openPantin.document,
-    openPantin.jointPositions,
-    openPantin.queuedSetpoints,
-  );
-  openPantin.queuedSetpoints.clear();
+  for (let step = 0; step < steps; step += 1) {
+    const stepped = stepSimulation(openPantin.document, openPantin, STEP_SECONDS);
+    openPantin.jointPositions = stepped.jointPositions;
+    openPantin.jointVelocities = stepped.jointVelocities;
+    openPantin.driveStates = stepped.driveStates;
+    openPantin.driveFeedback = stepped.driveFeedback;
+    // Joint setpoints are consumed by the first step (ADR 0012 point 3).
+    openPantin.queuedSetpoints.clear();
+  }
   openPantin.stepCount += steps;
 }
 

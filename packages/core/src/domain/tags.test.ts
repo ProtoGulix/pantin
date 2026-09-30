@@ -1,8 +1,8 @@
 import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
-import { describeJointTags, jointOfCommandTag } from "./joint-tags.ts";
 import { applyQueuedSetpoints } from "./simulation-step.ts";
+import { commandTagOf, describeTags } from "./tags.ts";
 
 const stroke: Joint = {
   id: "stroke",
@@ -57,7 +57,12 @@ const document: PantinDocument = {
   drives: [],
 };
 
-const noRuntime = { jointPositions: new Map(), setpoints: new Map() };
+const noRuntime = {
+  jointPositions: new Map(),
+  setpoints: new Map(),
+  driveCommands: new Map(),
+  driveFeedback: new Map(),
+};
 
 function apiErrorOf(action: () => unknown): ApiError {
   try {
@@ -71,9 +76,9 @@ function apiErrorOf(action: () => unknown): ApiError {
   throw new Error("Expected an ApiError.");
 }
 
-describe("describeJointTags", () => {
+describe("describeTags of joints", () => {
   it("gives a setpoint and a position to each movable joint, none to a fixed one", () => {
-    expect(describeJointTags(document, noRuntime)).toEqual([
+    expect(describeTags(document, noRuntime)).toEqual([
       { name: "axis_800.stroke.setpoint", type: "float", direction: "command", value: 0 },
       { name: "axis_800.stroke.position", type: "float", direction: "feedback", value: 0 },
     ]);
@@ -81,20 +86,24 @@ describe("describeJointTags", () => {
 
   it("reports the last written setpoint and the current position", () => {
     const runtime = {
+      ...noRuntime,
       jointPositions: new Map([["stroke", 0.04]]),
       setpoints: new Map([["stroke", 0.2]]),
     };
-    expect(describeJointTags(document, runtime).map((tag) => tag.value)).toEqual([0.2, 0.04]);
+    expect(describeTags(document, runtime).map((tag) => tag.value)).toEqual([0.2, 0.04]);
   });
 });
 
-describe("jointOfCommandTag", () => {
+describe("commandTagOf a joint", () => {
   it("finds the joint of a setpoint tag", () => {
-    expect(jointOfCommandTag(document, "axis_800.stroke.setpoint")).toBe(stroke);
+    expect(commandTagOf(document, "axis_800.stroke.setpoint").owner).toEqual({
+      kind: "joint",
+      joint: stroke,
+    });
   });
 
   it("refuses to write a feedback tag", () => {
-    expect(apiErrorOf(() => jointOfCommandTag(document, "axis_800.stroke.position")).code).toBe(
+    expect(apiErrorOf(() => commandTagOf(document, "axis_800.stroke.position")).code).toBe(
       "invalid_request",
     );
   });
@@ -105,14 +114,14 @@ describe("jointOfCommandTag", () => {
     "axis_800.clamp.setpoint",
     "frame.stroke.setpoint",
   ])("does not know %s", (name) => {
-    expect(apiErrorOf(() => jointOfCommandTag(document, name)).code).toBe("not_found");
+    expect(apiErrorOf(() => commandTagOf(document, name)).code).toBe("not_found");
   });
 });
 
-describe("jointOfCommandTag messages", () => {
+describe("commandTagOf messages", () => {
   it("names the tags of a joint whose member is wrong", () => {
-    expect(apiErrorOf(() => jointOfCommandTag(document, "axis_800.stroke.speed")).message).toBe(
-      'No tag "axis_800.stroke.speed". This joint has "axis_800.stroke.setpoint" and "axis_800.stroke.position".',
+    expect(apiErrorOf(() => commandTagOf(document, "axis_800.stroke.speed")).message).toBe(
+      'No tag "axis_800.stroke.speed". This owner has "axis_800.stroke.setpoint", "axis_800.stroke.position".',
     );
   });
 });

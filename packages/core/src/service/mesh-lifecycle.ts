@@ -6,6 +6,7 @@ import {
   meshPathsOf,
   type OpenPantin,
   readSavedDocument,
+  resetRuntimeState,
   type ServiceContext,
   toResponse,
 } from "./open-pantins.ts";
@@ -104,9 +105,7 @@ async function reloadDocument(
   openPantin.savedText = serializePantinDocument(saved);
   openPantin.savedMeshPaths = savedMeshPaths;
   openPantin.pendingMeshDeletions.clear();
-  openPantin.jointPositions.clear();
-  openPantin.setpoints.clear();
-  openPantin.queuedSetpoints.clear();
+  resetRuntimeState(openPantin);
   for (const meshPath of unsavedMeshes) {
     await context.store.deleteMesh(pantinId, meshPath);
   }

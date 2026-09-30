@@ -6,10 +6,13 @@ import type {
   PoseResponse,
   PoseSnapshot,
 } from "@pantin/protocol";
-import { addJointToDocument, updateJointInDocument } from "../domain/joint-rules.ts";
+import {
+  addJointToDocument,
+  deleteJointFromDocument,
+  updateJointInDocument,
+} from "../domain/joint-rules.ts";
 import { clampJointPosition, haveSameCoordinateUnit } from "../domain/joint-types/registry.ts";
 import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
-import { removeJoint } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
@@ -100,7 +103,7 @@ export async function deleteJoint(
   // would then remove (ADR 0017 point 4).
   await waitForImports(openPantin);
   findJoint(pantinId, openPantin, jointId);
-  openPantin.document = removeJoint(openPantin.document, jointId);
+  openPantin.document = deleteJointFromDocument(openPantin.document, jointId);
   forgetJointRuntimeState(openPantin, jointId);
   return toResponse(pantinId, openPantin);
 }
@@ -110,6 +113,8 @@ export function forgetJointRuntimeState(openPantin: OpenPantin, jointId: string)
   openPantin.jointPositions.delete(jointId);
   openPantin.setpoints.delete(jointId);
   openPantin.queuedSetpoints.delete(jointId);
+  openPantin.jointVelocities.delete(jointId);
+  openPantin.jammedJointIds.delete(jointId);
 }
 
 export async function getPose(context: ServiceContext, pantinId: PantinId): Promise<PoseResponse> {

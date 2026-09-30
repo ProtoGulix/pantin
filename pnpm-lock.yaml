@@ -204,6 +204,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@pantin/drive-types':
+        specifier: workspace:*
+        version: link:../drive-types
       '@pantin/protocol':
         specifier: workspace:*
         version: link:../protocol

@@ -1,9 +1,9 @@
 import type { PantinDocument } from "@pantin/protocol";
 import { clampJointPosition } from "./joint-types/registry.ts";
 
-// One simulation step (ADR 0012 point 4). Until drives exist (phase 4), a
-// joint moves straight to its queued setpoint, clamped to its limits.
-// Setpoints of joints deleted since they were written are ignored.
+// The setpoint tags of joints that no drive moves (ADR 0012 point 4, kept by
+// ADR 0022 point 5): such a joint moves straight to its queued setpoint,
+// clamped to its limits. Setpoints of deleted joints are ignored.
 export function applyQueuedSetpoints(
   document: PantinDocument,
   jointPositions: ReadonlyMap<string, number>,

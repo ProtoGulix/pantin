@@ -11,9 +11,9 @@ import {
   moveBody,
   renameAssembly,
   renameAssemblyKey,
-  renamedTags,
   renameTagKey,
 } from "../domain/assembly-edits.ts";
+import { renamedTags } from "../domain/tags.ts";
 import { parseWithSchema } from "../domain/validation.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
