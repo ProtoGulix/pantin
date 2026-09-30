@@ -6,6 +6,7 @@ import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
+import { sensorMarkersOf } from "../sensors/sensor-markers.ts";
 import { buildPanelView, type PanelView } from "../view-model.ts";
 import {
   initialViewerState,
@@ -71,6 +72,7 @@ export class ViewerStore {
       document === undefined ? new Set() : hiddenBodyIds(document, next.assemblyDisplay),
     );
     viewport.showJointPreview(jointPreviewOf(next));
+    viewport.showSensorMarkers(sensorMarkersOf(document));
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */
@@ -124,6 +126,7 @@ export class ViewerStore {
   showTagValues(values: ReadonlyMap<string, number>): void {
     this.tagValues = values;
     this.ports.showTagValues(values);
+    this.ports.viewport().showTagStates(values);
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

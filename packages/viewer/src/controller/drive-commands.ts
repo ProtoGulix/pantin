@@ -65,13 +65,15 @@ export async function writeFloatTag(store: ViewerStore, name: string, text: stri
 }
 
 /**
- * Reads every tag value of the open Pantin. A failed read changes nothing on
- * screen: the next one retries, and a core that went away is already reported
- * by the pose stream (message.poseClosed).
+ * Reads every tag value of the open Pantin, while the right-hand panel shows
+ * them or its sensors light up in 3D (ADR 0024). A failed read changes
+ * nothing on screen: the next one retries, and a core that went away is
+ * already reported by the pose stream (message.poseClosed).
  */
 export async function refreshTagValues(store: ViewerStore): Promise<void> {
   const open = store.state.openPantin;
-  if (open === null || !store.state.drivePanelOpen || store.readingTags) {
+  const shown = store.state.drivePanelOpen || (open?.document.sensors.length ?? 0) > 0;
+  if (open === null || !shown || store.readingTags) {
     return;
   }
   store.readingTags = true;

@@ -93,7 +93,7 @@ export interface ArrowPlacement {
 // Shortest rotation from +Y to a unit vector: axis Y x d, half angle folded
 // into w = 1 + Y.d, then normalised. Opposite vectors have no shortest axis:
 // half a turn about X is one of them.
-function rotationFromUpTo([x, y, z]: Vector3Tuple): QuaternionTuple {
+export function rotationFromUpTo([x, y, z]: Vector3Tuple): QuaternionTuple {
   if (y < -1 + 1e-9) {
     return [1, 0, 0, 0];
   }

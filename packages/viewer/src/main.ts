@@ -112,9 +112,9 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   return store;
 }
 
-// Tag values change at every simulation step: while the drives panel is open,
-// they are read four times a second (a stand-in until the tag bus, CLAUDE.md
-// section 9, pushes them).
+// Tag values change at every simulation step: while the drives panel is open
+// or the Pantin has sensors (ADR 0024), they are read four times a second (a
+// stand-in until the tag bus, CLAUDE.md section 9, pushes them).
 const TAG_REFRESH_MILLISECONDS = 250;
 
 function startApplication(): void {

@@ -10,9 +10,11 @@ import type { Body, PoseSnapshot } from "@pantin/protocol";
 import { babylonToCorePosition, type Vector3Tuple } from "../frames.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
+import type { SensorMarker } from "../sensors/sensor-markers.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { bodyRenderKey, frameBounds, planSceneSync } from "./scene-plan.ts";
+import { createSensorMarkers, type SensorMarkers } from "./sensor-markers.ts";
 import { createStage, type Stage } from "./stage.ts";
 
 // The Babylon canvas: shows the bodies it is given and reports clicks. It
@@ -42,6 +44,10 @@ export interface Viewport {
   clearPoses(): void;
   /** Colours a joint's bodies and draws its axis; null goes back to the selection. */
   showJointPreview(preview: JointPreview | null): void;
+  /** Draws every sensor along its joint (ADR 0024). */
+  showSensorMarkers(markers: readonly SensorMarker[]): void;
+  /** Tag values from the core: switch markers light up on 1. */
+  showTagStates(values: ReadonlyMap<string, number>): void;
 }
 
 const RIGHT_MOUSE_BUTTON = 2;
@@ -56,6 +62,7 @@ interface ViewportContext {
   bodyIdByMesh: Map<AbstractMesh, string>;
   poses: PoseInterpolator;
   highlights: BodyHighlights;
+  sensorMarkers: SensorMarkers;
   hiddenBodyIds: ReadonlySet<string>;
 }
 
@@ -209,6 +216,7 @@ function showBodies(
   });
   void Promise.all(loads).then(() => {
     context.highlights.redraw();
+    context.sensorMarkers.redraw();
     frameBodies(context, null);
   });
 }
@@ -220,6 +228,7 @@ function applyPosesEachFrame(context: ViewportContext): void {
   const visit = (bodyId: string, pose: InterpolatedPose): void => {
     context.loadedBodies.get(bodyId)?.setDisplacement(pose.translation, pose.rotation);
     context.highlights.followPose(bodyId, pose.translation, pose.rotation);
+    context.sensorMarkers.followPose(bodyId, pose.translation, pose.rotation);
   };
   context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
 }
@@ -229,6 +238,7 @@ function resetPlacements(context: ViewportContext): void {
     loaded.setDisplacement([0, 0, 0], [0, 0, 0, 1]);
   }
   context.highlights.resetPose();
+  context.sensorMarkers.resetPose();
 }
 
 export function createViewport(
@@ -248,6 +258,7 @@ export function createViewport(
     bodyIdByMesh: new Map(),
     poses: new PoseInterpolator(),
     highlights: createBodyHighlights(scene, loadedBodies),
+    sensorMarkers: createSensorMarkers(scene, loadedBodies),
     hiddenBodyIds: new Set(),
   };
   listenToPicks(context, callbacks);
@@ -265,7 +276,10 @@ export function createViewport(
     setHiddenBodies: (bodyIds) => {
       context.hiddenBodyIds = bodyIds;
       applyVisibility(context);
+      context.sensorMarkers.setHidden(bodyIds);
     },
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
+    showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
+    showTagStates: (values) => context.sensorMarkers.setStates(values),
   };
 }
