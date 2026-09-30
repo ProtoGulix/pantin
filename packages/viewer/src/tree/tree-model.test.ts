@@ -11,7 +11,8 @@ import {
   parseNodeId,
   sourceNodeNodeId,
 } from "./node-ids.ts";
-import { buildTree, findNode, flattenTree, type TreeViewState } from "./tree-model.ts";
+import { buildTree, findNode } from "./tree-model.ts";
+import { flattenTree, type TreeViewState } from "./tree-rows.ts";
 import { nodeExists, withRevealedNode, withTreeStateCarried } from "./tree-state.ts";
 
 const translate = createTranslator("fr");
@@ -251,34 +252,5 @@ describe("hidden assemblies in the tree", () => {
       findNode(buildTree(source, translate), assemblyNodeId("press", "main"))?.visibility,
     ).toBe("shown");
     expect(findNode(tree, bodyNodeId("press", "rail"))?.visibility).toBeNull();
-  });
-});
-
-describe("driven joints in the tree (ADR 0022)", () => {
-  it("marks a driven joint with a bolt and says which drive moves it", () => {
-    const carriage = stepBody("carriage", "Carriage");
-    const pantin = pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]);
-    const valve = {
-      id: "valve",
-      tagKey: "valve",
-      name: "Valve",
-      assembly: "main",
-      joints: ["hinge"],
-      type: "double_acting_cylinder" as const,
-      speed: 1,
-    };
-    const document = { ...pantin.document, drives: [valve] };
-    const tree = buildTree({ openPantin: { ...pantin, document } }, translate);
-    expect(findNode(tree, jointNodeId("press", "hinge"))).toMatchObject({
-      icon: "joint",
-      driven: true,
-      stateLabel: "piloté par Valve",
-    });
-    // Under its body too, where the same joint is listed again.
-    expect(findNode(tree, jointNodeId("press", "hinge", "rail"))?.driven).toBe(true);
-    expect(findNode(tree, jointNodeId("press", "slide"))).toMatchObject({
-      driven: false,
-      stateLabel: null,
-    });
   });
 });

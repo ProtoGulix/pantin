@@ -18,12 +18,14 @@ import type { Language, Translate } from "../i18n/translate.ts";
 import { displayUnitLabel } from "../joints/joint-parameters.ts";
 import { displayUnitOf } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
+import { buildSensorSectionView, type SensorSectionView } from "./sensor-panel-model.ts";
 
 // The drives panel on the right (ADR 0022) as data: each drive with its tags
 // and the joints it moves, and the drive form. Drive types, parameters and
 // tags come from the registries; their labels from @pantin/drive-types.
 // Tag values are not here: they change at every step and are written straight
-// into the page (showTagValues), like the joint sliders.
+// into the page (showTagValues), like the joint sliders. Sensors have their
+// section in sensor-panel-model.ts.
 
 // Values arrive in SI; `coordinateUnit` says how to show them (mm or
 // degrees), null for a bit.
@@ -74,6 +76,8 @@ export interface DrivePanelView {
   canCreate: boolean;
   drives: DriveCardView[];
   form: DriveFormView | null;
+  // Sensors share the panel: they are wired to joints too (ADR 0023); null without a Pantin.
+  sensors: SensorSectionView | null;
 }
 
 function rateUnit(unit: JointCoordinateUnit, kind: DriveParameterKind | null, t: Translate) {
@@ -171,5 +175,6 @@ export function buildDrivePanelView(state: ViewerState, t: Translate): DrivePane
       document === undefined || state.driveForm === null
         ? null
         : formView(state.driveForm, state, document, t),
+    sensors: document === undefined ? null : buildSensorSectionView(state, document, t),
   };
 }

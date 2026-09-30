@@ -31,16 +31,22 @@
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
-/* The eye of an assembly, after its key at the end of the row: hides it in
-   the 3D view. The key's auto margin already pushes both to the right. */
-/* The bolt of a driven joint, at the end of its row like the eye. */
-.tree-row__bolt {
+/* The bolt of a driven joint and the mark of a watched one, at the end of
+   its row like the eye. */
+.tree-row__bolt,
+.tree-row__sensor {
   display: inline-flex;
   padding: 0 4px;
   color: #3fb950;
   cursor: pointer;
 }
 
+.tree-row__sensor {
+  color: #58a6ff;
+}
+
+/* The eye of an assembly, after its key at the end of the row: hides it in
+   the 3D view. The key's auto margin already pushes both to the right. */
 .tree-row__eye-slot {
   display: inline-flex;
 }

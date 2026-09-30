@@ -1,5 +1,5 @@
 import type { Translate } from "../i18n/translate.ts";
-import type { TreeRow } from "../tree/tree-model.ts";
+import type { TreeRow } from "../tree/tree-rows.ts";
 import { element } from "./dom.ts";
 import { icon } from "./icons.ts";
 
@@ -22,7 +22,7 @@ export function chevron(row: TreeRow): HTMLElement {
 // The bolt of a driven joint, clickable like the eye: it opens the joint's
 // drive in the drives panel. Silent too: the state text names the drive.
 export function driveBolt(row: TreeRow, translate: Translate): HTMLElement | null {
-  if (!row.driven) {
+  if (row.wiring === null || row.wiring.driveId === null) {
     return null;
   }
   return element(
@@ -36,6 +36,27 @@ export function driveBolt(row: TreeRow, translate: Translate): HTMLElement | nul
       },
     },
     [icon("bolt")],
+  );
+}
+
+// The mark of a watched joint, after the bolt: it opens the joint's first
+// sensor in the right-hand panel (ADR 0023). Silent too: the state text names
+// the sensors.
+export function sensorMark(row: TreeRow, translate: Translate): HTMLElement | null {
+  if (row.wiring === null || row.wiring.sensorIds.length === 0) {
+    return null;
+  }
+  return element(
+    "span",
+    {
+      className: "tree-row__sensor",
+      attributes: {
+        "data-action": "sensor",
+        title: translate("sensors.form.editTitle"),
+        "aria-hidden": "true",
+      },
+    },
+    [icon("sensor")],
   );
 }
 

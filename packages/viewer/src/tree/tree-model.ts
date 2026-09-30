@@ -7,6 +7,7 @@ import {
 import { driveOfJoint } from "../drives/drive-form.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
+import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
@@ -31,6 +32,13 @@ export type TreeIcon =
   | "joint"
   | "source-node";
 
+interface JointWiring {
+  // Its drive, if any: a joint has one at most.
+  driveId: string | null;
+  // The sensors watching it, in document order.
+  sensorIds: readonly string[];
+}
+
 export interface TreeNode {
   id: string;
   kind: NodeRef["kind"];
@@ -43,9 +51,10 @@ export interface TreeNode {
   renamable: boolean;
   // Only assemblies can be hidden in the 3D view: an eye button, not text.
   visibility: "shown" | "hidden" | null;
-  // A joint a drive moves: a bolt at the end of its row, like the eye.
-  driven: boolean;
-  // What an icon says (an assembly hidden, a joint driven), for screen readers
+  // A joint a drive moves or a sensor watches: a bolt or a sensor mark at the
+  // end of its row, like the eye (ADR 0022, ADR 0023); null for other nodes.
+  wiring: JointWiring | null;
+  // What an icon says (an assembly hidden, a joint driven or watched), for screen readers
   // and as a tooltip; null when there is nothing to say.
   stateLabel: string | null;
   children: readonly TreeNode[];
@@ -67,7 +76,7 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
     muted: true,
     renamable: false,
     visibility: null,
-    driven: false,
+    wiring: null,
     stateLabel: null,
     children: [],
   }));
@@ -101,7 +110,7 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
     muted: false,
     renamable: true,
     visibility: null,
-    driven: false,
+    wiring: null,
     stateLabel: null,
     children: [
       ...bodyJointChildren(pantin, body, translate),
@@ -110,11 +119,18 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
   };
 }
 
-// A joint a drive moves gets a bolt at the end of its row, and says which
-// drive in words (ADR 0022): the bolt alone would say nothing to a screen
-// reader.
+// A joint a drive moves gets a bolt at the end of its row, a watched joint a
+// sensor mark, and both say which drive or sensors in words (ADR 0022, ADR
+// 0023): the icons alone would say nothing to a screen reader.
 function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): TreeNode {
   const drive = driveOfJoint(pantin.document, joint.id);
+  const sensors = sensorsOfJoint(pantin.document, joint.id);
+  const states = [
+    drive === undefined ? null : translate("tree.driven", { name: drive.name }),
+    sensors.length === 0
+      ? null
+      : translate("tree.watched", { names: sensors.map((sensor) => sensor.name).join(", ") }),
+  ].filter((state) => state !== null);
   return {
     id: jointNodeId(pantin.id, joint.id),
     kind: "joint",
@@ -124,8 +140,8 @@ function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): 
     muted: false,
     renamable: false,
     visibility: null,
-    driven: drive !== undefined,
-    stateLabel: drive === undefined ? null : translate("tree.driven", { name: drive.name }),
+    wiring: { driveId: drive?.id ?? null, sensorIds: sensors.map((sensor) => sensor.id) },
+    stateLabel: states.length === 0 ? null : states.join(" · "),
     children: [],
   };
 }
@@ -161,7 +177,7 @@ function assemblyNode(
     muted: false,
     renamable: true,
     visibility: hidden ? "hidden" : "shown",
-    driven: false,
+    wiring: null,
     stateLabel: hidden ? translate("tree.hidden") : null,
     children: [
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
@@ -181,7 +197,7 @@ function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): 
     muted: false,
     renamable: false,
     visibility: null,
-    driven: false,
+    wiring: null,
     stateLabel: null,
     children: joints.map((joint) => jointNode(pantin, joint, translate)),
   };
@@ -202,7 +218,7 @@ function pantinNode(
     muted: false,
     renamable: true,
     visibility: null,
-    driven: false,
+    wiring: null,
     stateLabel: null,
     children: [
       ...pantin.document.assemblies.map((assembly) =>
@@ -230,70 +246,4 @@ export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode |
     }
   }
   return null;
-}
-
-export interface TreeRow {
-  id: string;
-  kind: TreeNode["kind"];
-  icon: TreeIcon;
-  label: string;
-  detail: string | null;
-  muted: boolean;
-  renamable: boolean;
-  visibility: TreeNode["visibility"];
-  driven: boolean;
-  stateLabel: string | null;
-  depth: number;
-  parentId: string | null;
-  expandable: boolean;
-  expanded: boolean;
-  selected: boolean;
-  renaming: boolean;
-  positionInSet: number;
-  setSize: number;
-}
-
-export interface TreeViewState {
-  expandedNodeIds: ReadonlySet<string>;
-  selectedNodeId: string | null;
-  renamingNodeId: string | null;
-}
-
-function isExpandable(node: TreeNode): boolean {
-  return node.children.length > 0;
-}
-
-/** Visible rows, depth first: children only under expanded nodes. */
-export function flattenTree(nodes: readonly TreeNode[], view: TreeViewState): TreeRow[] {
-  const rows: TreeRow[] = [];
-  const visit = (siblings: readonly TreeNode[], depth: number, parentId: string | null) => {
-    siblings.forEach((node, index) => {
-      const expanded = isExpandable(node) && view.expandedNodeIds.has(node.id);
-      rows.push({
-        id: node.id,
-        kind: node.kind,
-        icon: node.icon,
-        label: node.label,
-        detail: node.detail,
-        muted: node.muted,
-        renamable: node.renamable,
-        visibility: node.visibility,
-        driven: node.driven,
-        stateLabel: node.stateLabel,
-        depth,
-        parentId,
-        expandable: isExpandable(node),
-        expanded,
-        selected: node.id === view.selectedNodeId,
-        renaming: node.id === view.renamingNodeId,
-        positionInSet: index + 1,
-        setSize: siblings.length,
-      });
-      if (expanded) {
-        visit(node.children, depth + 1, node.id);
-      }
-    });
-  };
-  visit(nodes, 0, null);
-  return rows;
 }

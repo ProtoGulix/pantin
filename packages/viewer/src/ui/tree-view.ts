@@ -1,12 +1,12 @@
 import type { Translate } from "../i18n/translate.ts";
 import { isDraggableNode } from "../tree/tree-drop.ts";
-import type { TreeRow } from "../tree/tree-model.ts";
 import { commandForKey, type TreeCommand } from "../tree/tree-navigation.ts";
+import type { TreeRow } from "../tree/tree-rows.ts";
 import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { listenToDrags } from "./tree-drag.ts";
-import { chevron, driveBolt, stateText, visibilityEye } from "./tree-row-parts.ts";
+import { chevron, driveBolt, sensorMark, stateText, visibilityEye } from "./tree-row-parts.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -122,6 +122,7 @@ function rowElement(
       ? null
       : element("span", { className: "tree-row__detail", text: row.detail }),
     driveBolt(row, translate),
+    sensorMark(row, translate),
     visibilityEye(row, translate),
   ]);
 }
@@ -134,9 +135,8 @@ function rowSignature(row: TreeRow, index: number, language: string): string {
 
 interface Hit {
   row: TreeRow;
-  onToggle: boolean;
-  onEye: boolean;
-  onBolt: boolean;
+  // The data-action of the row part clicked (tree-row-parts.ts), if any.
+  control: string | null;
   inInput: boolean;
 }
 
@@ -152,11 +152,22 @@ function hitOf(event: Event, current: Current): Hit | null {
   }
   return {
     row,
-    onToggle: target.closest("[data-action=toggle]") !== null,
-    onEye: target.closest("[data-action=visibility]") !== null,
-    onBolt: target.closest("[data-action=drive]") !== null,
+    control: target.closest("[data-action]")?.getAttribute("data-action") ?? null,
     inInput: target.closest("input") !== null,
   };
+}
+
+function runRowControl({ row, control }: Hit, intents: PanelIntents): void {
+  if (control === "toggle") {
+    intents.setExpanded(row.id, !row.expanded);
+  } else if (control === "visibility") {
+    intents.toggleAssemblyHidden(row.id);
+  } else if (control === "drive") {
+    intents.openDriveFormForJoint(row.id);
+  } else if (control === "sensor") {
+    // The first sensor: the others are listed next to it in the panel.
+    intents.openSensorForm(row.wiring?.sensorIds[0] ?? null);
+  }
 }
 
 function finishOpenRename(tree: HTMLElement): void {
@@ -172,7 +183,7 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
   // is never lost to the redraw that ends the rename.
   tree.addEventListener("pointerdown", (event) => {
     const hit = hitOf(event, current);
-    const onControl = hit !== null && (hit.onToggle || hit.onEye || hit.onBolt);
+    const onControl = hit !== null && hit.control !== null;
     if (hit === null || hit.inInput || onControl || (event.button !== 0 && event.button !== 2)) {
       return;
     }
@@ -181,17 +192,13 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
   });
   tree.addEventListener("click", (event) => {
     const hit = hitOf(event, current);
-    if (hit?.onToggle) {
-      current.intents?.setExpanded(hit.row.id, !hit.row.expanded);
-    } else if (hit?.onEye) {
-      current.intents?.toggleAssemblyHidden(hit.row.id);
-    } else if (hit?.onBolt) {
-      current.intents?.openDriveFormForJoint(hit.row.id);
+    if (hit !== null && current.intents !== null) {
+      runRowControl(hit, current.intents);
     }
   });
   tree.addEventListener("dblclick", (event) => {
     const hit = hitOf(event, current);
-    if (hit === null || hit.inInput || hit.onToggle || hit.onEye || hit.onBolt) {
+    if (hit === null || hit.inInput || hit.control !== null) {
       return;
     }
     if (hit.row.renamable) {

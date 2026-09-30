@@ -14,6 +14,7 @@ import {
   renameEditor,
   row,
 } from "./property-rows.ts";
+import { jointSensorGroup } from "./sensor-rows.ts";
 
 // The CODESYS-like "Property | Value" grid for the selected tree node, as
 // plain data (shapes in property-rows.ts). Groups keep a stable id so their
@@ -28,6 +29,7 @@ const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   parameters: "properties.group.parameters",
   joints: "properties.group.joints",
   drive: "properties.group.drive",
+  sensors: "properties.group.sensors",
 };
 
 function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
@@ -213,10 +215,15 @@ function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupD
     if (joint === undefined) {
       return [];
     }
-    // The drive comes right after the general group: it says what moves the joint.
+    // The drive and the sensors come right after the general group: they say
+    // what moves the joint and what reads it.
     const [general, ...others] = jointGroups(joint, open, customAxis, t);
-    const drive = jointDriveGroup(joint, open, source.language ?? "en", t);
-    return general === undefined ? [drive, ...others] : [general, drive, ...others];
+    const language = source.language ?? "en";
+    const wiring = [
+      jointDriveGroup(joint, open, language, t),
+      jointSensorGroup(joint, open, language, t),
+    ];
+    return general === undefined ? [...wiring, ...others] : [general, ...wiring, ...others];
   }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {

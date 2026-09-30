@@ -1,4 +1,4 @@
-import type { TreeRow } from "./tree-model.ts";
+import type { TreeRow } from "./tree-rows.ts";
 
 // Keyboard behaviour of the tree (WAI-ARIA tree pattern, selection follows
 // focus as in CODESYS and SolidWorks). Pure: rows and key in, command out.

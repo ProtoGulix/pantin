@@ -20,10 +20,10 @@ const jointSource = {
     [hingeJoint, screwJoint, spinJoint],
   ),
 };
-// The drive group has its own tests (drive-rows.test.ts): left out here.
+// The drive and sensor groups have their own tests: left out here.
 const jointGroupsOf = (jointId: string) =>
   buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate).filter(
-    (group) => group.id !== "drive",
+    (group) => group.id !== "drive" && group.id !== "sensors",
   );
 const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 

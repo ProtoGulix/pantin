@@ -11,7 +11,8 @@ import { buildPropertyGroups } from "./properties/properties-model.ts";
 import type { PropertyGroup } from "./properties/property-rows.ts";
 import { type ViewMode, viewModeOf } from "./session-state.ts";
 import { parseNodeId } from "./tree/node-ids.ts";
-import { buildTree, flattenTree, type TreeRow } from "./tree/tree-model.ts";
+import { buildTree } from "./tree/tree-model.ts";
+import { flattenTree, type TreeRow } from "./tree/tree-rows.ts";
 import type { ViewerState } from "./viewer-state.ts";
 
 // Display logic: turns ViewerState into exactly what the window shows, as

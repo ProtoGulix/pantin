@@ -8,49 +8,14 @@ import type {
 import { coordinateToDisplay, formatDisplayNumber } from "../units.ts";
 import { button, element, iconButton, selectInput } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
+import { checkbox, field, formInput, valueSpan } from "./panel-fields.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { renderSensorSection } from "./sensor-section.ts";
 
 // The drives panel on the right (ADR 0022): wiring drives to joints, and
 // commanding them without a PLC. Redrawn from its view on every change; the
 // tag values alone are written in place by showTagValues, several times a
 // second, so that typing in the panel is never disturbed.
-
-function field(label: string, control: HTMLElement): HTMLElement {
-  return element("label", { className: "inline-field" }, [
-    element("span", { className: "inline-field__label", text: label }),
-    control,
-  ]);
-}
-
-function formInput(
-  focusKey: string,
-  value: string,
-  label: string,
-  onInput: (text: string) => void,
-) {
-  const input = element("input", {
-    className: "text-input",
-    attributes: {
-      type: "text",
-      "aria-label": label,
-      "data-focus-key": focusKey,
-      spellcheck: "false",
-    },
-  });
-  input.value = value;
-  input.addEventListener("input", () => onInput(input.value));
-  return input;
-}
-
-function checkbox(label: string, checked: boolean, onChange: (checked: boolean) => void) {
-  const input = element("input", { attributes: { type: "checkbox" } });
-  input.checked = checked;
-  input.addEventListener("change", () => onChange(input.checked));
-  return element("label", { className: "drive-panel__check" }, [
-    input,
-    element("span", { text: label }),
-  ]);
-}
 
 function renderForm(form: DriveFormView, t: Translate, intents: PanelIntents): HTMLElement {
   const parameters = form.parameters.map((parameter) =>
@@ -98,14 +63,6 @@ function renderForm(form: DriveFormView, t: Translate, intents: PanelIntents): H
       ]),
     ],
   );
-}
-
-// The value spans carry what showTagValues needs: the tag and its unit.
-function valueSpan(name: string, coordinateUnit: string | null): HTMLElement {
-  return element("span", {
-    className: "drive-panel__value",
-    attributes: { "data-tag-value": name, "data-unit": coordinateUnit ?? "" },
-  });
 }
 
 function tagControl(tag: DriveTagView, t: Translate, intents: PanelIntents): HTMLElement {
@@ -206,6 +163,7 @@ export class DrivePanel {
         ? element("p", { className: "drive-panel__empty", text: empty })
         : null,
       ...view.drives.map((card) => renderCard(card, t, intents)),
+      view.sensors === null ? null : renderSensorSection(view.sensors, t, intents),
     ];
     this.root.replaceChildren(...parts.filter((part) => part !== null));
     restoreFocus(this.root, focus);

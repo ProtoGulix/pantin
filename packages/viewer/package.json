@@ -14,7 +14,8 @@
     "@babylonjs/core": "9.28.0",
     "@babylonjs/loaders": "9.28.0",
     "@pantin/drive-types": "workspace:*",
-    "@pantin/protocol": "workspace:*"
+    "@pantin/protocol": "workspace:*",
+    "@pantin/sensor-types": "workspace:*"
   },
   "devDependencies": {
     "vite": "8.3.1"

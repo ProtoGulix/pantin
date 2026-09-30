@@ -25,6 +25,10 @@ function runAction(
     intents.openJointEditForm(nodeId);
   } else if (action === "driveJoint") {
     intents.openDriveFormForJoint(nodeId);
+  } else if (action === "addJointSensor") {
+    intents.openSensorFormForJoint(nodeId);
+  } else if (action === "addEndSwitches") {
+    intents.addEndSwitches(nodeId);
   } else if (action === "toggleAssemblyHidden") {
     intents.toggleAssemblyHidden(nodeId);
   } else if (action === "toggleAssemblyIsolated") {

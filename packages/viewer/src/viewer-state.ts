@@ -5,6 +5,7 @@ import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
+import type { SensorFormState } from "./sensors/sensor-form.ts";
 import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { nodeExists, withRevealedNode } from "./tree/tree-state.ts";
 
@@ -54,6 +55,8 @@ export interface ViewerState {
   // core reported last.
   drivePanelOpen: boolean;
   driveForm: DriveFormState | null;
+  // The sensor form of the same panel (ADR 0023).
+  sensorForm: SensorFormState | null;
   faults: FaultsResponse;
 }
 
@@ -85,6 +88,7 @@ export function initialViewerState(language: Language): ViewerState {
     // Shown from the start: the panel is where drives are wired (ADR 0022).
     drivePanelOpen: true,
     driveForm: null,
+    sensorForm: null,
     faults: NO_FAULTS,
   };
 }
@@ -114,6 +118,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     driveForm: null,
+    sensorForm: null,
     faults: NO_FAULTS,
   };
 }

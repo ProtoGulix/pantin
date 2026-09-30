@@ -8,8 +8,9 @@ import {
   pantinNodeId,
   sourceNodeNodeId,
 } from "./node-ids.ts";
-import { buildTree, flattenTree } from "./tree-model.ts";
+import { buildTree } from "./tree-model.ts";
 import { commandForKey } from "./tree-navigation.ts";
+import { flattenTree } from "./tree-rows.ts";
 
 const press = pantinNodeId("press");
 const carriage = bodyNodeId("press", "carriage");

@@ -255,6 +255,9 @@ importers:
       '@pantin/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@pantin/sensor-types':
+        specifier: workspace:*
+        version: link:../sensor-types
     devDependencies:
       vite:
         specifier: 8.3.1

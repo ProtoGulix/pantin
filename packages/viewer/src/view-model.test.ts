@@ -92,7 +92,14 @@ describe("context menu", () => {
     ]);
     expect(
       contextEntries({ kind: "joint", pantinId, jointId: "hinge", underBodyId: null }, false),
-    ).toEqual(["frame", "changeJointType", "driveJoint", "delete"]);
+    ).toEqual([
+      "frame",
+      "changeJointType",
+      "driveJoint",
+      "addJointSensor",
+      "addEndSwitches",
+      "delete",
+    ]);
   });
 });
 

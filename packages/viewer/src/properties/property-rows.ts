@@ -10,7 +10,8 @@ export type PropertyGroupId =
   | "placement"
   | "parameters"
   | "joints"
-  | "drive";
+  | "drive"
+  | "sensors";
 
 export type EditTarget =
   // A Pantin or a body, named by its tree node.

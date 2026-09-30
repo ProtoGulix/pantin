@@ -73,7 +73,7 @@ describe("menu bar model", () => {
     expect(view?.map((entry) => entry.type === "item" && [entry.label, entry.checked])).toEqual([
       ["Tout cadrer", null],
       ["Cadrer la sélection", null],
-      ["Panneau des drives", true],
+      ["Panneau des drives et capteurs", true],
       ["Langue : FR", true],
       ["Langue : EN", false],
     ]);

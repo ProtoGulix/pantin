@@ -7,7 +7,8 @@ import {
   pantinNodeId,
   parseNodeId,
 } from "./node-ids.ts";
-import type { TreeSource, TreeViewState } from "./tree-model.ts";
+import type { TreeSource } from "./tree-model.ts";
+import type { TreeViewState } from "./tree-rows.ts";
 
 // Pure transitions of the tree's own state (expansion, selection, rename).
 // Generic over the full state so that this module does not depend on it.

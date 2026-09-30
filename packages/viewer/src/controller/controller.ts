@@ -38,6 +38,7 @@ import {
   savePantin,
 } from "./pantin-actions.ts";
 import { commitPropertyEdit } from "./property-actions.ts";
+import { sensorIntents } from "./sensor-intents.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
 import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
@@ -157,6 +158,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...importIntents(store),
     ...jointIntents(store),
     ...driveIntents(store),
+    ...sensorIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     togglePropertyGroup: (groupId) =>
       store.update({

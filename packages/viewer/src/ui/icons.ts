@@ -18,7 +18,8 @@ type ToolIcon =
   | "check"
   | "eye"
   | "eye-off"
-  | "bolt";
+  | "bolt"
+  | "sensor";
 
 export type IconName = TreeIcon | ToolIcon;
 
@@ -52,6 +53,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   check: "M3 8.5 6.5 12 13 4.5",
   // A lightning bolt: a drive moves this joint.
   bolt: "M9.5 1.5 4 9h4l-1.5 5.5L12 7H8Z",
+  // A detector and its waves: a sensor watches this joint.
+  sensor: "M2 6h4v4H2Z M8.5 5.5a3.5 3.5 0 0 1 0 5 M10.8 3.5a6.3 6.3 0 0 1 0 9",
   eye: "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   "eye-off":
     "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M2.5 13.5l11-11",

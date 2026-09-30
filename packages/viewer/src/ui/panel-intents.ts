@@ -61,6 +61,21 @@ export interface PanelIntents {
   // Typed in mm or degrees (per second).
   writeFloatTag(tagName: string, text: string): void;
 
+  // The sensors of the same panel (ADR 0023); parameter inputs by key
+  // ("range.lower", "pulsesPerUnit"), a flag as "true" or "false".
+  openSensorForm(sensorId: string | null): void;
+  // From a joint's context menu: a new sensor watching it, or its two end switches.
+  openSensorFormForJoint(nodeId: string): void;
+  addEndSwitches(nodeId: string): void;
+  cancelSensorForm(): void;
+  editSensorName(name: string): void;
+  editSensorParameter(key: string, text: string): void;
+  changeSensorType(type: string): void;
+  changeSensorJoint(jointId: string): void;
+  changeSensorAssembly(assembly: string): void;
+  submitSensorForm(): void;
+  deleteSensor(sensorId: string): void;
+
   // A new empty assembly in the Pantin of this tree node (ADR 0019).
   createAssembly(nodeId: string): void;
   // A body dragged onto an assembly, or onto a body of it, in the tree.

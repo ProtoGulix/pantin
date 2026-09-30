@@ -1,6 +1,7 @@
 import { type AssemblyDisplay, isAssemblyHidden } from "../assembly-display.ts";
 import { driveOfJoint, movableJoints } from "../drives/drive-form.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
+import { endSwitchRequests } from "../sensors/joint-sensors.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -15,6 +16,8 @@ export type ContextAction =
   | "newJoint"
   | "changeJointType"
   | "driveJoint"
+  | "addJointSensor"
+  | "addEndSwitches"
   | "toggleAssemblyHidden"
   | "toggleAssemblyIsolated"
   | "delete";
@@ -46,7 +49,7 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
     entries.push("toggleAssemblyHidden", "toggleAssemblyIsolated");
   }
   if (ref.kind === "joint") {
-    entries.push("changeJointType", "driveJoint");
+    entries.push("changeJointType", "driveJoint", "addJointSensor", "addEndSwitches");
   }
   if (ref.kind === "body" || ref.kind === "joint" || ref.kind === "assembly") {
     entries.push("delete");
@@ -62,20 +65,28 @@ const CONTEXT_LABELS = {
   newJoint: "menu.newJoint",
   changeJointType: "menu.changeJointType",
   driveJoint: "menu.addJointDrive",
+  addJointSensor: "menu.addJointSensor",
+  addEndSwitches: "menu.addEndSwitches",
   toggleAssemblyHidden: "menu.hideAssembly",
   toggleAssemblyIsolated: "menu.isolateAssembly",
   delete: "menu.delete",
 } as const;
 
-// A joint no drive can move (fixed) gets no drive entry (ADR 0022).
+const JOINT_WIRING: readonly ContextAction[] = ["driveJoint", "addJointSensor", "addEndSwitches"];
+
+// A fixed joint gets no drive nor sensor entry (ADR 0022, ADR 0023), and a
+// joint without limits (continuous) no end-of-stroke switches.
 function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boolean {
-  if (action !== "driveJoint" || ref.kind !== "joint") {
+  if (!JOINT_WIRING.includes(action) || ref.kind !== "joint") {
     return true;
   }
   const document = state.openPantin?.document;
-  return (
-    document !== undefined && movableJoints(document).some((joint) => joint.id === ref.jointId)
-  );
+  if (document === undefined) {
+    return false;
+  }
+  return action === "addEndSwitches"
+    ? endSwitchRequests(document, ref.jointId).length > 0
+    : movableJoints(document).some((joint) => joint.id === ref.jointId);
 }
 
 function isDriven(ref: NodeRef, state: ViewerState): boolean {
