@@ -1,13 +1,15 @@
 import type { z } from "zod";
 
 // Document rules of assemblies (ADR 0019): unique keys, every body in a known
-// assembly, and tag keys unique among the joints whose child body shares an
-// assembly, since `<assembly>.<tagKey>` must name one joint only.
+// assembly, and tag prefixes `<assembly>.<tagKey>` unique among joints (in
+// their child's assembly) and drives (in their own, ADR 0022), since a prefix
+// must name one tag owner only.
 
 type DocumentShape = {
   assemblies: readonly { key: string }[];
   bodies: readonly { id: string; assembly: string }[];
   joints: readonly { id: string; child: string; tagKey: string }[];
+  drives: readonly { id: string; assembly: string; tagKey: string }[];
 };
 
 export function assemblyIssues(document: DocumentShape, context: z.RefinementCtx): void {
@@ -49,6 +51,17 @@ function tagKeyIssues(document: DocumentShape, context: z.RefinementCtx): void {
         code: "custom",
         path: ["joints", index, "tagKey"],
         message: `Tag key "${joint.tagKey}" of joint "${joint.id}" is already used in assembly "${assembly}".`,
+      });
+    }
+    seen.add(tagPrefix);
+  }
+  for (const [index, drive] of document.drives.entries()) {
+    const tagPrefix = `${drive.assembly}.${drive.tagKey}`;
+    if (seen.has(tagPrefix)) {
+      context.addIssue({
+        code: "custom",
+        path: ["drives", index, "tagKey"],
+        message: `Tag key "${drive.tagKey}" of drive "${drive.id}" is already used in assembly "${drive.assembly}".`,
       });
     }
     seen.add(tagPrefix);

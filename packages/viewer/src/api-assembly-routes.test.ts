@@ -14,6 +14,7 @@ const pantin = {
     assemblies: [{ key: "verin_pince", name: "Vérin pince" }],
     bodies: [],
     joints: [],
+    drives: [],
   },
 };
 

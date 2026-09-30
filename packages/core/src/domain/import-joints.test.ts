@@ -20,6 +20,7 @@ function documentWith(bodies: Body[]): PantinDocument {
     assemblies: [{ key: "main", name: "main" }],
     bodies,
     joints: [],
+    drives: [],
   };
 }
 

@@ -230,6 +230,7 @@ describe("schema version 1 on disk", () => {
       assemblies: [{ key: "main", name: "main" }],
       bodies: [],
       joints: [],
+      drives: [],
     });
   });
 

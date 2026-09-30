@@ -31,6 +31,7 @@ function documentWith(joints: unknown[], bodyIds = ["rail", "carriage", "tool"])
     assemblies: [{ key: "axis", name: "Axis" }],
     bodies: bodyIds.map(body),
     joints,
+    drives: [],
   };
 }
 

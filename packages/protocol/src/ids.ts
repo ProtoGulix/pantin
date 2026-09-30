@@ -21,6 +21,8 @@ export type BodyId = z.infer<typeof BodyIdSchema>;
 
 export const JointIdSchema = safeIdSchema();
 export type JointId = z.infer<typeof JointIdSchema>;
+export const DriveIdSchema = safeIdSchema();
+export type DriveId = z.infer<typeof DriveIdSchema>;
 
 // Keys name the segments of a tag (ADR 0019): like ids, plus "_" so that a
 // tag reads like a PLC variable, "verin_pince.tige.position". Never a dot:

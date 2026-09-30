@@ -56,6 +56,7 @@ const PRESS: PantinDocument = {
     body("rod-2", "id1s0400125e-0-2"),
   ],
   joints: [rod("tige", "body-1", "rod-1"), rod("tige-2", "body-2", "rod-2")],
+  drives: [],
 };
 
 describe("renameAssemblyKey", () => {

@@ -56,6 +56,7 @@ export function pantinResponse(
       assemblies: [{ key: "main", name: "main" }],
       bodies,
       joints,
+      drives: [],
     },
   };
 }

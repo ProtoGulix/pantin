@@ -13,7 +13,14 @@ import { formatIssues } from "./validation.ts";
 // Pure edits of a Pantin document: each returns a new document.
 
 export function createPantinDocument(name: string): PantinDocument {
-  return { schema_version: PANTIN_SCHEMA_VERSION, name, assemblies: [], bodies: [], joints: [] };
+  return {
+    schema_version: PANTIN_SCHEMA_VERSION,
+    name,
+    assemblies: [],
+    bodies: [],
+    joints: [],
+    drives: [],
+  };
 }
 
 export function renamePantinDocument(document: PantinDocument, name: string): PantinDocument {

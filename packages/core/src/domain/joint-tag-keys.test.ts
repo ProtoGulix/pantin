@@ -36,6 +36,7 @@ const TWO_CYLINDERS: PantinDocument = {
     body("rod-2", "levage"),
   ],
   joints: [],
+  drives: [],
 };
 
 function rod(parent: string, child: string, name = "Tige"): CreateJointRequest {

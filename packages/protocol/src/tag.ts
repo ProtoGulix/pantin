@@ -34,8 +34,13 @@ export const TagNameSchema = z
 // point 6). Only a joint that can move has tags.
 export type JointTagMember = "setpoint" | "position";
 
-export function jointTagName(assemblyKey: string, tagKey: string, member: JointTagMember): string {
+/** Any tag: a joint's or a drive's, whose members come from its type (ADR 0022). */
+export function tagName(assemblyKey: string, tagKey: string, member: string): string {
   return `${assemblyKey}.${tagKey}.${member}`;
+}
+
+export function jointTagName(assemblyKey: string, tagKey: string, member: JointTagMember): string {
+  return tagName(assemblyKey, tagKey, member);
 }
 
 // Every value is a number: a bit will be 0 or 1, as in a PLC's process

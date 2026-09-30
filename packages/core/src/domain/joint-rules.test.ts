@@ -28,6 +28,7 @@ const EMPTY: PantinDocument = {
   assemblies: [{ key: "main", name: "main" }],
   bodies: ["a", "b", "c"].map(body),
   joints: [],
+  drives: [],
 };
 
 function link(parent: string, child: string, name = "Link"): CreateJointRequest {

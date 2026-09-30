@@ -13,6 +13,7 @@ const pantin: PantinResponse = {
     assemblies: [],
     bodies: [],
     joints: [],
+    drives: [],
   },
 };
 

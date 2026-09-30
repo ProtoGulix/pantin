@@ -54,6 +54,7 @@ const document: PantinDocument = {
   ],
   bodies: [body("rail", "frame"), body("carriage", "axis_800"), body("tool", "axis_800")],
   joints: [stroke, clamp],
+  drives: [],
 };
 
 const noRuntime = { jointPositions: new Map(), setpoints: new Map() };

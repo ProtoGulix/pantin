@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 4
+      "const": 5
     },
     "name": {
       "type": "string",
@@ -513,9 +513,235 @@
           }
         ]
       }
+    },
+    "drives": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joints": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "double_acting_cylinder"
+              },
+              "speed": {
+                "type": "number"
+              }
+            },
+            "required": ["id", "tagKey", "name", "assembly", "joints", "type", "speed"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joints": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "single_acting_cylinder"
+              },
+              "speed": {
+                "type": "number"
+              }
+            },
+            "required": ["id", "tagKey", "name", "assembly", "joints", "type", "speed"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joints": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "servo_axis"
+              },
+              "maxSpeed": {
+                "type": "number"
+              },
+              "maxAcceleration": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "joints",
+              "type",
+              "maxSpeed",
+              "maxAcceleration"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joints": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "motor_analog"
+              },
+              "acceleration": {
+                "type": "number"
+              }
+            },
+            "required": ["id", "tagKey", "name", "assembly", "joints", "type", "acceleration"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joints": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+                }
+              },
+              "type": {
+                "type": "string",
+                "const": "motor_on_off"
+              },
+              "nominalSpeed": {
+                "type": "number"
+              },
+              "acceleration": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "joints",
+              "type",
+              "nominalSpeed",
+              "acceleration"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
     }
   },
-  "required": ["schema_version", "name", "assemblies", "bodies", "joints"],
+  "required": ["schema_version", "name", "assemblies", "bodies", "joints", "drives"],
   "additionalProperties": false,
   "title": "Pantin document (pantin.json)",
   "description": "Shape of a Pantin document. The joint tree, the assemblies and the tag keys follow further rules that only `pnpm pantin validate` checks."

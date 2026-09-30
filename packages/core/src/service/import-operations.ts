@@ -1,5 +1,6 @@
 import type { Assembly, Body, ImportBodyQuery, Joint, PantinId } from "@pantin/protocol";
 import { stepConverterUnavailable } from "../converter/step-converter.ts";
+import { newAssembly } from "../domain/assemblies.ts";
 import { fileNameStem } from "../domain/ids.ts";
 import {
   buildImportedBody,
@@ -7,7 +8,6 @@ import {
   toDisplayName,
   unsupportedFileError,
 } from "../domain/import-body.ts";
-import { newAssembly } from "../domain/assemblies.ts";
 import { addStarJoints } from "../domain/import-joints.ts";
 import {
   addAssembly,

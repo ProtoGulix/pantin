@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "name": "Axis",
   "assemblies": [
     {
@@ -47,5 +47,6 @@
       "axis": [1, 0, 0],
       "limits": [0, 0.34]
     }
-  ]
+  ],
+  "drives": []
 }

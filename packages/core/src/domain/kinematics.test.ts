@@ -27,6 +27,7 @@ function documentWith(joints: Joint[], bodyIds = ["base", "arm", "slider"]): Pan
     assemblies: [{ key: "main", name: "main" }],
     bodies: bodyIds.map(body),
     joints,
+    drives: [],
   };
 }
 

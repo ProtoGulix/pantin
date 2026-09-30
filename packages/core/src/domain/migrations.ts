@@ -34,11 +34,17 @@ function migrateV3ToV4(document: JsonObject): JsonObject {
   };
 }
 
+// Version 5 adds drives (ADR 0022): existing documents have none.
+function migrateV4ToV5(document: JsonObject): JsonObject {
+  return { ...document, schema_version: 5, drives: [] };
+}
+
 // Key: the version a step starts from.
 const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject> = new Map([
   [1, migrateV1ToV2],
   [2, migrateV2ToV3],
   [3, migrateV3ToV4],
+  [4, migrateV4ToV5],
 ]);
 
 function isJsonObject(value: unknown): value is JsonObject {

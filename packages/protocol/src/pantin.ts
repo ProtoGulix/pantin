@@ -1,15 +1,17 @@
 import { z } from "zod";
+import { DriveSchema } from "./drive.ts";
 import { BodyIdSchema, DisplayNameSchema, KeySchema } from "./ids.ts";
 import { JointSchema } from "./joint.ts";
 import { assemblyIssues } from "./pantin-assemblies.ts";
+import { driveIssues } from "./pantin-drives.ts";
 
 // A Pantin is a folder on disk: `pantin.json` plus a `meshes/` directory.
 // The folder name is the Pantin id; the display name lives in the document.
 
 // Version 2 added `joints` (ADR 0011), version 3 the helical joint (ADR 0013),
-// version 4 assemblies and tag keys (ADR 0019). The core migrates older
-// documents on read.
-export const PANTIN_SCHEMA_VERSION = 4;
+// version 4 assemblies and tag keys (ADR 0019), version 5 drives (ADR 0022).
+// The core migrates older documents on read.
+export const PANTIN_SCHEMA_VERSION = 5;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";
@@ -93,10 +95,12 @@ export const PantinDocumentSchema = z
     joints: z.array(JointSchema).superRefine((joints, context) => {
       duplicateIdIssues(joints, "Joint", context);
     }),
+    drives: z.array(DriveSchema),
   })
   .superRefine((document, context) => {
     jointTreeIssues(document, context);
     assemblyIssues(document, context);
+    driveIssues(document, context);
   });
 export type PantinDocument = z.infer<typeof PantinDocumentSchema>;
 

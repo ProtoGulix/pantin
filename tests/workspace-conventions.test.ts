@@ -31,6 +31,7 @@ describe("workspace packages", () => {
       "bridge",
       "cli",
       "core",
+      "drive-types",
       "protocol",
       "step-converter",
       "viewer",

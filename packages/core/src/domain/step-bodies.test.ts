@@ -35,6 +35,7 @@ describe("newAssembly", () => {
     assemblies: [{ key: "verin-pince", name: "Verin pince" }],
     bodies: [],
     joints: [],
+    drives: [],
   };
 
   it("derives a unique key from the name and keeps the name as given", () => {
