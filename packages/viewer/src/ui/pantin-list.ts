@@ -6,8 +6,10 @@ import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // The list view (role=listbox): every Pantin with its id and body count.
-// Built once and fed by delegation, like the tree, so redraws never lose a
-// click; a double-click, Enter or the Open button opens a Pantin.
+// Built once and fed by delegation, like the tree; a double-click, Enter or
+// the Open button opens a Pantin. A row is kept across redraws and only its
+// selection updated: pressing Open selects the row, and a row rebuilt
+// between the press and the release would lose the click.
 
 export interface PantinList {
   element: HTMLElement;
@@ -18,6 +20,8 @@ export interface PantinList {
 interface Current {
   rows: readonly PantinListRowView[];
   intents: PanelIntents | null;
+  // Row elements by what they show but their selection.
+  elements: Map<string, HTMLElement>;
 }
 
 function rowElement(row: PantinListRowView, index: number, translate: Translate): HTMLElement {
@@ -31,12 +35,11 @@ function rowElement(row: PantinListRowView, index: number, translate: Translate)
   return element(
     "div",
     {
-      className: row.selected ? "list-row list-row--selected" : "list-row",
+      className: "list-row",
       attributes: {
         role: "option",
         id: `pantin-option-${index}`,
         "data-pantin-id": row.id,
-        "aria-selected": String(row.selected),
       },
     },
     [
@@ -46,6 +49,30 @@ function rowElement(row: PantinListRowView, index: number, translate: Translate)
       open,
     ],
   );
+}
+
+function contentSignature(row: PantinListRowView, index: number, openLabel: string): string {
+  return JSON.stringify([row.id, row.name, row.detail, index, openLabel]);
+}
+
+function updateRows(listbox: HTMLElement, current: Current, translate: Translate): void {
+  const openLabel = translate("list.open");
+  const elements = new Map<string, HTMLElement>();
+  const ordered = current.rows.map((row, index) => {
+    const signature = contentSignature(row, index, openLabel);
+    const kept = current.elements.get(signature) ?? rowElement(row, index, translate);
+    kept.classList.toggle("list-row--selected", row.selected);
+    kept.setAttribute("aria-selected", String(row.selected));
+    elements.set(signature, kept);
+    return kept;
+  });
+  current.elements = elements;
+  const unchanged =
+    ordered.length === listbox.children.length &&
+    ordered.every((row, index) => listbox.children[index] === row);
+  if (!unchanged) {
+    listbox.replaceChildren(...ordered);
+  }
 }
 
 function pantinIdOf(event: Event): string | null {
@@ -103,7 +130,7 @@ export function createPantinList(): PantinList {
     emptyMessage,
     listbox,
   ]);
-  const current: Current = { rows: [], intents: null };
+  const current: Current = { rows: [], intents: null, elements: new Map() };
   listen(listbox, current);
   return {
     element: container,
@@ -113,7 +140,7 @@ export function createPantinList(): PantinList {
       current.intents = intents;
       title.textContent = translate("list.title");
       listbox.setAttribute("aria-label", translate("list.label"));
-      listbox.replaceChildren(...rows.map((row, index) => rowElement(row, index, translate)));
+      updateRows(listbox, current, translate);
       emptyMessage.textContent = translate("list.empty");
       emptyMessage.hidden = rows.length > 0;
       const selectedIndex = rows.findIndex((row) => row.selected);
