@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/drive-types" },
+    { "path": "packages/actuator-types" },
     { "path": "packages/sensor-types" },
     { "path": "packages/protocol" },
     { "path": "packages/core" },

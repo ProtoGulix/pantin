@@ -19,13 +19,13 @@ module.exports = {
     {
       name: "protocol-has-no-workspace-dependency",
       comment:
-        "protocol is the shared contract: it imports no other Pantin package, but the drive and sensor type schemas (ADR 0022, 0023).",
+        "protocol is the shared contract: it imports no other Pantin package, but the drive, actuator and sensor type schemas (ADR 0022, 0023, 0028).",
       severity: "error",
       from: { path: "^packages/protocol/" },
       to: {
         path: "^packages/(?!protocol/)|^@pantin/(?!protocol$)",
         pathNot:
-          "^packages/(drive|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(next-schemas|ports)\\.ts$",
+          "^packages/(drive|actuator|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(next-schemas|ports)\\.ts$",
       },
     },
     {
@@ -51,6 +51,45 @@ module.exports = {
       from: {
         path: "^packages/drive-types/src/(schemas|next-schemas|schema-common|ports|[^/]+/schema)\\.ts$",
       },
+      // Through any chain of imports, not only a direct one.
+      to: { path: "behaviour", reachable: true },
+    },
+    {
+      name: "actuator-types-imports-only-port-states",
+      comment:
+        "An actuator type depends on Zod and on the port state schemas of drive-types, never on its behaviours (ADR 0028 point 3).",
+      severity: "error",
+      from: { path: "^packages/actuator-types/", pathNot: "\\.test\\.ts$" },
+      to: {
+        path: "^packages/(?!actuator-types/)|^@pantin/",
+        pathNot: "^packages/drive-types/src/ports\\.ts$",
+      },
+    },
+    {
+      name: "actuator-types-tests-import-only-drive-schemas",
+      comment:
+        "Tests may also read the drive port declarations (next-schemas) to check default feeds, never a behaviour (ADR 0028).",
+      severity: "error",
+      from: { path: "^packages/actuator-types/.*\\.test\\.ts$" },
+      to: {
+        path: "^packages/(?!actuator-types/)|^@pantin/",
+        pathNot: "^packages/drive-types/src/(ports|next-schemas)\\.ts$",
+      },
+    },
+    {
+      name: "viewer-runs-no-actuator-behaviour",
+      comment: "The viewer shows actuators but never simulates them (CLAUDE.md section 3.2).",
+      severity: "error",
+      from: { path: "^packages/viewer/" },
+      to: {
+        path: "^packages/actuator-types/src/(behaviours|behaviour-[a-z-]*common|[^/]+/behaviour)\\.ts$",
+      },
+    },
+    {
+      name: "actuator-type-schemas-hold-no-logic",
+      comment: "The protocol imports the schemas: they must never reach the behaviours (ADR 0028).",
+      severity: "error",
+      from: { path: "^packages/actuator-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$" },
       // Through any chain of imports, not only a direct one.
       to: { path: "behaviour", reachable: true },
     },

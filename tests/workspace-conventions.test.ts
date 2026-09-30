@@ -28,6 +28,7 @@ const packageFolderNames = allPackageFolderNames.filter(
 describe("workspace packages", () => {
   it("contains exactly the packages declared in CLAUDE.md", () => {
     expect(allPackageFolderNames).toEqual([
+      "actuator-types",
       "bridge",
       "cli",
       "core",

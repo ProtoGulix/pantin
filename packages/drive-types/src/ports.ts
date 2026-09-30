@@ -27,8 +27,10 @@ export type AcPowerState = z.infer<typeof AcPowerStateSchema>;
 /** In the unit of the joints the actuator moves, per second and per second squared. */
 export const ServoStateSchema = z.object({
   setpoint: z.number(),
-  maxSpeed: z.number(),
-  maxAcceleration: z.number(),
+  // Strictly positive: the trapezoidal profile divides by neither, but takes a
+  // square root that is NaN for a negative acceleration.
+  maxSpeed: z.number().positive(),
+  maxAcceleration: z.number().positive(),
 });
 export type ServoState = z.infer<typeof ServoStateSchema>;
 

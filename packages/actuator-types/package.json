@@ -1,0 +1,17 @@
+{
+  "name": "@pantin/actuator-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "One folder per actuator type: schema, pure behaviour, labels (ADR 0028).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./schemas": "./src/schemas.ts",
+    "./behaviours": "./src/behaviours.ts",
+    "./labels": "./src/labels.ts"
+  },
+  "dependencies": {
+    "@pantin/drive-types": "workspace:*",
+    "zod": "4.6.5"
+  }
+}
