@@ -7,10 +7,10 @@ import {
 import { ENCODER_PARAMETERS, ENCODER_TAGS, EncoderFieldsSchema } from "./encoder/schema.ts";
 import {
   INDUCTIVE_SWITCH_PARAMETERS,
-  MATERIAL_FACTORS,
   INDUCTIVE_SWITCH_PLACEMENT,
   INDUCTIVE_SWITCH_TAGS,
   InductiveSwitchFieldsSchema,
+  MATERIAL_FACTORS,
 } from "./inductive-switch/schema.ts";
 import {
   LIMIT_SWITCH_PARAMETERS,
