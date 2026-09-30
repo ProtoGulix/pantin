@@ -35,7 +35,8 @@ export async function writeTag(
   if (owner.kind === "joint") {
     openPantin.setpoints.set(owner.joint.id, value);
     openPantin.queuedSetpoints.set(owner.joint.id, value);
-  } else {
+  } else if (owner.kind === "drive") {
+    // A sensor has feedback tags only, which commandTagOf refuses.
     const commands = openPantin.driveCommands.get(owner.drive.id) ?? {};
     openPantin.driveCommands.set(owner.drive.id, { ...commands, [entry.member]: value });
   }

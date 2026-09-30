@@ -4,21 +4,28 @@ import {
   type Joint,
   type PantinDocument,
   type RenamedTag,
+  SENSOR_TAGS,
+  type Sensor,
   type Tag,
   type TagDirection,
   type TagType,
   tagName,
 } from "@pantin/protocol";
+import { evaluateSensor } from "@pantin/sensor-types/evaluators";
 import { ApiError } from "../errors.ts";
 import { isMovableJoint } from "./joint-types/registry.ts";
 import { currentJointPosition } from "./kinematics.ts";
 
 // Every tag of a Pantin, named "<assembly>.<tagKey>.<member>" (ADR 0019).
 // A movable joint has a "position" feedback, and a "setpoint" command while
-// no drive moves it (ADR 0012, ADR 0022 point 5); a drive has the tags its
-// type declares (ADR 0022 point 3).
+// no drive moves it (ADR 0012, ADR 0022 point 5); a drive and a sensor have
+// the tags their type declares (ADR 0022 point 3, ADR 0023 point 3).
 
-type TagOwner = { kind: "joint"; joint: Joint } | { kind: "drive"; drive: Drive };
+type TagOwner =
+  | { kind: "joint"; joint: Joint }
+  | { kind: "drive"; drive: Drive }
+  // The watched joint travels with the sensor: its values come from its position.
+  | { kind: "sensor"; sensor: Sensor; joint: Joint };
 
 export interface TagEntry {
   owner: TagOwner;
@@ -82,7 +89,23 @@ function driveEntries(drive: Drive): TagEntry[] {
   }));
 }
 
-/** Every tag, joints first then drives, in document order. */
+function sensorEntries(document: PantinDocument, sensor: Sensor): TagEntry[] {
+  const joint = document.joints.find((candidate) => candidate.id === sensor.joint);
+  // A validated document always has the watched joint (ADR 0023 point 3).
+  if (joint === undefined) {
+    throw new Error(`Sensor "${sensor.id}" watches "${sensor.joint}", which is missing.`);
+  }
+  const owner: TagOwner = { kind: "sensor", sensor, joint };
+  return SENSOR_TAGS[sensor.type].map((tag) => ({
+    owner,
+    member: tag.member,
+    name: tagName(sensor.assembly, sensor.tagKey, tag.member),
+    type: tag.type,
+    direction: tag.direction,
+  }));
+}
+
+/** Every tag, joints first, then drives, then sensors, in document order. */
 function tagEntries(document: PantinDocument): TagEntry[] {
   const driven = drivenJointIds(document);
   return [
@@ -90,6 +113,7 @@ function tagEntries(document: PantinDocument): TagEntry[] {
       .filter(isMovableJoint)
       .flatMap((joint) => jointEntries(document, joint, driven.has(joint.id))),
     ...document.drives.flatMap(driveEntries),
+    ...document.sensors.flatMap((sensor) => sensorEntries(document, sensor)),
   ];
 }
 
@@ -99,6 +123,11 @@ function currentValue(entry: TagEntry, runtime: TagRuntime): number {
     return member === "setpoint"
       ? (runtime.setpoints.get(owner.joint.id) ?? 0)
       : currentJointPosition(owner.joint, runtime.jointPositions);
+  }
+  // Computed at each read, from the latest step: a sensor has no state (ADR 0023 point 4).
+  if (owner.kind === "sensor") {
+    const position = currentJointPosition(owner.joint, runtime.jointPositions);
+    return evaluateSensor({ fields: owner.sensor, position })[member] ?? 0;
   }
   const values = entry.direction === "command" ? runtime.driveCommands : runtime.driveFeedback;
   return values.get(owner.drive.id)?.[member] ?? 0;
@@ -161,7 +190,14 @@ export function commandTagOf(document: PantinDocument, wanted: string): TagEntry
 }
 
 function ownerId(owner: TagOwner): string {
-  return owner.kind === "joint" ? `joint:${owner.joint.id}` : `drive:${owner.drive.id}`;
+  switch (owner.kind) {
+    case "joint":
+      return `joint:${owner.joint.id}`;
+    case "drive":
+      return `drive:${owner.drive.id}`;
+    case "sensor":
+      return `sensor:${owner.sensor.id}`;
+  }
 }
 
 /**

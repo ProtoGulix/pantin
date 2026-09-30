@@ -1,5 +1,6 @@
 import {
   type CreateJointRequest,
+  JOINT_COORDINATE_UNITS,
   type Joint,
   type PantinDocument,
   PantinDocumentSchema,
@@ -104,6 +105,9 @@ export function updateJointInDocument(
       `Tag key "${existing.tagKey}" of joint "${jointId}" is already used in the assembly of body "${request.child}". Rename one of the tag keys first.`,
     );
   }
+  if (JOINT_COORDINATE_UNITS[request.type] === null) {
+    sensorsWatchingGuard(document, jointId);
+  }
   const joint: Joint = { id: jointId, tagKey: existing.tagKey, ...request };
   return validatedJoint(
     replaceJoint(document, joint),
@@ -112,8 +116,8 @@ export function updateJointInDocument(
   );
 }
 
-// A driven joint cannot go: its drive would move nothing, or a joint that is
-// no longer there (ADR 0022 point 4).
+// A driven or watched joint cannot go: its drive would move nothing, or a
+// joint that is no longer there (ADR 0022 point 4, ADR 0023 point 5).
 export function deleteJointFromDocument(document: PantinDocument, jointId: string): PantinDocument {
   const drive = document.drives.find((candidate) => candidate.joints.includes(jointId));
   if (drive !== undefined) {
@@ -122,5 +126,17 @@ export function deleteJointFromDocument(document: PantinDocument, jointId: strin
       `Joint "${jointId}" is moved by drive "${drive.id}". Remove it from the drive, or delete the drive, first.`,
     );
   }
+  sensorsWatchingGuard(document, jointId);
   return removeJoint(document, jointId);
+}
+
+// A sensor reads a joint's coordinate: the joint must keep one (ADR 0023 point 5).
+function sensorsWatchingGuard(document: PantinDocument, jointId: string): void {
+  const sensors = document.sensors.filter((sensor) => sensor.joint === jointId).map(({ id }) => id);
+  if (sensors.length > 0) {
+    throw new ApiError(
+      "conflict",
+      `Joint "${jointId}" is watched by sensor "${sensors.join('", "')}". Point the sensor at another joint, or delete it, first.`,
+    );
+  }
 }

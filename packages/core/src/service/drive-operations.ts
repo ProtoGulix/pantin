@@ -15,7 +15,7 @@ import {
 } from "../domain/drive-rules.ts";
 import { renamedTags } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
-import { waitForImports } from "./mesh-lifecycle.ts";
+import { loadSettledPantin } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
 // Drives and faults of an open Pantin (ADR 0022). Every drive edit also tidies
@@ -40,13 +40,6 @@ function tidyJoints(openPantin: OpenPantin, before: readonly string[], after: re
   }
 }
 
-// An import in flight may still roll back joints or an assembly a drive uses.
-async function openSettled(context: ServiceContext, pantinId: PantinId): Promise<OpenPantin> {
-  const openPantin = await loadPantin(context, pantinId);
-  await waitForImports(openPantin);
-  return openPantin;
-}
-
 function driveOf(document: PantinDocument, driveId: string): Drive | undefined {
   return document.drives.find((drive) => drive.id === driveId);
 }
@@ -54,14 +47,14 @@ function driveOf(document: PantinDocument, driveId: string): Drive | undefined {
 export function driveOperations(context: ServiceContext) {
   return {
     createDrive: async (pantinId: PantinId, request: CreateDriveRequest): Promise<Drive> => {
-      const openPantin = await openSettled(context, pantinId);
+      const openPantin = await loadSettledPantin(context, pantinId);
       const { document, drive } = addDriveToDocument(openPantin.document, request);
       openPantin.document = document;
       tidyJoints(openPantin, [], drive.joints);
       return drive;
     },
     updateDrive: async (pantinId: PantinId, driveId: string, request: CreateDriveRequest) => {
-      const openPantin = await openSettled(context, pantinId);
+      const openPantin = await loadSettledPantin(context, pantinId);
       const before = driveOf(openPantin.document, driveId);
       const { document, drive } = updateDriveInDocument(openPantin.document, driveId, request);
       openPantin.document = document;
@@ -72,7 +65,7 @@ export function driveOperations(context: ServiceContext) {
       return drive;
     },
     deleteDrive: async (pantinId: PantinId, driveId: string): Promise<PantinResponse> => {
-      const openPantin = await openSettled(context, pantinId);
+      const openPantin = await loadSettledPantin(context, pantinId);
       const before = driveOf(openPantin.document, driveId);
       openPantin.document = deleteDriveFromDocument(openPantin.document, driveId);
       tidyJoints(openPantin, before?.joints ?? [], []);
@@ -80,7 +73,7 @@ export function driveOperations(context: ServiceContext) {
       return toResponse(pantinId, openPantin);
     },
     renameDriveTagKey: async (pantinId: PantinId, driveId: string, tagKey: string) => {
-      const openPantin = await openSettled(context, pantinId);
+      const openPantin = await loadSettledPantin(context, pantinId);
       const before = openPantin.document;
       openPantin.document = renameDriveTagKey(before, driveId, tagKey);
       const answer: RenamedTagsResponse = {

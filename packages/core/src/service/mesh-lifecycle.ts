@@ -54,6 +54,16 @@ export async function waitForImports(openPantin: OpenPantin): Promise<void> {
   }
 }
 
+/** The open Pantin once its imports settled: a rollback may remove joints or an assembly. */
+export async function loadSettledPantin(
+  context: ServiceContext,
+  pantinId: PantinId,
+): Promise<OpenPantin> {
+  const openPantin = await loadPantin(context, pantinId);
+  await waitForImports(openPantin);
+  return openPantin;
+}
+
 async function writeDocument(
   context: ServiceContext,
   pantinId: PantinId,

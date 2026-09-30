@@ -14,6 +14,7 @@ import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
 import { bodyIdOf, pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
+import { SENSOR_ROUTES } from "./sensor-routes.ts";
 import { TAG_ROUTES } from "./tag-routes.ts";
 
 const MESH_CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -140,6 +141,7 @@ export const ROUTES: readonly Route[] = [
   ...JOINT_ROUTES,
   ...ASSEMBLY_ROUTES,
   ...DRIVE_ROUTES,
+  ...SENSOR_ROUTES,
   ...POSE_STREAM_ROUTES,
   ...TAG_ROUTES,
 ];

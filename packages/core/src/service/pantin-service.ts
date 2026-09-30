@@ -39,6 +39,7 @@ import {
   toResponse,
   updateDocument,
 } from "./open-pantins.ts";
+import { sensorOperations } from "./sensor-operations.ts";
 import { listTags, runSimulationSteps, writeTag } from "./simulation.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
@@ -141,6 +142,7 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     runSimulationSteps: (steps: number) => runSimulationSteps(context, steps),
     ...assemblyOperations(context),
     ...driveOperations(context),
+    ...sensorOperations(context),
   };
 }
 

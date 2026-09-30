@@ -4,8 +4,8 @@ import { newAssembly } from "./assemblies.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
-// Assembly and joint keys change only here, drive keys in drive-rules.ts: the
-// only edits that rename tags.
+// Assembly and joint keys change only here, drive keys in drive-rules.ts and
+// sensor keys in sensor-rules.ts: the only edits that rename tags.
 
 function findAssembly(document: PantinDocument, key: string): Assembly {
   const assembly = document.assemblies.find((candidate) => candidate.key === key);
@@ -46,12 +46,17 @@ export function deleteAssembly(document: PantinDocument, key: string): PantinDoc
       `Assembly "${assembly.name}" still holds ${bodies}. Move or delete them first.`,
     );
   }
-  const drives = document.drives.filter((drive) => drive.assembly === key).map(({ id }) => id);
-  if (drives.length > 0) {
-    throw new ApiError(
-      "conflict",
-      `Assembly "${assembly.name}" still holds drive "${drives.join('", "')}". Move or delete it first.`,
-    );
+  for (const [kind, owners] of [
+    ["drive", document.drives],
+    ["sensor", document.sensors],
+  ] as const) {
+    const ids = owners.filter((owner) => owner.assembly === key).map(({ id }) => id);
+    if (ids.length > 0) {
+      throw new ApiError(
+        "conflict",
+        `Assembly "${assembly.name}" still holds ${kind} "${ids.join('", "')}". Move or delete it first.`,
+      );
+    }
   }
   return { ...document, assemblies: document.assemblies.filter((item) => item.key !== key) };
 }
@@ -74,6 +79,7 @@ export function renameAssemblyKey(
     assemblies: document.assemblies.map((assembly) => ({ ...assembly, key: rekey(assembly.key) })),
     bodies: document.bodies.map((body) => ({ ...body, assembly: rekey(body.assembly) })),
     drives: document.drives.map((drive) => ({ ...drive, assembly: rekey(drive.assembly) })),
+    sensors: document.sensors.map((sensor) => ({ ...sensor, assembly: rekey(sensor.assembly) })),
   };
 }
 

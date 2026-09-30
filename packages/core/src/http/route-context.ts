@@ -6,6 +6,7 @@ import {
   KeySchema,
   type PantinId,
   PantinIdSchema,
+  SensorIdSchema,
   TagNameSchema,
 } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
@@ -44,6 +45,10 @@ export function jointIdOf(context: RouteContext): string {
 
 export function driveIdOf(context: RouteContext): string {
   return parseWithSchema(DriveIdSchema, context.parameters.driveId, "The drive id in the URL");
+}
+
+export function sensorIdOf(context: RouteContext): string {
+  return parseWithSchema(SensorIdSchema, context.parameters.sensorId, "The sensor id in the URL");
 }
 
 export function assemblyKeyOf(context: RouteContext): string {
