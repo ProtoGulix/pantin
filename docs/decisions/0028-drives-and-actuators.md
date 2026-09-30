@@ -103,7 +103,7 @@ motor, a cylinder pushed back by a load) are left for a later ADR.
    | `valve_5_3_exhaust` | `coil_14`, `coil_12` | centre: both exhaust | keeps position, diagnostic |
    | `valve_5_3_pressure` | `coil_14`, `coil_12` | centre: both pressure | keeps position, diagnostic |
    | `contactor` | `run` | open | n/a |
-   | `reversing_contactor` | `forward`, `reverse` | open | keeps the first closed (interlock) |
+   | `reversing_contactor` | `forward`, `reverse` | open | keeps the first closed (interlock), diagnostic |
    | `vfd_on_off` | `run`, `reverse` | ramp to 0 | n/a |
    | `vfd_analog` | `speed_setpoint` | ramp to 0 | n/a |
    | `servo_drive` | `setpoint` | holds | n/a |
@@ -123,7 +123,10 @@ motor, a cylinder pushed back by a load) are left for a later ADR.
    (CLAUDE.md section 9) once the tag bus exists. It tells the user that
    the PLC program commands something a real machine would not survive
    well. First diagnostic: `conflicting_commands`, on the three 5/3
-   valve types.
+   valve types and the reversing contactor, whose interlock hides a real
+   fault. Not on the 5/2 double solenoid valve: both coils set is common
+   and harmless there, the spool stays where it is (decided by the user on
+   2026-09-30).
 6. **Units of drive tags.** A variable speed drive knows no motor: its
    `speed_setpoint` command and its `speed` feedback are percentages of the
    motor's nominal speed, and its acceleration is in percent per second.
@@ -246,9 +249,10 @@ motor, a cylinder pushed back by a load) are left for a later ADR.
 - The phase 4 exit test runs through the migration with unchanged motion,
   then again with each valve type.
 - This reworks phase 4. It must land before phase 7 (the PLC bridge), when
-  tag names start to matter; doing it before phase 6 is to be decided.
-- To decide: the exhausted cylinder holding until loads exist; whether a
-  5/2 double solenoid valve and a reversing contactor also raise
-  `conflicting_commands`.
+  tag names start to matter; the user decided on 2026-09-30 to do it before
+  phase 6.
+- Decided on 2026-09-30: a double-acting cylinder with both chambers
+  exhausted holds until loads exist; `conflicting_commands` covers the 5/3
+  valves and the reversing contactor (point 5).
 - Next ADR: loads and faults flowing back from actuators to drives
   (overcurrent, air loss, a cylinder pushed back).
