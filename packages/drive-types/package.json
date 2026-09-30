@@ -8,7 +8,11 @@
   "exports": {
     "./schemas": "./src/schemas.ts",
     "./behaviours": "./src/behaviours.ts",
-    "./labels": "./src/labels.ts"
+    "./labels": "./src/labels.ts",
+    "./ports": "./src/ports.ts",
+    "./next-schemas": "./src/next-schemas.ts",
+    "./next-behaviours": "./src/next-behaviours.ts",
+    "./next-labels": "./src/next-labels.ts"
   },
   "dependencies": {
     "zod": "4.6.5"

@@ -24,7 +24,8 @@ module.exports = {
       from: { path: "^packages/protocol/" },
       to: {
         path: "^packages/(?!protocol/)|^@pantin/(?!protocol$)",
-        pathNot: "^packages/(drive|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$",
+        pathNot:
+          "^packages/(drive|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(next-schemas|ports)\\.ts$",
       },
     },
     {
@@ -39,13 +40,17 @@ module.exports = {
       comment: "The viewer shows drives but never simulates them (CLAUDE.md section 3.2).",
       severity: "error",
       from: { path: "^packages/viewer/" },
-      to: { path: "^packages/drive-types/src/(behaviours|behaviour-common|[^/]+/behaviour)\\.ts$" },
+      to: {
+        path: "^packages/drive-types/src/(behaviours|next-behaviours|[^/]*behaviour-[a-z-]*common|[^/]+/behaviour)\\.ts$",
+      },
     },
     {
       name: "drive-type-schemas-hold-no-logic",
       comment: "The protocol imports the schemas: they must never reach the behaviours (ADR 0022).",
       severity: "error",
-      from: { path: "^packages/drive-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$" },
+      from: {
+        path: "^packages/drive-types/src/(schemas|next-schemas|schema-common|ports|[^/]+/schema)\\.ts$",
+      },
       // Through any chain of imports, not only a direct one.
       to: { path: "behaviour", reachable: true },
     },

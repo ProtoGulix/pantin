@@ -1,10 +1,11 @@
 import { z } from "zod";
 
 // What every drive type's schema.ts uses: shapes of data only, no logic, since
-// the protocol imports the schemas (ADR 0022 point 2). Units are SI, in the
-// unit of the driven joints' coordinate (metre or radian).
+// the protocol imports the schemas (ADR 0022 point 2). Float values are SI
+// in the unit of the driven joints' coordinate (metre or radian), except the
+// percentages of a variable speed drive (ADR 0028 point 6).
 
-/** A speed or an acceleration: finite and strictly positive. */
+/** A rate (speed, acceleration or ramp in percent per second): finite and strictly positive. */
 export function positiveRate(what: string) {
   return z
     .number()
@@ -19,19 +20,25 @@ export interface DriveTag {
   member: string;
   type: DriveTagType;
   direction: "command" | "feedback";
-  // What a float tag measures, in the joints' unit: a position, or a speed
-  // (per second). Clients show it in mm or degrees; a bit has none.
-  quantity?: "position" | "speed";
+  // What a float tag measures: a position or a speed (per second) in the
+  // joints' unit, which clients show in mm or degrees; or a percent (of a
+  // motor's nominal speed). A bit has none.
+  quantity?: "position" | "speed" | "percent";
 }
 
 // "speed" is per second, "acceleration" per second squared, of the joints'
-// coordinate unit; clients show them in mm or degrees.
-export type DriveParameterKind = "speed" | "acceleration";
+// coordinate unit; clients show them in mm or degrees. "percent_per_second" is
+// a ramp in percent of a nominal speed per second (ADR 0028 point 6).
+export type DriveParameterKind = "speed" | "acceleration" | "percent_per_second";
 
 export interface DriveParameter {
   field: string;
   kind: DriveParameterKind;
 }
+
+/** Conditions a behaviour detects in the commands, as opposed to injected faults (ADR 0028 point 5). */
+// Extend the union with each new diagnostic.
+export type DriveDiagnostic = "conflicting_commands";
 
 export type DriveLanguage = "en" | "fr";
 
