@@ -45,8 +45,18 @@ assemblies exist, ADR 0019).
    assembly is drawn in that chain with a badge naming its assembly, and
    listed only there. Inside a band, each leaf of the forest gets a row and
    a parent is centred on its children, ordered by id, so that the layout is
-   deterministic and edges never cross. An actuator without feed shows empty
-   input ports.
+   deterministic and edges of different nodes never cross. Edges leaving one
+   node may cross each other: a valve feeding two cylinders sends `port_4`
+   to both caps and `port_2` to both rods, which no order of sockets draws
+   without a crossing. A fed actuator's input sockets follow the order of the
+   drive ports its default feed reads (ADR 0028 point 2), so that a default
+   feed draws straight and a swapped one crosses. An edge between two
+   heights leaves and enters horizontally and crosses the gap on a slant, so
+   that edges from two sockets never share a segment and a crossing always
+   shows as an X (right-angled wires cannot avoid an overlap on a swapped
+   feed). Edges from one socket share their first stub, as a fan-out
+   (amended on 2026-09-30, while laying out). An actuator without feed shows
+   empty input ports.
 4. **Layout in the viewer.** A pure display module turns the document into
    node boxes and edge paths, unit tested like the rest of the display
    logic. The view renders them as SVG. No dependency is added.
