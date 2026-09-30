@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   BodyIdSchema,
+  DriveIdSchema,
   JointIdSchema,
   KeySchema,
   type PantinId,
@@ -39,6 +40,10 @@ export function bodyIdOf(context: RouteContext): string {
 
 export function jointIdOf(context: RouteContext): string {
   return parseWithSchema(JointIdSchema, context.parameters.jointId, "The joint id in the URL");
+}
+
+export function driveIdOf(context: RouteContext): string {
+  return parseWithSchema(DriveIdSchema, context.parameters.driveId, "The drive id in the URL");
 }
 
 export function assemblyKeyOf(context: RouteContext): string {

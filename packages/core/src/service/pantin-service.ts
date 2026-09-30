@@ -17,6 +17,7 @@ import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { driveOperations } from "./drive-operations.ts";
 import { importBodies } from "./import-operations.ts";
 import {
   createJoint,
@@ -89,6 +90,17 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
   return toResponse(pantinId, openPantin);
 }
 
+// Sync, for the simulation tick: only Pantins already loaded.
+function simulationPeeks(context: ServiceContext) {
+  return {
+    peekStepCount: (pantinId: PantinId) => context.loadedPantins.get(pantinId)?.stepCount,
+    peekPoseSnapshot: (pantinId: PantinId) => {
+      const openPantin = context.loadedPantins.get(pantinId);
+      return openPantin === undefined ? undefined : toPoseSnapshot(openPantin);
+    },
+  };
+}
+
 export function createPantinService(store: PantinStore, stepConverter: StepConverter | undefined) {
   const context: ServiceContext = {
     store,
@@ -120,12 +132,7 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     deleteJoint: (pantinId: PantinId, jointId: string) => deleteJoint(context, pantinId, jointId),
     getPose: (pantinId: PantinId) => getPose(context, pantinId),
     getPoseSnapshot: (pantinId: PantinId) => getPoseSnapshot(context, pantinId),
-    // Sync, for the simulation tick: only Pantins already loaded.
-    peekStepCount: (pantinId: PantinId) => context.loadedPantins.get(pantinId)?.stepCount,
-    peekPoseSnapshot: (pantinId: PantinId) => {
-      const openPantin = context.loadedPantins.get(pantinId);
-      return openPantin === undefined ? undefined : toPoseSnapshot(openPantin);
-    },
+    ...simulationPeeks(context),
     setJointPosition: (pantinId: PantinId, jointId: string, position: number) =>
       setJointPosition(context, pantinId, jointId, position),
     listTags: (pantinId: PantinId) => listTags(context, pantinId),
@@ -133,6 +140,7 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
       writeTag(context, pantinId, tagName, value),
     runSimulationSteps: (steps: number) => runSimulationSteps(context, steps),
     ...assemblyOperations(context),
+    ...driveOperations(context),
   };
 }
 

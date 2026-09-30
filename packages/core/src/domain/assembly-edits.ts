@@ -1,11 +1,11 @@
 import type { Assembly, PantinDocument } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { newAssembly } from "./assemblies.ts";
-import { makeUniqueId } from "./ids.ts";
-import { tagKeyOwners } from "./tag-keys.ts";
+import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
-// Keys change only here, so these are the only edits that rename tags.
+// Assembly and joint keys change only here, drive keys in drive-rules.ts: the
+// only edits that rename tags.
 
 function findAssembly(document: PantinDocument, key: string): Assembly {
   const assembly = document.assemblies.find((candidate) => candidate.key === key);
@@ -13,12 +13,6 @@ function findAssembly(document: PantinDocument, key: string): Assembly {
     throw new ApiError("not_found", `This Pantin has no assembly "${key}".`);
   }
   return assembly;
-}
-
-// A taken key is refused with a free one, so the user can retry at once.
-function keyTaken(key: string, owner: string, takenKeys: ReadonlySet<string>): ApiError {
-  const free = makeUniqueId(key, takenKeys);
-  return new ApiError("conflict", `Key "${key}" is already used by ${owner}. "${free}" is free.`);
 }
 
 export function createAssembly(

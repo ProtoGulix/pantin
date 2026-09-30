@@ -1,4 +1,6 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { ApiError } from "../errors.ts";
+import { makeUniqueId } from "./ids.ts";
 
 // Who uses each tag key of an assembly: joints through their child body's
 // assembly (ADR 0019), drives through their own (ADR 0022). A key names one
@@ -28,4 +30,10 @@ export function tagKeyOwners(
     }
   }
   return owners;
+}
+
+// A taken key is refused with a free one, so the user can retry at once.
+export function keyTaken(key: string, owner: string, takenKeys: ReadonlySet<string>): ApiError {
+  const free = makeUniqueId(key, takenKeys);
+  return new ApiError("conflict", `Key "${key}" is already used by ${owner}. "${free}" is free.`);
 }
