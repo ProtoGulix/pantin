@@ -6,7 +6,7 @@ import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { listenToDrags } from "./tree-drag.ts";
-import { chevron, stateText, visibilityEye } from "./tree-row-parts.ts";
+import { chevron, driveBolt, stateText, visibilityEye } from "./tree-row-parts.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -121,6 +121,7 @@ function rowElement(
     row.detail === null
       ? null
       : element("span", { className: "tree-row__detail", text: row.detail }),
+    driveBolt(row, translate),
     visibilityEye(row, translate),
   ]);
 }
@@ -135,6 +136,7 @@ interface Hit {
   row: TreeRow;
   onToggle: boolean;
   onEye: boolean;
+  onBolt: boolean;
   inInput: boolean;
 }
 
@@ -152,6 +154,7 @@ function hitOf(event: Event, current: Current): Hit | null {
     row,
     onToggle: target.closest("[data-action=toggle]") !== null,
     onEye: target.closest("[data-action=visibility]") !== null,
+    onBolt: target.closest("[data-action=drive]") !== null,
     inInput: target.closest("input") !== null,
   };
 }
@@ -169,7 +172,7 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
   // is never lost to the redraw that ends the rename.
   tree.addEventListener("pointerdown", (event) => {
     const hit = hitOf(event, current);
-    const onControl = hit !== null && (hit.onToggle || hit.onEye);
+    const onControl = hit !== null && (hit.onToggle || hit.onEye || hit.onBolt);
     if (hit === null || hit.inInput || onControl || (event.button !== 0 && event.button !== 2)) {
       return;
     }
@@ -182,11 +185,13 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
       current.intents?.setExpanded(hit.row.id, !hit.row.expanded);
     } else if (hit?.onEye) {
       current.intents?.toggleAssemblyHidden(hit.row.id);
+    } else if (hit?.onBolt) {
+      current.intents?.openDriveFormForJoint(hit.row.id);
     }
   });
   tree.addEventListener("dblclick", (event) => {
     const hit = hitOf(event, current);
-    if (hit === null || hit.inInput || hit.onToggle || hit.onEye) {
+    if (hit === null || hit.inInput || hit.onToggle || hit.onEye || hit.onBolt) {
       return;
     }
     if (hit.row.renamable) {

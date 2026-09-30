@@ -19,6 +19,26 @@ export function chevron(row: TreeRow): HTMLElement {
   );
 }
 
+// The bolt of a driven joint, clickable like the eye: it opens the joint's
+// drive in the drives panel. Silent too: the state text names the drive.
+export function driveBolt(row: TreeRow, translate: Translate): HTMLElement | null {
+  if (!row.driven) {
+    return null;
+  }
+  return element(
+    "span",
+    {
+      className: "tree-row__bolt",
+      attributes: {
+        "data-action": "drive",
+        title: translate("menu.editJointDrive"),
+        "aria-hidden": "true",
+      },
+    },
+    [icon("bolt")],
+  );
+}
+
 /** What the row's icons say, for screen readers only (the row's tooltip shows it). */
 export function stateText(row: TreeRow): HTMLElement | null {
   return row.stateLabel === null

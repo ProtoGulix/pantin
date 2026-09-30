@@ -33,6 +33,14 @@
 
 /* The eye of an assembly, after its key at the end of the row: hides it in
    the 3D view. The key's auto margin already pushes both to the right. */
+/* The bolt of a driven joint, at the end of its row like the eye. */
+.tree-row__bolt {
+  display: inline-flex;
+  padding: 0 4px;
+  color: #3fb950;
+  cursor: pointer;
+}
+
 .tree-row__eye-slot {
   display: inline-flex;
 }
