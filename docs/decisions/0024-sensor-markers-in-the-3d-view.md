@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-30
+- Partly superseded by: ADR 0029 (point 5: when tag values are read)
 - Extends: ADR 0023 (joint sensors), ADR 0022 (the joint arrow shows its drive)
 
 ## Context

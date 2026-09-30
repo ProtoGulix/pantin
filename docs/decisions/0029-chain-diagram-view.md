@@ -1,6 +1,6 @@
 # 0029. A chain diagram view, in columns
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-09-30
 - Depends on: ADR 0028 (drives and actuators)
 - Amends: ADR 0024 (point 5: when tag values are read)

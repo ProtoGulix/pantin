@@ -38,7 +38,8 @@ Exigences fortes :
 Monorepo :
 
     packages/protocol    schémas Zod (source de vérité), types dérivés, JSON Schema exporté. Aucune logique.
-    packages/drive-types un dossier par type de drive : schéma, comportement, libellés (ADR 0022)
+    packages/drive-types un dossier par type de préactionneur (distributeur, contacteur, variateur) : schéma, comportement, libellés (ADR 0022, 0028)
+    packages/actuator-types un dossier par type d'actionneur (vérin, moteur) : schéma, comportement, libellés (ADR 0028)
     packages/sensor-types un dossier par type de capteur : schéma, évaluation, libellés (ADR 0023)
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
@@ -52,7 +53,7 @@ Monorepo :
 
 Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/bridge, @pantin/cli) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
 
-Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer, bridge et cli. core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types et de sensor-types (sans logique), jamais leurs comportements ni leurs évaluations (ADR 0022, 0023).
+Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer, bridge et cli. core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types et sensor-types (sans logique), jamais leurs comportements ni leurs évaluations (ADR 0022, 0023, 0028). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028).
 
 Stack proposée (à confirmer en phase 0) :
 
@@ -69,11 +70,9 @@ Un projet contient des instances de pièces. Une pièce est composée de :
 
 1. Corps (Body) : un maillage importé, avec unité et repère.
 2. Liaison (Joint) : entre un corps parent (ou l'origine du monde) et un corps enfant. Elle a un repère d'origine, un axe, des limites éventuelles. Types du MVP : fixe (0 ddl), glissière (translation avec course), pivot limité (rotation avec butées), pivot continu (rotation sans limite). Plus tard : cylindrique, rotule, plane. La structure doit accepter les types futurs sans réécriture.
-3. Drive (actionneur) : un pilote branché sur le degré de liberté d'une liaison. Ce n'est pas une pièce 3D. Trois modes :
-   1. discret (vérin) : une ou deux bobines, deux positions de fin de course, vitesse de déplacement. Le double effet sans rappel ressort garde sa position si les deux bobines tombent.
-   2. position (axe servo) : tag de consigne, vitesse et accélération maximales, tag de position réelle.
-   3. vitesse (moteur, convoyeur, table) : consigne bit ou analogique, rampe, vitesse réelle en retour.
-   Chaque drive expose un défaut injectable (grippé, ne répond plus).
+3. Chaîne d'action (ADR 0028). Ni l'un ni l'autre n'est une pièce 3D :
+   1. Préactionneur (Drive) : l'appareil que l'automate commande (distributeur, contacteur, variateur de vitesse, variateur servo). Il porte les tags de commande et de retour, son état (position du tiroir, rampe) et le défaut injectable « ne répond plus ». Il ne déplace aucune liaison : ses orifices de sortie typés (pneumatique, puissance, servo) alimentent des actionneurs. Une variante est un type (distributeur 5/2 monostable, 5/3 centre fermé...), pour que les tags restent des données. Il peut signaler un diagnostic (commandes contradictoires), qui n'est pas un tag.
+   2. Actionneur (Actuator) : vérin simple ou double effet, moteur, servomoteur. Sans tag, il lit les orifices du préactionneur qui l'alimente et déplace une ou plusieurs liaisons. Le défaut « grippé » reste porté par la liaison.
 4. Capteur (Sensor), attaché à un corps ou à un repère de la scène. Deux familles :
    1. capteurs de liaison, sans physique : détecteur de plage de position d'une liaison (fin de course), codeur d'impulsions.
    2. capteurs de présence : barrière ou rayon photoélectrique, inductif filtré par matériau, portée réglable, inversion NO ou NF, retard.

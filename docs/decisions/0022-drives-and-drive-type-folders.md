@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-30
+- Partly superseded by: ADR 0028 (points 3, 4, 5 and 6: drive types, drive document, joint setpoint, behaviour)
 - Extends: ADR 0011 (joints), ADR 0012 (tags and fixed step), ADR 0013 (type registry), ADR 0019 (assemblies and tag keys)
 - Changes: CLAUDE.md section 4 (the protocol may import drive type schemas)
 
