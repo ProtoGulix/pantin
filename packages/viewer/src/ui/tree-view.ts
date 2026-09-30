@@ -6,7 +6,7 @@ import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { listenToDrags } from "./tree-drag.ts";
-import { chevron, driveBolt, sensorMark, stateText, visibilityEye } from "./tree-row-parts.ts";
+import { actuatorBolt, chevron, sensorMark, stateText, visibilityEye } from "./tree-row-parts.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -121,7 +121,7 @@ function rowElement(
     row.detail === null
       ? null
       : element("span", { className: "tree-row__detail", text: row.detail }),
-    driveBolt(row, translate),
+    actuatorBolt(row, translate),
     sensorMark(row, translate),
     visibilityEye(row, translate),
   ]);
@@ -162,8 +162,8 @@ function runRowControl({ row, control }: Hit, intents: PanelIntents): void {
     intents.setExpanded(row.id, !row.expanded);
   } else if (control === "visibility") {
     intents.toggleAssemblyHidden(row.id);
-  } else if (control === "drive") {
-    intents.openDriveFormForJoint(row.id);
+  } else if (control === "actuator") {
+    intents.openActuatorFormForJoint(row.id);
   } else if (control === "sensor") {
     // The first sensor: the others are listed next to it in the panel.
     intents.openSensorForm(row.wiring?.sensorIds[0] ?? null);

@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
     "@pantin/sensor-types": "workspace:*",
     "zod": "4.6.5"

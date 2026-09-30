@@ -1,35 +1,52 @@
-import type { DriveBehaviour, DriveStepInput, DriveStepOutput } from "./behaviour-common.ts";
-import { doubleActingCylinder } from "./double-acting-cylinder/behaviour.ts";
-import { motorAnalog } from "./motor-analog/behaviour.ts";
-import { motorOnOff } from "./motor-on-off/behaviour.ts";
+import type {
+  DriveStepBehaviour,
+  DriveStepInput,
+  DriveStepOutput,
+} from "./behaviour-step-common.ts";
+import { contactor } from "./contactor/behaviour.ts";
+import { reversingContactor } from "./reversing-contactor/behaviour.ts";
 import type { DriveFields, DriveType } from "./schemas.ts";
-import { servoAxis } from "./servo-axis/behaviour.ts";
-import { singleActingCylinder } from "./single-acting-cylinder/behaviour.ts";
+import { servoDrive } from "./servo-drive/behaviour.ts";
+import { valve32Single } from "./valve-3-2-single/behaviour.ts";
+import { valve52Double } from "./valve-5-2-double/behaviour.ts";
+import { valve52Single } from "./valve-5-2-single/behaviour.ts";
+import { valve53Closed } from "./valve-5-3-closed/behaviour.ts";
+import { valve53Exhaust } from "./valve-5-3-exhaust/behaviour.ts";
+import { valve53Pressure } from "./valve-5-3-pressure/behaviour.ts";
+import { valveDouble32 } from "./valve-double-3-2/behaviour.ts";
+import { vfdAnalog } from "./vfd-analog/behaviour.ts";
+import { vfdOnOff } from "./vfd-on-off/behaviour.ts";
 
-// Registry of drive type behaviours (ADR 0022), for the core only. The record
+// Registry of drive type behaviours (ADR 0028), for the core only. The record
 // is keyed by type, so a type declared in schemas.ts without a behaviour here
 // does not compile. The core calls stepDrive and never names a drive type.
 
 export type {
+  DriveStepBehaviour,
   DriveStepInput,
   DriveStepOutput,
-  JointMotion,
-} from "./behaviour-common.ts";
+} from "./behaviour-step-common.ts";
 
 const DRIVE_BEHAVIOURS: {
-  readonly [Type in DriveType]: DriveBehaviour<Extract<DriveFields, { type: Type }>>;
+  readonly [Type in DriveType]: DriveStepBehaviour<Extract<DriveFields, { type: Type }>>;
 } = {
-  double_acting_cylinder: doubleActingCylinder,
-  single_acting_cylinder: singleActingCylinder,
-  servo_axis: servoAxis,
-  motor_analog: motorAnalog,
-  motor_on_off: motorOnOff,
+  valve_3_2_single: valve32Single,
+  valve_double_3_2: valveDouble32,
+  valve_5_2_single: valve52Single,
+  valve_5_2_double: valve52Double,
+  valve_5_3_closed: valve53Closed,
+  valve_5_3_exhaust: valve53Exhaust,
+  valve_5_3_pressure: valve53Pressure,
+  contactor: contactor,
+  reversing_contactor: reversingContactor,
+  vfd_on_off: vfdOnOff,
+  vfd_analog: vfdAnalog,
+  servo_drive: servoDrive,
 };
 
 // The entry for fields.type handles that type: the record's type above
-// guarantees it. TypeScript accepts the lookup without a cast because method
-// parameters are compared bivariantly (see DriveBehaviour).
-function behaviourOf(fields: DriveFields): DriveBehaviour<DriveFields> {
+// guarantees it. No cast: method parameters are compared bivariantly.
+function behaviourOf(fields: DriveFields): DriveStepBehaviour<DriveFields> {
   return DRIVE_BEHAVIOURS[fields.type];
 }
 

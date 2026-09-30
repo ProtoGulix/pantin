@@ -29,6 +29,7 @@ const EMPTY: PantinDocument = {
   bodies: ["a", "b", "c"].map(body),
   joints: [],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 

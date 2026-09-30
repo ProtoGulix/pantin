@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { stepNextDrive } from "./next-behaviours.ts";
-import type { NextDriveFields } from "./next-schemas.ts";
+import { stepDrive } from "./behaviours.ts";
+import type { DriveFields } from "./schemas.ts";
 
 // Valves as tables (ADR 0028 point 4): commands and previous spool to ports
 // and diagnostics. Spool: 1 is pilot 14, -1 pilot 12, 0 the centre.
 
 type Ports = Record<string, string>;
-type ValveType = Extract<NextDriveFields["type"], `valve_${string}`>;
+type ValveType = Extract<DriveFields["type"], `valve_${string}`>;
 interface Row {
   coils: [coil14: number, coil12: number];
   // Undefined: a never-stepped valve.
@@ -22,7 +22,7 @@ const both = (state: string): Ports => ({ port_2: state, port_4: state });
 const CONFLICT = ["conflicting_commands"];
 
 function run(type: ValveType, [coil14, coil12]: Row["coils"], spool?: number) {
-  return stepNextDrive({
+  return stepDrive({
     fields: { type },
     commands: { coil_14: coil14, coil_12: coil12 },
     state: spool === undefined ? {} : { spool },

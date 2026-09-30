@@ -48,6 +48,7 @@ export function deleteAssembly(document: PantinDocument, key: string): PantinDoc
   }
   for (const [kind, owners] of [
     ["drive", document.drives],
+    ["actuator", document.actuators],
     ["sensor", document.sensors],
   ] as const) {
     const ids = owners.filter((owner) => owner.assembly === key).map(({ id }) => id);
@@ -79,6 +80,10 @@ export function renameAssemblyKey(
     assemblies: document.assemblies.map((assembly) => ({ ...assembly, key: rekey(assembly.key) })),
     bodies: document.bodies.map((body) => ({ ...body, assembly: rekey(body.assembly) })),
     drives: document.drives.map((drive) => ({ ...drive, assembly: rekey(drive.assembly) })),
+    actuators: document.actuators.map((actuator) => ({
+      ...actuator,
+      assembly: rekey(actuator.assembly),
+    })),
     sensors: document.sensors.map((sensor) => ({ ...sensor, assembly: rekey(sensor.assembly) })),
   };
 }

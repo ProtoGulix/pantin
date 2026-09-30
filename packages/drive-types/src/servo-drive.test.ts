@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { stepNextDrive } from "./next-behaviours.ts";
-import type { NextDriveFields } from "./next-schemas.ts";
+import { stepDrive } from "./behaviours.ts";
+import type { DriveFields } from "./schemas.ts";
 
-const fields: NextDriveFields = { type: "servo_drive", maxSpeed: 0.5, maxAcceleration: 2 };
+const fields: DriveFields = { type: "servo_drive", maxSpeed: 0.5, maxAcceleration: 2 };
 
 function step(commands: Record<string, number>, jointPositions: number[]) {
-  return stepNextDrive({ fields, commands, state: {}, jointPositions, dt: 1 / 120 });
+  return stepDrive({ fields, commands, state: {}, jointPositions, dt: 1 / 120 });
 }
 
 describe("servo drive", () => {

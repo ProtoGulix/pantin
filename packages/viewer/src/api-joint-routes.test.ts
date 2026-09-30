@@ -61,6 +61,7 @@ describe("PantinApiClient joints", () => {
         bodies: [],
         joints: [],
         drives: [],
+        actuators: [],
         sensors: [],
       },
     };

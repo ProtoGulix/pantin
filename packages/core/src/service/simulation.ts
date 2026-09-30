@@ -1,12 +1,12 @@
 import type { PantinId, Tag, TagListResponse } from "@pantin/protocol";
-import { stepSimulation } from "../domain/drive-step.ts";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { stepSensors } from "../domain/sensor-step.ts";
+import { stepSimulation } from "../domain/simulation-step.ts";
 import { commandTagOf, describeTags } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
-// Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025).
+// Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025, ADR 0028).
 
 export async function listTags(
   context: ServiceContext,
@@ -50,7 +50,9 @@ function runSteps(openPantin: OpenPantin, steps: number): void {
     openPantin.jointPositions = stepped.jointPositions;
     openPantin.jointVelocities = stepped.jointVelocities;
     openPantin.driveStates = stepped.driveStates;
+    openPantin.drivePortStates = stepped.drivePortStates;
     openPantin.driveFeedback = stepped.driveFeedback;
+    openPantin.driveDiagnostics = stepped.driveDiagnostics;
     openPantin.sensorOutputs = stepSensors(
       openPantin.document,
       openPantin.jointPositions,

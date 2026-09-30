@@ -1,4 +1,5 @@
 import {
+  type Actuator,
   DRIVE_TAGS,
   type Drive,
   type Joint,
@@ -19,8 +20,9 @@ import { jointStroke } from "./sensor-step.ts";
 
 // Every tag of a Pantin, named "<assembly>.<tagKey>.<member>" (ADR 0019).
 // A movable joint has a "position" feedback, and a "setpoint" command while
-// no drive moves it (ADR 0012, ADR 0022 point 5); a drive and a sensor have
-// the tags their type declares (ADR 0022 point 3, ADR 0023 point 3).
+// no actuator moves it (ADR 0012, ADR 0028 point 9); a drive and a sensor have
+// the tags their type declares (ADR 0022 point 3, ADR 0023 point 3). An
+// actuator has none.
 
 type TagOwner =
   | { kind: "joint"; joint: Joint }
@@ -47,8 +49,8 @@ export type TagRuntime = {
   sensorOutputs: ReadonlyMap<string, SensorOutput>;
 };
 
-export function drivenJointIds(document: PantinDocument): Set<string> {
-  return new Set(document.drives.flatMap((drive) => drive.joints));
+export function movedJointIds(document: PantinDocument): Set<string> {
+  return new Set(document.actuators.flatMap((actuator) => actuator.joints));
 }
 
 // A validated document always has the child and its assembly, so the empty
@@ -57,7 +59,7 @@ function jointAssembly(document: PantinDocument, joint: Joint): string {
   return document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
 }
 
-function jointEntries(document: PantinDocument, joint: Joint, driven: boolean): TagEntry[] {
+function jointEntries(document: PantinDocument, joint: Joint, moved: boolean): TagEntry[] {
   const owner: TagOwner = { kind: "joint", joint };
   const name = (member: string) => tagName(jointAssembly(document, joint), joint.tagKey, member);
   const position: TagEntry = {
@@ -67,7 +69,7 @@ function jointEntries(document: PantinDocument, joint: Joint, driven: boolean): 
     type: "float",
     direction: "feedback",
   };
-  if (driven) {
+  if (moved) {
     return [position];
   }
   const setpoint: TagEntry = {
@@ -110,11 +112,11 @@ function sensorEntries(document: PantinDocument, sensor: Sensor): TagEntry[] {
 
 /** Every tag, joints first, then drives, then sensors, in document order. */
 function tagEntries(document: PantinDocument): TagEntry[] {
-  const driven = drivenJointIds(document);
+  const moved = movedJointIds(document);
   return [
     ...document.joints
       .filter(isMovableJoint)
-      .flatMap((joint) => jointEntries(document, joint, driven.has(joint.id))),
+      .flatMap((joint) => jointEntries(document, joint, moved.has(joint.id))),
     ...document.drives.flatMap(driveEntries),
     ...document.sensors.flatMap((sensor) => sensorEntries(document, sensor)),
   ];
@@ -164,28 +166,37 @@ function closestTags(entries: readonly TagEntry[], wanted: string): string {
     : `This owner has "${names.map((entry) => entry.name).join('", "')}".`;
 }
 
-/** The command tag named `wanted`; an actionable ApiError otherwise. */
-// The setpoint of a joint a drive now moves: say which drive to command.
-function drivenSetpointHint(document: PantinDocument, wanted: string): string | null {
-  for (const drive of document.drives) {
-    for (const jointId of drive.joints) {
+// The setpoint of a joint an actuator now moves: say which drive to command.
+function movedSetpointHint(document: PantinDocument, wanted: string): string | null {
+  for (const actuator of document.actuators) {
+    for (const jointId of actuator.joints) {
       const joint = document.joints.find((candidate) => candidate.id === jointId);
       const setpoint = joint && tagName(jointAssembly(document, joint), joint.tagKey, "setpoint");
       if (setpoint === wanted) {
-        const commands = driveEntries(drive).filter((entry) => entry.direction === "command");
-        const names = commands.map((entry) => entry.name).join('", "');
-        return `Joint "${jointId}" is moved by drive "${drive.id}": write "${names}" instead.`;
+        return movedJointHint(document, jointId, actuator);
       }
     }
   }
   return null;
 }
 
+function movedJointHint(document: PantinDocument, jointId: string, actuator: Actuator): string {
+  const drive = document.drives.find((candidate) => candidate.id === actuator.feed?.drive);
+  const moved = `Joint "${jointId}" is moved by actuator "${actuator.id}"`;
+  if (drive === undefined) {
+    return `${moved}, which has no drive feeding it: give it a feed, then command the drive.`;
+  }
+  const commands = driveEntries(drive).filter((entry) => entry.direction === "command");
+  const names = commands.map((entry) => entry.name).join('", "');
+  return `${moved}, fed by drive "${drive.id}": write "${names}" instead.`;
+}
+
+/** The command tag named `wanted`; an actionable ApiError otherwise. */
 export function commandTagOf(document: PantinDocument, wanted: string): TagEntry {
   const entries = tagEntries(document);
   const entry = entries.find((candidate) => candidate.name === wanted);
   if (entry === undefined) {
-    const hint = drivenSetpointHint(document, wanted) ?? closestTags(entries, wanted);
+    const hint = movedSetpointHint(document, wanted) ?? closestTags(entries, wanted);
     throw new ApiError("not_found", `No tag "${wanted}". ${hint}`);
   }
   if (entry.direction === "feedback") {

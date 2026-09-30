@@ -231,6 +231,7 @@ describe("schema version 1 on disk", () => {
       bodies: [],
       joints: [],
       drives: [],
+      actuators: [],
       sensors: [],
     });
   });
@@ -240,7 +241,7 @@ describe("schema version 1 on disk", () => {
     await mkdir(folder);
     await writeFile(
       join(folder, "pantin.json"),
-      JSON.stringify({ schema_version: 9, name: "F", bodies: [] }),
+      JSON.stringify({ schema_version: PANTIN_SCHEMA_VERSION + 1, name: "F", bodies: [] }),
     );
     const response = await sendRaw(server, "GET", "/api/pantins/future");
     expect(response.status).toBe(409);

@@ -116,14 +116,14 @@ export function updateJointInDocument(
   );
 }
 
-// A driven or watched joint cannot go: its drive would move nothing, or a
-// joint that is no longer there (ADR 0022 point 4, ADR 0023 point 5).
+// A moved or watched joint cannot go: its actuator would move nothing, or a
+// joint that is no longer there (ADR 0028 point 9, ADR 0023 point 5).
 export function deleteJointFromDocument(document: PantinDocument, jointId: string): PantinDocument {
-  const drive = document.drives.find((candidate) => candidate.joints.includes(jointId));
-  if (drive !== undefined) {
+  const actuator = document.actuators.find((candidate) => candidate.joints.includes(jointId));
+  if (actuator !== undefined) {
     throw new ApiError(
       "conflict",
-      `Joint "${jointId}" is moved by drive "${drive.id}". Remove it from the drive, or delete the drive, first.`,
+      `Joint "${jointId}" is moved by actuator "${actuator.id}". Remove it from the actuator, or delete the actuator, first.`,
     );
   }
   sensorsWatchingGuard(document, jointId);

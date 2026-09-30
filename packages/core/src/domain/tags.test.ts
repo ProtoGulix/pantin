@@ -55,6 +55,7 @@ const document: PantinDocument = {
   bodies: [body("rail", "frame"), body("carriage", "axis_800"), body("tool", "axis_800")],
   joints: [stroke, clamp],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 

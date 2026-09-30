@@ -95,7 +95,7 @@ describe("context menu", () => {
     ).toEqual([
       "frame",
       "changeJointType",
-      "driveJoint",
+      "actuateJoint",
       "addJointSensor",
       "addEndSwitches",
       "delete",

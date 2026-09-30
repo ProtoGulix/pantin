@@ -37,6 +37,7 @@ const TWO_CYLINDERS: PantinDocument = {
   ],
   joints: [],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 

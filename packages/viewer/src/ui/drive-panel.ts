@@ -6,19 +6,20 @@ import type {
   DriveTagView,
 } from "../panel/drive-panel-model.ts";
 import { coordinateToDisplay, formatDisplayNumber } from "../units.ts";
+import { renderActuatorSection } from "./actuator-section.ts";
 import { button, element, iconButton, selectInput } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import { checkbox, field, formInput, valueSpan } from "./panel-fields.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { renderSensorSection } from "./sensor-section.ts";
 
-// The drives panel on the right (ADR 0022): wiring drives to joints, and
-// commanding them without a PLC. Redrawn from its view on every change; the
+// The drives panel on the right (ADR 0022, 0028): drives commanded without a
+// PLC, then the actuators they feed, then the sensors. Redrawn from its view on every change; the
 // tag values alone are written in place by showTagValues, several times a
 // second, so that typing in the panel is never disturbed.
 
-function renderForm(form: DriveFormView, t: Translate, intents: PanelIntents): HTMLElement {
-  const parameters = form.parameters.map((parameter) =>
+function renderParameters(form: DriveFormView, intents: PanelIntents) {
+  const inputs = form.parameters.map((parameter) =>
     field(
       parameter.unit === null ? parameter.label : `${parameter.label} (${parameter.unit})`,
       formInput(`drive-${parameter.field}`, parameter.value, parameter.label, (text) =>
@@ -26,6 +27,14 @@ function renderForm(form: DriveFormView, t: Translate, intents: PanelIntents): H
       ),
     ),
   );
+  const hint =
+    form.unitHint === null
+      ? null
+      : element("p", { className: "drive-panel__detail", text: form.unitHint });
+  return [hint, ...inputs];
+}
+
+function renderForm(form: DriveFormView, t: Translate, intents: PanelIntents): HTMLElement {
   const confirm = button(form.confirmLabel, "button button--primary", intents.submitDriveForm);
   confirm.disabled = !form.canSubmit;
   return element(
@@ -50,13 +59,7 @@ function renderForm(form: DriveFormView, t: Translate, intents: PanelIntents): H
           intents.changeDriveAssembly,
         ),
       ),
-      element("div", { className: "inline-field__label", text: t("drives.form.joints") }),
-      ...form.joints.map((joint) =>
-        checkbox(joint.label, joint.checked, (checked) =>
-          intents.toggleDriveJoint(joint.id, checked),
-        ),
-      ),
-      ...parameters,
+      ...renderParameters(form, intents),
       element("div", { className: "inline-form__actions" }, [
         button(t("joint.form.cancel"), "button", intents.cancelDriveForm),
         confirm,
@@ -97,15 +100,6 @@ function renderCard(card: DriveCardView, t: Translate, intents: PanelIntents): H
       tagControl(tag, t, intents),
     ]),
   );
-  const joints = card.joints.map((joint) =>
-    element("div", { className: "drive-panel__row", attributes: { title: joint.positionTag } }, [
-      element("span", { text: joint.unit === null ? joint.name : `${joint.name} (${joint.unit})` }),
-      valueSpan(joint.positionTag, joint.coordinateUnit),
-      checkbox(t("drives.fault.jammed"), joint.jammed, (on) =>
-        intents.setJointJammed(joint.id, on),
-      ),
-    ]),
-  );
   return element(
     "section",
     { className: "drive-panel__card", attributes: { "aria-label": card.name } },
@@ -126,8 +120,6 @@ function renderCard(card: DriveCardView, t: Translate, intents: PanelIntents): H
       ]),
       element("div", { className: "drive-panel__label", text: t("drives.tags") }),
       ...tags,
-      element("div", { className: "drive-panel__label", text: t("drives.joints") }),
-      ...joints,
     ],
   );
 }
@@ -148,25 +140,37 @@ export class DrivePanel {
       return;
     }
     const focus = captureFocus(this.root);
-    const create = button(t("drives.new"), "button", () => intents.openDriveForm(null));
-    create.disabled = !view.canCreate;
-    const empty = view.canCreate ? t("drives.empty") : t("drives.noMovableJoint");
     this.root.setAttribute("aria-label", view.title);
     const parts = [
       element("div", { className: "drive-panel__head" }, [
         element("h2", { className: "drive-panel__title", text: view.title }),
-        create,
         iconButton("close", t("joint.form.cancel"), intents.toggleDrivePanel),
       ]),
-      view.form === null ? null : renderForm(view.form, t, intents),
-      view.drives.length === 0
-        ? element("p", { className: "drive-panel__empty", text: empty })
-        : null,
-      ...view.drives.map((card) => renderCard(card, t, intents)),
+      this.renderDrives(view, t, intents),
+      view.actuators === null ? null : renderActuatorSection(view.actuators, t, intents),
       view.sensors === null ? null : renderSensorSection(view.sensors, t, intents),
     ];
     this.root.replaceChildren(...parts.filter((part) => part !== null));
     restoreFocus(this.root, focus);
+  }
+
+  private renderDrives(view: DrivePanelView, t: Translate, intents: PanelIntents): HTMLElement {
+    const create = button(t("drives.new"), "button", () => intents.openDriveForm(null));
+    return element(
+      "section",
+      { className: "drive-panel__section", attributes: { "aria-label": view.drivesTitle } },
+      [
+        element("div", { className: "drive-panel__head" }, [
+          element("h3", { className: "drive-panel__title", text: view.drivesTitle }),
+          create,
+        ]),
+        view.form === null ? null : renderForm(view.form, t, intents),
+        view.drives.length === 0
+          ? element("p", { className: "drive-panel__empty", text: t("drives.empty") })
+          : null,
+        ...view.drives.map((card) => renderCard(card, t, intents)),
+      ].filter((part) => part !== null),
+    );
   }
 
   /** SI values from the core, shown in mm or degrees; bits as On or Off. */

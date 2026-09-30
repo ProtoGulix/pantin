@@ -13,6 +13,7 @@
   "dependencies": {
     "@babylonjs/core": "9.28.0",
     "@babylonjs/loaders": "9.28.0",
+    "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
     "@pantin/protocol": "workspace:*",
     "@pantin/sensor-types": "workspace:*"

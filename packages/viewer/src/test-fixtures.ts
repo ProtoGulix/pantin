@@ -57,6 +57,7 @@ export function pantinResponse(
       bodies,
       joints,
       drives: [],
+      actuators: [],
       sensors: [],
     },
   };

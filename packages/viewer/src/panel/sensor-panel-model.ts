@@ -8,7 +8,7 @@ import {
   tagName,
 } from "@pantin/protocol";
 import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
-import { movableJoints } from "../drives/drive-form.ts";
+import { movableJoints } from "../actuators/actuator-joints.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { displayUnitLabel, strokeOf } from "../joints/joint-parameters.ts";
 import { parameterKeys } from "../sensors/parameter-texts.ts";

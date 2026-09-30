@@ -12,9 +12,8 @@ import type { ServoMotorFieldsSchema } from "./schema.ts";
 
 type Fields = z.infer<typeof ServoMotorFieldsSchema>;
 
-// brakingSpeed and followSetpoint are moved from drive-types servo-axis
-// (ADR 0022). The servo-axis copy disappears in slice A3 of ADR 0028, when
-// the core switches over; until then both exist.
+// brakingSpeed and followSetpoint come from the servo axis of ADR 0022, which
+// ADR 0028 split into a servo drive and this motor.
 
 // The highest speed from which braking by acceleration * dt at each step
 // still stops within `distance`: the discrete counterpart of sqrt(2 a d),

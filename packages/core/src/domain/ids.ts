@@ -36,3 +36,9 @@ export function fileNameStem(fileName: string): string {
   const stem = dotIndex > 0 ? baseName.slice(0, dotIndex) : baseName;
   return stem.trim() === "" ? baseName : stem;
 }
+
+// Steps run each list in id order, so that a document gives the same motion
+// whatever the order of its arrays (ADR 0028 point 11).
+export function sortedById<Item extends { id: string }>(items: readonly Item[]): Item[] {
+  return [...items].sort((first, second) => (first.id < second.id ? -1 : 1));
+}

@@ -1,17 +1,20 @@
 # Adding a drive type
 
-A drive type is one folder in `packages/drive-types/src/` and one line in each
-of its three registries (ADR 0022). Nothing else in the core, the protocol or
-the viewer names a drive type: the simulation step, the tags, the REST API and
-the drives panel pick the new type up from the registries. The steps below
-use a hypothetical `example_drive` type in `src/example-drive/`; replace it
-with the real name.
+A drive is what the PLC commands: a valve, a contactor, a variable speed
+drive, a servo drive (ADR 0022, 0028). A drive type is one folder in
+`packages/drive-types/src/` and one line in each of its three registries.
+Nothing else in the core, the protocol or the viewer names a drive type: the
+simulation step, the tags, the REST API and the drives panel pick the new type
+up from the registries. The steps below use a hypothetical `example_drive`
+type in `src/example-drive/`; replace it with the real name.
 
 Before you start:
 
-- A drive moves one or more joints of one coordinate unit (metres or radians)
-  and has fixed tags. A variant with other tags (a second coil, a bit command
-  instead of an analog one) is another type, not an option.
+- A drive moves no joint. Its behaviour answers the state of its **output
+  ports**, which actuators read (ADR 0028 point 2), and its feedback tags. The
+  actuator that moves joints is another type (docs/guides/adding-an-actuator-type.md).
+- A drive has fixed tags. A variant with other tags (a second coil, a bit
+  command instead of an analog one) is another type, not an option.
 - The behaviour is code. It is reviewed like any core change and never loaded
   at run time from elsewhere (CLAUDE.md section 11.3); a drive type without
   code is a backlog idea (docs/backlog/declarative-drives.md).
@@ -23,56 +26,77 @@ of a behaviour from here.
 
 ```ts
 import { z } from "zod";
+import type { DrivePort } from "../ports.ts";
 import { type DriveParameter, type DriveTag, positiveRate } from "../schema-common.ts";
 
-// One line saying what the actuator does.
+// One line saying what the drive does.
 export const ExampleDriveFieldsSchema = z.object({
   type: z.literal("example_drive"),
-  speed: positiveRate("speed"),
+  acceleration: positiveRate("acceleration"),
 });
 
 // Speeds are per second, accelerations per second squared, in the unit of the
-// driven joints; the drives panel shows them in mm or degrees.
+// moved joints ("speed", "acceleration"); a ramp in percent of a nominal speed
+// per second is "percent_per_second". Clients show them in mm or degrees.
 export const EXAMPLE_DRIVE_PARAMETERS = [
-  { field: "speed", kind: "speed" },
+  { field: "acceleration", kind: "percent_per_second" },
 ] as const satisfies readonly DriveParameter[];
 
-// Members are lowercase English words ("run", "speed_setpoint"). A float tag
-// says what it measures ("position" or "speed") so clients can show its unit.
+// Output ports: a name and the domain of what they carry (`pneumatic`,
+// `ac_power`, `servo`; the states are in `src/ports.ts`). Actuators are fed
+// through these names, so a new one is as good as a new tag name.
+export const EXAMPLE_DRIVE_PORTS = [
+  { name: "out", domain: "ac_power" },
+] as const satisfies readonly DrivePort[];
+
+// Members are lowercase English words, digits allowed after the first letter
+// ("run", "speed_setpoint", "coil_14"). A float tag says what it measures
+// ("position", "speed" or "percent") so clients can show its unit.
 export const EXAMPLE_DRIVE_TAGS = [
   { member: "run", type: "bit", direction: "command" },
-  { member: "speed", type: "float", direction: "feedback", quantity: "speed" },
+  { member: "speed", type: "float", direction: "feedback", quantity: "percent" },
 ] as const satisfies readonly DriveTag[];
 ```
 
+A new domain (a new kind of port state) is a change of `src/ports.ts`: add its
+state schema there, then an actuator type that reads it.
+
 ## 2. The behaviour: `behaviour.ts`
 
-One simulation step (1/120 s) as a pure function of plain numbers. Use the
-helpers of `behaviour-common.ts` (`isSet`, `rampToward`, `travelAtSpeed`,
-`moveAtVelocity`, `holdPosition`) rather than your own arithmetic.
+One simulation step (1/120 s) as a pure function of plain numbers. It answers
+the state of every output port it declares, its own state for the next step,
+its feedback, and the diagnostics it detects. Use the helpers of
+`behaviour-common.ts` (`isSet`, `rampToward`, `clamp`) rather than your own
+arithmetic.
 
 ```ts
 import type { z } from "zod";
-import { type DriveBehaviour, isSet, moveAtVelocity } from "../behaviour-common.ts";
+import { isSet, rampToward } from "../behaviour-common.ts";
+import type { DriveStepBehaviour } from "../behaviour-step-common.ts";
 import type { ExampleDriveFieldsSchema } from "./schema.ts";
 
 type Fields = z.infer<typeof ExampleDriveFieldsSchema>;
 
-// Why it moves the way it does, in a comment.
-export const exampleDrive: DriveBehaviour<Fields> = {
-  step: ({ fields, commands, joints, dt }) => {
-    const speed = isSet(commands, "run") ? fields.speed : 0;
+// Why it answers what it answers, in a comment.
+export const exampleDrive: DriveStepBehaviour<Fields> = {
+  step: ({ fields, commands, state, dt }) => {
+    const target = isSet(commands, "run") ? 100 : 0;
+    const speed = rampToward(state.speed ?? 0, target, fields.acceleration * dt);
     return {
-      joints: joints.map((joint) => moveAtVelocity(joint, speed, dt)),
-      state: {},
+      ports: { out: { direction: 1, ratio: speed / 100 } },
+      state: { speed },
       feedback: { speed },
+      // "conflicting_commands" when the PLC commands what a real machine would
+      // not survive well; it is runtime state, never a tag (ADR 0028 point 5).
+      diagnostics: [],
     };
   },
 };
 ```
 
-The core handles the faults (a jammed joint, an unresponsive drive) around
-your behaviour: do not handle them here.
+The core handles the faults (an unresponsive drive, a jammed joint) around
+your behaviour: do not handle them here. A servo drive also receives
+`jointPositions`, those of the joints it moves in the end.
 
 ## 3. The labels: `labels.ts`
 
@@ -84,8 +108,8 @@ import type { DriveTypeLabels } from "../schema-common.ts";
 import type { EXAMPLE_DRIVE_PARAMETERS, EXAMPLE_DRIVE_TAGS } from "./schema.ts";
 
 export const EXAMPLE_DRIVE_LABELS = {
-  en: { name: "Example drive", parameters: { speed: "Speed" }, tags: { run: "Run", speed: "Actual speed" } },
-  fr: { name: "Drive d'exemple", parameters: { speed: "Vitesse" }, tags: { run: "Marche", speed: "Vitesse réelle" } },
+  en: { name: "Example drive", parameters: { acceleration: "Acceleration" }, tags: { run: "Run", speed: "Actual speed" } },
+  fr: { name: "Drive d'exemple", parameters: { acceleration: "Accélération" }, tags: { run: "Marche", speed: "Vitesse réelle" } },
 } satisfies DriveTypeLabels<
   (typeof EXAMPLE_DRIVE_PARAMETERS)[number]["field"],
   (typeof EXAMPLE_DRIVE_TAGS)[number]["member"]
@@ -98,16 +122,17 @@ Add the new entry to each; the records are keyed by type, so the compiler
 lists every place you missed:
 
 - `src/schemas.ts`: the schema in `DriveFieldsSchema`, then
-  `DRIVE_PARAMETERS` and `DRIVE_TAGS`;
+  `DRIVE_PARAMETERS`, `DRIVE_TAGS` and `DRIVE_PORTS`;
 - `src/behaviours.ts`: `DRIVE_BEHAVIOURS`;
 - `src/labels.ts`: `DRIVE_LABELS`.
 
 ## 5. Tests, then the schema version
 
-- In `src/behaviours.test.ts`, step the behaviour through `stepDrive` at
-  1/120 s: each command, the limits, and every bound the type promises (a
-  speed, an acceleration) at every step, the stop included.
-- `src/schemas.test.ts` checks the registries on its own.
+- Step the behaviour through `stepDrive` at 1/120 s, as `src/valves.test.ts`
+  and `src/ac-drives.test.ts` do: each command, the ports answered, the
+  diagnostics, and every bound the type promises at every step.
+- `src/schemas.test.ts` and `src/drives.test.ts` check the registries and that
+  the ports answered are those declared, in their domain.
 - A new drive type changes what `pantin.json` accepts: raise
   `PANTIN_SCHEMA_VERSION` with a migration step (CLAUDE.md section 14.6), then
   run `pnpm schema:generate` for the JSON Schema (ADR 0021).

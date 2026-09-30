@@ -23,8 +23,8 @@ function runAction(
     intents.openJointForm();
   } else if (action === "changeJointType") {
     intents.openJointEditForm(nodeId);
-  } else if (action === "driveJoint") {
-    intents.openDriveFormForJoint(nodeId);
+  } else if (action === "actuateJoint") {
+    intents.openActuatorFormForJoint(nodeId);
   } else if (action === "addJointSensor") {
     intents.openSensorFormForJoint(nodeId);
   } else if (action === "addEndSwitches") {

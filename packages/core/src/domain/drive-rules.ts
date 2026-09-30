@@ -9,9 +9,9 @@ import { makeUniqueId, slugifyDisplayName } from "./ids.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 import { parseWithSchema } from "./validation.ts";
 
-// Adding and changing drives in a document (ADR 0022), as pure functions.
-// The document schema checks the rest: known joints and assembly, one drive
-// per joint, one unit per drive.
+// Adding and changing drives in a document (ADR 0022, 0028), as pure
+// functions. The document schema checks the rest: a known assembly, and that
+// an actuator's feed still fits the drive after a change of type.
 
 function validatedDrive(document: PantinDocument, id: string, context: string) {
   const updated = parseWithSchema(PantinDocumentSchema, document, context);
@@ -65,8 +65,17 @@ export function updateDriveInDocument(
   return validatedDrive(withDrive(document, drive), driveId, "The changed drive");
 }
 
+// A drive that feeds an actuator cannot go: the actuator would be left without
+// a source (ADR 0028 point 10), as a driven joint cannot be deleted.
 export function deleteDriveFromDocument(document: PantinDocument, driveId: string) {
   findDrive(document, driveId);
+  const fed = document.actuators.filter((actuator) => actuator.feed?.drive === driveId);
+  if (fed.length > 0) {
+    throw new ApiError(
+      "conflict",
+      `Drive "${driveId}" feeds actuator "${fed.map(({ id }) => id).join('", "')}". Change its feed or delete it first.`,
+    );
+  }
   return { ...document, drives: document.drives.filter((drive) => drive.id !== driveId) };
 }
 

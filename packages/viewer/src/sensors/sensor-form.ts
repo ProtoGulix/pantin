@@ -9,7 +9,7 @@ import {
   type SensorType,
 } from "@pantin/protocol";
 import { SensorFieldsSchema } from "@pantin/sensor-types/schemas";
-import { movableJoints } from "../drives/drive-form.ts";
+import { movableJoints } from "../actuators/actuator-joints.ts";
 import { schemaMessage } from "../joints/joint-form.ts";
 import { defaultTexts, parameterKeys, parameterTexts, parameterValue } from "./parameter-texts.ts";
 

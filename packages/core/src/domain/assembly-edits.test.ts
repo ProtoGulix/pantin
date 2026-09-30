@@ -57,6 +57,7 @@ const PRESS: PantinDocument = {
   ],
   joints: [rod("tige", "body-1", "rod-1"), rod("tige-2", "body-2", "rod-2")],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 
@@ -168,26 +169,56 @@ describe("assembly display names and deletion", () => {
   });
 });
 
-describe("assembly edits and drives (ADR 0022)", () => {
-  const valve = {
-    id: "valve",
-    tagKey: "valve",
-    name: "Valve",
-    assembly: "id1s0400125e-0",
-    joints: ["tige"],
-    type: "double_acting_cylinder" as const,
-    speed: 0.2,
-  };
-  const withValve: PantinDocument = { ...PRESS, drives: [valve] };
+const valve = {
+  id: "valve",
+  tagKey: "valve",
+  name: "Valve",
+  assembly: "id1s0400125e-0",
+  type: "valve_5_3_closed" as const,
+};
+const cylinder = {
+  id: "cylinder",
+  name: "Cylinder",
+  assembly: "id1s0400125e-0",
+  type: "double_acting_cylinder" as const,
+  extendSpeed: 0.2,
+  retractSpeed: 0.2,
+  feed: { drive: "valve", ports: { cap: "port_4", rod: "port_2" } },
+  joints: ["tige"],
+};
+const withValve: PantinDocument = { ...PRESS, drives: [valve] };
 
+describe("assembly edits and drives (ADR 0022)", () => {
   it("moves a drive with its assembly's key, and reports its renamed tags", () => {
     const after = renameAssemblyKey(withValve, "id1s0400125e-0", "verin_pince");
     expect(after.drives[0]?.assembly).toBe("verin_pince");
     expect(renamedTags(withValve, after).map((tag) => tag.to)).toContain(
-      "verin_pince.valve.extend",
+      "verin_pince.valve.coil_14",
     );
   });
+});
 
+describe("assembly edits and actuators (ADR 0028)", () => {
+  it("moves an actuator with its assembly's key", () => {
+    const withCylinder: PantinDocument = { ...withValve, actuators: [cylinder] };
+    const after = renameAssemblyKey(withCylinder, "id1s0400125e-0", "verin_pince");
+    expect(after.actuators[0]?.assembly).toBe("verin_pince");
+  });
+
+  it("refuses to delete an assembly that still holds an actuator", () => {
+    const emptied = {
+      ...PRESS,
+      bodies: [],
+      joints: [],
+      actuators: [{ ...cylinder, feed: undefined, joints: [] }],
+    };
+    expect(() => deleteAssembly(emptied, "id1s0400125e-0")).toThrow(
+      'Assembly "ID1S0400125E_0" still holds actuator "cylinder". Move or delete it first.',
+    );
+  });
+});
+
+describe("assembly deletion and tag keys with drives (ADR 0022)", () => {
   it("refuses to delete an assembly that still holds a drive", () => {
     const emptied = { ...withValve, bodies: [], joints: [] };
     expect(() => deleteAssembly(emptied, "id1s0400125e-0")).toThrow(

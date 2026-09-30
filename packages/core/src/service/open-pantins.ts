@@ -1,7 +1,9 @@
+import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
 import type { PantinDocument, PantinId, PantinResponse } from "@pantin/protocol";
 import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { parsePantinDocument, serializePantinDocument } from "../domain/pantin-document.ts";
+import type { PortStates } from "../domain/simulation-state.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 
@@ -29,14 +31,17 @@ export type OpenPantin = {
   // the next simulation step has not consumed yet. Never saved.
   setpoints: Map<string, number>;
   queuedSetpoints: Map<string, number>;
-  // Drives (ADR 0022), never saved: joint velocities, the last value written
-  // to each drive command, each drive's state and feedback, and the faults.
+  // Drives and actuators (ADR 0022, 0028), never saved: joint velocities, the
+  // last value written to each drive command, each drive's state, output port
+  // states, feedback and diagnostics, and the faults.
   jointVelocities: Map<string, number>;
   driveCommands: Map<string, Readonly<Record<string, number>>>;
   driveStates: Map<string, Readonly<Record<string, number>>>;
+  drivePortStates: Map<string, PortStates>;
   driveFeedback: Map<string, Readonly<Record<string, number>>>;
-  // An unresponsive drive runs on the commands it had when it failed.
-  frozenDriveCommands: Map<string, Readonly<Record<string, number>>>;
+  driveDiagnostics: Map<string, readonly DriveDiagnostic[]>;
+  // An unresponsive drive keeps the port states and feedback it had when it failed.
+  unresponsiveDriveIds: Set<string>;
   jammedJointIds: Set<string>;
   // Joint sensors (ADR 0025): each one's tag values and state of the last
   // step, never saved.
@@ -65,8 +70,10 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
     jointVelocities: new Map(),
     driveCommands: new Map(),
     driveStates: new Map(),
+    drivePortStates: new Map(),
     driveFeedback: new Map(),
-    frozenDriveCommands: new Map(),
+    driveDiagnostics: new Map(),
+    unresponsiveDriveIds: new Set(),
     jammedJointIds: new Set(),
     sensorOutputs: new Map(),
     stepCount: 0,
@@ -81,8 +88,10 @@ export function resetRuntimeState(openPantin: OpenPantin): void {
   openPantin.jointVelocities.clear();
   openPantin.driveCommands.clear();
   openPantin.driveStates.clear();
+  openPantin.drivePortStates.clear();
   openPantin.driveFeedback.clear();
-  openPantin.frozenDriveCommands.clear();
+  openPantin.driveDiagnostics.clear();
+  openPantin.unresponsiveDriveIds.clear();
   openPantin.jammedJointIds.clear();
   openPantin.sensorOutputs.clear();
 }

@@ -3,7 +3,7 @@ import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
-import { jointDriveGroup } from "./drive-rows.ts";
+import { jointActuatorGroup } from "./actuator-rows.ts";
 import { jointGroups } from "./joint-groups.ts";
 import {
   type GroupDraft,
@@ -28,7 +28,7 @@ const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   placement: "properties.group.placement",
   parameters: "properties.group.parameters",
   joints: "properties.group.joints",
-  drive: "properties.group.drive",
+  actuator: "properties.group.actuator",
   sensors: "properties.group.sensors",
 };
 
@@ -215,12 +215,12 @@ function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupD
     if (joint === undefined) {
       return [];
     }
-    // The drive and the sensors come right after the general group: they say
+    // The actuator and the sensors come right after the general group: they say
     // what moves the joint and what reads it.
     const [general, ...others] = jointGroups(joint, open, customAxis, t);
     const language = source.language ?? "en";
     const wiring = [
-      jointDriveGroup(joint, open, language, t),
+      jointActuatorGroup(joint, open, language, t),
       jointSensorGroup(joint, open, language, t),
     ];
     return general === undefined ? [...wiring, ...others] : [general, ...wiring, ...others];

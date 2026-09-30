@@ -1,5 +1,5 @@
 import type { Vector3 } from "@pantin/protocol";
-import { driveOfJoint } from "../drives/drive-form.ts";
+import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -23,7 +23,7 @@ export interface JointPreview {
   origin: Vector3 | null;
   // Null as well for the zero vector, which has no direction.
   axis: Vector3 | null;
-  // A drive moves this joint (ADR 0022): the arrow says so by its colour.
+  // An actuator moves this joint (ADR 0028): the arrow says so by its colour.
   driven: boolean;
 }
 
@@ -42,7 +42,7 @@ function formVector(form: JointFormState, vector: "origin" | "axis"): Vector3 | 
 function isDriven(state: ViewerState, jointId: string | null): boolean {
   const document = state.openPantin?.document;
   return (
-    jointId !== null && document !== undefined && driveOfJoint(document, jointId) !== undefined
+    jointId !== null && document !== undefined && actuatorOfJoint(document, jointId) !== undefined
   );
 }
 

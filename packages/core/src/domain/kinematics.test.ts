@@ -28,6 +28,7 @@ function documentWith(joints: Joint[], bodyIds = ["base", "arm", "slider"]): Pan
     bodies: bodyIds.map(body),
     joints,
     drives: [],
+    actuators: [],
     sensors: [],
   };
 }

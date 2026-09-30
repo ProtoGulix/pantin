@@ -2,12 +2,13 @@ import { z } from "zod";
 import { CreateDriveRequestSchema, DriveSchema } from "./drive.ts";
 import { DriveIdSchema, JointIdSchema } from "./ids.ts";
 
-// Drives and faults (ADR 0022), under API_PREFIX:
+// Drives and faults (ADR 0022, 0028), under API_PREFIX:
 //
 //   POST   /api/pantins/:pantinId/drives  CreateDriveRequest -> 201 DriveResponse
 //   PATCH  /api/pantins/:pantinId/drives/:driveId  UpdateDriveRequest -> DriveResponse
 //          (every field but the id and the tag key; the type may change)
 //   DELETE /api/pantins/:pantinId/drives/:driveId  -> PantinResponse
+//          (409 while an actuator is fed by the drive, ADR 0028 point 10)
 //   PUT    /api/pantins/:pantinId/drives/:driveId/tag-key  RenameTagKeyRequest
 //          -> RenamedTagsResponse
 //   GET    /api/pantins/:pantinId/faults  -> FaultsResponse

@@ -1,5 +1,5 @@
-import { NEXT_DRIVE_PORTS } from "@pantin/drive-types/next-schemas";
 import type { PortDomain } from "@pantin/drive-types/ports";
+import { DRIVE_PORTS } from "@pantin/drive-types/schemas";
 import { describe, expect, it } from "vitest";
 import { ACTUATOR_DEFAULT_FEEDS, ACTUATOR_INPUT_PORTS, ActuatorFieldsSchema } from "./schemas.ts";
 
@@ -9,7 +9,7 @@ const actuatorTypes = ActuatorFieldsSchema.options.map((option) => option.shape.
 // Every output port name of the drive types, with the domains it carries.
 function outputDomains(name: string): Set<PortDomain> {
   const domains = new Set<PortDomain>();
-  for (const ports of Object.values(NEXT_DRIVE_PORTS)) {
+  for (const ports of Object.values(DRIVE_PORTS)) {
     for (const port of ports) {
       if (port.name === name) {
         domains.add(port.domain);

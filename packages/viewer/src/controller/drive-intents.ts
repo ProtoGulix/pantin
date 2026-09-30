@@ -6,9 +6,7 @@ import {
   editDriveName,
   editDriveParameter,
   openDriveForm,
-  openDriveFormForJoint,
   submitDriveForm,
-  toggleDriveJoint,
   toggleDrivePanel,
 } from "./drive-actions.ts";
 import {
@@ -24,13 +22,11 @@ export function driveIntents(store: ViewerStore) {
   return {
     toggleDrivePanel: () => toggleDrivePanel(store),
     openDriveForm: (driveId: string | null) => openDriveForm(store, driveId),
-    openDriveFormForJoint: (nodeId: string) => openDriveFormForJoint(store, nodeId),
     cancelDriveForm: () => cancelDriveForm(store),
     editDriveName: (name: string) => editDriveName(store, name),
     editDriveParameter: (field: string, text: string) => editDriveParameter(store, field, text),
     changeDriveType: (type: string) => changeDriveType(store, type),
     changeDriveAssembly: (assembly: string) => changeDriveAssembly(store, assembly),
-    toggleDriveJoint: (jointId: string, on: boolean) => toggleDriveJoint(store, jointId, on),
     submitDriveForm: () => void submitDriveForm(store),
     deleteDrive: (driveId: string) => void deleteDrive(store, driveId),
     setDriveUnresponsive: (driveId: string, on: boolean) =>

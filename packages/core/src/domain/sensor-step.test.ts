@@ -39,6 +39,7 @@ const DOCUMENT: PantinDocument = {
     },
   ],
   drives: [],
+  actuators: [],
   sensors: [
     {
       id: "reed",

@@ -19,10 +19,10 @@ export function chevron(row: TreeRow): HTMLElement {
   );
 }
 
-// The bolt of a driven joint, clickable like the eye: it opens the joint's
-// drive in the drives panel. Silent too: the state text names the drive.
-export function driveBolt(row: TreeRow, translate: Translate): HTMLElement | null {
-  if (row.wiring === null || row.wiring.driveId === null) {
+// The bolt of a joint an actuator moves, clickable like the eye: it opens the
+// joint's actuator in the drives panel. Silent too: the state text names it.
+export function actuatorBolt(row: TreeRow, translate: Translate): HTMLElement | null {
+  if (row.wiring === null || row.wiring.actuatorId === null) {
     return null;
   }
   return element(
@@ -30,8 +30,8 @@ export function driveBolt(row: TreeRow, translate: Translate): HTMLElement | nul
     {
       className: "tree-row__bolt",
       attributes: {
-        "data-action": "drive",
-        title: translate("menu.editJointDrive"),
+        "data-action": "actuator",
+        title: translate("menu.editJointActuator"),
         "aria-hidden": "true",
       },
     },

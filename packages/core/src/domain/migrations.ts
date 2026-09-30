@@ -1,6 +1,7 @@
 import { PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { isJsonObject, type JsonObject } from "./json-object.ts";
+import { migrateV8ToV9 } from "./migrate-drives-actuators.ts";
 import { migrateV7ToV8 } from "./migrate-switch-sides.ts";
 
 // Migrations of pantin.json between schema versions (CLAUDE.md 11.2,
@@ -58,6 +59,7 @@ const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject>
   [5, migrateV5ToV6],
   [6, migrateV6ToV7],
   [7, migrateV7ToV8],
+  [8, migrateV8ToV9],
 ]);
 
 // Brings a parsed pantin.json to the current version; validation comes after.

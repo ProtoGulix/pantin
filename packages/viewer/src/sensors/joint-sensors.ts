@@ -1,5 +1,5 @@
 import type { CreateSensorRequest, PantinDocument, Sensor } from "@pantin/protocol";
-import { movableJoints } from "../drives/drive-form.ts";
+import { movableJoints } from "../actuators/actuator-joints.ts";
 import { coordinateLimits } from "../joints/joint-parameters.ts";
 import { initialSensorForm, type SensorFormState } from "./sensor-form.ts";
 

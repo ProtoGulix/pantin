@@ -6,7 +6,7 @@ import { DRIVE_PARAMETERS, DRIVE_TAGS, DriveFieldsSchema } from "./schemas.ts";
 
 const TYPES = DriveFieldsSchema.options.map((option) => option.shape.type.value);
 // The member pattern of the protocol's tag names (tag.ts).
-const MEMBER = /^[a-z][a-z_]{0,31}$/;
+const MEMBER = /^[a-z][a-z0-9_]{0,31}$/;
 
 describe("drive type registries", () => {
   it.each(TYPES)("%s declares fields that its schema has, and valid tag members", (type) => {

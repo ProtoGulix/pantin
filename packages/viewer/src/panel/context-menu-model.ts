@@ -1,5 +1,5 @@
+import { actuatorOfJoint, movableJoints } from "../actuators/actuator-joints.ts";
 import { type AssemblyDisplay, isAssemblyHidden } from "../assembly-display.ts";
-import { driveOfJoint, movableJoints } from "../drives/drive-form.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { endSwitchRequests } from "../sensors/joint-sensors.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
@@ -15,7 +15,7 @@ export type ContextAction =
   | "newAssembly"
   | "newJoint"
   | "changeJointType"
-  | "driveJoint"
+  | "actuateJoint"
   | "addJointSensor"
   | "addEndSwitches"
   | "toggleAssemblyHidden"
@@ -49,7 +49,7 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
     entries.push("toggleAssemblyHidden", "toggleAssemblyIsolated");
   }
   if (ref.kind === "joint") {
-    entries.push("changeJointType", "driveJoint", "addJointSensor", "addEndSwitches");
+    entries.push("changeJointType", "actuateJoint", "addJointSensor", "addEndSwitches");
   }
   if (ref.kind === "body" || ref.kind === "joint" || ref.kind === "assembly") {
     entries.push("delete");
@@ -64,7 +64,7 @@ const CONTEXT_LABELS = {
   newAssembly: "menu.newAssembly",
   newJoint: "menu.newJoint",
   changeJointType: "menu.changeJointType",
-  driveJoint: "menu.addJointDrive",
+  actuateJoint: "menu.addJointActuator",
   addJointSensor: "menu.addJointSensor",
   addEndSwitches: "menu.addEndSwitches",
   toggleAssemblyHidden: "menu.hideAssembly",
@@ -72,9 +72,9 @@ const CONTEXT_LABELS = {
   delete: "menu.delete",
 } as const;
 
-const JOINT_WIRING: readonly ContextAction[] = ["driveJoint", "addJointSensor", "addEndSwitches"];
+const JOINT_WIRING: readonly ContextAction[] = ["actuateJoint", "addJointSensor", "addEndSwitches"];
 
-// A fixed joint gets no drive nor sensor entry (ADR 0022, ADR 0023), and a
+// A fixed joint gets no actuator nor sensor entry (ADR 0028, ADR 0023), and a
 // joint without limits (continuous) no end-of-stroke switches.
 function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boolean {
   if (!JOINT_WIRING.includes(action) || ref.kind !== "joint") {
@@ -89,12 +89,12 @@ function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boo
     : movableJoints(document).some((joint) => joint.id === ref.jointId);
 }
 
-function isDriven(ref: NodeRef, state: ViewerState): boolean {
+function isActuated(ref: NodeRef, state: ViewerState): boolean {
   const document = state.openPantin?.document;
   return (
     ref.kind === "joint" &&
     document !== undefined &&
-    driveOfJoint(document, ref.jointId) !== undefined
+    actuatorOfJoint(document, ref.jointId) !== undefined
   );
 }
 
@@ -129,8 +129,8 @@ export function buildContextMenuView(state: ViewerState, t: Translate): ContextM
       .map((action) => ({
         action,
         label: t(
-          action === "driveJoint" && isDriven(ref, state)
-            ? "menu.editJointDrive"
+          action === "actuateJoint" && isActuated(ref, state)
+            ? "menu.editJointActuator"
             : labelKeyOf(action, ref, state.assemblyDisplay),
         ),
       })),

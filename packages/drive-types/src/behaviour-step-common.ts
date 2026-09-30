@@ -1,8 +1,7 @@
 import type { PortState } from "./ports.ts";
 import type { DriveDiagnostic } from "./schema-common.ts";
 
-// The step contract of the drive types of ADR 0028 (point 3), next to the
-// contract of ADR 0022 (behaviour-common.ts) until the core switches over.
+// The step contract of the drive types (ADR 0028 point 3).
 // Plain numbers only. A behaviour answers port states and feedback; it never
 // sees a joint's limits and never moves a joint.
 

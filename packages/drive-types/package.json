@@ -2,17 +2,14 @@
   "name": "@pantin/drive-types",
   "version": "0.0.0",
   "private": true,
-  "description": "One folder per drive type: schema, pure behaviour, labels (ADR 0022).",
+  "description": "One folder per drive type: schema, pure behaviour, labels (ADR 0022, 0028).",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {
     "./schemas": "./src/schemas.ts",
     "./behaviours": "./src/behaviours.ts",
     "./labels": "./src/labels.ts",
-    "./ports": "./src/ports.ts",
-    "./next-schemas": "./src/next-schemas.ts",
-    "./next-behaviours": "./src/next-behaviours.ts",
-    "./next-labels": "./src/next-labels.ts"
+    "./ports": "./src/ports.ts"
   },
   "dependencies": {
     "zod": "4.6.5"

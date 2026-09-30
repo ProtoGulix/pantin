@@ -14,6 +14,7 @@ const pantin: PantinResponse = {
     bodies: [],
     joints: [],
     drives: [],
+    actuators: [],
     sensors: [],
   },
 };

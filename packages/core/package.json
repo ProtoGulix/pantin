@@ -12,6 +12,7 @@
     "start": "node src/main.ts"
   },
   "dependencies": {
+    "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
     "@pantin/protocol": "workspace:*",
     "@pantin/sensor-types": "workspace:*",

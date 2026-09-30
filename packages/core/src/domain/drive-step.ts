@@ -1,101 +1,77 @@
-import { type JointMotion, stepDrive } from "@pantin/drive-types/behaviours";
-import type { Drive, Joint, PantinDocument } from "@pantin/protocol";
-import { clampJointPosition } from "./joint-types/registry.ts";
+import { stepDrive } from "@pantin/drive-types/behaviours";
+import type { PantinDocument } from "@pantin/protocol";
+import { sortedById } from "./ids.ts";
 import { currentJointPosition } from "./kinematics.ts";
-import { applyQueuedSetpoints } from "./simulation-step.ts";
-import { drivenJointIds } from "./tags.ts";
+import type { SimulationState, SteppedState } from "./simulation-state.ts";
 
-// One simulation step of a Pantin (ADR 0022 point 6), as a pure function:
-// each drive moves its joints through its type's behaviour, the other joints
-// follow their setpoint tag (ADR 0012). Faults (point 7): a jammed joint keeps
-// its position; an unresponsive drive runs on its frozen commands, and its
-// feedback stays as it was.
+// The drive half of a simulation step (ADR 0028 points 7 and 11): each drive,
+// in id order, turns its commands into port states, feedback and diagnostics.
+// An unresponsive drive is not stepped: its port states, feedback and
+// diagnostics stay as they were (ADR 0022 point 7, ADR 0028 point 11).
 
-type Values = Readonly<Record<string, number>>;
+export type DriveOutputs = Pick<
+  SteppedState,
+  "driveStates" | "drivePortStates" | "driveFeedback" | "driveDiagnostics"
+>;
 
-export interface SimulationState {
-  jointPositions: ReadonlyMap<string, number>;
-  jointVelocities: ReadonlyMap<string, number>;
-  queuedSetpoints: ReadonlyMap<string, number>;
-  driveCommands: ReadonlyMap<string, Values>;
-  // Commands kept when a drive became unresponsive, by drive.
-  frozenDriveCommands: ReadonlyMap<string, Values>;
-  driveStates: ReadonlyMap<string, Values>;
-  driveFeedback: ReadonlyMap<string, Values>;
-  jammedJointIds: ReadonlySet<string>;
-}
-
-// Fresh maps, which the caller may keep and change.
-export interface SteppedState {
-  jointPositions: Map<string, number>;
-  jointVelocities: Map<string, number>;
-  driveStates: Map<string, Values>;
-  driveFeedback: Map<string, Values>;
-}
-
-// Limits by clamping the infinities: no joint type is named here, and a joint
-// without limits (continuous) gets infinite ones.
-function motionOf(joint: Joint, state: SimulationState): JointMotion {
-  return {
-    position: currentJointPosition(joint, state.jointPositions),
-    velocity: state.jointVelocities.get(joint.id) ?? 0,
-    lower: clampJointPosition(joint, Number.NEGATIVE_INFINITY),
-    upper: clampJointPosition(joint, Number.POSITIVE_INFINITY),
-  };
-}
-
-function stepOneDrive(
+// The joints a drive moves in the end, through the actuators it feeds, at the
+// end of the previous step: a servo drive reads its motor's encoder one step
+// late (ADR 0028 point 7).
+function movedJointPositions(
   document: PantinDocument,
-  drive: Drive,
+  driveId: string,
   state: SimulationState,
-  next: { positions: Map<string, number>; velocities: Map<string, number> },
-  dt: number,
-) {
-  const joints = drive.joints.flatMap((id) => document.joints.filter((joint) => joint.id === id));
-  const frozen = state.frozenDriveCommands.get(drive.id);
-  const output = stepDrive({
-    fields: drive,
-    commands: frozen ?? state.driveCommands.get(drive.id) ?? {},
-    state: state.driveStates.get(drive.id) ?? {},
-    joints: joints.map((joint) => motionOf(joint, state)),
-    dt,
-  });
-  for (const [index, joint] of joints.entries()) {
-    const moved = output.joints[index];
-    const jammed = state.jammedJointIds.has(joint.id);
-    if (moved !== undefined && !jammed) {
-      next.positions.set(joint.id, moved.position);
+): number[] {
+  const jointsById = new Map(document.joints.map((joint) => [joint.id, joint]));
+  return sortedById(document.actuators)
+    .filter((actuator) => actuator.feed?.drive === driveId)
+    .flatMap((actuator) => actuator.joints)
+    .flatMap((jointId) => {
+      const joint = jointsById.get(jointId);
+      return joint === undefined ? [] : [currentJointPosition(joint, state.jointPositions)];
+    });
+}
+
+function keepFrozen(outputs: DriveOutputs, driveId: string, state: SimulationState): void {
+  const copy = <Value>(from: ReadonlyMap<string, Value>, into: Map<string, Value>) => {
+    const value = from.get(driveId);
+    if (value !== undefined) {
+      into.set(driveId, value);
     }
-    next.velocities.set(joint.id, moved === undefined || jammed ? 0 : moved.velocity);
-  }
-  const feedback = frozen === undefined ? output.feedback : state.driveFeedback.get(drive.id);
-  return { state: output.state, feedback: feedback ?? {} };
+  };
+  copy(state.driveStates, outputs.driveStates);
+  copy(state.drivePortStates, outputs.drivePortStates);
+  copy(state.driveFeedback, outputs.driveFeedback);
+  copy(state.driveDiagnostics, outputs.driveDiagnostics);
 }
 
-export function stepSimulation(
+export function stepDrives(
   document: PantinDocument,
   state: SimulationState,
   dt: number,
-): SteppedState {
-  const driven = drivenJointIds(document);
-  const undriven = new Map(
-    [...state.queuedSetpoints].filter(
-      ([jointId]) => !driven.has(jointId) && !state.jammedJointIds.has(jointId),
-    ),
-  );
-  const positions = applyQueuedSetpoints(document, state.jointPositions, undriven);
-  const next = { positions, velocities: new Map(state.jointVelocities) };
-  const driveStates = new Map<string, Values>();
-  const driveFeedback = new Map<string, Values>();
-  for (const drive of document.drives) {
-    const stepped = stepOneDrive(document, drive, state, next, dt);
-    driveStates.set(drive.id, stepped.state);
-    driveFeedback.set(drive.id, stepped.feedback);
-  }
-  return {
-    jointPositions: next.positions,
-    jointVelocities: next.velocities,
-    driveStates,
-    driveFeedback,
+): DriveOutputs {
+  const outputs: DriveOutputs = {
+    driveStates: new Map(),
+    drivePortStates: new Map(),
+    driveFeedback: new Map(),
+    driveDiagnostics: new Map(),
   };
+  for (const drive of sortedById(document.drives)) {
+    if (state.unresponsiveDriveIds.has(drive.id)) {
+      keepFrozen(outputs, drive.id, state);
+      continue;
+    }
+    const output = stepDrive({
+      fields: drive,
+      commands: state.driveCommands.get(drive.id) ?? {},
+      state: state.driveStates.get(drive.id) ?? {},
+      jointPositions: movedJointPositions(document, drive.id, state),
+      dt,
+    });
+    outputs.driveStates.set(drive.id, output.state);
+    outputs.drivePortStates.set(drive.id, output.ports);
+    outputs.driveFeedback.set(drive.id, output.feedback);
+    outputs.driveDiagnostics.set(drive.id, output.diagnostics);
+  }
+  return outputs;
 }

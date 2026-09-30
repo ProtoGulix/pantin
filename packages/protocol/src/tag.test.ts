@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { jointTagName, TagNameSchema, TagSchema, WriteTagRequestSchema } from "./tag.ts";
 
 describe("TagNameSchema", () => {
-  it.each(["verin_pince.tige.setpoint", "axis-1.stroke.position", "a.b.c"])(
+  it.each(["verin_pince.tige.setpoint", "axis-1.stroke.position", "a.b.c", "valve.drive.coil_14"])(
     "accepts %s",
     (name) => {
       expect(TagNameSchema.safeParse(name).success).toBe(true);
@@ -18,6 +18,7 @@ describe("TagNameSchema", () => {
     "a/b.c.d",
     "../x.y.z",
     "_a.b.setpoint",
+    "a.b.1coil",
   ])("refuses %s", (name) => {
     expect(TagNameSchema.safeParse(name).success).toBe(false);
   });

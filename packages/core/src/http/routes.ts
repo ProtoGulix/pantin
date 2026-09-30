@@ -7,6 +7,7 @@ import {
 } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
+import { ACTUATOR_ROUTES } from "./actuator-routes.ts";
 import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
@@ -141,6 +142,7 @@ export const ROUTES: readonly Route[] = [
   ...JOINT_ROUTES,
   ...ASSEMBLY_ROUTES,
   ...DRIVE_ROUTES,
+  ...ACTUATOR_ROUTES,
   ...SENSOR_ROUTES,
   ...POSE_STREAM_ROUTES,
   ...TAG_ROUTES,

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { stepNextDrive } from "./next-behaviours.ts";
-import { NEXT_DRIVE_PORTS, type NextDriveFields, NextDriveFieldsSchema } from "./next-schemas.ts";
+import { stepDrive } from "./behaviours.ts";
 import { PORT_STATE_SCHEMAS, ServoStateSchema } from "./ports.ts";
+import { DRIVE_PORTS, type DriveFields, DriveFieldsSchema } from "./schemas.ts";
 
 // Every next drive type answers exactly the ports it declares, in its domain.
 
-const FIELDS: NextDriveFields[] = [
+const FIELDS: DriveFields[] = [
   { type: "valve_3_2_single" },
   { type: "valve_double_3_2" },
   { type: "valve_5_2_single" },
@@ -26,23 +26,21 @@ const COMMANDS = [
   { coil_12: 1, reverse: 1, speed_setpoint: -40 },
 ];
 
-describe("next drive types", () => {
+describe("drive types", () => {
   it("covers every registered type", () => {
-    expect(FIELDS.map((fields) => fields.type).sort()).toEqual(
-      Object.keys(NEXT_DRIVE_PORTS).sort(),
-    );
+    expect(FIELDS.map((fields) => fields.type).sort()).toEqual(Object.keys(DRIVE_PORTS).sort());
   });
 
   describe.each(FIELDS)("$type", (fields) => {
     it.each(COMMANDS)("answers its declared ports for %o", (commands) => {
-      const output = stepNextDrive({
+      const output = stepDrive({
         fields,
         commands,
         state: {},
         jointPositions: [0],
         dt: 1 / 120,
       });
-      const declared = NEXT_DRIVE_PORTS[fields.type];
+      const declared = DRIVE_PORTS[fields.type];
       expect(Object.keys(output.ports).sort()).toEqual(declared.map((port) => port.name).sort());
       for (const port of declared) {
         expect(PORT_STATE_SCHEMAS[port.domain].safeParse(output.ports[port.name]).success).toBe(
@@ -53,14 +51,14 @@ describe("next drive types", () => {
   });
 
   it("rejects a zero ramp or maximum speed", () => {
-    expect(NextDriveFieldsSchema.safeParse({ type: "vfd_on_off", acceleration: 0 }).success).toBe(
+    expect(DriveFieldsSchema.safeParse({ type: "vfd_on_off", acceleration: 0 }).success).toBe(
       false,
     );
-    expect(NextDriveFieldsSchema.safeParse({ type: "vfd_analog", acceleration: 0 }).success).toBe(
+    expect(DriveFieldsSchema.safeParse({ type: "vfd_analog", acceleration: 0 }).success).toBe(
       false,
     );
     const servo = { type: "servo_drive", maxSpeed: 0, maxAcceleration: 1 };
-    expect(NextDriveFieldsSchema.safeParse(servo).success).toBe(false);
+    expect(DriveFieldsSchema.safeParse(servo).success).toBe(false);
   });
 });
 

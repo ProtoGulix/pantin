@@ -4,16 +4,21 @@ import {
   type PantinDocument,
   tagName,
 } from "@pantin/protocol";
-import { driveCoordinateUnit } from "./drive-form.ts";
+import { driveCoordinateUnit } from "../actuators/actuator-joints.ts";
+import { quantityConversionUnit } from "./parameter-units.ts";
 
-/** The unit of a drive's float tag, to convert what the user types; null if unknown. */
+/**
+ * The unit to convert a drive's float tag with, from what the user types to
+ * SI; null when the tag is not a coordinate (a percent) or the name is not a
+ * drive tag.
+ */
 export function driveTagUnit(document: PantinDocument, name: string): JointCoordinateUnit | null {
   for (const drive of document.drives) {
-    const owns = DRIVE_TAGS[drive.type].some(
-      (tag) => tagName(drive.assembly, drive.tagKey, tag.member) === name,
+    const tag = DRIVE_TAGS[drive.type].find(
+      (candidate) => tagName(drive.assembly, drive.tagKey, candidate.member) === name,
     );
-    if (owns) {
-      return driveCoordinateUnit(document, drive.joints);
+    if (tag !== undefined) {
+      return quantityConversionUnit(tag.quantity, driveCoordinateUnit(document, drive.id));
     }
   }
   return null;

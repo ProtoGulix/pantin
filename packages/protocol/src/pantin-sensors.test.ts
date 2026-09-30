@@ -54,9 +54,18 @@ const valve = {
   tagKey: "valve",
   name: "Valve",
   assembly: "press",
-  joints: ["stroke"],
+  type: "valve_5_3_closed",
+};
+
+const cylinder = {
+  id: "cylinder",
+  name: "Cylinder",
+  assembly: "press",
   type: "double_acting_cylinder",
-  speed: 0.2,
+  extendSpeed: 0.2,
+  retractSpeed: 0.2,
+  feed: { drive: "valve", ports: { cap: "port_4", rod: "port_2" } },
+  joints: ["stroke"],
 };
 
 // A cylinder with its valve, a switch and an encoder, plus a fixed stop.
@@ -67,6 +76,7 @@ const press = {
   bodies: ["frame", "rod", "stop"].map(body),
   joints: [joint("stroke", "rod"), joint("stop", "stop", "fixed")],
   drives: [valve],
+  actuators: [cylinder],
   sensors: [extended, encoder],
 };
 

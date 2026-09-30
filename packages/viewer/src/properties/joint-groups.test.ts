@@ -23,7 +23,7 @@ const jointSource = {
 // The drive and sensor groups have their own tests: left out here.
 const jointGroupsOf = (jointId: string) =>
   buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate).filter(
-    (group) => group.id !== "drive" && group.id !== "sensors",
+    (group) => group.id !== "actuator" && group.id !== "sensors",
   );
 const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 

@@ -10,7 +10,7 @@ export type PropertyGroupId =
   | "placement"
   | "parameters"
   | "joints"
-  | "drive"
+  | "actuator"
   | "sensors";
 
 export type EditTarget =

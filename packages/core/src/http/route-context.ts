@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
+  ActuatorIdSchema,
   BodyIdSchema,
   DriveIdSchema,
   JointIdSchema,
@@ -45,6 +46,14 @@ export function jointIdOf(context: RouteContext): string {
 
 export function driveIdOf(context: RouteContext): string {
   return parseWithSchema(DriveIdSchema, context.parameters.driveId, "The drive id in the URL");
+}
+
+export function actuatorIdOf(context: RouteContext): string {
+  return parseWithSchema(
+    ActuatorIdSchema,
+    context.parameters.actuatorId,
+    "The actuator id in the URL",
+  );
 }
 
 export function sensorIdOf(context: RouteContext): string {

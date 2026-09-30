@@ -51,14 +51,11 @@ export interface PanelIntents {
   // The drives panel on the right (ADR 0022): its form, faults and commands.
   toggleDrivePanel(): void;
   openDriveForm(driveId: string | null): void;
-  // From a joint's context menu: its drive, or a new one connected to it.
-  openDriveFormForJoint(nodeId: string): void;
   cancelDriveForm(): void;
   editDriveName(name: string): void;
   editDriveParameter(field: string, text: string): void;
   changeDriveType(type: string): void;
   changeDriveAssembly(assembly: string): void;
-  toggleDriveJoint(jointId: string, connected: boolean): void;
   submitDriveForm(): void;
   deleteDrive(driveId: string): void;
   setDriveUnresponsive(driveId: string, on: boolean): void;
@@ -66,6 +63,23 @@ export interface PanelIntents {
   toggleBitTag(tagName: string): void;
   // Typed in mm or degrees (per second).
   writeFloatTag(tagName: string, text: string): void;
+
+  // The actuators of the same panel (ADR 0028): the feed is a drive and its
+  // output port for each input port of the type.
+  openActuatorForm(actuatorId: string | null): void;
+  // From a joint's context menu: its actuator, or a new one moving it.
+  openActuatorFormForJoint(nodeId: string): void;
+  cancelActuatorForm(): void;
+  editActuatorName(name: string): void;
+  editActuatorParameter(field: string, text: string): void;
+  changeActuatorType(type: string): void;
+  changeActuatorAssembly(assembly: string): void;
+  // An empty drive id removes the feed.
+  changeActuatorDrive(driveId: string): void;
+  changeActuatorPort(inputPort: string, outputPort: string): void;
+  toggleActuatorJoint(jointId: string, moved: boolean): void;
+  submitActuatorForm(): void;
+  deleteActuator(actuatorId: string): void;
 
   // The sensors of the same panel (ADR 0023); parameter inputs by key
   // ("range.lower", "pulsesPerUnit"), a flag as "true" or "false".

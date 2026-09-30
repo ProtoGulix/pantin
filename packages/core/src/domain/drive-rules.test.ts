@@ -4,9 +4,14 @@ import {
   type PantinDocument,
 } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { addDriveToDocument, renameDriveTagKey, updateDriveInDocument } from "./drive-rules.ts";
+import {
+  addDriveToDocument,
+  deleteDriveFromDocument,
+  renameDriveTagKey,
+  updateDriveInDocument,
+} from "./drive-rules.ts";
 
-// Drive edits in a document (ADR 0022 points 4 and 8).
+// Drive edits in a document (ADR 0022 points 4 and 8, ADR 0028 point 10).
 
 function body(id: string, assembly: string) {
   return {
@@ -46,11 +51,12 @@ const PRESS: PantinDocument = {
     },
   ],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 
 function valve(name = "Tige", assembly = "pince"): CreateDriveRequest {
-  return { name, assembly, joints: ["tige"], type: "double_acting_cylinder", speed: 0.2 };
+  return { name, assembly, type: "valve_5_3_closed" };
 }
 
 describe("drive rules", () => {
@@ -64,15 +70,14 @@ describe("drive rules", () => {
     const servo: CreateDriveRequest = {
       name: "Motor",
       assembly: "pince",
-      joints: ["tige"],
-      type: "servo_axis",
+      type: "servo_drive",
       maxSpeed: 1,
       maxAcceleration: 2,
     };
     expect(updateDriveInDocument(document, drive.id, servo).drive).toMatchObject({
       id: "valve",
       tagKey: "valve",
-      type: "servo_axis",
+      type: "servo_drive",
     });
   });
 
@@ -88,5 +93,30 @@ describe("drive rules", () => {
     expect(() => renameDriveTagKey(document, "valve", "tige")).toThrow(
       'Key "tige" is already used by joint "tige" in assembly "pince". "tige-2" is free.',
     );
+  });
+});
+
+describe("drive deletion", () => {
+  it("refuses to delete a drive that feeds an actuator, naming it", () => {
+    const { document } = addDriveToDocument(PRESS, valve("Valve"));
+    const fed: PantinDocument = {
+      ...document,
+      actuators: [
+        {
+          id: "cylinder",
+          name: "Cylinder",
+          assembly: "pince",
+          type: "double_acting_cylinder",
+          extendSpeed: 0.2,
+          retractSpeed: 0.2,
+          feed: { drive: "valve", ports: { cap: "port_4", rod: "port_2" } },
+          joints: ["tige"],
+        },
+      ],
+    };
+    expect(() => deleteDriveFromDocument(fed, "valve")).toThrow(
+      'Drive "valve" feeds actuator "cylinder". Change its feed or delete it first.',
+    );
+    expect(deleteDriveFromDocument(document, "valve").drives).toEqual([]);
   });
 });

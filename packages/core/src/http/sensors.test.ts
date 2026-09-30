@@ -55,7 +55,7 @@ describe("end-of-stroke switches over REST (phase 5 exit)", () => {
       "carriage.retracted.state": 1,
       "carriage.extended.state": 0,
     });
-    await axis.writeTag("carriage.valve.extend", 1);
+    await axis.writeTag("carriage.valve.coil_14", 1);
     const seen: { position: number; extended: number; retracted: number }[] = [];
     for (let step = 0; step < 66; step += 1) {
       axis.runSeconds(1 / 120);
@@ -71,8 +71,8 @@ describe("end-of-stroke switches over REST (phase 5 exit)", () => {
       expect([extended, retracted]).toEqual([position >= 0.098 ? 1 : 0, position <= 0.002 ? 1 : 0]);
     }
     expect(seen.at(-1)).toEqual({ position: 0.1, extended: 1, retracted: 0 });
-    await axis.writeTag("carriage.valve.extend", 0);
-    await axis.writeTag("carriage.valve.retract", 1);
+    await axis.writeTag("carriage.valve.coil_14", 0);
+    await axis.writeTag("carriage.valve.coil_12", 1);
     axis.runSeconds(0.6);
     expect(await tagValues()).toMatchObject({
       "carriage.stroke.position": 0,
@@ -116,7 +116,7 @@ describe("mechanical limit switch over REST (ADR 0025)", () => {
 
   beforeEach(async () => {
     await sendJsonRequest(axis.server, "POST", "/api/pantins/axis/sensors", STOP);
-    await sendRaw(axis.server, "DELETE", "/api/pantins/axis/drives/valve");
+    await sendRaw(axis.server, "DELETE", "/api/pantins/axis/actuators/valve-actuator");
   });
 
   it("changes over at its operating position and lets go only past its differential travel", async () => {
@@ -145,7 +145,7 @@ describe("encoder over REST", () => {
       type: "encoder",
       pulsesPerUnit: 10000,
     });
-    await axis.writeTag("carriage.valve.extend", 1);
+    await axis.writeTag("carriage.valve.coil_14", 1);
     axis.runSeconds(0.6);
     const response = await sendRaw(axis.server, "GET", "/api/pantins/axis/tags");
     const tags = TagListResponseSchema.parse(response.json).tags;
@@ -183,7 +183,7 @@ describe("sensor edits", () => {
 
 describe("sensor guards", () => {
   it("refuses to delete a watched joint, naming the sensors", async () => {
-    await sendRaw(axis.server, "DELETE", "/api/pantins/axis/drives/valve");
+    await sendRaw(axis.server, "DELETE", "/api/pantins/axis/actuators/valve-actuator");
     const refused = await sendRaw(axis.server, "DELETE", "/api/pantins/axis/joints/stroke");
     expect(refused.status).toBe(409);
     expect(JSON.stringify(refused.json)).toContain('sensor \\"extended\\", \\"retracted\\"');

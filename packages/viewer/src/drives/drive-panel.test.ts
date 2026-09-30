@@ -1,4 +1,4 @@
-import type { Drive, PantinDocument } from "@pantin/protocol";
+import type { Actuator, Drive, PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { buildDrivePanelView } from "../panel/drive-panel-model.ts";
@@ -8,61 +8,80 @@ import {
   buildDriveRequest,
   driveFormFor,
   initialDriveForm,
-  withDriveFormJoint,
   withDriveFormType,
   withDriveFormValue,
 } from "./drive-form.ts";
 import { driveTagUnit } from "./drive-tags.ts";
 
-// The drives panel (ADR 0022): its form, in display units, and its view.
+// The drives section of the panel (ADR 0022, 0028): its form, in display
+// units, and its view.
 
-const valve: Drive = {
-  id: "valve",
-  tagKey: "valve",
-  name: "Valve",
+const inverter: Drive = {
+  id: "inverter",
+  tagKey: "inverter",
+  name: "Inverter",
   assembly: "main",
+  type: "vfd_analog",
+  acceleration: 50,
+};
+const servo: Drive = {
+  id: "servo",
+  tagKey: "servo",
+  name: "Servo",
+  assembly: "main",
+  type: "servo_drive",
+  maxSpeed: 0.2,
+  maxAcceleration: 1,
+};
+const slider: Actuator = {
+  id: "slider",
+  name: "Slider",
+  assembly: "main",
+  type: "servo_motor",
+  feed: { drive: "servo", ports: { in: "out" } },
   joints: ["slide"],
-  type: "double_acting_cylinder",
-  speed: 0.2,
 };
 
 const response = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")], "press", [
   slideJoint,
   hingeJoint,
 ]);
-const document: PantinDocument = { ...response.document, drives: [valve] };
+const document: PantinDocument = {
+  ...response.document,
+  drives: [inverter, servo],
+  actuators: [slider],
+};
 
 describe("drive form", () => {
-  it("builds the SI request from a speed typed in mm/s", () => {
-    let form = withDriveFormJoint(initialDriveForm(document), "slide", true);
-    form = withDriveFormValue({ ...form, name: "Valve" }, "speed", "200");
-    expect(buildDriveRequest(form, document)).toEqual({
+  it("sends a ramp in percent per second as typed", () => {
+    const form = withDriveFormType(
+      { ...initialDriveForm(document), name: "Inverter" },
+      "vfd_on_off",
+    );
+    expect(buildDriveRequest(withDriveFormValue(form, "acceleration", "50"), document)).toEqual({
       ok: true,
-      request: {
-        type: "double_acting_cylinder",
-        name: "Valve",
-        assembly: "main",
-        joints: ["slide"],
-        speed: 0.2,
-      },
+      request: { type: "vfd_on_off", name: "Inverter", assembly: "main", acceleration: 50 },
     });
   });
 
-  it("types a pivot's speed in degrees per second", () => {
-    let form = withDriveFormJoint(initialDriveForm(document), "hinge", true);
-    form = withDriveFormValue({ ...form, name: "Arm" }, "speed", "180");
-    const built = buildDriveRequest(form, document);
-    expect(built.ok && Reflect.get(built.request, "speed")).toBeCloseTo(Math.PI);
+  it("types a servo drive's speed in the unit of the joints it ends up moving", () => {
+    const form = driveFormFor(servo, document);
+    expect(form.values).toEqual({ maxSpeed: "200", maxAcceleration: "1000" });
+    const rotary: PantinDocument = {
+      ...document,
+      actuators: [{ ...slider, joints: ["hinge"] }],
+    };
+    const built = buildDriveRequest(
+      { ...form, values: { maxSpeed: "180", maxAcceleration: "90" } },
+      rotary,
+    );
+    expect(built.ok && Reflect.get(built.request, "maxSpeed")).toBeCloseTo(Math.PI);
   });
 
-  it("prefills a drive in display units, and empties parameters on a type change", () => {
-    const form = driveFormFor(valve, document);
-    expect([form.driveId, form.joints, form.values]).toEqual([
-      "valve",
-      ["slide"],
-      { speed: "200" },
-    ]);
-    expect(withDriveFormType(form, "servo_axis").values).toEqual({});
+  it("prefills a drive, and empties parameters on a type change", () => {
+    const form = driveFormFor(inverter, document);
+    expect([form.driveId, form.values]).toEqual(["inverter", { acceleration: "50" }]);
+    expect(withDriveFormType(form, "servo_drive").values).toEqual({});
   });
 
   it("reports the schema's message instead of a request", () => {
@@ -74,49 +93,66 @@ describe("drive panel view", () => {
   const opened = withOpenPantin(initialViewerState("fr"), { ...response, document });
   const translate = createTranslator("fr");
 
-  it("is open from the start, closes on demand, and lists each drive with its tags and joints", () => {
+  it("is open from the start, closes on demand, and lists each drive with its tags", () => {
     expect(buildDrivePanelView({ ...opened, drivePanelOpen: false }, translate).open).toBe(false);
     const view = buildDrivePanelView(opened, translate);
-    expect(view.open).toBe(true);
-    const [card] = view.drives;
-    expect(card).toMatchObject({
-      name: "Valve",
-      typeLabel: "Vérin double effet",
-      tagPrefix: "main.valve",
+    expect(view.drivesTitle).toBe("Préactionneurs");
+    expect(view.drives[0]).toMatchObject({
+      name: "Inverter",
+      typeLabel: expect.stringContaining("analogique"),
+      tagPrefix: "main.inverter",
     });
-    expect(card?.tags.map(({ name, control }) => [name, control])).toEqual([
-      ["main.valve.extend", "bit"],
-      ["main.valve.retract", "bit"],
+  });
+
+  it("shows percent tags in %, unscaled, and servo tags in the unit of the joints", () => {
+    const [inverterCard, servoCard] = buildDrivePanelView(opened, translate).drives;
+    expect(
+      inverterCard?.tags.map(({ name, unit, coordinateUnit }) => [name, unit, coordinateUnit]),
+    ).toEqual([
+      ["main.inverter.speed_setpoint", "%", null],
+      ["main.inverter.speed", "%", null],
     ]);
-    expect(card?.joints).toEqual([
-      {
-        id: "slide",
-        name: "Slide",
-        positionTag: "main.slide.position",
-        unit: "mm",
-        coordinateUnit: "metre",
-        jammed: false,
-      },
+    expect(
+      servoCard?.tags.map(({ name, unit, coordinateUnit }) => [name, unit, coordinateUnit]),
+    ).toEqual([
+      ["main.servo.setpoint", "mm", "metre"],
+      ["main.servo.position", "mm", "metre"],
     ]);
   });
 
-  it("shows faults and the form with the type's own parameters and units", () => {
-    const faults = { jammedJoints: ["slide"], unresponsiveDrives: ["valve"] };
-    const driveForm = driveFormFor(valve, document);
-    const view = buildDrivePanelView(
-      { ...opened, drivePanelOpen: true, faults, driveForm },
-      translate,
-    );
-    expect([view.drives[0]?.unresponsive, view.drives[0]?.joints[0]?.jammed]).toEqual([true, true]);
+  it("shows the drive fault and the form with the type's own parameters and units", () => {
+    const faults = { jammedJoints: [], unresponsiveDrives: ["inverter"] };
+    const driveForm = driveFormFor(inverter, document);
+    const view = buildDrivePanelView({ ...opened, faults, driveForm }, translate);
+    expect(view.drives[0]?.unresponsive).toBe(true);
     expect(view.form?.parameters).toEqual([
-      { field: "speed", label: "Vitesse", unit: "mm/s", value: "200" },
+      { field: "acceleration", label: "Accélération", unit: "%/s", value: "50" },
     ]);
   });
 });
 
 describe("driveTagUnit", () => {
-  it("gives a drive tag the unit of its joints, and nothing for other names", () => {
-    expect(driveTagUnit(document, "main.valve.extend")).toBe("metre");
+  it("gives a coordinate tag the unit of the joints, a percent none, and other names none", () => {
+    expect(driveTagUnit(document, "main.servo.setpoint")).toBe("metre");
+    expect(driveTagUnit(document, "main.inverter.speed_setpoint")).toBeNull();
     expect(driveTagUnit(document, "main.slide.position")).toBeNull();
+  });
+});
+
+describe("servo drive unit hint", () => {
+  const translate = createTranslator("fr");
+  const hint = (doc: PantinDocument, drive: Drive) =>
+    buildDrivePanelView(
+      {
+        ...withOpenPantin(initialViewerState("fr"), { ...response, document: doc }),
+        driveForm: driveFormFor(drive, doc),
+      },
+      translate,
+    ).form?.unitHint;
+
+  it("announces the fallback unit until an actuator moves a joint, and only for joint units", () => {
+    expect(hint({ ...document, actuators: [] }, servo)).toMatch(/mm/);
+    expect(hint(document, servo)).toBeNull();
+    expect(hint(document, inverter)).toBeNull();
   });
 });

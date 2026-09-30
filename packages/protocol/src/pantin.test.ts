@@ -56,6 +56,7 @@ describe("PantinDocumentSchema", () => {
     ],
     joints: [],
     drives: [],
+    actuators: [],
     sensors: [],
   };
 

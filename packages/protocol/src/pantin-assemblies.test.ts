@@ -43,6 +43,7 @@ const twoCylinders = {
   ],
   joints: [rod("tige", "body-1", "rod-1"), rod("tige-2", "body-2", "rod-2")],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 

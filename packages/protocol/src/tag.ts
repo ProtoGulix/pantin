@@ -21,11 +21,11 @@ export const TagDirectionSchema = z.enum(["command", "feedback"]);
 export type TagDirection = z.infer<typeof TagDirectionSchema>;
 
 // "<assembly key>.<tag key>.<member>": keys never contain a dot, the member
-// is a lowercase word, so a tag name never contains a slash.
+// is a lowercase word that may hold digits ("coil_14"), so a tag name never contains a slash.
 export const TagNameSchema = z
   .string()
   .regex(
-    new RegExp(`^${KEY_PATTERN_SOURCE}\\.${KEY_PATTERN_SOURCE}\\.[a-z][a-z_]{0,31}$`),
+    new RegExp(`^${KEY_PATTERN_SOURCE}\\.${KEY_PATTERN_SOURCE}\\.[a-z][a-z0-9_]{0,31}$`),
     'A tag name is "<assembly>.<tag key>.<member>", for example "verin_pince.tige.setpoint".',
   );
 

@@ -11,6 +11,7 @@ import { parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
 import type { WelcomeTab } from "../viewer-state.ts";
+import { actuatorIntents } from "./actuator-intents.ts";
 import {
   createAssembly,
   dropBody,
@@ -169,6 +170,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...importIntents(store),
     ...jointIntents(store),
     ...driveIntents(store),
+    ...actuatorIntents(store),
     ...sensorIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     togglePropertyGroup: (groupId) =>

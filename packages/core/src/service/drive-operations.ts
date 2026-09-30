@@ -18,26 +18,17 @@ import { ApiError } from "../errors.ts";
 import { loadSettledPantin } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
-// Drives and faults of an open Pantin (ADR 0022). Every drive edit also tidies
-// the runtime state, so that nothing stale comes back: a released joint stops,
-// a newly driven joint forgets its setpoint, a changed or deleted drive forgets
-// its commands, state, feedback and fault.
+// Drives and faults of an open Pantin (ADR 0022, 0028). Every drive edit also
+// tidies the runtime state, so that nothing stale comes back: a changed or
+// deleted drive forgets its commands, state, port states, feedback and fault.
 
 function forgetDriveRuntimeState(openPantin: OpenPantin, driveId: string): void {
   openPantin.driveCommands.delete(driveId);
   openPantin.driveStates.delete(driveId);
+  openPantin.drivePortStates.delete(driveId);
   openPantin.driveFeedback.delete(driveId);
-  openPantin.frozenDriveCommands.delete(driveId);
-}
-
-function tidyJoints(openPantin: OpenPantin, before: readonly string[], after: readonly string[]) {
-  for (const jointId of before.filter((id) => !after.includes(id))) {
-    openPantin.jointVelocities.delete(jointId);
-  }
-  for (const jointId of after.filter((id) => !before.includes(id))) {
-    openPantin.setpoints.delete(jointId);
-    openPantin.queuedSetpoints.delete(jointId);
-  }
+  openPantin.driveDiagnostics.delete(driveId);
+  openPantin.unresponsiveDriveIds.delete(driveId);
 }
 
 function driveOf(document: PantinDocument, driveId: string): Drive | undefined {
@@ -50,7 +41,6 @@ export function driveOperations(context: ServiceContext) {
       const openPantin = await loadSettledPantin(context, pantinId);
       const { document, drive } = addDriveToDocument(openPantin.document, request);
       openPantin.document = document;
-      tidyJoints(openPantin, [], drive.joints);
       return drive;
     },
     updateDrive: async (pantinId: PantinId, driveId: string, request: CreateDriveRequest) => {
@@ -58,7 +48,6 @@ export function driveOperations(context: ServiceContext) {
       const before = driveOf(openPantin.document, driveId);
       const { document, drive } = updateDriveInDocument(openPantin.document, driveId, request);
       openPantin.document = document;
-      tidyJoints(openPantin, before?.joints ?? [], drive.joints);
       if (before?.type !== drive.type) {
         forgetDriveRuntimeState(openPantin, driveId);
       }
@@ -66,9 +55,7 @@ export function driveOperations(context: ServiceContext) {
     },
     deleteDrive: async (pantinId: PantinId, driveId: string): Promise<PantinResponse> => {
       const openPantin = await loadSettledPantin(context, pantinId);
-      const before = driveOf(openPantin.document, driveId);
       openPantin.document = deleteDriveFromDocument(openPantin.document, driveId);
-      tidyJoints(openPantin, before?.joints ?? [], []);
       forgetDriveRuntimeState(openPantin, driveId);
       return toResponse(pantinId, openPantin);
     },
@@ -89,12 +76,12 @@ export function driveOperations(context: ServiceContext) {
 function faultsOf(openPantin: OpenPantin): FaultsResponse {
   return {
     jammedJoints: [...openPantin.jammedJointIds],
-    unresponsiveDrives: [...openPantin.frozenDriveCommands.keys()],
+    unresponsiveDrives: [...openPantin.unresponsiveDriveIds],
   };
 }
 
 // Faults need not wait for imports: a rollback removes its joints through
-// forgetJointRuntimeState, which drops their jam, and no drive can use a
+// forgetJointRuntimeState, which drops their jam, and no actuator can use a
 // joint or an assembly still reserved by an import (drive edits wait).
 function faultOperations(context: ServiceContext) {
   return {
@@ -117,12 +104,10 @@ function faultOperations(context: ServiceContext) {
       if (driveOf(openPantin.document, driveId) === undefined) {
         throw new ApiError("not_found", `Pantin "${pantinId}" has no drive "${driveId}".`);
       }
-      // Frozen once: failing again keeps the commands of the first failure.
-      if (fault === "unresponsive" && !openPantin.frozenDriveCommands.has(driveId)) {
-        const commands = openPantin.driveCommands.get(driveId) ?? {};
-        openPantin.frozenDriveCommands.set(driveId, commands);
-      } else if (fault === "none") {
-        openPantin.frozenDriveCommands.delete(driveId);
+      if (fault === "unresponsive") {
+        openPantin.unresponsiveDriveIds.add(driveId);
+      } else {
+        openPantin.unresponsiveDriveIds.delete(driveId);
       }
       return faultsOf(openPantin);
     },

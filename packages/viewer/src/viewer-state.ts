@@ -1,4 +1,5 @@
 import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
+import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
@@ -62,6 +63,8 @@ export interface ViewerState {
   // core reported last.
   drivePanelOpen: boolean;
   driveForm: DriveFormState | null;
+  // The actuator form of the same panel (ADR 0028).
+  actuatorForm: ActuatorFormState | null;
   // The sensor form of the same panel (ADR 0023).
   sensorForm: SensorFormState | null;
   faults: FaultsResponse;
@@ -98,6 +101,7 @@ export function initialViewerState(language: Language): ViewerState {
     // Shown from the start: the panel is where drives are wired (ADR 0022).
     drivePanelOpen: true,
     driveForm: null,
+    actuatorForm: null,
     sensorForm: null,
     faults: NO_FAULTS,
   };
@@ -128,6 +132,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     driveForm: null,
+    actuatorForm: null,
     sensorForm: null,
     faults: NO_FAULTS,
   };

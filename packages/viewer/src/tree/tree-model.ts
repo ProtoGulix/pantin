@@ -1,10 +1,10 @@
 import type { Assembly, Body, Joint, PantinResponse } from "@pantin/protocol";
+import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import {
   type AssemblyDisplay,
   isAssemblyHidden,
   NO_ASSEMBLY_DISPLAY,
 } from "../assembly-display.ts";
-import { driveOfJoint } from "../drives/drive-form.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
@@ -33,8 +33,8 @@ export type TreeIcon =
   | "source-node";
 
 interface JointWiring {
-  // Its drive, if any: a joint has one at most.
-  driveId: string | null;
+  // Its actuator, if any: a joint has one at most.
+  actuatorId: string | null;
   // The sensors watching it, in document order.
   sensorIds: readonly string[];
 }
@@ -51,7 +51,7 @@ export interface TreeNode {
   renamable: boolean;
   // Only assemblies can be hidden in the 3D view: an eye button, not text.
   visibility: "shown" | "hidden" | null;
-  // A joint a drive moves or a sensor watches: a bolt or a sensor mark at the
+  // A joint an actuator moves or a sensor watches: a bolt or a sensor mark at the
   // end of its row, like the eye (ADR 0022, ADR 0023); null for other nodes.
   wiring: JointWiring | null;
   // What an icon says (an assembly hidden, a joint driven or watched), for screen readers
@@ -119,14 +119,14 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
   };
 }
 
-// A joint a drive moves gets a bolt at the end of its row, a watched joint a
-// sensor mark, and both say which drive or sensors in words (ADR 0022, ADR
+// A joint an actuator moves gets a bolt at the end of its row, a watched joint a
+// sensor mark, and both say which actuator or sensors in words (ADR 0028, ADR
 // 0023): the icons alone would say nothing to a screen reader.
 function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): TreeNode {
-  const drive = driveOfJoint(pantin.document, joint.id);
+  const actuator = actuatorOfJoint(pantin.document, joint.id);
   const sensors = sensorsOfJoint(pantin.document, joint.id);
   const states = [
-    drive === undefined ? null : translate("tree.driven", { name: drive.name }),
+    actuator === undefined ? null : translate("tree.driven", { name: actuator.name }),
     sensors.length === 0
       ? null
       : translate("tree.watched", { names: sensors.map((sensor) => sensor.name).join(", ") }),
@@ -140,7 +140,7 @@ function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): 
     muted: false,
     renamable: false,
     visibility: null,
-    wiring: { driveId: drive?.id ?? null, sensorIds: sensors.map((sensor) => sensor.id) },
+    wiring: { actuatorId: actuator?.id ?? null, sensorIds: sensors.map((sensor) => sensor.id) },
     stateLabel: states.length === 0 ? null : states.join(" · "),
     children: [],
   };

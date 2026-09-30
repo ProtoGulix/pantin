@@ -23,6 +23,8 @@ export const JointIdSchema = safeIdSchema();
 export type JointId = z.infer<typeof JointIdSchema>;
 export const DriveIdSchema = safeIdSchema();
 export type DriveId = z.infer<typeof DriveIdSchema>;
+export const ActuatorIdSchema = safeIdSchema();
+export type ActuatorId = z.infer<typeof ActuatorIdSchema>;
 export const SensorIdSchema = safeIdSchema();
 export type SensorId = z.infer<typeof SensorIdSchema>;
 

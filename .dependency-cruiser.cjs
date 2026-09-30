@@ -25,7 +25,7 @@ module.exports = {
       to: {
         path: "^packages/(?!protocol/)|^@pantin/(?!protocol$)",
         pathNot:
-          "^packages/(drive|actuator|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(next-schemas|ports)\\.ts$",
+          "^packages/(drive|actuator|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(schemas|ports)\\.ts$",
       },
     },
     {
@@ -41,7 +41,7 @@ module.exports = {
       severity: "error",
       from: { path: "^packages/viewer/" },
       to: {
-        path: "^packages/drive-types/src/(behaviours|next-behaviours|[^/]*behaviour-[a-z-]*common|[^/]+/behaviour)\\.ts$",
+        path: "^packages/drive-types/src/(behaviours|[^/]*behaviour-[a-z-]*common|[^/]+/behaviour)\\.ts$",
       },
     },
     {
@@ -49,7 +49,7 @@ module.exports = {
       comment: "The protocol imports the schemas: they must never reach the behaviours (ADR 0022).",
       severity: "error",
       from: {
-        path: "^packages/drive-types/src/(schemas|next-schemas|schema-common|ports|[^/]+/schema)\\.ts$",
+        path: "^packages/drive-types/src/(schemas|schema-common|ports|[^/]+/schema)\\.ts$",
       },
       // Through any chain of imports, not only a direct one.
       to: { path: "behaviour", reachable: true },
@@ -68,12 +68,12 @@ module.exports = {
     {
       name: "actuator-types-tests-import-only-drive-schemas",
       comment:
-        "Tests may also read the drive port declarations (next-schemas) to check default feeds, never a behaviour (ADR 0028).",
+        "Tests may also read the drive port declarations (schemas) to check default feeds, never a behaviour (ADR 0028).",
       severity: "error",
       from: { path: "^packages/actuator-types/.*\\.test\\.ts$" },
       to: {
         path: "^packages/(?!actuator-types/)|^@pantin/",
-        pathNot: "^packages/drive-types/src/(ports|next-schemas)\\.ts$",
+        pathNot: "^packages/drive-types/src/(ports|schemas)\\.ts$",
       },
     },
     {

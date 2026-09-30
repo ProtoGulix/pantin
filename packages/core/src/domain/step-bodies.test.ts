@@ -36,6 +36,7 @@ describe("newAssembly", () => {
     bodies: [],
     joints: [],
     drives: [],
+    actuators: [],
     sensors: [],
   };
 

@@ -47,6 +47,7 @@ const PRESS: PantinDocument = {
     },
   ],
   drives: [],
+  actuators: [],
   sensors: [],
 };
 
@@ -66,9 +67,7 @@ describe("sensor rules", () => {
     const withDrive = addDriveToDocument(PRESS, {
       name: "Tige 2",
       assembly: "pince",
-      joints: ["tige"],
-      type: "double_acting_cylinder",
-      speed: 0.2,
+      type: "valve_5_3_closed",
     }).document;
     const { sensor } = addSensorToDocument(withDrive, limitSwitch());
     expect([sensor.id, sensor.tagKey]).toEqual(["tige", "tige-3"]);
