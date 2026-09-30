@@ -1,3 +1,4 @@
+import type { DriveRuntime } from "@pantin/protocol";
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
 import {
   createPanelIntents,
@@ -36,6 +37,7 @@ interface Screen {
   render(view: PanelView, intents: PanelIntents): void;
   showJointPositions(positions: ReadonlyMap<string, number>): void;
   showTagValues(values: ReadonlyMap<string, number>): void;
+  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void;
 }
 
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
@@ -67,6 +69,7 @@ function createScreen(): Screen {
     },
     showJointPositions: (positions) => sidePanel.showJointPositions(positions),
     showTagValues: (values) => drivePanel.showTagValues(values),
+    showDriveRuntime: (runtime) => drivePanel.showDriveRuntime(runtime),
   };
 }
 
@@ -113,6 +116,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
       },
       showJointPositions: (positions) => screen.showJointPositions(positions),
       showTagValues: (values) => screen.showTagValues(values),
+      showDriveRuntime: (runtime) => screen.showDriveRuntime(runtime),
       viewport: () => {
         if (viewport === null) {
           throw new Error("The viewport is used before it was created.");

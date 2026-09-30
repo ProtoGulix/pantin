@@ -18,6 +18,7 @@ export function testStore(api: Partial<PantinApiClient>): ViewerStore {
       renderPanel: () => undefined,
       showJointPositions: () => undefined,
       showTagValues: () => undefined,
+      showDriveRuntime: () => undefined,
       viewport: () => silent<Viewport>(),
       poseStream: { follow: () => undefined },
       storeLanguage: () => undefined,

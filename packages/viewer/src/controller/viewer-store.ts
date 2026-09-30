@@ -1,4 +1,4 @@
-import type { JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
+import type { DriveRuntime, JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds, selectedBodyIds } from "../assembly-display.ts";
 import type { Language } from "../i18n/translate.ts";
@@ -28,6 +28,8 @@ export interface StorePorts {
   showJointPositions(positions: ReadonlyMap<string, number>): void;
   // Tag values in the drives panel, written in place for the same reason.
   showTagValues(values: ReadonlyMap<string, number>): void;
+  // Drive diagnostics on the drive cards, in place too.
+  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -48,6 +50,9 @@ export class ViewerStore {
   tagValues: ReadonlyMap<string, number> = new Map();
   // One tag read at a time: a slow core must not pile requests up.
   readingTags = false;
+  // Latest port states and diagnostics of each drive, by drive id, read with
+  // the tags; the chain diagram will light its edges from it (ADR 0029 point 8).
+  driveRuntime: ReadonlyMap<string, DriveRuntime> = new Map();
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
 
@@ -61,6 +66,7 @@ export class ViewerStore {
     this.ports.renderPanel(buildPanelView(next));
     this.ports.showJointPositions(this.jointPositions);
     this.ports.showTagValues(this.tagValues);
+    this.ports.showDriveRuntime(this.driveRuntime);
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
@@ -91,6 +97,7 @@ export class ViewerStore {
     this.jointPositions = new Map();
     // Another Pantin: the previous one's tag values must not flip a bit here.
     this.tagValues = new Map();
+    this.driveRuntime = new Map();
     this.ports.poseStream.follow(pantinId);
   }
 
@@ -127,6 +134,12 @@ export class ViewerStore {
     this.tagValues = values;
     this.ports.showTagValues(values);
     this.ports.viewport().showTagStates(values);
+  }
+
+  /** Port states and diagnostics from the core, shown without a redraw. */
+  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void {
+    this.driveRuntime = runtime;
+    this.ports.showDriveRuntime(runtime);
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

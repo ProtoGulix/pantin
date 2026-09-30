@@ -16,6 +16,12 @@ export async function listTags(
   return {
     stepCount: openPantin.stepCount,
     tags: describeTags(openPantin.document, openPantin),
+    // Copies: the response must not alias state the next step replaces.
+    drives: openPantin.document.drives.map((drive) => ({
+      id: drive.id,
+      ports: { ...openPantin.drivePortStates.get(drive.id) },
+      diagnostics: [...(openPantin.driveDiagnostics.get(drive.id) ?? [])],
+    })),
   };
 }
 

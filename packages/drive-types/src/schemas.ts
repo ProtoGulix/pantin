@@ -88,6 +88,7 @@ export type {
   DriveTagType,
   DriveTypeLabels,
 } from "./schema-common.ts";
+export { DRIVE_DIAGNOSTICS } from "./schema-common.ts";
 
 export const DriveFieldsSchema = z.discriminatedUnion("type", [
   Valve32SingleFieldsSchema,

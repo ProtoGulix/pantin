@@ -3,6 +3,7 @@ import {
   DRIVE_PARAMETERS,
   DRIVE_TAGS,
   type Drive,
+  type DriveType,
   type JointCoordinateUnit,
   type PantinDocument,
   tagName,
@@ -41,6 +42,7 @@ export interface DriveTagView {
 export interface DriveCardView {
   id: string;
   name: string;
+  type: DriveType;
   typeLabel: string;
   tagPrefix: string;
   unresponsive: boolean;
@@ -79,6 +81,7 @@ function driveCard(document: PantinDocument, drive: Drive, state: ViewerState, t
   const card: DriveCardView = {
     id: drive.id,
     name: drive.name,
+    type: drive.type,
     typeLabel: labels.name,
     tagPrefix: `${drive.assembly}.${drive.tagKey}`,
     unresponsive: state.faults.unresponsiveDrives.includes(drive.id),

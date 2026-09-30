@@ -71,7 +71,7 @@ describe("refreshTagValues", () => {
     let reads = 0;
     const listTags = async () => {
       reads += 1;
-      return { stepCount: 0, tags: [] };
+      return { stepCount: 0, tags: [], drives: [] };
     };
     const store = storeWith({ listTags }, pantin);
     store.state = { ...store.state, drivePanelOpen: panelOpen };

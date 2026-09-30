@@ -1,3 +1,9 @@
+import {
+  AcPowerStateSchema,
+  PneumaticStateSchema,
+  ServoStateSchema,
+} from "@pantin/drive-types/ports";
+import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
 import { KEY_PATTERN_SOURCE } from "./ids.ts";
 
@@ -55,10 +61,29 @@ export const TagSchema = z.object({
 });
 export type Tag = z.infer<typeof TagSchema>;
 
+// What the last simulation step made of one drive (ADR 0028 points 2 and 5,
+// ADR 0029 point 8): runtime state, read only, never saved. A drive not
+// stepped yet since the Pantin was opened has no ports and no diagnostics.
+// An unresponsive drive keeps the ports and diagnostics it had before the
+// fault: they are what its actuators still read. The ports are keyed by the
+// port names of the drive type.
+const PortStateSchema = z.union([PneumaticStateSchema, AcPowerStateSchema, ServoStateSchema]);
+
+export const DriveDiagnosticSchema = z.enum(DRIVE_DIAGNOSTICS);
+
+export const DriveRuntimeSchema = z.object({
+  id: z.string(),
+  ports: z.record(z.string(), PortStateSchema),
+  diagnostics: z.array(DriveDiagnosticSchema),
+});
+export type DriveRuntime = z.infer<typeof DriveRuntimeSchema>;
+
 export const TagListResponseSchema = z.object({
   // Simulation steps run since the Pantin was opened.
   stepCount: z.number().int().nonnegative(),
   tags: z.array(TagSchema),
+  // One entry per drive of the Pantin, in document order, read with the tags.
+  drives: z.array(DriveRuntimeSchema),
 });
 export type TagListResponse = z.infer<typeof TagListResponseSchema>;
 

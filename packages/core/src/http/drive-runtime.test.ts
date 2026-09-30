@@ -119,3 +119,48 @@ describe("drive and actuator route status codes", () => {
     expect(updated.json).toMatchObject({ actuator: { feed: swapped } });
   });
 });
+
+describe("drive runtime in the tag read (ADR 0029 point 8)", () => {
+  async function valveRuntime() {
+    const answer = TagListResponseSchema.parse(
+      (await sendRaw(axis.server, "GET", "/api/pantins/axis/tags")).json,
+    );
+    return answer.drives.find((drive) => drive.id === "valve");
+  }
+
+  it("lists a drive not stepped yet without ports or diagnostics", async () => {
+    expect(await valveRuntime()).toEqual({ id: "valve", ports: {}, diagnostics: [] });
+  });
+
+  it("reports the port states of a valve after coil_14", async () => {
+    await axis.writeTag("carriage.valve.coil_14", 1);
+    axis.runSeconds(0.05);
+    expect(await valveRuntime()).toEqual({
+      id: "valve",
+      ports: { port_2: "exhaust", port_4: "pressure" },
+      diagnostics: [],
+    });
+  });
+
+  it("reports conflicting commands while both coils are set, and drops them with a coil", async () => {
+    await axis.writeTag("carriage.valve.coil_14", 1);
+    await axis.writeTag("carriage.valve.coil_12", 1);
+    axis.runSeconds(0.05);
+    expect((await valveRuntime())?.diagnostics).toEqual(["conflicting_commands"]);
+    await axis.writeTag("carriage.valve.coil_12", 0);
+    axis.runSeconds(0.05);
+    expect((await valveRuntime())?.diagnostics).toEqual([]);
+  });
+
+  it("keeps the last ports and diagnostics of an unresponsive drive", async () => {
+    await axis.writeTag("carriage.valve.coil_14", 1);
+    await axis.writeTag("carriage.valve.coil_12", 1);
+    axis.runSeconds(0.05);
+    const before = await valveRuntime();
+    await request("PUT", "/drives/valve/fault", { fault: "unresponsive" });
+    await axis.writeTag("carriage.valve.coil_12", 0);
+    axis.runSeconds(0.05);
+    expect(await valveRuntime()).toEqual(before);
+    expect(before?.diagnostics).toEqual(["conflicting_commands"]);
+  });
+});

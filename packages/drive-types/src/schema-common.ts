@@ -37,8 +37,9 @@ export interface DriveParameter {
 }
 
 /** Conditions a behaviour detects in the commands, as opposed to injected faults (ADR 0028 point 5). */
-// Extend the union with each new diagnostic.
-export type DriveDiagnostic = "conflicting_commands";
+// Extend the list with each new diagnostic: the protocol's schema follows it.
+export const DRIVE_DIAGNOSTICS = ["conflicting_commands"] as const;
+export type DriveDiagnostic = (typeof DRIVE_DIAGNOSTICS)[number];
 
 export type DriveLanguage = "en" | "fr";
 

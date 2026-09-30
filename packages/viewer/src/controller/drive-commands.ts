@@ -1,5 +1,6 @@
 import { driveTagUnit } from "../drives/drive-tags.ts";
 import { parseNumber } from "../joints/joint-form.ts";
+import { runtimeByDriveId } from "../panel/drive-diagnostics.ts";
 import { coordinateFromDisplay } from "../units.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -82,5 +83,6 @@ export async function refreshTagValues(store: ViewerStore): Promise<void> {
   // An answer for a Pantin closed meanwhile is dropped.
   if (answer !== null && store.state.openPantin?.id === open.id) {
     store.showTagValues(new Map(answer.tags.map((tag) => [tag.name, tag.value])));
+    store.showDriveRuntime(runtimeByDriveId(answer.drives));
   }
 }

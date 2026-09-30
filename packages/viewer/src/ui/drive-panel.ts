@@ -1,4 +1,6 @@
+import type { DriveRuntime, DriveType } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { type DiagnosticLine, nextDiagnosticUpdate } from "../panel/drive-diagnostics.ts";
 import type {
   DriveCardView,
   DriveFormView,
@@ -111,6 +113,11 @@ function renderCard(card: DriveCardView, t: Translate, intents: PanelIntents): H
           text: `${card.typeLabel} · ${card.tagPrefix}`,
         }),
       ]),
+      // Filled by showDriveRuntime, which runs after every redraw and every tag read.
+      element("div", {
+        className: "drive-panel__diagnostics",
+        attributes: { "data-drive-diagnostics": card.id, role: "status" },
+      }),
       element("div", { className: "drive-panel__actions" }, [
         button(t("drives.edit"), "button", () => intents.openDriveForm(card.id)),
         button(t("drives.delete"), "button", () => intents.deleteDrive(card.id)),
@@ -124,9 +131,19 @@ function renderCard(card: DriveCardView, t: Translate, intents: PanelIntents): H
   );
 }
 
+function warningLine(line: DiagnosticLine): HTMLElement {
+  return element("p", { className: "drive-panel__warning", attributes: { title: line.id } }, [
+    // The glyph is a second cue next to the colour; the text says it all for screen readers.
+    element("span", { text: "\u26A0", attributes: { "aria-hidden": "true" } }),
+    element("span", { text: line.text }),
+  ]);
+}
+
 export class DrivePanel {
   private readonly root: HTMLElement;
   private translate: Translate | null = null;
+  // The type of each drawn drive, from the view rather than read back from the page.
+  private driveTypes: ReadonlyMap<string, DriveType> = new Map();
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -134,6 +151,7 @@ export class DrivePanel {
 
   render(view: DrivePanelView, t: Translate, intents: PanelIntents): void {
     this.translate = t;
+    this.driveTypes = new Map(view.drives.map((card) => [card.id, card.type]));
     this.root.hidden = !view.open;
     if (!view.open) {
       this.root.replaceChildren();
@@ -191,6 +209,31 @@ export class DrivePanel {
       const shown =
         unit === "metre" || unit === "radian" ? coordinateToDisplay(unit, value) : value;
       target.textContent = formatDisplayNumber(shown);
+    }
+  }
+
+  /** Each active diagnostic as a warning line on its drive's card; none once it clears. */
+  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void {
+    const t = this.translate;
+    if (t === null) {
+      return;
+    }
+    for (const target of this.root.querySelectorAll("[data-drive-diagnostics]")) {
+      const driveId = target.getAttribute("data-drive-diagnostics") ?? "";
+      const driveType = this.driveTypes.get(driveId);
+      if (driveType === undefined) {
+        continue;
+      }
+      const update = nextDiagnosticUpdate(
+        target.getAttribute("data-shown") ?? "",
+        runtime.get(driveId)?.diagnostics ?? [],
+        driveType,
+        t,
+      );
+      if (update !== null) {
+        target.setAttribute("data-shown", update.signature);
+        target.replaceChildren(...update.lines.map(warningLine));
+      }
     }
   }
 }
