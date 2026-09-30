@@ -39,12 +39,18 @@ function migrateV4ToV5(document: JsonObject): JsonObject {
   return { ...document, schema_version: 5, drives: [] };
 }
 
+// Version 6 adds joint sensors (ADR 0023): existing documents have none.
+function migrateV5ToV6(document: JsonObject): JsonObject {
+  return { ...document, schema_version: 6, sensors: [] };
+}
+
 // Key: the version a step starts from.
 const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject> = new Map([
   [1, migrateV1ToV2],
   [2, migrateV2ToV3],
   [3, migrateV3ToV4],
   [4, migrateV4ToV5],
+  [5, migrateV5ToV6],
 ]);
 
 function isJsonObject(value: unknown): value is JsonObject {

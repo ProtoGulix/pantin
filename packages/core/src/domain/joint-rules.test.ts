@@ -29,6 +29,7 @@ const EMPTY: PantinDocument = {
   bodies: ["a", "b", "c"].map(body),
   joints: [],
   drives: [],
+  sensors: [],
 };
 
 function link(parent: string, child: string, name = "Link"): CreateJointRequest {

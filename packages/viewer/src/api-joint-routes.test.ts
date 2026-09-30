@@ -61,6 +61,7 @@ describe("PantinApiClient joints", () => {
         bodies: [],
         joints: [],
         drives: [],
+        sensors: [],
       },
     };
     const { fetchFunction, requests } = fakeFetch(jsonResponse(pantin));

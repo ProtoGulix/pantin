@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 5
+      "const": 6
     },
     "name": {
       "type": "string",
@@ -739,9 +739,109 @@
           }
         ]
       }
+    },
+    "sensors": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joint": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "type": {
+                "type": "string",
+                "const": "position_switch"
+              },
+              "range": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "normallyClosed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "joint",
+              "type",
+              "range",
+              "normallyClosed"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "joint": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "type": {
+                "type": "string",
+                "const": "encoder"
+              },
+              "pulsesPerUnit": {
+                "type": "number"
+              }
+            },
+            "required": ["id", "tagKey", "name", "assembly", "joint", "type", "pulsesPerUnit"],
+            "additionalProperties": false
+          }
+        ]
+      }
     }
   },
-  "required": ["schema_version", "name", "assemblies", "bodies", "joints", "drives"],
+  "required": ["schema_version", "name", "assemblies", "bodies", "joints", "drives", "sensors"],
   "additionalProperties": false,
   "title": "Pantin document (pantin.json)",
   "description": "Shape of a Pantin document. The joint tree, the assemblies and the tag keys follow further rules that only `pnpm pantin validate` checks."

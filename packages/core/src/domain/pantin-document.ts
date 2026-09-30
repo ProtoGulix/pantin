@@ -20,6 +20,7 @@ export function createPantinDocument(name: string): PantinDocument {
     bodies: [],
     joints: [],
     drives: [],
+    sensors: [],
   };
 }
 

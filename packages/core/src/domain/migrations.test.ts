@@ -23,6 +23,7 @@ const CURRENT_OF_V1 = {
   bodies: V1_DOCUMENT.bodies.map((body) => ({ ...body, assembly: "main" })),
   joints: [],
   drives: [],
+  sensors: [],
 };
 
 describe("migratePantinDocument", () => {
@@ -42,14 +43,22 @@ describe("migratePantinDocument", () => {
       ...CURRENT_OF_V1,
       joints: [{ ...joint, tagKey: "stroke" }],
       drives: [],
+      sensors: [],
     });
   });
 });
 
 describe("migratePantinDocument to version 5 (ADR 0022)", () => {
   it("adds an empty drive list", () => {
-    const { drives: _drives, ...v4 } = { ...CURRENT_OF_V1, schema_version: 4 };
+    const { drives: _drives, sensors: _sensors, ...v4 } = { ...CURRENT_OF_V1, schema_version: 4 };
     expect(migratePantinDocument(v4, "p")).toEqual(CURRENT_OF_V1);
+  });
+});
+
+describe("migratePantinDocument to version 6 (ADR 0023)", () => {
+  it("adds an empty sensor list", () => {
+    const { sensors: _sensors, ...v5 } = { ...CURRENT_OF_V1, schema_version: 5 };
+    expect(migratePantinDocument(v5, "p")).toEqual(CURRENT_OF_V1);
   });
 });
 
@@ -61,6 +70,7 @@ describe("migratePantinDocument on unusual input", () => {
       bodies: "x",
       joints: [7, { name: "j" }],
       drives: [],
+      sensors: [],
     };
     const migrated = migratePantinDocument(malformed, "p");
     expect(migrated).toMatchObject({ bodies: "x", joints: [7, { name: "j", tagKey: undefined }] });

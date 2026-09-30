@@ -51,6 +51,7 @@ const press = {
     joint("spin", "frame", "spindle", "continuous"),
   ],
   drives: [valve],
+  sensors: [],
 };
 
 function issuesOf(document: unknown): string[] {

@@ -15,6 +15,7 @@ const pantin = {
     bodies: [],
     joints: [],
     drives: [],
+    sensors: [],
   },
 };
 

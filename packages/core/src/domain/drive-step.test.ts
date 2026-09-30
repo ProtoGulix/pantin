@@ -55,6 +55,7 @@ const PRESS: PantinDocument = {
       speed: 0.2,
     },
   ],
+  sensors: [],
 };
 
 function state(changes: Partial<SimulationState> = {}): SimulationState {

@@ -231,6 +231,7 @@ describe("schema version 1 on disk", () => {
       bodies: [],
       joints: [],
       drives: [],
+      sensors: [],
     });
   });
 

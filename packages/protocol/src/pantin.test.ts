@@ -56,6 +56,7 @@ describe("PantinDocumentSchema", () => {
     ],
     joints: [],
     drives: [],
+    sensors: [],
   };
 
   it("accepts a complete document", () => {

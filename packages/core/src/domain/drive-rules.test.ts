@@ -46,6 +46,7 @@ const PRESS: PantinDocument = {
     },
   ],
   drives: [],
+  sensors: [],
 };
 
 function valve(name = "Tige", assembly = "pince"): CreateDriveRequest {

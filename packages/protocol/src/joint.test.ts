@@ -32,6 +32,7 @@ function documentWith(joints: unknown[], bodyIds = ["rail", "carriage", "tool"])
     bodies: bodyIds.map(body),
     joints,
     drives: [],
+    sensors: [],
   };
 }
 

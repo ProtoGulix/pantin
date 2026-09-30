@@ -21,6 +21,7 @@ function documentWith(bodies: Body[]): PantinDocument {
     bodies,
     joints: [],
     drives: [],
+    sensors: [],
   };
 }
 
