@@ -228,5 +228,6 @@
   "properties.group.drive": "Drive",
   "properties.drive": "Drive",
   "properties.driveCommands": "Commandes",
-  "properties.noDrive": "Aucun : clic droit sur la liaison pour en ajouter un"
+  "properties.noDrive": "Aucun : clic droit sur la liaison pour en ajouter un",
+  "tree.driven": "piloté par {name}"
 }

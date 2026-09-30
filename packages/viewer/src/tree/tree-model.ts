@@ -4,6 +4,7 @@ import {
   isAssemblyHidden,
   NO_ASSEMBLY_DISPLAY,
 } from "../assembly-display.ts";
+import { driveOfJoint } from "../drives/drive-form.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import {
@@ -28,6 +29,7 @@ export type TreeIcon =
   | "body-stl"
   | "body-step"
   | "joint"
+  | "joint-driven"
   | "source-node";
 
 export interface TreeNode {
@@ -42,7 +44,8 @@ export interface TreeNode {
   renamable: boolean;
   // Only assemblies can be hidden in the 3D view: an eye button, not text.
   visibility: "shown" | "hidden" | null;
-  // Read by screen readers only, since the eye is an icon ("hidden"), or null.
+  // What an icon says (an assembly hidden, a joint driven), for screen readers
+  // and as a tooltip; null when there is nothing to say.
   stateLabel: string | null;
   children: readonly TreeNode[];
 }
@@ -78,7 +81,7 @@ function bodyJointChildren(pantin: PantinResponse, body: Body, translate: Transl
     const role = joint.child === body.id ? "tree.jointRole.child" : "tree.jointRole.parent";
     return [
       {
-        ...jointNode(pantin.id, joint, translate),
+        ...jointNode(pantin, joint, translate),
         id: jointNodeId(pantin.id, joint.id, body.id),
         detail: translate(role, { type: translate(jointTypeLabelKey(joint.type)) }),
       },
@@ -104,17 +107,20 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
   };
 }
 
-function jointNode(pantinId: string, joint: Joint, translate: Translate): TreeNode {
+// A joint a drive moves gets its own icon, and says which drive in words
+// (ADR 0022): the icon alone would say nothing to a screen reader.
+function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): TreeNode {
+  const drive = driveOfJoint(pantin.document, joint.id);
   return {
-    id: jointNodeId(pantinId, joint.id),
+    id: jointNodeId(pantin.id, joint.id),
     kind: "joint",
-    icon: "joint",
+    icon: drive === undefined ? "joint" : "joint-driven",
     label: joint.name,
     detail: translate(jointTypeLabelKey(joint.type)),
     muted: false,
     renamable: false,
     visibility: null,
-    stateLabel: null,
+    stateLabel: drive === undefined ? null : translate("tree.driven", { name: drive.name }),
     children: [],
   };
 }
@@ -153,7 +159,7 @@ function assemblyNode(
     stateLabel: hidden ? translate("tree.hidden") : null,
     children: [
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
-      ...joints.map((joint) => jointNode(pantin.id, joint, translate)),
+      ...joints.map((joint) => jointNode(pantin, joint, translate)),
     ],
   };
 }
@@ -170,7 +176,7 @@ function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): 
     renamable: false,
     visibility: null,
     stateLabel: null,
-    children: joints.map((joint) => jointNode(pantin.id, joint, translate)),
+    children: joints.map((joint) => jointNode(pantin, joint, translate)),
   };
 }
 

@@ -228,5 +228,6 @@
   "properties.group.drive": "Drive",
   "properties.drive": "Drive",
   "properties.driveCommands": "Commands",
-  "properties.noDrive": "None: right-click the joint to add one"
+  "properties.noDrive": "None: right-click the joint to add one",
+  "tree.driven": "driven by {name}"
 }

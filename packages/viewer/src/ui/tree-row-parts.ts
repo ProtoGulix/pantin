@@ -19,9 +19,16 @@ export function chevron(row: TreeRow): HTMLElement {
   );
 }
 
+/** What the row's icons say, for screen readers only (the row's tooltip shows it). */
+export function stateText(row: TreeRow): HTMLElement | null {
+  return row.stateLabel === null
+    ? null
+    : element("span", { className: "visually-hidden", text: row.stateLabel });
+}
+
 // Not a focusable button: the tree is one tab stop, and the context menu
 // gives the keyboard the same choice. The icon is silent; the row's state
-// label tells screen readers that the assembly is hidden.
+// text tells screen readers that the assembly is hidden.
 export function visibilityEye(row: TreeRow, translate: Translate): HTMLElement | null {
   if (row.visibility === null) {
     return null;
@@ -38,8 +45,5 @@ export function visibilityEye(row: TreeRow, translate: Translate): HTMLElement |
       },
       [icon(hidden ? "eye-off" : "eye")],
     ),
-    row.stateLabel === null
-      ? null
-      : element("span", { className: "visually-hidden", text: row.stateLabel }),
   ]);
 }

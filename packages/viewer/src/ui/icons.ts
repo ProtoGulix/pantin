@@ -35,6 +35,9 @@ const PATHS: Readonly<Record<IconName, string>> = {
   "body-step":
     "M3 4.5c0-1.1 2.2-2 5-2s5 .9 5 2v7c0 1.1-2.2 2-5 2s-5-.9-5-2Z M3 4.5c0 1.1 2.2 2 5 2s5-.9 5-2",
   joint: "M6 5a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M14 11a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M5.4 6.3 10.6 9.7",
+  // The joint with a lightning bolt in its free corner: a drive moves it.
+  "joint-driven":
+    "M6 5a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M14 11a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M5.4 6.3 10.6 9.7 M12.5 1 10 4.5h3L10.5 8",
   "source-node": "M2.5 8h3.5 M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   plus: "M8 3v10 M3 8h10",
   back: "M13 8H3.5 M7.5 4 3.5 8l4 4",

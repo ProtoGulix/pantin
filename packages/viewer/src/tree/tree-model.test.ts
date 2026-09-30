@@ -253,3 +253,33 @@ describe("hidden assemblies in the tree", () => {
     expect(findNode(tree, bodyNodeId("press", "rail"))?.visibility).toBeNull();
   });
 });
+
+describe("driven joints in the tree (ADR 0022)", () => {
+  it("gives a driven joint its own icon and says which drive moves it", () => {
+    const carriage = stepBody("carriage", "Carriage");
+    const pantin = pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]);
+    const valve = {
+      id: "valve",
+      tagKey: "valve",
+      name: "Valve",
+      assembly: "main",
+      joints: ["hinge"],
+      type: "double_acting_cylinder" as const,
+      speed: 1,
+    };
+    const tree = buildTree(
+      { openPantin: { ...pantin, document: { ...pantin.document, drives: [valve] } } },
+      translate,
+    );
+    expect(findNode(tree, jointNodeId("press", "hinge"))).toMatchObject({
+      icon: "joint-driven",
+      stateLabel: "piloté par Valve",
+    });
+    // Under its body too, where the same joint is listed again.
+    expect(findNode(tree, jointNodeId("press", "hinge", "rail"))?.icon).toBe("joint-driven");
+    expect(findNode(tree, jointNodeId("press", "slide"))).toMatchObject({
+      icon: "joint",
+      stateLabel: null,
+    });
+  });
+});

@@ -6,7 +6,7 @@ import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { listenToDrags } from "./tree-drag.ts";
-import { chevron, visibilityEye } from "./tree-row-parts.ts";
+import { chevron, stateText, visibilityEye } from "./tree-row-parts.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -93,6 +93,9 @@ function rowAttributes(row: TreeRow, index: number): Record<string, string> {
   if (row.expandable) {
     attributes["aria-expanded"] = String(row.expanded);
   }
+  if (row.stateLabel !== null) {
+    attributes.title = row.stateLabel;
+  }
   // A body can be dropped on another assembly (tree-drag.ts); not while its
   // name is edited, where a drag would select text.
   if (isDraggableNode(row.id) && !row.renaming) {
@@ -114,6 +117,7 @@ function rowElement(
     chevron(row),
     icon(row.icon, "icon tree-row__icon"),
     labelOrRenameInput(row, translate, intents, tree),
+    stateText(row),
     row.detail === null
       ? null
       : element("span", { className: "tree-row__detail", text: row.detail }),
