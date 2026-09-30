@@ -8,6 +8,7 @@ import {
   type Sensor,
   type SensorType,
 } from "@pantin/protocol";
+import { SensorFieldsSchema } from "@pantin/sensor-types/schemas";
 import { movableJoints } from "../drives/drive-form.ts";
 import { schemaMessage } from "../joints/joint-form.ts";
 import { defaultTexts, parameterKeys, parameterTexts, parameterValue } from "./parameter-texts.ts";
@@ -102,6 +103,15 @@ export function withSensorFormValue(
   return { ...form, values: { ...form.values, [key]: text } };
 }
 
+function siParameters(form: SensorFormState, unit: JointCoordinateUnit) {
+  return Object.fromEntries(
+    SENSOR_PARAMETERS[form.type].map((parameter) => [
+      parameter.field,
+      parameterValue(parameter, form.values, unit),
+    ]),
+  );
+}
+
 export type SensorRequestResult =
   | { ok: true; request: CreateSensorRequest }
   // The schema's own message, in English.
@@ -113,12 +123,7 @@ export function buildSensorRequest(
   document: PantinDocument,
 ): SensorRequestResult {
   const unit = sensorCoordinateUnit(document, form.joint);
-  const parameters = Object.fromEntries(
-    SENSOR_PARAMETERS[form.type].map((parameter) => [
-      parameter.field,
-      parameterValue(parameter, form.values, unit),
-    ]),
-  );
+  const parameters = siParameters(form, unit);
   const parsed = CreateSensorRequestSchema.safeParse({
     type: form.type,
     name: form.name,
@@ -129,4 +134,11 @@ export function buildSensorRequest(
   return parsed.success
     ? { ok: true, request: parsed.data }
     : { ok: false, message: schemaMessage(parsed.error) };
+}
+
+/** The typed parameters as the type's fields, for the diagram; null while one does not parse. */
+export function sensorFieldsOf(form: SensorFormState, unit: JointCoordinateUnit) {
+  const parameters = siParameters(form, unit);
+  const parsed = SensorFieldsSchema.safeParse({ type: form.type, ...parameters });
+  return parsed.success ? parsed.data : null;
 }

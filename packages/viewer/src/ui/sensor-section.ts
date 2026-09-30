@@ -7,6 +7,7 @@ import type {
 import { button, element, selectInput } from "./dom.ts";
 import { checkbox, field, formInput, valueSpan } from "./panel-fields.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { renderSwitchDiagram } from "./switch-diagram.ts";
 
 // The sensors section of the right-hand panel (ADR 0023): wiring sensors to
 // joints, and reading their tags as a PLC would. Their values are written in
@@ -54,6 +55,7 @@ function renderForm(form: SensorFormView, t: Translate, intents: PanelIntents): 
         form.assembly,
         intents.changeSensorAssembly,
       ),
+      form.diagram === null ? null : renderSwitchDiagram(form.diagram),
       ...renderInputs(form, intents),
       element("div", { className: "inline-form__actions" }, [
         button(t("joint.form.cancel"), "button", intents.cancelSensorForm),

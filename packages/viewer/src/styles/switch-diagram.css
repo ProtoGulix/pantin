@@ -1,0 +1,67 @@
+/* The dimensioned diagram of a switch in the sensor form (ADR 0026). Tokens in base.css. */
+.switch-diagram__svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.switch-diagram__bar {
+  fill: var(--surface-3);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.switch-diagram__hold {
+  fill: var(--accent);
+  fill-opacity: 0.3;
+}
+
+.switch-diagram__on {
+  fill: var(--accent);
+  fill-opacity: 0.75;
+}
+
+.switch-diagram__zone-arrow {
+  fill: var(--accent);
+}
+
+.switch-diagram__symbol {
+  fill: var(--text);
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.switch-diagram__symbol path {
+  fill: none;
+}
+
+.switch-diagram__symbol--refused {
+  fill: var(--danger);
+  stroke: var(--danger);
+}
+
+.switch-diagram__extension {
+  stroke: var(--text-faint);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 2;
+}
+
+.switch-diagram__dimension {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+
+.switch-diagram__arrow {
+  fill: var(--text-muted);
+}
+
+.switch-diagram__text {
+  fill: var(--text);
+  font: 9px var(--font-ui);
+}
+
+.switch-diagram__problem {
+  margin: 2px 0 0;
+  color: var(--danger);
+}

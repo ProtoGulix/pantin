@@ -10,13 +10,18 @@ import {
 import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
 import { movableJoints } from "../drives/drive-form.ts";
 import type { Translate } from "../i18n/translate.ts";
-import { displayUnitLabel } from "../joints/joint-parameters.ts";
+import { displayUnitLabel, strokeOf } from "../joints/joint-parameters.ts";
 import { parameterKeys } from "../sensors/parameter-texts.ts";
 import {
   SENSOR_TYPES,
   type SensorFormState,
   sensorCoordinateUnit,
+  sensorFieldsOf,
 } from "../sensors/sensor-form.ts";
+import {
+  buildSwitchDiagramModel,
+  type SwitchDiagramModel,
+} from "../sensors/switch-diagram-model.ts";
 import { displayUnitOf } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
@@ -68,6 +73,8 @@ export interface SensorFormView {
   joint: string;
   jointOptions: { value: string; label: string }[];
   inputs: SensorInputView[];
+  // The switch's dimensioned diagram (ADR 0026); null for another type or while a field does not parse.
+  diagram: SwitchDiagramModel | null;
   canSubmit: boolean;
 }
 
@@ -152,6 +159,28 @@ function formInputs(
   });
 }
 
+function formDiagram(
+  form: SensorFormState,
+  state: ViewerState,
+  document: PantinDocument,
+  t: Translate,
+) {
+  const joint = document.joints.find((candidate) => candidate.id === form.joint);
+  const unit = sensorCoordinateUnit(document, form.joint);
+  const display = displayUnitOf(unit);
+  const fields = sensorFieldsOf(form, unit);
+  if (joint === undefined || display === null || fields === null) {
+    return null;
+  }
+  return buildSwitchDiagramModel({
+    fields,
+    stroke: strokeOf(joint),
+    labels: SENSOR_LABELS[form.type][state.language],
+    unit,
+    unitSymbol: displayUnitLabel(display, t),
+  });
+}
+
 function formView(
   form: SensorFormState,
   state: ViewerState,
@@ -172,6 +201,7 @@ function formView(
     joint: form.joint,
     jointOptions: movableJoints(document).map(({ id, name }) => ({ value: id, label: name })),
     inputs: formInputs(form, state, document, t),
+    diagram: formDiagram(form, state, document, t),
     canSubmit: state.pendingRequestCount === 0,
   };
   return view;
