@@ -1,13 +1,13 @@
 import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
-import type { DeviceRef } from "./device-selection.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
+import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
 import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { selectionExists, withRevealedNode } from "./tree/tree-state.ts";
@@ -38,11 +38,7 @@ export interface ViewerState {
   pantins: readonly PantinSummary[];
   openPantin: PantinResponse | null;
   expandedNodeIds: ReadonlySet<string>;
-  selectedNodeId: string | null;
-  // A drive, an actuator or a sensor selected, which has no tree row
-  // (ADR 0030): then selectedNodeId is null, and the other way round. The two
-  // fields become one union when the left panel goes (ADR 0030 point 2, step 2).
-  selectedDevice: DeviceRef | null;
+  selection: Selection | null;
   renamingNodeId: string | null;
   collapsedPropertyGroups: ReadonlySet<string>;
   // Joints whose axis the user chose to type as components in the properties
@@ -107,8 +103,7 @@ export function initialViewerState(language: Language): ViewerState {
     pantins: [],
     openPantin: null,
     expandedNodeIds: new Set(),
-    selectedNodeId: null,
-    selectedDevice: null,
+    selection: null,
     renamingNodeId: null,
     collapsedPropertyGroups: new Set(),
     customAxisJointIds: new Set(),
@@ -153,8 +148,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
       ),
       folderNodeId(openPantin.id, "betweenAssemblies"),
     ]),
-    selectedNodeId: pantinNodeId(openPantin.id),
-    selectedDevice: null,
+    selection: nodeSelection(pantinNodeId(openPantin.id)),
     renamingNodeId: null,
     contextMenu: null,
     pendingImport: null,
@@ -187,7 +181,7 @@ export function withOpenPantin(state: ViewerState, openPantin: PantinResponse): 
   const next: ViewerState = { ...state, openPantin };
   return selectionExists(next)
     ? next
-    : { ...next, selectedNodeId: pantinNodeId(openPantin.id), selectedDevice: null };
+    : { ...next, selection: nodeSelection(pantinNodeId(openPantin.id)) };
 }
 
 export function withRequestStarted(state: ViewerState): ViewerState {

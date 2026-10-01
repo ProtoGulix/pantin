@@ -6,10 +6,6 @@ const PANEL_WIDTH_MINIMUM = 220;
 // The 3D view always keeps at least this width.
 const VIEWPORT_WIDTH_MINIMUM = 320;
 
-export const TREE_FRACTION_DEFAULT = 0.6;
-const TREE_FRACTION_MINIMUM = 0.15;
-const TREE_FRACTION_MAXIMUM = 0.85;
-
 // Keyboard step of a splitter, in pixels.
 export const SPLITTER_KEYBOARD_STEP = 16;
 
@@ -19,13 +15,6 @@ export function clampPanelWidth(width: number, windowWidth: number): number {
     return Math.min(PANEL_WIDTH_DEFAULT, maximum);
   }
   return Math.round(Math.min(Math.max(width, PANEL_WIDTH_MINIMUM), maximum));
-}
-
-export function clampTreeFraction(fraction: number): number {
-  if (!Number.isFinite(fraction)) {
-    return TREE_FRACTION_DEFAULT;
-  }
-  return Math.min(Math.max(fraction, TREE_FRACTION_MINIMUM), TREE_FRACTION_MAXIMUM);
 }
 
 export function parseStoredNumber(text: string | null, fallback: number): number {

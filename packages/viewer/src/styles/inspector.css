@@ -14,6 +14,13 @@
   display: none;
 }
 
+/* The two redrawn parts, either side of the joint slider. */
+.inspector__part {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .inspector__head,
 .inspector__create {
   display: flex;
@@ -98,4 +105,10 @@
   gap: 4px;
   align-items: center;
   font-size: 12px;
+}
+
+/* In the inspector the slider has the panel's padding already. */
+.inspector .joint-slider {
+  padding: 0;
+  border-bottom: 0;
 }

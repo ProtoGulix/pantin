@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { pantinResponse, pantinSummaries, stepBody } from "./test-fixtures.ts";
+import { nodeSelection, selectedNodeIdOf } from "./selection.ts";
+import { pantinResponse, pantinSummaries, stepBody, withNode } from "./test-fixtures.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
@@ -7,7 +8,7 @@ import {
   pantinNodeId,
   sourceNodeNodeId,
 } from "./tree/node-ids.ts";
-import { nodeExists, withExpanded, withRevealedNode, withSelectedNode } from "./tree/tree-state.ts";
+import { nodeExists, withExpanded, withRevealedNode } from "./tree/tree-state.ts";
 import {
   initialViewerState,
   type ViewerState,
@@ -29,21 +30,21 @@ describe("withOpenPantin", () => {
       assemblyNodeId("press", "main"),
       folderNodeId("press", "betweenAssemblies"),
     ]);
-    expect(state.selectedNodeId).toBe(pantinNodeId("press"));
+    expect(selectedNodeIdOf(state.selection)).toBe(pantinNodeId("press"));
   });
 
   it("keeps a selection that still exists after a refresh", () => {
     const opened = withOpenPantin(listed(), pantinResponse(false));
-    const selected = withSelectedNode(opened, bodyNodeId("press", "rail"));
-    expect(withOpenPantin(selected, pantinResponse(true)).selectedNodeId).toBe(
+    const selected = withNode(opened, bodyNodeId("press", "rail"));
+    expect(selectedNodeIdOf(withOpenPantin(selected, pantinResponse(true)).selection)).toBe(
       bodyNodeId("press", "rail"),
     );
   });
 
   it("moves the selection to the Pantin when its body disappeared", () => {
     const opened = withOpenPantin(listed(), pantinResponse(false));
-    const selected = withSelectedNode(opened, bodyNodeId("press", "rail"));
-    expect(withOpenPantin(selected, pantinResponse(false, [])).selectedNodeId).toBe(
+    const selected = withNode(opened, bodyNodeId("press", "rail"));
+    expect(selectedNodeIdOf(withOpenPantin(selected, pantinResponse(false, [])).selection)).toBe(
       pantinNodeId("press"),
     );
   });
@@ -75,12 +76,12 @@ describe("tree state", () => {
       assemblyNodeId("press", "main"),
       bodyNodeId("press", "rail"),
     ]);
-    expect(revealed.selectedNodeId).toBe(sourceNodeNodeId("press", "rail", 0));
+    expect(selectedNodeIdOf(revealed.selection)).toBe(sourceNodeNodeId("press", "rail", 0));
   });
 
   it("ends a rename when the selection changes", () => {
     const renaming = { ...opened, renamingNodeId: pantinNodeId("press") };
-    expect(withSelectedNode(renaming, pantinNodeId("robot")).renamingNodeId).toBeNull();
+    expect(withNode(renaming, pantinNodeId("robot")).renamingNodeId).toBeNull();
   });
 });
 
@@ -97,7 +98,7 @@ describe("multi-body import", () => {
     expect(done).toMatchObject({
       importInProgress: false,
       pendingImport: null,
-      selectedNodeId: bodyNodeId("press", "rail"),
+      selection: nodeSelection(bodyNodeId("press", "rail")),
     });
     expect(done.expandedNodeIds.has(assemblyNodeId("press", "main"))).toBe(true);
   });

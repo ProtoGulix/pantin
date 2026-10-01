@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
+import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
 import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import {
   assemblyNodeId,
@@ -21,8 +22,7 @@ const source = { openPantin: pantinResponse(false) };
 function view(expanded: string[], selected: string | null = null): TreeViewState {
   return {
     expandedNodeIds: new Set(expanded),
-    selectedNodeId: selected,
-    selectedDevice: null,
+    selection: nodeSelection(selected),
     renamingNodeId: null,
   };
 }
@@ -239,7 +239,7 @@ describe("withTreeStateCarried", () => {
     const fresh = view([pantinNodeId("press"), from], pantinNodeId("press"));
     const carried = withTreeStateCarried(before, fresh, from, to);
     expect([...carried.expandedNodeIds]).toEqual([pantinNodeId("press"), to]);
-    expect(carried.selectedNodeId).toBe(to);
+    expect(selectedNodeIdOf(carried.selection)).toBe(to);
   });
 });
 

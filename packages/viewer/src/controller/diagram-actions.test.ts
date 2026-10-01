@@ -8,6 +8,7 @@ import {
   encoderOf,
   jointOf,
 } from "../diagram/diagram-fixtures.ts";
+import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
@@ -43,8 +44,8 @@ describe("the diagram state", () => {
   it("selects the tree row of a joint node", () => {
     const store = openStore();
     selectDiagramNode(store, `joint:${slideJoint.id}`);
-    expect(store.state.selectedDevice).toBeNull();
-    expect(store.state.selectedNodeId).toBe(
+    expect(selectedDeviceOf(store.state.selection)).toBeNull();
+    expect(selectedNodeIdOf(store.state.selection)).toBe(
       jointNodeId(pantin.id, slideJoint.id, slideJoint.child),
     );
   });
@@ -96,8 +97,8 @@ describe("selecting a device in the diagram", () => {
     const bodies: ReadonlySet<string>[] = [];
     const store = deviceStore(bodies);
     selectDiagramNode(store, `${kind}:${id}`);
-    expect(store.state.selectedDevice).toEqual({ kind, id });
-    expect(store.state.selectedNodeId).toBeNull();
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind, id });
+    expect(selectedNodeIdOf(store.state.selection)).toBeNull();
     // The bodies moved downstream, or the watched one, are tinted in 3D.
     expect(bodies.at(-1)).toEqual(new Set(["s1"]));
   });
@@ -106,11 +107,11 @@ describe("selecting a device in the diagram", () => {
     const store = deviceStore();
     selectDiagramNode(store, "drive:v1");
     store.update(withRevealedNode(store.state, bodyNodeId(withDevices.id, "s1")));
-    expect(store.state.selectedDevice).toBeNull();
-    expect(store.state.selectedNodeId).toBe(bodyNodeId(withDevices.id, "s1"));
+    expect(selectedDeviceOf(store.state.selection)).toBeNull();
+    expect(selectedNodeIdOf(store.state.selection)).toBe(bodyNodeId(withDevices.id, "s1"));
   });
 
-  it("opens a closed inspector, so the left-hand note never points to a hidden panel", () => {
+  it("opens a closed inspector: it is the only place a device is shown", () => {
     const store = deviceStore();
     store.update({ ...store.state, inspectorOpen: false });
     selectDiagramNode(store, "drive:v1");
@@ -120,7 +121,7 @@ describe("selecting a device in the diagram", () => {
   it("ignores a device that is not in the document", () => {
     const store = deviceStore();
     selectDiagramNode(store, "drive:ghost");
-    expect(store.state.selectedDevice).toBeNull();
+    expect(selectedDeviceOf(store.state.selection)).toBeNull();
   });
 
   it("moves the selection to the Pantin when the device is deleted", () => {
@@ -128,8 +129,8 @@ describe("selecting a device in the diagram", () => {
     selectDiagramNode(store, "actuator:c1");
     const without = { ...withDevices, document: { ...withDevices.document, actuators: [] } };
     store.update(withOpenPantin(store.state, without));
-    expect(store.state.selectedDevice).toBeNull();
-    expect(store.state.selectedNodeId).toBe(pantinNodeId(withDevices.id));
+    expect(selectedDeviceOf(store.state.selection)).toBeNull();
+    expect(selectedNodeIdOf(store.state.selection)).toBe(pantinNodeId(withDevices.id));
   });
 });
 

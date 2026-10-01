@@ -6,15 +6,19 @@ import { renderActuatorForm, renderDriveForm, renderSensorForm } from "./device-
 import { button, element, iconButton } from "./dom.ts";
 import { captureFocus, focusField, restoreFocus } from "./focus.ts";
 import { showInspectorLive } from "./inspector-live.ts";
+import { renderJointForm } from "./joint-form.ts";
+import { JointSliderControl } from "./joint-slider.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { renderPropertiesGrid } from "./properties-grid.ts";
 import { deleteDevice, editDevice } from "./row-actions.ts";
 
-// The right-hand panel (ADR 0030): the inspector of what is selected. The
-// buttons that create devices stay at its head in every case; below them the
-// form being filled, then the "Property | Value" grid of the selection. Redrawn
-// from its view on every change; its live cells are written in place by
-// showLive, several times a second.
+// The right-hand panel (ADR 0030): the inspector of what is selected, the only
+// properties panel. The buttons that create devices stay at its head in every
+// case; below them the form being filled, then the "Property | Value" grid of
+// the selection. Redrawn from its view on every change; its live cells are
+// written in place by showLive, several times a second. A joint's slider sits
+// between the two redrawn parts and is never rebuilt, so that a redraw cannot
+// interrupt a drag (joint-slider.ts).
 
 function createButtons(view: InspectorView, t: Translate, intents: PanelIntents): HTMLElement {
   const newActuator = button(t("actuators.new"), "button", () => intents.openActuatorForm(null));
@@ -45,6 +49,7 @@ function deviceButtons(view: InspectorView, t: Translate, intents: PanelIntents)
 
 function formsOf(view: InspectorView, t: Translate, intents: PanelIntents) {
   return [
+    view.jointForm === null ? null : renderJointForm(view.jointForm, t, intents),
     view.driveForm === null ? null : renderDriveForm(view.driveForm, t, intents),
     view.actuatorForm === null ? null : renderActuatorForm(view.actuatorForm, t, intents),
     view.sensorForm === null ? null : renderSensorForm(view.sensorForm, t, intents),
@@ -53,6 +58,9 @@ function formsOf(view: InspectorView, t: Translate, intents: PanelIntents) {
 
 export class Inspector {
   private readonly root: HTMLElement;
+  private readonly upper = element("div", { className: "inspector__part" });
+  private readonly jointSlider = new JointSliderControl();
+  private readonly lower = element("div", { className: "inspector__part" });
   private translate: Translate | null = null;
   private live: ReadonlyMap<string, LiveSource> = new Map();
   // A redraw must not take the focus back to a field the user has left.
@@ -60,19 +68,22 @@ export class Inspector {
 
   constructor(root: HTMLElement) {
     this.root = root;
+    root.replaceChildren(this.upper, this.jointSlider.element, this.lower);
   }
 
   render(view: InspectorView, t: Translate, intents: PanelIntents): void {
     this.translate = t;
     this.live = view.live;
     this.root.hidden = !view.open;
+    this.jointSlider.render(view.jointSlider, t, intents);
     if (!view.open) {
-      this.root.replaceChildren();
+      this.upper.replaceChildren();
+      this.lower.replaceChildren();
       return;
     }
     const focus = captureFocus(this.root);
     this.root.setAttribute("aria-label", view.title);
-    this.root.replaceChildren(
+    this.upper.replaceChildren(
       ...[
         element("div", { className: "inspector__head" }, [
           element("h2", { className: "inspector__title", text: view.title }),
@@ -84,11 +95,13 @@ export class Inspector {
           ? null
           : element("h3", { className: "inspector__subject", text: view.subject }),
         deviceButtons(view, t, intents),
-        view.note === null
-          ? renderPropertiesGrid(view.groups, t, intents)
-          : element("p", { className: "inspector__empty", text: view.note }),
-        ...view.hints.map((hint) => element("p", { className: "inspector__empty", text: hint })),
       ].filter((part) => part !== null),
+    );
+    this.lower.replaceChildren(
+      view.note === null
+        ? renderPropertiesGrid(view.groups, t, intents)
+        : element("p", { className: "inspector__empty", text: view.note }),
+      ...view.hints.map((hint) => element("p", { className: "inspector__empty", text: hint })),
     );
     restoreFocus(this.root, focus);
     this.serveFocusRequest(view.focusRequest);
@@ -99,6 +112,10 @@ export class Inspector {
       this.servedFocusSerial = request.serial;
       focusField(this.root, request.key);
     }
+  }
+
+  showJointPositions(positions: ReadonlyMap<string, number>): void {
+    this.jointSlider.showPositions(positions);
   }
 
   /** SI values from the core, shown in mm or degrees; bits as On or Off. */

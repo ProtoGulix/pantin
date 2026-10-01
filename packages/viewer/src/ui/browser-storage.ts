@@ -5,7 +5,6 @@
 export const STORAGE_KEYS = {
   language: "pantin.viewer.language",
   panelWidth: "pantin.viewer.panelWidth",
-  treeFraction: "pantin.viewer.treeFraction",
 } as const;
 
 export function readStoredText(key: string): string | null {

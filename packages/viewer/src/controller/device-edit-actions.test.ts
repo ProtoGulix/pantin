@@ -14,6 +14,7 @@ import {
   encoderOf,
   jointOf,
 } from "../diagram/diagram-fixtures.ts";
+import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { runForcing, submitForcedValue } from "../ui/diagram-forcing.ts";
 import { applyToggle } from "../ui/row-actions.ts";
 import { withOpenPantin } from "../viewer-state.ts";
@@ -181,7 +182,7 @@ describe("forcing from the diagram (ADR 0030 point 3)", () => {
 
   it("forcing from the diagram does not change the selection", async () => {
     const { store, intents } = commandStore();
-    const before = store.state.selectedNodeId;
+    const before = selectedNodeIdOf(store.state.selection);
     const element = {} as Element; // only handed back to openValueInput
     runForcing({ kind: "toggle", tag: "a.v1.coil_14" }, element, {
       intents,
@@ -189,8 +190,8 @@ describe("forcing from the diagram (ADR 0030 point 3)", () => {
     });
     submitForcedValue("a.sv.setpoint", "40", intents);
     await Promise.resolve();
-    expect(store.state.selectedNodeId).toBe(before);
-    expect(store.state.selectedDevice).toBeNull();
+    expect(selectedNodeIdOf(store.state.selection)).toBe(before);
+    expect(selectedDeviceOf(store.state.selection)).toBeNull();
   });
 });
 
@@ -199,10 +200,10 @@ describe("selecting a device from an index line", () => {
     const store = openStore({});
     const intents = createPanelIntents(store);
     intents.selectDevice({ kind: "sensor", id: "e1" });
-    expect(store.state.selectedDevice).toEqual({ kind: "sensor", id: "e1" });
-    expect(store.state.selectedNodeId).toBeNull();
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind: "sensor", id: "e1" });
+    expect(selectedNodeIdOf(store.state.selection)).toBeNull();
     intents.selectDevice({ kind: "sensor", id: "ghost" });
-    expect(store.state.selectedDevice).toEqual({ kind: "sensor", id: "e1" });
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind: "sensor", id: "e1" });
   });
 });
 
@@ -218,7 +219,7 @@ describe("deleting a device from the inspector", () => {
     const intents = createPanelIntents(store);
     intents.selectDevice({ kind: "sensor", id: "e1" });
     intents.deleteSensor("e1");
-    await vi.waitFor(() => expect(store.state.selectedDevice).toBeNull());
+    await vi.waitFor(() => expect(selectedDeviceOf(store.state.selection)).toBeNull());
     expect(deleteSensor).toHaveBeenCalledWith("press", "e1");
   });
 });

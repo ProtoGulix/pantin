@@ -1,7 +1,8 @@
 import type { PantinResponse } from "@pantin/protocol";
 import { infoMessage } from "./messages.ts";
+import { nodeSelection } from "./selection.ts";
 import { pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
-import { withSelectedNode } from "./tree/tree-state.ts";
+import { withSelection } from "./tree/tree-state.ts";
 import { type ViewerState, type WelcomeTab, withOpenPantin } from "./viewer-state.ts";
 
 // The two views and their transitions, as pure functions. List view: no
@@ -17,7 +18,7 @@ export function viewModeOf(state: ViewerState): ViewMode {
 /** Back to the welcome dialog: nothing of the closed Pantin stays on screen. */
 export function withPantinClosed(state: ViewerState): ViewerState {
   return {
-    ...withSelectedNode(state, null),
+    ...withSelection(state, null),
     listSelectedPantinId: state.openPantin?.id ?? state.listSelectedPantinId,
     openPantin: null,
     welcomeHidden: false,
@@ -100,8 +101,8 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     return state;
   }
   return {
-    // Through withSelectedNode: a node clicked in the diagram must not stay selected there.
-    ...withSelectedNode(state, nodeId),
+    // Through withSelection: a node clicked in the diagram must not stay selected there.
+    ...withSelection(state, nodeSelection(nodeId)),
     pendingDeleteBodyId: bodyExists ? bodyId : null,
     pendingDeleteJointId: jointExists ? jointId : null,
     pendingFeedReplacement: null,
@@ -122,7 +123,7 @@ export function withBodyDeleted(
 ): ViewerState {
   const shown = withOpenPantin({ ...state, pendingDeleteBodyId: null }, response);
   return {
-    ...withSelectedNode(shown, pantinNodeId(response.id)),
+    ...withSelection(shown, nodeSelection(pantinNodeId(response.id))),
     message: infoMessage("message.deleted", { name: bodyName }),
   };
 }
@@ -135,7 +136,7 @@ export function withJointDeleted(
 ): ViewerState {
   const shown = withOpenPantin({ ...state, pendingDeleteJointId: null }, response);
   return {
-    ...withSelectedNode(shown, pantinNodeId(response.id)),
+    ...withSelection(shown, nodeSelection(pantinNodeId(response.id))),
     message: infoMessage("message.jointDeleted", { name: jointName }),
   };
 }

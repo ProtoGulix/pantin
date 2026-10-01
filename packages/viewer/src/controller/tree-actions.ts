@@ -1,6 +1,7 @@
 import { DEVICE_NAME_FOCUS_KEY, DEVICE_NAME_GROUP } from "../inspector/device-fields.ts";
+import { nodeSelection, selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import { withExpanded, withSelectedNode } from "../tree/tree-state.ts";
+import { withExpanded, withSelection } from "../tree/tree-state.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Tree interactions in the edit view: expansion, activation, rename, framing.
@@ -11,7 +12,7 @@ export function setExpanded(store: ViewerStore, nodeId: string, expanded: boolea
 
 /** Enter or double-click on a node that cannot be renamed: fold or unfold it. */
 export function activateNode(store: ViewerStore, nodeId: string): void {
-  const selected = withSelectedNode(store.state, nodeId);
+  const selected = withSelection(store.state, nodeSelection(nodeId));
   store.update(withExpanded(selected, nodeId, !selected.expandedNodeIds.has(nodeId)));
 }
 
@@ -19,7 +20,7 @@ export function startRename(store: ViewerStore, nodeId: string): void {
   const kind = parseNodeId(nodeId)?.kind;
   if (kind === "pantin" || kind === "body" || kind === "assembly") {
     store.update({
-      ...withSelectedNode(store.state, nodeId),
+      ...withSelection(store.state, nodeSelection(nodeId)),
       renamingNodeId: nodeId,
       contextMenu: null,
     });
@@ -32,10 +33,11 @@ export function startRename(store: ViewerStore, nodeId: string): void {
  * holding the field is opened, and the inspector with it.
  */
 export function renameSelection(store: ViewerStore): void {
-  const { selectedDevice, selectedNodeId, inspectorFocus, collapsedPropertyGroups } = store.state;
-  if (selectedDevice === null) {
-    if (selectedNodeId !== null) {
-      startRename(store, selectedNodeId);
+  const { selection, inspectorFocus, collapsedPropertyGroups } = store.state;
+  const nodeId = selectedNodeIdOf(selection);
+  if (selectedDeviceOf(selection) === null) {
+    if (nodeId !== null) {
+      startRename(store, nodeId);
     }
     return;
   }

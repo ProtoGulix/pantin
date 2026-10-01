@@ -1,6 +1,7 @@
 import type { PantinDocument } from "@pantin/protocol";
 import { selectedBodyIds } from "../assembly-display.ts";
-import { type DeviceRef, deviceNodeId } from "../device-selection.ts";
+import { deviceNodeId } from "../device-selection.ts";
+import { type Selection, selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import {
   type ChainLinks,
@@ -31,20 +32,16 @@ export function treeNodeForJointNode(
     : jointNodeId(pantinId, diagramNodeId.slice(JOINT_PREFIX.length), childBody);
 }
 
-interface Selections {
-  selectedNodeId: string | null;
-  selectedDevice: DeviceRef | null;
-}
-
 // The selected device, or a joint selected in the tree, as a node of the
 // diagram, when the diagram draws it.
-function selectedChainNode(links: ChainLinks, selections: Selections): string | null {
-  const { selectedNodeId, selectedDevice } = selections;
+function selectedChainNode(links: ChainLinks, selection: Selection | null): string | null {
+  const selectedDevice = selectedDeviceOf(selection);
   if (selectedDevice !== null) {
     const node = deviceNodeId(selectedDevice);
     return links.nodeIds.has(node) ? node : null;
   }
-  const ref = selectedNodeId === null ? null : parseNodeId(selectedNodeId);
+  const nodeId = selectedNodeIdOf(selection);
+  const ref = nodeId === null ? null : parseNodeId(nodeId);
   if (ref?.kind !== "joint") {
     return null;
   }
@@ -56,16 +53,16 @@ function selectedChainNode(links: ChainLinks, selections: Selections): string | 
 export function diagramHighlight(
   document: PantinDocument,
   links: ChainLinks,
-  selections: Selections,
+  selection: Selection | null,
 ): Map<string, NodeHighlight> {
-  const chosen = selectedChainNode(links, selections);
+  const chosen = selectedChainNode(links, selection);
   if (chosen !== null) {
     const highlight = new Map<string, NodeHighlight>(
       [...chainOfNode(links, chosen)].map((id) => [id, "related"]),
     );
     return highlight.set(chosen, "selected");
   }
-  const bodies = selectedBodyIds(document, selections.selectedNodeId);
+  const bodies = selectedBodyIds(document, selectedNodeIdOf(selection));
   return new Map([...chainNodeIdsOfBodies(links, bodies)].map((id) => [id, "related"]));
 }
 
@@ -73,17 +70,17 @@ export function diagramHighlight(
 export function highlightedBodyIds(
   document: PantinDocument,
   links: ChainLinks,
-  selections: Selections,
+  selection: Selection | null,
 ): Set<string> {
   // A joint selected in the tree tints its child, like the same joint clicked in the diagram.
-  const { selectedDevice } = selections;
-  const chosen = selectedChainNode(links, selections);
+  const selectedDevice = selectedDeviceOf(selection);
+  const chosen = selectedChainNode(links, selection);
   if (selectedDevice !== null) {
     // A sensor on a fixed joint is no diagram node, and moves nothing.
     return chosen === null ? new Set() : downstreamBodyIds(links, chosen);
   }
   return chosen === null
-    ? selectedBodyIds(document, selections.selectedNodeId)
+    ? selectedBodyIds(document, selectedNodeIdOf(selection))
     : downstreamBodyIds(links, chosen);
 }
 

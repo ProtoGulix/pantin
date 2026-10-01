@@ -5,8 +5,16 @@ import {
   type PantinResponse,
   type PantinSummary,
 } from "@pantin/protocol";
+import { nodeSelection } from "./selection.ts";
+import type { TreeViewState } from "./tree/tree-rows.ts";
+import { withSelection } from "./tree/tree-state.ts";
 
 // Sample data shared by the unit tests of the display logic.
+
+/** Selects a tree node (or nothing), as a click on its row does. */
+export function withNode<State extends TreeViewState>(state: State, nodeId: string | null): State {
+  return withSelection(state, nodeSelection(nodeId));
+}
 
 export const railBody: Body = {
   id: "rail",

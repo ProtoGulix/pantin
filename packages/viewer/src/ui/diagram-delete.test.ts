@@ -3,7 +3,8 @@ import { createPanelIntents } from "../controller/controller.ts";
 import { testStore } from "../controller/controller-test-helpers.ts";
 import type { FocusTarget } from "../diagram/diagram-focus.ts";
 import { wiringDiagram, wiringDocument } from "../diagram/diagram-wiring-fixtures.ts";
-import { withSelectedDevice } from "../tree/tree-state.ts";
+import { selectedDeviceOf } from "../selection.ts";
+import { withSelection } from "../tree/tree-state.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { deleteInDiagram } from "./diagram-delete.ts";
 
@@ -27,7 +28,7 @@ function selectedDriveStore() {
   });
   store.requestedPantinId = "press";
   store.update(
-    withSelectedDevice(withOpenPantin(store.state, wiringPantin), { kind: "drive", id: "v1" }),
+    withSelection(withOpenPantin(store.state, wiringPantin), { kind: "drive", id: "v1" }),
   );
   return { store, deleteDrive, updateActuator };
 }
@@ -49,7 +50,7 @@ describe("deleteInDiagram with a device selected", () => {
   it("shows the hint on a focused node and keeps the selected device", () => {
     const { store, deleteDrive } = deleteAt(node("drive:v1"));
     expect(deleteDrive).not.toHaveBeenCalled();
-    expect(store.state.selectedDevice).toEqual({ kind: "drive", id: "v1" });
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind: "drive", id: "v1" });
     expect(store.state.message?.key).toBe("diagram.hint.deleteOnPort");
   });
 
@@ -58,7 +59,7 @@ describe("deleteInDiagram with a device selected", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(updateActuator).toHaveBeenCalledOnce();
     expect(deleteDrive).not.toHaveBeenCalled();
-    expect(store.state.selectedDevice).toEqual({ kind: "drive", id: "v1" });
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind: "drive", id: "v1" });
   });
 
   it("shows the hint on a port with no link", () => {

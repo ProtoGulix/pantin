@@ -22,6 +22,7 @@ export function toggleInspector(store: ViewerStore): void {
     ...store.state,
     inspectorOpen: open,
     driveForm: open ? store.state.driveForm : null,
+    jointForm: open ? store.state.jointForm : null,
   });
   if (open) {
     void refreshFaults(store);

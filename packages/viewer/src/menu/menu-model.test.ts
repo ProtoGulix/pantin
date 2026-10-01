@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { pantinResponse, pantinSummaries } from "../test-fixtures.ts";
+import { pantinResponse, pantinSummaries, withNode } from "../test-fixtures.ts";
 import { bodyNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
-import { withSelectedDevice, withSelectedNode } from "../tree/tree-state.ts";
+import { withSelection } from "../tree/tree-state.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import {
   buildMenuBar,
@@ -62,8 +62,8 @@ describe("menu bar model", () => {
   });
 
   it("enables Supprimer only on a body, Renommer on a Pantin or a body", () => {
-    const onBody = withSelectedNode(editing(false), bodyNodeId("press", "rail"));
-    const onSource = withSelectedNode(editing(false), sourceNodeNodeId("press", "rail", 0));
+    const onBody = withNode(editing(false), bodyNodeId("press", "rail"));
+    const onSource = withNode(editing(false), sourceNodeNodeId("press", "rail", 0));
     expect(enabledCommands(onBody)).toEqual(expect.arrayContaining(["rename", "delete"]));
     expect(enabledCommands(onSource)).not.toContain("delete");
     expect(enabledCommands(onSource)).not.toContain("rename");
@@ -88,26 +88,26 @@ describe("menu bar model on a device", () => {
   it.each(["drive", "actuator", "sensor"] as const)(
     "enables Supprimer and Renommer on a %s, not Cadrer la sélection",
     (kind) => {
-      const onDevice = withSelectedDevice(editing(false), { kind, id: "x" });
+      const onDevice = withSelection(editing(false), { kind, id: "x" });
       expect(enabledCommands(onDevice)).toEqual(expect.arrayContaining(["delete", "rename"]));
       expect(enabledCommands(onDevice)).not.toContain("frameSelection");
     },
   );
 
   it("disables Supprimer on a device while a request is in flight", () => {
-    const busy = { ...withSelectedDevice(editing(false), { kind: "drive", id: "x" }) };
+    const busy = { ...withSelection(editing(false), { kind: "drive", id: "x" }) };
     busy.pendingRequestCount = 1;
     expect(enabledCommands(busy)).not.toContain("delete");
   });
 
   it("still frames a selected body", () => {
-    expect(
-      enabledCommands(withSelectedNode(editing(false), bodyNodeId("press", "rail"))),
-    ).toContain("frameSelection");
+    expect(enabledCommands(withNode(editing(false), bodyNodeId("press", "rail")))).toContain(
+      "frameSelection",
+    );
   });
 
   it("runs F2 and Suppr on a selected device", () => {
-    const onDevice = withSelectedDevice(editing(false), { kind: "sensor", id: "x" });
+    const onDevice = withSelection(editing(false), { kind: "sensor", id: "x" });
     expect(shortcutForKeyPress(onDevice, press("F2"))).toMatchObject({
       command: "rename",
       run: true,
@@ -120,7 +120,7 @@ describe("menu bar model on a device", () => {
 });
 
 describe("keyboard shortcuts", () => {
-  const onBody = withSelectedNode(editing(true), bodyNodeId("press", "rail"));
+  const onBody = withNode(editing(true), bodyNodeId("press", "rail"));
   const commandOf = (state: ViewerState, keyPress: KeyPress) => {
     const found = shortcutForKeyPress(state, keyPress);
     return found?.run ? found.command : null;

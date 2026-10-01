@@ -1,4 +1,5 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
+import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { deleteActuator } from "./actuator-actions.ts";
 import { toggleDiagram } from "./diagram-actions.ts";
@@ -14,7 +15,7 @@ import type { ViewerStore } from "./viewer-store.ts";
 // file picker must open inside the click itself, so the menu bar handles it.
 
 function withSelection(store: ViewerStore, action: (nodeId: string) => void): void {
-  const selected = store.state.selectedNodeId;
+  const selected = selectedNodeIdOf(store.state.selection);
   if (selected !== null) {
     action(selected);
   }
@@ -23,7 +24,7 @@ function withSelection(store: ViewerStore, action: (nodeId: string) => void): vo
 // The same calls as the inspector's Delete button (the drive, actuator and
 // sensor intents); a drive still feeding an actuator is refused by the core.
 function deleteSelection(store: ViewerStore): void {
-  const device = store.state.selectedDevice;
+  const device = selectedDeviceOf(store.state.selection);
   if (device === null) {
     withSelection(store, (nodeId) => requestDelete(store, nodeId));
   } else if (device.kind === "drive") {

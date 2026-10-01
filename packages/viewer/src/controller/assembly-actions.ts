@@ -9,9 +9,10 @@ import {
 import { createTranslator, pluralKey } from "../i18n/translate.ts";
 import { infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
+import { nodeSelection } from "../selection.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { bodyMoveOf } from "../tree/tree-drop.ts";
-import { withRevealedNode, withSelectedNode, withTreeStateCarried } from "../tree/tree-state.ts";
+import { withRevealedNode, withSelection, withTreeStateCarried } from "../tree/tree-state.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
@@ -134,6 +135,9 @@ export async function deleteAssembly(store: ViewerStore, pantinId: string, key: 
   const pantin = await editPantin(store, pantinId, (id) => store.ports.api.deleteAssembly(id, key));
   if (pantin !== undefined) {
     const assemblyDisplay = withAssemblyRemoved(store.state.assemblyDisplay, key);
-    store.update({ ...withSelectedNode(store.state, pantinNodeId(pantinId)), assemblyDisplay });
+    store.update({
+      ...withSelection(store.state, nodeSelection(pantinNodeId(pantinId))),
+      assemblyDisplay,
+    });
   }
 }

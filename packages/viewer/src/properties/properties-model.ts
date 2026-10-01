@@ -3,20 +3,13 @@ import type { Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
-import { GROUP_TITLES } from "./group-titles.ts";
 import { jointGroups } from "./joint-groups.ts";
-import {
-  type GroupDraft,
-  linkRow,
-  type PropertyGroup,
-  type PropertyRow,
-  renameEditor,
-  row,
-} from "./property-rows.ts";
+import { type GroupDraft, linkRow, type PropertyRow, renameEditor, row } from "./property-rows.ts";
 
-// The CODESYS-like "Property | Value" grid for the selected tree node, as
-// plain data (shapes in property-rows.ts). Groups keep a stable id so their
-// collapsed state survives a change of selection.
+// The CODESYS-like "Property | Value" groups of a tree node, as plain data
+// (shapes in property-rows.ts); the inspector shows them (ADR 0030 point 2).
+// Groups keep a stable id so their collapsed state survives a change of
+// selection.
 
 function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
   const { document } = pantin;
@@ -173,7 +166,8 @@ export interface PropertySource extends TreeSource {
   customAxisJointIds?: ReadonlySet<string>;
 }
 
-function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupDraft[] {
+/** The properties of a tree node, as groups; none for a node the Pantin no longer has. */
+export function nodeGroups(source: PropertySource, nodeId: string, t: Translate): GroupDraft[] {
   const ref = parseNodeId(nodeId);
   if (ref === null) {
     return [];
@@ -207,21 +201,4 @@ function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupD
   return ref.kind === "body"
     ? bodyGroups(body, open, nodeId, t)
     : sourceNodeGroups(body, ref.index, t);
-}
-
-/** Groups for the selected node, or an empty list when nothing is selected. */
-export function buildPropertyGroups(
-  source: PropertySource,
-  selectedNodeId: string | null,
-  collapsedGroups: ReadonlySet<string>,
-  translate: Translate,
-): PropertyGroup[] {
-  if (selectedNodeId === null) {
-    return [];
-  }
-  return groupsFor(source, selectedNodeId, translate).map((draft) => ({
-    ...draft,
-    title: translate(GROUP_TITLES[draft.id]),
-    collapsed: collapsedGroups.has(draft.id),
-  }));
 }

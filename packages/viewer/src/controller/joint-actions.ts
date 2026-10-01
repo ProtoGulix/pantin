@@ -33,6 +33,8 @@ export function openJointForm(store: ViewerStore): void {
   store.update({
     ...store.state,
     jointForm: initialJointForm(open.document.bodies),
+    // The joint form is drawn in the inspector, so it must be open.
+    inspectorOpen: true,
     contextMenu: null,
     message: null,
   });
@@ -52,6 +54,8 @@ export function openJointEditForm(store: ViewerStore, nodeId: string): void {
   store.update({
     ...store.state,
     jointForm: jointFormFor(joint),
+    // The joint form is drawn in the inspector, so it must be open.
+    inspectorOpen: true,
     contextMenu: null,
     message: null,
   });
@@ -70,6 +74,8 @@ export function openJointFormWithType(store: ViewerStore, jointId: string, rawTy
   store.update({
     ...store.state,
     jointForm: withJointFormType(jointFormFor(joint), type),
+    // The joint form is drawn in the inspector, so it must be open.
+    inspectorOpen: true,
     contextMenu: null,
     message: null,
   });

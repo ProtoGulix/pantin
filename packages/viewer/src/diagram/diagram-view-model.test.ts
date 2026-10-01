@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { nodeSelection } from "../selection.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId } from "../tree/node-ids.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
@@ -27,7 +28,9 @@ describe("createDiagramModelBuilder", () => {
   it("returns the same diagram while only the selection changes", () => {
     const build = createDiagramModelBuilder(createChainLinksCache());
     const first = shown(build(base));
-    const selected = shown(build({ ...base, selectedNodeId: bodyNodeId(pantin.id, "carriage") }));
+    const selected = shown(
+      build({ ...base, selection: nodeSelection(bodyNodeId(pantin.id, "carriage")) }),
+    );
     expect(selected.diagram).toBe(first.diagram);
     expect(selected.typeLabels).toBe(first.typeLabels);
   });

@@ -2,6 +2,7 @@ import { pickedNodeId } from "../assembly-display.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
+import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
 import {
   withListSelection,
   withWelcomeFilter,
@@ -9,7 +10,7 @@ import {
   withWelcomeTab,
 } from "../session-state.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import { withRevealedNode, withSelectedNode } from "../tree/tree-state.ts";
+import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
 import type { WelcomeTab } from "../viewer-state.ts";
 import { actuatorIntents } from "./actuator-intents.ts";
@@ -82,9 +83,13 @@ function treeIntents(store: ViewerStore) {
   return {
     selectNode: (nodeId: string) => {
       // No redraw when nothing changes, so a double-click lands on the same row element.
-      const { selectedNodeId, contextMenu, renamingNodeId } = store.state;
-      if (selectedNodeId !== nodeId || contextMenu !== null || renamingNodeId !== null) {
-        store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: null });
+      const { selection, contextMenu, renamingNodeId } = store.state;
+      if (
+        selectedNodeIdOf(selection) !== nodeId ||
+        contextMenu !== null ||
+        renamingNodeId !== null
+      ) {
+        store.update({ ...withSelection(store.state, nodeSelection(nodeId)), contextMenu: null });
       }
     },
     selectDevice: (device: DeviceRef) => selectDevice(store, device),
@@ -108,7 +113,10 @@ function treeIntents(store: ViewerStore) {
       }
     },
     openContextMenu: (nodeId: string, x: number, y: number) =>
-      store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: { nodeId, x, y } }),
+      store.update({
+        ...withSelection(store.state, nodeSelection(nodeId)),
+        contextMenu: { nodeId, x, y },
+      }),
     closeContextMenu: () => store.update({ ...store.state, contextMenu: null }),
   };
 }
@@ -119,7 +127,7 @@ function editIntents(store: ViewerStore) {
     savePantin: () => void savePantin(store),
     frameAll: () => store.ports.viewport().frameBodies(null),
     frameSelection: () => {
-      const selected = store.state.selectedNodeId;
+      const selected = selectedNodeIdOf(store.state.selection);
       if (selected !== null) {
         frameNode(store, selected);
       }
@@ -198,7 +206,7 @@ export function selectBodyFromViewport(
 ): void {
   const open = store.state.openPantin;
   if (bodyId === null || open === null) {
-    store.update(withSelectedNode(store.state, null));
+    store.update(withSelection(store.state, null));
     return;
   }
   store.update(

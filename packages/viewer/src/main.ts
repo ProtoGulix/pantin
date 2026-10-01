@@ -81,7 +81,7 @@ function createScreen(): Screen {
       welcome.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
-    showJointPositions: (positions) => sidePanel.showJointPositions(positions),
+    showJointPositions: (positions) => inspector.showJointPositions(positions),
     showInspectorLive: (tags, runtime) => inspector.showLive(tags, runtime),
     renderDiagram: (model, intents) => diagram.render(model, intents),
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),

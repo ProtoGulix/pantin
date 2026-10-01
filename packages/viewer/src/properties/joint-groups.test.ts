@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { hingeJoint, pantinResponse, screwJoint, spinJoint, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId, folderNodeId, jointNodeId } from "../tree/node-ids.ts";
-import { buildPropertyGroups } from "./properties-model.ts";
+import { titledNodeGroups } from "./properties-test-helpers.ts";
 import type { PropertyGroup } from "./property-rows.ts";
 
 const translate = createTranslator("fr");
@@ -21,7 +21,7 @@ const jointSource = {
   ),
 };
 const jointGroupsOf = (jointId: string) =>
-  buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate);
+  titledNodeGroups(jointSource, jointNodeId("press", jointId), translate);
 const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 
 const HINGE_GROUPS = [
@@ -68,7 +68,7 @@ describe("joint properties", () => {
       openPantin: pantinResponse(false, [stepBody("rail", "Rail")], "press", [oblique]),
     };
     const placement = table(
-      buildPropertyGroups(source, jointNodeId("press", "hinge"), new Set(), translate).filter(
+      titledNodeGroups(source, jointNodeId("press", "hinge"), translate).filter(
         (group) => group.id === "placement",
       ),
     )[0];
@@ -84,10 +84,9 @@ describe("joint properties", () => {
 
 describe("joint axis in the grid", () => {
   const axisRowsOf = (customAxisJointIds: ReadonlySet<string>) =>
-    buildPropertyGroups(
+    titledNodeGroups(
       { ...jointSource, customAxisJointIds },
       jointNodeId("press", "hinge"),
-      new Set(),
       translate,
     ).find((group) => group.id === "placement")?.rows ?? [];
 
@@ -137,10 +136,9 @@ describe("joint parameters and folder", () => {
   });
 
   it("describes the folder of joints between assemblies by its own label and count", () => {
-    const groups = buildPropertyGroups(
+    const groups = titledNodeGroups(
       jointSource,
       folderNodeId("press", "betweenAssemblies"),
-      new Set(),
       translate,
     );
     expect(table(groups)).toEqual([
@@ -204,7 +202,7 @@ describe("joint edit targets", () => {
 
 describe("joint values in display units", () => {
   const rowsOf = (jointId: string) =>
-    buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate).flatMap(
+    titledNodeGroups(jointSource, jointNodeId("press", jointId), translate).flatMap(
       (group) => group.rows,
     );
 
@@ -226,7 +224,7 @@ describe("joint values in display units", () => {
 
 describe("joints of a body", () => {
   const bodyRows = (bodyId: string) =>
-    buildPropertyGroups(jointSource, bodyNodeId("press", bodyId), new Set(), translate).find(
+    titledNodeGroups(jointSource, bodyNodeId("press", bodyId), translate).find(
       (group) => group.id === "joints",
     )?.rows ?? [];
 

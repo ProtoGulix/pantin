@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { nodeSelection } from "../selection.ts";
 import { assemblyNodeId, bodyNodeId, jointNodeId } from "../tree/node-ids.ts";
 import { layoutChainDiagram } from "./chain-layout.ts";
 import { createChainLinksCache } from "./diagram-chains.ts";
@@ -20,11 +21,9 @@ const document = documentOf({
 });
 const links = createChainLinksCache()(document);
 
-const none = { selectedNodeId: null, selectedDevice: null };
-const device = (kind: "drive" | "actuator" | "sensor", id: string) => ({
-  selectedNodeId: null,
-  selectedDevice: { kind, id } as const,
-});
+const none = null;
+const device = (kind: "drive" | "actuator" | "sensor", id: string) => ({ kind, id }) as const;
+const node = (nodeId: string) => nodeSelection(nodeId);
 
 describe("treeNodeForJointNode", () => {
   it("names the tree row of a joint node, under its child body", () => {
@@ -74,30 +73,21 @@ describe("highlight and bodies of a selected device", () => {
 
 describe("highlight and bodies of a tree selection", () => {
   it("a joint selected in the tree is the selected node", () => {
-    const highlight = diagramHighlight(document, links, {
-      ...none,
-      selectedNodeId: jointNodeId("p", "j1", "s1"),
-    });
+    const highlight = diagramHighlight(document, links, node(jointNodeId("p", "j1", "s1")));
     expect(highlight.get("joint:j1")).toBe("selected");
     expect(highlight.get("actuator:c1")).toBe("related");
     expect(highlight.has("joint:j2")).toBe(false);
   });
 
   it("a body or an assembly selected in 3D highlights the chains that move it", () => {
-    const body = diagramHighlight(document, links, {
-      ...none,
-      selectedNodeId: bodyNodeId("p", "s1"),
-    });
+    const body = diagramHighlight(document, links, node(bodyNodeId("p", "s1")));
     expect([...body.keys()].sort()).toEqual(["actuator:c1", "drive:v1", "joint:j1"]);
-    const assembly = diagramHighlight(document, links, {
-      ...none,
-      selectedNodeId: assemblyNodeId("p", "a"),
-    });
+    const assembly = diagramHighlight(document, links, node(assemblyNodeId("p", "a")));
     expect(assembly.size).toBe(6);
     expect([...assembly.values()].every((kind) => kind === "related")).toBe(true);
-    expect(
-      highlightedBodyIds(document, links, { ...none, selectedNodeId: bodyNodeId("p", "s1") }),
-    ).toEqual(new Set(["s1"]));
+    expect(highlightedBodyIds(document, links, node(bodyNodeId("p", "s1")))).toEqual(
+      new Set(["s1"]),
+    );
   });
 
   it("highlights nothing without a selection", () => {
@@ -106,7 +96,7 @@ describe("highlight and bodies of a tree selection", () => {
   });
 
   it("a joint tints its child body", () => {
-    const selections = { ...none, selectedNodeId: jointNodeId("p", "j2", "s2") };
+    const selections = node(jointNodeId("p", "j2", "s2"));
     expect(highlightedBodyIds(document, links, selections)).toEqual(new Set(["s2"]));
   });
 });
@@ -114,10 +104,7 @@ describe("highlight and bodies of a tree selection", () => {
 describe("relatedEdgeIds", () => {
   it("keeps the wires whose two ends are highlighted", () => {
     const diagram = layoutChainDiagram(document, new Set(), "en");
-    const highlight = diagramHighlight(document, links, {
-      ...none,
-      selectedNodeId: jointNodeId("p", "j1", "s1"),
-    });
+    const highlight = diagramHighlight(document, links, node(jointNodeId("p", "j1", "s1")));
     const related = relatedEdgeIds(diagram, highlight);
     expect(related.size).toBeGreaterThan(0);
     for (const edge of diagram.edges.filter((candidate) => related.has(candidate.id))) {

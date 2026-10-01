@@ -26,8 +26,7 @@ function rows(expanded: string[]) {
   );
   return flattenTree(tree, {
     expandedNodeIds: new Set(expanded),
-    selectedNodeId: null,
-    selectedDevice: null,
+    selection: null,
     renamingNodeId: null,
   });
 }

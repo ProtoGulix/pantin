@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "./i18n/translate.ts";
 import { buildPromptView } from "./panel/prompt-model.ts";
+import { nodeSelection, selectedDeviceOf, selectedNodeIdOf } from "./selection.ts";
 import {
   viewModeOf,
   withBodyDeleted,
@@ -46,7 +47,7 @@ describe("list and edit views", () => {
   it("enters the edit view on the opened Pantin, expanded down to its bodies", () => {
     const state = editing(false);
     expect(viewModeOf(state)).toBe("edit");
-    expect(state.selectedNodeId).toBe(pantinNodeId("press"));
+    expect(selectedNodeIdOf(state.selection)).toBe(pantinNodeId("press"));
   });
 
   it("selects only Pantins that exist in the list", () => {
@@ -59,7 +60,7 @@ describe("list and edit views", () => {
     expect(viewModeOf(closed)).toBe("list");
     expect(closed).toMatchObject({
       listSelectedPantinId: "press",
-      selectedNodeId: null,
+      selection: null,
       pendingDeleteBodyId: null,
     });
     expect(closed.expandedNodeIds.size).toBe(0);
@@ -117,10 +118,10 @@ describe("deleting a body", () => {
   });
 
   it("replaces a selected device by the body", () => {
-    const state = { ...editing(false), selectedNodeId: null, selectedDevice: DEVICE };
+    const state = { ...editing(false), selection: DEVICE };
     const asking = withDeleteRequested(state, bodyNodeId("press", "carriage"));
-    expect(asking.selectedDevice).toBeNull();
-    expect(asking.selectedNodeId).toBe(bodyNodeId("press", "carriage"));
+    expect(selectedDeviceOf(asking.selection)).toBeNull();
+    expect(selectedNodeIdOf(asking.selection)).toBe(bodyNodeId("press", "carriage"));
   });
 
   it("refuses anything that is not an existing body", () => {
@@ -147,7 +148,7 @@ describe("deleting a body", () => {
     expect(deleted.openPantin?.document.bodies.map((body) => body.id)).toEqual(["carriage"]);
     expect(deleted.openPantin?.unsavedChanges).toBe(true);
     expect(deleted).toMatchObject({
-      selectedNodeId: pantinNodeId("press"),
+      selection: nodeSelection(pantinNodeId("press")),
       pendingDeleteBodyId: null,
     });
     expect(deleted.message?.key).toBe("message.deleted");
@@ -192,7 +193,7 @@ describe("deleting a joint", () => {
     expect(deleted.openPantin?.document.joints).toEqual([]);
     expect(deleted.openPantin?.unsavedChanges).toBe(true);
     expect(deleted).toMatchObject({
-      selectedNodeId: pantinNodeId("press"),
+      selection: nodeSelection(pantinNodeId("press")),
       pendingDeleteJointId: null,
     });
     expect(deleted.message?.key).toBe("message.jointDeleted");
@@ -222,20 +223,20 @@ describe("welcome dialog state (ADR 0027)", () => {
 });
 
 describe("a device selected while the Pantin changes", () => {
-  const onDevice = { ...editing(false), selectedNodeId: null, selectedDevice: DEVICE };
+  const onDevice = { ...editing(false), selection: DEVICE };
 
   it("is dropped when a body or a joint is deleted, the Pantin is selected", () => {
     const afterBody = withBodyDeleted(onDevice, pantinResponse(false), "N_1");
-    expect(afterBody.selectedDevice).toBeNull();
-    expect(afterBody.selectedNodeId).toBe(pantinNodeId("press"));
+    expect(selectedDeviceOf(afterBody.selection)).toBeNull();
+    expect(selectedNodeIdOf(afterBody.selection)).toBe(pantinNodeId("press"));
     const afterJoint = withJointDeleted(onDevice, pantinResponse(false), "hinge");
-    expect(afterJoint.selectedDevice).toBeNull();
-    expect(afterJoint.selectedNodeId).toBe(pantinNodeId("press"));
+    expect(selectedDeviceOf(afterJoint.selection)).toBeNull();
+    expect(selectedNodeIdOf(afterJoint.selection)).toBe(pantinNodeId("press"));
   });
 
   it("is dropped when the Pantin is closed", () => {
     const closed = withPantinClosed(onDevice);
-    expect(closed.selectedDevice).toBeNull();
-    expect(closed.selectedNodeId).toBeNull();
+    expect(selectedDeviceOf(closed.selection)).toBeNull();
+    expect(selectedNodeIdOf(closed.selection)).toBeNull();
   });
 });

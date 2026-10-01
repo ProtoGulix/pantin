@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { nodeSelection } from "../selection.ts";
 import { hingeJoint, pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId, jointNodeId } from "../tree/node-ids.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
@@ -14,11 +15,15 @@ const opened = withOpenPantin(
 describe("jointPreviewOf", () => {
   it("shows nothing without a form or a selected joint", () => {
     expect(jointPreviewOf(opened)).toBeNull();
-    expect(jointPreviewOf({ ...opened, selectedNodeId: bodyNodeId("press", "rail") })).toBeNull();
+    expect(
+      jointPreviewOf({ ...opened, selection: nodeSelection(bodyNodeId("press", "rail")) }),
+    ).toBeNull();
   });
 
   it("shows the selected joint as stored", () => {
-    expect(jointPreviewOf({ ...opened, selectedNodeId: jointNodeId("press", "hinge") })).toEqual({
+    expect(
+      jointPreviewOf({ ...opened, selection: nodeSelection(jointNodeId("press", "hinge")) }),
+    ).toEqual({
       parentBodyId: "rail",
       childBodyId: "carriage",
       origin: [0.01, 0, 0.02],
@@ -29,7 +34,11 @@ describe("jointPreviewOf", () => {
 
   it("follows the form, origin converted to metres, even over a selected joint", () => {
     const form = withJointFormValue(initialJointForm(bodies), "origin.x", "250");
-    const state = { ...opened, selectedNodeId: jointNodeId("press", "hinge"), jointForm: form };
+    const state = {
+      ...opened,
+      selection: nodeSelection(jointNodeId("press", "hinge")),
+      jointForm: form,
+    };
     expect(jointPreviewOf(state)).toEqual({
       parentBodyId: "rail",
       childBodyId: "carriage",

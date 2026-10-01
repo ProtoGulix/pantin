@@ -1,5 +1,6 @@
 import type { PantinDocument } from "@pantin/protocol";
-import { type DeviceRef, deviceExists } from "../device-selection.ts";
+import { deviceExists } from "../device-selection.ts";
+import { nodeSelection, type Selection } from "../selection.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
@@ -98,29 +99,24 @@ export function withExpanded<State extends TreeViewState>(
   return { ...state, expandedNodeIds };
 }
 
-/** Selects a tree node (or nothing): a device selected before is dropped. */
-export function withSelectedNode<State extends TreeViewState>(
+/** Selects a tree node, a device or nothing; any rename in progress ends. */
+export function withSelection<State extends TreeViewState>(
   state: State,
-  nodeId: string | null,
+  selection: Selection | null,
 ): State {
-  return { ...state, selectedNodeId: nodeId, selectedDevice: null, renamingNodeId: null };
-}
-
-/** Selects a device: the tree has no row for it, so no row stays selected. */
-export function withSelectedDevice<State extends TreeViewState>(
-  state: State,
-  device: DeviceRef,
-): State {
-  return { ...state, selectedNodeId: null, selectedDevice: device, renamingNodeId: null };
+  return { ...state, selection, renamingNodeId: null };
 }
 
 /** The selected tree node or device is still in the open Pantin. */
 export function selectionExists(state: TreeSource & TreeViewState): boolean {
+  const { selection } = state;
   const document = state.openPantin?.document;
-  if (state.selectedDevice !== null) {
-    return document !== undefined && deviceExists(document, state.selectedDevice);
+  if (selection === null || document === undefined) {
+    return false;
   }
-  return state.selectedNodeId !== null && nodeExists(state, state.selectedNodeId);
+  return selection.kind === "node"
+    ? nodeExists(state, selection.nodeId)
+    : deviceExists(document, selection);
 }
 
 /** A node whose id changed (a renamed key) keeps its expansion and selection. */
@@ -130,10 +126,12 @@ function withNodeIdChanged<State extends TreeViewState>(
   to: string,
 ): State {
   const rename = (nodeId: string) => (nodeId === from ? to : nodeId);
+  const { selection } = state;
   return {
     ...state,
     expandedNodeIds: new Set([...state.expandedNodeIds].map(rename)),
-    selectedNodeId: state.selectedNodeId === null ? null : rename(state.selectedNodeId),
+    selection:
+      selection?.kind === "node" ? { kind: "node", nodeId: rename(selection.nodeId) } : selection,
   };
 }
 
@@ -151,8 +149,7 @@ export function withTreeStateCarried<State extends TreeViewState>(
   const restored = {
     ...next,
     expandedNodeIds: before.expandedNodeIds,
-    selectedNodeId: before.selectedNodeId,
-    selectedDevice: before.selectedDevice,
+    selection: before.selection,
   };
   return withNodeIdChanged(restored, from, to);
 }
@@ -168,5 +165,5 @@ export function withRevealedNode<State extends TreeViewState & TreeSource>(
     return state;
   }
   const expandedNodeIds = new Set([...state.expandedNodeIds, ...ancestorsOf(ref, document)]);
-  return { ...withSelectedNode(state, nodeId), expandedNodeIds };
+  return { ...withSelection(state, nodeSelection(nodeId)), expandedNodeIds };
 }

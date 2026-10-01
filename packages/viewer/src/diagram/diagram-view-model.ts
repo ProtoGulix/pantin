@@ -68,10 +68,7 @@ export function createDiagramModelBuilder(
       document: open.document,
       diagram,
       typeLabels,
-      highlight: diagramHighlight(open.document, linksOf(open.document), {
-        selectedNodeId: state.selectedNodeId,
-        selectedDevice: state.selectedDevice,
-      }),
+      highlight: diagramHighlight(open.document, linksOf(open.document), state.selection),
       empty: diagram.nodes.length === 0 && diagram.bands.every((band) => !band.collapsed),
       translate: createTranslator(state.language),
     };

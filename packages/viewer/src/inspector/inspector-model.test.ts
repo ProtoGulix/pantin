@@ -9,18 +9,14 @@ import {
 } from "../diagram/diagram-fixtures.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import type { PropertyGroup, PropertyRow } from "../properties/property-rows.ts";
-import {
-  assemblyNodeId,
-  bodyNodeId,
-  folderNodeId,
-  jointNodeId,
-  pantinNodeId,
-} from "../tree/node-ids.ts";
-import { withSelectedDevice, withSelectedNode } from "../tree/tree-state.ts";
+import { withNode } from "../test-fixtures.ts";
+import { assemblyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
+import { withSelection } from "../tree/tree-state.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import { buildInspectorView } from "./inspector-model.ts";
 
-// The inspector for each kind of selection (ADR 0030 point 2, first step).
+// The inspector for each kind of selection (ADR 0030 point 2); the properties
+// of tree nodes are in node-inspector.test.ts.
 
 const t = createTranslator("fr");
 
@@ -38,9 +34,9 @@ const pantin = { id: "press", unsavedChanges: false, document };
 const opened = withOpenPantin(initialViewerState("fr"), pantin);
 
 const inspectorOf = (state: ViewerState) => buildInspectorView(state, t);
-const selecting = (nodeId: string) => inspectorOf(withSelectedNode(opened, nodeId));
+const selecting = (nodeId: string) => inspectorOf(withNode(opened, nodeId));
 const device = (kind: "drive" | "actuator" | "sensor", id: string) =>
-  inspectorOf(withSelectedDevice(opened, { kind, id }));
+  inspectorOf(withSelection(opened, { kind, id }));
 const rowsOf = (groups: PropertyGroup[], id: string): PropertyRow[] =>
   groups.find((group) => group.id === id)?.rows ?? [];
 
@@ -82,7 +78,7 @@ describe("inspector of a drive, faults and parameters", () => {
   it("offers the unresponsive fault from the core's state, and the diagnostics line", () => {
     const faults = { jammedJoints: [], unresponsiveDrives: ["v1"] };
     const faulty = inspectorOf({
-      ...withSelectedDevice(opened, { kind: "drive", id: "v1" }),
+      ...withSelection(opened, { kind: "drive", id: "v1" }),
       faults,
     });
     const [unresponsive, diagnostics] = rowsOf(faulty.groups, "faults");
@@ -151,7 +147,7 @@ describe("inspector of a sensor", () => {
 describe("inspector of a joint", () => {
   it("shows its live position and the jammed toggle, and links to its actuator and sensors", () => {
     const faults = { jammedJoints: ["j1"], unresponsiveDrives: [] };
-    const view = inspectorOf({ ...withSelectedNode(opened, jointNodeId("press", "j1")), faults });
+    const view = inspectorOf({ ...withNode(opened, jointNodeId("press", "j1")), faults });
     const [position, jammed] = rowsOf(view.groups, "position");
     expect([position?.label, position?.live]).toEqual([
       "Position (mm)",
@@ -180,10 +176,10 @@ describe("inspector of a joint", () => {
     expect(rowsOf(view.groups, "links")[0]?.muted).toBe(true);
   });
 
-  it("has nothing to show for a fixed joint", () => {
+  it("has no live group for a fixed joint, only its properties", () => {
     const view = selecting(jointNodeId("press", "j3"));
-    expect(view.groups).toEqual([]);
-    expect(view.note).not.toBeNull();
+    expect(view.groups.map((group) => group.id)).toEqual(["general", "placement"]);
+    expect(view.note).toBeNull();
   });
 });
 
@@ -192,6 +188,7 @@ describe("index of the Pantin and of an assembly", () => {
 
   it("lists every device with its name and type, and a line selects its device", () => {
     expect(index.groups.map((group) => group.id)).toEqual([
+      "general",
       "driveIndex",
       "actuatorIndex",
       "sensorIndex",
@@ -227,7 +224,7 @@ describe("index of the Pantin and of an assembly", () => {
 
   it("limits an assembly's index to its own devices", () => {
     const view = selecting(assemblyNodeId("press", "b"));
-    expect(view.groups.map((group) => group.id)).toEqual(["driveIndex"]);
+    expect(view.groups.map((group) => group.id)).toEqual(["general", "driveIndex"]);
     expect(rowsOf(view.groups, "driveIndex").map((row) => row.label)).toEqual(["inv"]);
   });
 });
@@ -237,7 +234,7 @@ describe("hints of an index without devices", () => {
 
   it("says what each family without device is for, in a compact line", () => {
     expect(index.hints).toEqual([]);
-    const onlyB = withSelectedNode(opened, assemblyNodeId("press", "b"));
+    const onlyB = withNode(opened, assemblyNodeId("press", "b"));
     expect(inspectorOf(onlyB).hints).toEqual([t("actuators.empty"), t("sensors.empty")]);
     const empty = withOpenPantin(initialViewerState("fr"), {
       ...pantin,
@@ -250,19 +247,16 @@ describe("hints of an index without devices", () => {
 
   it("keeps the collapsed state of a group by id", () => {
     const folded = inspectorOf({
-      ...withSelectedNode(opened, pantinNodeId("press")),
+      ...withNode(opened, pantinNodeId("press")),
       collapsedPropertyGroups: new Set(["driveIndex"]),
     });
-    expect(folded.groups.map((group) => group.collapsed)).toEqual([true, false, false]);
+    expect(folded.groups.map((group) => group.collapsed)).toEqual([false, true, false, false]);
   });
 });
 
 describe("inspector without anything to show", () => {
-  it.each([
-    ["a body", bodyNodeId("press", "s1")],
-    ["the folder between assemblies", folderNodeId("press", "betweenAssemblies")],
-  ])("shows no index for %s, only the buttons", (_name, nodeId) => {
-    const view = selecting(nodeId);
+  it("shows a note and the buttons when nothing is selected", () => {
+    const view = inspectorOf({ ...opened, selection: null });
     expect(view.groups).toEqual([]);
     expect(view.note).toBe(t("inspector.empty"));
     expect([view.open, view.canCreateActuator, view.canCreateSensor]).toEqual([true, true, true]);

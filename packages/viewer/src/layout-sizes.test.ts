@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  clampPanelWidth,
-  clampTreeFraction,
-  PANEL_WIDTH_DEFAULT,
-  parseStoredNumber,
-  TREE_FRACTION_DEFAULT,
-} from "./layout-sizes.ts";
+import { clampPanelWidth, PANEL_WIDTH_DEFAULT, parseStoredNumber } from "./layout-sizes.ts";
 
 describe("layout sizes", () => {
   it("keeps the panel between its minimum and what leaves room for the 3D view", () => {
@@ -16,12 +10,6 @@ describe("layout sizes", () => {
 
   it("falls back to the default width on a corrupt value", () => {
     expect(clampPanelWidth(Number.NaN, 1600)).toBe(PANEL_WIDTH_DEFAULT);
-  });
-
-  it("keeps both tree and properties visible", () => {
-    expect(clampTreeFraction(0)).toBe(0.15);
-    expect(clampTreeFraction(1)).toBe(0.85);
-    expect(clampTreeFraction(Number.POSITIVE_INFINITY)).toBe(TREE_FRACTION_DEFAULT);
   });
 
   it("parses stored numbers defensively", () => {

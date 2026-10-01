@@ -4,21 +4,19 @@ import { renderContextMenu } from "./context-menu.ts";
 import { element } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import { renderImportForm } from "./import-form.ts";
-import { renderJointForm } from "./joint-form.ts";
-import { JointSliderControl } from "./joint-slider.ts";
 import { renderMessageLine } from "./message-line.ts";
 import { type PaneLayout, setUpPaneLayout } from "./pane-layout.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { renderPromptLine } from "./prompt-line.ts";
-import { renderPropertiesGrid } from "./properties-grid.ts";
 import { renderToolbar, type ToolbarCallbacks } from "./toolbar.ts";
 import { createTreeView, type TreeView } from "./tree-view.ts";
 
-// The left panel: quick-access bar, inline forms, the tree and properties, a
-// confirmation line and the message line. It exists only while a Pantin is
-// open: with none, the welcome dialog replaces it (ADR 0027). The skeleton is
-// built once (so the tree keeps keyboard focus); each region is redrawn from
-// the PanelView on every change.
+// The left panel: quick-access bar, the import form, the tree, a confirmation
+// line and the message line. What is selected is shown in the inspector
+// (ADR 0030). The panel exists only while a Pantin is open: with none, the
+// welcome dialog replaces it (ADR 0027). The skeleton is built once (so the
+// tree keeps keyboard focus); each region is redrawn from the PanelView on
+// every change.
 
 export class SidePanel {
   private readonly panel: HTMLElement;
@@ -26,9 +24,6 @@ export class SidePanel {
   private readonly formHost = element("div", { className: "form-host" });
   private readonly treeView: TreeView = createTreeView();
   private readonly promptHost = element("div", { className: "prompt-host" });
-  private readonly propertiesTitle = element("h2", { className: "pane__title" });
-  private readonly jointSlider = new JointSliderControl();
-  private readonly propertiesBody = element("div", { className: "pane__body" });
   private readonly messageHost = element("div", { className: "message-host" });
   private readonly menuHost = element("div", { className: "menu-host" });
   private readonly fileInput = element("input", {
@@ -54,22 +49,16 @@ export class SidePanel {
     this.panel = panel;
     this.layoutRoot = layoutRoot;
     const treePane = element("section", { className: "pane pane--tree" }, [this.treeView.tree]);
-    const propertiesPane = element("section", { className: "pane pane--properties" }, [
-      this.propertiesTitle,
-      this.jointSlider.element,
-      this.propertiesBody,
-    ]);
-    const paneStack = element("div", { className: "pane-stack" }, [treePane, propertiesPane]);
     panel.replaceChildren(
       this.toolbarHost,
       this.formHost,
-      paneStack,
+      treePane,
       this.promptHost,
       this.messageHost,
       this.menuHost,
       this.fileInput,
     );
-    this.layout = setUpPaneLayout({ layoutRoot, panel, paneStack, treePane });
+    this.layout = setUpPaneLayout({ layoutRoot, panel });
     this.fileInput.addEventListener("change", () => this.onFileChosen());
     document.addEventListener("pointerdown", (event) => this.closeMenuOnOutsidePointer(event));
   }
@@ -82,7 +71,7 @@ export class SidePanel {
     this.layoutRoot.classList.toggle("layout--welcome", view.mode === "list");
     this.toolbarHost.replaceChildren(renderToolbar(view, intents, this.callbacks));
     this.renderForms(view, intents);
-    this.renderViewContent(view, intents);
+    this.treeView.render(view.treeRows, view.language, translate, intents);
     this.renderPrompt(view, intents);
     const message = renderMessageLine(view.message, translate, intents);
     this.messageHost.replaceChildren(...(message === null ? [] : [message]));
@@ -92,24 +81,8 @@ export class SidePanel {
     restoreFocus(this.panel, focus);
   }
 
-  private renderViewContent(view: PanelView, intents: PanelIntents): void {
-    const { translate } = view;
-    this.treeView.render(view.treeRows, view.language, translate, intents);
-    this.propertiesTitle.textContent = translate("properties.label");
-    this.jointSlider.render(view.jointSlider, translate, intents);
-    this.propertiesBody.replaceChildren(
-      view.propertiesNote === null
-        ? renderPropertiesGrid(view.properties, translate, intents)
-        : element("p", { className: "pane-empty", text: view.propertiesNote }),
-    );
-  }
-
   focusTree(): void {
     this.treeView.tree.focus();
-  }
-
-  showJointPositions(positions: ReadonlyMap<string, number>): void {
-    this.jointSlider.showPositions(positions);
   }
 
   private renderPrompt(view: PanelView, intents: PanelIntents): void {
@@ -126,9 +99,7 @@ export class SidePanel {
     const { translate } = view;
     const importForm =
       view.importForm === null ? null : renderImportForm(view.importForm, translate, intents);
-    const jointForm =
-      view.jointForm === null ? null : renderJointForm(view.jointForm, translate, intents);
-    this.formHost.replaceChildren(...[importForm, jointForm].filter((form) => form !== null));
+    this.formHost.replaceChildren(...(importForm === null ? [] : [importForm]));
   }
 
   private renderMenu(view: PanelView, intents: PanelIntents): void {

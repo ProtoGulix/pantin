@@ -1,5 +1,6 @@
 import type { Vector3 } from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
+import { selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -62,7 +63,8 @@ export function jointPreviewOf(state: ViewerState): JointPreview | null {
   if (state.jointForm !== null) {
     return formPreview(state.jointForm, isDriven(state, state.jointForm.jointId));
   }
-  const ref = state.selectedNodeId === null ? null : parseNodeId(state.selectedNodeId);
+  const nodeId = selectedNodeIdOf(state.selection);
+  const ref = nodeId === null ? null : parseNodeId(nodeId);
   const joint =
     ref?.kind === "joint"
       ? state.openPantin?.document.joints.find((candidate) => candidate.id === ref.jointId)

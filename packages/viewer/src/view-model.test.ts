@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
 import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
-import { pantinResponse, pantinSummaries } from "./test-fixtures.ts";
+import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { withSelectedDevice, withSelectedNode } from "./tree/tree-state.ts";
+import { withSelection } from "./tree/tree-state.ts";
 import { buildPanelView } from "./view-model.ts";
 import {
   initialViewerState,
@@ -52,8 +52,8 @@ describe("toolbar", () => {
   });
 
   it("frames the selection only when something is selected", () => {
-    const onBody = withSelectedNode(opened(false), bodyNodeId("press", "rail"));
-    const nothing = withSelectedNode(opened(false), null);
+    const onBody = withNode(opened(false), bodyNodeId("press", "rail"));
+    const nothing = withNode(opened(false), null);
     expect(buildPanelView(onBody).toolbar.frameSelectionEnabled).toBe(true);
     expect(buildPanelView(nothing).toolbar.frameSelectionEnabled).toBe(false);
   });
@@ -168,10 +168,28 @@ describe("message line and language", () => {
     });
   });
 
-  it("feeds the tree rows and the properties from the same selection", () => {
-    const view = buildPanelView(withSelectedNode(opened(false), bodyNodeId("press", "rail")));
+  it("feeds the tree rows and the inspector from the same selection", () => {
+    const view = buildPanelView(withNode(opened(false), bodyNodeId("press", "rail")));
     expect(view.treeRows.find((row) => row.selected)?.label).toBe("Linear rail");
-    expect(view.properties[0]?.rows[0]?.value).toBe("Linear rail");
+    expect(view.inspector.groups[0]?.rows[0]?.value).toBe("Linear rail");
+  });
+
+  it("has no properties of its own: the left column is the tree and its notifications", () => {
+    expect(Object.keys(buildPanelView(opened(false))).sort()).toEqual([
+      "contextMenu",
+      "importForm",
+      "inspector",
+      "language",
+      "menus",
+      "message",
+      "mode",
+      "prompt",
+      "toolbar",
+      "translate",
+      "treeRows",
+      "viewportHint",
+      "welcome",
+    ]);
   });
 });
 
@@ -235,7 +253,7 @@ describe("context menu of an assembly (ADR 0019)", () => {
   });
 });
 
-describe("devices in the panels", () => {
+describe("devices in the tree and the inspector", () => {
   const document = documentOf({
     assemblies: ["main"],
     bodies: [bodyOf("carriage", "main")],
@@ -244,23 +262,13 @@ describe("devices in the panels", () => {
     actuators: [cylinderOf("verin1", "main", "verin1-dist", ["slide"])],
   });
   const onDevice = (language: "fr" | "en") =>
-    withSelectedDevice(
+    withSelection(
       withOpenPantin(initialViewerState(language), { ...pantinResponse(false), document }),
       { kind: "drive", id: "verin1-dist" },
     );
 
-  it("names the device shown in the inspector, in both languages", () => {
-    expect(buildPanelView(onDevice("fr")).propertiesNote).toBe(
-      "verin1-dist (Préactionneur) est affiché dans l'inspecteur.",
-    );
-    expect(buildPanelView(onDevice("en")).propertiesNote).toBe(
-      "verin1-dist (Drive) is shown in the inspector.",
-    );
-  });
-
-  it("selects no row and shows no property for a device, only related joints", () => {
+  it("selects no row for a device, only related joints", () => {
     const view = buildPanelView(onDevice("fr"));
-    expect(view.properties).toEqual([]);
     expect(view.treeRows.some((row) => row.selected)).toBe(false);
     const related = view.treeRows.filter((row) => row.related);
     expect(related.length).toBeGreaterThan(0);
@@ -277,8 +285,7 @@ describe("devices in the panels", () => {
     expect(buildPanelView(onDevice("en")).inspector.subject).toBe("Drive · verin1-dist");
   });
 
-  it("has no note for a tree node", () => {
-    expect(buildPanelView(opened(false)).propertiesNote).toBeNull();
+  it("marks no related row for a tree node", () => {
     expect(buildPanelView(opened(false)).treeRows.some((row) => row.related)).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import type { DeviceRef } from "../device-selection.ts";
+import { type Selection, selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "./node-ids.ts";
 import type { TreeIcon, TreeNode } from "./tree-model.ts";
 
@@ -30,8 +30,7 @@ export interface TreeRow {
 
 export interface TreeViewState {
   expandedNodeIds: ReadonlySet<string>;
-  selectedNodeId: string | null;
-  selectedDevice: DeviceRef | null;
+  selection: Selection | null;
   renamingNodeId: string | null;
 }
 
@@ -54,6 +53,7 @@ export function flattenTree(
   relatedJointIds: ReadonlySet<string> = NO_JOINTS,
 ): TreeRow[] {
   const rows: TreeRow[] = [];
+  const selectedId = selectedNodeIdOf(view.selection);
   const visit = (siblings: readonly TreeNode[], depth: number, parentId: string | null) => {
     siblings.forEach((node, index) => {
       const expanded = isExpandable(node) && view.expandedNodeIds.has(node.id);
@@ -72,7 +72,7 @@ export function flattenTree(
         parentId,
         expandable: isExpandable(node),
         expanded,
-        selected: node.id === view.selectedNodeId,
+        selected: node.id === selectedId,
         related: isRelatedJoint(node.id, relatedJointIds),
         renaming: node.id === view.renamingNodeId,
         positionInSet: index + 1,

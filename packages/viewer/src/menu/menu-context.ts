@@ -1,5 +1,6 @@
 import type { DeviceKind } from "../device-selection.ts";
 import type { Language } from "../i18n/translate.ts";
+import type { Selection } from "../selection.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
@@ -16,6 +17,13 @@ export interface MenuContext {
   diagramShown: boolean;
 }
 
+function selectedKindOf(selection: Selection | null): MenuContext["selectedKind"] {
+  if (selection === null) {
+    return null;
+  }
+  return selection.kind === "node" ? (parseNodeId(selection.nodeId)?.kind ?? null) : selection.kind;
+}
+
 export function menuContext(state: ViewerState): MenuContext {
   return {
     editing: state.openPantin !== null,
@@ -23,9 +31,7 @@ export function menuContext(state: ViewerState): MenuContext {
     unsavedChanges: state.openPantin?.unsavedChanges ?? false,
     importing: state.importInProgress,
     hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
-    selectedKind:
-      state.selectedDevice?.kind ??
-      (state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null)),
+    selectedKind: selectedKindOf(state.selection),
     language: state.language,
     inspectorOpen: state.inspectorOpen,
     diagramShown: state.diagramShown,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, stepBody } from "../test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
-import { buildPropertyGroups } from "./properties-model.ts";
+import { titledNodeGroups } from "./properties-test-helpers.ts";
 import type { PropertyGroup } from "./property-rows.ts";
 
 const translate = createTranslator("fr");
@@ -12,13 +12,9 @@ function table(groups: PropertyGroup[]) {
   return groups.map((group) => [group.title, group.rows.map((row) => [row.label, row.value])]);
 }
 
-describe("buildPropertyGroups", () => {
-  it("is empty without selection", () => {
-    expect(buildPropertyGroups(source, null, new Set(), translate)).toEqual([]);
-  });
-
+describe("properties of the Pantin", () => {
   it("describes the open Pantin, with an editable name", () => {
-    const groups = buildPropertyGroups(source, pantinNodeId("press"), new Set(), translate);
+    const groups = titledNodeGroups(source, pantinNodeId("press"), translate);
     expect(table(groups)).toEqual([
       [
         "Général",
@@ -38,13 +34,13 @@ describe("buildPropertyGroups", () => {
   });
 
   it("is empty for a Pantin that is not the open one", () => {
-    expect(buildPropertyGroups(source, pantinNodeId("robot"), new Set(), translate)).toEqual([]);
+    expect(titledNodeGroups(source, pantinNodeId("robot"), translate)).toEqual([]);
   });
 });
 
-describe("buildPropertyGroups for bodies and nodes", () => {
+describe("properties of bodies and nodes", () => {
   it("describes a body: general, joints, source, mesh and original nodes", () => {
-    const groups = buildPropertyGroups(source, bodyNodeId("press", "rail"), new Set(), translate);
+    const groups = titledNodeGroups(source, bodyNodeId("press", "rail"), translate);
     expect(table(groups)).toEqual([
       [
         "Général",
@@ -77,27 +73,17 @@ describe("buildPropertyGroups for bodies and nodes", () => {
   });
 });
 
-describe("buildPropertyGroups for other nodes", () => {
+describe("properties of other nodes", () => {
   it("shows the STEP format of a converted body", () => {
     const stepSource = {
       openPantin: pantinResponse(false, [stepBody("carriage", "N_1")]),
     };
-    const groups = buildPropertyGroups(
-      stepSource,
-      bodyNodeId("press", "carriage"),
-      new Set(),
-      translate,
-    );
+    const groups = titledNodeGroups(stepSource, bodyNodeId("press", "carriage"), translate);
     expect(groups[2]?.rows[1]?.value).toBe("STEP");
   });
 
   it("describes a source node, read-only", () => {
-    const groups = buildPropertyGroups(
-      source,
-      sourceNodeNodeId("press", "rail", 0),
-      new Set(),
-      translate,
-    );
+    const groups = titledNodeGroups(source, sourceNodeNodeId("press", "rail", 0), translate);
     expect(table(groups)).toEqual([
       [
         "Général",
@@ -110,32 +96,15 @@ describe("buildPropertyGroups for other nodes", () => {
   });
 });
 
-describe("buildPropertyGroups for folders and group state", () => {
-  it("marks collapsed groups by id, whatever the node", () => {
-    const groups = buildPropertyGroups(
-      source,
-      bodyNodeId("press", "rail"),
-      new Set(["source"]),
-      translate,
-    );
-    expect(groups.map((group) => group.collapsed)).toEqual([false, false, true, false, false]);
-  });
-
+describe("properties of a missing node", () => {
   it("is empty for a node that no longer exists", () => {
-    expect(buildPropertyGroups(source, bodyNodeId("press", "ghost"), new Set(), translate)).toEqual(
-      [],
-    );
+    expect(titledNodeGroups(source, bodyNodeId("press", "ghost"), translate)).toEqual([]);
   });
 });
 
-describe("buildPropertyGroups for assemblies (ADR 0019)", () => {
+describe("properties of assemblies (ADR 0019)", () => {
   it("describes an assembly: its name, its key, which prefixes tags, and its bodies", () => {
-    const groups = buildPropertyGroups(
-      source,
-      assemblyNodeId("press", "main"),
-      new Set(),
-      translate,
-    );
+    const groups = titledNodeGroups(source, assemblyNodeId("press", "main"), translate);
     expect(table(groups)).toEqual([
       [
         "Général",
@@ -154,7 +123,7 @@ describe("buildPropertyGroups for assemblies (ADR 0019)", () => {
   });
 
   it("lets a body move to another assembly with a select", () => {
-    const groups = buildPropertyGroups(source, bodyNodeId("press", "rail"), new Set(), translate);
+    const groups = titledNodeGroups(source, bodyNodeId("press", "rail"), translate);
     const assembly = groups[0]?.rows.find((entry) => entry.id === "assembly");
     expect(assembly?.edit).toEqual({
       input: "select",

@@ -11,7 +11,8 @@ import {
 } from "../diagram/diagram-fixtures.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { buildInspectorView } from "../inspector/inspector-model.ts";
-import { withSelectedDevice } from "../tree/tree-state.ts";
+import { selectedDeviceOf } from "../selection.ts";
+import { withSelection } from "../tree/tree-state.ts";
 import { buildPanelView } from "../view-model.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { createPanelIntents } from "./controller.ts";
@@ -57,7 +58,7 @@ describe("Supprimer on a selected device", () => {
     async (kind, id, call, done) => {
       const remove = vi.fn(async () => pantin);
       const store = openStore({ [call]: remove });
-      store.update(withSelectedDevice(store.state, { kind, id }));
+      store.update(withSelection(store.state, { kind, id }));
       runMenuCommand(store, "delete", ignoreLanguage);
       await settle();
       expect(remove).toHaveBeenCalledWith("press", id);
@@ -73,7 +74,7 @@ describe("a refused drive deletion", () => {
         throw new PantinApiError("api", 'Drive "v1" feeds actuator "c1", "c2".', "conflict", 409);
       },
     });
-    store.update(withSelectedDevice(store.state, { kind: "drive", id: "v1" }));
+    store.update(withSelection(store.state, { kind: "drive", id: "v1" }));
     runMenuCommand(store, "delete", ignoreLanguage);
     return store;
   }
@@ -101,7 +102,7 @@ describe("a refused drive deletion", () => {
       throw new Error("The message has no link.");
     }
     createPanelIntents(store).selectDevice(first.device);
-    expect(store.state.selectedDevice).toEqual({ kind: "actuator", id: "c1" });
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind: "actuator", id: "c1" });
   });
 
   it("keeps the generic message when the failure is not a conflict", async () => {
@@ -110,7 +111,7 @@ describe("a refused drive deletion", () => {
         throw new PantinApiError("network", "down", null, null);
       },
     });
-    store.update(withSelectedDevice(store.state, { kind: "drive", id: "v1" }));
+    store.update(withSelection(store.state, { kind: "drive", id: "v1" }));
     runMenuCommand(store, "delete", ignoreLanguage);
     await settle();
     expect(store.state.message?.key).toBe("error.network");
@@ -122,7 +123,7 @@ describe("Renommer on a selected device", () => {
 
   it("asks the inspector to focus the name field, once per press", () => {
     const store = openStore();
-    store.update(withSelectedDevice(store.state, { kind: "sensor", id: "e1" }));
+    store.update(withSelection(store.state, { kind: "sensor", id: "e1" }));
     runMenuCommand(store, "rename", ignoreLanguage);
     const first = buildInspectorView(store.state, t).focusRequest;
     expect(first).toMatchObject({ key: "property-name" });
@@ -134,7 +135,7 @@ describe("Renommer on a selected device", () => {
   it("opens the inspector and unfolds the group holding the name", () => {
     const store = openStore();
     store.update({
-      ...withSelectedDevice(store.state, { kind: "drive", id: "v2" }),
+      ...withSelection(store.state, { kind: "drive", id: "v2" }),
       inspectorOpen: false,
       collapsedPropertyGroups: new Set(["general", "parameters"]),
     });
@@ -149,7 +150,7 @@ describe("Renommer on a selected device", () => {
     const intents = createPanelIntents(store);
     intents.selectDiagramNode("actuator:c2");
     intents.runMenuCommand("rename");
-    expect(store.state.selectedDevice).toEqual({ kind: "actuator", id: "c2" });
+    expect(selectedDeviceOf(store.state.selection)).toEqual({ kind: "actuator", id: "c2" });
     expect(store.state.inspectorFocus).toMatchObject({ key: "property-name" });
   });
 

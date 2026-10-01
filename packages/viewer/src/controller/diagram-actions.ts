@@ -1,7 +1,7 @@
 import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
-import { withRevealedNode, withSelectedDevice } from "../tree/tree-state.ts";
+import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
 import {
   createDiagramElement,
   type DiagramElementKind,
@@ -37,9 +37,10 @@ export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
 export function selectDevice(store: ViewerStore, device: DeviceRef): void {
   const open = store.state.openPantin;
   if (open !== null && deviceExists(open.document, device)) {
-    // A hidden inspector would leave the left-hand note pointing at nothing.
+    // The inspector is the only place a device is shown: selecting one from the
+    // diagram or an index opens it. A tree node never does (ADR 0030 point 2).
     store.update({
-      ...withSelectedDevice(store.state, device),
+      ...withSelection(store.state, device),
       inspectorOpen: true,
       contextMenu: null,
     });

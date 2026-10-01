@@ -7,9 +7,9 @@ import type {
 import { button, element, selectInput } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
-// The inline "New joint" form under the toolbar. Every text input reports
+// The "New joint" form, at the head of the inspector. Every text input reports
 // each edit to the controller (which keeps it without redrawing), so a redraw
-// of the panel never loses what was typed.
+// of the inspector never loses what was typed.
 
 function field(label: string, control: HTMLElement): HTMLElement {
   return element("label", { className: "inline-field" }, [

@@ -92,10 +92,7 @@ export class ViewerStore {
     viewport.setSelectedBodies(
       document === undefined || next.openPantin === null
         ? new Set()
-        : highlightedBodyIds(document, this.chainLinksOf(document), {
-            selectedNodeId: next.selectedNodeId,
-            selectedDevice: next.selectedDevice,
-          }),
+        : highlightedBodyIds(document, this.chainLinksOf(document), next.selection),
     );
     viewport.setHiddenBodies(
       document === undefined ? new Set() : hiddenBodyIds(document, next.assemblyDisplay),
