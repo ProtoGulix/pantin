@@ -34,7 +34,8 @@
 
 .view-switch__button {
   height: 20px;
-  padding: 0 8px;
+  padding: 0 6px;
+  white-space: nowrap;
   font: inherit;
   color: var(--text-muted);
   cursor: pointer;
