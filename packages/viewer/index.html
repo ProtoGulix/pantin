@@ -17,17 +17,21 @@
     <link rel="stylesheet" href="/src/styles/diagram.css" />
     <link rel="stylesheet" href="/src/styles/diagram-wiring.css" />
     <link rel="stylesheet" href="/src/styles/welcome.css" />
+    <link rel="stylesheet" href="/src/styles/console.css" />
   </head>
   <body>
     <!-- Texts and labels are set from the translation files at start-up (ADR 0010). -->
     <header id="menu-bar" class="menu-bar"></header>
     <div class="layout">
       <aside id="side-panel" class="side-panel"></aside>
+      <div class="central">
       <main class="viewport">
         <canvas id="viewport-canvas" class="viewport__canvas" tabindex="-1"></canvas>
         <p id="viewport-hint" class="viewport__hint"></p>
         <div id="welcome" class="welcome-overlay" hidden></div>
       </main>
+      <section id="console" class="console" hidden></section>
+      </div>
       <aside id="inspector" class="inspector" hidden></aside>
     </div>
     <script type="module" src="/src/main.ts"></script>

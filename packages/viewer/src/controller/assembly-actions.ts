@@ -78,7 +78,7 @@ export async function commitKeyEdit(
   store.update({
     ...stateAfterKeyEdit(store, before, target, value),
     message: {
-      ...infoMessage(pluralKey("message.tagsRenamed", count), { count }),
+      ...infoMessage(pluralKey("message.tagsRenamed", count, store.state.language), { count }),
       detail: count === 0 ? null : renamedTagsText(answer.renamedTags),
     },
   });

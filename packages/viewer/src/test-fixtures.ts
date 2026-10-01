@@ -5,6 +5,7 @@ import {
   type PantinResponse,
   type PantinSummary,
 } from "@pantin/protocol";
+import type { Language } from "./i18n/translate.ts";
 import { nodeSelection } from "./selection.ts";
 import type { TreeViewState } from "./tree/tree-rows.ts";
 import { withSelection } from "./tree/tree-state.ts";
@@ -127,3 +128,8 @@ export const weldJoint: Joint = {
   name: "Weld",
   type: "fixed",
 };
+
+/** A tree or properties source for a test: the parts it is about, in the reference language. */
+export function sourceOf<Parts extends object>(parts: Parts): Parts & { language: Language } {
+  return { ...parts, language: "fr" };
+}

@@ -56,3 +56,15 @@ describe("runMenuCommand on the central layout and the language", () => {
     expect(store.state.centralLayout).toBe("both");
   });
 });
+
+describe("runMenuCommand on the console", () => {
+  it("opens and closes the console from Affichage > Console, and from nothing else", () => {
+    const store = testStore({});
+    store.state = withOpenPantin(store.state, pantinResponse(false));
+    expect(store.state.console.open).toBe(false);
+    runMenuCommand(store, "toggleConsole", ignoreLanguage);
+    expect(store.state.console.open).toBe(true);
+    runMenuCommand(store, "toggleConsole", ignoreLanguage);
+    expect(store.state.console.open).toBe(false);
+  });
+});

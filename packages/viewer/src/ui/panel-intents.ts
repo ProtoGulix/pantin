@@ -1,3 +1,4 @@
+import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
 import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
 import type { DeviceRef } from "../device-selection.ts";
@@ -135,6 +136,13 @@ export interface PanelIntents {
   removeDiagramLink(fromNodeId: string, toNodeId: string): void;
   showDiagramHint(hint: DiagramHint): void;
   createDiagramElement(kind: DiagramElementKind): void;
+
+  // The Pantin console (ADR 0031): the panel, its level filters, "Effacer", and
+  // a click or Enter on a line, which selects its source.
+  toggleConsole(): void;
+  toggleConsoleLevel(level: ConsoleLevel): void;
+  clearConsole(): void;
+  selectConsoleSource(source: ConsoleSource): void;
 
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;

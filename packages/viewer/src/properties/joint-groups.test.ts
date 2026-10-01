@@ -1,7 +1,14 @@
 import { JOINT_COORDINATE_UNITS } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { hingeJoint, pantinResponse, screwJoint, spinJoint, stepBody } from "../test-fixtures.ts";
+import {
+  hingeJoint,
+  pantinResponse,
+  screwJoint,
+  sourceOf,
+  spinJoint,
+  stepBody,
+} from "../test-fixtures.ts";
 import { bodyNodeId, folderNodeId, jointNodeId } from "../tree/node-ids.ts";
 import { titledNodeGroups } from "./properties-test-helpers.ts";
 import type { PropertyGroup } from "./property-rows.ts";
@@ -21,7 +28,7 @@ const jointSource = {
   ),
 };
 const jointGroupsOf = (jointId: string) =>
-  titledNodeGroups(jointSource, jointNodeId("press", jointId), translate);
+  titledNodeGroups(sourceOf(jointSource), jointNodeId("press", jointId), translate);
 const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 
 const HINGE_GROUPS = [
@@ -68,7 +75,7 @@ describe("joint properties", () => {
       openPantin: pantinResponse(false, [stepBody("rail", "Rail")], "press", [oblique]),
     };
     const placement = table(
-      titledNodeGroups(source, jointNodeId("press", "hinge"), translate).filter(
+      titledNodeGroups(sourceOf(source), jointNodeId("press", "hinge"), translate).filter(
         (group) => group.id === "placement",
       ),
     )[0];
@@ -85,7 +92,7 @@ describe("joint properties", () => {
 describe("joint axis in the grid", () => {
   const axisRowsOf = (customAxisJointIds: ReadonlySet<string>) =>
     titledNodeGroups(
-      { ...jointSource, customAxisJointIds },
+      sourceOf({ ...jointSource, customAxisJointIds }),
       jointNodeId("press", "hinge"),
       translate,
     ).find((group) => group.id === "placement")?.rows ?? [];
@@ -137,7 +144,7 @@ describe("joint parameters and folder", () => {
 
   it("describes the folder of joints between assemblies by its own label and count", () => {
     const groups = titledNodeGroups(
-      jointSource,
+      sourceOf(jointSource),
       folderNodeId("press", "betweenAssemblies"),
       translate,
     );
@@ -202,7 +209,7 @@ describe("joint edit targets", () => {
 
 describe("joint values in display units", () => {
   const rowsOf = (jointId: string) =>
-    titledNodeGroups(jointSource, jointNodeId("press", jointId), translate).flatMap(
+    titledNodeGroups(sourceOf(jointSource), jointNodeId("press", jointId), translate).flatMap(
       (group) => group.rows,
     );
 
@@ -224,7 +231,7 @@ describe("joint values in display units", () => {
 
 describe("joints of a body", () => {
   const bodyRows = (bodyId: string) =>
-    titledNodeGroups(jointSource, bodyNodeId("press", bodyId), translate).find(
+    titledNodeGroups(sourceOf(jointSource), bodyNodeId("press", bodyId), translate).find(
       (group) => group.id === "joints",
     )?.rows ?? [];
 

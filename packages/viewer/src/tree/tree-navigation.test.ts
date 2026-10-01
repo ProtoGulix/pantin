@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
+import { pantinResponse, railBody, sourceOf, stepBody } from "../test-fixtures.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
@@ -21,7 +21,7 @@ const firstSource = sourceNodeNodeId("press", "rail", 0);
 
 function rows(expanded: string[]) {
   const tree = buildTree(
-    { openPantin: pantinResponse(false, [railBody, stepBody("carriage", "N_1")]) },
+    sourceOf({ openPantin: pantinResponse(false, [railBody, stepBody("carriage", "N_1")]) }),
     createTranslator("en"),
   );
   return flattenTree(tree, {

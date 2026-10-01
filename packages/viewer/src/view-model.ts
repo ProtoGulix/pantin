@@ -1,4 +1,6 @@
 import { type CentralLayout, showsViewport } from "./central-layout.ts";
+import type { ClientConsole } from "./console/console-list.ts";
+import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
 import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
@@ -61,6 +63,8 @@ export interface PanelView {
   viewportHint: string;
   // The right-hand panel: the only properties panel (ADR 0030).
   inspector: InspectorView;
+  // The Pantin console and its counter (ADR 0031); null with no Pantin open.
+  console: ConsoleView | null;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -109,7 +113,7 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
-export function buildPanelView(state: ViewerState): PanelView {
+export function buildPanelView(state: ViewerState, consoleList: ClientConsole): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
   return {
@@ -126,5 +130,12 @@ export function buildPanelView(state: ViewerState): PanelView {
     message: buildMessageView(state, translate),
     viewportHint: translate(mode === "list" ? "page.viewportEmpty" : "page.viewportHint"),
     inspector: buildInspectorView(state, translate),
+    console: buildConsoleView(
+      state.console,
+      consoleList,
+      state.openPantin,
+      state.language,
+      translate,
+    ),
   };
 }

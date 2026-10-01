@@ -1,6 +1,8 @@
 import type { DriveRuntime } from "@pantin/protocol";
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
 import { effectiveLayout, parseStoredLayout } from "./central-layout.ts";
+import type { ConsoleView } from "./console/console-view.ts";
+import { refreshConsole } from "./controller/console-actions.ts";
 import {
   createPanelIntents,
   selectBodyFromViewport,
@@ -16,6 +18,7 @@ import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
 import { CentralArea } from "./ui/central-area.ts";
+import { ConsolePanel } from "./ui/console-panel.ts";
 import { DiagramView } from "./ui/diagram-view.ts";
 import { Inspector } from "./ui/inspector.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
@@ -49,6 +52,16 @@ interface Screen {
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
   ): void;
+  showConsoleLive(view: ConsoleView | null): void;
+}
+
+// Its counter sits in the toolbar of the side panel, which is redrawn: looked up when needed.
+function createConsolePanel(sidePanel: HTMLElement): ConsolePanel {
+  return new ConsolePanel(
+    requireElement("#console", HTMLElement),
+    requireElement(".central", HTMLElement),
+    () => sidePanel.querySelector<HTMLElement>(".console-counter"),
+  );
 }
 
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
@@ -70,6 +83,7 @@ function createScreen(): Screen {
     requireElement("#welcome", HTMLElement),
   );
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
+  const consolePanel = createConsolePanel(panel);
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
@@ -85,6 +99,7 @@ function createScreen(): Screen {
         effectiveLayout(view.toolbar.centralLayout, view.toolbar.mode === "edit"),
         view.translate,
       );
+      consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
@@ -92,6 +107,7 @@ function createScreen(): Screen {
     showInspectorLive: (tags, runtime) => inspector.showLive(tags, runtime),
     renderDiagram: (model, intents) => diagram.render(model, intents),
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
+    showConsoleLive: (view) => consolePanel.showLive(view),
   };
 }
 
@@ -144,6 +160,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
         }
       },
       showDiagramLive: (tags, runtime) => screen.showDiagramLive(tags, runtime),
+      showConsoleLive: (view) => screen.showConsoleLive(view),
       viewport: () => {
         if (viewport === null) {
           throw new Error("The viewport is used before it was created.");
@@ -179,7 +196,8 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
 
 // Tag values change at every simulation step: while the inspector is open
 // or the Pantin has sensors (ADR 0024), they are read four times a second (a
-// stand-in until the tag bus, CLAUDE.md section 9, pushes them).
+// stand-in until the tag bus, CLAUDE.md section 9, pushes them). The console
+// entries of the open Pantin are read in the same loop (ADR 0031 point 4).
 const TAG_REFRESH_MILLISECONDS = 250;
 
 function startApplication(): void {
@@ -187,7 +205,10 @@ function startApplication(): void {
   const api = createPantinApiClient((url, init) => fetch(url, init));
   const store = createStore(createScreen(), api);
   startViewer(store);
-  window.setInterval(() => void refreshTagValues(store), TAG_REFRESH_MILLISECONDS);
+  window.setInterval(() => {
+    void refreshTagValues(store);
+    void refreshConsole(store);
+  }, TAG_REFRESH_MILLISECONDS);
 }
 
 startApplication();

@@ -19,6 +19,7 @@ export type MenuCommand =
   | "frameAll"
   | "frameSelection"
   | "toggleInspector"
+  | "toggleConsole"
   | "cycleLayout"
   | `layout:${CentralLayout}`
   | `language:${Language}`;
@@ -167,6 +168,15 @@ const MENUS: readonly MenuDefinition[] = [
         ...item("toggleInspector", "menubar.view.inspector", (context) => context.editing),
         // Checked while the drives panel is shown (ADR 0022).
         checked: (context) => context.inspectorOpen,
+      },
+      {
+        ...item("toggleConsole", "menubar.view.console", (context) => context.editing, {
+          key: "F8",
+          primaryModifier: false,
+          labelKey: "shortcut.toggleConsole",
+        }),
+        // Checked while the console is shown (ADR 0031 point 5).
+        checked: (context) => context.consoleOpen,
       },
       "separator",
       item("cycleLayout", "menubar.view.cycleLayout", (context) => context.editing, {

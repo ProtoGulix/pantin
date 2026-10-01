@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
+import {
+  hingeJoint,
+  pantinResponse,
+  railBody,
+  slideJoint,
+  sourceOf,
+  stepBody,
+} from "../test-fixtures.ts";
 import { bodyNodeId, jointNodeId } from "./node-ids.ts";
 import { buildTree, findNode } from "./tree-model.ts";
 
@@ -21,7 +28,7 @@ describe("moved joints in the tree (ADR 0028)", () => {
     const carriage = stepBody("carriage", "Carriage");
     const pantin = pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]);
     const document = { ...pantin.document, actuators: [cylinder] };
-    const tree = buildTree({ openPantin: { ...pantin, document } }, translate);
+    const tree = buildTree(sourceOf({ openPantin: { ...pantin, document } }), translate);
     expect(findNode(tree, jointNodeId("press", "hinge"))).toMatchObject({
       icon: "joint",
       wiring: { actuatorId: "cylinder", sensorIds: [] },
@@ -53,7 +60,7 @@ describe("moved joints in the tree (ADR 0028)", () => {
       ...pantin.document,
       sensors: [sensor("low", "Low"), sensor("high", "High")],
     };
-    const tree = buildTree({ openPantin: { ...pantin, document } }, translate);
+    const tree = buildTree(sourceOf({ openPantin: { ...pantin, document } }), translate);
     expect(findNode(tree, jointNodeId("press", "slide"))).toMatchObject({
       wiring: { actuatorId: null, sensorIds: ["low", "high"] },
       stateLabel: "surveillée par Low, High",

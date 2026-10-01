@@ -27,6 +27,7 @@ const SHORTCUT_KEYS = [
   "Ctrl+S",
   "F2",
   "Suppr",
+  "F8",
   "F4",
   "Flèches",
   "Entrée",

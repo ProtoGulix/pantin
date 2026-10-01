@@ -1,0 +1,217 @@
+/* The central column and the Pantin console under it (ADR 0031). Tokens in base.css. */
+.central {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.central > .viewport {
+  flex: 1;
+  min-height: 0;
+}
+
+.console {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+}
+
+.console[hidden] {
+  display: none;
+}
+
+/* A thin handle on the top edge, over the border. */
+.console__splitter {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 4px;
+}
+
+.console__head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.console__title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.console__filters {
+  display: flex;
+  gap: 4px;
+}
+
+.console__filter {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  font: inherit;
+  color: var(--text-faint);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* A pressed filter is outlined and in full colour; an unpressed one is faint: the icon and text stay the cue. */
+.console__filter.is-pressed {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.console__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.console__empty {
+  margin: 8px;
+  color: var(--text-muted);
+}
+
+.console-line {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 1px 8px;
+  border-left: 3px solid transparent;
+}
+
+.console-line.is-activatable {
+  cursor: pointer;
+}
+
+.console-line:hover {
+  background: var(--hover);
+}
+
+.console-line:focus-visible {
+  background: var(--accent-soft);
+  box-shadow: var(--focus-ring);
+}
+
+.console-line--error {
+  background: var(--danger-soft);
+  border-left-color: var(--danger);
+}
+
+.console-line--warning {
+  border-left-color: var(--accent);
+}
+
+.console-line__time {
+  flex: none;
+  font-family: var(--font-source);
+  color: var(--text-muted);
+}
+
+.console-line__level {
+  display: flex;
+  flex: none;
+  align-self: center;
+}
+
+.console-line--error .console-line__level {
+  color: var(--danger);
+}
+
+.console-line--warning .console-line__level {
+  color: var(--accent);
+}
+
+.console-line--info .console-line__level {
+  color: var(--text-muted);
+}
+
+.console-line__level-text {
+  flex: none;
+  min-width: 11ch;
+  font-weight: 600;
+}
+
+.console-line__source {
+  flex: none;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.console-line__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.console-line__detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-source);
+  color: var(--text-muted);
+}
+
+.console-line__repeat {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--font-source);
+  color: var(--text-muted);
+}
+
+/* Toolbar counter: icons and numbers, so colour is never the only cue. */
+.console-counter {
+  display: flex;
+  flex-shrink: 0;
+  gap: 3px;
+  align-items: center;
+  height: 22px;
+  padding: 0 6px;
+  font: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+}
+
+.console-counter:hover {
+  background: var(--hover);
+}
+
+.console-counter.is-pressed {
+  background: var(--accent-soft);
+  border-color: var(--border);
+}
+
+.console-counter .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.console-counter__count + .icon {
+  margin-left: 4px;
+}
+
+.console-counter__count--errors.is-active {
+  color: var(--danger);
+}
+
+.console-counter__count--warnings.is-active {
+  color: var(--accent);
+}

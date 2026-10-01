@@ -2,15 +2,15 @@
 // Home/End move the selection, Enter opens the selected Pantin.
 
 export type ListCommand =
-  | { type: "select"; pantinId: string }
-  | { type: "open"; pantinId: string }
+  | { type: "select"; id: string }
+  | { type: "open"; id: string }
   | { type: "none" };
 
 const NONE: ListCommand = { type: "none" };
 
 function selectAt(ids: readonly string[], index: number): ListCommand {
-  const pantinId = ids[index];
-  return pantinId === undefined ? NONE : { type: "select", pantinId };
+  const id = ids[index];
+  return id === undefined ? NONE : { type: "select", id };
 }
 
 export function listCommandForKey(
@@ -29,7 +29,7 @@ export function listCommandForKey(
     case "End":
       return selectAt(ids, ids.length - 1);
     case "Enter":
-      return selectedId !== null && index >= 0 ? { type: "open", pantinId: selectedId } : NONE;
+      return selectedId !== null && index >= 0 ? { type: "open", id: selectedId } : NONE;
     default:
       return NONE;
   }

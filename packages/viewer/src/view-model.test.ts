@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { EMPTY_CLIENT_CONSOLE } from "./console/console-list.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
 import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { withSelection } from "./tree/tree-state.ts";
-import { buildPanelView } from "./view-model.ts";
+import { buildPanelView as buildPanelViewWith } from "./view-model.ts";
 import {
   initialViewerState,
   type ViewerState,
@@ -13,6 +14,9 @@ import {
   withOpenPantin,
   withRequestStarted,
 } from "./viewer-state.ts";
+
+// The console lines are not what these tests are about.
+const buildPanelView = (state: ViewerState) => buildPanelViewWith(state, EMPTY_CLIENT_CONSOLE);
 
 function opened(unsavedChanges: boolean, language: "fr" | "en" = "fr"): ViewerState {
   return withOpenPantin(
@@ -176,6 +180,7 @@ describe("message line and language", () => {
 
   it("has no properties of its own: the left column is the tree and its notifications", () => {
     expect(Object.keys(buildPanelView(opened(false))).sort()).toEqual([
+      "console",
       "contextMenu",
       "importForm",
       "inspector",

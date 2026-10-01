@@ -8,12 +8,15 @@
 }
 
 /* Toolbar */
+/* Wraps to a second row rather than squeezing or hiding a control when the
+   panel is narrow (the layout switch and the console counter are wide). */
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 1px;
   align-items: center;
-  height: 30px;
-  padding: 0 4px;
+  min-height: 30px;
+  padding: 3px 4px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
 }
@@ -28,6 +31,7 @@
 /* The 3D / Diagram switch: a segmented control, the pressed side in the accent. */
 .view-switch {
   display: flex;
+  flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }

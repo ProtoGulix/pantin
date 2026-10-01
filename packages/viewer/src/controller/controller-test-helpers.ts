@@ -1,7 +1,7 @@
 import type { PantinApiClient } from "../api-client.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import type { Viewport } from "../scene/viewport.ts";
-import { ViewerStore } from "./viewer-store.ts";
+import { type StorePorts, ViewerStore } from "./viewer-store.ts";
 
 // A store over a fake API, for the tests of controller actions.
 
@@ -20,6 +20,7 @@ export function testStore(
   api: Partial<PantinApiClient>,
   viewport: Partial<Viewport> = {},
   storeCentralLayout: (layout: CentralLayout) => void = () => undefined,
+  ports: Partial<StorePorts> = {},
 ): ViewerStore {
   return new ViewerStore(
     {
@@ -34,7 +35,9 @@ export function testStore(
       viewport: () => silent<Viewport>(viewport),
       poseStream: { follow: () => undefined },
       storeLanguage: () => undefined,
+      showConsoleLive: () => undefined,
       storeCentralLayout,
+      ...ports,
     },
     "fr",
   );

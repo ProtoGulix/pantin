@@ -112,7 +112,7 @@ function listen(listbox: HTMLElement, current: Current): void {
       event.preventDefault();
       const act =
         command.type === "open" ? current.intents?.openPantin : current.intents?.selectListPantin;
-      act?.(command.pantinId);
+      act?.(command.id);
     }
   });
 }

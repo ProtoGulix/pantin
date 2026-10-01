@@ -3,6 +3,7 @@ import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { deleteActuator } from "./actuator-actions.ts";
+import { toggleConsole } from "./console-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
@@ -51,6 +52,33 @@ function runParameterisedCommand(
   }
 }
 
+// The Affichage menu: panels, layout, framing, then the parameterised commands.
+function runViewCommand(
+  store: ViewerStore,
+  command: MenuCommand,
+  changeLanguage: (language: string) => void,
+): void {
+  switch (command) {
+    case "cycleLayout":
+      cycleCentralLayout(store);
+      return;
+    case "toggleConsole":
+      toggleConsole(store);
+      return;
+    case "toggleInspector":
+      toggleInspector(store);
+      return;
+    case "frameAll":
+      store.ports.viewport().frameBodies(null);
+      return;
+    case "frameSelection":
+      withSelection(store, (nodeId) => frameNode(store, nodeId));
+      return;
+    default:
+      runParameterisedCommand(store, command, changeLanguage);
+  }
+}
+
 export function runMenuCommand(
   store: ViewerStore,
   command: MenuCommand,
@@ -85,19 +113,7 @@ export function runMenuCommand(
     case "delete":
       deleteSelection(store);
       return;
-    case "cycleLayout":
-      cycleCentralLayout(store);
-      return;
-    case "toggleInspector":
-      toggleInspector(store);
-      return;
-    case "frameAll":
-      store.ports.viewport().frameBodies(null);
-      return;
-    case "frameSelection":
-      withSelection(store, (nodeId) => frameNode(store, nodeId));
-      return;
     default:
-      runParameterisedCommand(store, command, changeLanguage);
+      runViewCommand(store, command, changeLanguage);
   }
 }

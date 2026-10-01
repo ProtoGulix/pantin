@@ -48,3 +48,16 @@ export function splitRatioAfterMove(
 ): number {
   return clampSplitRatio(startRatio + deltaPixels / areaHeight, areaHeight);
 }
+
+export const CONSOLE_HEIGHT_DEFAULT = 180;
+const CONSOLE_HEIGHT_MINIMUM = 80;
+// The 3D view and the diagram keep at least this height above the console.
+const CENTRAL_HEIGHT_MINIMUM = 160;
+
+export function clampConsoleHeight(height: number, areaHeight: number): number {
+  const maximum = Math.max(CONSOLE_HEIGHT_MINIMUM, areaHeight - CENTRAL_HEIGHT_MINIMUM);
+  if (!Number.isFinite(height)) {
+    return Math.min(CONSOLE_HEIGHT_DEFAULT, maximum);
+  }
+  return Math.round(Math.min(Math.max(height, CONSOLE_HEIGHT_MINIMUM), maximum));
+}

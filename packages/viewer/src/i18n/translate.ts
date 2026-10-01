@@ -57,12 +57,16 @@ export function chooseLanguage(preferred: readonly string[], stored: string | nu
   return DEFAULT_LANGUAGE;
 }
 
-/** Plural forms are separate keys (ADR 0010): ".one" for 1, ".other" otherwise. */
+/**
+ * Plural forms are separate keys (ADR 0010), ".one" or ".other", chosen by the
+ * language's own rule: French says "0 erreur", English "0 errors".
+ */
 export function pluralKey<Base extends string>(
   base: Base,
   count: number,
+  language: Language,
 ): `${Base}.one` | `${Base}.other` {
-  return count === 1 ? `${base}.one` : `${base}.other`;
+  return new Intl.PluralRules(language).select(count) === "one" ? `${base}.one` : `${base}.other`;
 }
 
 /** For keys built from protocol data (a parameter field name) that the type system cannot see. */

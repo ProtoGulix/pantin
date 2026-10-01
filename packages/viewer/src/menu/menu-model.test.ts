@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { withConsoleToggled } from "../console/console-state.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, pantinSummaries, withNode } from "../test-fixtures.ts";
 import { bodyNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
@@ -77,6 +78,7 @@ describe("menu bar model", () => {
       ["Tout cadrer", null],
       ["Cadrer la sélection", null],
       ["Inspecteur", true],
+      ["Console", false],
       ["Changer la vue centrale", null],
       ["3D seule", false],
       ["Schéma des chaînes seul", false],
@@ -84,6 +86,28 @@ describe("menu bar model", () => {
       ["Langue : FR", true],
       ["Langue : EN", false],
     ]);
+  });
+});
+
+describe("menu bar model console", () => {
+  const consoleEntry = (state: ViewerState) =>
+    buildMenuBar(state, translate)[2]?.entries.find(
+      (entry) => entry.type === "item" && entry.command === "toggleConsole",
+    );
+
+  it("offers Console in Affichage, enabled and unchecked while a Pantin is open", () => {
+    expect(consoleEntry(editing(false))).toMatchObject({
+      label: "Console",
+      shortcutLabel: "F8",
+      enabled: true,
+      checked: false,
+    });
+    expect(consoleEntry(listing)).toMatchObject({ enabled: false });
+  });
+
+  it("checks Console while the panel is open", () => {
+    const opened = { ...editing(false), console: withConsoleToggled(editing(false).console) };
+    expect(consoleEntry(opened)).toMatchObject({ checked: true });
   });
 });
 
@@ -187,6 +211,11 @@ describe("keyboard shortcuts", () => {
     expect(commandOf(listing, press("F4"))).toBeNull();
   });
 
+  it("maps F8 to the console only while a Pantin is open", () => {
+    expect(commandOf(onBody, press("F8"))).toBe("toggleConsole");
+    expect(commandOf(listing, press("F8"))).toBeNull();
+  });
+
   it("needs the exact modifiers", () => {
     expect(shortcutForKeyPress(onBody, press("s"))).toBeNull();
     expect(shortcutForKeyPress(onBody, press("s", { ctrlKey: true, altKey: true }))).toBeNull();
@@ -199,6 +228,7 @@ describe("shortcut listing", () => {
       { keys: "Ctrl+S", action: "Enregistrer" },
       { keys: "F2", action: "Renommer" },
       { keys: "Suppr", action: "Supprimer" },
+      { keys: "F8", action: "Console" },
       { keys: "F4", action: "Changer la vue centrale" },
     ]);
   });

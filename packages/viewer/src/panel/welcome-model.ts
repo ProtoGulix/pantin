@@ -99,8 +99,8 @@ export function nextFocusIndex(count: number, current: number, backwards: boolea
   return (current + (backwards ? count - 1 : 1)) % count;
 }
 
-function bodiesLabel(summary: PantinSummary, t: Translate): string {
-  const key = pluralKey("tree.bodyCount", summary.bodyCount);
+function bodiesLabel(summary: PantinSummary, t: Translate, language: Language): string {
+  const key = pluralKey("tree.bodyCount", summary.bodyCount, language);
   return t(key, { count: summary.bodyCount });
 }
 
@@ -111,7 +111,7 @@ function buildRows(state: ViewerState, t: Translate): PantinListRowView[] {
     name: summary.name,
     detail: t("list.rowDetail", {
       id: summary.id,
-      bodyCount: bodiesLabel(summary, t),
+      bodyCount: bodiesLabel(summary, t, state.language),
       date: formatModifiedAt(summary.modifiedAt, state.language),
     }),
     selected: summary.id === state.listSelectedPantinId,
@@ -124,7 +124,7 @@ function buildRecents(state: ViewerState, t: Translate): RecentCardView[] {
     .map((summary) => ({
       id: summary.id,
       name: summary.name,
-      bodies: bodiesLabel(summary, t),
+      bodies: bodiesLabel(summary, t, state.language),
       modified: formatModifiedAt(summary.modifiedAt, state.language),
     }));
 }

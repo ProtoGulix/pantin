@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   panelWidth: "pantin.viewer.panelWidth",
   centralLayout: "pantin.viewer.centralLayout",
   splitRatio: "pantin.viewer.splitRatio",
+  consoleHeight: "pantin.viewer.consoleHeight",
 } as const;
 
 export function readStoredText(key: string): string | null {

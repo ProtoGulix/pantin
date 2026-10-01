@@ -5,7 +5,7 @@ import {
   isAssemblyHidden,
   NO_ASSEMBLY_DISPLAY,
 } from "../assembly-display.ts";
-import { pluralKey, type Translate } from "../i18n/translate.ts";
+import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
 import {
@@ -61,6 +61,8 @@ export interface TreeNode {
 }
 
 export interface TreeSource {
+  // For the plural of "N bodies".
+  language: Language;
   openPantin: PantinResponse | null;
   // Absent means every assembly is shown.
   assemblyDisplay?: AssemblyDisplay;
@@ -207,6 +209,7 @@ function pantinNode(
   pantin: PantinResponse,
   display: AssemblyDisplay,
   translate: Translate,
+  language: Language,
 ): TreeNode {
   const bodyCount = pantin.document.bodies.length;
   return {
@@ -214,7 +217,7 @@ function pantinNode(
     kind: "pantin",
     icon: "pantin",
     label: pantin.document.name,
-    detail: translate(pluralKey("tree.bodyCount", bodyCount), { count: bodyCount }),
+    detail: translate(pluralKey("tree.bodyCount", bodyCount, language), { count: bodyCount }),
     muted: false,
     renamable: true,
     visibility: null,
@@ -232,7 +235,9 @@ function pantinNode(
 /** The edit view's tree: exactly one root, the open Pantin; empty in the list view. */
 export function buildTree(source: TreeSource, translate: Translate): TreeNode[] {
   const display = source.assemblyDisplay ?? NO_ASSEMBLY_DISPLAY;
-  return source.openPantin === null ? [] : [pantinNode(source.openPantin, display, translate)];
+  return source.openPantin === null
+    ? []
+    : [pantinNode(source.openPantin, display, translate, source.language)];
 }
 
 export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode | null {

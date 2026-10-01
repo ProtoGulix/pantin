@@ -13,6 +13,7 @@ type ToolIcon =
   | "frame-selection"
   | "chevron"
   | "error"
+  | "warning"
   | "info"
   | "close"
   | "check"
@@ -48,6 +49,7 @@ const PATHS: Readonly<Record<IconName, string>> = {
   "frame-selection": `${CORNERS} M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z`,
   chevron: "M6 3.5 10.5 8 6 12.5",
   error: `${CIRCLE} M8 4.5v4 M8 10.8v.7`,
+  warning: "M8 2 14.5 13.5h-13Z M8 6.5v3.5 M8 11.6v.6",
   info: `${CIRCLE} M8 7.2v4 M8 4.8v.7`,
   close: "M4 4l8 8 M12 4l-8 8",
   check: "M3 8.5 6.5 12 13 4.5",

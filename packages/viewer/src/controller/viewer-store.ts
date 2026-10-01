@@ -2,10 +2,12 @@ import type { DriveRuntime, JointPosition, PantinResponse, PoseSnapshot } from "
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
 import { type CentralLayout, shouldRender } from "../central-layout.ts";
+import { type ClientConsole, EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
+import { buildConsoleView, type ConsoleView } from "../console/console-view.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
-import type { Language } from "../i18n/translate.ts";
+import { createTranslator, type Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
@@ -43,6 +45,8 @@ export interface StorePorts {
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
   ): void;
+  // The console panel and its counter, written in place (ADR 0031 point 4).
+  showConsoleLive(view: ConsoleView | null): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -64,6 +68,11 @@ export class ViewerStore {
   tagValues: ReadonlyMap<string, number> = new Map();
   // One tag read at a time: a slow core must not pile requests up.
   readingTags = false;
+  // Same for the console (ADR 0031 point 4).
+  readingConsole = false;
+  // The lines of the open Pantin's console, outside ViewerState: see console-state.ts.
+  consoleList: ClientConsole = EMPTY_CLIENT_CONSOLE;
+  private consolePantinId: string | null = null;
   // Latest port states and diagnostics of each drive, by drive id, read with
   // the tags; the chain diagram will light its edges from it (ADR 0029 point 8).
   driveRuntime: ReadonlyMap<string, DriveRuntime> = new Map();
@@ -80,7 +89,12 @@ export class ViewerStore {
 
   update(next: ViewerState): void {
     this.state = next;
-    this.ports.renderPanel(buildPanelView(next));
+    // Another Pantin, or none: its lines are gone, and so is the clear point.
+    if ((next.openPantin?.id ?? null) !== this.consolePantinId) {
+      this.consolePantinId = next.openPantin?.id ?? null;
+      this.consoleList = EMPTY_CLIENT_CONSOLE;
+    }
+    this.ports.renderPanel(buildPanelView(next, this.consoleList));
     this.ports.showJointPositions(this.jointPositions);
     this.ports.showInspectorLive(this.tagValues, this.driveRuntime);
     const viewport = this.ports.viewport();
@@ -161,6 +175,21 @@ export class ViewerStore {
     this.ports.showInspectorLive(values, runtime);
     this.ports.viewport().showTagStates(values);
     this.ports.showDiagramLive(values, runtime);
+  }
+
+  /** New console lines reach the panel and the toolbar counter in place, without a redraw. */
+  showConsoleList(list: ClientConsole): void {
+    this.consoleList = list;
+    const { state } = this;
+    this.ports.showConsoleLive(
+      buildConsoleView(
+        state.console,
+        list,
+        state.openPantin,
+        state.language,
+        createTranslator(state.language),
+      ),
+    );
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

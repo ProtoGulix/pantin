@@ -2,6 +2,7 @@ import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@panti
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
+import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
@@ -89,6 +90,8 @@ export interface ViewerState {
   // F2 on a device: the inspector's field to focus. The serial makes asking
   // twice for the same key a new request, since a redraw must not refocus.
   inspectorFocus: InspectorFocusRequest | null;
+  // The Pantin console at the bottom of the central area (ADR 0031).
+  console: ConsoleState;
 }
 
 export interface InspectorFocusRequest {
@@ -137,6 +140,7 @@ export function initialViewerState(
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
     inspectorFocus: null,
+    console: INITIAL_CONSOLE_STATE,
   };
 }
 

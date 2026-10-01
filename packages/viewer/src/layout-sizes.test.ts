@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  CONSOLE_HEIGHT_DEFAULT,
+  clampConsoleHeight,
   clampPanelWidth,
   clampSplitRatio,
   PANEL_WIDTH_DEFAULT,
@@ -53,5 +55,19 @@ describe("split ratio", () => {
     expect(splitRatioAfterMove(0.6, -100, 1000)).toBeCloseTo(0.5);
     expect(splitRatioAfterMove(0.6, SPLITTER_KEYBOARD_STEP, 800)).toBeCloseTo(0.62);
     expect(splitRatioAfterMove(0.6, 5000, 1000)).toBeCloseTo(0.88);
+  });
+});
+
+describe("console height", () => {
+  it("keeps the console between its minimum and what leaves room above it", () => {
+    expect(clampConsoleHeight(20, 800)).toBe(80);
+    expect(clampConsoleHeight(250.4, 800)).toBe(250);
+    expect(clampConsoleHeight(790, 800)).toBe(640);
+  });
+
+  it("keeps its minimum in a tiny window, and falls back to the default on a corrupt value", () => {
+    expect(clampConsoleHeight(300, 100)).toBe(80);
+    expect(clampConsoleHeight(Number.NaN, 800)).toBe(CONSOLE_HEIGHT_DEFAULT);
+    expect(clampConsoleHeight(Number.POSITIVE_INFINITY, 800)).toBe(CONSOLE_HEIGHT_DEFAULT);
   });
 });

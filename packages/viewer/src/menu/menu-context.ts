@@ -15,6 +15,7 @@ export interface MenuContext {
   selectedKind: NodeRef["kind"] | DeviceKind | null;
   language: Language;
   inspectorOpen: boolean;
+  consoleOpen: boolean;
   centralLayout: CentralLayout;
 }
 
@@ -35,6 +36,7 @@ export function menuContext(state: ViewerState): MenuContext {
     selectedKind: selectedKindOf(state.selection),
     language: state.language,
     inspectorOpen: state.inspectorOpen,
+    consoleOpen: state.console.open,
     centralLayout: state.centralLayout,
   };
 }

@@ -111,7 +111,7 @@ export async function confirmImport(store: ViewerStore): Promise<void> {
     const count = importedBodies.length;
     store.update({
       ...store.state,
-      message: infoMessage(pluralKey("message.imported", count), { count }),
+      message: infoMessage(pluralKey("message.imported", count, store.state.language), { count }),
     });
   }
 }

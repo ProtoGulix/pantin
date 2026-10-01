@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
-import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
+import {
+  hingeJoint,
+  pantinResponse,
+  railBody,
+  slideJoint,
+  sourceOf,
+  stepBody,
+} from "../test-fixtures.ts";
 import {
   assemblyNodeId,
   bodyIdOfNode,
@@ -64,10 +71,10 @@ describe("node ids", () => {
 });
 
 describe("buildTree", () => {
-  const tree = buildTree(source, translate);
+  const tree = buildTree(sourceOf(source), translate);
 
   it("has no root in the list view, when no Pantin is open", () => {
-    expect(buildTree({ openPantin: null }, translate)).toEqual([]);
+    expect(buildTree(sourceOf({ openPantin: null }), translate)).toEqual([]);
   });
 
   it("starts at the open Pantin, with its body count", () => {
@@ -100,7 +107,9 @@ describe("buildTree", () => {
 describe("joints in assemblies", () => {
   const carriage = stepBody("carriage", "Carriage");
   const withJoints = buildTree(
-    { openPantin: pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]) },
+    sourceOf({
+      openPantin: pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]),
+    }),
     translate,
   );
   const tool = { ...stepBody("tool", "Tool"), assembly: "gripper" };
@@ -138,7 +147,7 @@ describe("joints in assemblies", () => {
         assemblies: [...between.document.assemblies, { key: "gripper", name: "Gripper" }],
       },
     };
-    const tree = buildTree({ openPantin }, translate);
+    const tree = buildTree(sourceOf({ openPantin }), translate);
     const folder = findNode(tree, folderNodeId("press", "betweenAssemblies"));
     expect([folder?.detail, folder?.children.map((node) => node.id)]).toEqual([
       "1",
@@ -150,7 +159,7 @@ describe("joints in assemblies", () => {
 });
 
 describe("flattenTree", () => {
-  const tree = buildTree(source, translate);
+  const tree = buildTree(sourceOf(source), translate);
 
   it("shows only the Pantin when nothing is expanded", () => {
     const rows = flattenTree(tree, view([]));
@@ -188,7 +197,7 @@ describe("joints under their bodies", () => {
   const openPantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")], "press", [
     hingeJoint,
   ]);
-  const tree = buildTree({ openPantin }, translate);
+  const tree = buildTree(sourceOf({ openPantin }), translate);
 
   it("lists a joint under its parent and its child, before the CAD nodes", () => {
     const rail = findNode(tree, bodyNodeId("press", "rail"));
@@ -213,13 +222,17 @@ describe("joints under their bodies", () => {
   });
 
   it("exists only while the joint still holds that body", () => {
-    expect(nodeExists({ openPantin }, jointNodeId("press", "hinge", "carriage"))).toBe(true);
-    expect(nodeExists({ openPantin }, jointNodeId("press", "hinge", "ghost"))).toBe(false);
+    expect(nodeExists(sourceOf({ openPantin }), jointNodeId("press", "hinge", "carriage"))).toBe(
+      true,
+    );
+    expect(nodeExists(sourceOf({ openPantin }), jointNodeId("press", "hinge", "ghost"))).toBe(
+      false,
+    );
   });
 
   it("unfolds the body to reveal it", () => {
     const revealed = withRevealedNode(
-      { ...view([]), openPantin },
+      sourceOf({ ...view([]), openPantin }),
       jointNodeId("press", "hinge", "rail"),
     );
     expect([...revealed.expandedNodeIds]).toEqual([
@@ -246,7 +259,7 @@ describe("withTreeStateCarried", () => {
 describe("hidden assemblies in the tree", () => {
   it("gives assemblies an eye, closed when the 3D view hides them, and nothing else", () => {
     const assemblyDisplay = { hiddenAssemblyKeys: new Set(["main"]), isolatedAssemblyKey: null };
-    const tree = buildTree({ ...source, assemblyDisplay }, translate);
+    const tree = buildTree(sourceOf({ ...source, assemblyDisplay }), translate);
     const main = findNode(tree, assemblyNodeId("press", "main"));
     expect([main?.detail, main?.visibility, main?.stateLabel]).toEqual([
       "main",
@@ -254,7 +267,7 @@ describe("hidden assemblies in the tree", () => {
       "masqué",
     ]);
     expect(
-      findNode(buildTree(source, translate), assemblyNodeId("press", "main"))?.visibility,
+      findNode(buildTree(sourceOf(source), translate), assemblyNodeId("press", "main"))?.visibility,
     ).toBe("shown");
     expect(findNode(tree, bodyNodeId("press", "rail"))?.visibility).toBeNull();
   });

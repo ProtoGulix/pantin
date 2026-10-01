@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PantinApiClient } from "../api-client.ts";
 import { PantinApiError } from "../api-transport.ts";
+import { EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
 import {
   bodyOf,
   cylinderOf,
@@ -82,7 +83,7 @@ describe("a refused drive deletion", () => {
   it("names the actuators to detach first, found in the document", async () => {
     const store = refusedStore();
     await settle();
-    const view = buildPanelView(store.state);
+    const view = buildPanelView(store.state, EMPTY_CLIENT_CONSOLE);
     expect(view.message?.text).toBe(
       "Le préactionneur « v1 » alimente encore des actionneurs. Détachez-les d'abord :",
     );
@@ -97,7 +98,7 @@ describe("a refused drive deletion", () => {
   it("selects an actuator when its link is followed", async () => {
     const store = refusedStore();
     await settle();
-    const [first] = buildPanelView(store.state).message?.links ?? [];
+    const [first] = buildPanelView(store.state, EMPTY_CLIENT_CONSOLE).message?.links ?? [];
     if (first === undefined) {
       throw new Error("The message has no link.");
     }

@@ -20,6 +20,7 @@ import {
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
+import { consoleIntents } from "./console-actions.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
 import {
@@ -184,6 +185,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...driveIntents(store),
     ...actuatorIntents(store),
     ...sensorIntents(store),
+    ...consoleIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     togglePropertyGroup: (groupId) =>
       store.update({

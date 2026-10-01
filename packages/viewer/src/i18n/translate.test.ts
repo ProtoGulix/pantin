@@ -64,8 +64,11 @@ describe("chooseLanguage", () => {
 
 describe("pluralKey", () => {
   it("picks one or other", () => {
-    expect(pluralKey("tree.bodyCount", 1)).toBe("tree.bodyCount.one");
-    expect(pluralKey("tree.bodyCount", 0)).toBe("tree.bodyCount.other");
-    expect(pluralKey("tree.bodyCount", 2)).toBe("tree.bodyCount.other");
+    expect(pluralKey("tree.bodyCount", 1, "en")).toBe("tree.bodyCount.one");
+    expect(pluralKey("tree.bodyCount", 0, "en")).toBe("tree.bodyCount.other");
+    expect(pluralKey("tree.bodyCount", 2, "en")).toBe("tree.bodyCount.other");
+    // French counts 0 as singular.
+    expect(pluralKey("tree.bodyCount", 0, "fr")).toBe("tree.bodyCount.one");
+    expect(pluralKey("tree.bodyCount", 2, "fr")).toBe("tree.bodyCount.other");
   });
 });
