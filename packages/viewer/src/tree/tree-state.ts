@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { type DeviceRef, deviceExists } from "../device-selection.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
@@ -97,14 +98,29 @@ export function withExpanded<State extends TreeViewState>(
   return { ...state, expandedNodeIds };
 }
 
-// diagramNodeId: a selection made in the tree or the 3D view forgets the node
-// last clicked in the diagram, so that selecting the same row again later does
-// not bring that old diagram selection back.
-export function withSelectedNode<State extends TreeViewState & { diagramNodeId?: string | null }>(
+/** Selects a tree node (or nothing): a device selected before is dropped. */
+export function withSelectedNode<State extends TreeViewState>(
   state: State,
   nodeId: string | null,
 ): State {
-  return { ...state, selectedNodeId: nodeId, renamingNodeId: null, diagramNodeId: null };
+  return { ...state, selectedNodeId: nodeId, selectedDevice: null, renamingNodeId: null };
+}
+
+/** Selects a device: the tree has no row for it, so no row stays selected. */
+export function withSelectedDevice<State extends TreeViewState>(
+  state: State,
+  device: DeviceRef,
+): State {
+  return { ...state, selectedNodeId: null, selectedDevice: device, renamingNodeId: null };
+}
+
+/** The selected tree node or device is still in the open Pantin. */
+export function selectionExists(state: TreeSource & TreeViewState): boolean {
+  const document = state.openPantin?.document;
+  if (state.selectedDevice !== null) {
+    return document !== undefined && deviceExists(document, state.selectedDevice);
+  }
+  return state.selectedNodeId !== null && nodeExists(state, state.selectedNodeId);
 }
 
 /** A node whose id changed (a renamed key) keeps its expansion and selection. */
@@ -136,6 +152,7 @@ export function withTreeStateCarried<State extends TreeViewState>(
     ...next,
     expandedNodeIds: before.expandedNodeIds,
     selectedNodeId: before.selectedNodeId,
+    selectedDevice: before.selectedDevice,
   };
   return withNodeIdChanged(restored, from, to);
 }

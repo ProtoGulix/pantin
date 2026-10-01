@@ -44,6 +44,7 @@
   "properties.property": "Property",
   "properties.value": "Value",
   "properties.empty": "Select an item in the tree.",
+  "properties.shownInInspector": "{name} ({kind}) is shown in the inspector.",
   "properties.editLabel": "Edit: {property}",
   "properties.group.general": "General",
   "properties.group.source": "Source",

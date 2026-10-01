@@ -1,3 +1,4 @@
+import { deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildJointSlider, type JointSliderSpec } from "./joints/slider-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
@@ -58,6 +59,8 @@ export interface PanelView {
   prompt: PromptView | null;
   message: MessageView | null;
   viewportHint: string;
+  // Left-hand panel while a device is selected: a line instead of the grid.
+  propertiesNote: string | null;
   // The drives panel on the right (ADR 0022).
   drivePanel: DrivePanelView;
 }
@@ -103,6 +106,27 @@ function selectedJointSlider(state: ViewerState): JointSliderSpec | null {
     : buildJointSlider(pantin.id, joint);
 }
 
+function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
+  const document = state.openPantin?.document;
+  return document === undefined || state.selectedDevice === null
+    ? new Set()
+    : relatedJointIds(document, state.selectedDevice);
+}
+
+// The inspector shows devices (ADR 0030 point 2, first step): say so where
+// the tree's properties would be.
+function deviceNote(state: ViewerState, translate: Translate): string | null {
+  const document = state.openPantin?.document;
+  const device = state.selectedDevice;
+  const name = document === undefined || device === null ? null : deviceName(document, device);
+  return device === null || name === null
+    ? null
+    : translate("properties.shownInInspector", {
+        name,
+        kind: translate(`diagram.kind.${device.kind}`),
+      });
+}
+
 export function buildPanelView(state: ViewerState): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
@@ -113,7 +137,8 @@ export function buildPanelView(state: ViewerState): PanelView {
     menus: buildMenuBar(state, translate),
     toolbar: buildToolbarView(state),
     welcome: buildWelcomeView(state, translate),
-    treeRows: flattenTree(buildTree(state, translate), state),
+    treeRows: flattenTree(buildTree(state, translate), state, relatedJointsOf(state)),
+    propertiesNote: deviceNote(state, translate),
     properties: buildPropertyGroups(
       state,
       state.selectedNodeId,

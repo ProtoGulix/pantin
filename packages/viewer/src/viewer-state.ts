@@ -1,6 +1,7 @@
 import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
+import type { DeviceRef } from "./device-selection.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
@@ -9,7 +10,7 @@ import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
 import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { nodeExists, withRevealedNode } from "./tree/tree-state.ts";
+import { selectionExists, withRevealedNode } from "./tree/tree-state.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
 // truth: this is only the last answer it gave, plus purely local UI state.
@@ -38,6 +39,10 @@ export interface ViewerState {
   openPantin: PantinResponse | null;
   expandedNodeIds: ReadonlySet<string>;
   selectedNodeId: string | null;
+  // A drive, an actuator or a sensor selected, which has no tree row
+  // (ADR 0030): then selectedNodeId is null, and the other way round. The two
+  // fields become one union when the left panel goes (ADR 0030 point 2, step 2).
+  selectedDevice: DeviceRef | null;
   renamingNodeId: string | null;
   collapsedPropertyGroups: ReadonlySet<string>;
   // Joints whose axis the user chose to type as components in the properties
@@ -79,10 +84,9 @@ export interface ViewerState {
   sensorForm: SensorFormState | null;
   faults: FaultsResponse;
   // The chain diagram (ADR 0029) replaces the 3D view while shown; the bands
-  // the user folded, and the node last clicked in it. Display state only: never saved.
+  // the user folded. Display state only: never saved.
   diagramShown: boolean;
   collapsedDiagramBands: ReadonlySet<string>;
-  diagramNodeId: string | null;
   pendingFeedReplacement: PendingDiagramLink | null;
 }
 
@@ -96,6 +100,7 @@ export function initialViewerState(language: Language): ViewerState {
     openPantin: null,
     expandedNodeIds: new Set(),
     selectedNodeId: null,
+    selectedDevice: null,
     renamingNodeId: null,
     collapsedPropertyGroups: new Set(),
     customAxisJointIds: new Set(),
@@ -122,7 +127,6 @@ export function initialViewerState(language: Language): ViewerState {
     faults: NO_FAULTS,
     diagramShown: false,
     collapsedDiagramBands: new Set(),
-    diagramNodeId: null,
     pendingFeedReplacement: null,
   };
 }
@@ -141,6 +145,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
       folderNodeId(openPantin.id, "betweenAssemblies"),
     ]),
     selectedNodeId: pantinNodeId(openPantin.id),
+    selectedDevice: null,
     renamingNodeId: null,
     contextMenu: null,
     pendingImport: null,
@@ -157,7 +162,6 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     faults: NO_FAULTS,
     diagramShown: false,
     collapsedDiagramBands: new Set(),
-    diagramNodeId: null,
     pendingFeedReplacement: null,
   };
 }
@@ -172,8 +176,9 @@ export function withOpenPantin(state: ViewerState, openPantin: PantinResponse): 
     return freshEditView(state, openPantin);
   }
   const next: ViewerState = { ...state, openPantin };
-  const selectionExists = next.selectedNodeId !== null && nodeExists(next, next.selectedNodeId);
-  return selectionExists ? next : { ...next, selectedNodeId: pantinNodeId(openPantin.id) };
+  return selectionExists(next)
+    ? next
+    : { ...next, selectedNodeId: pantinNodeId(openPantin.id), selectedDevice: null };
 }
 
 export function withRequestStarted(state: ViewerState): ViewerState {

@@ -27,9 +27,7 @@ describe("createDiagramModelBuilder", () => {
   it("returns the same diagram while only the selection changes", () => {
     const build = createDiagramModelBuilder(createChainLinksCache());
     const first = shown(build(base));
-    const selected = shown(
-      build({ ...base, selectedNodeId: bodyNodeId(pantin.id, "carriage"), diagramNodeId: null }),
-    );
+    const selected = shown(build({ ...base, selectedNodeId: bodyNodeId(pantin.id, "carriage") }));
     expect(selected.diagram).toBe(first.diagram);
     expect(selected.typeLabels).toBe(first.typeLabels);
   });

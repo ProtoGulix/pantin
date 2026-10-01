@@ -1,12 +1,20 @@
 import type { Translate } from "../i18n/translate.ts";
-import { isDraggableNode } from "../tree/tree-drop.ts";
 import { commandForKey, type TreeCommand } from "../tree/tree-navigation.ts";
 import type { TreeRow } from "../tree/tree-rows.ts";
 import { committingTextInput, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { listenToDrags } from "./tree-drag.ts";
-import { actuatorBolt, chevron, sensorMark, stateText, visibilityEye } from "./tree-row-parts.ts";
+import {
+  actuatorBolt,
+  chevron,
+  rowAttributes,
+  rowClassName,
+  rowElementId,
+  sensorMark,
+  stateText,
+  visibilityEye,
+} from "./tree-row-parts.ts";
 
 // The tree (role=tree, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
@@ -28,10 +36,6 @@ interface Current {
   intents: PanelIntents | null;
   // Row elements by content signature, reused when nothing changed.
   elements: Map<string, HTMLElement>;
-}
-
-function rowElementId(index: number): string {
-  return `tree-item-${index}`;
 }
 
 function dispatch(command: TreeCommand, intents: PanelIntents, tree: HTMLElement): void {
@@ -79,31 +83,6 @@ function labelOrRenameInput(
   });
 }
 
-function rowAttributes(row: TreeRow, index: number): Record<string, string> {
-  const attributes: Record<string, string> = {
-    role: "treeitem",
-    id: rowElementId(index),
-    "data-node-id": row.id,
-    "aria-level": String(row.depth + 1),
-    "aria-setsize": String(row.setSize),
-    "aria-posinset": String(row.positionInSet),
-    "aria-selected": String(row.selected),
-    style: `--depth: ${row.depth}`,
-  };
-  if (row.expandable) {
-    attributes["aria-expanded"] = String(row.expanded);
-  }
-  if (row.stateLabel !== null) {
-    attributes.title = row.stateLabel;
-  }
-  // A body can be dropped on another assembly (tree-drag.ts); not while its
-  // name is edited, where a drag would select text.
-  if (isDraggableNode(row.id) && !row.renaming) {
-    attributes.draggable = "true";
-  }
-  return attributes;
-}
-
 function rowElement(
   row: TreeRow,
   index: number,
@@ -111,8 +90,7 @@ function rowElement(
   intents: PanelIntents,
   tree: HTMLElement,
 ): HTMLElement {
-  const modifiers = [row.selected ? "tree-row--selected" : "", row.muted ? "tree-row--muted" : ""];
-  const className = ["tree-row", ...modifiers].filter((name) => name !== "").join(" ");
+  const className = rowClassName(row);
   return element("div", { className, attributes: rowAttributes(row, index) }, [
     chevron(row),
     icon(row.icon, "icon tree-row__icon"),

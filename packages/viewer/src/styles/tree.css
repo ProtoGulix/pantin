@@ -31,6 +31,14 @@
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
+/* A joint the selected device drives or watches: the selected row's bar and
+   fill, fainter, as the diagram steps its related nodes back. */
+.tree-row--related,
+.tree-row--related:hover {
+  background: var(--related-fill);
+  box-shadow: inset 2px 0 0 var(--related-bar);
+}
+
 /* The bolt of a driven joint and the mark of a watched one, at the end of
    its row like the eye. */
 .tree-row__bolt,

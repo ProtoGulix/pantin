@@ -17,13 +17,11 @@ export function viewModeOf(state: ViewerState): ViewMode {
 /** Back to the welcome dialog: nothing of the closed Pantin stays on screen. */
 export function withPantinClosed(state: ViewerState): ViewerState {
   return {
-    ...state,
+    ...withSelectedNode(state, null),
     listSelectedPantinId: state.openPantin?.id ?? state.listSelectedPantinId,
     openPantin: null,
     welcomeHidden: false,
     expandedNodeIds: new Set(),
-    selectedNodeId: null,
-    renamingNodeId: null,
     contextMenu: null,
     pendingImport: null,
     importInProgress: false,
@@ -124,8 +122,7 @@ export function withBodyDeleted(
 ): ViewerState {
   const shown = withOpenPantin({ ...state, pendingDeleteBodyId: null }, response);
   return {
-    ...shown,
-    selectedNodeId: pantinNodeId(response.id),
+    ...withSelectedNode(shown, pantinNodeId(response.id)),
     message: infoMessage("message.deleted", { name: bodyName }),
   };
 }
@@ -138,8 +135,7 @@ export function withJointDeleted(
 ): ViewerState {
   const shown = withOpenPantin({ ...state, pendingDeleteJointId: null }, response);
   return {
-    ...shown,
-    selectedNodeId: pantinNodeId(response.id),
+    ...withSelectedNode(shown, pantinNodeId(response.id)),
     message: infoMessage("message.jointDeleted", { name: jointName }),
   };
 }

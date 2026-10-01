@@ -1,3 +1,5 @@
+import type { DeviceRef } from "../device-selection.ts";
+import { parseNodeId } from "./node-ids.ts";
 import type { TreeIcon, TreeNode } from "./tree-model.ts";
 
 // The flat list of visible rows the tree's DOM draws, from the tree of nodes
@@ -19,6 +21,8 @@ export interface TreeRow {
   expandable: boolean;
   expanded: boolean;
   selected: boolean;
+  // A joint the selected device drives or watches (ADR 0030 point 1).
+  related: boolean;
   renaming: boolean;
   positionInSet: number;
   setSize: number;
@@ -27,6 +31,7 @@ export interface TreeRow {
 export interface TreeViewState {
   expandedNodeIds: ReadonlySet<string>;
   selectedNodeId: string | null;
+  selectedDevice: DeviceRef | null;
   renamingNodeId: string | null;
 }
 
@@ -34,8 +39,20 @@ function isExpandable(node: TreeNode): boolean {
   return node.children.length > 0;
 }
 
+const NO_JOINTS: ReadonlySet<string> = new Set();
+
+// Every row of a joint is related, whichever body lists it.
+function isRelatedJoint(nodeId: string, relatedJointIds: ReadonlySet<string>): boolean {
+  const ref = parseNodeId(nodeId);
+  return ref?.kind === "joint" && relatedJointIds.has(ref.jointId);
+}
+
 /** Visible rows, depth first: children only under expanded nodes. */
-export function flattenTree(nodes: readonly TreeNode[], view: TreeViewState): TreeRow[] {
+export function flattenTree(
+  nodes: readonly TreeNode[],
+  view: TreeViewState,
+  relatedJointIds: ReadonlySet<string> = NO_JOINTS,
+): TreeRow[] {
   const rows: TreeRow[] = [];
   const visit = (siblings: readonly TreeNode[], depth: number, parentId: string | null) => {
     siblings.forEach((node, index) => {
@@ -56,6 +73,7 @@ export function flattenTree(nodes: readonly TreeNode[], view: TreeViewState): Tr
         expandable: isExpandable(node),
         expanded,
         selected: node.id === view.selectedNodeId,
+        related: isRelatedJoint(node.id, relatedJointIds),
         renaming: node.id === view.renamingNodeId,
         positionInSet: index + 1,
         setSize: siblings.length,

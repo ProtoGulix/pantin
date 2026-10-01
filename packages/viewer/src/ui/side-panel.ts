@@ -97,7 +97,11 @@ export class SidePanel {
     this.treeView.render(view.treeRows, view.language, translate, intents);
     this.propertiesTitle.textContent = translate("properties.label");
     this.jointSlider.render(view.jointSlider, translate, intents);
-    this.propertiesBody.replaceChildren(renderPropertiesGrid(view.properties, translate, intents));
+    this.propertiesBody.replaceChildren(
+      view.propertiesNote === null
+        ? renderPropertiesGrid(view.properties, translate, intents)
+        : element("p", { className: "pane-empty", text: view.propertiesNote }),
+    );
   }
 
   focusTree(): void {

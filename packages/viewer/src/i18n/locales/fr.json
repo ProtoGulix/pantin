@@ -44,6 +44,7 @@
   "properties.property": "Propriété",
   "properties.value": "Valeur",
   "properties.empty": "Sélectionnez un élément de l'arborescence.",
+  "properties.shownInInspector": "{name} ({kind}) est affiché dans l'inspecteur.",
   "properties.editLabel": "Modifier : {property}",
   "properties.group.general": "Général",
   "properties.group.source": "Source",

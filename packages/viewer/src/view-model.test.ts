@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
 import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { withSelectedNode } from "./tree/tree-state.ts";
+import { withSelectedDevice, withSelectedNode } from "./tree/tree-state.ts";
 import { buildPanelView } from "./view-model.ts";
 import {
   initialViewerState,
@@ -230,5 +231,43 @@ describe("context menu of an assembly (ADR 0019)", () => {
       assemblyDisplay: { hiddenAssemblyKeys: new Set<string>(), isolatedAssemblyKey: "main" },
     };
     expect(menuOf(isolated)).toContain("Afficher tous les assemblages");
+  });
+});
+
+describe("devices in the panels", () => {
+  const document = documentOf({
+    assemblies: ["main"],
+    bodies: [bodyOf("carriage", "main")],
+    joints: [jointOf("slide", "carriage")],
+    drives: [driveOf("verin1-dist", "main")],
+    actuators: [cylinderOf("verin1", "main", "verin1-dist", ["slide"])],
+  });
+  const onDevice = (language: "fr" | "en") =>
+    withSelectedDevice(
+      withOpenPantin(initialViewerState(language), { ...pantinResponse(false), document }),
+      { kind: "drive", id: "verin1-dist" },
+    );
+
+  it("names the device shown in the inspector, in both languages", () => {
+    expect(buildPanelView(onDevice("fr")).propertiesNote).toBe(
+      "verin1-dist (Préactionneur) est affiché dans l'inspecteur.",
+    );
+    expect(buildPanelView(onDevice("en")).propertiesNote).toBe(
+      "verin1-dist (Drive) is shown in the inspector.",
+    );
+  });
+
+  it("selects no row and shows no property for a device, only related joints", () => {
+    const view = buildPanelView(onDevice("fr"));
+    expect(view.properties).toEqual([]);
+    expect(view.treeRows.some((row) => row.selected)).toBe(false);
+    const related = view.treeRows.filter((row) => row.related);
+    expect(related.length).toBeGreaterThan(0);
+    expect(related.every((row) => row.kind === "joint")).toBe(true);
+  });
+
+  it("has no note for a tree node", () => {
+    expect(buildPanelView(opened(false)).propertiesNote).toBeNull();
+    expect(buildPanelView(opened(false)).treeRows.some((row) => row.related)).toBe(false);
   });
 });

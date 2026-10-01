@@ -11,6 +11,8 @@
   --text-faint: #6d7686;
   --accent: #f0a030;
   --accent-soft: rgb(240 160 48 / 14%);
+  --related-fill: rgb(240 160 48 / 6%);
+  --related-bar: rgb(240 160 48 / 55%);
   --danger: #f06c6c;
   --danger-soft: rgb(240 108 108 / 12%);
   --success: #6cc38a;

@@ -1,6 +1,7 @@
-import { treeNodeForDiagramNode } from "../diagram/diagram-selection.ts";
+import { deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
+import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
-import { withRevealedNode } from "../tree/tree-state.ts";
+import { withRevealedNode, withSelectedDevice } from "../tree/tree-state.ts";
 import {
   createDiagramElement,
   type DiagramElementKind,
@@ -33,24 +34,29 @@ export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
 }
 
 /**
- * Selects the closest tree row (treeNodeForDiagramNode says which) and keeps
- * the clicked node, so that the 3D view tints the bodies moved downstream of it.
+ * A drive, an actuator or a sensor node selects that device; a joint node
+ * selects its tree row (ADR 0030 point 1).
  */
 export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): void {
   const open = store.state.openPantin;
   if (open === null) {
     return;
   }
-  const treeNodeId = treeNodeForDiagramNode(
+  const device = deviceOfDiagramNode(diagramNodeId);
+  if (device !== null) {
+    if (deviceExists(open.document, device)) {
+      store.update({ ...withSelectedDevice(store.state, device), contextMenu: null });
+    }
+    return;
+  }
+  const treeNodeId = treeNodeForJointNode(
     store.chainLinksOf(open.document),
     open.id,
     diagramNodeId,
   );
-  store.update({
-    ...withRevealedNode(store.state, treeNodeId),
-    diagramNodeId,
-    contextMenu: null,
-  });
+  if (treeNodeId !== null) {
+    store.update({ ...withRevealedNode(store.state, treeNodeId), contextMenu: null });
+  }
 }
 
 export function diagramIntents(store: ViewerStore) {

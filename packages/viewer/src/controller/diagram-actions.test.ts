@@ -1,7 +1,16 @@
+import type { PantinResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import {
+  bodyOf,
+  cylinderOf,
+  documentOf,
+  driveOf,
+  encoderOf,
+  jointOf,
+} from "../diagram/diagram-fixtures.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
-import { bodyNodeId, jointNodeId } from "../tree/node-ids.ts";
-import { withSelectedNode } from "../tree/tree-state.ts";
+import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
+import { withRevealedNode } from "../tree/tree-state.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import { selectDiagramNode, setDiagramShown, toggleDiagramBand } from "./diagram-actions.ts";
@@ -31,10 +40,10 @@ describe("the diagram state", () => {
     expect(store.state.diagramShown).toBe(false);
   });
 
-  it("selects the closest tree row and keeps the clicked node", () => {
+  it("selects the tree row of a joint node", () => {
     const store = openStore();
     selectDiagramNode(store, `joint:${slideJoint.id}`);
-    expect(store.state.diagramNodeId).toBe(`joint:${slideJoint.id}`);
+    expect(store.state.selectedDevice).toBeNull();
     expect(store.state.selectedNodeId).toBe(
       jointNodeId(pantin.id, slideJoint.id, slideJoint.child),
     );
@@ -56,18 +65,64 @@ describe("refreshTagValues with the diagram", () => {
   });
 });
 
-describe("selection memory", () => {
-  it("forgets the clicked diagram node when the tree selects a row", () => {
-    const store = openStore();
-    selectDiagramNode(store, `joint:${slideJoint.id}`);
-    expect(store.state.diagramNodeId).not.toBeNull();
-    store.update(withSelectedNode(store.state, bodyNodeId(pantin.id, "carriage")));
-    expect(store.state.diagramNodeId).toBeNull();
-    // Selecting the joint row again does not bring the old diagram selection back.
-    store.update(
-      withSelectedNode(store.state, jointNodeId(pantin.id, slideJoint.id, slideJoint.child)),
-    );
-    expect(store.state.diagramNodeId).toBeNull();
+const withDevices: PantinResponse = {
+  ...pantin,
+  document: documentOf({
+    assemblies: ["a"],
+    bodies: [bodyOf("s1", "a")],
+    joints: [jointOf("j1", "s1")],
+    drives: [driveOf("v1", "a")],
+    actuators: [cylinderOf("c1", "a", "v1", ["j1"])],
+    sensors: [encoderOf("e1", "a", "j1")],
+  }),
+};
+
+function deviceStore(bodies: ReadonlySet<string>[] = []) {
+  const store = testStore(
+    {},
+    { setSelectedBodies: (ids: ReadonlySet<string>) => bodies.push(ids) },
+  );
+  store.requestedPantinId = withDevices.id;
+  store.update(withOpenPantin(store.state, withDevices));
+  return store;
+}
+
+describe("selecting a device in the diagram", () => {
+  it.each([
+    ["drive", "v1"],
+    ["actuator", "c1"],
+    ["sensor", "e1"],
+  ] as const)("a %s node selects that device and no tree row", (kind, id) => {
+    const bodies: ReadonlySet<string>[] = [];
+    const store = deviceStore(bodies);
+    selectDiagramNode(store, `${kind}:${id}`);
+    expect(store.state.selectedDevice).toEqual({ kind, id });
+    expect(store.state.selectedNodeId).toBeNull();
+    // The bodies moved downstream, or the watched one, are tinted in 3D.
+    expect(bodies.at(-1)).toEqual(new Set(["s1"]));
+  });
+
+  it("a selection made in the tree or the 3D view replaces the device", () => {
+    const store = deviceStore();
+    selectDiagramNode(store, "drive:v1");
+    store.update(withRevealedNode(store.state, bodyNodeId(withDevices.id, "s1")));
+    expect(store.state.selectedDevice).toBeNull();
+    expect(store.state.selectedNodeId).toBe(bodyNodeId(withDevices.id, "s1"));
+  });
+
+  it("ignores a device that is not in the document", () => {
+    const store = deviceStore();
+    selectDiagramNode(store, "drive:ghost");
+    expect(store.state.selectedDevice).toBeNull();
+  });
+
+  it("moves the selection to the Pantin when the device is deleted", () => {
+    const store = deviceStore();
+    selectDiagramNode(store, "actuator:c1");
+    const without = { ...withDevices, document: { ...withDevices.document, actuators: [] } };
+    store.update(withOpenPantin(store.state, without));
+    expect(store.state.selectedDevice).toBeNull();
+    expect(store.state.selectedNodeId).toBe(pantinNodeId(withDevices.id));
   });
 });
 

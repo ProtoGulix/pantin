@@ -91,9 +91,9 @@ export class ViewerStore {
     viewport.setSelectedBodies(
       document === undefined || next.openPantin === null
         ? new Set()
-        : highlightedBodyIds(document, this.chainLinksOf(document), next.openPantin.id, {
+        : highlightedBodyIds(document, this.chainLinksOf(document), {
             selectedNodeId: next.selectedNodeId,
-            diagramNodeId: next.diagramNodeId,
+            selectedDevice: next.selectedDevice,
           }),
     );
     viewport.setHiddenBodies(

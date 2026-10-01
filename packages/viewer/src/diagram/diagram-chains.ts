@@ -71,7 +71,7 @@ function buildChainLinks(document: PantinDocument): ChainLinks {
   return { parent, children, bodyOfJoint, nodeIds };
 }
 
-export function descendantsOf(links: ChainLinks, nodeId: string): string[] {
+function descendantsOf(links: ChainLinks, nodeId: string): string[] {
   const direct = links.children.get(nodeId) ?? [];
   return direct.flatMap((child) => [child, ...descendantsOf(links, child)]);
 }

@@ -1,5 +1,6 @@
+import { type DeviceKind, isDeviceKind } from "../device-selection.ts";
 import { LANGUAGES, type Language, type MessageKey, type Translate } from "../i18n/translate.ts";
-import { parseNodeId } from "../tree/node-ids.ts";
+import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
 // The menu bar as data: menus, items, enable rules and keyboard shortcuts.
@@ -36,7 +37,7 @@ interface MenuContext {
   unsavedChanges: boolean;
   importing: boolean;
   hasBodies: boolean;
-  selectedKind: string | null;
+  selectedKind: NodeRef["kind"] | DeviceKind | null;
   language: Language;
   drivePanelOpen: boolean;
   diagramShown: boolean;
@@ -147,7 +148,11 @@ const MENUS: readonly MenuDefinition[] = [
       item(
         "frameSelection",
         "menubar.view.frameSelection",
-        (context) => context.hasBodies && context.selectedKind !== null && !context.diagramShown,
+        (context) =>
+          context.hasBodies &&
+          context.selectedKind !== null &&
+          !isDeviceKind(context.selectedKind) &&
+          !context.diagramShown,
       ),
       {
         ...item("toggleDrives", "menubar.view.drives", (context) => context.editing),
@@ -177,7 +182,8 @@ function menuContext(state: ViewerState): MenuContext {
     importing: state.importInProgress,
     hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
     selectedKind:
-      state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null),
+      state.selectedDevice?.kind ??
+      (state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null)),
     language: state.language,
     drivePanelOpen: state.drivePanelOpen,
     diagramShown: state.diagramShown,

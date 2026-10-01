@@ -19,7 +19,12 @@ const translate = createTranslator("fr");
 const source = { openPantin: pantinResponse(false) };
 
 function view(expanded: string[], selected: string | null = null): TreeViewState {
-  return { expandedNodeIds: new Set(expanded), selectedNodeId: selected, renamingNodeId: null };
+  return {
+    expandedNodeIds: new Set(expanded),
+    selectedNodeId: selected,
+    selectedDevice: null,
+    renamingNodeId: null,
+  };
 }
 
 const BETWEEN = "Liaisons entre assemblages";

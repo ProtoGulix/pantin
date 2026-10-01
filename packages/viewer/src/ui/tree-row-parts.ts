@@ -1,4 +1,5 @@
 import type { Translate } from "../i18n/translate.ts";
+import { isDraggableNode } from "../tree/tree-drop.ts";
 import type { TreeRow } from "../tree/tree-rows.ts";
 import { element } from "./dom.ts";
 import { icon } from "./icons.ts";
@@ -87,4 +88,44 @@ export function visibilityEye(row: TreeRow, translate: Translate): HTMLElement |
       [icon(hidden ? "eye-off" : "eye")],
     ),
   ]);
+}
+
+/** The classes of a row: its states, which the stylesheet tells apart. */
+export function rowClassName(row: TreeRow): string {
+  const flags: [boolean, string][] = [
+    [row.selected, "tree-row--selected"],
+    [row.related, "tree-row--related"],
+    [row.muted, "tree-row--muted"],
+  ];
+  return ["tree-row", ...flags.filter(([on]) => on).map(([, name]) => name)].join(" ");
+}
+
+export function rowElementId(index: number): string {
+  return `tree-item-${index}`;
+}
+
+/** The attributes of a row: its tree item role, position and state. */
+export function rowAttributes(row: TreeRow, index: number): Record<string, string> {
+  const attributes: Record<string, string> = {
+    role: "treeitem",
+    id: rowElementId(index),
+    "data-node-id": row.id,
+    "aria-level": String(row.depth + 1),
+    "aria-setsize": String(row.setSize),
+    "aria-posinset": String(row.positionInSet),
+    "aria-selected": String(row.selected),
+    style: `--depth: ${row.depth}`,
+  };
+  if (row.expandable) {
+    attributes["aria-expanded"] = String(row.expanded);
+  }
+  if (row.stateLabel !== null) {
+    attributes.title = row.stateLabel;
+  }
+  // A body can be dropped on another assembly (tree-drag.ts); not while its
+  // name is edited, where a drag would select text.
+  if (isDraggableNode(row.id) && !row.renaming) {
+    attributes.draggable = "true";
+  }
+  return attributes;
 }

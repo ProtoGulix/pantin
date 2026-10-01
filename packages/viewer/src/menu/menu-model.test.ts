@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, pantinSummaries } from "../test-fixtures.ts";
 import { bodyNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
-import { withSelectedNode } from "../tree/tree-state.ts";
+import { withSelectedDevice, withSelectedNode } from "../tree/tree-state.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import {
   buildMenuBar,
@@ -81,6 +81,18 @@ describe("menu bar model", () => {
       ["Langue : FR", true],
       ["Langue : EN", false],
     ]);
+  });
+});
+
+describe("menu bar model on a device", () => {
+  it("keeps Supprimer, Renommer and Cadrer la sélection disabled on a device", () => {
+    const onDevice = withSelectedDevice(editing(false), { kind: "actuator", id: "c1" });
+    expect(enabledCommands(onDevice)).not.toContain("delete");
+    expect(enabledCommands(onDevice)).not.toContain("rename");
+    expect(enabledCommands(onDevice)).not.toContain("frameSelection");
+    expect(
+      enabledCommands(withSelectedNode(editing(false), bodyNodeId("press", "rail"))),
+    ).toContain("frameSelection");
   });
 });
 

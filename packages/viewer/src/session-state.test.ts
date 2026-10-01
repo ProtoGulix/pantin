@@ -28,6 +28,7 @@ import { bodyNodeId, jointNodeId, pantinNodeId, sourceNodeNodeId } from "./tree/
 import { initialViewerState, type ViewerState, withOpenPantin } from "./viewer-state.ts";
 
 const translate = createTranslator("fr");
+const DEVICE = { kind: "drive", id: "v1" } as const;
 const listing: ViewerState = { ...initialViewerState("fr"), pantins: pantinSummaries };
 
 function editing(unsavedChanges: boolean): ViewerState {
@@ -115,10 +116,10 @@ describe("deleting a body", () => {
     expect(buildPromptView(asking, translate)?.text).toBe("Supprimer le corps « N_1 » ?");
   });
 
-  it("forgets the node last clicked in the diagram, like any other selection", () => {
-    const state = { ...editing(false), diagramNodeId: "joint:slide" };
+  it("replaces a selected device by the body", () => {
+    const state = { ...editing(false), selectedNodeId: null, selectedDevice: DEVICE };
     const asking = withDeleteRequested(state, bodyNodeId("press", "carriage"));
-    expect(asking.diagramNodeId).toBeNull();
+    expect(asking.selectedDevice).toBeNull();
     expect(asking.selectedNodeId).toBe(bodyNodeId("press", "carriage"));
   });
 
@@ -217,5 +218,24 @@ describe("welcome dialog state (ADR 0027)", () => {
   it("comes back when a Pantin is closed", () => {
     const closed = withPantinClosed({ ...editing(false), welcomeHidden: true });
     expect(closed.welcomeHidden).toBe(false);
+  });
+});
+
+describe("a device selected while the Pantin changes", () => {
+  const onDevice = { ...editing(false), selectedNodeId: null, selectedDevice: DEVICE };
+
+  it("is dropped when a body or a joint is deleted, the Pantin is selected", () => {
+    const afterBody = withBodyDeleted(onDevice, pantinResponse(false), "N_1");
+    expect(afterBody.selectedDevice).toBeNull();
+    expect(afterBody.selectedNodeId).toBe(pantinNodeId("press"));
+    const afterJoint = withJointDeleted(onDevice, pantinResponse(false), "hinge");
+    expect(afterJoint.selectedDevice).toBeNull();
+    expect(afterJoint.selectedNodeId).toBe(pantinNodeId("press"));
+  });
+
+  it("is dropped when the Pantin is closed", () => {
+    const closed = withPantinClosed(onDevice);
+    expect(closed.selectedDevice).toBeNull();
+    expect(closed.selectedNodeId).toBeNull();
   });
 });
