@@ -9,14 +9,14 @@ import {
   type NetworkConfig,
   resolveNetworkConfig,
 } from "../domain/network-config.ts";
-import { createPantinService } from "../service/pantin-service.ts";
+import { createPantinService, type PantinService } from "../service/pantin-service.ts";
 import {
   createRealSimulationTimer,
   type SimulationTimer,
   startSimulationLoop,
 } from "../service/simulation-loop.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
-import { createPoseStreamRegistry } from "./pose-stream-registry.ts";
+import { createPoseStreamRegistry, type PoseSource } from "./pose-stream-registry.ts";
 import { createRequestHandler } from "./request-handler.ts";
 
 export type PantinServerOptions = {
@@ -95,6 +95,15 @@ function listen(server: Server, port: number, address: string): Promise<void> {
   });
 }
 
+function poseSourceOf(service: PantinService): PoseSource {
+  return {
+    stepCount: service.peekStepCount,
+    snapshot: service.peekPoseSnapshot,
+    clock: service.peekClock,
+    isRunning: service.peekIsRunning,
+  };
+}
+
 export async function startPantinServer(
   options: PantinServerOptions,
 ): Promise<RunningPantinServer> {
@@ -113,8 +122,8 @@ export async function startPantinServer(
     },
   );
   const poseStreams = createPoseStreamRegistry({
-    source: { stepCount: service.peekStepCount, snapshot: service.peekPoseSnapshot },
-    keepAliveTimer: options.streamTimer ?? createRealSimulationTimer(),
+    source: poseSourceOf(service),
+    timer: options.streamTimer ?? createRealSimulationTimer(),
   });
   const server = createServer(
     createRequestHandler({

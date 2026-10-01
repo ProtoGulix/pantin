@@ -41,6 +41,7 @@ export const POSE_STREAM_ROUTES: readonly Route[] = [
       });
       response.flushHeaders();
       stream.send(initial);
+      stream.sendClock();
     },
   },
 ];

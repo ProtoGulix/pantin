@@ -179,3 +179,5 @@ export const PoseSnapshotSchema = PoseResponseSchema.extend({
 export type PoseSnapshot = z.infer<typeof PoseSnapshotSchema>;
 
 export const POSE_STREAM_EVENT_NAME = "pose";
+// The second event of the stream, carrying a SimulationClockState (ADR 0032 point 9).
+export const CLOCK_STREAM_EVENT_NAME = "clock";

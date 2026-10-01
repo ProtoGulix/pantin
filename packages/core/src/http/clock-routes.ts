@@ -19,7 +19,12 @@ export const CLOCK_ROUTES: readonly Route[] = [
       const pantinId = pantinIdOf(context);
       const body = await readJsonBody(context.request);
       const { running } = parseWithSchema(SetClockRunningRequestSchema, body, "The clock request");
-      sendJson(context.response, 200, await context.service.setClockRunning(pantinId, running));
+      const before = await context.service.getClock(pantinId);
+      const state = await context.service.setClockRunning(pantinId, running);
+      if (before.running !== running) {
+        context.poseStreams.notifyClockChange(pantinId, { withPose: false });
+      }
+      sendJson(context.response, 200, state);
     },
   },
   {
@@ -29,7 +34,11 @@ export const CLOCK_ROUTES: readonly Route[] = [
       const pantinId = pantinIdOf(context);
       const body = await readJsonBody(context.request);
       const { steps } = parseWithSchema(StepClockRequestSchema, body, "The step request");
-      sendJson(context.response, 200, await context.service.stepClock(pantinId, steps));
+      const state = await context.service.stepClock(pantinId, steps);
+      // Paused time sends no pose by itself: the viewer gets the result at once
+      // instead of waiting for the next wall-clock check.
+      context.poseStreams.notifyClockChange(pantinId, { withPose: true });
+      sendJson(context.response, 200, state);
     },
   },
 ];

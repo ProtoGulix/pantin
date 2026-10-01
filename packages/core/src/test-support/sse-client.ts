@@ -1,11 +1,19 @@
 import { request as httpRequest, type IncomingMessage } from "node:http";
-import { type PoseSnapshot, PoseSnapshotSchema } from "@pantin/protocol";
+import {
+  type PoseSnapshot,
+  PoseSnapshotSchema,
+  type SimulationClockState,
+  SimulationClockStateSchema,
+} from "@pantin/protocol";
 
 // A minimal Server-Sent Events reader over node:http, for the stream tests.
 export type SseClient = {
   status: number;
   headers: IncomingMessage["headers"];
   snapshots: PoseSnapshot[];
+  clocks: SimulationClockState[];
+  // Event names in arrival order, to check what was sent after what.
+  eventNames: string[];
   comments: string[];
   // Resolves once the predicate holds; re-checked as data arrives.
   waitUntil(predicate: () => boolean): Promise<void>;
@@ -13,7 +21,10 @@ export type SseClient = {
   close(): void;
 };
 
-function parseBlock(client: Pick<SseClient, "snapshots" | "comments">, block: string): void {
+function parseBlock(
+  client: Pick<SseClient, "snapshots" | "clocks" | "eventNames" | "comments">,
+  block: string,
+): void {
   if (block.startsWith(":")) {
     client.comments.push(block);
     return;
@@ -24,6 +35,11 @@ function parseBlock(client: Pick<SseClient, "snapshots" | "comments">, block: st
     ?.slice("data: ".length);
   if (block.startsWith("event: pose\n") && data !== undefined) {
     client.snapshots.push(PoseSnapshotSchema.parse(JSON.parse(data)));
+    client.eventNames.push("pose");
+  }
+  if (block.startsWith("event: clock\n") && data !== undefined) {
+    client.clocks.push(SimulationClockStateSchema.parse(JSON.parse(data)));
+    client.eventNames.push("clock");
   }
 }
 
@@ -62,6 +78,8 @@ function readEvents(incoming: IncomingMessage, close: () => void): SseClient {
     status: incoming.statusCode ?? 0,
     headers: incoming.headers,
     snapshots: [],
+    clocks: [],
+    eventNames: [],
     comments: [],
     waitUntil: until,
     ended: () => until(() => isEnded),

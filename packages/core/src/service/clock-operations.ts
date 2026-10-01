@@ -9,7 +9,7 @@ import { runSteps } from "./simulation.ts";
 
 // Pause, resume and single steps of an open Pantin (ADR 0032).
 
-function toClockState(openPantin: OpenPantin): SimulationClockState {
+export function toClockState(openPantin: OpenPantin): SimulationClockState {
   const { clock } = openPantin;
   return {
     running: clock.running,

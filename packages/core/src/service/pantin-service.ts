@@ -18,7 +18,7 @@ import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
-import { clockOperations } from "./clock-operations.ts";
+import { clockOperations, toClockState } from "./clock-operations.ts";
 import { readConsole } from "./console-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { importBodies } from "./import-operations.ts";
@@ -110,6 +110,11 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
 function simulationPeeks(context: ServiceContext) {
   return {
     peekStepCount: (pantinId: PantinId) => context.loadedPantins.get(pantinId)?.stepCount,
+    peekIsRunning: (pantinId: PantinId) => context.loadedPantins.get(pantinId)?.clock.running,
+    peekClock: (pantinId: PantinId) => {
+      const openPantin = context.loadedPantins.get(pantinId);
+      return openPantin === undefined ? undefined : toClockState(openPantin);
+    },
     peekPoseSnapshot: (pantinId: PantinId) => {
       const openPantin = context.loadedPantins.get(pantinId);
       return openPantin === undefined ? undefined : toPoseSnapshot(openPantin);

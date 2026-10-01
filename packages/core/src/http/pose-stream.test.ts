@@ -17,6 +17,8 @@ import type { RunningPantinServer } from "./server.ts";
 
 const STREAM_PATH = "/api/pantins/axis/pose/stream";
 const PERIOD_STEPS = 4;
+// Keep-alive and clock event.
+const TIMERS_PER_STREAM = 2;
 
 let workspace: TestWorkspace;
 let clock: ManualTimer;
@@ -170,7 +172,7 @@ describe("pose stream slots", () => {
     for (let index = 0; index < MAX_POSE_STREAMS; index += 1) {
       opened.push(await connect());
     }
-    expect(streamClock.runningCount()).toBe(MAX_POSE_STREAMS);
+    expect(streamClock.runningCount()).toBe(MAX_POSE_STREAMS * TIMERS_PER_STREAM);
     opened[0]?.close();
     // The server notices the closed socket asynchronously.
     await waitForCount(MAX_POSE_STREAMS - 1);
@@ -190,7 +192,7 @@ describe("pose stream slots", () => {
 });
 
 async function waitForCount(expected: number): Promise<void> {
-  while (streamClock.runningCount() !== expected) {
+  while (streamClock.runningCount() !== expected * TIMERS_PER_STREAM) {
     await new Promise((resolve) => setImmediate(resolve));
   }
 }

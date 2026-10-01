@@ -1,10 +1,10 @@
 import type { PoseSnapshot } from "@pantin/protocol";
 import { STEP_SECONDS } from "./fixed-step.ts";
 
-// When the pose stream sends a snapshot (ADR 0015 point 3). Simulated time is
-// counted in steps, so the decision does not depend on wall-clock jitter.
+// When the pose stream sends a snapshot (ADR 0015 point 3). While running, time
+// is counted in steps, so the decision does not depend on wall-clock jitter.
 
-const SNAPSHOT_PERIOD_SECONDS = 1 / 30;
+export const SNAPSHOT_PERIOD_SECONDS = 1 / 30;
 // Rounded because 1/30 divided by 1/120 is not exactly 4 in floating point.
 export const SNAPSHOT_PERIOD_STEPS = Math.round(SNAPSHOT_PERIOD_SECONDS / STEP_SECONDS);
 

@@ -13,8 +13,9 @@ describe("startSimulationLoop", () => {
       () => undefined,
     );
     manual.advance(STEP_SECONDS * 2.5);
-    manual.advance(STEP_SECONDS * 0.6);
-    expect(runs).toEqual([2, 1]);
+    // 0.5 step carried from the first tick + 1.6 = 2.1 steps: 1 without the carry.
+    manual.advance(STEP_SECONDS * 1.6);
+    expect(runs).toEqual([2, 2]);
   });
 });
 

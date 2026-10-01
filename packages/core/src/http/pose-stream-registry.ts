@@ -1,5 +1,16 @@
-import { type PantinId, POSE_STREAM_EVENT_NAME, type PoseSnapshot } from "@pantin/protocol";
-import { isSnapshotPeriodElapsed, shouldSendSnapshot } from "../domain/pose-stream.ts";
+import {
+  CLOCK_STREAM_EVENT_NAME,
+  type PantinId,
+  POSE_STREAM_EVENT_NAME,
+  type PoseSnapshot,
+  type SimulationClockState,
+} from "@pantin/protocol";
+import {
+  hasMoved,
+  isSnapshotPeriodElapsed,
+  SNAPSHOT_PERIOD_SECONDS,
+  shouldSendSnapshot,
+} from "../domain/pose-stream.ts";
 import { ApiError } from "../errors.ts";
 import type { SimulationTimer } from "../service/simulation-loop.ts";
 
@@ -9,6 +20,7 @@ import type { SimulationTimer } from "../service/simulation-loop.ts";
 
 export const MAX_POSE_STREAMS = 16;
 const KEEP_ALIVE_SECONDS = 15;
+const CLOCK_EVENT_SECONDS = 1;
 
 export type PoseStreamSink = {
   // Returns false when nothing was written (client too slow): the caller then
@@ -21,10 +33,14 @@ export type PoseStreamSink = {
 export type PoseSource = {
   stepCount(pantinId: PantinId): number | undefined;
   snapshot(pantinId: PantinId): PoseSnapshot | undefined;
+  clock(pantinId: PantinId): SimulationClockState | undefined;
+  // Cheap: read after every tick, where `clock` builds a whole state.
+  isRunning(pantinId: PantinId): boolean | undefined;
 };
 
 type PoseStream = {
   send(snapshot: PoseSnapshot): void;
+  sendClock(): void;
   close(): void;
 };
 
@@ -33,6 +49,10 @@ export type PoseStreamRegistry = {
   open(pantinId: PantinId, sink: PoseStreamSink): PoseStream;
   // To call after every simulation tick.
   notifyTick(): void;
+  // To call after the clock of a Pantin was changed by a request (ADR 0032
+  // point 9): sends its clock state, and its poses when `withPose` (a step
+  // request moves them while no tick sends anything).
+  notifyClockChange(pantinId: PantinId, change: { withPose: boolean }): void;
   openCount(): number;
   closeAll(): void;
 };
@@ -41,20 +61,39 @@ type StreamState = {
   pantinId: PantinId;
   sink: PoseStreamSink;
   lastSent: PoseSnapshot | undefined;
-  stopKeepAlive: () => void;
+  // Wall time of the last pose written, for the paused cadence.
+  lastSentAt: number;
+  stopTimers: () => void;
 };
 
-function encodeSnapshotEvent(snapshot: PoseSnapshot): string {
-  return `event: ${POSE_STREAM_EVENT_NAME}\ndata: ${JSON.stringify(snapshot)}\n\n`;
-}
-
-function sendTo(state: StreamState, snapshot: PoseSnapshot): void {
-  if (state.sink.write(encodeSnapshotEvent(snapshot))) {
+function sendTo(state: StreamState, snapshot: PoseSnapshot, now: number): void {
+  if (state.sink.write(encodeEvent(POSE_STREAM_EVENT_NAME, snapshot))) {
     state.lastSent = snapshot;
+    state.lastSentAt = now;
   }
 }
 
-function notifyStream(source: PoseSource, state: StreamState): void {
+function encodeEvent(name: string, data: PoseSnapshot | SimulationClockState): string {
+  return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+function sendClockTo(source: PoseSource, state: StreamState): void {
+  const clock = source.clock(state.pantinId);
+  if (clock !== undefined) {
+    state.sink.write(encodeEvent(CLOCK_STREAM_EVENT_NAME, clock));
+  }
+}
+
+function sendCurrentPose(source: PoseSource, state: StreamState, now: number): void {
+  const current = source.snapshot(state.pantinId);
+  if (current !== undefined) {
+    sendTo(state, current, now);
+  }
+}
+
+// Running: the period counts simulated time, so the decision does not depend
+// on wall-clock jitter (ADR 0015 point 3).
+function notifyRunningStream(source: PoseSource, state: StreamState, now: number): void {
   const stepCount = source.stepCount(state.pantinId);
   const { lastSent } = state;
   if (stepCount === undefined) {
@@ -66,19 +105,72 @@ function notifyStream(source: PoseSource, state: StreamState): void {
   }
   const current = source.snapshot(state.pantinId);
   if (current !== undefined && (lastSent === undefined || shouldSendSnapshot(lastSent, current))) {
-    sendTo(state, current);
+    sendTo(state, current, now);
   }
+}
+
+// Paused: simulated time stands still, so the period counts wall time and
+// only motion (an edit of a joint position) is worth a send (ADR 0032 point 9).
+function notifyPausedStream(source: PoseSource, state: StreamState, now: number): void {
+  const { lastSent } = state;
+  if (lastSent !== undefined && now - state.lastSentAt < SNAPSHOT_PERIOD_SECONDS) {
+    return;
+  }
+  const current = source.snapshot(state.pantinId);
+  if (current !== undefined && (lastSent === undefined || hasMoved(lastSent, current))) {
+    sendTo(state, current, now);
+  }
+}
+
+function notifyStream(source: PoseSource, state: StreamState, now: number): void {
+  if (source.isRunning(state.pantinId) === false) {
+    notifyPausedStream(source, state, now);
+  } else {
+    notifyRunningStream(source, state, now);
+  }
+}
+
+type RegistryContext = { source: PoseSource; timer: SimulationTimer };
+
+function newStreamState(
+  { source, timer }: RegistryContext,
+  pantinId: PantinId,
+  sink: PoseStreamSink,
+): StreamState {
+  const state: StreamState = {
+    pantinId,
+    sink,
+    lastSent: undefined,
+    lastSentAt: timer.now(),
+    stopTimers: noop,
+  };
+  const stopKeepAlive = timer.repeat(KEEP_ALIVE_SECONDS, () => {
+    sink.write(": keep-alive\n\n");
+  });
+  // An idle machine sends no pose: without this the viewer's time would freeze.
+  const stopClock = timer.repeat(CLOCK_EVENT_SECONDS, () => {
+    if (source.isRunning(pantinId) === true) {
+      sendClockTo(source, state);
+    }
+  });
+  state.stopTimers = () => {
+    stopKeepAlive();
+    stopClock();
+  };
+  return state;
 }
 
 export function createPoseStreamRegistry(options: {
   source: PoseSource;
-  keepAliveTimer: SimulationTimer;
+  // Wall time for the paused cadence, and the repeating keep-alive and clock timers.
+  timer: SimulationTimer;
   maxStreams?: number;
 }): PoseStreamRegistry {
+  const { source, timer } = options;
   const maxStreams = options.maxStreams ?? MAX_POSE_STREAMS;
   const streams = new Set<StreamState>();
   const release = (state: StreamState) => {
-    state.stopKeepAlive();
+    state.stopTimers();
     streams.delete(state);
   };
   return {
@@ -89,16 +181,29 @@ export function createPoseStreamRegistry(options: {
           `The core already serves ${maxStreams} pose streams. Close a viewer tab and retry.`,
         );
       }
-      const state: StreamState = { pantinId, sink, lastSent: undefined, stopKeepAlive: noop };
-      state.stopKeepAlive = options.keepAliveTimer.repeat(KEEP_ALIVE_SECONDS, () => {
-        sink.write(": keep-alive\n\n");
-      });
+      const state = newStreamState(options, pantinId, sink);
       streams.add(state);
-      return { send: (snapshot) => sendTo(state, snapshot), close: () => release(state) };
+      return {
+        send: (snapshot) => sendTo(state, snapshot, timer.now()),
+        sendClock: () => sendClockTo(source, state),
+        close: () => release(state),
+      };
     },
     notifyTick: () => {
+      const now = timer.now();
       for (const state of [...streams]) {
-        notifyStream(options.source, state);
+        notifyStream(source, state, now);
+      }
+    },
+    notifyClockChange: (pantinId, { withPose }) => {
+      const now = timer.now();
+      for (const state of [...streams]) {
+        if (state.pantinId === pantinId) {
+          sendClockTo(source, state);
+          if (withPose) {
+            sendCurrentPose(source, state, now);
+          }
+        }
       }
     },
     openCount: () => streams.size,
