@@ -43,7 +43,6 @@
   "properties.label": "Properties",
   "properties.property": "Property",
   "properties.value": "Value",
-  "properties.empty": "Select an item in the tree, the 3D view or the diagram.",
   "properties.editLabel": "Edit: {property}",
   "properties.group.general": "General",
   "properties.group.source": "Source",

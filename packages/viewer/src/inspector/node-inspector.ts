@@ -31,11 +31,19 @@ export function nodeInspectorContent(
   if (ref === null || ref.pantinId !== pantin.id || groups.length === 0) {
     return NOTHING;
   }
-  const label = findNode(buildTree(source, t), nodeId)?.label ?? null;
-  const base = { subject: label, groups, hints: [] };
+  const { document } = pantin;
+  // Named by the document where it has the name; folders and source nodes have only the tree's label.
+  const documentName =
+    ref.kind === "assembly"
+      ? document.assemblies.find((assembly) => assembly.key === ref.key)?.name
+      : ref.kind === "body"
+        ? document.bodies.find((body) => body.id === ref.bodyId)?.name
+        : undefined;
+  const subject = documentName ?? findNode(buildTree(source, t), nodeId)?.label ?? null;
+  const base = { subject, groups, hints: [] };
   switch (ref.kind) {
     case "pantin":
-      return withIndex({ ...base, subject: pantin.document.name }, context, null);
+      return withIndex({ ...base, subject: document.name }, context, null);
     case "assembly":
       return withIndex(base, context, ref.key);
     case "joint": {

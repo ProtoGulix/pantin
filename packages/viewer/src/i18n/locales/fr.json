@@ -43,7 +43,6 @@
   "properties.label": "Propriétés",
   "properties.property": "Propriété",
   "properties.value": "Valeur",
-  "properties.empty": "Sélectionnez un élément dans l'arborescence, la vue 3D ou le schéma.",
   "properties.editLabel": "Modifier : {property}",
   "properties.group.general": "Général",
   "properties.group.source": "Source",

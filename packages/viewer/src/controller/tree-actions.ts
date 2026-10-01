@@ -13,7 +13,11 @@ export function setExpanded(store: ViewerStore, nodeId: string, expanded: boolea
 /** Enter or double-click on a node that cannot be renamed: fold or unfold it. */
 export function activateNode(store: ViewerStore, nodeId: string): void {
   const selected = withSelection(store.state, nodeSelection(nodeId));
-  store.update(withExpanded(selected, nodeId, !selected.expandedNodeIds.has(nodeId)));
+  // An explicit activation shows the node's properties; a single click does not.
+  store.update({
+    ...withExpanded(selected, nodeId, !selected.expandedNodeIds.has(nodeId)),
+    inspectorOpen: true,
+  });
 }
 
 export function startRename(store: ViewerStore, nodeId: string): void {

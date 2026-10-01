@@ -159,7 +159,7 @@ export function renderPropertiesGrid(
   intents: PanelIntents,
 ): HTMLElement {
   if (groups.length === 0) {
-    return element("p", { className: "pane-empty", text: translate("properties.empty") });
+    return element("p", { className: "pane-empty", text: translate("inspector.empty") });
   }
   const head = element("thead", {}, [
     element("tr", {}, [

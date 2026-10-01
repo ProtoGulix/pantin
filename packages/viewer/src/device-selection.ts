@@ -1,10 +1,10 @@
 import type { PantinDocument } from "@pantin/protocol";
 import { actuatorNode, driveNode, sensorNode } from "./diagram/diagram-chains.ts";
 
-// The selection is a tree node (selectedNodeId) or one of these devices, never
+// The selection (selection.ts) is a tree node or one of these devices, never
 // both: the tree has no row for a drive, an actuator or a sensor (ADR 0030
 // point 1). Pure functions over the document, shared by the tree, the 3D view,
-// the diagram and the left-hand panel.
+// the diagram and the inspector.
 
 export type DeviceKind = "drive" | "actuator" | "sensor";
 

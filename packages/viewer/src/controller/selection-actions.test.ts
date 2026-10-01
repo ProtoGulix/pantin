@@ -33,8 +33,8 @@ const pantin: PantinResponse = {
   }),
 };
 
-function storeWithInspector(open: boolean) {
-  const store = testStore({});
+function storeWithInspector(open: boolean, previews: unknown[] = []) {
+  const store = testStore({}, { showJointPreview: (preview: unknown) => previews.push(preview) });
   store.requestedPantinId = pantin.id;
   store.update({ ...withOpenPantin(store.state, pantin), inspectorOpen: open });
   return store;
@@ -99,10 +99,25 @@ describe("the joint form lives in the inspector", () => {
   });
 
   it("drops the form with the inspector, so no hidden form keeps previewing", () => {
-    const store = storeWithInspector(true);
+    const previews: unknown[] = [];
+    const store = storeWithInspector(true, previews);
     openJointForm(store);
+    expect(previews.at(-1)).not.toBeNull();
     toggleInspector(store);
     expect(store.state.inspectorOpen).toBe(false);
     expect(store.state.jointForm).toBeNull();
+    // Nothing selected is a joint: the 3D preview of the form goes with it.
+    expect(previews.at(-1)).toBeNull();
+  });
+});
+
+describe("opening the inspector by activating a tree row", () => {
+  it("Enter or double-click on a row opens a closed inspector; a single click does not", () => {
+    const store = storeWithInspector(false);
+    const intents = createPanelIntents(store);
+    intents.selectNode(bodyNodeId("press", "s1"));
+    expect(store.state.inspectorOpen).toBe(false);
+    intents.activateNode(bodyNodeId("press", "s1"));
+    expect(store.state.inspectorOpen).toBe(true);
   });
 });
