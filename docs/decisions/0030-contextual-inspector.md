@@ -116,7 +116,9 @@ menu act on any selection, and to keep the diagram's Delete rule.
    - on a node, Enter focuses its first socket and Space selects the node
      (unchanged);
    - on a boolean command socket, Space toggles;
-   - on a numeric command socket, Enter opens the input, Escape closes it;
+   - on a numeric command socket, Enter opens the input, prefilled with
+     the current value; Escape, or leaving the input, closes it without
+     writing;
    - on a power port (drive output, actuator input), Enter opens "Relier
      à…" (unchanged). Enter on a tag socket no longer opens it: a tag is
      never linked.

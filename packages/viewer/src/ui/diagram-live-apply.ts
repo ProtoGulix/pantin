@@ -1,3 +1,5 @@
+import type { PantinDocument } from "@pantin/protocol";
+import { commandSocketName, forcedValueText } from "../diagram/diagram-forcing.ts";
 import { type LitState, nodeLitStates } from "../diagram/diagram-lit-states.ts";
 import {
   changedDiagnostics,
@@ -5,6 +7,8 @@ import {
   type LiveState,
   type SetChanges,
 } from "../diagram/diagram-live.ts";
+import type { ChainDiagram } from "../diagram/diagram-types.ts";
+import { forcedTagUnit, forcedTagUnitLabel } from "../drives/drive-tags.ts";
 import type { Translate } from "../i18n/translate.ts";
 import type { DrawnDiagram } from "./diagram-draw.ts";
 import { showNodeWarning } from "./diagram-warning.ts";
@@ -43,11 +47,20 @@ export function applyLive(
   previous: LiveState,
   next: LiveState,
 ): void {
-  applyChanges(
-    diffSets(previous.litSockets, next.litSockets),
-    (key) => portOf(drawn, key)?.group,
-    "is-lit",
-  );
+  const lit = diffSets(previous.litSockets, next.litSockets);
+  applyChanges(lit, (key) => portOf(drawn, key)?.group, "is-lit");
+  // A toggle says its state as pressed, not in its name (applyLitText leaves it alone).
+  for (const [keys, pressed] of [
+    [lit.added, "true"],
+    [lit.removed, "false"],
+  ] as const) {
+    for (const key of keys) {
+      const port = portOf(drawn, key);
+      if (port?.forcing === "toggle") {
+        port.group.setAttribute("aria-pressed", pressed);
+      }
+    }
+  }
   applyChanges(diffSets(previous.litEdges, next.litEdges), (id) => drawn.edges.get(id), "is-lit");
   for (const [nodeId, lines] of changedDiagnostics(previous.diagnostics, next.diagnostics)) {
     const node = drawn.nodes.get(nodeId);
@@ -76,7 +89,7 @@ export function applyLitText(
   for (const key of new Set([...previous.keys(), ...next.keys()])) {
     const port = portOf(drawn, key);
     const state = next.get(key);
-    if (port !== undefined && port.baseLabel !== "") {
+    if (port !== undefined && port.baseLabel !== "" && port.forcing === null) {
       const label =
         state === undefined ? port.baseLabel : `${port.baseLabel}, ${t(`diagram.lit.${state}`)}`;
       port.group.setAttribute("aria-label", label);
@@ -91,6 +104,34 @@ export function applyLitText(
       group?.removeAttribute("aria-description");
     } else {
       group?.setAttribute("aria-description", states.map((s) => t(`diagram.lit.${s}`)).join(", "));
+    }
+  }
+}
+
+/**
+ * A numeric command's accessible name carries its value, in display units
+ * (ADR 0030 point 3); only the sockets whose value changed are touched.
+ */
+export function applyForcedValues(
+  drawn: DrawnDiagram,
+  context: { diagram: ChainDiagram; document: PantinDocument; t: Translate },
+  previous: ReadonlyMap<string, number>,
+  next: ReadonlyMap<string, number>,
+): void {
+  const { diagram, document, t } = context;
+  for (const node of diagram.nodes) {
+    for (const socket of node.sockets) {
+      const value = socket.tagName === undefined ? undefined : next.get(socket.tagName);
+      if (socket.tagType !== "number" || socket.tagName === undefined || value === undefined) {
+        continue;
+      }
+      if (value !== previous.get(socket.tagName)) {
+        const unit = forcedTagUnit(document, socket.tagName);
+        const symbol = forcedTagUnitLabel(document, socket.tagName, t);
+        const text = forcedValueText(value, unit, symbol);
+        const label = commandSocketName(socket, t, { text });
+        drawn.nodes.get(node.id)?.sockets.get(socket.id)?.group.setAttribute("aria-label", label);
+      }
     }
   }
 }

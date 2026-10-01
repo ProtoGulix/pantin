@@ -6,6 +6,7 @@ import type {
 import { describe, expect, it, vi } from "vitest";
 import type { PantinApiClient } from "../api-client.ts";
 import {
+  actuatorOf,
   bodyOf,
   cylinderOf,
   documentOf,
@@ -13,6 +14,7 @@ import {
   encoderOf,
   jointOf,
 } from "../diagram/diagram-fixtures.ts";
+import { runForcing, submitForcedValue } from "../ui/diagram-forcing.ts";
 import { applyToggle } from "../ui/row-actions.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { createPanelIntents } from "./controller.ts";
@@ -28,8 +30,15 @@ const document = documentOf({
   assemblies: ["a"],
   bodies: [bodyOf("s1", "a"), bodyOf("s2", "a")],
   joints: [jointOf("j1", "s1"), jointOf("j2", "s2")],
-  drives: [driveOf("v1", "a"), { ...driveOf("inv", "a", "vfd_analog"), acceleration: 50 }],
-  actuators: [cylinderOf("c1", "a", "v1", ["j1"])],
+  drives: [
+    driveOf("v1", "a"),
+    { ...driveOf("inv", "a", "vfd_analog"), acceleration: 50 },
+    { ...driveOf("sv", "a", "servo_drive"), maxSpeed: 1, maxAcceleration: 1 },
+  ],
+  actuators: [
+    cylinderOf("c1", "a", "v1", ["j1"]),
+    actuatorOf("m1", "a", { type: "servo_motor" }, { drive: "sv", ports: { in: "out" } }, ["j2"]),
+  ],
   sensors: [encoderOf("e1", "a", "j1")],
 });
 const pantin = { id: "press", unsavedChanges: false, document };
@@ -105,31 +114,31 @@ describe("commitDeviceEdit, other cases", () => {
   });
 });
 
-describe("the inspector's commands", () => {
-  function commandStore() {
-    const writeTag = vi.fn(async (_id: string, name: string, value: number) => ({
-      name,
-      type: "bit" as const,
-      direction: "command" as const,
-      value,
-    }));
-    const setDriveFault = vi.fn(async () => ({ jammedJoints: [], unresponsiveDrives: ["v1"] }));
-    const setJointFault = vi.fn(async () => ({ jammedJoints: ["j1"], unresponsiveDrives: [] }));
-    const store = openStore({
-      writeTag,
-      setDriveFault,
-      setJointFault,
-      listTags: async () => ({
-        stepCount: 0,
-        tags: [
-          { name: "a.v1.coil_14", type: "bit" as const, direction: "command" as const, value: 0 },
-        ],
-        drives: [],
-      }),
-    });
-    return { store, intents: createPanelIntents(store), writeTag, setDriveFault, setJointFault };
-  }
+function commandStore() {
+  const writeTag = vi.fn(async (_id: string, name: string, value: number) => ({
+    name,
+    type: "bit" as const,
+    direction: "command" as const,
+    value,
+  }));
+  const setDriveFault = vi.fn(async () => ({ jammedJoints: [], unresponsiveDrives: ["v1"] }));
+  const setJointFault = vi.fn(async () => ({ jammedJoints: ["j1"], unresponsiveDrives: [] }));
+  const store = openStore({
+    writeTag,
+    setDriveFault,
+    setJointFault,
+    listTags: async () => ({
+      stepCount: 0,
+      tags: [
+        { name: "a.v1.coil_14", type: "bit" as const, direction: "command" as const, value: 0 },
+      ],
+      drives: [],
+    }),
+  });
+  return { store, intents: createPanelIntents(store), writeTag, setDriveFault, setJointFault };
+}
 
+describe("the inspector's commands", () => {
   it("forces a bit tag from the toggle, as the former panel did", async () => {
     const { store, intents, writeTag } = commandStore();
     await refreshTagValues(store);
@@ -150,6 +159,38 @@ describe("the inspector's commands", () => {
     const { intents, writeTag } = commandStore();
     intents.writeFloatTag("a.j2.setpoint", "40");
     await vi.waitFor(() => expect(writeTag).toHaveBeenCalledWith("press", "a.j2.setpoint", 0.04));
+  });
+});
+
+describe("forcing from the diagram (ADR 0030 point 3)", () => {
+  it("forces from the diagram through the same tag writes, a number converted to SI", async () => {
+    const { store, intents, writeTag } = commandStore();
+    await refreshTagValues(store);
+    const openValueInput = vi.fn();
+    const element = {} as Element; // only handed back to openValueInput
+    runForcing({ kind: "toggle", tag: "a.v1.coil_14" }, element, { intents, openValueInput });
+    await vi.waitFor(() => expect(writeTag).toHaveBeenCalledWith("press", "a.v1.coil_14", 1));
+    expect(submitForcedValue("a.sv.setpoint", "40", intents)).toBe(true);
+    await vi.waitFor(() => expect(writeTag).toHaveBeenCalledWith("press", "a.sv.setpoint", 0.04));
+    // A percent has no conversion.
+    submitForcedValue("a.inv.speed_setpoint", "60", intents);
+    await vi.waitFor(() =>
+      expect(writeTag).toHaveBeenCalledWith("press", "a.inv.speed_setpoint", 60),
+    );
+  });
+
+  it("forcing from the diagram does not change the selection", async () => {
+    const { store, intents } = commandStore();
+    const before = store.state.selectedNodeId;
+    const element = {} as Element; // only handed back to openValueInput
+    runForcing({ kind: "toggle", tag: "a.v1.coil_14" }, element, {
+      intents,
+      openValueInput: vi.fn(),
+    });
+    submitForcedValue("a.sv.setpoint", "40", intents);
+    await Promise.resolve();
+    expect(store.state.selectedNodeId).toBe(before);
+    expect(store.state.selectedDevice).toBeNull();
   });
 });
 

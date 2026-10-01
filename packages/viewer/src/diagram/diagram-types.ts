@@ -23,6 +23,8 @@ export interface Socket {
   domain?: PortDomain;
   // Drive command tags and sensor tags: the full tag name, to light the socket from tag values.
   tagName?: string;
+  // Command tags only: a bit is toggled, any other type is typed (ADR 0030 point 3).
+  tagType?: "bit" | "number";
 }
 
 interface AssemblyBadge {

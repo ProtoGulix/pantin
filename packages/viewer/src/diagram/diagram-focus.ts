@@ -16,12 +16,13 @@ export type Direction = "left" | "right" | "up" | "down";
 export const focusKeyOf = (target: FocusTarget): string =>
   target.socketId === null ? `node:${target.nodeId}` : `port:${target.nodeId}|${target.socketId}`;
 
-// The tags of a drive or a sensor show a value; only the sockets that links
-// attach to take the focus.
-const isPort = (socket: Socket): boolean => socket.role !== "command" && socket.role !== "feedback";
+// A sensor's tag only shows a value, which a screen reader gets from its node;
+// the ports and the command tags (forced from the keyboard, ADR 0030 point 3)
+// take the focus.
+const takesFocus = (socket: Socket): boolean => socket.role !== "feedback";
 
 function portsOf(node: DiagramNode): Socket[] {
-  const ports = node.sockets.filter(isPort);
+  const ports = node.sockets.filter(takesFocus);
   return [
     ...ports.filter((port) => port.side === "left"),
     ...ports.filter((port) => port.side === "right"),
@@ -75,19 +76,20 @@ function portAlongLink(diagram: ChainDiagram, from: FocusTarget, direction: Dire
     : { nodeId: edge.fromNode, socketId: edge.fromSocket };
 }
 
-function portOnSameSide(diagram: ChainDiagram, from: FocusTarget, step: 1 | -1) {
+// Up and down walk every focusable socket of the node in focus order (left side,
+// then right), so that a drive's outputs stay reachable behind its command tags.
+function portInNode(diagram: ChainDiagram, from: FocusTarget, step: 1 | -1) {
   const node = diagram.nodes.find((candidate) => candidate.id === from.nodeId);
-  const current = node?.sockets.find((socket) => socket.id === from.socketId);
-  const side = node === undefined ? [] : portsOf(node).filter((p) => p.side === current?.side);
-  const at = side.findIndex((port) => port.id === from.socketId);
-  const next = at < 0 ? undefined : side[at + step];
+  const sockets = node === undefined ? [] : portsOf(node);
+  const at = sockets.findIndex((port) => port.id === from.socketId);
+  const next = at < 0 ? undefined : sockets[at + step];
   return next === undefined ? null : { nodeId: from.nodeId, socketId: next.id };
 }
 
 /**
  * Where an arrow key leads from a focused node or port, or null to stay.
  * On a node: left and right follow the chain, up and down walk the column. On
- * a port: left and right cross the link, up and down walk the node's ports.
+ * a port: left and right cross the link, up and down walk the node's sockets.
  */
 export function neighbour(
   diagram: ChainDiagram,
@@ -101,7 +103,7 @@ export function neighbour(
       ? nodeInColumn(diagram, from.nodeId, step)
       : nodeAlongChain(diagram, from.nodeId, direction);
   }
-  return vertical ? portOnSameSide(diagram, from, step) : portAlongLink(diagram, from, direction);
+  return vertical ? portInNode(diagram, from, step) : portAlongLink(diagram, from, direction);
 }
 
 /** The link that ends at a port, the one Delete removes from a focused port. */

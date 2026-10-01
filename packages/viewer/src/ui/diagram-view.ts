@@ -1,19 +1,23 @@
 import type { DriveRuntime } from "@pantin/protocol";
 import { focusKeyOf } from "../diagram/diagram-focus.ts";
+import { forcedDisplayNumber, forcedValueText } from "../diagram/diagram-forcing.ts";
 import { type LitState, socketLitStates } from "../diagram/diagram-lit-states.ts";
 import { diffSets, type LiveState, liveStateOf, NO_LIVE_STATE } from "../diagram/diagram-live.ts";
 import { type NodeHighlight, relatedEdgeIds } from "../diagram/diagram-selection.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
+import { forcedTagUnit, forcedTagUnitLabel } from "../drives/drive-tags.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import { drawColumnHeads } from "./diagram-columns.ts";
 import { listenToLinkDrags } from "./diagram-drag.ts";
 import { type DrawnDiagram, drawDiagram, HELP_ID } from "./diagram-draw.ts";
 import { EdgeSelection } from "./diagram-edge-select.ts";
+import { listenToSocketClicks, submitForcedValue } from "./diagram-forcing.ts";
 import { unhandledKeyInDiagram } from "./diagram-key-policy.ts";
 import { listenToDiagramKeys } from "./diagram-keys.ts";
 import { LinkMenu } from "./diagram-link-menu.ts";
-import { applyChanges, applyLitText, applyLive } from "./diagram-live-apply.ts";
+import { applyChanges, applyForcedValues, applyLitText, applyLive } from "./diagram-live-apply.ts";
 import { RovingFocus } from "./diagram-roving.ts";
+import { ValueInput } from "./diagram-value-input.ts";
 import { element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { isEditable } from "./shortcuts.ts";
@@ -40,12 +44,14 @@ export class DiagramView {
   private readonly roving = new RovingFocus();
   private readonly edgeSelection = new EdgeSelection();
   private readonly linkMenu = new LinkMenu();
+  private readonly valueInput = new ValueInput();
   private model: ShownModel | null = null;
   private intents: PanelIntents | null = null;
   private drawn: DrawnDiagram | null = null;
   private highlight: ReadonlyMap<string, NodeHighlight> = new Map();
   private live: LiveState = NO_LIVE_STATE;
   private litStates: ReadonlyMap<string, LitState> = new Map();
+  private tags: ReadonlyMap<string, number> = new Map();
 
   // The diagram goes under `before` (the welcome overlay), over the canvas.
   constructor(viewport: HTMLElement, before: HTMLElement) {
@@ -76,6 +82,7 @@ export class DiagramView {
     this.host.hidden = !model.shown;
     if (!model.shown) {
       this.linkMenu.close(false);
+      this.valueInput.close(false);
       return;
     }
     // The builder hands the same diagram object while nothing changed the layout.
@@ -99,20 +106,26 @@ export class DiagramView {
     const nextStates = socketLitStates(model.diagram, next);
     applyLive(drawn, model.translate, this.live, next);
     applyLitText(drawn, model.translate, this.litStates, nextStates);
+    const forced = { diagram: model.diagram, document: model.document, t: model.translate };
+    applyForcedValues(drawn, forced, this.tags, tags);
+    this.tags = tags;
     this.live = next;
     this.litStates = nextStates;
   }
 
   private redraw(model: ShownModel, intents: PanelIntents): void {
     // Every edit redraws: the keyboard user must find their place again.
-    const hadFocus = this.roving.holdsFocus(this.drawn?.svg ?? null);
+    // An open value input holds the focus too: the socket gets it back.
+    const hadFocus = this.roving.holdsFocus(this.drawn?.svg ?? null) || this.valueInput.isOpen();
     this.linkMenu.close(false);
+    this.valueInput.close(false);
     const drawn = drawDiagram(model, intents);
     this.drawn = drawn;
     // The new elements start unlit and unselected.
     this.highlight = new Map();
     this.live = NO_LIVE_STATE;
     this.litStates = new Map();
+    this.tags = new Map();
     this.emptyText.textContent = model.translate("diagram.empty");
     const help = element("p", {
       className: "visually-hidden",
@@ -138,10 +151,13 @@ export class DiagramView {
       drawn: () => this.drawn,
       intents: () => this.intents,
     };
+    const openValueInput = (opener: Element, tag: string) => this.openValueInput(opener, tag);
     listenToLinkDrags(drawn.svg, context);
+    listenToSocketClicks(drawn.svg, { ...context, openValueInput });
     listenToDiagramKeys(drawn.svg, {
       ...context,
       focusKey: (key) => this.roving.focus(key),
+      openValueInput,
       selectedEdgeId: () => this.edgeSelection.id,
       clearEdgeSelection: () => this.selectEdge(null),
       openMenu: (opener, title, choices, choose) => this.openMenu(opener, title, choices, choose),
@@ -168,6 +184,33 @@ export class DiagramView {
     if (this.model !== null) {
       this.linkMenu.open(this.host, opener, this.model.translate(title), choices, choose);
     }
+  }
+
+  private openValueInput(opener: Element, tag: string): void {
+    const { model, intents } = this;
+    const socket = model?.diagram.nodes
+      .flatMap((node) => node.sockets)
+      .find((candidate) => candidate.tagName === tag);
+    if (model === null || intents === null || socket === undefined) {
+      return;
+    }
+    const t = model.translate;
+    const unit = forcedTagUnitLabel(model.document, tag, t);
+    const value = this.tags.get(tag);
+    const conversion = forcedTagUnit(model.document, tag);
+    const spec = {
+      label:
+        value === undefined
+          ? t("diagram.input.label", { name: socket.label })
+          : t("diagram.input.labelValue", {
+              name: socket.label,
+              value: forcedValueText(value, conversion, unit),
+            }),
+      unit,
+      invalidText: t("diagram.input.invalid"),
+      initial: value === undefined ? "" : forcedDisplayNumber(value, conversion),
+    };
+    this.valueInput.open(this.host, opener, spec, (text) => submitForcedValue(tag, text, intents));
   }
 
   private applyHighlight(next: ReadonlyMap<string, NodeHighlight>): void {

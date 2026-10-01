@@ -26,14 +26,23 @@ describe("focusTargets", () => {
     const nodeKeys = keys.filter((key) => key.startsWith("node:"));
     expect(nodeKeys).toEqual(wiringDiagram.nodes.map((n) => `node:${n.id}`));
     const at = keys.indexOf("node:drive:v1");
-    expect(keys.slice(at + 1, at + 3)).toEqual([
+    const own = keys.slice(at + 1).filter((key) => key.startsWith("port:drive:v1|"));
+    expect(own.filter((key) => key.includes("|out:"))).toEqual([
       "port:drive:v1|out:port_2",
       "port:drive:v1|out:port_4",
     ]);
   });
 
-  it("leaves out the tags, which only show a value", () => {
-    expect(keys.some((key) => key.includes("|tag:"))).toBe(false);
+  it("includes a drive's command tags, which are forced, before its ports", () => {
+    const at = keys.indexOf("node:drive:v1");
+    expect(keys.slice(at + 1, at + 3)).toEqual([
+      "port:drive:v1|tag:coil_14",
+      "port:drive:v1|tag:coil_12",
+    ]);
+  });
+
+  it("leaves out a sensor's tag, which only shows a value", () => {
+    expect(keys.some((key) => key.startsWith("port:sensor:e1|tag:"))).toBe(false);
   });
 
   it("puts a node's left ports before its right ones", () => {
@@ -85,6 +94,24 @@ describe("neighbour on a port", () => {
       `port:actuator:cyl1|${second?.id}`,
     );
     expect(first && keyAfter(port("actuator:cyl1", first.id), "up")).toBeNull();
+  });
+});
+
+describe("reaching an unlinked drive's outputs by keys only", () => {
+  it("goes from the node into its sockets, then down past the command tags to an output", () => {
+    let at: FocusTarget | null = firstPortOf(wiringDiagram, "drive:v2");
+    const reached: string[] = [];
+    while (at !== null) {
+      reached.push(focusKeyOf(at));
+      at = neighbour(wiringDiagram, at, "down");
+    }
+    expect(reached).toEqual([
+      "port:drive:v2|tag:coil_14",
+      "port:drive:v2|tag:coil_12",
+      "port:drive:v2|out:port_2",
+      "port:drive:v2|out:port_4",
+    ]);
+    expect(keyAfter(port("drive:v2", "out:port_2"), "up")).toBe("port:drive:v2|tag:coil_12");
   });
 });
 

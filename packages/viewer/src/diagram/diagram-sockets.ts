@@ -44,6 +44,7 @@ export function driveSockets(drive: Drive, language: Language): SocketSpecs {
       role: "command",
       side: "left",
       tagName: tagName(drive.assembly, drive.tagKey, tag.member),
+      tagType: tag.type === "bit" ? "bit" : "number",
     })),
     right: DRIVE_PORTS[drive.type].map((port) => ({
       id: `out:${port.name}`,

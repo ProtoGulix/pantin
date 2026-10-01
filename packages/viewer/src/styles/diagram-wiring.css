@@ -170,3 +170,29 @@
 .diagram-link-menu {
   z-index: 5;
 }
+
+/* Command tags are forced by a click: they look pressable, a read only tag does not. */
+.diagram-port[data-forcing] {
+  cursor: pointer;
+}
+
+.diagram-value-input {
+  position: fixed;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 45%);
+}
+
+.diagram-value-input .text-input {
+  width: 90px;
+}
+
+.diagram-value-input .text-input.is-invalid {
+  border-color: var(--danger);
+}

@@ -1,5 +1,6 @@
 import { NODE_TITLE_HEIGHT, NODE_WIDTH } from "../diagram/diagram-constants.ts";
 import { focusKeyOf } from "../diagram/diagram-focus.ts";
+import { commandSocketName } from "../diagram/diagram-forcing.ts";
 import { portLabel, truncateLabel } from "../diagram/diagram-texts.ts";
 import type { DiagramNode, Socket } from "../diagram/diagram-types.ts";
 import type { Translate } from "../i18n/translate.ts";
@@ -30,11 +31,14 @@ export interface DrawnNode {
 }
 
 // A socket as a group: the dot, its name, and a larger invisible area to
-// aim at when dragging a link. A port (not a tag) takes the keyboard focus.
+// aim at when dragging a link or pressing a command. A port or a command tag
+// takes the keyboard focus; a sensor's tag only shows a value.
 interface DrawnPort {
   group: SVGElement;
-  // The accessible name without the lit state, which the view appends.
+  // The accessible name without the lit state (or the value), which the view appends.
   baseLabel: string;
+  // What a press does to a command tag; null for a port and a read only tag.
+  forcing: "toggle" | "edit" | null;
 }
 
 function text(className: string, x: number, y: number, content: string): SVGElement {
@@ -64,6 +68,36 @@ function hitArea(node: DiagramNode, socket: Socket): SVGElement {
   });
 }
 
+type Forcing = DrawnPort["forcing"];
+
+function forcingOf(socket: Socket): Forcing {
+  if (socket.role !== "command") {
+    return null;
+  }
+  return socket.tagType === "bit" ? "toggle" : "edit";
+}
+
+function socketLabel(socket: Socket, t: Translate, node: DiagramNode): string {
+  if (socket.role === "feedback") {
+    return "";
+  }
+  return socket.role === "command" ? commandSocketName(socket, t) : portLabel(node, socket, t);
+}
+
+function focusAttributes(node: DiagramNode, socket: Socket, label: string, forcing: Forcing) {
+  return {
+    class: `diagram-port diagram-port--${socket.role}`,
+    role: "button",
+    tabindex: -1,
+    "aria-label": label,
+    "data-focus": focusKeyOf({ nodeId: node.id, socketId: socket.id }),
+    "data-node-id": node.id,
+    "data-socket-id": socket.id,
+    ...(forcing === "toggle" ? { "aria-pressed": "false" } : {}),
+    ...(forcing === null ? {} : { "data-forcing": forcing }),
+  };
+}
+
 function drawSocket(node: DiagramNode, socket: Socket, t: Translate): DrawnPort {
   const dot = svgElement("circle", {
     class: `diagram-socket diagram-socket--${socket.role}`,
@@ -83,21 +117,15 @@ function drawSocket(node: DiagramNode, socket: Socket, t: Translate): DrawnPort 
             socket.label,
           ),
         ];
-  const focusable = socket.role !== "command" && socket.role !== "feedback";
-  const baseLabel = focusable ? portLabel(node, socket, t) : "";
-  const attributes = focusable
-    ? {
-        class: `diagram-port diagram-port--${socket.role}`,
-        role: "button",
-        tabindex: -1,
-        "aria-label": baseLabel,
-        "data-focus": focusKeyOf({ nodeId: node.id, socketId: socket.id }),
-        "data-node-id": node.id,
-        "data-socket-id": socket.id,
-      }
-    : { class: "diagram-port", "aria-hidden": "true" };
-  const parts = focusable ? [hitArea(node, socket), dot, ...label] : [dot, ...label];
-  return { group: svgElement("g", attributes, parts), baseLabel };
+  const forcing = forcingOf(socket);
+  const baseLabel = socketLabel(socket, t, node);
+  if (socket.role === "feedback") {
+    const attributes = { class: "diagram-port", "aria-hidden": "true" };
+    return { group: svgElement("g", attributes, [dot, ...label]), baseLabel, forcing };
+  }
+  const attributes = focusAttributes(node, socket, baseLabel, forcing);
+  const group = svgElement("g", attributes, [hitArea(node, socket), dot, ...label]);
+  return { group, baseLabel, forcing };
 }
 
 function badgeParts(node: DiagramNode, t: Translate): SVGElement[] {

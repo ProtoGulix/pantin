@@ -6,10 +6,12 @@ import {
   focusKeyOf,
   neighbour,
 } from "../diagram/diagram-focus.ts";
+import { type SocketPress, socketAction, socketOf } from "../diagram/diagram-forcing.ts";
 import { type LinkChoice, linkChoices } from "../diagram/diagram-link-targets.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import { deleteInDiagram } from "./diagram-delete.ts";
+import { runForcing } from "./diagram-forcing.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // The keyboard of the diagram (ADR 0029 point 7). What each key means is
@@ -22,6 +24,8 @@ export interface KeyContext {
   model(): ShownModel | null;
   intents(): PanelIntents | null;
   focusKey(key: string): void;
+  // A small input beside a numeric command socket (ADR 0030 point 3).
+  openValueInput(opener: Element, tag: string): void;
   // The selected link, and how to drop the selection.
   selectedEdgeId(): string | null;
   clearEdgeSelection(): void;
@@ -77,6 +81,7 @@ const moveToEnd =
     return node !== undefined;
   };
 
+// The link menu belongs to power ports: a tag is never linked (ADR 0030 point 3).
 function openLinkMenu({ item, target, model, intents, context }: Call): boolean {
   if (target?.socketId === null || target === null) {
     return false;
@@ -93,14 +98,29 @@ function openLinkMenu({ item, target, model, intents, context }: Call): boolean 
   return true;
 }
 
-// Enter goes in: from a node to its first port, from a port to "Relier à…".
+// What the key does on a focused socket, as socketAction decides it.
+function pressSocket(call: Call, press: SocketPress): boolean {
+  const { item, target, model, intents, context } = call;
+  const socket =
+    target === null || target.socketId === null ? null : socketOf(model.diagram, target);
+  if (socket === null) {
+    return false;
+  }
+  const action = socketAction(socket, press);
+  if (action.kind === "openLinkMenu") {
+    return openLinkMenu(call);
+  }
+  return runForcing(action, item, { intents, openValueInput: context.openValueInput });
+}
+
+// Enter goes in: from a node to its first socket, from a socket to what it does.
 const enter: Handler = (call) => {
   const { target, model, context } = call;
   if (target === null) {
     return false;
   }
   if (target.socketId !== null) {
-    return openLinkMenu(call);
+    return pressSocket(call, "enter");
   }
   const port = firstPortOf(model.diagram, target.nodeId);
   if (port !== null) {
@@ -109,11 +129,14 @@ const enter: Handler = (call) => {
   return port !== null;
 };
 
-const space: Handler = ({ target, intents }) => {
-  if (target?.socketId === null) {
+// Space selects a node, and toggles a bit command (which never selects the node).
+const space: Handler = (call) => {
+  const { target, intents } = call;
+  if (target !== null && target.socketId === null) {
     intents.selectDiagramNode(target.nodeId);
+    return true;
   }
-  return target?.socketId === null;
+  return pressSocket(call, "space");
 };
 
 // Escape steps back: drops a selected link, and goes from a port to its node.
@@ -163,7 +186,7 @@ const HANDLERS: Readonly<Record<string, Handler>> = {
   Escape: stepBack,
   Delete: remove,
   F2: rename,
-  ContextMenu: openLinkMenu,
+  ContextMenu: (call) => pressSocket(call, "menu"),
 };
 
 export function listenToDiagramKeys(svg: SVGElement, context: KeyContext): void {
