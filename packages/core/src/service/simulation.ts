@@ -1,9 +1,11 @@
-import type { PantinId, Tag, TagListResponse } from "@pantin/protocol";
+import type { ConsoleEvent, PantinId, Tag, TagListResponse } from "@pantin/protocol";
+import { diagnosticEvents, stepErrorEvent } from "../domain/console-events.ts";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { stepSensors } from "../domain/sensor-step.ts";
 import { stepSimulation } from "../domain/simulation-step.ts";
 import { commandTagOf, describeTags } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
+import { recordConsoleEvents } from "./console-record.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
 // Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025, ADR 0028).
@@ -50,24 +52,51 @@ export async function writeTag(
   return { name: tagName, type: entry.type, direction: "command", value };
 }
 
-function runSteps(openPantin: OpenPantin, steps: number): void {
+// A step is atomic: everything it computes is read before anything is
+// stored, so a throw leaves the Pantin as it was (ADR 0031 point 3). Returns
+// the console events of the step, for the caller to record once it applied.
+function runStep(openPantin: OpenPantin): ConsoleEvent[] {
+  const stepped = stepSimulation(openPantin.document, openPantin, STEP_SECONDS);
+  const sensorOutputs = stepSensors(
+    openPantin.document,
+    stepped.jointPositions,
+    openPantin.sensorOutputs,
+  );
+  const events = diagnosticEvents(
+    openPantin.document,
+    openPantin.driveDiagnostics,
+    stepped.driveDiagnostics,
+  );
+  openPantin.jointPositions = stepped.jointPositions;
+  openPantin.jointVelocities = stepped.jointVelocities;
+  openPantin.driveStates = stepped.driveStates;
+  openPantin.drivePortStates = stepped.drivePortStates;
+  openPantin.driveFeedback = stepped.driveFeedback;
+  openPantin.driveDiagnostics = stepped.driveDiagnostics;
+  openPantin.sensorOutputs = sensorOutputs;
+  // Joint setpoints are consumed by the first step (ADR 0012 point 3).
+  openPantin.queuedSetpoints.clear();
+  openPantin.stepCount += 1;
+  return events;
+}
+
+// A failing step is skipped and put in the console; the rest of this tick is
+// skipped too, since the next step would fail on the same state. The Pantin
+// is tried again at the next tick, and the others are not held back.
+function runSteps(context: ServiceContext, openPantin: OpenPantin, steps: number): void {
   for (let step = 0; step < steps; step += 1) {
-    const stepped = stepSimulation(openPantin.document, openPantin, STEP_SECONDS);
-    openPantin.jointPositions = stepped.jointPositions;
-    openPantin.jointVelocities = stepped.jointVelocities;
-    openPantin.driveStates = stepped.driveStates;
-    openPantin.drivePortStates = stepped.drivePortStates;
-    openPantin.driveFeedback = stepped.driveFeedback;
-    openPantin.driveDiagnostics = stepped.driveDiagnostics;
-    openPantin.sensorOutputs = stepSensors(
-      openPantin.document,
-      openPantin.jointPositions,
-      openPantin.sensorOutputs,
-    );
-    // Joint setpoints are consumed by the first step (ADR 0012 point 3).
-    openPantin.queuedSetpoints.clear();
+    let events: ConsoleEvent[];
+    try {
+      events = runStep(openPantin);
+    } catch (error) {
+      if (recordConsoleEvents(context, openPantin, [stepErrorEvent(error)])) {
+        context.reportStepError(error);
+      }
+      return;
+    }
+    // Outside the try: a step_error is only ever a step that was not applied.
+    recordConsoleEvents(context, openPantin, events);
   }
-  openPantin.stepCount += steps;
 }
 
 // Every loaded Pantin advances by the same number of steps: each is an
@@ -77,6 +106,6 @@ export function runSimulationSteps(context: ServiceContext, steps: number): void
     return;
   }
   for (const openPantin of context.loadedPantins.values()) {
-    runSteps(openPantin, steps);
+    runSteps(context, openPantin, steps);
   }
 }

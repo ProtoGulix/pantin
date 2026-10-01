@@ -35,6 +35,10 @@ export type PantinServerOptions = {
   stepConverterLimits?: Partial<ProcessLimits>;
   // Clock of the fixed-step loop (ADR 0012); the real one by default.
   simulationTimer?: SimulationTimer;
+  // Wall clock of the console entries (ADR 0031); the real one by default.
+  wallClock?: () => Date;
+  // Makes the id of each console (ADR 0031); random by default.
+  newConsoleId?: () => string;
   // Clock of the pose streams' keep-alive comments (ADR 0015); the real one by default.
   streamTimer?: SimulationTimer;
   // Receives unexpected errors (the client only gets a generic message).
@@ -102,6 +106,11 @@ export async function startPantinServer(
   const service = createPantinService(
     createPantinStore(options.pantinsDirectory),
     createConfiguredStepConverter(options),
+    {
+      ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
+      ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
+      reportStepError: options.reportError,
+    },
   );
   const poseStreams = createPoseStreamRegistry({
     source: { stepCount: service.peekStepCount, snapshot: service.peekPoseSnapshot },

@@ -121,7 +121,10 @@ export function readPantinDocument(text: string, location: string): DocumentRead
   return { kind: "valid", document: result.data, migratedFrom: versionOf(json) };
 }
 
-export function parsePantinDocument(text: string, location: string): PantinDocument {
+export type ValidReading = Extract<DocumentReading, { kind: "valid" }>;
+
+// Like readPantinDocument, but an unreadable document throws an ApiError.
+export function readValidDocument(text: string, location: string): ValidReading {
   const reading = readPantinDocument(text, location);
   if (reading.kind === "invalidJson") {
     throw new ApiError(
@@ -136,5 +139,9 @@ export function parsePantinDocument(text: string, location: string): PantinDocum
       `${location} is not a valid Pantin: ${issues}. Fix or restore it.`,
     );
   }
-  return reading.document;
+  return reading;
+}
+
+export function parsePantinDocument(text: string, location: string): PantinDocument {
+  return readValidDocument(text, location).document;
 }

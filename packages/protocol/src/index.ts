@@ -2,6 +2,7 @@ export * from "./actuator.ts";
 export * from "./actuator-api.ts";
 export * from "./api.ts";
 export * from "./assembly-api.ts";
+export * from "./console.ts";
 export * from "./drive.ts";
 export * from "./drive-api.ts";
 export * from "./ids.ts";

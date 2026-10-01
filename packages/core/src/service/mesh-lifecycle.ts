@@ -115,7 +115,7 @@ async function reloadDocument(
   openPantin.savedText = serializePantinDocument(saved);
   openPantin.savedMeshPaths = savedMeshPaths;
   openPantin.pendingMeshDeletions.clear();
-  resetRuntimeState(openPantin);
+  resetRuntimeState(context, openPantin);
   for (const meshPath of unsavedMeshes) {
     await context.store.deleteMesh(pantinId, meshPath);
   }

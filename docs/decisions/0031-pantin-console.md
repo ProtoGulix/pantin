@@ -49,9 +49,13 @@ reads tags through REST meanwhile).
    | `migrated` | info | the document was migrated on opening, from and to which versions |
 
    Entries are written on changes, never at every step. When an entry would
-   repeat the previous one (same code, source and parameters), the core
-   increments a count on it instead, so a fault that flickers at 120 Hz
-   cannot flood the console.
+   repeat one of the latest entries of its source (same code, source and
+   parameters, with no entry of another source after it), the core
+   increments a count on that entry and moves it to the end with a new
+   sequence number, instead of adding one. So a fault that flickers at
+   120 Hz, raised and cleared in turn, stays two lines with growing counts
+   and cannot flood the console (amended on 2026-10-01, while building:
+   repeating only the previous entry did not fold an alternation).
 4. **Reading.** Until the tag bus exists, the viewer reads new entries
    (those after the last sequence it has) through a REST route next to the
    tag read, in the 250 ms loop of ADR 0029 point 8. Once the tag bus
@@ -105,4 +109,6 @@ reads tags through REST meanwhile).
   point 6 needs.
 - Backlog: export of the console as text, codes for sensors (a sensor
   changing state, as a trace for the PLC program), entries kept across a
-  restart of the core.
+  restart of the core, and a wider folding when several sources flicker
+  in the same step (their entries interleave, so point 3 does not fold
+  them; to measure in phase 7).

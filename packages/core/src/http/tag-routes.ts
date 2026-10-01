@@ -1,16 +1,33 @@
-import { WriteTagRequestSchema } from "@pantin/protocol";
+import { ConsoleQuerySchema, WriteTagRequestSchema } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { readJsonBody } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
 import { pantinIdOf, type Route, tagNameOf } from "./route-context.ts";
 
-// Tag routes (ADR 0012): the REST face of what the tag bus will carry.
+// Tag routes (ADR 0012): the REST face of what the tag bus will carry, and
+// the console read (ADR 0031), which the tag bus will carry too.
 export const TAG_ROUTES: readonly Route[] = [
   {
     method: "GET",
     pattern: ["pantins", ":pantinId", "tags"],
     handle: async (context) =>
       sendJson(context.response, 200, await context.service.listTags(pantinIdOf(context))),
+  },
+  {
+    method: "GET",
+    pattern: ["pantins", ":pantinId", "console"],
+    handle: async (context) => {
+      const { after } = parseWithSchema(
+        ConsoleQuerySchema,
+        Object.fromEntries(context.query),
+        "The console query",
+      );
+      sendJson(
+        context.response,
+        200,
+        await context.service.readConsole(pantinIdOf(context), after ?? 0),
+      );
+    },
   },
   {
     method: "PUT",

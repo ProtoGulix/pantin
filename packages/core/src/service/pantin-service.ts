@@ -18,6 +18,7 @@ import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { readConsole } from "./console-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { importBodies } from "./import-operations.ts";
 import {
@@ -97,7 +98,7 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
   await context.store.createPantinFolder(pantinId);
   const document = createPantinDocument(name);
   await context.store.writeDocumentAtomically(pantinId, serializePantinDocument(document));
-  const openPantin = newOpenPantin(document);
+  const openPantin = newOpenPantin(document, context.newConsoleId());
   context.openPantins.set(pantinId, Promise.resolve(openPantin));
   context.loadedPantins.set(pantinId, openPantin);
   return toResponse(pantinId, openPantin);
@@ -114,13 +115,36 @@ function simulationPeeks(context: ServiceContext) {
   };
 }
 
-export function createPantinService(store: PantinStore, stepConverter: StepConverter | undefined) {
-  const context: ServiceContext = {
+// The clock and the step error report are the boundaries: the real ones by
+// default, tests pass their own.
+export type ServiceOptions = {
+  wallClock?: () => Date;
+  newConsoleId?: () => string;
+  reportStepError?: (error: unknown) => void;
+};
+
+function createServiceContext(
+  store: PantinStore,
+  stepConverter: StepConverter | undefined,
+  options: ServiceOptions,
+): ServiceContext {
+  return {
     store,
     openPantins: new Map(),
     loadedPantins: new Map(),
     stepConverter,
+    wallClock: options.wallClock ?? (() => new Date()),
+    newConsoleId: options.newConsoleId ?? (() => crypto.randomUUID()),
+    reportStepError: options.reportStepError ?? (() => undefined),
   };
+}
+
+export function createPantinService(
+  store: PantinStore,
+  stepConverter: StepConverter | undefined,
+  options: ServiceOptions = {},
+) {
+  const context = createServiceContext(store, stepConverter, options);
   return {
     listPantins: () => listPantins(context),
     createPantin: (name: string) => createPantin(context, name),
@@ -151,6 +175,7 @@ export function createPantinService(store: PantinStore, stepConverter: StepConve
     listTags: (pantinId: PantinId) => listTags(context, pantinId),
     writeTag: (pantinId: PantinId, tagName: string, value: number) =>
       writeTag(context, pantinId, tagName, value),
+    readConsole: (pantinId: PantinId, after: number) => readConsole(context, pantinId, after),
     runSimulationSteps: (steps: number) => runSimulationSteps(context, steps),
     ...assemblyOperations(context),
     ...driveOperations(context),

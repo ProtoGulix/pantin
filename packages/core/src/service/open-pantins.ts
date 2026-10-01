@@ -2,10 +2,13 @@ import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
 import type { PantinDocument, PantinId, PantinResponse } from "@pantin/protocol";
 import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
-import { parsePantinDocument, serializePantinDocument } from "../domain/pantin-document.ts";
+import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
+import { allClearedEvents, migratedEvent } from "../domain/console-events.ts";
+import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
+import { recordConsoleEvents } from "./console-record.ts";
 
 // In-memory Pantins of one service instance: documents are edited here and
 // written to disk only on save.
@@ -48,6 +51,8 @@ export type OpenPantin = {
   sensorOutputs: Map<string, SensorOutput>;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
+  // The Pantin console (ADR 0031): runtime only, gone when the Pantin closes.
+  console: ConsoleBuffer;
 };
 
 export function meshPathsOf(document: PantinDocument): Set<string> {
@@ -55,7 +60,7 @@ export function meshPathsOf(document: PantinDocument): Set<string> {
 }
 
 // `document` is what pantin.json on disk contains.
-export function newOpenPantin(document: PantinDocument): OpenPantin {
+export function newOpenPantin(document: PantinDocument, consoleId: string): OpenPantin {
   return {
     document,
     savedText: serializePantinDocument(document),
@@ -77,11 +82,13 @@ export function newOpenPantin(document: PantinDocument): OpenPantin {
     jammedJointIds: new Set(),
     sensorOutputs: new Map(),
     stepCount: 0,
+    console: emptyConsole(consoleId),
   };
 }
 
 /** Back to the reference configuration: no motion, no command, no fault. */
-export function resetRuntimeState(openPantin: OpenPantin): void {
+export function resetRuntimeState(context: ServiceContext, openPantin: OpenPantin): void {
+  recordConsoleEvents(context, openPantin, allClearedEvents(openPantin));
   openPantin.jointPositions.clear();
   openPantin.setpoints.clear();
   openPantin.queuedSetpoints.clear();
@@ -104,6 +111,13 @@ export type ServiceContext = {
   loadedPantins: Map<PantinId, OpenPantin>;
   // Undefined when the core was started without --step-converter-python.
   stepConverter: StepConverter | undefined;
+  // Wall clock of the console entries, injected so tests can fix it.
+  wallClock: () => Date;
+  // Makes the id of a console (random in the real core, fixed in tests).
+  newConsoleId: () => string;
+  // Receives a step error the console shows for the first time, for the
+  // server log: repeats fold in the console and are not reported again.
+  reportStepError: (error: unknown) => void;
 };
 
 export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinResponse {
@@ -131,6 +145,10 @@ export async function readSavedDocument(
   context: ServiceContext,
   pantinId: PantinId,
 ): Promise<PantinDocument> {
+  return (await readSavedReading(context, pantinId)).document;
+}
+
+async function readSavedReading(context: ServiceContext, pantinId: PantinId) {
   const text = await context.store.readDocumentText(pantinId);
   if (text === undefined) {
     throw new ApiError(
@@ -139,7 +157,7 @@ export async function readSavedDocument(
     );
   }
   const location = context.store.describeDocumentLocation(pantinId);
-  return parsePantinDocument(text, location);
+  return readValidDocument(text, location);
 }
 
 async function readPantinFromDisk(
@@ -147,7 +165,12 @@ async function readPantinFromDisk(
   pantinId: PantinId,
 ): Promise<OpenPantin> {
   // Compared in canonical form, so a hand formatted file is not "unsaved".
-  return newOpenPantin(await readSavedDocument(context, pantinId));
+  const { document, migratedFrom } = await readSavedReading(context, pantinId);
+  const openPantin = newOpenPantin(document, context.newConsoleId());
+  if (migratedFrom !== null) {
+    recordConsoleEvents(context, openPantin, [migratedEvent(migratedFrom)]);
+  }
+  return openPantin;
 }
 
 export async function updateDocument(
