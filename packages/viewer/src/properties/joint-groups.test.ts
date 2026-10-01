@@ -20,11 +20,8 @@ const jointSource = {
     [hingeJoint, screwJoint, spinJoint],
   ),
 };
-// The drive and sensor groups have their own tests: left out here.
 const jointGroupsOf = (jointId: string) =>
-  buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate).filter(
-    (group) => group.id !== "actuator" && group.id !== "sensors",
-  );
+  buildPropertyGroups(jointSource, jointNodeId("press", jointId), new Set(), translate);
 const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 
 const HINGE_GROUPS = [
@@ -53,6 +50,14 @@ const HINGE_GROUPS = [
 ];
 
 describe("joint properties", () => {
+  it("leaves the actuator and the sensors to the inspector (ADR 0030)", () => {
+    expect(jointGroupsOf("hinge").map((group) => group.id)).toEqual([
+      "general",
+      "placement",
+      "parameters",
+    ]);
+  });
+
   it("shows the type, the bodies by name, the axis as a direction and the origin", () => {
     expect(groupsOf("hinge").slice(0, 2)).toEqual(HINGE_GROUPS);
   });
@@ -160,7 +165,10 @@ describe("joint edit targets", () => {
   });
 
   it("edits everything but the id and the tags; the type opens the joint form", () => {
-    const edits = rowsOf("hinge").map((r) => [r.id, r.edit?.target ?? null]);
+    const edits = rowsOf("hinge").map((r) => [
+      r.id,
+      r.edit && "target" in r.edit ? r.edit.target : null,
+    ]);
     expect(edits).toEqual([
       ["name", target("name")],
       ["id", null],
@@ -234,7 +242,7 @@ describe("joints of a body", () => {
 
   it("links each row to its joint in the tree, read-only", () => {
     const hinge = bodyRows("carriage")[0];
-    expect(hinge?.link).toBe(jointNodeId("press", "hinge"));
+    expect(hinge?.link).toEqual({ kind: "node", nodeId: jointNodeId("press", "hinge") });
     expect(hinge?.edit).toBeNull();
   });
 });

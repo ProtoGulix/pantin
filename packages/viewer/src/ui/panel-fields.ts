@@ -1,7 +1,6 @@
 import { element } from "./dom.ts";
 
-// Small controls shared by the drives and sensors sections of the right-hand
-// panel (ADR 0022, ADR 0023).
+// Small controls shared by the device forms of the inspector (ADR 0022, ADR 0023).
 
 export function field(label: string, control: HTMLElement): HTMLElement {
   return element("label", { className: "inline-field" }, [
@@ -34,16 +33,8 @@ export function checkbox(label: string, checked: boolean, onChange: (checked: bo
   const input = element("input", { attributes: { type: "checkbox" } });
   input.checked = checked;
   input.addEventListener("change", () => onChange(input.checked));
-  return element("label", { className: "drive-panel__check" }, [
+  return element("label", { className: "inspector__check" }, [
     input,
     element("span", { text: label }),
   ]);
-}
-
-// The value spans carry what showTagValues needs: the tag and its unit.
-export function valueSpan(name: string, coordinateUnit: string | null): HTMLElement {
-  return element("span", {
-    className: "drive-panel__value",
-    attributes: { "data-tag-value": name, "data-unit": coordinateUnit ?? "" },
-  });
 }

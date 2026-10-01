@@ -1,0 +1,101 @@
+/* The inspector, on the right of the 3D view (ADR 0022, 0030). */
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 340px;
+  padding: 8px;
+  overflow-y: auto;
+  background: var(--surface-1);
+  border-left: 1px solid var(--border);
+}
+
+.inspector[hidden] {
+  display: none;
+}
+
+.inspector__head,
+.inspector__create {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.inspector__title {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inspector__subject {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inspector__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.inspector__warning {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0;
+  padding: 4px 6px;
+  font-size: 12px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+/* Live cells of the grid, written in place after every tag read. */
+.property-grid__live {
+  font-variant-numeric: tabular-nums;
+}
+
+.property-grid__link + .property-grid__live {
+  margin-left: 8px;
+  color: var(--text-muted);
+}
+
+.property-grid__diagnostics {
+  display: block;
+  white-space: normal;
+}
+
+.property-grid__row--link {
+  cursor: pointer;
+}
+
+.property-grid__send {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.property-grid__send .text-input {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+}
+
+.property-grid__toggle[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.inspector__detail {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.inspector__check {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 12px;
+}

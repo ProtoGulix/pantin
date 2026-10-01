@@ -74,7 +74,7 @@ export interface ViewerState {
   jointForm: JointFormState | null;
   // Hidden and isolated assemblies of the 3D view (ADR 0019): never saved.
   assemblyDisplay: AssemblyDisplay;
-  // The drives panel on the right (ADR 0022), its form, and the faults the
+  // The inspector on the right (ADR 0022, 0030), its form, and the faults the
   // core reported last.
   drivePanelOpen: boolean;
   driveForm: DriveFormState | null;

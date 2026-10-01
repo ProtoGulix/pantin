@@ -266,6 +266,16 @@ describe("devices in the panels", () => {
     expect(related.every((row) => row.kind === "joint")).toBe(true);
   });
 
+  it("shows the selected device in the inspector, in both languages", () => {
+    const fr = buildPanelView(onDevice("fr")).inspector;
+    expect([fr.open, fr.subject, fr.device]).toEqual([
+      true,
+      "Préactionneur · verin1-dist",
+      { kind: "drive", id: "verin1-dist" },
+    ]);
+    expect(buildPanelView(onDevice("en")).inspector.subject).toBe("Drive · verin1-dist");
+  });
+
   it("has no note for a tree node", () => {
     expect(buildPanelView(opened(false)).propertiesNote).toBeNull();
     expect(buildPanelView(opened(false)).treeRows.some((row) => row.related)).toBe(false);

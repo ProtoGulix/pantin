@@ -25,3 +25,22 @@ describe("refreshTagValues", () => {
     expect(store.driveRuntime.size).toBe(0);
   });
 });
+
+describe("refreshTagValues with the inspector", () => {
+  it("reads while the inspector shows live values, and stops once it is closed", async () => {
+    let reads = 0;
+    const store = testStore({
+      listTags: async () => {
+        reads += 1;
+        return { stepCount: 0, tags: [], drives: [] };
+      },
+    });
+    store.requestedPantinId = pantin.id;
+    store.update({ ...withOpenPantin(store.state, pantin), drivePanelOpen: true });
+    await refreshTagValues(store);
+    expect(reads).toBe(1);
+    store.update({ ...store.state, drivePanelOpen: false });
+    await refreshTagValues(store);
+    expect(reads).toBe(1);
+  });
+});

@@ -33,7 +33,7 @@ export const NO_LIVE_STATE: LiveState = {
 
 export const socketKey = (nodeId: string, socketId: string) => `${nodeId}|${socketId}`;
 
-// A bit is 1 in the process image; half is the threshold the drives panel uses too.
+// A bit is 1 in the process image; half is the threshold the inspector uses too.
 const BIT_THRESHOLD = 0.5;
 
 function litSockets(diagram: ChainDiagram, tagValues: ReadonlyMap<string, number>): Set<string> {

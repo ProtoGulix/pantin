@@ -29,10 +29,12 @@ export interface StorePorts {
   // Joint sliders follow the poses without redrawing the panel: a redraw
   // would interrupt a drag.
   showJointPositions(positions: ReadonlyMap<string, number>): void;
-  // Tag values in the drives panel, written in place for the same reason.
-  showTagValues(values: ReadonlyMap<string, number>): void;
-  // Drive diagnostics on the drive cards, in place too.
-  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void;
+  // Live values of the inspector (tags, drive diagnostics), written in place
+  // for the same reason.
+  showInspectorLive(
+    tags: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+  ): void;
   // The chain diagram (ADR 0029), redrawn from the model; the live state
   // (tags and drive runtime) reaches it without a redraw.
   renderDiagram(model: DiagramModel): void;
@@ -56,7 +58,7 @@ export class ViewerStore {
   requestedPantinId: string | null = null;
   // Latest position of every joint (metres or radians), from the pose stream.
   jointPositions: ReadonlyMap<string, number> = new Map();
-  // Latest value of every tag (SI), read while the drives panel is open.
+  // Latest value of every tag (SI), read while the inspector is open.
   tagValues: ReadonlyMap<string, number> = new Map();
   // One tag read at a time: a slow core must not pile requests up.
   readingTags = false;
@@ -78,8 +80,7 @@ export class ViewerStore {
     this.state = next;
     this.ports.renderPanel(buildPanelView(next));
     this.ports.showJointPositions(this.jointPositions);
-    this.ports.showTagValues(this.tagValues);
-    this.ports.showDriveRuntime(this.driveRuntime);
+    this.ports.showInspectorLive(this.tagValues, this.driveRuntime);
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
@@ -152,15 +153,14 @@ export class ViewerStore {
   }
 
   /**
-   * One tag read from the core: tag values and drive runtime reach the drives
-   * panel, the 3D markers and the diagram without a redraw, the diagram once.
+   * One tag read from the core: tag values and drive runtime reach the
+   * inspector, the 3D markers and the diagram without a redraw, the diagram once.
    */
   showTagRead(values: ReadonlyMap<string, number>, runtime: ReadonlyMap<string, DriveRuntime>) {
     this.tagValues = values;
     this.driveRuntime = runtime;
-    this.ports.showTagValues(values);
+    this.ports.showInspectorLive(values, runtime);
     this.ports.viewport().showTagStates(values);
-    this.ports.showDriveRuntime(runtime);
     this.ports.showDiagramLive(values, runtime);
   }
 

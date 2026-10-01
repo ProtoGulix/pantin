@@ -2,8 +2,7 @@ import type { PantinDocument, Sensor } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { buildContextMenuView } from "../panel/context-menu-model.ts";
-import { buildSensorSectionView } from "../panel/sensor-panel-model.ts";
-import { buildPropertyGroups } from "../properties/properties-model.ts";
+import { buildSensorFormView } from "../panel/sensor-form-model.ts";
 import {
   hingeJoint,
   pantinResponse,
@@ -23,7 +22,7 @@ import {
   withSensorFormValue,
 } from "./sensor-form.ts";
 
-// The sensors of the right-hand panel (ADR 0023): the form in display units,
+// The sensors of the inspector (ADR 0023): the form in display units,
 // the end-of-stroke switches, and what the joint's context menu offers.
 
 const extended: Sensor = {
@@ -128,7 +127,7 @@ describe("sensor section and context menu", () => {
 
   it("offers a choice parameter as a select with its labelled options", () => {
     const form = withSensorFormType(formForJoint("slide"), "inductive_switch");
-    const view = buildSensorSectionView({ ...state, sensorForm: form }, document, t).form;
+    const view = buildSensorFormView({ ...state, sensorForm: form }, document, t);
     const material = view?.inputs.find((input) => input.key === "material");
     expect([material?.input, material?.value, material?.options[2]]).toEqual([
       "select",
@@ -138,19 +137,6 @@ describe("sensor section and context menu", () => {
     expect(view?.inputs.find((input) => input.key === "hysteresisPercent")?.label).toBe(
       "Hystérésis (%)",
     );
-  });
-
-  it("lists each sensor with its tags and the joint it watches", () => {
-    expect(buildSensorSectionView(state, document, t).sensors).toEqual([
-      {
-        id: "extended",
-        name: "Extended",
-        typeLabel: "Contact idéal",
-        tagPrefix: "main.extended",
-        watches: "Surveille « Slide »",
-        tags: [{ name: "main.extended.state", label: "État" }],
-      },
-    ]);
   });
 
   it("offers a sensor on a movable joint, and end switches only when it has limits", () => {
@@ -165,27 +151,5 @@ describe("sensor section and context menu", () => {
     );
     expect(entriesOf("spin")).toContain("Ajouter un capteur…");
     expect(entriesOf("spin")).not.toContain("Ajouter les fins de course");
-  });
-});
-
-describe("sensors in the joint properties", () => {
-  const groupOf = (jointId: string) =>
-    buildPropertyGroups(
-      { openPantin: { ...response, document }, language: "fr" },
-      jointNodeId("press", jointId),
-      new Set(),
-      t,
-    ).find((group) => group.id === "sensors");
-
-  it("lists each sensor watching the joint with its type and tags", () => {
-    expect(groupOf("slide")?.rows.map((row) => [row.label, row.value])).toEqual([
-      ["Extended", "Contact idéal · main.extended.state"],
-    ]);
-  });
-
-  it("says how to add one when none watches it", () => {
-    expect(groupOf("hinge")?.rows.map((row) => [row.value, row.muted])).toEqual([
-      ["Aucun : clic droit sur la liaison pour en ajouter", true],
-    ]);
   });
 });

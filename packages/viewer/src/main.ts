@@ -15,7 +15,7 @@ import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
 import { DiagramView } from "./ui/diagram-view.ts";
-import { DrivePanel } from "./ui/drive-panel.ts";
+import { Inspector } from "./ui/inspector.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
 import type { PanelIntents } from "./ui/panel-intents.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
@@ -38,8 +38,10 @@ interface Screen {
   canvas: HTMLCanvasElement;
   render(view: PanelView, intents: PanelIntents): void;
   showJointPositions(positions: ReadonlyMap<string, number>): void;
-  showTagValues(values: ReadonlyMap<string, number>): void;
-  showDriveRuntime(runtime: ReadonlyMap<string, DriveRuntime>): void;
+  showInspectorLive(
+    tags: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+  ): void;
   renderDiagram(model: DiagramModel, intents: PanelIntents): void;
   showDiagramLive(
     tags: ReadonlyMap<string, number>,
@@ -65,7 +67,7 @@ function createScreen(): Screen {
     requireElement(".viewport", HTMLElement),
     requireElement("#welcome", HTMLElement),
   );
-  const drivePanel = new DrivePanel(requireElement("#drive-panel", HTMLElement));
+  const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
     canvas,
@@ -77,11 +79,10 @@ function createScreen(): Screen {
       menuBar.render(view.menus, view.translate, intents);
       sidePanel.render(view, intents);
       welcome.render(view, intents);
-      drivePanel.render(view.drivePanel, view.translate, intents);
+      inspector.render(view.inspector, view.translate, intents);
     },
     showJointPositions: (positions) => sidePanel.showJointPositions(positions),
-    showTagValues: (values) => drivePanel.showTagValues(values),
-    showDriveRuntime: (runtime) => drivePanel.showDriveRuntime(runtime),
+    showInspectorLive: (tags, runtime) => inspector.showLive(tags, runtime),
     renderDiagram: (model, intents) => diagram.render(model, intents),
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
   };
@@ -129,8 +130,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
         }
       },
       showJointPositions: (positions) => screen.showJointPositions(positions),
-      showTagValues: (values) => screen.showTagValues(values),
-      showDriveRuntime: (runtime) => screen.showDriveRuntime(runtime),
+      showInspectorLive: (tags, runtime) => screen.showInspectorLive(tags, runtime),
       renderDiagram: (model) => {
         if (intents !== null) {
           screen.renderDiagram(model, intents);
@@ -168,7 +168,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   return store;
 }
 
-// Tag values change at every simulation step: while the drives panel is open
+// Tag values change at every simulation step: while the inspector is open
 // or the Pantin has sensors (ADR 0024), they are read four times a second (a
 // stand-in until the tag bus, CLAUDE.md section 9, pushes them).
 const TAG_REFRESH_MILLISECONDS = 250;

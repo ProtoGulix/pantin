@@ -1,55 +1,127 @@
 import type { Translate } from "../i18n/translate.ts";
-import type { PropertyGroup, PropertyRow } from "../properties/property-rows.ts";
+import {
+  liveKey,
+  type PropertyGroup,
+  type PropertyRow,
+  type RowEditor,
+} from "../properties/property-rows.ts";
 import { committingTextInput, element, selectInput } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { followLink } from "./row-actions.ts";
+import { numberControl, toggleControl } from "./row-controls.ts";
 
 // CODESYS-like two-column grid, as a real table: one <tbody> per group, with
 // a header row whose button folds the group.
 
-// The value names another tree node (a joint of a body): a click selects it.
-function linkCell(row: PropertyRow, nodeId: string, intents: PanelIntents): HTMLElement {
+// What the page needs to write a live value in place after a tag read.
+function liveAttributes(liveId: string | null): Record<string, string> {
+  return liveId === null ? {} : { "data-live-id": liveId };
+}
+
+// The value names another element (a joint of a body, a device): a click on
+// the row selects it, and Enter on the link does too, as a click.
+function linkCell(row: PropertyRow, liveId: string | null): HTMLElement {
   const link = element("button", {
     className: "property-grid__link",
     text: row.value,
     attributes: { type: "button", title: row.value },
   });
-  link.addEventListener("click", () => intents.revealNode(nodeId));
-  return element("td", { className: "property-grid__value" }, [link]);
+  const live =
+    row.live === null
+      ? null
+      : element("span", {
+          className: "property-grid__live",
+          attributes: liveAttributes(liveId),
+        });
+  return element("td", { className: "property-grid__value" }, [link, live]);
 }
 
-function valueCell(row: PropertyRow, translate: Translate, intents: PanelIntents): HTMLElement {
-  const editor = row.edit;
-  if (row.link !== null) {
-    return linkCell(row, row.link, intents);
+function editorCell(
+  row: PropertyRow,
+  editor: RowEditor,
+  liveId: string | null,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLElement {
+  if (editor.input === "toggle") {
+    return toggleControl(row, editor, liveId, translate, intents);
   }
-  if (editor === null) {
-    return element("td", {
-      className: row.muted
-        ? "property-grid__value property-grid__value--source"
-        : "property-grid__value",
-      text: row.value,
-      attributes: { title: row.value },
-    });
+  if (editor.input === "number") {
+    return numberControl(row, editor, liveId, translate, intents);
   }
   const commit = (value: string) => intents.commitPropertyEdit(editor.target, value);
   // A select commits as soon as another option is chosen; there is nothing to type.
-  const control =
-    editor.input === "select"
-      ? selectInput(
-          editor.options,
-          editor.selected,
-          translate("properties.editSelectLabel", { property: row.label }),
-          (value) => (value === editor.selected ? undefined : commit(value)),
-        )
-      : committingTextInput(row.value, {
-          label: translate("properties.editLabel", { property: row.label }),
-          focusKey: `property-${row.id}`,
-          onCommit: commit,
-        });
-  return element("td", { className: "property-grid__value property-grid__value--editable" }, [
-    control,
+  return editor.input === "select"
+    ? selectInput(
+        editor.options,
+        editor.selected,
+        translate("properties.editSelectLabel", { property: row.label }),
+        (value) => (value === editor.selected ? undefined : commit(value)),
+      )
+    : committingTextInput(row.value, {
+        label: translate("properties.editLabel", { property: row.label }),
+        focusKey: `property-${row.id}`,
+        onCommit: commit,
+      });
+}
+
+function valueCell(
+  row: PropertyRow,
+  liveId: string | null,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLElement {
+  const editor = row.edit;
+  if (row.link !== null) {
+    return linkCell(row, liveId);
+  }
+  if (editor !== null) {
+    const control = editorCell(row, editor, liveId, translate, intents);
+    const editable = editor.input === "text" || editor.input === "select";
+    return element(
+      "td",
+      { className: `property-grid__value${editable ? " property-grid__value--editable" : ""}` },
+      [control],
+    );
+  }
+  if (row.live !== null) {
+    // A diagnostics cell holds lines, so it wraps; the others are one value.
+    const className =
+      row.live.kind === "diagnostics" ? "property-grid__diagnostics" : "property-grid__live";
+    return element("td", { className: "property-grid__value" }, [
+      element("span", { className, attributes: { role: "status", ...liveAttributes(liveId) } }),
+    ]);
+  }
+  return element("td", {
+    className: row.muted
+      ? "property-grid__value property-grid__value--source"
+      : "property-grid__value",
+    text: row.value,
+    attributes: { title: row.value },
+  });
+}
+
+function dataRow(
+  group: PropertyGroup,
+  row: PropertyRow,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLElement {
+  const liveId = row.live === null ? null : liveKey(group.id, row.id);
+  const line = element("tr", { className: row.link === null ? "" : "property-grid__row--link" }, [
+    element("th", {
+      className: "property-grid__name",
+      text: row.label,
+      attributes: { scope: "row" },
+    }),
+    valueCell(row, liveId, translate, intents),
   ]);
+  const { link } = row;
+  if (link !== null) {
+    line.addEventListener("click", () => followLink(link, intents));
+  }
+  return line;
 }
 
 function groupBody(group: PropertyGroup, translate: Translate, intents: PanelIntents): HTMLElement {
@@ -70,16 +142,7 @@ function groupBody(group: PropertyGroup, translate: Translate, intents: PanelInt
   ]);
   const rows = group.collapsed
     ? []
-    : group.rows.map((row) =>
-        element("tr", {}, [
-          element("th", {
-            className: "property-grid__name",
-            text: row.label,
-            attributes: { scope: "row" },
-          }),
-          valueCell(row, translate, intents),
-        ]),
-      );
+    : group.rows.map((row) => dataRow(group, row, translate, intents));
   return element("tbody", {}, [header, ...rows]);
 }
 

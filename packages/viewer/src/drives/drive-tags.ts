@@ -1,6 +1,8 @@
 import {
   DRIVE_TAGS,
+  JOINT_COORDINATE_UNITS,
   type JointCoordinateUnit,
+  jointTagName,
   type PantinDocument,
   tagName,
 } from "@pantin/protocol";
@@ -22,4 +24,20 @@ export function driveTagUnit(document: PantinDocument, name: string): JointCoord
     }
   }
   return null;
+}
+
+/** The same for the setpoint of a joint, in the unit of its coordinate; null for another name. */
+function jointSetpointUnit(document: PantinDocument, name: string): JointCoordinateUnit | null {
+  for (const joint of document.joints) {
+    const assembly = document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
+    if (jointTagName(assembly, joint.tagKey, "setpoint") === name) {
+      return JOINT_COORDINATE_UNITS[joint.type];
+    }
+  }
+  return null;
+}
+
+/** The unit to convert a float tag the inspector forces, a drive's or a joint's setpoint. */
+export function forcedTagUnit(document: PantinDocument, name: string): JointCoordinateUnit | null {
+  return driveTagUnit(document, name) ?? jointSetpointUnit(document, name);
 }

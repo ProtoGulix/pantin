@@ -13,7 +13,7 @@ import { coordinateFromDisplay, coordinateToDisplay, formatDisplayNumber } from 
 import { defaultFeedPorts, drivesFeeding, withPortSwapped } from "./actuator-feed.ts";
 import { actuatorOfJoint, jointsCoordinateUnit, movableJoints } from "./actuator-joints.ts";
 
-// The actuator form of the drives panel (ADR 0028 point 13) as pure
+// The actuator form of the inspector (ADR 0028 point 13) as pure
 // functions. The type comes first, then the drive that feeds it (only those
 // whose ports fit), then the joints it moves. Parameters come from
 // ACTUATOR_PARAMETERS and are typed in the display unit of the joints.

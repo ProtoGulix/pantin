@@ -1,4 +1,4 @@
-import { deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
+import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import { withRevealedNode, withSelectedDevice } from "../tree/tree-state.ts";
@@ -33,6 +33,14 @@ export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
   store.update({ ...store.state, collapsedDiagramBands });
 }
 
+/** Selects the device, if the open Pantin still has it (a link of the inspector). */
+export function selectDevice(store: ViewerStore, device: DeviceRef): void {
+  const open = store.state.openPantin;
+  if (open !== null && deviceExists(open.document, device)) {
+    store.update({ ...withSelectedDevice(store.state, device), contextMenu: null });
+  }
+}
+
 /**
  * A drive, an actuator or a sensor node selects that device; a joint node
  * selects its tree row (ADR 0030 point 1).
@@ -44,9 +52,7 @@ export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): vo
   }
   const device = deviceOfDiagramNode(diagramNodeId);
   if (device !== null) {
-    if (deviceExists(open.document, device)) {
-      store.update({ ...withSelectedDevice(store.state, device), contextMenu: null });
-    }
+    selectDevice(store, device);
     return;
   }
   const treeNodeId = treeNodeForJointNode(

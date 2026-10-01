@@ -76,7 +76,7 @@ describe("menu bar model", () => {
     expect(view?.map((entry) => entry.type === "item" && [entry.label, entry.checked])).toEqual([
       ["Tout cadrer", null],
       ["Cadrer la sélection", null],
-      ["Panneau des préactionneurs, actionneurs et capteurs", true],
+      ["Inspecteur", true],
       ["Schéma des chaînes", false],
       ["Langue : FR", true],
       ["Langue : EN", false],

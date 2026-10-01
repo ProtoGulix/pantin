@@ -21,7 +21,7 @@ export function chevron(row: TreeRow): HTMLElement {
 }
 
 // The bolt of a joint an actuator moves, clickable like the eye: it opens the
-// joint's actuator in the drives panel. Silent too: the state text names it.
+// joint's actuator in the inspector. Silent too: the state text names it.
 export function actuatorBolt(row: TreeRow, translate: Translate): HTMLElement | null {
   if (row.wiring === null || row.wiring.actuatorId === null) {
     return null;

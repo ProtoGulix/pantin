@@ -16,7 +16,7 @@ import { refreshFaults } from "./drive-commands.ts";
 import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
-// The actuator form of the drives panel (ADR 0028 point 13).
+// The actuator form of the inspector (ADR 0028 point 13).
 
 export function openActuatorForm(store: ViewerStore, actuatorId: string | null): void {
   const document = store.state.openPantin?.document;

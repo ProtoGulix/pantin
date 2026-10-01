@@ -11,7 +11,7 @@ import { refreshFaults } from "./drive-commands.ts";
 import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
-// The drives panel (ADR 0022, 0028): opening it, and the drive form. Commands and
+// The inspector (ADR 0022, 0028, 0030): opening it, and the drive form. Commands and
 // faults are in drive-commands.ts.
 
 export function toggleDrivePanel(store: ViewerStore): void {

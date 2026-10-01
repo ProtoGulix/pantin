@@ -1,7 +1,7 @@
 import { type Actuator, DriveSchema, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { buildActuatorSectionView } from "../panel/actuator-panel-model.ts";
+import { buildActuatorFormView } from "../panel/actuator-form-model.ts";
 import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
 import { defaultFeedPorts, drivesFeeding } from "./actuator-feed.ts";
@@ -170,34 +170,12 @@ describe("joints an actuator offers", () => {
   });
 });
 
-describe("actuator section view", () => {
-  it("shows each actuator with its type, its feed and its joints", () => {
-    const view = buildActuatorSectionView(opened, withCylinder, translate);
-    expect(view.title).toBe("Actionneurs");
-    expect(view.actuators[0]).toMatchObject({
-      typeLabel: "Vérin double effet",
-      feed: {
-        driveName: "valve",
-        pairs: [
-          { input: "Chambre fond (sortie)", output: "port_4" },
-          { input: "Chambre tige (rentrée)", output: "port_2" },
-        ],
-      },
-      joints: [{ id: "slide", positionTag: "main.slide.position", unit: "mm", jammed: false }],
-    });
-  });
-});
-
 describe("actuator form view", () => {
-  it("flags a jammed joint, and the form lists fitting drives and each port's choices", () => {
-    const faults = { jammedJoints: ["slide"], unresponsiveDrives: [] };
+  it("lists fitting drives and each port's choices", () => {
     const actuatorForm = actuatorFormFor(cylinder, withCylinder);
-    const view = buildActuatorSectionView(
-      { ...opened, faults, actuatorForm },
-      withCylinder,
-      translate,
-    );
-    expect(view.actuators[0]?.joints[0]?.jammed).toBe(true);
+    const view = {
+      form: buildActuatorFormView({ ...opened, actuatorForm }, withCylinder, translate),
+    };
     expect(view.form?.driveOptions.map(({ value }) => value)).toEqual(["", "valve"]);
     expect(
       view.form?.ports.map(({ name, value, options }) => [name, value, options.length]),
@@ -214,7 +192,7 @@ describe("actuator form view", () => {
   it("tells when no drive fits the type", () => {
     const bare: PantinDocument = { ...withCylinder, drives: [smallValve] };
     const actuatorForm = initialActuatorForm(bare);
-    const view = buildActuatorSectionView({ ...opened, actuatorForm }, bare, translate);
-    expect([view.form?.noFittingDrive, view.form?.drive]).toEqual([true, ""]);
+    const form = buildActuatorFormView({ ...opened, actuatorForm }, bare, translate);
+    expect([form?.noFittingDrive, form?.drive]).toEqual([true, ""]);
   });
 });

@@ -1,4 +1,5 @@
 import { pickedNodeId } from "../assembly-display.ts";
+import type { DeviceRef } from "../device-selection.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import {
@@ -18,7 +19,7 @@ import {
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
-import { diagramIntents } from "./diagram-actions.ts";
+import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
 import {
   cancelImport,
@@ -86,6 +87,7 @@ function treeIntents(store: ViewerStore) {
         store.update({ ...withSelectedNode(store.state, nodeId), contextMenu: null });
       }
     },
+    selectDevice: (device: DeviceRef) => selectDevice(store, device),
     revealNode: (nodeId: string) =>
       store.update({ ...withRevealedNode(store.state, nodeId), contextMenu: null }),
     setExpanded: (nodeId: string, expanded: boolean) => setExpanded(store, nodeId, expanded),

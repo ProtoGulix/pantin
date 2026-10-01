@@ -1,4 +1,5 @@
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
+import type { DeviceRef } from "../device-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
@@ -29,6 +30,8 @@ export interface PanelIntents {
   frameSelection(): void;
   frameNode(nodeId: string): void;
   selectNode(nodeId: string): void;
+  // Selects a drive, an actuator or a sensor, shown in the inspector (ADR 0030).
+  selectDevice(device: DeviceRef): void;
   // Selects a node that may sit in a folded branch, unfolding its ancestors.
   revealNode(nodeId: string): void;
   setExpanded(nodeId: string, expanded: boolean): void;
@@ -36,7 +39,7 @@ export interface PanelIntents {
   startRename(nodeId: string): void;
   commitRename(nodeId: string, name: string): void;
   cancelRename(): void;
-  // A committed edit of the properties grid (rename, joint field...).
+  // A committed edit of a grid (rename, joint field, device field...).
   commitPropertyEdit(target: EditTarget, value: string): void;
   requestDelete(nodeId: string): void;
   openContextMenu(nodeId: string, x: number, y: number): void;
@@ -50,7 +53,7 @@ export interface PanelIntents {
   confirmImport(): void;
   cancelImport(): void;
 
-  // The drives panel on the right (ADR 0022): its form, faults and commands.
+  // The inspector on the right (ADR 0022, 0030): the device forms, faults and commands.
   toggleDrivePanel(): void;
   openDriveForm(driveId: string | null): void;
   cancelDriveForm(): void;

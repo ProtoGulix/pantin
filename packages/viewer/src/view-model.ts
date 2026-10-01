@@ -1,10 +1,10 @@
 import { deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
+import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
 import { buildJointSlider, type JointSliderSpec } from "./joints/slider-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
 import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
-import { buildDrivePanelView, type DrivePanelView } from "./panel/drive-panel-model.ts";
 import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
 import { buildJointFormView, type JointFormView } from "./panel/joint-form-model.ts";
 import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
@@ -61,8 +61,8 @@ export interface PanelView {
   viewportHint: string;
   // Left-hand panel while a device is selected: a line instead of the grid.
   propertiesNote: string | null;
-  // The drives panel on the right (ADR 0022).
-  drivePanel: DrivePanelView;
+  // The right-hand panel: the inspector of the selection (ADR 0030).
+  inspector: InspectorView;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -152,6 +152,6 @@ export function buildPanelView(state: ViewerState): PanelView {
     prompt: buildPromptView(state, translate),
     message: buildMessageView(state, translate),
     viewportHint: translate(mode === "list" ? "page.viewportEmpty" : "page.viewportHint"),
-    drivePanel: buildDrivePanelView(state, translate),
+    inspector: buildInspectorView(state, translate),
   };
 }

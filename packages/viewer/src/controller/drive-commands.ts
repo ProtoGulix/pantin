@@ -1,4 +1,4 @@
-import { driveTagUnit } from "../drives/drive-tags.ts";
+import { forcedTagUnit } from "../drives/drive-tags.ts";
 import { parseNumber } from "../joints/joint-form.ts";
 import { runtimeByDriveId } from "../panel/drive-diagnostics.ts";
 import { coordinateFromDisplay } from "../units.ts";
@@ -58,7 +58,7 @@ export async function toggleBitTag(store: ViewerStore, name: string): Promise<vo
 /** Typed in mm or degrees (per second), sent in SI. */
 export async function writeFloatTag(store: ViewerStore, name: string, text: string) {
   const document = store.state.openPantin?.document;
-  const unit = document === undefined ? null : driveTagUnit(document, name);
+  const unit = document === undefined ? null : forcedTagUnit(document, name);
   const typed = parseNumber(text);
   if (Number.isFinite(typed)) {
     await writeTag(store, name, unit === null ? typed : coordinateFromDisplay(unit, typed));
@@ -66,8 +66,8 @@ export async function writeFloatTag(store: ViewerStore, name: string, text: stri
 }
 
 /**
- * Reads every tag value of the open Pantin, while the right-hand panel shows
- * them, its sensors light up in 3D (ADR 0024) or the chain diagram is
+ * Reads every tag value of the open Pantin, while the inspector shows them
+ * (ADR 0030), its sensors light up in 3D (ADR 0024) or the chain diagram is
  * shown (ADR 0029 point 8). A failed read changes
  * nothing on screen: the next one retries, and a core that went away is
  * already reported by the pose stream (message.poseClosed).

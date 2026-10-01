@@ -1,36 +1,22 @@
 import type { Assembly, Body, PantinResponse } from "@pantin/protocol";
-import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
+import type { Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
-import { jointActuatorGroup } from "./actuator-rows.ts";
+import { GROUP_TITLES } from "./group-titles.ts";
 import { jointGroups } from "./joint-groups.ts";
 import {
   type GroupDraft,
   linkRow,
   type PropertyGroup,
-  type PropertyGroupId,
   type PropertyRow,
   renameEditor,
   row,
 } from "./property-rows.ts";
-import { jointSensorGroup } from "./sensor-rows.ts";
 
 // The CODESYS-like "Property | Value" grid for the selected tree node, as
 // plain data (shapes in property-rows.ts). Groups keep a stable id so their
 // collapsed state survives a change of selection.
-
-const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
-  general: "properties.group.general",
-  source: "properties.group.source",
-  mesh: "properties.group.mesh",
-  sourceNodes: "properties.group.sourceNodes",
-  placement: "properties.group.placement",
-  parameters: "properties.group.parameters",
-  joints: "properties.group.joints",
-  actuator: "properties.group.actuator",
-  sensors: "properties.group.sensors",
-};
 
 function pantinGroups(pantin: PantinResponse, nodeId: string, t: Translate): GroupDraft[] {
   const { document } = pantin;
@@ -185,9 +171,6 @@ function sourceNodeGroups(body: Body, index: number, t: Translate): GroupDraft[]
 export interface PropertySource extends TreeSource {
   // See ViewerState; absent means none.
   customAxisJointIds?: ReadonlySet<string>;
-  // For labels that come from elsewhere than the translation files (drive
-  // types); absent means English.
-  language?: Language;
 }
 
 function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupDraft[] {
@@ -215,15 +198,7 @@ function groupsFor(source: PropertySource, nodeId: string, t: Translate): GroupD
     if (joint === undefined) {
       return [];
     }
-    // The actuator and the sensors come right after the general group: they say
-    // what moves the joint and what reads it.
-    const [general, ...others] = jointGroups(joint, open, customAxis, t);
-    const language = source.language ?? "en";
-    const wiring = [
-      jointActuatorGroup(joint, open, language, t),
-      jointSensorGroup(joint, open, language, t),
-    ];
-    return general === undefined ? [...wiring, ...others] : [general, ...wiring, ...others];
+    return jointGroups(joint, open, customAxis, t);
   }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {

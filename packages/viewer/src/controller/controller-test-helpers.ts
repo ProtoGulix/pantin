@@ -25,8 +25,7 @@ export function testStore(
       api: api as PantinApiClient,
       renderPanel: () => undefined,
       showJointPositions: () => undefined,
-      showTagValues: () => undefined,
-      showDriveRuntime: () => undefined,
+      showInspectorLive: () => undefined,
       renderDiagram: () => undefined,
       showDiagramLive: () => undefined,
       // The silent stand-in answers every call; a test names the ones it watches.

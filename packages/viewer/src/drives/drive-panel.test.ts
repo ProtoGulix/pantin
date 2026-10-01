@@ -1,7 +1,7 @@
 import type { Actuator, Drive, PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { buildDrivePanelView } from "../panel/drive-panel-model.ts";
+import { buildDriveFormView } from "../panel/drive-form-model.ts";
 import { hingeJoint, pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
 import {
@@ -11,7 +11,7 @@ import {
   withDriveFormType,
   withDriveFormValue,
 } from "./drive-form.ts";
-import { driveTagUnit } from "./drive-tags.ts";
+import { driveTagUnit, forcedTagUnit } from "./drive-tags.ts";
 
 // The drives section of the panel (ADR 0022, 0028): its form, in display
 // units, and its view.
@@ -89,43 +89,15 @@ describe("drive form", () => {
   });
 });
 
-describe("drive panel view", () => {
+describe("drive form view", () => {
   const opened = withOpenPantin(initialViewerState("fr"), { ...response, document });
   const translate = createTranslator("fr");
 
-  it("is open from the start, closes on demand, and lists each drive with its tags", () => {
-    expect(buildDrivePanelView({ ...opened, drivePanelOpen: false }, translate).open).toBe(false);
-    const view = buildDrivePanelView(opened, translate);
-    expect(view.drivesTitle).toBe("Préactionneurs");
-    expect(view.drives[0]).toMatchObject({
-      name: "Inverter",
-      typeLabel: expect.stringContaining("analogique"),
-      tagPrefix: "main.inverter",
-    });
-  });
-
-  it("shows percent tags in %, unscaled, and servo tags in the unit of the joints", () => {
-    const [inverterCard, servoCard] = buildDrivePanelView(opened, translate).drives;
-    expect(
-      inverterCard?.tags.map(({ name, unit, coordinateUnit }) => [name, unit, coordinateUnit]),
-    ).toEqual([
-      ["main.inverter.speed_setpoint", "%", null],
-      ["main.inverter.speed", "%", null],
-    ]);
-    expect(
-      servoCard?.tags.map(({ name, unit, coordinateUnit }) => [name, unit, coordinateUnit]),
-    ).toEqual([
-      ["main.servo.setpoint", "mm", "metre"],
-      ["main.servo.position", "mm", "metre"],
-    ]);
-  });
-
-  it("shows the drive fault and the form with the type's own parameters and units", () => {
-    const faults = { jammedJoints: [], unresponsiveDrives: ["inverter"] };
+  it("is empty until a form is open, then has the type's own parameters and units", () => {
+    expect(buildDriveFormView(opened, document, translate)).toBeNull();
     const driveForm = driveFormFor(inverter, document);
-    const view = buildDrivePanelView({ ...opened, faults, driveForm }, translate);
-    expect(view.drives[0]?.unresponsive).toBe(true);
-    expect(view.form?.parameters).toEqual([
+    const view = buildDriveFormView({ ...opened, driveForm }, document, translate);
+    expect(view?.parameters).toEqual([
       { field: "acceleration", label: "Accélération", unit: "%/s", value: "50" },
     ]);
   });
@@ -137,18 +109,25 @@ describe("driveTagUnit", () => {
     expect(driveTagUnit(document, "main.inverter.speed_setpoint")).toBeNull();
     expect(driveTagUnit(document, "main.slide.position")).toBeNull();
   });
+
+  it("gives a joint's setpoint the unit of its coordinate when a tag is forced", () => {
+    expect(forcedTagUnit(document, "main.slide.setpoint")).toBe("metre");
+    expect(forcedTagUnit(document, "main.servo.setpoint")).toBe("metre");
+    expect(forcedTagUnit(document, "main.slide.position")).toBeNull();
+  });
 });
 
 describe("servo drive unit hint", () => {
   const translate = createTranslator("fr");
   const hint = (doc: PantinDocument, drive: Drive) =>
-    buildDrivePanelView(
+    buildDriveFormView(
       {
         ...withOpenPantin(initialViewerState("fr"), { ...response, document: doc }),
         driveForm: driveFormFor(drive, doc),
       },
+      doc,
       translate,
-    ).form?.unitHint;
+    )?.unitHint;
 
   it("announces the fallback unit until an actuator moves a joint, and only for joint units", () => {
     expect(hint({ ...document, actuators: [] }, servo)).toMatch(/mm/);
