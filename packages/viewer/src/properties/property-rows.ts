@@ -139,6 +139,11 @@ export function liveKey(groupId: PropertyGroupId, rowId: string): string {
   return `${groupId}/${rowId}`;
 }
 
+/** The focus key of a row's field, which survives a redraw of the grid (ui/focus.ts). */
+export function rowFocusKey(rowId: string): string {
+  return `property-${rowId}`;
+}
+
 export function renameEditor(nodeId: string): RowEditor {
   return { input: "text", target: { kind: "rename", nodeId } };
 }

@@ -4,6 +4,7 @@ import {
   type PropertyGroup,
   type PropertyRow,
   type RowEditor,
+  rowFocusKey,
 } from "../properties/property-rows.ts";
 import { committingTextInput, element, selectInput } from "./dom.ts";
 import { icon } from "./icons.ts";
@@ -61,7 +62,7 @@ function editorCell(
       )
     : committingTextInput(row.value, {
         label: translate("properties.editLabel", { property: row.label }),
-        focusKey: `property-${row.id}`,
+        focusKey: rowFocusKey(row.id),
         onCommit: commit,
       });
 }

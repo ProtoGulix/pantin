@@ -1,5 +1,5 @@
 import type { Translate } from "../i18n/translate.ts";
-import type { PropertyRow, RowEditor } from "../properties/property-rows.ts";
+import { type PropertyRow, type RowEditor, rowFocusKey } from "../properties/property-rows.ts";
 import { button, element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { applyToggle } from "./row-actions.ts";
@@ -44,7 +44,7 @@ export function numberControl(
     attributes: {
       type: "text",
       "aria-label": translate("properties.editLabel", { property: row.label }),
-      "data-focus-key": `property-${row.id}`,
+      "data-focus-key": rowFocusKey(row.id),
       spellcheck: "false",
     },
   });

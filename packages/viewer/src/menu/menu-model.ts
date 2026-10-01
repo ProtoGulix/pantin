@@ -1,7 +1,7 @@
-import { type DeviceKind, isDeviceKind } from "../device-selection.ts";
+import { isDeviceKind } from "../device-selection.ts";
 import { LANGUAGES, type Language, type MessageKey, type Translate } from "../i18n/translate.ts";
-import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
+import { type MenuContext, menuContext } from "./menu-context.ts";
 
 // The menu bar as data: menus, items, enable rules and keyboard shortcuts.
 // Adding an item (e.g. Fichier > Exporter) is adding one entry to MENUS.
@@ -28,19 +28,6 @@ interface Shortcut {
   // Ctrl on Windows and Linux, Cmd on macOS.
   primaryModifier: boolean;
   labelKey: MessageKey;
-}
-
-// What the enable rules look at, computed once per state.
-interface MenuContext {
-  editing: boolean;
-  busy: boolean;
-  unsavedChanges: boolean;
-  importing: boolean;
-  hasBodies: boolean;
-  selectedKind: NodeRef["kind"] | DeviceKind | null;
-  language: Language;
-  inspectorOpen: boolean;
-  diagramShown: boolean;
 }
 
 interface MenuItemDefinition {
@@ -120,14 +107,20 @@ const MENUS: readonly MenuDefinition[] = [
       item(
         "rename",
         "menubar.edit.rename",
-        (context) => context.selectedKind === "pantin" || context.selectedKind === "body",
+        (context) =>
+          context.selectedKind === "pantin" ||
+          context.selectedKind === "body" ||
+          (context.selectedKind !== null && isDeviceKind(context.selectedKind)),
         { key: "F2", primaryModifier: false, labelKey: "shortcut.rename" },
       ),
       item(
         "delete",
         "menubar.edit.delete",
         (context) =>
-          (context.selectedKind === "body" || context.selectedKind === "joint") && !context.busy,
+          (context.selectedKind === "body" ||
+            context.selectedKind === "joint" ||
+            (context.selectedKind !== null && isDeviceKind(context.selectedKind))) &&
+          !context.busy,
         {
           key: "Delete",
           primaryModifier: false,
@@ -173,22 +166,6 @@ const MENUS: readonly MenuDefinition[] = [
     ],
   },
 ];
-
-function menuContext(state: ViewerState): MenuContext {
-  return {
-    editing: state.openPantin !== null,
-    busy: state.pendingRequestCount > 0,
-    unsavedChanges: state.openPantin?.unsavedChanges ?? false,
-    importing: state.importInProgress,
-    hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
-    selectedKind:
-      state.selectedDevice?.kind ??
-      (state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null)),
-    language: state.language,
-    inspectorOpen: state.inspectorOpen,
-    diagramShown: state.diagramShown,
-  };
-}
 
 export type MenuEntryView =
   | {

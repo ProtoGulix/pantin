@@ -85,14 +85,37 @@ describe("menu bar model", () => {
 });
 
 describe("menu bar model on a device", () => {
-  it("keeps Supprimer, Renommer and Cadrer la sélection disabled on a device", () => {
-    const onDevice = withSelectedDevice(editing(false), { kind: "actuator", id: "c1" });
-    expect(enabledCommands(onDevice)).not.toContain("delete");
-    expect(enabledCommands(onDevice)).not.toContain("rename");
-    expect(enabledCommands(onDevice)).not.toContain("frameSelection");
+  it.each(["drive", "actuator", "sensor"] as const)(
+    "enables Supprimer and Renommer on a %s, not Cadrer la sélection",
+    (kind) => {
+      const onDevice = withSelectedDevice(editing(false), { kind, id: "x" });
+      expect(enabledCommands(onDevice)).toEqual(expect.arrayContaining(["delete", "rename"]));
+      expect(enabledCommands(onDevice)).not.toContain("frameSelection");
+    },
+  );
+
+  it("disables Supprimer on a device while a request is in flight", () => {
+    const busy = { ...withSelectedDevice(editing(false), { kind: "drive", id: "x" }) };
+    busy.pendingRequestCount = 1;
+    expect(enabledCommands(busy)).not.toContain("delete");
+  });
+
+  it("still frames a selected body", () => {
     expect(
       enabledCommands(withSelectedNode(editing(false), bodyNodeId("press", "rail"))),
     ).toContain("frameSelection");
+  });
+
+  it("runs F2 and Suppr on a selected device", () => {
+    const onDevice = withSelectedDevice(editing(false), { kind: "sensor", id: "x" });
+    expect(shortcutForKeyPress(onDevice, press("F2"))).toMatchObject({
+      command: "rename",
+      run: true,
+    });
+    expect(shortcutForKeyPress(onDevice, press("Delete"))).toMatchObject({
+      command: "delete",
+      run: true,
+    });
   });
 });
 

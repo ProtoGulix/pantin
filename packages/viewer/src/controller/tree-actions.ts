@@ -1,3 +1,4 @@
+import { DEVICE_NAME_FOCUS_KEY, DEVICE_NAME_GROUP } from "../inspector/device-fields.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { withExpanded, withSelectedNode } from "../tree/tree-state.ts";
 import type { ViewerStore } from "./viewer-store.ts";
@@ -23,6 +24,30 @@ export function startRename(store: ViewerStore, nodeId: string): void {
       contextMenu: null,
     });
   }
+}
+
+/**
+ * Renames the selection: a tree node in place, a device in the inspector, which
+ * has the only name field there is for it (ADR 0030 point 4). The grid group
+ * holding the field is opened, and the inspector with it.
+ */
+export function renameSelection(store: ViewerStore): void {
+  const { selectedDevice, selectedNodeId, inspectorFocus, collapsedPropertyGroups } = store.state;
+  if (selectedDevice === null) {
+    if (selectedNodeId !== null) {
+      startRename(store, selectedNodeId);
+    }
+    return;
+  }
+  const expanded = new Set(collapsedPropertyGroups);
+  expanded.delete(DEVICE_NAME_GROUP);
+  store.update({
+    ...store.state,
+    inspectorOpen: true,
+    collapsedPropertyGroups: expanded,
+    contextMenu: null,
+    inspectorFocus: { key: DEVICE_NAME_FOCUS_KEY, serial: (inspectorFocus?.serial ?? 0) + 1 },
+  });
 }
 
 /** Frames the bodies a node stands for: one body, an assembly, or the whole open Pantin. */

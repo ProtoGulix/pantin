@@ -236,51 +236,6 @@
   font-style: italic;
 }
 
-/* Message line */
-.message-line {
-  display: flex;
-  gap: 6px;
-  align-items: flex-start;
-  padding: 4px 4px 4px 8px;
-  border-top: 1px solid var(--border);
-}
-
-.message-line__level {
-  display: flex;
-  padding-top: 4px;
-}
-
-.message-line--error {
-  background: var(--danger-soft);
-}
-
-.message-line--error .message-line__level {
-  color: var(--danger);
-}
-
-.message-line--info .message-line__level {
-  color: var(--success);
-}
-
-.message-line__body {
-  flex: 1;
-  min-width: 0;
-  padding-top: 4px;
-}
-
-.message-line__text {
-  overflow-wrap: anywhere;
-}
-
-.message-line__detail {
-  overflow: hidden;
-  font-family: var(--font-source);
-  font-size: 11px;
-  color: var(--text-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Number inputs of the "New joint" form */
 .joint-form__inputs {
   display: flex;

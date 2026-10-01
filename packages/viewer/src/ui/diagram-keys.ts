@@ -1,15 +1,15 @@
+import { deviceOfDiagramNode } from "../device-selection.ts";
 import {
   type Direction,
-  edgeInto,
-  edgesFrom,
   type FocusTarget,
   firstPortOf,
   focusKeyOf,
   neighbour,
 } from "../diagram/diagram-focus.ts";
-import { endpointLabel, type LinkChoice, linkChoices } from "../diagram/diagram-link-targets.ts";
+import { type LinkChoice, linkChoices } from "../diagram/diagram-link-targets.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { MessageKey } from "../i18n/translate.ts";
+import { deleteInDiagram } from "./diagram-delete.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // The keyboard of the diagram (ADR 0029 point 7). What each key means is
@@ -127,44 +127,27 @@ const stepBack: Handler = ({ target, context }) => {
   return hadSelection;
 };
 
-// A port with no incoming link may have outgoing ones (a drive output, an
-// actuator's anchor): one is removed, several are picked from a menu.
-function removeOutgoing(
-  { item, target, model, intents, context }: Call,
-  ports: FocusTarget,
-): boolean {
-  const edges = edgesFrom(model.diagram, ports);
-  const [only] = edges;
-  if (only !== undefined && edges.length === 1) {
-    intents.removeDiagramLink(only.fromNode, only.toNode);
-    return true;
-  }
-  if (edges.length === 0 || target === null) {
+// Delete removes a link, never an element: the window's Delete would remove the
+// selected element, which is not what the focus says (ADR 0030 point 4).
+const remove: Handler = ({ item, target, model, intents, context }) => {
+  deleteInDiagram({
+    edgeId: item.getAttribute("data-edge-id"),
+    target,
+    diagram: model.diagram,
+    intents,
+    openMenu: (title, choices, choose) => context.openMenu(item, title, choices, choose),
+  });
+  return true;
+};
+
+// F2 on a device node: the node has the focus, so it is the one to rename,
+// whatever is selected. The window's F2 would rename the selection.
+const rename: Handler = ({ target, intents }) => {
+  if (target === null || deviceOfDiagramNode(target.nodeId) === null) {
     return false;
   }
-  const choices = edges.map((edge) => ({
-    endpoint: { nodeId: edge.toNode, socketId: edge.toSocket },
-    label: endpointLabel(model.diagram, { nodeId: edge.toNode, socketId: edge.toSocket }),
-  }));
-  context.openMenu(item, "diagram.removeMenu", choices, (choice) =>
-    intents.removeDiagramLink(ports.nodeId, choice.endpoint.nodeId),
-  );
-  return true;
-}
-
-// Delete removes a link, never an element: the window's Delete would remove the
-// tree's selected element, which is not what the focus says.
-const remove: Handler = (call) => {
-  const { item, target, model, intents } = call;
-  const edgeId = item.getAttribute("data-edge-id");
-  const hasPort = target !== null && target.socketId !== null;
-  const ending = hasPort ? edgeInto(model.diagram, target) : null;
-  const edge = edgeId === null ? ending : model.diagram.edges.find((e) => e.id === edgeId);
-  if (edge !== undefined && edge !== null) {
-    intents.removeDiagramLink(edge.fromNode, edge.toNode);
-  } else if (!(hasPort && removeOutgoing(call, target))) {
-    intents.showDiagramHint("diagram.hint.deleteOnPort");
-  }
+  intents.selectDiagramNode(target.nodeId);
+  intents.runMenuCommand("rename");
   return true;
 };
 
@@ -179,6 +162,7 @@ const HANDLERS: Readonly<Record<string, Handler>> = {
   " ": space,
   Escape: stepBack,
   Delete: remove,
+  F2: rename,
   ContextMenu: openLinkMenu,
 };
 

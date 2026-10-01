@@ -61,6 +61,13 @@ export function deviceName(document: PantinDocument, device: DeviceRef): string 
   return found?.name ?? null;
 }
 
+/** The actuators fed by a drive: what must be detached before the drive can go. */
+export function actuatorsFedBy(document: PantinDocument, driveId: string): DeviceRef[] {
+  return document.actuators
+    .filter((actuator) => actuator.feed?.drive === driveId)
+    .map((actuator) => ({ kind: "actuator", id: actuator.id }));
+}
+
 /**
  * The joints a device drives or watches: a drive those of the actuators it
  * feeds, an actuator its own, a sensor the joint it watches.

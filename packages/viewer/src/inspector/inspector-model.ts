@@ -12,7 +12,7 @@ import {
   type PropertyGroup,
 } from "../properties/property-rows.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import type { ViewerState } from "../viewer-state.ts";
+import type { InspectorFocusRequest, ViewerState } from "../viewer-state.ts";
 import { actuatorGroups } from "./actuator-inspector.ts";
 import { driveGroups } from "./drive-inspector.ts";
 import type { InspectorContext } from "./inspector-context.ts";
@@ -46,6 +46,8 @@ export interface InspectorView {
   hints: string[];
   // The live cells of the grid, by liveKey.
   live: ReadonlyMap<string, LiveSource>;
+  // F2: the field to focus, served once per serial (ui/inspector.ts).
+  focusRequest: InspectorFocusRequest | null;
 }
 
 function find<Item extends { id: string }>(items: readonly Item[], id: string): Item | null {
@@ -160,6 +162,7 @@ function emptyInspector(t: Translate): InspectorView {
     note: null,
     hints: [],
     live: new Map(),
+    focusRequest: null,
   };
 }
 
@@ -191,5 +194,6 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),
     live: liveSourcesOf(groups),
+    focusRequest: state.inspectorFocus,
   };
 }

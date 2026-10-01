@@ -1,4 +1,4 @@
-import { deviceName, relatedJointIds } from "./device-selection.ts";
+import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
 import { buildJointSlider, type JointSliderSpec } from "./joints/slider-model.ts";
@@ -37,6 +37,13 @@ export interface MessageView {
   levelLabel: string;
   text: string;
   detail: string | null;
+  // Devices the message names, in the order it gives them.
+  links: MessageLinkView[];
+}
+
+export interface MessageLinkView {
+  label: string;
+  device: DeviceRef;
 }
 
 export interface PanelView {
@@ -81,6 +88,15 @@ function buildToolbarView(state: ViewerState): ToolbarView {
   };
 }
 
+// A device the document no longer has gets no link: there is nothing to select.
+function messageLinks(state: ViewerState, devices: readonly DeviceRef[]): MessageLinkView[] {
+  const document = state.openPantin?.document;
+  return devices.flatMap((device) => {
+    const label = document === undefined ? null : deviceName(document, device);
+    return label === null ? [] : [{ label, device }];
+  });
+}
+
 function buildMessageView(state: ViewerState, t: Translate): MessageView | null {
   const message = state.message;
   if (message === null) {
@@ -91,6 +107,7 @@ function buildMessageView(state: ViewerState, t: Translate): MessageView | null 
     levelLabel: t(`message.level.${message.level}`),
     text: t(message.key, message.parameters),
     detail: message.detail,
+    links: messageLinks(state, message.links),
   };
 }
 

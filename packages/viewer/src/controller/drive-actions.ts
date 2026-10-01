@@ -1,4 +1,6 @@
-import { DRIVE_PARAMETERS, type DriveType } from "@pantin/protocol";
+import { DRIVE_PARAMETERS, type DriveType, type PantinDocument } from "@pantin/protocol";
+import { PantinApiError } from "../api-transport.ts";
+import { actuatorsFedBy } from "../device-selection.ts";
 import {
   buildDriveRequest,
   driveFormFor,
@@ -110,11 +112,41 @@ export async function deleteDrive(store: ViewerStore, driveId: string): Promise<
   if (open === null) {
     return;
   }
-  const deleted = await editPantin(store, open.id, (pantinId) =>
-    store.ports.api.deleteDrive(pantinId, driveId),
-  );
+  let refusal: unknown = null;
+  const deleted = await editPantin(store, open.id, async (pantinId) => {
+    try {
+      return await store.ports.api.deleteDrive(pantinId, driveId);
+    } catch (error) {
+      refusal = error;
+      throw error;
+    }
+  });
   if (deleted !== undefined) {
     await refreshFaults(store);
     store.update({ ...store.state, message: infoMessage("message.driveDeleted") });
+  } else {
+    explainRefusedDelete(store, open.document, driveId, refusal);
+  }
+}
+
+// The core refuses a drive that still feeds actuators (ADR 0028 point 10) with
+// a conflict. The document says which actuators to detach first, so the message
+// names them as links (ADR 0030 point 4), under the core's own text as detail.
+// Any other failure keeps the message the store already shows.
+function explainRefusedDelete(
+  store: ViewerStore,
+  document: PantinDocument,
+  driveId: string,
+  failure: unknown,
+): void {
+  const drive = document.drives.find((candidate) => candidate.id === driveId);
+  const fed = actuatorsFedBy(document, driveId);
+  const isConflict =
+    failure instanceof PantinApiError && failure.kind === "api" && failure.code === "conflict";
+  if (isConflict && drive !== undefined && fed.length > 0) {
+    store.update({
+      ...store.state,
+      message: errorMessage("message.driveInUse", { name: drive.name }, failure.message, fed),
+    });
   }
 }

@@ -242,6 +242,7 @@
   "message.driveCreated": "Drive \"{name}\" created.",
   "message.driveUpdated": "Drive \"{name}\" updated.",
   "message.driveDeleted": "Drive deleted.",
+  "message.driveInUse": "Drive \"{name}\" still feeds actuators. Detach them first:",
   "message.driveInvalid": "The drive is not valid: fix the fields and try again.",
   "message.actuatorCreated": "Actuator \"{name}\" created.",
   "message.actuatorUpdated": "Actuator \"{name}\" updated.",
@@ -318,7 +319,7 @@
   "diagram.refusal.notLinkable": "These two cannot be linked.",
   "diagram.refusal.sensorNeedsJoint": "A sensor always watches a joint: drag its link onto another joint instead of removing it.",
   "diagram.hint.noLinkChoices": "Nothing this port can be linked to.",
-  "diagram.hint.deleteOnPort": "Delete removes the link of a focused port, or a selected link. Elements themselves are deleted from the tree or the panel.",
+  "diagram.hint.deleteOnPort": "Delete removes the link of a focused port, or a selected link. Elements themselves are deleted from the Edit menu.",
   "prompt.replaceFeed.text": "Replace the feed of {actuator} (now from {from}) by one from {to}?",
   "prompt.replaceFeed.confirm": "Replace",
   "prompt.replaceFeed.cancel": "Cancel",
@@ -356,6 +357,6 @@
   "diagram.hint.busy": "Another edit is in progress: try again in a moment.",
   "diagram.roleDescription": "chain diagram",
   "diagram.node.role": "node",
-  "diagram.help": "Arrow keys move between nodes; Enter goes into a node's ports; on a port, Enter opens Link to…; Space selects a node; Delete removes the link of a port; Escape goes back.",
+  "diagram.help": "Arrow keys move between nodes; Enter goes into a node's ports; on a port, Enter opens Link to…; Space selects a node; F2 renames a drive, actuator or sensor; Delete removes the link of a port; Escape goes back.",
   "diagram.removeMenu": "Remove link to…"
 }

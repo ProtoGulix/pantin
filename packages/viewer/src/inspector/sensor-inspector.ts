@@ -4,7 +4,12 @@ import type { DeviceRef } from "../device-selection.ts";
 import { sensorFormInputs } from "../panel/sensor-form-model.ts";
 import { type GroupDraft, liveRow, type PropertyRow, row } from "../properties/property-rows.ts";
 import { sensorFormFor } from "../sensors/sensor-form.ts";
-import { deviceFieldEditor, deviceNameRow, yesNoOptions } from "./device-fields.ts";
+import {
+  DEVICE_NAME_GROUP,
+  deviceFieldEditor,
+  deviceNameRow,
+  yesNoOptions,
+} from "./device-fields.ts";
 import type { InspectorContext } from "./inspector-context.ts";
 
 // The inspector of a sensor (ADR 0030 point 2): its fields, its parameters in
@@ -46,7 +51,7 @@ export function sensorGroups(sensor: Sensor, context: InspectorContext): GroupDr
   const parameters = parameterRows(sensor, context);
   return [
     {
-      id: "general",
+      id: DEVICE_NAME_GROUP,
       rows: [
         deviceNameRow(device, sensor.name, t),
         row("type", t("drives.form.type"), SENSOR_LABELS[sensor.type][language].name),

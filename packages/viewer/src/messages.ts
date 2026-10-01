@@ -1,5 +1,6 @@
 import type { ApiErrorCode } from "@pantin/protocol";
 import { PantinApiError } from "./api-transport.ts";
+import type { DeviceRef } from "./device-selection.ts";
 import type { MessageKey, MessageParameters } from "./i18n/translate.ts";
 
 // The one message line of the panel. Stored untranslated (key + parameters),
@@ -15,18 +16,22 @@ export interface PanelMessage {
   // from the core or the browser, shown under the translated text, never
   // alone (ADR 0010).
   detail: string | null;
+  // Devices the message names, shown as links that select them (ADR 0030
+  // point 4). Kept as references: their names are read from the document.
+  links: readonly DeviceRef[];
 }
 
 export function errorMessage(
   key: MessageKey,
   parameters: MessageParameters = {},
   detail: string | null = null,
+  links: readonly DeviceRef[] = [],
 ): PanelMessage {
-  return { level: "error", key, parameters, detail };
+  return { level: "error", key, parameters, detail, links };
 }
 
 export function infoMessage(key: MessageKey, parameters: MessageParameters = {}): PanelMessage {
-  return { level: "info", key, parameters, detail: null };
+  return { level: "info", key, parameters, detail: null, links: [] };
 }
 
 function apiErrorKey(code: ApiErrorCode): MessageKey {

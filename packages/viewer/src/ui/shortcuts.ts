@@ -5,7 +5,7 @@ import type { PanelIntents } from "./panel-intents.ts";
 // Window-wide keyboard shortcuts of the menu bar (Ctrl+S, F2, Suppr). The
 // rules live in the menu model; this only reads the key and the focus.
 
-function isEditable(target: EventTarget | null): boolean {
+export function isEditable(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
   }

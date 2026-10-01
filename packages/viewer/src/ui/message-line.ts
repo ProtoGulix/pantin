@@ -1,8 +1,13 @@
 import type { Translate } from "../i18n/translate.ts";
-import type { MessageView } from "../view-model.ts";
-import { element, iconButton } from "./dom.ts";
+import type { MessageLinkView, MessageView } from "../view-model.ts";
+import { button, element, iconButton } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+
+// A device the message names: a click selects it, as any link of the inspector.
+function messageLink(link: MessageLinkView, intents: PanelIntents): HTMLElement {
+  return button(link.label, "message-line__link", () => intents.selectDevice(link.device));
+}
 
 // One compact line at the bottom of the panel with the latest message.
 
@@ -28,7 +33,13 @@ export function renderMessageLine(
         ],
       ),
       element("div", { className: "message-line__body" }, [
-        element("div", { className: "message-line__text", text: message.text }),
+        element("div", { className: "message-line__text" }, [
+          document.createTextNode(message.text),
+          ...message.links.flatMap((link, index) => [
+            document.createTextNode(index === 0 ? " " : ", "),
+            messageLink(link, intents),
+          ]),
+        ]),
         message.detail === null
           ? null
           : element("div", {

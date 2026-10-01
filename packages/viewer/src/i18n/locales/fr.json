@@ -242,6 +242,7 @@
   "message.driveCreated": "Préactionneur « {name} » créé.",
   "message.driveUpdated": "Préactionneur « {name} » modifié.",
   "message.driveDeleted": "Préactionneur supprimé.",
+  "message.driveInUse": "Le préactionneur « {name} » alimente encore des actionneurs. Détachez-les d'abord :",
   "message.driveInvalid": "Le préactionneur n'est pas valide : corrigez les champs puis réessayez.",
   "message.actuatorCreated": "Actionneur « {name} » créé.",
   "message.actuatorUpdated": "Actionneur « {name} » modifié.",
@@ -318,7 +319,7 @@
   "diagram.refusal.notLinkable": "Ces deux éléments ne peuvent pas être reliés.",
   "diagram.refusal.sensorNeedsJoint": "Un capteur surveille toujours une liaison : glissez son lien sur une autre liaison au lieu de le retirer.",
   "diagram.hint.noLinkChoices": "Rien à quoi ce port puisse être relié.",
-  "diagram.hint.deleteOnPort": "Suppr retire le lien d'un port ayant le focus, ou un lien sélectionné. Les éléments eux-mêmes se suppriment depuis l'arborescence ou le panneau.",
+  "diagram.hint.deleteOnPort": "Suppr retire le lien d'un port ayant le focus, ou un lien sélectionné. Les éléments eux-mêmes se suppriment depuis le menu Édition.",
   "prompt.replaceFeed.text": "Remplacer l'alimentation de {actuator} (actuellement depuis {from}) par une alimentation depuis {to} ?",
   "prompt.replaceFeed.confirm": "Remplacer",
   "prompt.replaceFeed.cancel": "Annuler",
@@ -356,6 +357,6 @@
   "diagram.hint.busy": "Une autre modification est en cours : réessayez dans un instant.",
   "diagram.roleDescription": "schéma des chaînes",
   "diagram.node.role": "nœud",
-  "diagram.help": "Les flèches passent d'un nœud à l'autre ; Entrée entre dans les ports d'un nœud ; sur un port, Entrée ouvre Relier à… ; Espace sélectionne un nœud ; Suppr retire le lien d'un port ; Échap revient en arrière.",
+  "diagram.help": "Les flèches passent d'un nœud à l'autre ; Entrée entre dans les ports d'un nœud ; sur un port, Entrée ouvre Relier à… ; Espace sélectionne un nœud ; F2 renomme un préactionneur, actionneur ou capteur ; Suppr retire le lien d'un port ; Échap revient en arrière.",
   "diagram.removeMenu": "Retirer le lien vers…"
 }

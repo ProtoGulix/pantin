@@ -40,3 +40,12 @@ export function restoreFocus(root: HTMLElement, snapshot: FocusSnapshot | null):
     target.focus();
   }
 }
+
+/** Focuses, with its text selected, the field a keyboard command asked for. */
+export function focusField(root: HTMLElement, key: string): void {
+  const target = [...root.querySelectorAll("input")].find(
+    (candidate) => candidate.getAttribute("data-focus-key") === key,
+  );
+  target?.focus();
+  target?.select();
+}

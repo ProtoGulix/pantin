@@ -88,6 +88,14 @@ export interface ViewerState {
   diagramShown: boolean;
   collapsedDiagramBands: ReadonlySet<string>;
   pendingFeedReplacement: PendingDiagramLink | null;
+  // F2 on a device: the inspector's field to focus. The serial makes asking
+  // twice for the same key a new request, since a redraw must not refocus.
+  inspectorFocus: InspectorFocusRequest | null;
+}
+
+export interface InspectorFocusRequest {
+  key: string;
+  serial: number;
 }
 
 // Faults are runtime state of the core, cleared when a Pantin opens.
@@ -128,6 +136,7 @@ export function initialViewerState(language: Language): ViewerState {
     diagramShown: false,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
+    inspectorFocus: null,
   };
 }
 

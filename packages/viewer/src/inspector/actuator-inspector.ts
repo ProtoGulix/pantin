@@ -5,7 +5,7 @@ import { jointsCoordinateUnit } from "../actuators/actuator-joints.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import { parameterUnitLabel } from "../drives/parameter-units.ts";
 import { type GroupDraft, row } from "../properties/property-rows.ts";
-import { deviceFieldEditor, deviceNameRow, withUnit } from "./device-fields.ts";
+import { DEVICE_NAME_GROUP, deviceFieldEditor, deviceNameRow, withUnit } from "./device-fields.ts";
 import type { InspectorContext } from "./inspector-context.ts";
 
 // The inspector of an actuator (ADR 0030 point 2): its fields and parameters.
@@ -30,7 +30,7 @@ export function actuatorGroups(actuator: Actuator, context: InspectorContext): G
   );
   return [
     {
-      id: "general",
+      id: DEVICE_NAME_GROUP,
       rows: [
         deviceNameRow(device, actuator.name, t),
         row("type", t("drives.form.type"), labels.name),

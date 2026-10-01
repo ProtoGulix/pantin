@@ -4,7 +4,7 @@ import type { InspectorView } from "../inspector/inspector-model.ts";
 import type { LiveSource } from "../properties/property-rows.ts";
 import { renderActuatorForm, renderDriveForm, renderSensorForm } from "./device-forms.ts";
 import { button, element, iconButton } from "./dom.ts";
-import { captureFocus, restoreFocus } from "./focus.ts";
+import { captureFocus, focusField, restoreFocus } from "./focus.ts";
 import { showInspectorLive } from "./inspector-live.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { renderPropertiesGrid } from "./properties-grid.ts";
@@ -55,6 +55,8 @@ export class Inspector {
   private readonly root: HTMLElement;
   private translate: Translate | null = null;
   private live: ReadonlyMap<string, LiveSource> = new Map();
+  // A redraw must not take the focus back to a field the user has left.
+  private servedFocusSerial = 0;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -89,6 +91,14 @@ export class Inspector {
       ].filter((part) => part !== null),
     );
     restoreFocus(this.root, focus);
+    this.serveFocusRequest(view.focusRequest);
+  }
+
+  private serveFocusRequest(request: InspectorView["focusRequest"]): void {
+    if (request !== null && request.serial !== this.servedFocusSerial) {
+      this.servedFocusSerial = request.serial;
+      focusField(this.root, request.key);
+    }
   }
 
   /** SI values from the core, shown in mm or degrees; bits as On or Off. */

@@ -1,0 +1,62 @@
+/* Message line at the bottom of the left panel. Tokens in base.css. */
+.message-line {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 4px 4px 4px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.message-line__level {
+  display: flex;
+  padding-top: 4px;
+}
+
+.message-line--error {
+  background: var(--danger-soft);
+}
+
+.message-line--error .message-line__level {
+  color: var(--danger);
+}
+
+.message-line--info .message-line__level {
+  color: var(--success);
+}
+
+.message-line__body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.message-line__text {
+  overflow-wrap: anywhere;
+}
+
+.message-line__link {
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.message-line__link:hover {
+  text-decoration: underline;
+}
+
+.message-line__link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.message-line__detail {
+  overflow: hidden;
+  font-family: var(--font-source);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

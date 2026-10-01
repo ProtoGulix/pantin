@@ -163,6 +163,7 @@ describe("message line and language", () => {
       level: "error",
       levelLabel: "Error",
       text: 'Cannot display body "Rail".',
+      links: [],
       detail: "bad file",
     });
   });

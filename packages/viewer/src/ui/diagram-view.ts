@@ -9,12 +9,14 @@ import { drawColumnHeads } from "./diagram-columns.ts";
 import { listenToLinkDrags } from "./diagram-drag.ts";
 import { type DrawnDiagram, drawDiagram, HELP_ID } from "./diagram-draw.ts";
 import { EdgeSelection } from "./diagram-edge-select.ts";
+import { unhandledKeyInDiagram } from "./diagram-key-policy.ts";
 import { listenToDiagramKeys } from "./diagram-keys.ts";
 import { LinkMenu } from "./diagram-link-menu.ts";
 import { applyChanges, applyLitText, applyLive } from "./diagram-live-apply.ts";
 import { RovingFocus } from "./diagram-roving.ts";
 import { element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { isEditable } from "./shortcuts.ts";
 
 // The chain diagram in the central area (ADR 0029). It is redrawn when the
 // layout changes; selection and live state are applied in place and only to
@@ -50,6 +52,23 @@ export class DiagramView {
     this.viewport = viewport;
     this.host.hidden = true;
     viewport.insertBefore(this.host, before);
+    this.guardWindowShortcuts();
+  }
+
+  // The diagram's own handlers run first (they are deeper); what none of them
+  // took must not reach the window's Delete and F2 (diagram-key-policy.ts).
+  private guardWindowShortcuts(): void {
+    this.host.addEventListener("keydown", (event) => {
+      const { key, ctrlKey, metaKey, altKey } = event;
+      const press = { key, ctrlKey, metaKey, altKey, inEditableField: isEditable(event.target) };
+      const action = event.defaultPrevented ? "pass" : unhandledKeyInDiagram(press);
+      if (action !== "pass") {
+        event.preventDefault();
+      }
+      if (action === "hint") {
+        this.intents?.showDiagramHint("diagram.hint.deleteOnPort");
+      }
+    });
   }
 
   render(model: DiagramModel, intents: PanelIntents): void {

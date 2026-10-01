@@ -9,7 +9,7 @@ import {
   quantityUnitLabel,
 } from "../drives/parameter-units.ts";
 import { type GroupDraft, liveRow, type PropertyRow, row } from "../properties/property-rows.ts";
-import { deviceFieldEditor, deviceNameRow, withUnit } from "./device-fields.ts";
+import { DEVICE_NAME_GROUP, deviceFieldEditor, deviceNameRow, withUnit } from "./device-fields.ts";
 import type { InspectorContext } from "./inspector-context.ts";
 
 // The inspector of a drive (ADR 0030 point 2): its fields, its command tags
@@ -87,7 +87,7 @@ export function driveGroups(drive: Drive, context: InspectorContext): GroupDraft
   const parameters = parameterRows(drive, context);
   const groups: GroupDraft[] = [
     {
-      id: "general",
+      id: DEVICE_NAME_GROUP,
       rows: [
         deviceNameRow(device, drive.name, t),
         row("type", t("drives.form.type"), DRIVE_LABELS[drive.type][language].name),
