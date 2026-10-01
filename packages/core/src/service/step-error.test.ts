@@ -35,6 +35,10 @@ afterEach(async () => {
   await rm(pantinsDirectory, { recursive: true });
 });
 
+function runSteps(service: ReturnType<typeof createPantinService>, steps: number): void {
+  service.runSimulationSteps({ steps, droppedSteps: 0, now: 0 });
+}
+
 function startService() {
   const reported: unknown[] = [];
   const service = createPantinService(createPantinStore(pantinsDirectory), undefined, {
@@ -63,7 +67,7 @@ describe("a simulation step that throws", () => {
     await service.createPantin("Bad");
     await service.createPantin("Good");
     failing.names.add("Bad");
-    expect(() => service.runSimulationSteps(3)).not.toThrow();
+    expect(() => runSteps(service, 3)).not.toThrow();
     expect(service.peekStepCount("bad")).toBe(0);
     expect(service.peekStepCount("good")).toBe(3);
     const { entries } = await service.readConsole("bad", 0);
@@ -83,14 +87,14 @@ describe("a simulation step that throws", () => {
     await service.createPantin("Bad");
     failing.names.add("Bad");
     for (let tick = 0; tick < 50; tick += 1) {
-      service.runSimulationSteps(1);
+      runSteps(service, 1);
     }
     const { entries } = await service.readConsole("bad", 0);
     expect(entries).toHaveLength(1);
     expect(entries[0]?.count).toBe(50);
     expect(reported).toHaveLength(1);
     failing.names.clear();
-    service.runSimulationSteps(2);
+    runSteps(service, 2);
     expect(service.peekStepCount("bad")).toBe(2);
   });
 
@@ -98,13 +102,45 @@ describe("a simulation step that throws", () => {
     const { service, reported } = startService();
     await service.createPantin("Bad");
     failing.names.add("Bad");
-    service.runSimulationSteps(1);
+    runSteps(service, 1);
     failing.message = "another failure";
-    service.runSimulationSteps(1);
+    runSteps(service, 1);
     expect((await service.readConsole("bad", 0)).entries.map((entry) => entry.params)).toEqual([
       { detail: "step exploded" },
       { detail: "another failure" },
     ]);
     expect(reported).toHaveLength(2);
+  });
+});
+
+describe("a step request that throws", () => {
+  it("stops there, and the answer shows the steps that ran", async () => {
+    const { service } = startService();
+    await service.createPantin("Bad");
+    await service.setClockRunning("bad", false);
+    await service.stepClock("bad", 3);
+    failing.names.add("Bad");
+    const clock = await service.stepClock("bad", 5);
+    expect(clock).toMatchObject({ running: false, step: 3 });
+    expect((await service.readConsole("bad", 0)).entries.map((entry) => entry.code)).toEqual([
+      "clock_paused",
+      "step_error",
+    ]);
+    failing.names.clear();
+    expect((await service.stepClock("bad", 2)).step).toBe(5);
+  });
+});
+
+describe("the achieved ratio of a Pantin whose steps throw", () => {
+  it("drops for that Pantin only", async () => {
+    const { service } = startService();
+    await service.createPantin("Bad");
+    await service.createPantin("Good");
+    failing.names.add("Bad");
+    for (let tick = 0; tick < 130; tick += 1) {
+      service.runSimulationSteps({ steps: 1, droppedSteps: 0, now: tick / 100 });
+    }
+    expect((await service.getClock("bad")).achievedRatio).toBe(0);
+    expect((await service.getClock("good")).achievedRatio).toBe(1);
   });
 });

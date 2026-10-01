@@ -5,6 +5,7 @@ import type { StepConverter } from "../converter/step-converter.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
 import { allClearedEvents, migratedEvent } from "../domain/console-events.ts";
 import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
+import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
@@ -51,6 +52,8 @@ export type OpenPantin = {
   sensorOutputs: Map<string, SensorOutput>;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
+  // The simulation clock (ADR 0032), never saved: reset leaves it as it is.
+  clock: ClockRuntime;
   // The Pantin console (ADR 0031): runtime only, gone when the Pantin closes.
   console: ConsoleBuffer;
 };
@@ -82,6 +85,7 @@ export function newOpenPantin(document: PantinDocument, consoleId: string): Open
     jammedJointIds: new Set(),
     sensorOutputs: new Map(),
     stepCount: 0,
+    clock: newClockRuntime(),
     console: emptyConsole(consoleId),
   };
 }

@@ -38,6 +38,18 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "pantin" },
     params: { from: 1, to: 2 },
   }),
+  clock_paused: entryOf(8, {
+    code: "clock_paused",
+    level: "info",
+    source: { kind: "pantin" },
+    params: {},
+  }),
+  clock_resumed: entryOf(9, {
+    code: "clock_resumed",
+    level: "info",
+    source: { kind: "pantin" },
+    params: {},
+  }),
 };
 
 const expected = {
@@ -50,6 +62,8 @@ const expected = {
     fault_set: "Défaut injecté : Grippée.",
     fault_cleared: "Défaut retiré : Ne répond plus.",
     migrated: "Document migré à l'ouverture, de la version 1 à la version 2.",
+    clock_paused: "Simulation en pause.",
+    clock_resumed: "Simulation reprise.",
   },
   en: {
     forced_tag_written:
@@ -60,6 +74,8 @@ const expected = {
     fault_set: "Fault injected: Jammed.",
     fault_cleared: "Fault removed: Not responding.",
     migrated: "Document migrated on opening, from version 1 to version 2.",
+    clock_paused: "Simulation paused.",
+    clock_resumed: "Simulation resumed.",
   },
 } as const;
 

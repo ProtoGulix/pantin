@@ -18,6 +18,7 @@ import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { clockOperations } from "./clock-operations.ts";
 import { readConsole } from "./console-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { importBodies } from "./import-operations.ts";
@@ -43,6 +44,7 @@ import {
 } from "./open-pantins.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { listTags, runSimulationSteps, writeTag } from "./simulation.ts";
+import type { SimulationTick } from "./simulation-loop.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
 // only on save. One service per server instance, no shared state.
@@ -176,7 +178,8 @@ export function createPantinService(
     writeTag: (pantinId: PantinId, tagName: string, value: number) =>
       writeTag(context, pantinId, tagName, value),
     readConsole: (pantinId: PantinId, after: number) => readConsole(context, pantinId, after),
-    runSimulationSteps: (steps: number) => runSimulationSteps(context, steps),
+    runSimulationSteps: (tick: SimulationTick) => runSimulationSteps(context, tick),
+    ...clockOperations(context),
     ...assemblyOperations(context),
     ...driveOperations(context),
     ...actuatorOperations(context),

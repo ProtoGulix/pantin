@@ -394,5 +394,7 @@
   "console.code.diagnostic_cleared": "Diagnostic cleared: {diagnostic}.",
   "console.code.fault_set": "Fault injected: {fault}.",
   "console.code.fault_cleared": "Fault removed: {fault}.",
-  "console.code.migrated": "Document migrated on opening, from version {from} to version {to}."
+  "console.code.migrated": "Document migrated on opening, from version {from} to version {to}.",
+  "console.code.clock_paused": "Simulation paused.",
+  "console.code.clock_resumed": "Simulation resumed."
 }

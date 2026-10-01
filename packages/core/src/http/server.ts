@@ -130,8 +130,8 @@ export async function startPantinServer(
   await listen(server, options.port, network.listenAddress);
   const loop = startSimulationLoop(
     options.simulationTimer ?? createRealSimulationTimer(),
-    (steps) => {
-      service.runSimulationSteps(steps);
+    (tick) => {
+      service.runSimulationSteps(tick);
       poseStreams.notifyTick();
     },
     options.reportError,

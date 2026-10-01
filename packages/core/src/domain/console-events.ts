@@ -61,6 +61,15 @@ export function migratedEvent(from: number): ConsoleEvent {
   };
 }
 
+export function clockEvent(running: boolean): ConsoleEvent {
+  return {
+    code: running ? "clock_resumed" : "clock_paused",
+    level: "info",
+    source: { kind: "pantin" },
+    params: {},
+  };
+}
+
 const MAX_STEP_ERROR_DETAIL = 300;
 
 export function stepErrorEvent(error: unknown): ConsoleEvent {

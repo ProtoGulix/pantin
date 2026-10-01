@@ -42,6 +42,9 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
       };
     case "migrated":
       return { text: t("console.code.migrated", entry.params), detail: null };
+    case "clock_paused":
+    case "clock_resumed":
+      return { text: t(`console.code.${entry.code}`), detail: null };
   }
 }
 

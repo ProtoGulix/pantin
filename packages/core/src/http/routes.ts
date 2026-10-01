@@ -9,6 +9,7 @@ import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
 import { ACTUATOR_ROUTES } from "./actuator-routes.ts";
 import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
+import { CLOCK_ROUTES } from "./clock-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
@@ -145,6 +146,7 @@ export const ROUTES: readonly Route[] = [
   ...ACTUATOR_ROUTES,
   ...SENSOR_ROUTES,
   ...POSE_STREAM_ROUTES,
+  ...CLOCK_ROUTES,
   ...TAG_ROUTES,
 ];
 

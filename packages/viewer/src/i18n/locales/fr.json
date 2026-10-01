@@ -394,5 +394,7 @@
   "console.code.diagnostic_cleared": "Diagnostic résolu : {diagnostic}.",
   "console.code.fault_set": "Défaut injecté : {fault}.",
   "console.code.fault_cleared": "Défaut retiré : {fault}.",
-  "console.code.migrated": "Document migré à l'ouverture, de la version {from} à la version {to}."
+  "console.code.migrated": "Document migré à l'ouverture, de la version {from} à la version {to}.",
+  "console.code.clock_paused": "Simulation en pause.",
+  "console.code.clock_resumed": "Simulation reprise."
 }

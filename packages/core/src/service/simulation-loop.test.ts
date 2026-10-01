@@ -9,14 +9,30 @@ describe("startSimulationLoop", () => {
     const runs: number[] = [];
     startSimulationLoop(
       manual.timer,
-      (steps) => runs.push(steps),
+      (tick) => runs.push(tick.steps),
       () => undefined,
     );
     manual.advance(STEP_SECONDS * 2.5);
     manual.advance(STEP_SECONDS * 0.6);
     expect(runs).toEqual([2, 1]);
   });
+});
 
+describe("startSimulationLoop ticks", () => {
+  it("tells the dropped steps and the time of the tick", () => {
+    const manual = createManualTimer();
+    const ticks: unknown[] = [];
+    startSimulationLoop(
+      manual.timer,
+      (tick) => ticks.push(tick),
+      () => undefined,
+    );
+    manual.advance(1);
+    expect(ticks).toEqual([{ steps: 12, droppedSteps: 108, now: 1 }]);
+  });
+});
+
+describe("startSimulationLoop failures and stop", () => {
   it("reports a failing step and keeps running", () => {
     const manual = createManualTimer();
     const reported: unknown[] = [];

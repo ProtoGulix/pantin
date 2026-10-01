@@ -15,10 +15,14 @@ describe("dueSteps", () => {
   });
 
   it("caps the catch-up after a stall and drops the rest", () => {
-    expect(dueSteps(5, 0)).toEqual({ steps: MAX_CATCH_UP_STEPS, carriedSeconds: 0 });
+    expect(dueSteps(5, 0)).toEqual({
+      steps: MAX_CATCH_UP_STEPS,
+      droppedSteps: 600 - MAX_CATCH_UP_STEPS,
+      carriedSeconds: 0,
+    });
   });
 
   it("treats a clock going backwards as no time elapsed", () => {
-    expect(dueSteps(-1, 0)).toEqual({ steps: 0, carriedSeconds: 0 });
+    expect(dueSteps(-1, 0)).toEqual({ steps: 0, droppedSteps: 0, carriedSeconds: 0 });
   });
 });

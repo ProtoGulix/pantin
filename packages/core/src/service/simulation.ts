@@ -2,11 +2,13 @@ import type { ConsoleEvent, PantinId, Tag, TagListResponse } from "@pantin/proto
 import { diagnosticEvents, stepErrorEvent } from "../domain/console-events.ts";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { stepSensors } from "../domain/sensor-step.ts";
+import { recordTick } from "../domain/simulation-clock.ts";
 import { stepSimulation } from "../domain/simulation-step.ts";
 import { commandTagOf, describeTags } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
 import { recordConsoleEvents } from "./console-record.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
+import type { SimulationTick } from "./simulation-loop.ts";
 
 // Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025, ADR 0028).
 
@@ -82,8 +84,9 @@ function runStep(openPantin: OpenPantin): ConsoleEvent[] {
 
 // A failing step is skipped and put in the console; the rest of this tick is
 // skipped too, since the next step would fail on the same state. The Pantin
-// is tried again at the next tick, and the others are not held back.
-function runSteps(context: ServiceContext, openPantin: OpenPantin, steps: number): void {
+// is tried again at the next tick, and the others are not held back. Returns
+// the steps that were applied.
+export function runSteps(context: ServiceContext, openPantin: OpenPantin, steps: number): number {
   for (let step = 0; step < steps; step += 1) {
     let events: ConsoleEvent[];
     try {
@@ -92,20 +95,29 @@ function runSteps(context: ServiceContext, openPantin: OpenPantin, steps: number
       if (recordConsoleEvents(context, openPantin, [stepErrorEvent(error)])) {
         context.reportStepError(error);
       }
-      return;
+      return step;
     }
     // Outside the try: a step_error is only ever a step that was not applied.
     recordConsoleEvents(context, openPantin, events);
   }
+  return steps;
 }
 
-// Every loaded Pantin advances by the same number of steps: each is an
-// isolated machine, but they share the core's clock.
-export function runSimulationSteps(context: ServiceContext, steps: number): void {
-  if (steps <= 0) {
-    return;
-  }
+// Every running Pantin advances by the same number of steps: each is an
+// isolated machine, but they share the core's clock. A paused one is skipped
+// and gets no catch-up on resume (ADR 0032 point 2).
+export function runSimulationSteps(context: ServiceContext, tick: SimulationTick): void {
   for (const openPantin of context.loadedPantins.values()) {
-    runSteps(context, openPantin, steps);
+    if (!openPantin.clock.running) {
+      continue;
+    }
+    const executed = runSteps(context, openPantin, tick.steps);
+    const { clock } = openPantin;
+    clock.droppedSteps += tick.droppedSteps;
+    clock.window = recordTick(clock.window, {
+      time: tick.now,
+      due: tick.steps + tick.droppedSteps,
+      executed,
+    });
   }
 }

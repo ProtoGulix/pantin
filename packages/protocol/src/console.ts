@@ -65,6 +65,7 @@ const ParamsSchemas = {
     from: z.number().int().positive(),
     to: z.number().int().positive(),
   }),
+  clock: z.object({}),
 };
 
 const eventShapes = {
@@ -110,6 +111,18 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.migrated,
   }),
+  clockPaused: z.object({
+    code: z.literal("clock_paused"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.clock,
+  }),
+  clockResumed: z.object({
+    code: z.literal("clock_resumed"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.clock,
+  }),
 };
 
 // One event: what the core reports, before it gets a sequence and times.
@@ -122,6 +135,8 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.faultSet,
   eventShapes.faultCleared,
   eventShapes.migrated,
+  eventShapes.clockPaused,
+  eventShapes.clockResumed,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
 export type ConsoleCode = ConsoleEvent["code"];
@@ -147,6 +162,8 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.faultSet.extend(entryFields),
   eventShapes.faultCleared.extend(entryFields),
   eventShapes.migrated.extend(entryFields),
+  eventShapes.clockPaused.extend(entryFields),
+  eventShapes.clockResumed.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
 

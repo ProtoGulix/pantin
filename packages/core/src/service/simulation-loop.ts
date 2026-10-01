@@ -20,13 +20,21 @@ export function createRealSimulationTimer(): SimulationTimer {
   };
 }
 
+// What the scheduler decided at one tick: the steps to run, the ones it
+// dropped beyond the catch-up cap, and the monotonic time of the tick (ADR 0032 point 5).
+export type SimulationTick = {
+  steps: number;
+  droppedSteps: number;
+  now: number;
+};
+
 export type SimulationLoop = { stop(): void };
 
 // `reportError` receives what `runSteps` throws: a timer callback has no
 // caller to propagate to, and one bad step must not kill the core.
 export function startSimulationLoop(
   timer: SimulationTimer,
-  runSteps: (steps: number) => void,
+  runSteps: (tick: SimulationTick) => void,
   reportError: (error: unknown) => void,
 ): SimulationLoop {
   let lastTime = timer.now();
@@ -37,7 +45,7 @@ export function startSimulationLoop(
     lastTime = now;
     carriedSeconds = due.carriedSeconds;
     try {
-      runSteps(due.steps);
+      runSteps({ steps: due.steps, droppedSteps: due.droppedSteps, now });
     } catch (error) {
       reportError(error);
     }
