@@ -27,32 +27,34 @@ const jointGroupsOf = (jointId: string) =>
   );
 const groupsOf = (jointId: string) => table(jointGroupsOf(jointId));
 
+const HINGE_GROUPS = [
+  [
+    "Général",
+    [
+      ["Nom", "Hinge"],
+      ["Identifiant", "hinge"],
+      ["Clé de tag", "hinge"],
+      ["Tags", "main.hinge.setpoint, main.hinge.position"],
+      ["Type", "Pivot limité"],
+      ["Corps parent", "Rail"],
+      ["Corps enfant", "Carriage"],
+    ],
+  ],
+  [
+    "Position",
+    [
+      ["Axe", "Z"],
+      ["Sens", "Positif (+)"],
+      ["Origine X (mm)", "10"],
+      ["Origine Y (mm)", "0"],
+      ["Origine Z (mm)", "20"],
+    ],
+  ],
+];
+
 describe("joint properties", () => {
   it("shows the type, the bodies by name, the axis as a direction and the origin", () => {
-    expect(groupsOf("hinge").slice(0, 2)).toEqual([
-      [
-        "Général",
-        [
-          ["Nom", "Hinge"],
-          ["Identifiant", "hinge"],
-          ["Clé de tag", "hinge"],
-          ["Tags", "main.hinge.setpoint, main.hinge.position"],
-          ["Type", "Pivot limité"],
-          ["Corps parent", "Rail"],
-          ["Corps enfant", "Carriage"],
-        ],
-      ],
-      [
-        "Position",
-        [
-          ["Axe", "Z"],
-          ["Sens", "Positif (+)"],
-          ["Origine X (mm)", "10"],
-          ["Origine Y (mm)", "0"],
-          ["Origine Z (mm)", "20"],
-        ],
-      ],
-    ]);
+    expect(groupsOf("hinge").slice(0, 2)).toEqual(HINGE_GROUPS);
   });
 
   it("lists the components of an oblique axis after its direction and sense", () => {

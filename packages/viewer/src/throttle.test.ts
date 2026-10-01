@@ -57,7 +57,9 @@ describe("createThrottle", () => {
     expect(sent.length).toBeLessThanOrEqual(Math.ceil(540 / 33) + 1);
     expect(sent.at(-1)).toBe(99);
   });
+});
 
+describe("createThrottle after a burst", () => {
   it("sends immediately again after a quiet period", () => {
     const { scheduler, advance } = fakeScheduler();
     const sent: number[] = [];
