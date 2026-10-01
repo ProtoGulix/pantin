@@ -15,6 +15,7 @@ import {
 } from "@pantin/protocol";
 import { type ActuatorRoutes, actuatorRoutes } from "./api-actuator-routes.ts";
 import { type AssemblyRoutes, assemblyRoutes } from "./api-assembly-routes.ts";
+import { type ClockRoutes, clockRoutes } from "./api-clock-routes.ts";
 import { type ConsoleRoutes, consoleRoutes } from "./api-console-routes.ts";
 import { type DriveRoutes, driveRoutes } from "./api-drive-routes.ts";
 import { type JointRoutes, jointRoutes } from "./api-joint-routes.ts";
@@ -40,7 +41,8 @@ export interface PantinApiClient
     DriveRoutes,
     ActuatorRoutes,
     SensorRoutes,
-    ConsoleRoutes {
+    ConsoleRoutes,
+    ClockRoutes {
   listPantins(): Promise<PantinSummary[]>;
   createPantin(name: string): Promise<PantinResponse>;
   getPantin(pantinId: string): Promise<PantinResponse>;
@@ -161,5 +163,6 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...actuatorRoutes(send),
     ...sensorRoutes(send),
     ...consoleRoutes(send),
+    ...clockRoutes(send),
   };
 }

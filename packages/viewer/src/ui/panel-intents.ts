@@ -144,6 +144,10 @@ export interface PanelIntents {
   clearConsole(): void;
   selectConsoleSource(source: ConsoleSource): void;
 
+  // The transport bar (ADR 0032 point 10): run or pause, and a number of steps while paused.
+  toggleClockRunning(): void;
+  stepClock(steps: number): void;
+
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;
   changeLanguage(language: string): void;

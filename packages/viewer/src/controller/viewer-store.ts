@@ -1,7 +1,21 @@
-import type { DriveRuntime, JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
+import type {
+  DriveRuntime,
+  JointPosition,
+  PantinResponse,
+  PoseSnapshot,
+  SimulationClockState,
+} from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
 import { type CentralLayout, shouldRender } from "../central-layout.ts";
+import {
+  buildClockView,
+  type ClockModel,
+  type ClockView,
+  clockAfterClockState,
+  clockAfterPose,
+  INITIAL_CLOCK_MODEL,
+} from "../clock/clock-model.ts";
 import { type ClientConsole, EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "../console/console-view.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
@@ -47,6 +61,9 @@ export interface StorePorts {
   ): void;
   // The console panel and its counter, written in place (ADR 0031 point 4).
   showConsoleLive(view: ConsoleView | null): void;
+  // The transport bar (ADR 0032 point 10): its texts are written in place, so
+  // a pose or a clock event never redraws the viewer.
+  showClock(view: ClockView): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -76,6 +93,9 @@ export class ViewerStore {
   // Latest port states and diagnostics of each drive, by drive id, read with
   // the tags; the chain diagram will light its edges from it (ADR 0029 point 8).
   driveRuntime: ReadonlyMap<string, DriveRuntime> = new Map();
+  // The simulation clock of the followed Pantin, from the stream and from the
+  // answers of the clock requests; outside ViewerState for the same reason.
+  clockModel: ClockModel = INITIAL_CLOCK_MODEL;
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
   // Who is linked to whom in the open document, built once per answer of the core.
@@ -103,6 +123,8 @@ export class ViewerStore {
     // After followPoses: a Pantin just opened has no tag values yet.
     this.ports.renderDiagram(this.buildDiagramModel(next));
     this.ports.showDiagramLive(this.tagValues, this.driveRuntime);
+    // After followPoses too: a Pantin just opened starts from a fresh clock.
+    this.ports.showClock(this.clockView());
     const document = next.openPantin?.document;
     viewport.setRendering(shouldRender(next.centralLayout, next.openPantin !== null));
     viewport.setSelectedBodies(
@@ -134,6 +156,7 @@ export class ViewerStore {
     // Another Pantin: the previous one's tag values must not flip a bit here.
     this.tagValues = new Map();
     this.driveRuntime = new Map();
+    this.clockModel = INITIAL_CLOCK_MODEL;
     this.ports.poseStream.follow(pantinId);
   }
 
@@ -144,6 +167,30 @@ export class ViewerStore {
       snapshot.jointPositions.map(({ jointId, position }: JointPosition) => [jointId, position]),
     );
     this.ports.showJointPositions(this.jointPositions);
+    this.setClockModel(clockAfterPose(this.clockModel, snapshot.stepCount));
+  }
+
+  /** A clock event of the stream, or the answer of a clock request. */
+  receiveClock(state: SimulationClockState): void {
+    this.setClockModel(clockAfterClockState(this.clockModel, state));
+  }
+
+  clockView(): ClockView {
+    const { state } = this;
+    return buildClockView(
+      this.clockModel,
+      state.openPantin !== null,
+      state.language,
+      createTranslator(state.language),
+    );
+  }
+
+  // The bar is written in place: no state update, whatever changed.
+  private setClockModel(next: ClockModel): void {
+    if (next !== this.clockModel) {
+      this.clockModel = next;
+      this.ports.showClock(this.clockView());
+    }
   }
 
   /**

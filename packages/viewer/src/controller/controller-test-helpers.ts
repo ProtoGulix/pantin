@@ -36,6 +36,7 @@ export function testStore(
       poseStream: { follow: () => undefined },
       storeLanguage: () => undefined,
       showConsoleLive: () => undefined,
+      showClock: () => undefined,
       storeCentralLayout,
       ...ports,
     },

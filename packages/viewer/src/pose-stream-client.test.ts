@@ -28,10 +28,12 @@ class FakeSource implements PoseEventSource {
 function setUp() {
   const sources: FakeSource[] = [];
   const snapshots: unknown[] = [];
+  const clocks: unknown[] = [];
   const invalid: string[] = [];
   let closedCount = 0;
   const callbacks: PoseStreamCallbacks = {
     onSnapshot: (snapshot) => snapshots.push(snapshot),
+    onClock: (state) => clocks.push(state),
     onInvalid: (detail) => invalid.push(detail),
     onClosed: () => {
       closedCount += 1;
@@ -42,13 +44,21 @@ function setUp() {
     sources.push(source);
     return source;
   }, callbacks);
-  return { client, sources, snapshots, invalid, closedCount: () => closedCount };
+  return { client, sources, snapshots, clocks, invalid, closedCount: () => closedCount };
 }
 
 const VALID = JSON.stringify({
   stepCount: 3,
   jointPositions: [],
   bodies: [{ bodyId: "a", translation: [0, 0, 1], rotation: [0, 0, 0, 1] }],
+});
+
+const CLOCK = JSON.stringify({
+  running: true,
+  step: 120,
+  stepSeconds: 1 / 120,
+  achievedRatio: 0.99,
+  droppedSteps: 0,
 });
 
 describe("createPoseStreamClient", () => {
@@ -74,6 +84,24 @@ describe("createPoseStreamClient", () => {
     expect(invalid).toHaveLength(2);
   });
 
+  it("delivers valid clock events, apart from the poses", () => {
+    const { client, sources, snapshots, clocks } = setUp();
+    client.follow("p");
+    sources[0]?.emit("clock", CLOCK);
+    expect([snapshots, clocks]).toEqual([[], [JSON.parse(CLOCK)]]);
+  });
+
+  it("reports a bad clock event and never delivers it", () => {
+    const { client, sources, clocks, invalid } = setUp();
+    client.follow("p");
+    sources[0]?.emit("clock", "not json");
+    sources[0]?.emit("clock", JSON.stringify({ ...JSON.parse(CLOCK), step: -3 }));
+    sources[0]?.emit("clock", JSON.stringify({ running: true }));
+    expect(clocks).toHaveLength(0);
+    expect(invalid).toHaveLength(3);
+    expect(invalid[0]).toContain("clock");
+  });
+
   it("ignores other event names", () => {
     const { client, sources, snapshots, invalid } = setUp();
     client.follow("p");
@@ -95,12 +123,13 @@ describe("createPoseStreamClient lifecycle", () => {
   });
 
   it("closes on null and ignores what a closed stream still says", () => {
-    const { client, sources, snapshots } = setUp();
+    const { client, sources, snapshots, clocks } = setUp();
     client.follow("a");
     client.follow(null);
     expect(sources[0]?.closed).toBe(true);
     sources[0]?.emit("pose", VALID);
-    expect(snapshots).toHaveLength(0);
+    sources[0]?.emit("clock", CLOCK);
+    expect([snapshots, clocks]).toEqual([[], []]);
   });
 
   it("reports a stream the browser gave up on, but not a reconnecting one", () => {

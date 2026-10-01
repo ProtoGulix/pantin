@@ -1,0 +1,42 @@
+/* The transport bar at the top of the central area (ADR 0032). Tokens in base.css. */
+.transport {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.transport[hidden],
+.transport__warning[hidden] {
+  display: none;
+}
+
+.transport__button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.transport__time,
+.transport__steps {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.transport__time {
+  min-width: 9ch;
+  color: var(--text);
+  text-align: right;
+}
+
+/* Colour is never the only cue: the icon and the text say it too. */
+.transport__warning {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--accent);
+}

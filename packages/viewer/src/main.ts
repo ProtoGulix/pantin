@@ -1,6 +1,7 @@
 import type { DriveRuntime } from "@pantin/protocol";
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
 import { effectiveLayout, parseStoredLayout } from "./central-layout.ts";
+import type { ClockView } from "./clock/clock-model.ts";
 import type { ConsoleView } from "./console/console-view.ts";
 import { refreshConsole } from "./controller/console-actions.ts";
 import {
@@ -9,11 +10,11 @@ import {
   startViewer,
 } from "./controller/controller.ts";
 import { refreshTagValues } from "./controller/drive-commands.ts";
-import { ViewerStore } from "./controller/viewer-store.ts";
+import { type StorePorts, ViewerStore } from "./controller/viewer-store.ts";
 import type { DiagramModel } from "./diagram/diagram-view-model.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
-import { errorMessage } from "./messages.ts";
-import { createPoseStreamClient } from "./pose-stream-client.ts";
+import { errorMessage, type PanelMessage } from "./messages.ts";
+import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
@@ -25,6 +26,7 @@ import { MenuBar } from "./ui/menu-bar.ts";
 import type { PanelIntents } from "./ui/panel-intents.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
 import { SidePanel } from "./ui/side-panel.ts";
+import { TransportBar } from "./ui/transport-bar.ts";
 import { WelcomeDialog } from "./ui/welcome-dialog.ts";
 import type { PanelView } from "./view-model.ts";
 
@@ -53,6 +55,7 @@ interface Screen {
     runtime: ReadonlyMap<string, DriveRuntime>,
   ): void;
   showConsoleLive(view: ConsoleView | null): void;
+  showClock(view: ClockView, intents: PanelIntents): void;
 }
 
 // Its counter sits in the toolbar of the side panel, which is redrawn: looked up when needed.
@@ -84,6 +87,7 @@ function createScreen(): Screen {
   );
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
   const consolePanel = createConsolePanel(panel);
+  const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
@@ -108,6 +112,7 @@ function createScreen(): Screen {
     renderDiagram: (model, intents) => diagram.render(model, intents),
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
     showConsoleLive: (view) => consolePanel.showLive(view),
+    showClock: (view, intents) => transportBar.render(view, intents),
   };
 }
 
@@ -139,54 +144,71 @@ function createViewportOrInert(
   }
 }
 
+// A getter because the store is created with this client.
+function createStreamClient(getStore: () => ViewerStore): PoseStreamClient {
+  const showMessage = (message: PanelMessage): void =>
+    getStore().update({ ...getStore().state, message });
+  return createPoseStreamClient((url) => new EventSource(url), {
+    onSnapshot: (snapshot) => getStore().receivePose(snapshot),
+    onClock: (state) => getStore().receiveClock(state),
+    onInvalid: (detail) => showMessage(errorMessage("message.poseInvalid", {}, detail)),
+    onClosed: () => showMessage(errorMessage("message.poseClosed")),
+  });
+}
+
+// What the ports need from objects created after the store.
+interface LateBindings {
+  viewport: Viewport | null;
+  intents: PanelIntents | null;
+  store: ViewerStore | null;
+}
+
+function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): StorePorts {
+  // The panel, diagram and bar are drawn once the intents exist.
+  const withIntents = (draw: (intents: PanelIntents) => void): void => {
+    if (late.intents !== null) {
+      draw(late.intents);
+    }
+  };
+  return {
+    api,
+    renderPanel: (view) => withIntents((intents) => screen.render(view, intents)),
+    showJointPositions: (positions) => screen.showJointPositions(positions),
+    showInspectorLive: (tags, runtime) => screen.showInspectorLive(tags, runtime),
+    renderDiagram: (model) => withIntents((intents) => screen.renderDiagram(model, intents)),
+    showDiagramLive: (tags, runtime) => screen.showDiagramLive(tags, runtime),
+    showConsoleLive: (view) => screen.showConsoleLive(view),
+    showClock: (view) => withIntents((intents) => screen.showClock(view, intents)),
+    viewport: () => {
+      if (late.viewport === null) {
+        throw new Error("The viewport is used before it was created.");
+      }
+      return late.viewport;
+    },
+    poseStream: createStreamClient(() => {
+      if (late.store === null) {
+        throw new Error("The pose stream is used before the store was created.");
+      }
+      return late.store;
+    }),
+    storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
+    storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
+  };
+}
+
 function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   const language = chooseLanguage(navigator.languages, readStoredText(STORAGE_KEYS.language));
-  // Both are created after the store, because their callbacks need it.
-  let viewport: Viewport | null = null;
-  let intents: PanelIntents | null = null;
+  const late: LateBindings = { viewport: null, intents: null, store: null };
   const store = new ViewerStore(
-    {
-      api,
-      renderPanel: (view) => {
-        if (intents !== null) {
-          screen.render(view, intents);
-        }
-      },
-      showJointPositions: (positions) => screen.showJointPositions(positions),
-      showInspectorLive: (tags, runtime) => screen.showInspectorLive(tags, runtime),
-      renderDiagram: (model) => {
-        if (intents !== null) {
-          screen.renderDiagram(model, intents);
-        }
-      },
-      showDiagramLive: (tags, runtime) => screen.showDiagramLive(tags, runtime),
-      showConsoleLive: (view) => screen.showConsoleLive(view),
-      viewport: () => {
-        if (viewport === null) {
-          throw new Error("The viewport is used before it was created.");
-        }
-        return viewport;
-      },
-      poseStream: createPoseStreamClient((url) => new EventSource(url), {
-        onSnapshot: (snapshot) => store.receivePose(snapshot),
-        onInvalid: (detail) =>
-          store.update({
-            ...store.state,
-            message: errorMessage("message.poseInvalid", {}, detail),
-          }),
-        onClosed: () =>
-          store.update({ ...store.state, message: errorMessage("message.poseClosed") }),
-      }),
-      storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
-      storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
-    },
+    createPorts(screen, api, late),
     language,
     parseStoredLayout(readStoredText(STORAGE_KEYS.centralLayout)),
   );
-  intents = createPanelIntents(store);
-  listenToShortcuts(() => store.state, intents);
+  late.store = store;
+  late.intents = createPanelIntents(store);
+  listenToShortcuts(() => store.state, late.intents);
   const created = createViewportOrInert(screen.canvas, api, store);
-  viewport = created.viewport;
+  late.viewport = created.viewport;
   if (created.startupError !== null) {
     const message = errorMessage("message.webglUnavailable", {}, created.startupError);
     store.update({ ...store.state, message });

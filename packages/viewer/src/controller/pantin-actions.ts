@@ -1,6 +1,7 @@
 import { infoMessage } from "../messages.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
+import { resumeClock } from "./clock-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Pantin and body operations that go through the API. Every edit is followed
@@ -15,10 +16,20 @@ export async function refreshPantinList(store: ViewerStore): Promise<void> {
 
 export async function openPantin(store: ViewerStore, pantinId: string): Promise<void> {
   store.requestedPantinId = pantinId;
-  await store.run(
+  const opened = await store.run(
     () => store.ports.api.getPantin(pantinId),
     (current, response) => store.applyIfStillRequested(current, response),
   );
+  // A pause never survives closing and opening again (ADR 0032 point 1). Only
+  // an open that really applied resumes: a failed or stale one may find the
+  // same Pantin already on screen, which the user may have paused since.
+  if (
+    opened !== undefined &&
+    store.requestedPantinId === pantinId &&
+    store.state.openPantin?.id === pantinId
+  ) {
+    await resumeClock(store, pantinId);
+  }
 }
 
 /** Creates and opens a Pantin; resolves true when the core created it. */
