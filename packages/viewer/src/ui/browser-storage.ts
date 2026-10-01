@@ -1,10 +1,12 @@
-// Remembered UI preferences (language, pane sizes). Storage can be disabled
+// Remembered UI preferences (language, central layout, pane sizes). Storage can be disabled
 // or full (private mode, quotas): a failure only means the preference is not
 // remembered, which is harmless, so it is deliberately not reported.
 
 export const STORAGE_KEYS = {
   language: "pantin.viewer.language",
   panelWidth: "pantin.viewer.panelWidth",
+  centralLayout: "pantin.viewer.centralLayout",
+  splitRatio: "pantin.viewer.splitRatio",
 } as const;
 
 export function readStoredText(key: string): string | null {

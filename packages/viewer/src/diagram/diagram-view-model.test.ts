@@ -9,7 +9,10 @@ import { createDiagramModelBuilder } from "./diagram-view-model.ts";
 const pantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")], "press", [
   slideJoint,
 ]);
-const base = { ...withOpenPantin(initialViewerState("fr"), pantin), diagramShown: true };
+const base = {
+  ...withOpenPantin(initialViewerState("fr"), pantin),
+  centralLayout: "both" as const,
+};
 
 function shown(model: ReturnType<ReturnType<typeof createDiagramModelBuilder>>) {
   if (!model.shown) {
@@ -19,9 +22,10 @@ function shown(model: ReturnType<ReturnType<typeof createDiagramModelBuilder>>) 
 }
 
 describe("createDiagramModelBuilder", () => {
-  it("is not shown while the switch is on 3D or no Pantin is open", () => {
+  it("is shown in the diagram and both layouts, not in 3D alone or with no Pantin", () => {
     const build = createDiagramModelBuilder(createChainLinksCache());
-    expect(build({ ...base, diagramShown: false }).shown).toBe(false);
+    expect(build({ ...base, centralLayout: "diagram" }).shown).toBe(true);
+    expect(build({ ...base, centralLayout: "3d" }).shown).toBe(false);
     expect(build({ ...base, openPantin: null }).shown).toBe(false);
   });
 

@@ -1,8 +1,9 @@
+import { parseStoredLayout } from "../central-layout.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { deleteActuator } from "./actuator-actions.ts";
-import { toggleDiagram } from "./diagram-actions.ts";
+import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
@@ -33,6 +34,20 @@ function deleteSelection(store: ViewerStore): void {
     void deleteActuator(store, device.id);
   } else {
     void deleteSensor(store, device.id);
+  }
+}
+
+// "language:fr" and "layout:3d": the part after the colon is the argument.
+// A layout is parsed, not cast: the command is a plain string by now.
+function runParameterisedCommand(
+  store: ViewerStore,
+  command: string,
+  changeLanguage: (language: string) => void,
+): void {
+  if (command.startsWith("layout:")) {
+    setCentralLayout(store, parseStoredLayout(command.slice("layout:".length)));
+  } else {
+    changeLanguage(command.slice("language:".length));
   }
 }
 
@@ -70,8 +85,8 @@ export function runMenuCommand(
     case "delete":
       deleteSelection(store);
       return;
-    case "toggleDiagram":
-      toggleDiagram(store);
+    case "cycleLayout":
+      cycleCentralLayout(store);
       return;
     case "toggleInspector":
       toggleInspector(store);
@@ -83,6 +98,6 @@ export function runMenuCommand(
       withSelection(store, (nodeId) => frameNode(store, nodeId));
       return;
     default:
-      changeLanguage(command.slice("language:".length));
+      runParameterisedCommand(store, command, changeLanguage);
   }
 }

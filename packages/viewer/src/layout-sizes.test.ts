@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { clampPanelWidth, PANEL_WIDTH_DEFAULT, parseStoredNumber } from "./layout-sizes.ts";
+import {
+  clampPanelWidth,
+  clampSplitRatio,
+  PANEL_WIDTH_DEFAULT,
+  parseStoredNumber,
+  SPLIT_RATIO_DEFAULT,
+  SPLITTER_KEYBOARD_STEP,
+  splitRatioAfterMove,
+} from "./layout-sizes.ts";
 
 describe("layout sizes", () => {
   it("keeps the panel between its minimum and what leaves room for the 3D view", () => {
@@ -17,5 +25,33 @@ describe("layout sizes", () => {
     expect(parseStoredNumber(null, 1)).toBe(1);
     expect(parseStoredNumber("", 1)).toBe(1);
     expect(parseStoredNumber("wide", 1)).toBe(1);
+  });
+});
+
+describe("split ratio", () => {
+  it("starts at 60 % for the 3D view", () => {
+    expect(SPLIT_RATIO_DEFAULT).toBe(0.6);
+  });
+
+  it("keeps 120 px for each half", () => {
+    expect(clampSplitRatio(0.01, 1000)).toBeCloseTo(0.12);
+    expect(clampSplitRatio(0.99, 1000)).toBeCloseTo(0.88);
+    expect(clampSplitRatio(0.5, 1000)).toBe(0.5);
+  });
+
+  it("never crosses the middle in an area too small for two minimums", () => {
+    expect(clampSplitRatio(0.9, 200)).toBe(0.5);
+    expect(clampSplitRatio(0.1, 200)).toBe(0.5);
+  });
+
+  it("falls back to the default on a corrupt value or an empty area", () => {
+    expect(clampSplitRatio(Number.NaN, 800)).toBe(SPLIT_RATIO_DEFAULT);
+    expect(clampSplitRatio(0.4, 0)).toBe(SPLIT_RATIO_DEFAULT);
+  });
+
+  it("moves by a drag or one keyboard step, and stops at the clamp", () => {
+    expect(splitRatioAfterMove(0.6, -100, 1000)).toBeCloseTo(0.5);
+    expect(splitRatioAfterMove(0.6, SPLITTER_KEYBOARD_STEP, 800)).toBeCloseTo(0.62);
+    expect(splitRatioAfterMove(0.6, 5000, 1000)).toBeCloseTo(0.88);
   });
 });

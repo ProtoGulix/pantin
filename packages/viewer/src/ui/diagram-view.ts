@@ -30,8 +30,6 @@ import { isEditable } from "./shortcuts.ts";
 
 type ShownModel = Extract<DiagramModel, { shown: true }>;
 
-const SHOWN_CLASS = "viewport--diagram";
-
 export class DiagramView {
   private readonly host = element("div", {
     className: "diagram",
@@ -40,7 +38,6 @@ export class DiagramView {
     attributes: { tabindex: "0", role: "region" },
   });
   private readonly emptyText = element("p", { className: "diagram__empty" });
-  private readonly viewport: HTMLElement;
   private readonly roving = new RovingFocus();
   private readonly edgeSelection = new EdgeSelection();
   private readonly linkMenu = new LinkMenu();
@@ -53,9 +50,9 @@ export class DiagramView {
   private litStates: ReadonlyMap<string, LitState> = new Map();
   private tags: ReadonlyMap<string, number> = new Map();
 
-  // The diagram goes under `before` (the welcome overlay), over the canvas.
+  // The diagram goes under `before` (the welcome overlay); central-area.ts
+  // places it over the canvas, or under it.
   constructor(viewport: HTMLElement, before: HTMLElement) {
-    this.viewport = viewport;
     this.host.hidden = true;
     viewport.insertBefore(this.host, before);
     this.guardWindowShortcuts();
@@ -78,7 +75,6 @@ export class DiagramView {
   }
 
   render(model: DiagramModel, intents: PanelIntents): void {
-    this.viewport.classList.toggle(SHOWN_CLASS, model.shown);
     this.host.hidden = !model.shown;
     if (!model.shown) {
       this.linkMenu.close(false);

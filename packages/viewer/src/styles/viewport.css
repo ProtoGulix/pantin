@@ -27,3 +27,25 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
+
+/* Central layouts (ADR 0030 point 7). --split is the 3D view's share, set by central-area.ts. */
+.viewport--both .viewport__canvas {
+  height: var(--split, 60%);
+}
+
+.viewport--both .viewport__hint {
+  bottom: calc(100% - var(--split, 60%) + 10px);
+}
+
+.central-splitter {
+  position: absolute;
+  top: var(--split, 60%);
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 4px;
+}
+
+.central-splitter[hidden] {
+  display: none;
+}

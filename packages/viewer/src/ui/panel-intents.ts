@@ -1,3 +1,4 @@
+import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
@@ -122,9 +123,9 @@ export interface PanelIntents {
   cancelJointForm(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;
 
-  // The chain diagram (ADR 0029): shown instead of the 3D view, a band folded,
+  // The chain diagram (ADR 0029): the central layout, a band folded,
   // a node clicked (an id like "drive:valve").
-  setDiagramShown(shown: boolean): void;
+  setCentralLayout(layout: CentralLayout): void;
   toggleDiagramBand(bandKey: string): void;
   selectDiagramNode(nodeId: string): void;
   // Wiring (ADR 0029 points 6 and 7): two sockets linked, by drag or from

@@ -77,10 +77,31 @@ describe("menu bar model", () => {
       ["Tout cadrer", null],
       ["Cadrer la sélection", null],
       ["Inspecteur", true],
-      ["Schéma des chaînes", false],
+      ["Changer la vue centrale", null],
+      ["3D seule", false],
+      ["Schéma des chaînes seul", false],
+      ["3D + Schéma", true],
       ["Langue : FR", true],
       ["Langue : EN", false],
     ]);
+  });
+});
+
+describe("menu bar model layouts", () => {
+  it("checks the layout in use, and offers each layout while a Pantin is open", () => {
+    const checked = (state: ViewerState) =>
+      buildMenuBar(state, translate)[2]
+        ?.entries.filter((entry) => entry.type === "item" && entry.command.startsWith("layout:"))
+        .map((entry) => entry.type === "item" && [entry.command, entry.checked]);
+    expect(checked({ ...editing(false), centralLayout: "diagram" })).toEqual([
+      ["layout:3d", false],
+      ["layout:diagram", true],
+      ["layout:both", false],
+    ]);
+    expect(enabledCommands(editing(false))).toEqual(
+      expect.arrayContaining(["layout:3d", "layout:diagram", "layout:both"]),
+    );
+    expect(enabledCommands(listing)).not.toContain("layout:both");
   });
 });
 
@@ -161,8 +182,8 @@ describe("keyboard shortcuts", () => {
     expect(inField).toMatchObject({ run: false, primaryModifier: false });
   });
 
-  it("maps F4 to the chain diagram only while a Pantin is open", () => {
-    expect(commandOf(onBody, press("F4"))).toBe("toggleDiagram");
+  it("maps F4 to the layout cycle only while a Pantin is open", () => {
+    expect(commandOf(onBody, press("F4"))).toBe("cycleLayout");
     expect(commandOf(listing, press("F4"))).toBeNull();
   });
 
@@ -178,7 +199,7 @@ describe("shortcut listing", () => {
       { keys: "Ctrl+S", action: "Enregistrer" },
       { keys: "F2", action: "Renommer" },
       { keys: "Suppr", action: "Supprimer" },
-      { keys: "F4", action: "Schéma des chaînes" },
+      { keys: "F4", action: "Changer la vue centrale" },
     ]);
   });
 });

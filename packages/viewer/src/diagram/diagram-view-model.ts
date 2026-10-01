@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { showsDiagram } from "../central-layout.ts";
 import { createTranslator, type Language, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { layoutChainDiagram } from "./chain-layout.ts";
@@ -59,7 +60,7 @@ export function createDiagramModelBuilder(
   };
   return (state) => {
     const open = state.openPantin;
-    if (!state.diagramShown || open === null) {
+    if (!showsDiagram(state.centralLayout) || open === null) {
       return { shown: false };
     }
     const { diagram, typeLabels } = layoutFor(open.document, state);

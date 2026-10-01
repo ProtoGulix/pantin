@@ -1,4 +1,4 @@
-/* The chain diagram (ADR 0029), drawn over the 3D view. Tokens in base.css. */
+/* The chain diagram (ADR 0029), over the 3D view or under it (ADR 0030). Tokens in base.css. */
 :root {
   /* One colour and one line style per kind of wire: colour is never the only cue. */
   --edge-pneumatic: #5aa9e6;
@@ -23,6 +23,11 @@
   z-index: 1;
   overflow: auto;
   background: var(--viewport-background);
+}
+
+.viewport--both .diagram {
+  /* Below the splitter, which is 4px high. */
+  top: calc(var(--split, 60%) + 4px);
 }
 
 .diagram[hidden] {

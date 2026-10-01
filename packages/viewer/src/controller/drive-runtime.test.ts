@@ -39,7 +39,7 @@ describe("refreshTagValues with the inspector", () => {
     store.update({ ...withOpenPantin(store.state, pantin), inspectorOpen: true });
     await refreshTagValues(store);
     expect(reads).toBe(1);
-    store.update({ ...store.state, inspectorOpen: false });
+    store.update({ ...store.state, inspectorOpen: false, centralLayout: "3d" });
     await refreshTagValues(store);
     expect(reads).toBe(1);
   });

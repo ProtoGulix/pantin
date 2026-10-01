@@ -24,3 +24,27 @@ export function parseStoredNumber(text: string | null, fallback: number): number
   const value = Number(text);
   return Number.isFinite(value) ? value : fallback;
 }
+
+// The 3D view's share of the central area when the diagram is under it
+// (ADR 0030 point 7).
+export const SPLIT_RATIO_DEFAULT = 0.6;
+// Each half keeps at least this height, as long as the area can afford it.
+const SPLIT_PART_MINIMUM = 120;
+
+export function clampSplitRatio(ratio: number, areaHeight: number): number {
+  if (!Number.isFinite(ratio) || !(areaHeight > 0)) {
+    return SPLIT_RATIO_DEFAULT;
+  }
+  // Never above one half, so that a tiny area still yields minimum <= maximum.
+  const minimum = Math.min(SPLIT_PART_MINIMUM / areaHeight, 0.5);
+  return Math.min(Math.max(ratio, minimum), 1 - minimum);
+}
+
+/** The ratio after the splitter moved by `deltaPixels` (a drag, or a key step). */
+export function splitRatioAfterMove(
+  startRatio: number,
+  deltaPixels: number,
+  areaHeight: number,
+): number {
+  return clampSplitRatio(startRatio + deltaPixels / areaHeight, areaHeight);
+}

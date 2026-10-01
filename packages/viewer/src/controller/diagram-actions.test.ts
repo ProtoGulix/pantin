@@ -14,7 +14,12 @@ import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
-import { selectDiagramNode, setDiagramShown, toggleDiagramBand } from "./diagram-actions.ts";
+import {
+  cycleCentralLayout,
+  selectDiagramNode,
+  setCentralLayout,
+  toggleDiagramBand,
+} from "./diagram-actions.ts";
 import { refreshTagValues } from "./drive-commands.ts";
 
 const pantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")], "press", [
@@ -29,16 +34,31 @@ function openStore(listTags = async () => ({ stepCount: 0, tags: [], drives: [] 
 }
 
 describe("the diagram state", () => {
-  it("shows and hides the diagram, and folds a band and unfolds it", () => {
+  it("starts in both layouts, and opening a Pantin keeps the chosen one", () => {
     const store = openStore();
-    setDiagramShown(store, true);
-    expect(store.state.diagramShown).toBe(true);
+    expect(store.state.centralLayout).toBe("both");
+    setCentralLayout(store, "diagram");
+    store.update(withOpenPantin(store.state, pantin));
+    expect(store.state.centralLayout).toBe("diagram");
+  });
+
+  it("switches layout, cycles with F4 and remembers each change", () => {
+    const stored: string[] = [];
+    const store = testStore({}, {}, (layout) => stored.push(layout));
+    setCentralLayout(store, "3d");
+    // Already there: nothing to remember.
+    setCentralLayout(store, "3d");
+    cycleCentralLayout(store);
+    expect(store.state.centralLayout).toBe("diagram");
+    expect(stored).toEqual(["3d", "diagram"]);
+  });
+
+  it("folds a band and unfolds it", () => {
+    const store = openStore();
     toggleDiagramBand(store, "main");
     expect([...store.state.collapsedDiagramBands]).toEqual(["main"]);
     toggleDiagramBand(store, "main");
     expect(store.state.collapsedDiagramBands.size).toBe(0);
-    setDiagramShown(store, false);
-    expect(store.state.diagramShown).toBe(false);
   });
 
   it("selects the tree row of a joint node", () => {
@@ -52,17 +72,22 @@ describe("the diagram state", () => {
 });
 
 describe("refreshTagValues with the diagram", () => {
-  it("reads the tags while the diagram is shown, although no panel and no sensor asks", async () => {
+  it("reads the tags while the diagram is shown, alone or in both layouts, although no panel and no sensor asks", async () => {
     let reads = 0;
     const store = openStore(async () => {
       reads += 1;
       return { stepCount: 0, tags: [], drives: [] };
     });
+    setCentralLayout(store, "3d");
     await refreshTagValues(store);
     expect(reads).toBe(0);
-    setDiagramShown(store, true);
+    setCentralLayout(store, "diagram");
     await refreshTagValues(store);
     expect(reads).toBe(1);
+    // Under the 3D view the diagram is shown too (ADR 0030 point 7).
+    setCentralLayout(store, "both");
+    await refreshTagValues(store);
+    expect(reads).toBe(2);
   });
 });
 
@@ -134,21 +159,27 @@ describe("selecting a device in the diagram", () => {
   });
 });
 
-describe("the viewport follows the switch", () => {
-  it("renders in 3D and stops rendering while the diagram is shown", () => {
+describe("the viewport follows the layout", () => {
+  function renderCalls(): { calls: boolean[]; store: ReturnType<typeof testStore> } {
     const calls: boolean[] = [];
     const store = testStore({}, { setRendering: (active: boolean) => calls.push(active) });
+    return { calls, store };
+  }
+
+  it("renders in 3D and in both, and stops only for the diagram alone", () => {
+    const { calls, store } = renderCalls();
     store.requestedPantinId = pantin.id;
     store.update(withOpenPantin(store.state, pantin));
-    setDiagramShown(store, true);
-    setDiagramShown(store, false);
-    expect(calls.slice(-3)).toEqual([true, false, true]);
+    setCentralLayout(store, "diagram");
+    setCentralLayout(store, "3d");
+    setCentralLayout(store, "diagram");
+    setCentralLayout(store, "both");
+    expect(calls.slice(-5)).toEqual([true, false, true, false, true]);
   });
 
-  it("keeps rendering with no Pantin open, whatever the switch says", () => {
-    const calls: boolean[] = [];
-    const store = testStore({}, { setRendering: (active: boolean) => calls.push(active) });
-    store.update({ ...store.state, diagramShown: true });
+  it("keeps rendering with no Pantin open, whatever the layout says", () => {
+    const { calls, store } = renderCalls();
+    store.update({ ...store.state, centralLayout: "diagram" });
     expect(calls).toEqual([true]);
   });
 });

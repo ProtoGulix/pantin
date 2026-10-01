@@ -1,6 +1,7 @@
 import type { DriveRuntime, JointPosition, PantinResponse, PoseSnapshot } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
+import { type CentralLayout, shouldRender } from "../central-layout.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
@@ -47,6 +48,7 @@ export interface StorePorts {
   viewport(): Viewport;
   poseStream: PoseStreamClient;
   storeLanguage(language: Language): void;
+  storeCentralLayout(layout: CentralLayout): void;
 }
 
 export class ViewerStore {
@@ -71,9 +73,9 @@ export class ViewerStore {
   readonly chainLinksOf = createChainLinksCache();
   private readonly buildDiagramModel = createDiagramModelBuilder(this.chainLinksOf);
 
-  constructor(ports: StorePorts, language: Language) {
+  constructor(ports: StorePorts, language: Language, centralLayout?: CentralLayout) {
     this.ports = ports;
-    this.state = initialViewerState(language);
+    this.state = initialViewerState(language, centralLayout);
   }
 
   update(next: ViewerState): void {
@@ -88,7 +90,7 @@ export class ViewerStore {
     this.ports.renderDiagram(this.buildDiagramModel(next));
     this.ports.showDiagramLive(this.tagValues, this.driveRuntime);
     const document = next.openPantin?.document;
-    viewport.setRendering(!(next.diagramShown && next.openPantin !== null));
+    viewport.setRendering(shouldRender(next.centralLayout, next.openPantin !== null));
     viewport.setSelectedBodies(
       document === undefined || next.openPantin === null
         ? new Set()

@@ -1,3 +1,4 @@
+import { CENTRAL_LAYOUTS, type CentralLayout, showsViewport } from "../central-layout.ts";
 import { isDeviceKind } from "../device-selection.ts";
 import { LANGUAGES, type Language, type MessageKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -18,7 +19,8 @@ export type MenuCommand =
   | "frameAll"
   | "frameSelection"
   | "toggleInspector"
-  | "toggleDiagram"
+  | "cycleLayout"
+  | `layout:${CentralLayout}`
   | `language:${Language}`;
 
 type MenuId = "file" | "edit" | "view";
@@ -65,6 +67,20 @@ function languageItem(language: Language): MenuItemDefinition {
       translate("menubar.view.language", { language: translate(`language.${language}`) }),
     enabled: always,
     checked: (context) => context.language === language,
+  };
+}
+
+const LAYOUT_LABEL_KEYS: Readonly<Record<CentralLayout, MessageKey>> = {
+  "3d": "menubar.view.layout3d",
+  diagram: "menubar.view.layoutDiagram",
+  both: "menubar.view.layoutBoth",
+};
+
+// Explicit entries next to the F4 cycle, checked on the layout in use (ADR 0030).
+function layoutItem(layout: CentralLayout): MenuItemDefinition {
+  return {
+    ...item(`layout:${layout}`, LAYOUT_LABEL_KEYS[layout], (context) => context.editing),
+    checked: (context) => context.centralLayout === layout,
   };
 }
 
@@ -136,7 +152,7 @@ const MENUS: readonly MenuDefinition[] = [
       item(
         "frameAll",
         "menubar.view.frameAll",
-        (context) => context.hasBodies && !context.diagramShown,
+        (context) => context.hasBodies && showsViewport(context.centralLayout),
       ),
       item(
         "frameSelection",
@@ -145,22 +161,20 @@ const MENUS: readonly MenuDefinition[] = [
           context.hasBodies &&
           context.selectedKind !== null &&
           !isDeviceKind(context.selectedKind) &&
-          !context.diagramShown,
+          showsViewport(context.centralLayout),
       ),
       {
         ...item("toggleInspector", "menubar.view.inspector", (context) => context.editing),
         // Checked while the drives panel is shown (ADR 0022).
         checked: (context) => context.inspectorOpen,
       },
-      {
-        ...item("toggleDiagram", "menubar.view.diagram", (context) => context.editing, {
-          key: "F4",
-          primaryModifier: false,
-          labelKey: "shortcut.toggleDiagram",
-        }),
-        // Checked while the diagram replaces the 3D view (ADR 0029).
-        checked: (context) => context.diagramShown,
-      },
+      "separator",
+      item("cycleLayout", "menubar.view.cycleLayout", (context) => context.editing, {
+        key: "F4",
+        primaryModifier: false,
+        labelKey: "shortcut.cycleLayout",
+      }),
+      ...CENTRAL_LAYOUTS.map(layoutItem),
       "separator",
       ...LANGUAGES.map(languageItem),
     ],

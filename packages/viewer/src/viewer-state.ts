@@ -1,6 +1,7 @@
 import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
+import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { Language } from "./i18n/translate.ts";
@@ -79,9 +80,10 @@ export interface ViewerState {
   // The sensor form of the same panel (ADR 0023).
   sensorForm: SensorFormState | null;
   faults: FaultsResponse;
-  // The chain diagram (ADR 0029) replaces the 3D view while shown; the bands
-  // the user folded. Display state only: never saved.
-  diagramShown: boolean;
+  // What the central area shows (ADR 0030 point 7): a setting of the viewer,
+  // kept in the browser and not reset by opening a Pantin. Then the diagram
+  // bands the user folded: display state only, never saved.
+  centralLayout: CentralLayout;
   collapsedDiagramBands: ReadonlySet<string>;
   pendingFeedReplacement: PendingDiagramLink | null;
   // F2 on a device: the inspector's field to focus. The serial makes asking
@@ -97,7 +99,10 @@ export interface InspectorFocusRequest {
 // Faults are runtime state of the core, cleared when a Pantin opens.
 const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 
-export function initialViewerState(language: Language): ViewerState {
+export function initialViewerState(
+  language: Language,
+  centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
+): ViewerState {
   return {
     language,
     pantins: [],
@@ -128,7 +133,7 @@ export function initialViewerState(language: Language): ViewerState {
     actuatorForm: null,
     sensorForm: null,
     faults: NO_FAULTS,
-    diagramShown: false,
+    centralLayout,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
     inspectorFocus: null,
@@ -163,7 +168,6 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     actuatorForm: null,
     sensorForm: null,
     faults: NO_FAULTS,
-    diagramShown: false,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
   };

@@ -1,5 +1,6 @@
 import type { DriveRuntime } from "@pantin/protocol";
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
+import { effectiveLayout, parseStoredLayout } from "./central-layout.ts";
 import {
   createPanelIntents,
   selectBodyFromViewport,
@@ -14,6 +15,7 @@ import { createPoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
+import { CentralArea } from "./ui/central-area.ts";
 import { DiagramView } from "./ui/diagram-view.ts";
 import { Inspector } from "./ui/inspector.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
@@ -67,6 +69,7 @@ function createScreen(): Screen {
     requireElement(".viewport", HTMLElement),
     requireElement("#welcome", HTMLElement),
   );
+  const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
@@ -78,6 +81,10 @@ function createScreen(): Screen {
       hint.textContent = view.viewportHint;
       menuBar.render(view.menus, view.translate, intents);
       sidePanel.render(view, intents);
+      centralArea.render(
+        effectiveLayout(view.toolbar.centralLayout, view.toolbar.mode === "edit"),
+        view.translate,
+      );
       welcome.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
@@ -154,8 +161,10 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
           store.update({ ...store.state, message: errorMessage("message.poseClosed") }),
       }),
       storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
+      storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
     },
     language,
+    parseStoredLayout(readStoredText(STORAGE_KEYS.centralLayout)),
   );
   intents = createPanelIntents(store);
   listenToShortcuts(() => store.state, intents);

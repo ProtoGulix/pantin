@@ -1,3 +1,4 @@
+import { type CentralLayout, showsViewport } from "./central-layout.ts";
 import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
@@ -24,8 +25,8 @@ interface ToolbarView {
   importEnabled: boolean;
   frameAllEnabled: boolean;
   frameSelectionEnabled: boolean;
-  // The chain diagram replaces the 3D view (ADR 0029).
-  diagramShown: boolean;
+  // What the central area shows: 3D, the chain diagram, or both (ADR 0030).
+  centralLayout: CentralLayout;
 }
 
 export interface MessageView {
@@ -65,17 +66,17 @@ export interface PanelView {
 function buildToolbarView(state: ViewerState): ToolbarView {
   const busy = state.pendingRequestCount > 0;
   const hasBodies = (state.openPantin?.document.bodies.length ?? 0) > 0;
+  const viewportShown = showsViewport(state.centralLayout);
   return {
     mode: viewModeOf(state),
     busy,
     saveEnabled: (state.openPantin?.unsavedChanges ?? false) && !busy,
     hasUnsavedChanges: state.openPantin?.unsavedChanges ?? false,
     importEnabled: state.openPantin !== null && !busy && !state.importInProgress,
-    // Framing moves the 3D camera, which the diagram hides.
-    frameAllEnabled: hasBodies && !state.diagramShown,
-    frameSelectionEnabled:
-      hasBodies && selectedNodeIdOf(state.selection) !== null && !state.diagramShown,
-    diagramShown: state.diagramShown,
+    // Framing moves the 3D camera, which the diagram alone hides.
+    frameAllEnabled: hasBodies && viewportShown,
+    frameSelectionEnabled: hasBodies && selectedNodeIdOf(state.selection) !== null && viewportShown,
+    centralLayout: state.centralLayout,
   };
 }
 

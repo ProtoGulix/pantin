@@ -1,4 +1,5 @@
 import type { PantinApiClient } from "../api-client.ts";
+import type { CentralLayout } from "../central-layout.ts";
 import type { Viewport } from "../scene/viewport.ts";
 import { ViewerStore } from "./viewer-store.ts";
 
@@ -18,6 +19,7 @@ function silent<Port extends object>(overrides: Partial<Port> = {}): Port {
 export function testStore(
   api: Partial<PantinApiClient>,
   viewport: Partial<Viewport> = {},
+  storeCentralLayout: (layout: CentralLayout) => void = () => undefined,
 ): ViewerStore {
   return new ViewerStore(
     {
@@ -32,6 +34,7 @@ export function testStore(
       viewport: () => silent<Viewport>(viewport),
       poseStream: { follow: () => undefined },
       storeLanguage: () => undefined,
+      storeCentralLayout,
     },
     "fr",
   );

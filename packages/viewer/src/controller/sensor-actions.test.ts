@@ -74,7 +74,8 @@ describe("refreshTagValues", () => {
       return { stepCount: 0, tags: [], drives: [] };
     };
     const store = storeWith({ listTags }, pantin);
-    store.state = { ...store.state, inspectorOpen: panelOpen };
+    // "3d": the diagram, shown by default, would read too.
+    store.state = { ...store.state, inspectorOpen: panelOpen, centralLayout: "3d" };
     await refreshTagValues(store);
     return reads;
   };

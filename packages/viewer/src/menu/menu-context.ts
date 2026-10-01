@@ -1,3 +1,4 @@
+import type { CentralLayout } from "../central-layout.ts";
 import type { DeviceKind } from "../device-selection.ts";
 import type { Language } from "../i18n/translate.ts";
 import type { Selection } from "../selection.ts";
@@ -14,7 +15,7 @@ export interface MenuContext {
   selectedKind: NodeRef["kind"] | DeviceKind | null;
   language: Language;
   inspectorOpen: boolean;
-  diagramShown: boolean;
+  centralLayout: CentralLayout;
 }
 
 function selectedKindOf(selection: Selection | null): MenuContext["selectedKind"] {
@@ -34,6 +35,6 @@ export function menuContext(state: ViewerState): MenuContext {
     selectedKind: selectedKindOf(state.selection),
     language: state.language,
     inspectorOpen: state.inspectorOpen,
-    diagramShown: state.diagramShown,
+    centralLayout: state.centralLayout,
   };
 }

@@ -1,3 +1,4 @@
+import { type CentralLayout, nextLayout } from "../central-layout.ts";
 import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
@@ -12,17 +13,18 @@ import {
 } from "./diagram-edit-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
-// The chain diagram (ADR 0029): the switch with the 3D view, folding a band,
-// and clicking a node. Display state only; nothing is sent to the core.
+// The chain diagram (ADR 0029): the layout of the central area, folding a
+// band, and clicking a node. Display state only; nothing is sent to the core.
 
-export function setDiagramShown(store: ViewerStore, shown: boolean): void {
-  if (store.state.diagramShown !== shown) {
-    store.update({ ...store.state, diagramShown: shown, contextMenu: null });
+export function setCentralLayout(store: ViewerStore, layout: CentralLayout): void {
+  if (store.state.centralLayout !== layout) {
+    store.ports.storeCentralLayout(layout);
+    store.update({ ...store.state, centralLayout: layout, contextMenu: null });
   }
 }
 
-export function toggleDiagram(store: ViewerStore): void {
-  setDiagramShown(store, !store.state.diagramShown);
+export function cycleCentralLayout(store: ViewerStore): void {
+  setCentralLayout(store, nextLayout(store.state.centralLayout));
 }
 
 export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
@@ -73,7 +75,7 @@ export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): vo
 
 export function diagramIntents(store: ViewerStore) {
   return {
-    setDiagramShown: (shown: boolean) => setDiagramShown(store, shown),
+    setCentralLayout: (layout: CentralLayout) => setCentralLayout(store, layout),
     toggleDiagramBand: (bandKey: string) => toggleDiagramBand(store, bandKey),
     selectDiagramNode: (nodeId: string) => selectDiagramNode(store, nodeId),
     linkDiagramNodes: (from: Endpoint, to: Endpoint) => linkDiagramNodes(store, from, to),

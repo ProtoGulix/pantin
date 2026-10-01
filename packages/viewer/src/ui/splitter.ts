@@ -10,6 +10,8 @@ export interface SplitterOptions {
   onMove(deltaPixels: number): void;
   onStart(): void;
   onEnd(): void;
+  // Double click: back to the default size.
+  onReset?(): void;
 }
 
 function keyStep(orientation: SplitterOptions["orientation"], key: string): number {
@@ -47,6 +49,7 @@ export function createSplitter(options: SplitterOptions): HTMLElement {
   };
   splitter.addEventListener("pointerup", finish);
   splitter.addEventListener("pointercancel", finish);
+  splitter.addEventListener("dblclick", () => options.onReset?.());
   splitter.addEventListener("keydown", (event) => {
     const step = keyStep(options.orientation, event.key);
     if (step !== 0) {
