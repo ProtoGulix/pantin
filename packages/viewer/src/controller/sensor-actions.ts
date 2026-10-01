@@ -24,7 +24,7 @@ export function openSensorForm(store: ViewerStore, sensorId: string | null): voi
   const sensor = document.sensors.find((candidate) => candidate.id === sensorId);
   const sensorForm =
     sensor === undefined ? initialSensorForm(document) : sensorFormFor(sensor, document);
-  store.update({ ...store.state, drivePanelOpen: true, sensorForm, message: null });
+  store.update({ ...store.state, inspectorOpen: true, sensorForm, message: null });
 }
 
 /** Opens the panel on a new sensor watching the joint of this tree node. */
@@ -38,7 +38,7 @@ export function openSensorFormForJoint(store: ViewerStore, nodeId: string): void
   if (sensorForm !== null) {
     store.update({
       ...store.state,
-      drivePanelOpen: true,
+      inspectorOpen: true,
       sensorForm,
       contextMenu: null,
       message: null,
@@ -144,7 +144,7 @@ export async function addEndSwitches(store: ViewerStore, nodeId: string): Promis
   if (open === null || requests.length === 0) {
     return;
   }
-  store.update({ ...store.state, contextMenu: null, drivePanelOpen: true });
+  store.update({ ...store.state, contextMenu: null, inspectorOpen: true });
   const created = [];
   for (const request of requests) {
     const sensor = await editPantin(store, open.id, (pantinId) =>

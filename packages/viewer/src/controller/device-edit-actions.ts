@@ -24,6 +24,9 @@ type Prepared =
   | { ok: true; send: (pantinId: string) => Promise<{ name: string }> }
   | { ok: false; invalid: MessageKey; message: string };
 
+// An in-place edit resends the whole device from its form: the other parameters
+// go through the form's display rounding (units.ts), exactly as the Edit form
+// already does when it is applied.
 function prepareDriveEdit(
   store: ViewerStore,
   document: PantinDocument,

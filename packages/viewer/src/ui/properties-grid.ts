@@ -87,10 +87,13 @@ function valueCell(
   }
   if (row.live !== null) {
     // A diagnostics cell holds lines, so it wraps; the others are one value.
-    const className =
-      row.live.kind === "diagnostics" ? "property-grid__diagnostics" : "property-grid__live";
+    // Only warnings are announced: a value changing every 250 ms would flood a screen reader.
+    const diagnostics = row.live.kind === "diagnostics";
     return element("td", { className: "property-grid__value" }, [
-      element("span", { className, attributes: { role: "status", ...liveAttributes(liveId) } }),
+      element("span", {
+        className: diagnostics ? "property-grid__diagnostics" : "property-grid__live",
+        attributes: { ...(diagnostics ? { role: "status" } : {}), ...liveAttributes(liveId) },
+      }),
     ]);
   }
   return element("td", {
@@ -109,7 +112,10 @@ function dataRow(
   intents: PanelIntents,
 ): HTMLElement {
   const liveId = row.live === null ? null : liveKey(group.id, row.id);
-  const line = element("tr", { className: row.link === null ? "" : "property-grid__row--link" }, [
+  // The full tag name is the tooltip of a tag's row, as on the former cards.
+  const attributes = row.live?.kind === "tag" ? { title: row.live.tag } : {};
+  const className = row.link === null ? "" : "property-grid__row--link";
+  const line = element("tr", { className, attributes }, [
     element("th", {
       className: "property-grid__name",
       text: row.label,

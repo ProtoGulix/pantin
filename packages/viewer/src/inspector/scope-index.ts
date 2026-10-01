@@ -2,6 +2,7 @@ import { ACTUATOR_LABELS } from "@pantin/actuator-types/labels";
 import { DRIVE_LABELS } from "@pantin/drive-types/labels";
 import { DRIVE_TAGS, SENSOR_TAGS, tagName } from "@pantin/protocol";
 import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
+import type { MessageKey } from "../i18n/translate.ts";
 import { deviceLinkRow, type GroupDraft } from "../properties/property-rows.ts";
 import type { InspectorContext } from "./inspector-context.ts";
 
@@ -64,4 +65,17 @@ export function scopeIndexGroups(
     { id: "sensorIndex", rows: sensors },
   ];
   return groups.filter((group) => group.rows.length > 0);
+}
+
+const FAMILY_HINTS: readonly [GroupDraft["id"], MessageKey][] = [
+  ["driveIndex", "drives.empty"],
+  ["actuatorIndex", "actuators.empty"],
+  ["sensorIndex", "sensors.empty"],
+];
+
+/** What a newcomer should read for each family the index has no line for. */
+export function emptyFamilyHints(groups: readonly GroupDraft[]): MessageKey[] {
+  return FAMILY_HINTS.filter(([id]) => !groups.some((group) => group.id === id)).map(
+    ([, key]) => key,
+  );
 }

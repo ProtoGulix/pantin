@@ -75,7 +75,7 @@ export async function writeFloatTag(store: ViewerStore, name: string, text: stri
 export async function refreshTagValues(store: ViewerStore): Promise<void> {
   const open = store.state.openPantin;
   const shown =
-    store.state.drivePanelOpen ||
+    store.state.inspectorOpen ||
     store.state.diagramShown ||
     (open?.document.sensors.length ?? 0) > 0;
   if (open === null || !shown || store.readingTags) {

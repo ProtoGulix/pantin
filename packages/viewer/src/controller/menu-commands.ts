@@ -1,7 +1,7 @@
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { toggleDiagram } from "./diagram-actions.ts";
-import { toggleDrivePanel } from "./drive-actions.ts";
+import { toggleInspector } from "./drive-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
 import { requestClose, requestDelete } from "./session-actions.ts";
@@ -55,8 +55,8 @@ export function runMenuCommand(
     case "toggleDiagram":
       toggleDiagram(store);
       return;
-    case "toggleDrives":
-      toggleDrivePanel(store);
+    case "toggleInspector":
+      toggleInspector(store);
       return;
     case "frameAll":
       store.ports.viewport().frameBodies(null);

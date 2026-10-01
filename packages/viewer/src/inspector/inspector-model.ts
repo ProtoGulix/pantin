@@ -1,6 +1,6 @@
 import { movableJoints } from "../actuators/actuator-joints.ts";
 import type { DeviceRef } from "../device-selection.ts";
-import type { Translate } from "../i18n/translate.ts";
+import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { type ActuatorFormView, buildActuatorFormView } from "../panel/actuator-form-model.ts";
 import { buildDriveFormView, type DriveFormView } from "../panel/drive-form-model.ts";
 import { buildSensorFormView, type SensorFormView } from "../panel/sensor-form-model.ts";
@@ -17,7 +17,7 @@ import { actuatorGroups } from "./actuator-inspector.ts";
 import { driveGroups } from "./drive-inspector.ts";
 import type { InspectorContext } from "./inspector-context.ts";
 import { jointInspectorGroups } from "./joint-inspector.ts";
-import { scopeIndexGroups } from "./scope-index.ts";
+import { emptyFamilyHints, scopeIndexGroups } from "./scope-index.ts";
 import { sensorGroups } from "./sensor-inspector.ts";
 
 // The right-hand panel as data (ADR 0030 point 2, first step): the inspector
@@ -42,6 +42,8 @@ export interface InspectorView {
   groups: PropertyGroup[];
   // Said instead of an empty grid.
   note: string | null;
+  // Under the index: what a family without device is for.
+  hints: string[];
   // The live cells of the grid, by liveKey.
   live: ReadonlyMap<string, LiveSource>;
 }
@@ -59,19 +61,27 @@ function deviceView(device: DeviceRef, context: InspectorContext) {
       const drive = find(document.drives, device.id);
       return drive === null
         ? null
-        : { subject: `${label} · ${drive.name}`, groups: driveGroups(drive, context) };
+        : { subject: `${label} · ${drive.name}`, groups: driveGroups(drive, context), hints: [] };
     }
     case "actuator": {
       const actuator = find(document.actuators, device.id);
       return actuator === null
         ? null
-        : { subject: `${label} · ${actuator.name}`, groups: actuatorGroups(actuator, context) };
+        : {
+            subject: `${label} · ${actuator.name}`,
+            groups: actuatorGroups(actuator, context),
+            hints: [],
+          };
     }
     case "sensor": {
       const sensor = find(document.sensors, device.id);
       return sensor === null
         ? null
-        : { subject: `${label} · ${sensor.name}`, groups: sensorGroups(sensor, context) };
+        : {
+            subject: `${label} · ${sensor.name}`,
+            groups: sensorGroups(sensor, context),
+            hints: [],
+          };
     }
   }
 }
@@ -79,9 +89,16 @@ function deviceView(device: DeviceRef, context: InspectorContext) {
 interface Content {
   subject: string | null;
   groups: GroupDraft[];
+  // For a Pantin or an assembly: a line per family it has no device of.
+  hints: MessageKey[];
 }
 
-const NOTHING: Content = { subject: null, groups: [] };
+const NOTHING: Content = { subject: null, groups: [], hints: [] };
+
+function indexContent(subject: string, context: InspectorContext, key: string | null): Content {
+  const groups = scopeIndexGroups(context, key);
+  return { subject, groups, hints: emptyFamilyHints(groups) };
+}
 
 function treeNodeContent(nodeId: string, context: InspectorContext): Content {
   const { pantin, t } = context;
@@ -90,13 +107,11 @@ function treeNodeContent(nodeId: string, context: InspectorContext): Content {
     return NOTHING;
   }
   if (ref.kind === "pantin") {
-    return { subject: pantin.document.name, groups: scopeIndexGroups(context, null) };
+    return indexContent(pantin.document.name, context, null);
   }
   if (ref.kind === "assembly") {
     const assembly = pantin.document.assemblies.find((candidate) => candidate.key === ref.key);
-    return assembly === undefined
-      ? NOTHING
-      : { subject: assembly.name, groups: scopeIndexGroups(context, assembly.key) };
+    return assembly === undefined ? NOTHING : indexContent(assembly.name, context, assembly.key);
   }
   if (ref.kind === "joint") {
     const joint = pantin.document.joints.find((candidate) => candidate.id === ref.jointId);
@@ -105,6 +120,7 @@ function treeNodeContent(nodeId: string, context: InspectorContext): Content {
       : {
           subject: `${t("diagram.kind.joint")} · ${joint.name}`,
           groups: jointInspectorGroups(joint, context),
+          hints: [],
         };
   }
   return NOTHING;
@@ -132,7 +148,7 @@ function liveSourcesOf(groups: readonly PropertyGroup[]): Map<string, LiveSource
 function emptyInspector(t: Translate): InspectorView {
   return {
     open: false,
-    title: t("drives.title"),
+    title: t("inspector.title"),
     subject: null,
     device: null,
     canCreateActuator: false,
@@ -142,13 +158,14 @@ function emptyInspector(t: Translate): InspectorView {
     sensorForm: null,
     groups: [],
     note: null,
+    hints: [],
     live: new Map(),
   };
 }
 
 export function buildInspectorView(state: ViewerState, t: Translate): InspectorView {
   const pantin = state.openPantin;
-  if (pantin === null || !state.drivePanelOpen) {
+  if (pantin === null || !state.inspectorOpen) {
     return emptyInspector(t);
   }
   const context: InspectorContext = { pantin, language: state.language, faults: state.faults, t };
@@ -162,7 +179,7 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
   const canMove = movableJoints(document).length > 0;
   return {
     open: true,
-    title: t("drives.title"),
+    title: t("inspector.title"),
     subject: content.subject,
     device: state.selectedDevice,
     canCreateActuator: canMove,
@@ -171,7 +188,8 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
     actuatorForm: buildActuatorFormView(state, document, t),
     sensorForm: buildSensorFormView(state, document, t),
     groups,
-    note: groups.length === 0 ? t("inspector.empty") : null,
+    note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
+    hints: content.hints.map((hint) => t(hint)),
     live: liveSourcesOf(groups),
   };
 }

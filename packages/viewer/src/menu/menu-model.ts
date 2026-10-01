@@ -17,7 +17,7 @@ export type MenuCommand =
   | "delete"
   | "frameAll"
   | "frameSelection"
-  | "toggleDrives"
+  | "toggleInspector"
   | "toggleDiagram"
   | `language:${Language}`;
 
@@ -39,7 +39,7 @@ interface MenuContext {
   hasBodies: boolean;
   selectedKind: NodeRef["kind"] | DeviceKind | null;
   language: Language;
-  drivePanelOpen: boolean;
+  inspectorOpen: boolean;
   diagramShown: boolean;
 }
 
@@ -155,9 +155,9 @@ const MENUS: readonly MenuDefinition[] = [
           !context.diagramShown,
       ),
       {
-        ...item("toggleDrives", "menubar.view.drives", (context) => context.editing),
+        ...item("toggleInspector", "menubar.view.inspector", (context) => context.editing),
         // Checked while the drives panel is shown (ADR 0022).
-        checked: (context) => context.drivePanelOpen,
+        checked: (context) => context.inspectorOpen,
       },
       {
         ...item("toggleDiagram", "menubar.view.diagram", (context) => context.editing, {
@@ -185,7 +185,7 @@ function menuContext(state: ViewerState): MenuContext {
       state.selectedDevice?.kind ??
       (state.selectedNodeId === null ? null : (parseNodeId(state.selectedNodeId)?.kind ?? null)),
     language: state.language,
-    drivePanelOpen: state.drivePanelOpen,
+    inspectorOpen: state.inspectorOpen,
     diagramShown: state.diagramShown,
   };
 }

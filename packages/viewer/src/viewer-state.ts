@@ -76,7 +76,7 @@ export interface ViewerState {
   assemblyDisplay: AssemblyDisplay;
   // The inspector on the right (ADR 0022, 0030), its form, and the faults the
   // core reported last.
-  drivePanelOpen: boolean;
+  inspectorOpen: boolean;
   driveForm: DriveFormState | null;
   // The actuator form of the same panel (ADR 0028).
   actuatorForm: ActuatorFormState | null;
@@ -120,7 +120,7 @@ export function initialViewerState(language: Language): ViewerState {
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
-    drivePanelOpen: true,
+    inspectorOpen: true,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,

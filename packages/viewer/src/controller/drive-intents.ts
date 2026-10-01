@@ -7,7 +7,7 @@ import {
   editDriveParameter,
   openDriveForm,
   submitDriveForm,
-  toggleDrivePanel,
+  toggleInspector,
 } from "./drive-actions.ts";
 import {
   setDriveUnresponsive,
@@ -20,7 +20,7 @@ import type { ViewerStore } from "./viewer-store.ts";
 // The intents of the drives panel (ADR 0022), for createPanelIntents.
 export function driveIntents(store: ViewerStore) {
   return {
-    toggleDrivePanel: () => toggleDrivePanel(store),
+    toggleInspector: () => toggleInspector(store),
     openDriveForm: (driveId: string | null) => openDriveForm(store, driveId),
     cancelDriveForm: () => cancelDriveForm(store),
     editDriveName: (name: string) => editDriveName(store, name),

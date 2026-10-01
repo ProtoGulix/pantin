@@ -18,7 +18,7 @@ describe("refreshTagValues", () => {
     });
     store.requestedPantinId = pantin.id;
     // update() makes the store follow this Pantin, as opening it does.
-    store.update({ ...withOpenPantin(store.state, pantin), drivePanelOpen: true });
+    store.update({ ...withOpenPantin(store.state, pantin), inspectorOpen: true });
     await refreshTagValues(store);
     expect(store.driveRuntime.get("valve")).toEqual(runtime);
     store.update({ ...store.state, openPantin: null });
@@ -36,10 +36,10 @@ describe("refreshTagValues with the inspector", () => {
       },
     });
     store.requestedPantinId = pantin.id;
-    store.update({ ...withOpenPantin(store.state, pantin), drivePanelOpen: true });
+    store.update({ ...withOpenPantin(store.state, pantin), inspectorOpen: true });
     await refreshTagValues(store);
     expect(reads).toBe(1);
-    store.update({ ...store.state, drivePanelOpen: false });
+    store.update({ ...store.state, inspectorOpen: false });
     await refreshTagValues(store);
     expect(reads).toBe(1);
   });

@@ -126,7 +126,7 @@ export function showDiagramHint(store: ViewerStore, hint: DiagramHint): void {
 
 // The "+" of a column: the panel's creation form, which the panel shows when it is open.
 export function createDiagramElement(store: ViewerStore, kind: DiagramElementKind): void {
-  store.update({ ...store.state, drivePanelOpen: true });
+  store.update({ ...store.state, inspectorOpen: true });
   if (kind === "drive") {
     openDriveForm(store, null);
   } else if (kind === "actuator") {

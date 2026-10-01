@@ -32,7 +32,7 @@ function openStore() {
     listPantins: async () => [],
   });
   store.requestedPantinId = pantin.id;
-  store.update({ ...withOpenPantin(store.state, pantin), drivePanelOpen: false });
+  store.update({ ...withOpenPantin(store.state, pantin), inspectorOpen: false });
   return { store, updates };
 }
 
@@ -117,7 +117,7 @@ describe("hints and the creation forms of the column heads", () => {
   it("opens the panel on the form of the column's element", () => {
     const { store } = openStore();
     createDiagramElement(store, "actuator");
-    expect(store.state.drivePanelOpen).toBe(true);
+    expect(store.state.inspectorOpen).toBe(true);
     expect(store.state.actuatorForm?.actuatorId).toBeNull();
     createDiagramElement(store, "drive");
     expect(store.state.driveForm).not.toBeNull();

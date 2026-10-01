@@ -40,7 +40,7 @@ export function openActuatorFormForJoint(store: ViewerStore, nodeId: string): vo
   if (actuatorForm !== null) {
     store.update({
       ...store.state,
-      drivePanelOpen: true,
+      inspectorOpen: true,
       actuatorForm,
       contextMenu: null,
       message: null,

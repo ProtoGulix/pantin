@@ -74,7 +74,7 @@ export class Inspector {
       ...[
         element("div", { className: "inspector__head" }, [
           element("h2", { className: "inspector__title", text: view.title }),
-          iconButton("close", t("joint.form.cancel"), intents.toggleDrivePanel),
+          iconButton("close", t("joint.form.cancel"), intents.toggleInspector),
         ]),
         createButtons(view, t, intents),
         ...formsOf(view, t, intents),
@@ -85,6 +85,7 @@ export class Inspector {
         view.note === null
           ? renderPropertiesGrid(view.groups, t, intents)
           : element("p", { className: "inspector__empty", text: view.note }),
+        ...view.hints.map((hint) => element("p", { className: "inspector__empty", text: hint })),
       ].filter((part) => part !== null),
     );
     restoreFocus(this.root, focus);

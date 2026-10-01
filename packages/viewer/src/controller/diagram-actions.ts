@@ -37,7 +37,12 @@ export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
 export function selectDevice(store: ViewerStore, device: DeviceRef): void {
   const open = store.state.openPantin;
   if (open !== null && deviceExists(open.document, device)) {
-    store.update({ ...withSelectedDevice(store.state, device), contextMenu: null });
+    // A hidden inspector would leave the left-hand note pointing at nothing.
+    store.update({
+      ...withSelectedDevice(store.state, device),
+      inspectorOpen: true,
+      contextMenu: null,
+    });
   }
 }
 

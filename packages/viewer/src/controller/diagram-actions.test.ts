@@ -23,7 +23,7 @@ const pantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")
 function openStore(listTags = async () => ({ stepCount: 0, tags: [], drives: [] })) {
   const store = testStore({ listTags });
   store.requestedPantinId = pantin.id;
-  store.update({ ...withOpenPantin(store.state, pantin), drivePanelOpen: false });
+  store.update({ ...withOpenPantin(store.state, pantin), inspectorOpen: false });
   return store;
 }
 
@@ -108,6 +108,13 @@ describe("selecting a device in the diagram", () => {
     store.update(withRevealedNode(store.state, bodyNodeId(withDevices.id, "s1")));
     expect(store.state.selectedDevice).toBeNull();
     expect(store.state.selectedNodeId).toBe(bodyNodeId(withDevices.id, "s1"));
+  });
+
+  it("opens a closed inspector, so the left-hand note never points to a hidden panel", () => {
+    const store = deviceStore();
+    store.update({ ...store.state, inspectorOpen: false });
+    selectDiagramNode(store, "drive:v1");
+    expect(store.state.inspectorOpen).toBe(true);
   });
 
   it("ignores a device that is not in the document", () => {

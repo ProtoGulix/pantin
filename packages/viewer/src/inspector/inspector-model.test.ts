@@ -230,6 +230,23 @@ describe("index of the Pantin and of an assembly", () => {
     expect(view.groups.map((group) => group.id)).toEqual(["driveIndex"]);
     expect(rowsOf(view.groups, "driveIndex").map((row) => row.label)).toEqual(["inv"]);
   });
+});
+
+describe("hints of an index without devices", () => {
+  const index = selecting(pantinNodeId("press"));
+
+  it("says what each family without device is for, in a compact line", () => {
+    expect(index.hints).toEqual([]);
+    const onlyB = withSelectedNode(opened, assemblyNodeId("press", "b"));
+    expect(inspectorOf(onlyB).hints).toEqual([t("actuators.empty"), t("sensors.empty")]);
+    const empty = withOpenPantin(initialViewerState("fr"), {
+      ...pantin,
+      document: { ...document, drives: [], actuators: [], sensors: [] },
+    });
+    const view = inspectorOf(empty);
+    expect(view.hints).toEqual([t("drives.empty"), t("actuators.empty"), t("sensors.empty")]);
+    expect(view.note).toBeNull();
+  });
 
   it("keeps the collapsed state of a group by id", () => {
     const folded = inspectorOf({
@@ -251,6 +268,11 @@ describe("inspector without anything to show", () => {
     expect([view.open, view.canCreateActuator, view.canCreateSensor]).toEqual([true, true, true]);
   });
 
+  it("names the tag prefix of a sensor", () => {
+    const sensor = device("sensor", "e1");
+    expect(rowsOf(sensor.groups, "general")[2]?.value).toBe("a.e1");
+  });
+
   it("disables the actuator and sensor buttons without a joint that moves", () => {
     const bare = withOpenPantin(initialViewerState("fr"), {
       ...pantin,
@@ -261,7 +283,7 @@ describe("inspector without anything to show", () => {
   });
 
   it("is closed on demand and when no Pantin is open", () => {
-    expect(inspectorOf({ ...opened, drivePanelOpen: false }).open).toBe(false);
+    expect(inspectorOf({ ...opened, inspectorOpen: false }).open).toBe(false);
     expect(inspectorOf(initialViewerState("fr")).open).toBe(false);
   });
 

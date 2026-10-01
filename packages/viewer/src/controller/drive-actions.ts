@@ -14,11 +14,11 @@ import type { ViewerStore } from "./viewer-store.ts";
 // The inspector (ADR 0022, 0028, 0030): opening it, and the drive form. Commands and
 // faults are in drive-commands.ts.
 
-export function toggleDrivePanel(store: ViewerStore): void {
-  const open = !store.state.drivePanelOpen;
+export function toggleInspector(store: ViewerStore): void {
+  const open = !store.state.inspectorOpen;
   store.update({
     ...store.state,
-    drivePanelOpen: open,
+    inspectorOpen: open,
     driveForm: open ? store.state.driveForm : null,
   });
   if (open) {

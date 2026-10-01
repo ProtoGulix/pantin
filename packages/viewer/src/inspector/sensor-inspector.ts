@@ -50,6 +50,8 @@ export function sensorGroups(sensor: Sensor, context: InspectorContext): GroupDr
       rows: [
         deviceNameRow(device, sensor.name, t),
         row("type", t("drives.form.type"), SENSOR_LABELS[sensor.type][language].name),
+        // The prefix of its tags: assembly key and tag key (ADR 0019).
+        row("tagPrefix", t("inspector.tagPrefix"), `${sensor.assembly}.${sensor.tagKey}`),
       ],
     },
     ...(parameters.length === 0 ? [] : [{ id: "parameters" as const, rows: parameters }]),

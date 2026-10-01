@@ -13,8 +13,8 @@ import {
 } from "./drive-form.ts";
 import { driveTagUnit, forcedTagUnit } from "./drive-tags.ts";
 
-// The drives section of the panel (ADR 0022, 0028): its form, in display
-// units, and its view.
+// The drive form of the inspector (ADR 0022, 0028): in display
+// units, and its view; and the units of forced tags.
 
 const inverter: Drive = {
   id: "inverter",
