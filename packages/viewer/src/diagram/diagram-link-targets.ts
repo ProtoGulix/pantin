@@ -38,8 +38,16 @@ export function linkTargets(
 
 export interface LinkChoice {
   endpoint: Endpoint;
-  // "Valve 1 · port_4", or the node's name alone for a single-link node.
+  // "Valve 1 · Port 4", or the node's name alone for a single-link node.
   label: string;
+}
+
+/** "Valve 1 · Port 4": the node's name and the label of the socket; the name alone for an anchor. */
+export function endpointLabel(diagram: ChainDiagram, endpoint: Endpoint): string {
+  const node = diagram.nodes.find((candidate) => candidate.id === endpoint.nodeId);
+  const socket = node?.sockets.find((candidate) => candidate.id === endpoint.socketId);
+  const name = node?.label ?? splitNodeId(endpoint.nodeId).id;
+  return socket === undefined || socket.label === "" ? name : `${name} · ${socket.label}`;
 }
 
 /** The menu of "Relier à…": the targets the core would accept. */
@@ -48,18 +56,9 @@ export function linkChoices(
   diagram: ChainDiagram,
   from: Endpoint,
 ): LinkChoice[] {
-  const nodes = new Map(diagram.nodes.map((node) => [node.id, node]));
   return linkTargets(document, diagram, from)
     .filter(({ result }) => result.ok)
-    .map(({ endpoint }) => {
-      const node = nodes.get(endpoint.nodeId);
-      const socket = node?.sockets.find((candidate) => candidate.id === endpoint.socketId);
-      const name = node?.label ?? splitNodeId(endpoint.nodeId).id;
-      return {
-        endpoint,
-        label: socket === undefined || socket.label === "" ? name : `${name} · ${socket.label}`,
-      };
-    });
+    .map(({ endpoint }) => ({ endpoint, label: endpointLabel(diagram, endpoint) }));
 }
 
 /**

@@ -20,6 +20,7 @@ export interface DriveLabels {
   name: string;
   parameters: Readonly<Record<string, string>>;
   tags: Readonly<Record<string, string>>;
+  ports: Readonly<Record<string, string>>;
 }
 
 export const DRIVE_LABELS: Readonly<

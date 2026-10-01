@@ -1,4 +1,5 @@
 import { JOINT_COORDINATE_UNITS, type PantinDocument } from "@pantin/protocol";
+import type { Language } from "../i18n/translate.ts";
 import {
   actuatorSockets,
   driveSockets,
@@ -66,7 +67,7 @@ function attach(parent: ForestNode | undefined, child: ForestNode, roots: Forest
  * element a root (an actuator fed by an unknown drive) or drops it (a sensor on
  * an unknown joint), because the core, not the diagram, judges validity.
  */
-export function buildForest(document: PantinDocument): ForestNode[] {
+export function buildForest(document: PantinDocument, language: Language): ForestNode[] {
   const drives = new Map(
     document.drives.map((drive) => [
       drive.id,
@@ -76,11 +77,11 @@ export function buildForest(document: PantinDocument): ForestNode[] {
         label: drive.name,
         elementType: drive.type,
         assembly: drive.assembly,
-        sockets: driveSockets(drive),
+        sockets: driveSockets(drive, language),
       }),
     ]),
   );
-  const actuators = actuatorNodes(document);
+  const actuators = actuatorNodes(document, language);
   const joints = movableJointNodes(document);
   const roots: ForestNode[] = [...drives.values()];
   for (const actuator of document.actuators) {
@@ -98,14 +99,14 @@ export function buildForest(document: PantinDocument): ForestNode[] {
         label: sensor.name,
         elementType: sensor.type,
         assembly: sensor.assembly,
-        sockets: sensorSockets(sensor),
+        sockets: sensorSockets(sensor, language),
       }),
     );
   }
   return sortForest(roots);
 }
 
-function actuatorNodes(document: PantinDocument): Map<string, ForestNode> {
+function actuatorNodes(document: PantinDocument, language: Language): Map<string, ForestNode> {
   const drivesById = new Map(document.drives.map((drive) => [drive.id, drive]));
   return new Map(
     document.actuators.map((actuator) => [
@@ -116,7 +117,7 @@ function actuatorNodes(document: PantinDocument): Map<string, ForestNode> {
         label: actuator.name,
         elementType: actuator.type,
         assembly: actuator.assembly,
-        sockets: actuatorSockets(actuator, drivesById.get(actuator.feed?.drive ?? "")),
+        sockets: actuatorSockets(actuator, language, drivesById.get(actuator.feed?.drive ?? "")),
         feedPorts: actuator.feed?.ports,
       }),
     ]),

@@ -53,4 +53,4 @@ export const wiringDocument = documentOf({
   sensors: [encoderOf("e1", "a", "j1")],
 });
 
-export const wiringDiagram = layoutChainDiagram(wiringDocument, new Set());
+export const wiringDiagram = layoutChainDiagram(wiringDocument, new Set(), "en");

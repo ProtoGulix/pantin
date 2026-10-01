@@ -122,17 +122,6 @@
   stroke-opacity: 1;
 }
 
-/* The halo keeps a port label legible where a slant passes under it. */
-.diagram-edge__label {
-  font-size: 10px;
-  text-anchor: end;
-  fill: var(--text-muted);
-  stroke: var(--viewport-background);
-  stroke-linejoin: round;
-  stroke-width: 3px;
-  paint-order: stroke;
-}
-
 /* Nodes */
 .diagram-node {
   cursor: pointer;

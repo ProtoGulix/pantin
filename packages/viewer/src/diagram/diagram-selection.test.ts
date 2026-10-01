@@ -87,7 +87,7 @@ describe("highlight and bodies of a clicked node", () => {
 
 describe("relatedEdgeIds", () => {
   it("keeps the wires whose two ends are highlighted", () => {
-    const diagram = layoutChainDiagram(document, new Set());
+    const diagram = layoutChainDiagram(document, new Set(), "en");
     const highlight = diagramHighlight(document, links, "p", {
       diagramNodeId: null,
       selectedNodeId: jointNodeId("p", "j1", "s1"),

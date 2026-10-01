@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import type { Language } from "../i18n/translate.ts";
 import {
   BAND_GAP,
   BAND_HEADER_HEIGHT,
@@ -131,8 +132,9 @@ function rootsByBand(
 export function layoutChainDiagram(
   document: PantinDocument,
   collapsed: ReadonlySet<string>,
+  language: Language,
 ): ChainDiagram {
-  const roots = rootsByBand(document, buildForest(document));
+  const roots = rootsByBand(document, buildForest(document, language));
   const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
   const bands: DiagramBand[] = [];
   const nodes: DiagramNode[] = [];

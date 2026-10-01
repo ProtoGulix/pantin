@@ -21,7 +21,7 @@ const document = documentOf({
   actuators: [cylinderOf("c1", "a", "v1", ["j1"])],
   sensors: [encoderOf("e1", "a", "j1")],
 });
-const diagram = layoutChainDiagram(document, new Set());
+const diagram = layoutChainDiagram(document, new Set(), "en");
 const t = createTranslator("en");
 const runtime = (...drives: DriveRuntime[]) => new Map(drives.map((drive) => [drive.id, drive]));
 const live = (tags: [string, number][], drives: DriveRuntime[] = []) =>
@@ -94,7 +94,7 @@ describe("AC power ports", () => {
       ),
     ],
   });
-  const motorDiagram = layoutChainDiagram(motorDocument, new Set());
+  const motorDiagram = layoutChainDiagram(motorDocument, new Set(), "en");
   const litWith = (direction: -1 | 0 | 1) =>
     liveStateOf(
       motorDiagram,

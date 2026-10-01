@@ -100,19 +100,25 @@ your behaviour: do not handle them here. A servo drive also receives
 
 ## 3. The labels: `labels.ts`
 
-English and French. The type after `satisfies` makes a missing or misspelled
-label a compile error.
+English and French, with one label per parameter, tag member and output port.
+The type after `satisfies` makes a missing or misspelled label a compile error.
+Sockets of the diagram read the port labels (ADR 0030 point 5).
 
 ```ts
 import type { DriveTypeLabels } from "../schema-common.ts";
-import type { EXAMPLE_DRIVE_PARAMETERS, EXAMPLE_DRIVE_TAGS } from "./schema.ts";
+import type {
+  EXAMPLE_DRIVE_PARAMETERS,
+  EXAMPLE_DRIVE_PORTS,
+  EXAMPLE_DRIVE_TAGS,
+} from "./schema.ts";
 
 export const EXAMPLE_DRIVE_LABELS = {
-  en: { name: "Example drive", parameters: { acceleration: "Acceleration" }, tags: { run: "Run", speed: "Actual speed" } },
-  fr: { name: "Drive d'exemple", parameters: { acceleration: "Accélération" }, tags: { run: "Marche", speed: "Vitesse réelle" } },
+  en: { name: "Example drive", parameters: { acceleration: "Acceleration" }, tags: { run: "Run", speed: "Actual speed" }, ports: { out: "Output" } },
+  fr: { name: "Drive d'exemple", parameters: { acceleration: "Accélération" }, tags: { run: "Marche", speed: "Vitesse réelle" }, ports: { out: "Sortie" } },
 } satisfies DriveTypeLabels<
   (typeof EXAMPLE_DRIVE_PARAMETERS)[number]["field"],
-  (typeof EXAMPLE_DRIVE_TAGS)[number]["member"]
+  (typeof EXAMPLE_DRIVE_TAGS)[number]["member"],
+  (typeof EXAMPLE_DRIVE_PORTS)[number]["name"]
 >;
 ```
 

@@ -5,7 +5,8 @@ import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { actuatorNode, driveNode, jointNode, sensorNode } from "./diagram-chains.ts";
-import type { DiagramNode, Socket } from "./diagram-types.ts";
+import { endpointLabel } from "./diagram-link-targets.ts";
+import type { ChainDiagram, DiagramEdge, DiagramNode, Socket } from "./diagram-types.ts";
 
 // The words of the diagram that depend on the document: translated type labels.
 
@@ -58,6 +59,13 @@ export function portLabel(node: DiagramNode, socket: Socket, t: Translate): stri
   }
   const key = ANCHOR_KEYS[`${node.kind}:${socket.id}`];
   return key === undefined ? socket.label : t(key);
+}
+
+/** The accessible name of an edge: its domain and both ends, "Pneumatic link: V1 · Port 4 → Cyl · Cap chamber". */
+export function edgeDescription(diagram: ChainDiagram, edge: DiagramEdge, t: Translate): string {
+  const from = endpointLabel(diagram, { nodeId: edge.fromNode, socketId: edge.fromSocket });
+  const to = endpointLabel(diagram, { nodeId: edge.toNode, socketId: edge.toSocket });
+  return `${t(`diagram.edge.${edge.kind}`)}: ${from} → ${to}`;
 }
 
 /** The keys of the diagram, for the list of keyboard shortcuts of the welcome dialog. */

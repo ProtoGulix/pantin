@@ -76,13 +76,6 @@ export interface DiagramEdge {
   fromSocket: string;
   toNode: string;
   toSocket: string;
-  // Drive to actuator edges only: "port_4 → cap".
-  label?: string;
-  // Labelled edges: where the label ends (the target socket); the renderer
-  // writes it leftwards from there. Only the last stub is the edge's own: in a
-  // fan-out, other wires' slants may pass under the label, which the renderer
-  // (B3) has to keep legible.
-  labelAnchor?: DiagramPoint;
   // A polyline from the source socket to the target socket: straight at equal heights, else a
   // horizontal stub, a slant across the gap, a horizontal stub.
   points: DiagramPoint[];

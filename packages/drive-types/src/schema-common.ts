@@ -43,14 +43,19 @@ export type DriveDiagnostic = (typeof DRIVE_DIAGNOSTICS)[number];
 
 export type DriveLanguage = "en" | "fr";
 
-/** The labels of one drive type, one entry per parameter and per tag member. */
-export type DriveTypeLabels<Field extends string, Member extends string> = Readonly<
+/** The labels of one drive type, one entry per parameter, per tag member and per output port. */
+export type DriveTypeLabels<
+  Field extends string,
+  Member extends string,
+  Port extends string,
+> = Readonly<
   Record<
     DriveLanguage,
     {
       name: string;
       parameters: Readonly<Record<Field, string>>;
       tags: Readonly<Record<Member, string>>;
+      ports: Readonly<Record<Port, string>>;
     }
   >
 >;

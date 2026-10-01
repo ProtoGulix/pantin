@@ -1,7 +1,7 @@
 import type { DriveTypeLabels } from "../schema-common.ts";
-import type { SERVO_DRIVE_PARAMETERS, SERVO_DRIVE_TAGS } from "./schema.ts";
+import type { SERVO_DRIVE_PARAMETERS, SERVO_DRIVE_PORTS, SERVO_DRIVE_TAGS } from "./schema.ts";
 
-// What the user reads; the tag members themselves stay in English (ADR 0022).
+// What the user reads; the tag members and port names themselves stay in English (ADR 0022).
 export const SERVO_DRIVE_LABELS = {
   en: {
     name: "Servo drive",
@@ -12,6 +12,9 @@ export const SERVO_DRIVE_LABELS = {
     tags: {
       setpoint: "Position setpoint",
       position: "Actual position",
+    },
+    ports: {
+      out: "Output",
     },
   },
   fr: {
@@ -24,8 +27,12 @@ export const SERVO_DRIVE_LABELS = {
       setpoint: "Consigne de position",
       position: "Position réelle",
     },
+    ports: {
+      out: "Sortie",
+    },
   },
 } satisfies DriveTypeLabels<
   (typeof SERVO_DRIVE_PARAMETERS)[number]["field"],
-  (typeof SERVO_DRIVE_TAGS)[number]["member"]
+  (typeof SERVO_DRIVE_TAGS)[number]["member"],
+  (typeof SERVO_DRIVE_PORTS)[number]["name"]
 >;

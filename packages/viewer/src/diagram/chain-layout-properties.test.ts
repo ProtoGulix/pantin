@@ -124,7 +124,7 @@ const SEEDS = Array.from({ length: 400 }, (_, seed) => seed + 1);
 
 describe("layoutChainDiagram invariants", () => {
   it.each(SEEDS)("keeps nodes apart and edges clear of one another (seed %i)", (seed) => {
-    const diagram = layoutChainDiagram(generate(seed), new Set(seed % 2 === 0 ? ["b"] : []));
+    const diagram = layoutChainDiagram(generate(seed), new Set(seed % 2 === 0 ? ["b"] : []), "en");
     expect(overlapping(diagram)).toEqual([]);
     // Edges of different nodes never meet; edges of one node may cross (a swapped
     // feed) but never run along one another, except the shared trunk of one socket.
@@ -139,7 +139,7 @@ describe("layoutChainDiagram invariants", () => {
   });
 
   it.each(SEEDS)("keeps nodes unique, inside their band, in reading order (seed %i)", (seed) => {
-    const diagram = layoutChainDiagram(generate(seed), new Set(seed % 2 === 0 ? ["b"] : []));
+    const diagram = layoutChainDiagram(generate(seed), new Set(seed % 2 === 0 ? ["b"] : []), "en");
     const ids = diagram.nodes.map((node) => node.id);
     expect(new Set(ids).size).toBe(ids.length);
     const bandOf = new Map(diagram.bands.map((band) => [band.key, band]));
@@ -166,6 +166,6 @@ describe("layoutChainDiagram invariants", () => {
     const movable = document.joints.filter((joint) => joint.type !== "fixed").length;
     const expected =
       document.drives.length + document.actuators.length + document.sensors.length + movable;
-    expect(layoutChainDiagram(document, new Set()).nodes).toHaveLength(expected);
+    expect(layoutChainDiagram(document, new Set(), "en").nodes).toHaveLength(expected);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DRIVE_LABELS } from "./labels.ts";
-import { DRIVE_PARAMETERS, DRIVE_TAGS, DriveFieldsSchema } from "./schemas.ts";
+import { DRIVE_PARAMETERS, DRIVE_PORTS, DRIVE_TAGS, DriveFieldsSchema } from "./schemas.ts";
 
 // The registries stay consistent with each drive type's schema (ADR 0022).
 
@@ -23,7 +23,7 @@ describe("drive type registries", () => {
     }
   });
 
-  it.each(TYPES)("%s has a label for every parameter and tag, in each language", (type) => {
+  it.each(TYPES)("%s has a label for every parameter, tag and port, in each language", (type) => {
     for (const labels of Object.values(DRIVE_LABELS[type])) {
       expect(labels.name).not.toBe("");
       for (const parameter of DRIVE_PARAMETERS[type]) {
@@ -31,6 +31,9 @@ describe("drive type registries", () => {
       }
       for (const tag of DRIVE_TAGS[type]) {
         expect(labels.tags[tag.member]).toBeTruthy();
+      }
+      for (const port of DRIVE_PORTS[type]) {
+        expect(labels.ports[port.name]).toBeTruthy();
       }
     }
   });

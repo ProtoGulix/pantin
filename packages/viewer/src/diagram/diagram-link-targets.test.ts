@@ -49,7 +49,7 @@ describe("linkChoices", () => {
       socketId: "in:cap",
     });
     expect(choices.map((choice) => choice.label)).toEqual(
-      expect.arrayContaining(["v1 · port_2", "v1 · port_4", "v2 · port_4"]),
+      expect.arrayContaining(["v1 · Port 2", "v1 · Port 4", "v2 · Port 4"]),
     );
     expect(choices.some((choice) => choice.label.startsWith("sv"))).toBe(false);
   });

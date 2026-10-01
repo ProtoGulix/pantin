@@ -15,7 +15,6 @@ interface Link {
   fromSocket: Socket;
   to: DiagramNode;
   toSocket: Socket;
-  label?: string;
 }
 
 function socketOf(node: DiagramNode, socketId: string): Socket | undefined {
@@ -34,14 +33,12 @@ function feedLinks(
   for (const input of child.sockets.filter((socket) => socket.role === "input")) {
     const output = socketOf(parent, `out:${feed[input.id.slice("in:".length)]}`);
     if (output?.domain !== undefined) {
-      const label = `${output.label} → ${input.label}`;
       links.push({
         kind: output.domain,
         from: parent,
         fromSocket: output,
         to: child,
         toSocket: input,
-        label,
       });
     }
   }
@@ -87,9 +84,6 @@ function routeLinks(links: readonly Link[]): DiagramEdge[] {
     fromSocket: link.fromSocket.id,
     toNode: link.to.id,
     toSocket: link.toSocket.id,
-    ...(link.label === undefined
-      ? {}
-      : { label: link.label, labelAnchor: { x: link.toSocket.x, y: link.toSocket.y } }),
     points: pathOf(link),
   }));
 }

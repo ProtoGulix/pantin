@@ -52,7 +52,7 @@ export function createDiagramModelBuilder(
       document,
       collapsed,
       language,
-      diagram: layoutChainDiagram(document, collapsed),
+      diagram: layoutChainDiagram(document, collapsed, language),
       typeLabels: nodeTypeLabels(document, language, translate),
     };
     return last;

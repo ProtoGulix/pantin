@@ -15,7 +15,7 @@ function valveAndCylinder(ports: Record<string, string>): ChainDiagram {
     drives: [driveOf("valve", "a")],
     actuators: [cylinderOf("cyl", "a", "valve", ["stroke"], ports)],
   });
-  return layoutChainDiagram(document, new Set());
+  return layoutChainDiagram(document, new Set(), "en");
 }
 
 function feedEdges(diagram: ChainDiagram) {
@@ -37,15 +37,14 @@ describe("layoutChainDiagram feed edges", () => {
       (node) => node.id === "actuator:cyl",
     );
     expect(cylinder?.sockets.filter((s) => s.role === "input").map((s) => s.label)).toEqual([
-      "rod",
-      "cap",
+      "Rod chamber (retracts)",
+      "Cap chamber (extends)",
     ]);
   });
 
   it("makes a swapped feed cross, so it does not look like the default", () => {
     const swapped = valveAndCylinder({ cap: "port_2", rod: "port_4" });
     const [first, second] = feedEdges(swapped);
-    expect(feedEdges(swapped).map((edge) => edge.label)).toEqual(["port_4 → rod", "port_2 → cap"]);
     expect(first && second && pathsMeet(first, second)).toBe(true);
   });
 
@@ -55,20 +54,19 @@ describe("layoutChainDiagram feed edges", () => {
       bodies: [],
       actuators: [cylinderOf("cyl", "a", null, [])],
     });
-    const node = layoutChainDiagram(document, new Set()).nodes[0];
+    const node = layoutChainDiagram(document, new Set(), "en").nodes[0];
     expect(node?.sockets.filter((s) => s.role === "input").map((s) => s.label)).toEqual([
-      "cap",
-      "rod",
+      "Cap chamber (extends)",
+      "Rod chamber (retracts)",
     ]);
   });
 
-  it("gives labelled edges an anchor at their target and unlabelled ones none", () => {
+  it("gives edges no text: the sockets name the ports", () => {
     const diagram = valveAndCylinder({ cap: "port_4", rod: "port_2" });
+    expect(diagram.edges.length).toBeGreaterThan(0);
     for (const edge of diagram.edges) {
-      expect(edge.labelAnchor !== undefined).toBe(edge.label !== undefined);
-      if (edge.labelAnchor !== undefined) {
-        expect(edge.labelAnchor).toEqual(edge.points.at(-1));
-      }
+      expect(Object.keys(edge)).not.toContain("label");
+      expect(Object.keys(edge)).not.toContain("labelAnchor");
     }
   });
 });
@@ -87,7 +85,7 @@ describe("layoutChainDiagram wires of one node", () => {
   });
 
   it("never run along one another, from different sockets", () => {
-    const diagram = layoutChainDiagram(fanOut, new Set());
+    const diagram = layoutChainDiagram(fanOut, new Set(), "en");
     const shared = edgePairs(
       diagram,
       (a, b) => a.fromSocket !== b.fromSocket && pathsShareSegment(a, b),
@@ -96,7 +94,7 @@ describe("layoutChainDiagram wires of one node", () => {
   });
 
   it("leave and enter horizontally, and stay inside the gap before the target", () => {
-    const diagram = layoutChainDiagram(fanOut, new Set());
+    const diagram = layoutChainDiagram(fanOut, new Set(), "en");
     for (const edge of feedEdges(diagram)) {
       const [start, end] = [edge.points[0], edge.points.at(-1)];
       expect(edge.points[1]?.y).toBe(start?.y);

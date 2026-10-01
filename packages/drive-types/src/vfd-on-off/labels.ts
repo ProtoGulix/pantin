@@ -1,7 +1,7 @@
 import type { DriveTypeLabels } from "../schema-common.ts";
-import type { VFD_ON_OFF_PARAMETERS, VFD_ON_OFF_TAGS } from "./schema.ts";
+import type { VFD_ON_OFF_PARAMETERS, VFD_ON_OFF_PORTS, VFD_ON_OFF_TAGS } from "./schema.ts";
 
-// What the user reads; the tag members themselves stay in English (ADR 0022).
+// What the user reads; the tag members and port names themselves stay in English (ADR 0022).
 export const VFD_ON_OFF_LABELS = {
   en: {
     name: "Variable speed drive, on/off",
@@ -12,6 +12,9 @@ export const VFD_ON_OFF_LABELS = {
       run: "Run",
       reverse: "Reverse",
       speed: "Actual speed",
+    },
+    ports: {
+      out: "Output",
     },
   },
   fr: {
@@ -24,8 +27,12 @@ export const VFD_ON_OFF_LABELS = {
       reverse: "Sens inverse",
       speed: "Vitesse réelle",
     },
+    ports: {
+      out: "Sortie",
+    },
   },
 } satisfies DriveTypeLabels<
   (typeof VFD_ON_OFF_PARAMETERS)[number]["field"],
-  (typeof VFD_ON_OFF_TAGS)[number]["member"]
+  (typeof VFD_ON_OFF_TAGS)[number]["member"],
+  (typeof VFD_ON_OFF_PORTS)[number]["name"]
 >;

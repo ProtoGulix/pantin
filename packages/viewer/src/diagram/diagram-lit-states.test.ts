@@ -13,6 +13,7 @@ const diagram = layoutChainDiagram(
     actuators: [cylinderOf("cyl", "a", "valve", ["stroke"])],
   }),
   new Set(),
+  "en",
 );
 
 describe("socketLitStates", () => {

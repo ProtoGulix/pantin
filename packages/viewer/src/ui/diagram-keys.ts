@@ -7,7 +7,7 @@ import {
   focusKeyOf,
   neighbour,
 } from "../diagram/diagram-focus.ts";
-import { type LinkChoice, linkChoices } from "../diagram/diagram-link-targets.ts";
+import { endpointLabel, type LinkChoice, linkChoices } from "../diagram/diagram-link-targets.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -142,12 +142,9 @@ function removeOutgoing(
   if (edges.length === 0 || target === null) {
     return false;
   }
-  const labelOf = (nodeId: string) =>
-    model.diagram.nodes.find((n) => n.id === nodeId)?.label ?? nodeId;
   const choices = edges.map((edge) => ({
     endpoint: { nodeId: edge.toNode, socketId: edge.toSocket },
-    label:
-      edge.label === undefined ? labelOf(edge.toNode) : `${labelOf(edge.toNode)} · ${edge.label}`,
+    label: endpointLabel(model.diagram, { nodeId: edge.toNode, socketId: edge.toSocket }),
   }));
   context.openMenu(item, "diagram.removeMenu", choices, (choice) =>
     intents.removeDiagramLink(ports.nodeId, choice.endpoint.nodeId),

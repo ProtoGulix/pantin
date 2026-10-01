@@ -1,3 +1,4 @@
+import { edgeDescription } from "../diagram/diagram-texts.ts";
 import type { DiagramBand } from "../diagram/diagram-types.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { Translate } from "../i18n/translate.ts";
@@ -99,7 +100,9 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
   for (const [nodeId, drawn] of drawnNodes) {
     drawn.group.addEventListener("click", () => intents.selectDiagramNode(nodeId));
   }
-  const drawnEdges = diagram.edges.map((edge) => [edge.id, drawEdge(edge, t)] as const);
+  const drawnEdges = diagram.edges.map(
+    (edge) => [edge.id, drawEdge(edge, edgeDescription(diagram, edge, t))] as const,
+  );
   const svg = svgElement(
     "svg",
     {
@@ -115,10 +118,9 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
     },
     [
       ...diagram.bands.map((band) => drawBand(band, diagram.width, t, intents)),
-      // Wires under the nodes, labels over the wires.
+      // Wires under the nodes.
       ...drawnEdges.map(([, drawn]) => drawn.wire),
       ...drawnEdges.map(([, drawn]) => drawn.hit),
-      ...drawnEdges.flatMap(([, drawn]) => (drawn.label === null ? [] : [drawn.label])),
       ...[...drawnNodes.values()].map((drawn) => drawn.group),
     ],
   );
