@@ -228,6 +228,13 @@ describe("shortcut listing", () => {
       { keys: "G", action: "Déplacer" },
       { keys: "R", action: "Tourner" },
       { keys: "F", action: "Tout cadrer" },
+      { keys: "Ctrl+1", action: "Face" },
+      { keys: "Ctrl+2", action: "Arrière" },
+      { keys: "Ctrl+3", action: "Gauche" },
+      { keys: "Ctrl+4", action: "Droite" },
+      { keys: "Ctrl+5", action: "Dessus" },
+      { keys: "Ctrl+6", action: "Dessous" },
+      { keys: "Ctrl+7", action: "Isométrique" },
       { keys: "F8", action: "Console" },
       { keys: "F4", action: "Changer la vue centrale" },
     ]);

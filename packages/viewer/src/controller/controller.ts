@@ -44,6 +44,7 @@ import {
   submitJointForm,
 } from "./joint-actions.ts";
 import { runMenuCommand } from "./menu-commands.ts";
+import { showViewFromDirection } from "./navigation-actions.ts";
 import {
   createPantin,
   openPantin,
@@ -191,6 +192,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...clockIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     setGizmoStep: (field, text) => setGizmoStep(store, field, text),
+    showViewFromDirection: (direction) => showViewFromDirection(store, direction),
     togglePropertyGroup: (groupId) =>
       store.update({
         ...store.state,

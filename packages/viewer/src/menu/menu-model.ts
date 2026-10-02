@@ -3,6 +3,7 @@ import { isDeviceKind } from "../device-selection.ts";
 import { LANGUAGES, type Translate } from "../i18n/translate.ts";
 import { NAVIGATION_PRESET_IDS } from "../navigation/navigation-presets.ts";
 import { ARROW_STEPS_DEGREES } from "../navigation/navigation-settings.ts";
+import { STANDARD_VIEW_IDS } from "../navigation/standard-views.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type MenuContext, menuContext } from "./menu-context.ts";
 import {
@@ -18,6 +19,7 @@ import {
   navigationPresetItem,
   navigationToggleItem,
   type Shortcut,
+  standardViewItem,
 } from "./menu-definitions.ts";
 
 export type { MenuCommand } from "./menu-definitions.ts";
@@ -108,6 +110,9 @@ const MENUS: readonly MenuDefinition[] = [
           !isDeviceKind(context.selectedKind) &&
           showsViewport(context.centralLayout),
       ),
+      "separator",
+      ...STANDARD_VIEW_IDS.map(standardViewItem),
+      "separator",
       {
         ...item("toggleInspector", "menubar.view.inspector", (context) => context.editing),
         // Checked while the drives panel is shown (ADR 0022).

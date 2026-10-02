@@ -9,8 +9,10 @@ import {
   resolveBinding,
 } from "../navigation/navigation-presets.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "../navigation/navigation-settings.ts";
+import type { CameraAngles } from "../navigation/standard-views.ts";
 import { isArrowKey } from "../navigation/turntable.ts";
 import { dragZoomFactor, wheelZoomFactor } from "../navigation/zoom-math.ts";
+import { createViewAnimator, type ViewAnimator } from "./camera-animation.ts";
 import { createCameraMoves } from "./camera-moves.ts";
 import type { CameraPivot } from "./camera-pivot.ts";
 import { createCameraPivot } from "./camera-pivot.ts";
@@ -28,6 +30,10 @@ const MIDDLE_BUTTON_BIT = 4;
 
 export interface CameraNavigation {
   apply(settings: NavigationSettings): void;
+  /** Turns the camera to these angles in 300 ms, keeping the target and the zoom. */
+  showView(angles: CameraAngles): void;
+  /** Called with alpha and beta when they change, and once at once. */
+  onOrientation(listener: (alpha: number, beta: number) => void): void;
 }
 
 export interface NavigationHost {
@@ -67,13 +73,20 @@ function cursorOf(canvas: HTMLCanvasElement, event: MouseEvent): { x: number; y:
 
 type Moves = ReturnType<typeof createCameraMoves>;
 
-function listenToPointer(host: NavigationHost, live: Live, pivot: CameraPivot, moves: Moves): void {
+function listenToPointer(
+  host: NavigationHost,
+  live: Live,
+  pivot: CameraPivot,
+  moves: Moves,
+  animator: ViewAnimator,
+): void {
   const { canvas } = host;
   let dragZoom: { x: number; y: number } | null = null;
   canvas.addEventListener(
     "pointerdown",
     (event) => {
       canvas.focus({ preventScroll: true });
+      animator.cancel();
       const held = { ctrl: event.ctrlKey, shift: event.shiftKey };
       const interaction = resolveBinding(live.preset, event.button, held);
       if (interaction === "rotate") {
@@ -139,21 +152,34 @@ export function createCameraNavigation(host: NavigationHost): CameraNavigation {
   const { scene, canvas, camera, view } = host;
   const live: Live = { settings: DEFAULT_NAVIGATION, preset: NAVIGATION_PRESETS.solidworks };
   const pivot = createCameraPivot(camera);
-  const moves = createCameraMoves(scene, camera, view, () => pivot.release());
+  const animator = createViewAnimator(camera);
+  const moves = createCameraMoves(scene, camera, view, () => {
+    pivot.release();
+    animator.cancel();
+  });
+  const listeners: ((alpha: number, beta: number) => void)[] = [];
+  let announced: CameraAngles | null = null;
   camera.inputs.removeByType("ArcRotateCameraMouseWheelInput");
   camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput");
   // Default actions are prevented, otherwise the browser's context menu opens
   // on the right button and cancels a right-button drag.
   camera.attachControl(false);
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-  listenToPointer(host, live, pivot, moves);
+  listenToPointer(host, live, pivot, moves, animator);
   listenToWheel(canvas, live, moves);
   listenToKeys(canvas, live, moves);
   // After the inputs and before the matrices are built, so that neither the
   // pivot nor the orthographic bounds lag a frame behind the camera.
   camera.onAfterCheckInputsObservable.add(() => {
+    animator.step(performance.now());
     pivot.follow();
     view.update();
+    if (announced?.alpha !== camera.alpha || announced.beta !== camera.beta) {
+      announced = { alpha: camera.alpha, beta: camera.beta };
+      for (const listener of listeners) {
+        listener(camera.alpha, camera.beta);
+      }
+    }
   });
   camera.movement.input.inputMap = inputMapOf(live.preset);
   return {
@@ -164,6 +190,14 @@ export function createCameraNavigation(host: NavigationHost): CameraNavigation {
         camera.movement.input.inputMap = inputMapOf(live.preset);
       }
       live.settings = next;
+    },
+    showView(angles) {
+      pivot.release();
+      animator.goTo(angles, performance.now());
+    },
+    onOrientation(listener) {
+      listeners.push(listener);
+      listener(camera.alpha, camera.beta);
     },
   };
 }

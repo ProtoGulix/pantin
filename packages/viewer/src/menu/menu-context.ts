@@ -1,4 +1,4 @@
-import type { CentralLayout } from "../central-layout.ts";
+import { type CentralLayout, showsViewport } from "../central-layout.ts";
 import type { DeviceKind } from "../device-selection.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
@@ -25,6 +25,8 @@ export interface MenuContext {
   gizmoAvailable: boolean;
   // The mouse preset and the other settings of the 3D view (ADR 0036).
   navigation: NavigationSettings;
+  // The standard views need the 3D view to be on screen (ADR 0036 point 4).
+  viewsAvailable: boolean;
 }
 
 function selectedKindOf(selection: Selection | null): MenuContext["selectedKind"] {
@@ -49,5 +51,6 @@ export function menuContext(state: ViewerState): MenuContext {
     gizmoMode: state.gizmoMode,
     gizmoAvailable: canUseGizmo(state),
     navigation: state.navigation,
+    viewsAvailable: state.openPantin !== null && showsViewport(state.centralLayout),
   };
 }

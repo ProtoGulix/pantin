@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_NAVIGATION } from "../navigation/navigation-settings.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import { runMenuCommand } from "./menu-commands.ts";
+import { showViewFromDirection } from "./navigation-actions.ts";
 
 const noLanguage = () => undefined;
 
@@ -48,5 +49,29 @@ describe("navigation settings", () => {
     const store = testStore({}, { setNavigation });
     runMenuCommand(store, "perspective", noLanguage);
     expect(setNavigation).toHaveBeenLastCalledWith({ ...DEFAULT_NAVIGATION, perspective: true });
+  });
+});
+
+describe("standard views", () => {
+  it("turns the camera to the angles of the view, from the menu", () => {
+    const showView = vi.fn();
+    const store = testStore({}, { showView });
+    runMenuCommand(store, "view:top", noLanguage);
+    expect(showView).toHaveBeenCalledTimes(1);
+    expect(showView.mock.calls[0]?.[0]).toMatchObject({ alpha: -Math.PI / 2, beta: 0.01 });
+  });
+
+  it("ignores an unknown view", () => {
+    const showView = vi.fn();
+    const store = testStore({}, { showView });
+    runMenuCommand(store, "view:oblique" as never, noLanguage);
+    expect(showView).not.toHaveBeenCalled();
+  });
+
+  it("turns the camera to the direction of a cube cell", () => {
+    const showView = vi.fn();
+    const store = testStore({}, { showView });
+    showViewFromDirection(store, [0, -1, 1]);
+    expect(showView.mock.calls[0]?.[0].beta).toBeCloseTo(Math.PI / 4, 9);
   });
 });

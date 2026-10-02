@@ -2,6 +2,7 @@ import type { CentralLayout } from "../central-layout.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import type { NavigationPresetId } from "../navigation/navigation-presets.ts";
+import type { StandardViewId } from "../navigation/standard-views.ts";
 import type { MenuContext } from "./menu-context.ts";
 
 // The vocabulary of the menu bar: commands, item definitions and the helpers
@@ -18,6 +19,7 @@ export type MenuCommand =
   | "delete"
   | "frameAll"
   | "frameSelection"
+  | `view:${StandardViewId}`
   | "perspective"
   | "reverseWheel"
   | `arrowStep:${number}`
@@ -136,4 +138,23 @@ export function arrowStepItem(degrees: number): MenuItemDefinition {
     enabled: always,
     checked: (context) => context.navigation.arrowStepDegrees === degrees,
   };
+}
+
+const VIEW_SHORTCUT_KEYS: Readonly<Record<StandardViewId, string>> = {
+  front: "1",
+  back: "2",
+  left: "3",
+  right: "4",
+  top: "5",
+  bottom: "6",
+  isometric: "7",
+};
+
+/** A standard view of the Affichage menu, on Ctrl+1 to Ctrl+7 in the SolidWorks order. */
+export function standardViewItem(id: StandardViewId): MenuItemDefinition {
+  return item(`view:${id}`, `view.${id}`, (context) => context.viewsAvailable, {
+    key: VIEW_SHORTCUT_KEYS[id],
+    primaryModifier: true,
+    labelKey: `shortcut.view.${id}`,
+  });
 }

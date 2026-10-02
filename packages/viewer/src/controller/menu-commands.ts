@@ -11,6 +11,7 @@ import { openJointForm } from "./joint-actions.ts";
 import {
   setArrowStep,
   setNavigationPreset,
+  showStandardView,
   togglePerspective,
   toggleReverseWheel,
 } from "./navigation-actions.ts";
@@ -56,6 +57,8 @@ function runParameterisedCommand(
     setCentralLayout(store, parseStoredLayout(command.slice("layout:".length)));
   } else if (command.startsWith("navigation:")) {
     setNavigationPreset(store, command.slice("navigation:".length));
+  } else if (command.startsWith("view:")) {
+    showStandardView(store, command.slice("view:".length));
   } else if (command.startsWith("arrowStep:")) {
     setArrowStep(store, command.slice("arrowStep:".length));
   } else {

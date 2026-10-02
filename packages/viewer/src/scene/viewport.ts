@@ -1,27 +1,22 @@
-import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js";
 import "@babylonjs/core/Culling/ray.js";
 import { Engine } from "@babylonjs/core/Engines/engine.js";
 import { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
-import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
 import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
-import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
+import type { CameraAngles } from "../navigation/standard-views.ts";
+import type { InterpolatedPose } from "../pose-interpolation.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
-import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
-import { createCamera, frameBodies } from "./camera-framing.ts";
+import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
-import { type CameraView, createCameraView } from "./camera-view.ts";
-import { createPlacementGizmo, type PlacementGizmo } from "./placement-gizmo.ts";
 import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, planSceneSync } from "./scene-plan.ts";
-import { createSensorMarkers, type SensorMarkers } from "./sensor-markers.ts";
-import { createStage, type Stage } from "./stage.ts";
+import { createContext, type ViewportContext } from "./viewport-context.ts";
 
 // The Babylon canvas: shows the bodies it is given and reports clicks. It
 // knows nothing about the API or the panel; the controller wires them.
@@ -70,22 +65,10 @@ export interface Viewport {
   releasePlacementGizmo(): void;
   /** Mouse preset, wheel direction, arrow step and projection (ADR 0036). */
   setNavigation(settings: NavigationSettings): void;
-}
-
-interface ViewportContext {
-  scene: Scene;
-  camera: ArcRotateCamera;
-  view: CameraView;
-  stage: Stage;
-  // What each body should show (set as soon as a load starts, to skip duplicates).
-  wantedKeys: Map<string, string>;
-  loadedBodies: Map<string, LoadedBody>;
-  bodyIdByMesh: Map<AbstractMesh, string>;
-  poses: PoseInterpolator;
-  highlights: BodyHighlights;
-  sensorMarkers: SensorMarkers;
-  placementGizmo: PlacementGizmo;
-  hiddenBodyIds: ReadonlySet<string>;
+  /** A standard view or a cube cell (ADR 0036): the camera turns to these angles in 300 ms. */
+  showView(angles: CameraAngles): void;
+  /** Alpha and beta of the camera when they change, for the view cube; also once at once. */
+  onCameraOrientation(listener: (alpha: number, beta: number) => void): void;
 }
 
 function removeBody(context: ViewportContext, bodyId: string): void {
@@ -235,34 +218,6 @@ function navigationOf(context: ViewportContext, canvas: HTMLCanvasElement) {
   });
 }
 
-function createContext(
-  scene: Scene,
-  canvas: HTMLCanvasElement,
-  callbacks: ViewportCallbacks,
-): ViewportContext {
-  const loadedBodies = new Map<string, LoadedBody>();
-  const poses = new PoseInterpolator();
-  const latestPose = (bodyId: string) => poses.latestPose(bodyId);
-  const camera = createCamera(scene);
-  return {
-    scene,
-    camera,
-    view: createCameraView(scene, canvas, camera),
-    stage: createStage(scene),
-    wantedKeys: new Map(),
-    loadedBodies,
-    bodyIdByMesh: new Map(),
-    poses,
-    highlights: createBodyHighlights(scene, loadedBodies, latestPose),
-    sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
-    placementGizmo: createPlacementGizmo(scene, {
-      onDragged: callbacks.onPlacementDragged,
-      onDragEnded: callbacks.onPlacementDragEnded,
-    }),
-    hiddenBodyIds: new Set(),
-  };
-}
-
 export function createViewport(
   canvas: HTMLCanvasElement,
   loadBytes: MeshBytesLoader,
@@ -270,7 +225,10 @@ export function createViewport(
 ): Viewport {
   const engine = createEngine(canvas);
   const scene = new Scene(engine);
-  const context = createContext(scene, canvas, callbacks);
+  const context = createContext(scene, canvas, {
+    onDragged: callbacks.onPlacementDragged,
+    onDragEnded: callbacks.onPlacementDragEnded,
+  });
   listenToPicks(context, callbacks);
   applyPosesEachFrame(context);
   const navigation = navigationOf(context, canvas);
@@ -293,5 +251,7 @@ export function createViewport(
     showPlacementGizmo: (spec) => context.placementGizmo.show(spec),
     releasePlacementGizmo: () => context.placementGizmo.release(),
     setNavigation: (settings) => navigation.apply(settings),
+    showView: (angles) => navigation.showView(angles),
+    onCameraOrientation: (listener) => navigation.onOrientation(listener),
   };
 }

@@ -1,0 +1,67 @@
+/* View cube, top right of the 3D view (ADR 0036 point 5). Tokens in base.css. */
+.view-cube {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  width: 90px;
+  height: 90px;
+  /* The cube alone takes the mouse; the rest keeps middle drag and wheel for the canvas. */
+  pointer-events: none;
+  perspective: 420px;
+}
+
+.view-cube[hidden] {
+  display: none;
+}
+
+.view-cube__scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.view-cube__cell {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  padding: 0;
+  font: inherit;
+  color: transparent;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  backface-visibility: hidden;
+  pointer-events: auto;
+}
+
+/* The name of a face: as wide as the face, over its centre cell, not clickable. */
+.view-cube__label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90px;
+  height: 30px;
+  margin: -15px 0 0 -45px;
+  font-size: 11px;
+  line-height: 30px;
+  color: var(--text);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+
+.view-cube__cell--edge,
+.view-cube__cell--corner {
+  color: transparent;
+  background: var(--surface-2);
+}
+
+.view-cube__cell.is-hot {
+  background: var(--accent);
+}

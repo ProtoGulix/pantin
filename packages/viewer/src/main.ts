@@ -30,6 +30,8 @@ import type { PanelIntents } from "./ui/panel-intents.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
 import { SidePanel } from "./ui/side-panel.ts";
 import { TransportBar } from "./ui/transport-bar.ts";
+import { ViewCube } from "./ui/view-cube.ts";
+import { listenToViewListKey } from "./ui/view-list.ts";
 import { WelcomeDialog } from "./ui/welcome-dialog.ts";
 import type { PanelView } from "./view-model.ts";
 
@@ -59,6 +61,7 @@ interface Screen {
   ): void;
   showConsoleLive(view: ConsoleView | null): void;
   showClock(view: ClockView, intents: PanelIntents): void;
+  showCameraOrientation(alpha: number, beta: number): void;
 }
 
 // Its counter sits in the toolbar of the side panel, which is redrawn: looked up when needed.
@@ -67,6 +70,14 @@ function createConsolePanel(sidePanel: HTMLElement): ConsolePanel {
     requireElement("#console", HTMLElement),
     requireElement(".central", HTMLElement),
     () => sidePanel.querySelector<HTMLElement>(".console-counter"),
+  );
+}
+
+// Over the canvas, under the welcome dialog.
+function createDiagramView(): DiagramView {
+  return new DiagramView(
+    requireElement(".viewport", HTMLElement),
+    requireElement("#welcome", HTMLElement),
   );
 }
 
@@ -83,15 +94,12 @@ function createScreen(): Screen {
       canvas.focus();
     }
   });
-  // Over the canvas, under the welcome dialog.
-  const diagram = new DiagramView(
-    requireElement(".viewport", HTMLElement),
-    requireElement("#welcome", HTMLElement),
-  );
+  const diagram = createDiagramView();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
   const consolePanel = createConsolePanel(panel);
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
+  const viewCube = new ViewCube(requireElement("#view-cube", HTMLElement), canvas);
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
     canvas,
@@ -108,6 +116,7 @@ function createScreen(): Screen {
       );
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
+      viewCube.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
     showJointPositions: (positions) => inspector.showJointPositions(positions),
@@ -116,6 +125,7 @@ function createScreen(): Screen {
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),
+    showCameraOrientation: (alpha, beta) => viewCube.showOrientation(alpha, beta),
   };
 }
 
@@ -220,6 +230,8 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   listenToShortcuts(() => store.state, late.intents);
   const created = createViewportOrInert(screen.canvas, api, store);
   late.viewport = created.viewport;
+  created.viewport.onCameraOrientation(screen.showCameraOrientation);
+  listenToViewListKey(() => store.state, late.intents, screen.canvas);
   if (created.startupError !== null) {
     const message = errorMessage("message.webglUnavailable", {}, created.startupError);
     store.update({ ...store.state, message });

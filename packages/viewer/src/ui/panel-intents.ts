@@ -3,6 +3,7 @@ import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
+import type { Vector3Tuple } from "../frames.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
@@ -14,6 +15,8 @@ import type { WelcomeTab } from "../viewer-state.ts";
 // changes. Values from form fields arrive as raw strings, validated there.
 export interface PanelIntents {
   runMenuCommand(command: MenuCommand): void;
+  // The view cube (ADR 0036 point 5): look from this core direction.
+  showViewFromDirection(direction: Vector3Tuple): void;
 
   // The welcome dialog (ADR 0027), shown while no Pantin is open.
   selectListPantin(pantinId: string): void;

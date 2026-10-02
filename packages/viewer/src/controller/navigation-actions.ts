@@ -1,8 +1,14 @@
+import type { Vector3Tuple } from "../frames.ts";
 import {
   ARROW_STEPS_DEGREES,
   isNavigationPresetId,
   type NavigationSettings,
 } from "../navigation/navigation-settings.ts";
+import {
+  anglesFromDirection,
+  isStandardViewId,
+  STANDARD_VIEWS,
+} from "../navigation/standard-views.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The navigation settings of the 3D view (ADR 0036 points 1, 2, 6, 7): display
@@ -37,5 +43,17 @@ export function setArrowStep(store: ViewerStore, degrees: string): void {
     arrowStepDegrees !== store.state.navigation.arrowStepDegrees
   ) {
     changeNavigation(store, { arrowStepDegrees });
+  }
+}
+
+/** The camera turns to look from this core direction (a cube cell). */
+export function showViewFromDirection(store: ViewerStore, direction: Vector3Tuple): void {
+  store.ports.viewport().showView(anglesFromDirection(direction));
+}
+
+/** An unknown view name is ignored: the command is a plain string by now. */
+export function showStandardView(store: ViewerStore, viewId: string): void {
+  if (isStandardViewId(viewId)) {
+    showViewFromDirection(store, STANDARD_VIEWS[viewId].camera);
   }
 }
