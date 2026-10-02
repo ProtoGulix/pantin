@@ -55,9 +55,14 @@ checked on 2026-10-02). Dragging therefore fills no history.
    simulation.
 5. **Steps.** Translation step 1 mm and rotation step 15° by default,
    changeable in the viewer's settings (kept in the browser, never in the
-   Pantin), and off while Ctrl is held. The viewer rounds the value it sends
-   to the step in the anchor frame, so that a snapped value is exact in the
-   document whatever the gizmo's float noise.
+   Pantin), and off while Ctrl is held. The viewer rounds the drag, not the
+   resulting value: the displacement along the dragged arrow, or the angle
+   about the dragged ring's axis, both in the anchor frame, and applies it to
+   the placement the drag started from. The gizmo's float noise therefore
+   never reaches the document, and a value typed off the grid survives a
+   drag along another axis. (Amended on 2026-10-02 before the gizmo shipped:
+   rounding the three angles of the result turned the part about the axes
+   not dragged.)
 6. **Scope.** Gizmo and fields act on assemblies only; a body selected by a
    double click (ADR 0019 point 13) shows its placement read only when it
    has one (ADR 0033 point 7).
