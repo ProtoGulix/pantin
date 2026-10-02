@@ -398,6 +398,7 @@
   "console.code.migrated": "Document migré à l'ouverture, de la version {from} à la version {to}.",
   "console.code.clock_paused": "Simulation en pause.",
   "console.code.clock_resumed": "Simulation reprise.",
+  "console.code.face_file_missing": "Pas de fichier de faces : sur ce corps, l'alignement ne pourra viser que le plan d'un triangle, aucun axe.",
   "message.clockResume": "La simulation de ce Pantin n'a pas pu être reprise à l'ouverture : elle est peut-être en pause. Utilisez le bouton Reprendre de la barre de simulation.",
   "clock.label": "Contrôle de la simulation",
   "clock.run": "Reprendre",

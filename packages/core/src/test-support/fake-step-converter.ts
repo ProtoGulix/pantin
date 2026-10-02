@@ -17,7 +17,7 @@ const COMPONENT_GLB = buildGlb({
 
 function preamble(): string {
   return `#!${process.execPath}
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const args = process.argv.slice(2);
 const valueOf = (flag) => args[args.indexOf(flag) + 1];
@@ -40,11 +40,23 @@ const reply = (value) => process.stdout.write(JSON.stringify(value));
 `;
 }
 
+// A valid face file (ADR 0035): one plane face covering one triangle.
+export const SAMPLE_FACE_FILE = {
+  formatVersion: 1,
+  writer: "fake converter",
+  solid: true,
+  primitives: [{ mesh: 0, primitive: 0, ranges: [[0, 1, 0]] }],
+  faces: [{ kind: "plane", point: [0, 0, 0], normal: [0, 0, 1] }],
+};
+
+// The second component has no face file, as when the converter could not
+// prove its face map.
 export const TWO_COMPONENTS = {
   sourceUnit: "mm",
   components: [
     {
       file: "0.glb",
+      faceFile: "0.faces.json",
       name: "Carriage 3630.00",
       nodes: [
         { name: "AXIS_800", path: [0] },
@@ -53,6 +65,7 @@ export const TWO_COMPONENTS = {
     },
     {
       file: "1.glb",
+      faceFile: null,
       name: "Carriage 3630.00",
       nodes: [
         { name: "AXIS_800", path: [0] },
@@ -62,11 +75,17 @@ export const TWO_COMPONENTS = {
   ],
 };
 
+const writeBoth = `writeGlb("0.glb"); writeGlb("1.glb");`;
+const noFaceFileReason = `process.stderr.write("no face file for Carriage 3630.00: Triangles of face 3 differ.");`;
+
 const FAKE_CONVERTER_BEHAVIOURS = {
-  success: `writeGlb("0.glb"); writeGlb("1.glb"); reply(${JSON.stringify(TWO_COMPONENTS)});`,
+  success: `${writeBoth} writeFileSync(join(outputDir, "0.faces.json"), ${JSON.stringify(JSON.stringify(SAMPLE_FACE_FILE))}); ${noFaceFileReason} reply(${JSON.stringify(TWO_COMPONENTS)});`,
+  invalidFaceFile: `${writeBoth} writeFileSync(join(outputDir, "0.faces.json"), '{"formatVersion": 7}'); reply(${JSON.stringify(TWO_COMPONENTS)});`,
+  symlinkedFaceFile: `${writeBoth} symlinkSync(inputPath, join(outputDir, "0.faces.json")); reply(${JSON.stringify(TWO_COMPONENTS)});`,
+  escapingFaceFileName: `${writeBoth} reply({ sourceUnit: "mm", components: [{ file: "0.glb", faceFile: "../0.faces.json", name: "x", nodes: [] }] });`,
   missingSecondFile: `writeGlb("0.glb"); reply(${JSON.stringify(TWO_COMPONENTS)});`,
   secondFileNotGlb: `writeGlb("0.glb"); writeFileSync(join(outputDir, "1.glb"), "nope"); reply(${JSON.stringify(TWO_COMPONENTS)});`,
-  escapingFileName: `writeGlb("0.glb"); reply({ sourceUnit: "mm", components: [{ file: "../0.glb", name: "x", nodes: [] }] });`,
+  escapingFileName: `writeGlb("0.glb"); reply({ sourceUnit: "mm", components: [{ file: "../0.glb", faceFile: null, name: "x", nodes: [] }] });`,
   refusal: `reply({ error: "The file contains no solid. Export the bodies as solids." }); process.exit(2);`,
   crash: `process.stderr.write("Segmentation fault in BRepMesh"); process.exit(1);`,
   invalidJson: `process.stdout.write("this is not json");`,

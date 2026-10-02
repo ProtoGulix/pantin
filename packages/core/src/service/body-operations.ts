@@ -1,4 +1,4 @@
-import type { Body, PantinId } from "@pantin/protocol";
+import { type Body, faceFilePathOf, type PantinId } from "@pantin/protocol";
 import { findBody, renameBody } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import type { MeshFile } from "../store/pantin-store.ts";
@@ -32,9 +32,12 @@ export async function openBodyMesh(
   meshPath: string,
 ): Promise<MeshFile> {
   const { document } = await loadPantin(context, pantinId);
-  const body = document.bodies.find((candidate) => candidate.mesh === meshPath);
+  // Only a body's mesh, or the face file next to it (ADR 0035), is served.
+  const body = document.bodies.find(
+    (candidate) => candidate.mesh === meshPath || faceFilePathOf(candidate.mesh) === meshPath,
+  );
   if (body === undefined) {
     throw new ApiError("not_found", `Pantin "${pantinId}" has no mesh "${meshPath}".`);
   }
-  return context.store.openMesh(pantinId, body.mesh);
+  return context.store.openMesh(pantinId, meshPath);
 }

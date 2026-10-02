@@ -1,4 +1,12 @@
-import type { Assembly, Body, ImportBodyQuery, Joint, PantinId } from "@pantin/protocol";
+import type {
+  Assembly,
+  Body,
+  ConsoleEvent,
+  FaceFile,
+  ImportBodyQuery,
+  Joint,
+  PantinId,
+} from "@pantin/protocol";
 import { stepConverterUnavailable } from "../converter/step-converter.ts";
 import { newAssembly } from "../domain/assemblies.ts";
 import { fileNameStem } from "../domain/ids.ts";
@@ -17,6 +25,7 @@ import {
   removeJoints,
 } from "../domain/pantin-document.ts";
 import { buildStepBodies, stepAssemblyName } from "../domain/step-bodies.ts";
+import { recordConsoleEvents } from "./console-record.ts";
 import { forgetJointRuntimeState } from "./joint-operations.ts";
 import { releaseMesh } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
@@ -25,9 +34,12 @@ import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins
 // assembly component for STEP, joined by fixed joints (ADR 0017), all in one
 // new assembly (ADR 0019). All or nothing: on any failure, the joints, the
 // bodies then the assembly of this import leave the document and their mesh
-// files are deleted.
+// files are deleted. A STEP body keeps its face file next to its mesh
+// (ADR 0035 point 2); one without is reported in the console.
 
-type PlannedMesh = { body: Body; bytes: Uint8Array };
+// `faceFile` is null for a STEP body whose face map the converter could not
+// prove, undefined for GLB and STL bodies, which never have one.
+type PlannedMesh = { body: Body; bytes: Uint8Array; faceFile?: FaceFile | null };
 
 export type ImportedBodies = { bodies: Body[]; joints: Joint[] };
 
@@ -42,10 +54,15 @@ async function writeAllOrNothing(
 ): Promise<ImportedBodies> {
   const written: string[] = [];
   try {
-    for (const { body, bytes } of planned) {
+    for (const { body, bytes, faceFile } of planned) {
       // Exclusive creation: an existing file is never overwritten.
       await context.store.writeMesh(pantinId, body.mesh, bytes);
       written.push(body.mesh);
+      // No rollback entry of its own: deleting the mesh deletes its face file too.
+      if (faceFile !== undefined && faceFile !== null) {
+        const faceFileBytes = new TextEncoder().encode(JSON.stringify(faceFile));
+        await context.store.writeFaceFile(pantinId, body.mesh, faceFileBytes);
+      }
     }
   } catch (error) {
     // Joints first, so that no joint ever points to a missing body.
@@ -111,7 +128,11 @@ async function planStepImport(
   const { document } = openPantin;
   const assembly = newAssembly(document, stepAssemblyName(query, meshes));
   const planned = buildStepBodies(document, query, meshes, stems, assembly.key).map(
-    ({ body, component }) => ({ body, bytes: component.glbBytes }),
+    ({ body, component }) => ({
+      body,
+      bytes: component.glbBytes,
+      faceFile: component.faceFile ?? null,
+    }),
   );
   return reserve(openPantin, assembly, planned);
 }
@@ -147,8 +168,21 @@ export async function importBodies(
       : await planDirectImport(context, pantinId, query, bytes, format);
   // The meshes are written now; the bodies join pantin.json on the next save.
   try {
-    return await writeAllOrNothing(context, pantinId, reservation);
+    const imported = await writeAllOrNothing(context, pantinId, reservation);
+    recordConsoleEvents(context, reservation.openPantin, missingFaceFileEvents(reservation));
+    return imported;
   } finally {
     reservation.settle();
   }
+}
+
+function missingFaceFileEvents({ planned }: Reservation): ConsoleEvent[] {
+  return planned
+    .filter(({ faceFile }) => faceFile === null)
+    .map(({ body }) => ({
+      code: "face_file_missing",
+      level: "warning",
+      source: { kind: "body", id: body.id },
+      params: {},
+    }));
 }

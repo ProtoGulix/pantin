@@ -101,6 +101,14 @@ NOT VERIFIED:
    two coplanar faces, which a "point on the surface" test would miss, and
    covers faces of kind other.
 
+   **Storage.** The core validates the face file with the protocol schema
+   and keeps it at `meshes/<bodyId>.faces.json`, next to the GLB: written
+   with it, deleted with it (rollback, body deletion, discard), and served
+   by the mesh route only for a body's own mesh. A body without face file,
+   or whose face file the core refuses, is imported all the same, and the
+   console (ADR 0031) gets a `face_file_missing` warning whose source is the
+   body (a new source kind); the converter's reason goes to the core log.
+
    STL and GLB bodies have no face file.
 3. **Picking.** Alignment mode reuses the existing pick (ADR 0019
    point 13). The viewer maps the picked Babylon mesh to its glTF primitive

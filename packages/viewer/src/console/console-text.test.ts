@@ -50,6 +50,12 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "pantin" },
     params: {},
   }),
+  face_file_missing: entryOf(10, {
+    code: "face_file_missing",
+    level: "warning",
+    source: { kind: "body", id: "rail" },
+    params: {},
+  }),
 };
 
 const expected = {
@@ -64,6 +70,8 @@ const expected = {
     migrated: "Document migré à l'ouverture, de la version 1 à la version 2.",
     clock_paused: "Simulation en pause.",
     clock_resumed: "Simulation reprise.",
+    face_file_missing:
+      "Pas de fichier de faces : sur ce corps, l'alignement ne pourra viser que le plan d'un triangle, aucun axe.",
   },
   en: {
     forced_tag_written:
@@ -76,6 +84,8 @@ const expected = {
     migrated: "Document migrated on opening, from version 1 to version 2.",
     clock_paused: "Simulation paused.",
     clock_resumed: "Simulation resumed.",
+    face_file_missing:
+      "No face file: on this body, alignment can only pick the plane of a triangle, no axis.",
   },
 } as const;
 

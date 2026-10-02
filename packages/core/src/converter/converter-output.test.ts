@@ -3,7 +3,9 @@ import { interpretConverterRun, type ProcessOutcome } from "./converter-output.t
 
 const VALID_OUTPUT = {
   sourceUnit: "mm",
-  components: [{ file: "0.glb", name: "Rail", nodes: [{ name: "Rail", path: [0] }] }],
+  components: [
+    { file: "0.glb", faceFile: "0.faces.json", name: "Rail", nodes: [{ name: "Rail", path: [0] }] },
+  ],
 };
 
 function outcome(overrides: Partial<ProcessOutcome>): ProcessOutcome {
@@ -33,7 +35,7 @@ describe("interpretConverterRun", () => {
       {
         stdout: JSON.stringify({
           ...VALID_OUTPUT,
-          components: [{ file: "a/0.glb", name: "", nodes: [] }],
+          components: [{ file: "a/0.glb", faceFile: null, name: "", nodes: [] }],
         }),
       },
     ],
@@ -42,7 +44,7 @@ describe("interpretConverterRun", () => {
       {
         stdout: JSON.stringify({
           ...VALID_OUTPUT,
-          components: [{ file: "0.step", name: "", nodes: [] }],
+          components: [{ file: "0.step", faceFile: null, name: "", nodes: [] }],
         }),
       },
     ],
@@ -51,7 +53,9 @@ describe("interpretConverterRun", () => {
       {
         stdout: JSON.stringify({
           ...VALID_OUTPUT,
-          components: [{ file: "0.glb", name: "", nodes: [{ name: "a", path: [-1] }] }],
+          components: [
+            { file: "0.glb", faceFile: null, name: "", nodes: [{ name: "a", path: [-1] }] },
+          ],
         }),
       },
     ],
@@ -61,6 +65,31 @@ describe("interpretConverterRun", () => {
       ok: false,
       clientMessage: expect.stringContaining("core logs"),
     });
+  });
+});
+
+describe("interpretConverterRun face file names (ADR 0035)", () => {
+  it.each<[string, Partial<ProcessOutcome>]>([
+    [
+      "no faceFile field (ADR 0009 point 3 requires it, null when there is none)",
+      {
+        stdout: JSON.stringify({
+          ...VALID_OUTPUT,
+          components: [{ file: "0.glb", name: "", nodes: [] }],
+        }),
+      },
+    ],
+    [
+      "a face file outside the output directory",
+      {
+        stdout: JSON.stringify({
+          ...VALID_OUTPUT,
+          components: [{ file: "0.glb", faceFile: "../0.faces.json", name: "", nodes: [] }],
+        }),
+      },
+    ],
+  ])("fails with a generic message on %s", (_description, overrides) => {
+    expect(interpretConverterRun(outcome(overrides), 1000)).toMatchObject({ ok: false });
   });
 });
 

@@ -6,6 +6,7 @@ export * from "./clock.ts";
 export * from "./console.ts";
 export * from "./drive.ts";
 export * from "./drive-api.ts";
+export * from "./face-file.ts";
 export * from "./ids.ts";
 export * from "./joint.ts";
 export * from "./pantin.ts";

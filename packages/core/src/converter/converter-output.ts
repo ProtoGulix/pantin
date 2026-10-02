@@ -7,12 +7,19 @@ import { formatIssues } from "../domain/validation.ts";
 
 // A plain file name inside the output directory: no separator, no "..".
 const ComponentFileSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\.glb$/);
+const FaceFileNameSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\.faces\.json$/);
 
 const ConverterSuccessSchema = z.object({
   sourceUnit: z.string().min(1),
   components: z
     .array(
-      z.object({ file: ComponentFileSchema, name: z.string(), nodes: z.array(SourceNodeSchema) }),
+      z.object({
+        file: ComponentFileSchema,
+        // Null when the converter could not prove the face map (ADR 0035 point 2).
+        faceFile: FaceFileNameSchema.nullable(),
+        name: z.string(),
+        nodes: z.array(SourceNodeSchema),
+      }),
     )
     .min(1),
 });

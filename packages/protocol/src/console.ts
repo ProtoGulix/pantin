@@ -1,6 +1,12 @@
 import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
-import { ActuatorIdSchema, DriveIdSchema, JointIdSchema, SensorIdSchema } from "./ids.ts";
+import {
+  ActuatorIdSchema,
+  BodyIdSchema,
+  DriveIdSchema,
+  JointIdSchema,
+  SensorIdSchema,
+} from "./ids.ts";
 import { TagNameSchema } from "./tag.ts";
 
 // The Pantin console (ADR 0031): what happens in the core, per open Pantin,
@@ -36,6 +42,7 @@ export const ConsoleSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("actuator"), id: ActuatorIdSchema }),
   z.object({ kind: z.literal("sensor"), id: SensorIdSchema }),
   z.object({ kind: z.literal("joint"), id: JointIdSchema }),
+  z.object({ kind: z.literal("body"), id: BodyIdSchema }),
 ]);
 export type ConsoleSource = z.infer<typeof ConsoleSourceSchema>;
 
@@ -45,6 +52,7 @@ const JointOrDriveSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("joint"), id: JointIdSchema }),
 ]);
 const PantinSourceSchema = z.object({ kind: z.literal("pantin") });
+const BodySourceSchema = z.object({ kind: z.literal("body"), id: BodyIdSchema });
 
 // Params are typed per code, not a loose record: a client's translation of a
 // code knows which placeholders exist, and a new code cannot ship without
@@ -66,6 +74,10 @@ const ParamsSchemas = {
     to: z.number().int().positive(),
   }),
   clock: z.object({}),
+  // ADR 0035 point 2: the converter could not prove the face map of this
+  // STEP body, so alignment only offers the fallback pick on it. The reason
+  // goes to the core log.
+  face_file_missing: z.object({}),
 };
 
 const eventShapes = {
@@ -123,6 +135,12 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.clock,
   }),
+  faceFileMissing: z.object({
+    code: z.literal("face_file_missing"),
+    level: z.literal("warning"),
+    source: BodySourceSchema,
+    params: ParamsSchemas.face_file_missing,
+  }),
 };
 
 // One event: what the core reports, before it gets a sequence and times.
@@ -137,6 +155,7 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.migrated,
   eventShapes.clockPaused,
   eventShapes.clockResumed,
+  eventShapes.faceFileMissing,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
 export type ConsoleCode = ConsoleEvent["code"];
@@ -164,6 +183,7 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.migrated.extend(entryFields),
   eventShapes.clockPaused.extend(entryFields),
   eventShapes.clockResumed.extend(entryFields),
+  eventShapes.faceFileMissing.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
 

@@ -398,6 +398,7 @@
   "console.code.migrated": "Document migrated on opening, from version {from} to version {to}.",
   "console.code.clock_paused": "Simulation paused.",
   "console.code.clock_resumed": "Simulation resumed.",
+  "console.code.face_file_missing": "No face file: on this body, alignment can only pick the plane of a triangle, no axis.",
   "message.clockResume": "The simulation of this Pantin could not be resumed on opening: it may be paused. Use the Resume button of the simulation bar.",
   "clock.label": "Simulation control",
   "clock.run": "Resume",

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { ImportBodiesResponseSchema } from "@pantin/protocol";
+import { FaceFileSchema, faceFilePathOf, ImportBodiesResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   createTestWorkspace,
@@ -37,7 +37,7 @@ afterEach(async () => {
 });
 
 describe.skipIf(converterPython === undefined)("STEP import with the real converter", () => {
-  it("creates one body per component, with verbatim names and GLB meshes", async () => {
+  it("creates one body per component, with verbatim names, GLB meshes and face files", async () => {
     server = await startTestServer(workspace.pantinsDirectory, {
       stepConverterPython: converterPython ?? "",
     });
@@ -63,6 +63,15 @@ describe.skipIf(converterPython === undefined)("STEP import with the real conver
       expect(body.source).toMatchObject({ format: "step", unit: "m", upAxis: "z" });
       const mesh = await readFile(join(workspace.pantinsDirectory, "axis", body.mesh));
       expect(mesh.subarray(0, 4).toString("latin1")).toBe("glTF");
+      // Both components are boxes: six plane faces each (ADR 0035).
+      const faceFilePath = join(
+        workspace.pantinsDirectory,
+        "axis",
+        faceFilePathOf(body.mesh) ?? "",
+      );
+      const faceFile = FaceFileSchema.parse(JSON.parse(await readFile(faceFilePath, "utf8")));
+      expect(faceFile.solid).toBe(true);
+      expect(faceFile.faces.map((face) => face.kind)).toEqual(Array(6).fill("plane"));
     }
   }, 60_000);
 });

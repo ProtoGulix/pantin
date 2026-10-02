@@ -3,6 +3,7 @@ import { createReadStream, type ReadStream } from "node:fs";
 import { lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
+  faceFilePathOf,
   PANTIN_DOCUMENT_FILE_NAME,
   PANTIN_MESHES_DIRECTORY_NAME,
   type PantinId,
@@ -25,7 +26,11 @@ export type PantinStore = {
   writeDocumentAtomically(pantinId: PantinId, text: string): Promise<void>;
   listMeshFileNames(pantinId: PantinId): Promise<string[]>;
   writeMesh(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
+  // The face file of a GLB mesh (ADR 0035), written after the mesh.
+  writeFaceFile(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
+  // Serves a mesh, or the face file of one: any file of the meshes folder.
   openMesh(pantinId: PantinId, meshPath: string): Promise<MeshFile>;
+  // Deletes the mesh and its face file, if any.
   deleteMesh(pantinId: PantinId, meshPath: string): Promise<void>;
   describeDocumentLocation(pantinId: PantinId): string;
 };
@@ -116,18 +121,31 @@ async function listMeshFileNames(paths: Paths, pantinId: PantinId): Promise<stri
 }
 
 // "wx": never overwrite an existing file, nor follow a symbolic link planted there.
-async function writeMesh(paths: Paths, pantinId: PantinId, meshPath: string, bytes: Uint8Array) {
+async function writeMeshesFile(
+  paths: Paths,
+  pantinId: PantinId,
+  relativePath: string,
+  bytes: Uint8Array,
+) {
   const directory = meshesDirectory(paths, pantinId);
   await mkdir(directory, { recursive: true });
   await assertRealPathInside(paths.pantinsDirectory, directory);
   try {
-    await writeFile(pathInPantin(paths, pantinId, meshPath), bytes, { flag: "wx" });
+    await writeFile(pathInPantin(paths, pantinId, relativePath), bytes, { flag: "wx" });
   } catch (error) {
     if (isErrorWithCode(error, "EEXIST")) {
-      throw new ApiError("conflict", `Mesh file "${meshPath}" already exists. Retry the import.`);
+      throw new ApiError("conflict", `File "${relativePath}" already exists. Retry the import.`);
     }
     throw error;
   }
+}
+
+function requireFaceFilePath(meshPath: string): string {
+  const faceFilePath = faceFilePathOf(meshPath);
+  if (faceFilePath === undefined) {
+    throw new Error(`Only a GLB mesh has a face file, not "${meshPath}".`);
+  }
+  return faceFilePath;
 }
 
 async function openMesh(paths: Paths, pantinId: PantinId, meshPath: string): Promise<MeshFile> {
@@ -152,6 +170,10 @@ async function openMesh(paths: Paths, pantinId: PantinId, meshPath: string): Pro
 // Used to roll back a failed import; a missing file is not an error.
 async function deleteMesh(paths: Paths, pantinId: PantinId, meshPath: string): Promise<void> {
   await assertRealPathInside(paths.pantinsDirectory, meshesDirectory(paths, pantinId));
+  const faceFilePath = faceFilePathOf(meshPath);
+  if (faceFilePath !== undefined) {
+    await rm(pathInPantin(paths, pantinId, faceFilePath), { force: true });
+  }
   await rm(pathInPantin(paths, pantinId, meshPath), { force: true });
 }
 
@@ -164,7 +186,9 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     readDocumentModifiedAt: (pantinId) => readDocumentModifiedAt(paths, pantinId),
     writeDocumentAtomically: (pantinId, text) => writeDocumentAtomically(paths, pantinId, text),
     listMeshFileNames: (pantinId) => listMeshFileNames(paths, pantinId),
-    writeMesh: (pantinId, meshPath, bytes) => writeMesh(paths, pantinId, meshPath, bytes),
+    writeMesh: (pantinId, meshPath, bytes) => writeMeshesFile(paths, pantinId, meshPath, bytes),
+    writeFaceFile: (pantinId, meshPath, bytes) =>
+      writeMeshesFile(paths, pantinId, requireFaceFilePath(meshPath), bytes),
     openMesh: (pantinId, meshPath) => openMesh(paths, pantinId, meshPath),
     deleteMesh: (pantinId, meshPath) => deleteMesh(paths, pantinId, meshPath),
     // Relative to the pantins directory: error messages never reveal absolute paths.

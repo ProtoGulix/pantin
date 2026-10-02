@@ -30,6 +30,10 @@ const HOSTILE_FILE_NAMES = [
   "sentinel.stl",
   "pantin.json",
   "rail.stl%00.glb",
+  "..%2Fsentinel.faces.json",
+  "rail.json",
+  "rail.stl.faces.json",
+  ".faces.json",
 ];
 
 let workspace: TestWorkspace;

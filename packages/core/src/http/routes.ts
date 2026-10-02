@@ -1,6 +1,7 @@
 import {
   BodyIdSchema,
   CreatePantinRequestSchema,
+  FACE_FILE_EXTENSION,
   ImportBodyQuerySchema,
   PANTIN_MESHES_DIRECTORY_NAME,
   RenameRequestSchema,
@@ -24,18 +25,39 @@ const MESH_CONTENT_TYPES: Readonly<Record<string, string>> = {
   stl: "model/stl",
 };
 
-// A mesh file name is "<bodyId>.glb" or "<bodyId>.stl": nothing else can name a file.
+// The face file extension without its leading dot, like "glb" and "stl".
+const FACE_FILE_EXTENSION_NAME = FACE_FILE_EXTENSION.slice(1);
+
+function stemAndExtension(fileName: string): { stem: string; extension: string } {
+  if (fileName.endsWith(FACE_FILE_EXTENSION)) {
+    return {
+      stem: fileName.slice(0, -FACE_FILE_EXTENSION.length),
+      extension: FACE_FILE_EXTENSION_NAME,
+    };
+  }
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex === -1
+    ? { stem: fileName, extension: "" }
+    : { stem: fileName.slice(0, dotIndex), extension: fileName.slice(dotIndex + 1) };
+}
+
+// A file of the meshes folder is "<bodyId>.glb", "<bodyId>.stl" or the face
+// file "<bodyId>.faces.json" (ADR 0035): nothing else can name a file.
 function meshPathOf(context: RouteContext): { meshPath: string; contentType: string } {
   const fileName = context.parameters.fileName ?? "";
-  const dotIndex = fileName.lastIndexOf(".");
-  const stem = dotIndex === -1 ? fileName : fileName.slice(0, dotIndex);
-  const extension = dotIndex === -1 ? "" : fileName.slice(dotIndex + 1);
+  const { stem, extension } = stemAndExtension(fileName);
   parseWithSchema(BodyIdSchema, stem, "The mesh file name in the URL");
-  const contentType = Object.hasOwn(MESH_CONTENT_TYPES, extension)
-    ? MESH_CONTENT_TYPES[extension]
-    : undefined;
+  const contentType =
+    extension === FACE_FILE_EXTENSION_NAME
+      ? "application/json"
+      : Object.hasOwn(MESH_CONTENT_TYPES, extension)
+        ? MESH_CONTENT_TYPES[extension]
+        : undefined;
   if (contentType === undefined) {
-    throw new ApiError("invalid_request", `Mesh file "${fileName}" must end in .glb or .stl.`);
+    throw new ApiError(
+      "invalid_request",
+      `Mesh file "${fileName}" must end in .glb, .stl or ${FACE_FILE_EXTENSION}.`,
+    );
   }
   return { meshPath: `${PANTIN_MESHES_DIRECTORY_NAME}/${stem}.${extension}`, contentType };
 }

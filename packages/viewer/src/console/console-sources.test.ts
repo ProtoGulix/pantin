@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
+import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { consolePantin } from "./console-fixtures.ts";
 import { consoleSourceLabel, consoleSourceTarget } from "./console-sources.ts";
 
@@ -14,6 +14,7 @@ describe("consoleSourceLabel", () => {
     expect(consoleSourceLabel(document, { kind: "drive", id: "v1" }, t)).toBe("v1");
     expect(consoleSourceLabel(document, { kind: "actuator", id: "c1" }, t)).toBe("c1");
     expect(consoleSourceLabel(document, { kind: "sensor", id: "e1" }, t)).toBe("e1");
+    expect(consoleSourceLabel(document, { kind: "body", id: "s1" }, t)).toBe("s1");
   });
 
   it("gives the id of a source that no longer exists, marked as deleted", () => {
@@ -43,8 +44,16 @@ describe("consoleSourceTarget", () => {
     });
   });
 
+  it("selects a body as its row", () => {
+    expect(consoleSourceTarget(document, "press", { kind: "body", id: "s1" })).toEqual({
+      kind: "node",
+      nodeId: bodyNodeId("press", "s1"),
+    });
+  });
+
   it("selects nothing for a source that no longer exists", () => {
     expect(consoleSourceTarget(document, "press", { kind: "drive", id: "gone" })).toBeNull();
     expect(consoleSourceTarget(document, "press", { kind: "joint", id: "gone" })).toBeNull();
+    expect(consoleSourceTarget(document, "press", { kind: "body", id: "gone" })).toBeNull();
   });
 });

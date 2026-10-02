@@ -1,10 +1,15 @@
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { FaceFileSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { createPantinStore, type PantinStore } from "../store/pantin-store.ts";
-import { MINIMAL_STEP_TEXT, TWO_COMPONENTS } from "../test-support/fake-step-converter.ts";
+import {
+  MINIMAL_STEP_TEXT,
+  SAMPLE_FACE_FILE,
+  TWO_COMPONENTS,
+} from "../test-support/fake-step-converter.ts";
 import { storeHoldingMeshWrites } from "../test-support/held-mesh-store.ts";
 import { buildSampleGlb } from "../test-support/mesh-fixtures.ts";
 import { createPantinService } from "./pantin-service.ts";
@@ -19,11 +24,15 @@ afterEach(async () => {
   await rm(pantinsDirectory, { recursive: true });
 });
 
+const faceFile = FaceFileSchema.parse(SAMPLE_FACE_FILE);
+
+// The first component has a face file, the second none.
 const twoComponents: StepConverter = async () =>
-  TWO_COMPONENTS.components.map((component) => ({
+  TWO_COMPONENTS.components.map((component, index) => ({
     name: component.name,
     nodes: component.nodes,
     glbBytes: buildSampleGlb(),
+    faceFile: index === 0 ? faceFile : undefined,
   }));
 
 const oneComponent: StepConverter = async () =>
@@ -31,6 +40,7 @@ const oneComponent: StepConverter = async () =>
     name: component.name,
     nodes: component.nodes,
     glbBytes: buildSampleGlb(),
+    faceFile,
   }));
 
 const STEP_BYTES = new TextEncoder().encode(MINIMAL_STEP_TEXT);
