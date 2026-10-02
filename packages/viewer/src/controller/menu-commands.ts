@@ -8,6 +8,12 @@ import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
 import { toggleGizmo } from "./gizmo-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
+import {
+  setArrowStep,
+  setNavigationPreset,
+  togglePerspective,
+  toggleReverseWheel,
+} from "./navigation-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
 import { deleteSensor } from "./sensor-actions.ts";
 import { requestClose, requestDelete } from "./session-actions.ts";
@@ -39,7 +45,7 @@ function deleteSelection(store: ViewerStore): void {
   }
 }
 
-// "language:fr" and "layout:3d": the part after the colon is the argument.
+// "language:fr", "layout:3d", "navigation:zw3d" and "arrowStep:15": the part after the colon is the argument.
 // A layout is parsed, not cast: the command is a plain string by now.
 function runParameterisedCommand(
   store: ViewerStore,
@@ -48,6 +54,10 @@ function runParameterisedCommand(
 ): void {
   if (command.startsWith("layout:")) {
     setCentralLayout(store, parseStoredLayout(command.slice("layout:".length)));
+  } else if (command.startsWith("navigation:")) {
+    setNavigationPreset(store, command.slice("navigation:".length));
+  } else if (command.startsWith("arrowStep:")) {
+    setArrowStep(store, command.slice("arrowStep:".length));
   } else {
     changeLanguage(command.slice("language:".length));
   }
@@ -74,6 +84,12 @@ function runViewCommand(
       return;
     case "frameSelection":
       withSelection(store, (nodeId) => frameNode(store, nodeId));
+      return;
+    case "perspective":
+      togglePerspective(store);
+      return;
+    case "reverseWheel":
+      toggleReverseWheel(store);
       return;
     default:
       runParameterisedCommand(store, command, changeLanguage);

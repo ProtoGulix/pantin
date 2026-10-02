@@ -138,7 +138,9 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
     contextMenu: buildContextMenuView(state, translate),
     prompt: buildPromptView(state, translate),
     message: buildMessageView(state, translate),
-    viewportHint: translate(mode === "list" ? "page.viewportEmpty" : "page.viewportHint"),
+    viewportHint: translate(
+      mode === "list" ? "page.viewportEmpty" : `page.viewportHint.${state.navigation.preset}`,
+    ),
     inspector: buildInspectorView(state, translate),
     console: buildConsoleView(
       state.console,

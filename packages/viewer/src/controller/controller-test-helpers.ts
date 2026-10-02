@@ -39,6 +39,7 @@ export function testStore(
       showClock: () => undefined,
       storeCentralLayout,
       storeGizmoSteps: () => undefined,
+      storeNavigation: () => undefined,
       ...ports,
     },
     "fr",

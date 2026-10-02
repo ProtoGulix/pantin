@@ -1,6 +1,7 @@
 import type { CentralLayout } from "../central-layout.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
+import type { NavigationPresetId } from "../navigation/navigation-presets.ts";
 import type { MenuContext } from "./menu-context.ts";
 
 // The vocabulary of the menu bar: commands, item definitions and the helpers
@@ -17,6 +18,10 @@ export type MenuCommand =
   | "delete"
   | "frameAll"
   | "frameSelection"
+  | "perspective"
+  | "reverseWheel"
+  | `arrowStep:${number}`
+  | `navigation:${NavigationPresetId}`
   | "gizmoMove"
   | "gizmoRotate"
   | "toggleInspector"
@@ -101,5 +106,34 @@ export function gizmoItem(
       labelKey: shortcutLabelKey,
     }),
     checked: (context) => context.gizmoMode === kind,
+  };
+}
+
+/** "Souris : SolidWorks" and "Souris : ZW3D" (ADR 0036 point 1): checked on the preset in use. */
+export function navigationPresetItem(preset: NavigationPresetId): MenuItemDefinition {
+  return {
+    command: `navigation:${preset}`,
+    label: (translate) => translate(`menubar.view.navigation.${preset}`),
+    enabled: always,
+    checked: (context) => context.navigation.preset === preset,
+  };
+}
+
+/** A checkable item of the 3D view's settings, always available. */
+export function navigationToggleItem(
+  command: "perspective" | "reverseWheel",
+  labelKey: MessageKey,
+  isOn: (context: MenuContext) => boolean,
+): MenuItemDefinition {
+  return { ...item(command, labelKey, always), checked: isOn };
+}
+
+/** "Pas des flèches : 15°" (ADR 0036 point 7): checked on the step in use. */
+export function arrowStepItem(degrees: number): MenuItemDefinition {
+  return {
+    command: `arrowStep:${degrees}`,
+    label: (translate) => translate("menubar.view.arrowStep", { degrees }),
+    enabled: always,
+    checked: (context) => context.navigation.arrowStepDegrees === degrees,
   };
 }

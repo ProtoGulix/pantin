@@ -16,6 +16,7 @@ import type { DiagramModel } from "./diagram/diagram-view-model.ts";
 import { parseStoredSteps, serializeSteps } from "./gizmo/gizmo-steps.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { errorMessage, type PanelMessage } from "./messages.ts";
+import { parseStoredNavigation, serializeNavigation } from "./navigation/navigation-settings.ts";
 import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
@@ -199,6 +200,8 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
     storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
     storeGizmoSteps: (steps) => writeStoredText(STORAGE_KEYS.gizmoSteps, serializeSteps(steps)),
+    storeNavigation: (settings) =>
+      writeStoredText(STORAGE_KEYS.navigation, serializeNavigation(settings)),
   };
 }
 
@@ -210,6 +213,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
     language,
     parseStoredLayout(readStoredText(STORAGE_KEYS.centralLayout)),
     parseStoredSteps(readStoredText(STORAGE_KEYS.gizmoSteps)),
+    parseStoredNavigation(readStoredText(STORAGE_KEYS.navigation)),
   );
   late.store = store;
   late.intents = createPanelIntents(store);

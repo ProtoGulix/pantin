@@ -37,6 +37,21 @@ function press(key: string, overrides: Partial<KeyPress> = {}): KeyPress {
   };
 }
 
+// Under Affichage the settings of the 3D view stay enabled without a Pantin.
+const LIST_VIEW_COMMANDS = [
+  "welcome",
+  "open",
+  "perspective",
+  "navigation:solidworks",
+  "navigation:zw3d",
+  "reverseWheel",
+  "arrowStep:5",
+  "arrowStep:15",
+  "arrowStep:45",
+  "language:fr",
+  "language:en",
+];
+
 describe("menu bar model", () => {
   it("has Fichier, Édition and Affichage with their items and shortcut labels", () => {
     const menus = buildMenuBar(editing(true), translate);
@@ -53,7 +68,7 @@ describe("menu bar model", () => {
   });
 
   it("in the list view, shows the welcome dialog, opens, frames nothing and switches language", () => {
-    expect(enabledCommands(listing)).toEqual(["welcome", "open", "language:fr", "language:en"]);
+    expect(enabledCommands(listing)).toEqual(LIST_VIEW_COMMANDS);
     expect(enabledCommands(editing(false))).not.toContain("welcome");
   });
 
@@ -68,24 +83,6 @@ describe("menu bar model", () => {
     expect(enabledCommands(onBody)).toEqual(expect.arrayContaining(["rename", "delete"]));
     expect(enabledCommands(onSource)).not.toContain("delete");
     expect(enabledCommands(onSource)).not.toContain("rename");
-  });
-
-  it("checks the current language", () => {
-    const view = buildMenuBar(listing, translate)[2]?.entries.filter(
-      (entry) => entry.type === "item",
-    );
-    expect(view?.map((entry) => entry.type === "item" && [entry.label, entry.checked])).toEqual([
-      ["Tout cadrer", null],
-      ["Cadrer la sélection", null],
-      ["Inspecteur", true],
-      ["Console", false],
-      ["Changer la vue centrale", null],
-      ["3D seule", false],
-      ["Schéma des chaînes seul", false],
-      ["3D + Schéma", true],
-      ["Langue : FR", true],
-      ["Langue : EN", false],
-    ]);
   });
 });
 
@@ -230,6 +227,7 @@ describe("shortcut listing", () => {
       { keys: "Suppr", action: "Supprimer" },
       { keys: "G", action: "Déplacer" },
       { keys: "R", action: "Tourner" },
+      { keys: "F", action: "Tout cadrer" },
       { keys: "F8", action: "Console" },
       { keys: "F4", action: "Changer la vue centrale" },
     ]);

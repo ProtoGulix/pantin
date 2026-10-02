@@ -10,6 +10,7 @@ import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
+import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
 import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
@@ -97,6 +98,9 @@ export interface ViewerState {
   // setting of the viewer kept in the browser. Display state, never saved.
   gizmoMode: DragKind | null;
   gizmoSteps: SnapSteps;
+  // The mouse preset, wheel direction, arrow step and projection of the 3D
+  // view (ADR 0036), kept in the browser like the steps. Never saved.
+  navigation: NavigationSettings;
 }
 
 export interface InspectorFocusRequest {
@@ -111,6 +115,7 @@ export function initialViewerState(
   language: Language,
   centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
   gizmoSteps: SnapSteps = DEFAULT_SNAP_STEPS,
+  navigation: NavigationSettings = DEFAULT_NAVIGATION,
 ): ViewerState {
   return {
     language,
@@ -149,6 +154,7 @@ export function initialViewerState(
     console: INITIAL_CONSOLE_STATE,
     gizmoMode: null,
     gizmoSteps,
+    navigation,
   };
 }
 

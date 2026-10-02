@@ -1,9 +1,12 @@
 import { CENTRAL_LAYOUTS, showsViewport } from "../central-layout.ts";
 import { isDeviceKind } from "../device-selection.ts";
 import { LANGUAGES, type Translate } from "../i18n/translate.ts";
+import { NAVIGATION_PRESET_IDS } from "../navigation/navigation-presets.ts";
+import { ARROW_STEPS_DEGREES } from "../navigation/navigation-settings.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type MenuContext, menuContext } from "./menu-context.ts";
 import {
+  arrowStepItem,
   gizmoItem,
   item,
   languageItem,
@@ -12,6 +15,8 @@ import {
   type MenuDefinition,
   type MenuEntryDefinition,
   type MenuId,
+  navigationPresetItem,
+  navigationToggleItem,
   type Shortcut,
 } from "./menu-definitions.ts";
 
@@ -92,6 +97,7 @@ const MENUS: readonly MenuDefinition[] = [
         "frameAll",
         "menubar.view.frameAll",
         (context) => context.hasBodies && showsViewport(context.centralLayout),
+        { key: "f", primaryModifier: false, labelKey: "shortcut.frameAll" },
       ),
       item(
         "frameSelection",
@@ -123,6 +129,19 @@ const MENUS: readonly MenuDefinition[] = [
         labelKey: "shortcut.cycleLayout",
       }),
       ...CENTRAL_LAYOUTS.map(layoutItem),
+      "separator",
+      navigationToggleItem(
+        "perspective",
+        "menubar.view.perspective",
+        (context) => context.navigation.perspective,
+      ),
+      ...NAVIGATION_PRESET_IDS.map(navigationPresetItem),
+      navigationToggleItem(
+        "reverseWheel",
+        "menubar.view.reverseWheel",
+        (context) => context.navigation.reverseWheel,
+      ),
+      ...ARROW_STEPS_DEGREES.map(arrowStepItem),
       "separator",
       ...LANGUAGES.map(languageItem),
     ],

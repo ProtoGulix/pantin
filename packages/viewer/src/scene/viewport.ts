@@ -8,12 +8,15 @@ import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
 import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
+import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { createCamera, frameBodies } from "./camera-framing.ts";
+import { createCameraNavigation } from "./camera-navigation.ts";
+import { type CameraView, createCameraView } from "./camera-view.ts";
 import { createPlacementGizmo, type PlacementGizmo } from "./placement-gizmo.ts";
 import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, planSceneSync } from "./scene-plan.ts";
@@ -65,11 +68,14 @@ export interface Viewport {
   showPlacementGizmo(spec: PlacementGizmoSpec | null): void;
   /** After a drag: the Pantin was read again, the gizmo follows the assembly again. */
   releasePlacementGizmo(): void;
+  /** Mouse preset, wheel direction, arrow step and projection (ADR 0036). */
+  setNavigation(settings: NavigationSettings): void;
 }
 
 interface ViewportContext {
   scene: Scene;
   camera: ArcRotateCamera;
+  view: CameraView;
   stage: Stage;
   // What each body should show (set as soon as a load starts, to skip duplicates).
   wantedKeys: Map<string, string>;
@@ -132,6 +138,12 @@ async function loadAndShow(
   addLoadedBody(context, body.id, loaded);
 }
 
+// A hidden body cannot be picked.
+function pickBody(context: ViewportContext, x: number, y: number) {
+  const { scene, bodyIdByMesh } = context;
+  return scene.pick(x, y, (mesh) => bodyIdByMesh.has(mesh) && mesh.isEnabled());
+}
+
 function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): void {
   context.scene.onPointerObservable.add((pointerInfo) => {
     // A tap is a click without drag, so orbiting the camera never selects.
@@ -140,9 +152,7 @@ function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): 
       return;
     }
     const { scene, bodyIdByMesh } = context;
-    // A hidden body cannot be picked.
-    const pickable = (mesh: AbstractMesh) => bodyIdByMesh.has(mesh) && mesh.isEnabled();
-    const pick = scene.pick(scene.pointerX, scene.pointerY, pickable);
+    const pick = pickBody(context, scene.pointerX, scene.pointerY);
     const pickedMesh = pick.hit ? pick.pickedMesh : null;
     const bodyId = pickedMesh === null ? null : (bodyIdByMesh.get(pickedMesh) ?? null);
     callbacks.onBodyPicked(bodyId, type === PointerEventTypes.POINTERDOUBLETAP);
@@ -215,19 +225,29 @@ function forgetPoses(context: ViewportContext): void {
   context.placementGizmo.forgetPoses();
 }
 
-export function createViewport(
+function navigationOf(context: ViewportContext, canvas: HTMLCanvasElement) {
+  return createCameraNavigation({
+    scene: context.scene,
+    canvas,
+    camera: context.camera,
+    view: context.view,
+    pickBodyPoint: (x, y) => pickBody(context, x, y).pickedPoint,
+  });
+}
+
+function createContext(
+  scene: Scene,
   canvas: HTMLCanvasElement,
-  loadBytes: MeshBytesLoader,
   callbacks: ViewportCallbacks,
-): Viewport {
-  const engine = createEngine(canvas);
-  const scene = new Scene(engine);
+): ViewportContext {
   const loadedBodies = new Map<string, LoadedBody>();
   const poses = new PoseInterpolator();
   const latestPose = (bodyId: string) => poses.latestPose(bodyId);
-  const context: ViewportContext = {
+  const camera = createCamera(scene);
+  return {
     scene,
-    camera: createCamera(scene, canvas),
+    camera,
+    view: createCameraView(scene, canvas, camera),
     stage: createStage(scene),
     wantedKeys: new Map(),
     loadedBodies,
@@ -241,8 +261,19 @@ export function createViewport(
     }),
     hiddenBodyIds: new Set(),
   };
+}
+
+export function createViewport(
+  canvas: HTMLCanvasElement,
+  loadBytes: MeshBytesLoader,
+  callbacks: ViewportCallbacks,
+): Viewport {
+  const engine = createEngine(canvas);
+  const scene = new Scene(engine);
+  const context = createContext(scene, canvas, callbacks);
   listenToPicks(context, callbacks);
   applyPosesEachFrame(context);
+  const navigation = navigationOf(context, canvas);
   const setRendering = createRenderSwitch(engine, scene);
   return {
     showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
@@ -261,5 +292,6 @@ export function createViewport(
     setRendering,
     showPlacementGizmo: (spec) => context.placementGizmo.show(spec),
     releasePlacementGizmo: () => context.placementGizmo.release(),
+    setNavigation: (settings) => navigation.apply(settings),
   };
 }

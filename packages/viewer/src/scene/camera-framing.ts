@@ -4,30 +4,29 @@ import type { Scene } from "@babylonjs/core/scene.js";
 import { babylonToCorePosition } from "../frames.ts";
 import { boundsOfBodies } from "./body-bounds.ts";
 import type { LoadedBody } from "./body-loader.ts";
+import type { CameraView } from "./camera-view.ts";
 import { floorHeight, frameBounds } from "./scene-plan.ts";
 import type { Stage } from "./stage.ts";
 
 // The camera and its framing, split from viewport.ts. The context is only
 // what framing reads, so the viewport's own context satisfies it as it is.
 
-const RIGHT_MOUSE_BUTTON = 2;
-
 export interface FramingContext {
   camera: ArcRotateCamera;
+  view: CameraView;
   stage: Stage;
   loadedBodies: ReadonlyMap<string, LoadedBody>;
   hiddenBodyIds: ReadonlySet<string>;
 }
 
-export function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
+// The mouse, wheel and keys are attached by camera-navigation.ts.
+export function createCamera(scene: Scene): ArcRotateCamera {
   // Looking from core -Y towards +Y, slightly from the right and above.
   const camera = new ArcRotateCamera("camera", -2.0, 1.1, 3, Vector3.Zero(), scene);
-  camera.wheelDeltaPercentage = 0.01;
-  // Pan with a right-button drag or Ctrl + left-button drag. Default actions
-  // must be prevented, otherwise the browser's context menu opens on the right
-  // button and cancels the drag.
-  camera.attachControl(false, true, RIGHT_MOUSE_BUTTON);
-  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+  // No glide after the mouse stops, as in a CAD: the point grabbed by a pan
+  // stays under the cursor, and the view stays where the hand left it.
+  camera.inertia = 0;
+  camera.panningInertia = 0;
   return camera;
 }
 
@@ -63,9 +62,6 @@ export function frameBodies(context: FramingContext, bodyIds: readonly string[] 
   const framing = framingOf(context, visible);
   const { camera } = context;
   camera.setTarget(Vector3.FromArray(framing.target));
-  camera.radius = framing.radius;
-  camera.lowerRadiusLimit = framing.radius * 0.01;
-  camera.minZ = framing.radius * 0.001;
-  camera.maxZ = framing.radius * 100;
-  camera.panningSensibility = 1000 / framing.radius;
+  // The view sets the radius, limits, clip planes and panning speed from it.
+  context.view.frame(framing.radius);
 }

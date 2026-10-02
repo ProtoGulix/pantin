@@ -28,6 +28,7 @@ import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
+import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
 import { sensorMarkersOf } from "../sensors/sensor-markers.ts";
@@ -75,6 +76,7 @@ export interface StorePorts {
   storeLanguage(language: Language): void;
   storeCentralLayout(layout: CentralLayout): void;
   storeGizmoSteps(steps: SnapSteps): void;
+  storeNavigation(settings: NavigationSettings): void;
 }
 
 export class ViewerStore {
@@ -114,9 +116,10 @@ export class ViewerStore {
     language: Language,
     centralLayout?: CentralLayout,
     gizmoSteps?: SnapSteps,
+    navigation?: NavigationSettings,
   ) {
     this.ports = ports;
-    this.state = initialViewerState(language, centralLayout, gizmoSteps);
+    this.state = initialViewerState(language, centralLayout, gizmoSteps, navigation);
   }
 
   update(next: ViewerState): void {
@@ -138,6 +141,7 @@ export class ViewerStore {
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());
     const document = next.openPantin?.document;
+    viewport.setNavigation(next.navigation);
     viewport.setRendering(shouldRender(next.centralLayout, next.openPantin !== null));
     viewport.setSelectedBodies(
       document === undefined || next.openPantin === null

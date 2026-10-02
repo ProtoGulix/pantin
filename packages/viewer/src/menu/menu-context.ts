@@ -3,6 +3,7 @@ import type { DeviceKind } from "../device-selection.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language } from "../i18n/translate.ts";
+import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { Selection } from "../selection.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -22,6 +23,8 @@ export interface MenuContext {
   // The placement gizmo (ADR 0034): on, and whether one assembly is selected to use it on.
   gizmoMode: DragKind | null;
   gizmoAvailable: boolean;
+  // The mouse preset and the other settings of the 3D view (ADR 0036).
+  navigation: NavigationSettings;
 }
 
 function selectedKindOf(selection: Selection | null): MenuContext["selectedKind"] {
@@ -45,5 +48,6 @@ export function menuContext(state: ViewerState): MenuContext {
     centralLayout: state.centralLayout,
     gizmoMode: state.gizmoMode,
     gizmoAvailable: canUseGizmo(state),
+    navigation: state.navigation,
   };
 }
