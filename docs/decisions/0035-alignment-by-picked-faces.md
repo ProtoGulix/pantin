@@ -1,6 +1,7 @@
 # 0035. Alignment by picked faces
 
-- Status: accepted (2026-10-02)
+- Status: accepted (2026-10-02); points 9 and 10 added 2026-10-02 with the
+  user's approval, before the core and viewer tranches
 - Date: 2026-10-02
 - Depends on: ADR 0033 (assembly placement), ADR 0034 (placement editing)
 - Extends: ADR 0009 (STEP import converter), ADR 0019 point 13 (selection
@@ -198,6 +199,36 @@ NOT VERIFIED:
    screen (ADR 0033 point 6), the alignment then holds at every position of
    the target. The option is disabled, with the joint already in place named,
    when the moving assembly already has an anchor (ADR 0033 point 2).
+
+9. **Alignment kind registry.** Like joint types (ADR 0013), an alignment
+   kind is two files plus one registration line in each package:
+   - `packages/protocol/src/alignment-kinds/<kind>.ts`: a descriptor, as
+     data: its picks in order, each with its side (moving or target) and
+     the face kinds it accepts (plane, cylinder, and whether a fallback
+     plane is accepted), and which parameters apply (flip, offset,
+     rotation);
+   - `packages/core/src/domain/alignment-kinds/<kind>.ts`: its motion, a
+     pure function from the connector frames of the picks (point 4) and the
+     parameters to the rigid motion of point 5, or a refusal.
+
+   The request schema is derived from the descriptors; the compiler refuses
+   a kind declared in the protocol and missing its motion. The route, the
+   pick checks and the viewer's dialog read the descriptor and never test a
+   kind by name. Every kind gives a shared contract test an aligned example
+   (the motion is the identity) and a misaligned one (the motion is rigid
+   and aligns it). Since an alignment is never stored (point 7), adding a
+   kind changes no document schema. A kind stays core code: a part never
+   brings one (CLAUDE.md section 11.3).
+10. **API details.** Units are SI like the rest of the API: offset in
+    metres, rotation in radians; the viewer shows millimetres and degrees.
+    A pick is either a face of a face file (body, face index, hit point) or
+    a fallback plane (body, hit point, normal), both in the Pantin frame as
+    displayed. Moving picks must be bodies of the assembly that moves
+    (`400` otherwise); the first of them is the key body of ADR 0033's
+    placement solving: it lands exactly where the motion takes it, and so
+    does everything rigidly attached to it. The response is the placement
+    response of ADR 0033 point 8, plus `targetDisplaced`: true when a target
+    body is displaced by a joint, for the warning of point 6.
 
 ## Rejected alternatives
 
