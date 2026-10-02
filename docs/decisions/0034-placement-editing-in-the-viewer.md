@@ -1,6 +1,6 @@
 # 0034. Placement editing in the viewer: fields and gizmo
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-02
 - Depends on: ADR 0033 (assembly placement)
 - Extends: ADR 0016 (millimetres and degrees in the viewer), ADR 0019
@@ -17,15 +17,17 @@ Babylon.js provides position and rotation gizmos through `GizmoManager`;
 default (`@babylonjs/core` type declarations, read on 2026-10-02). A thread
 on the Babylon.js forum reports that snapped rotations end with float noise
 (values such as -6.09e-7 instead of 0), which the maintainers call expected;
-`incrementalSnapping` is suggested there. NOT VERIFIED on the version pinned
-in the viewer.
+`incrementalSnapping` is suggested there. The viewer pins `@babylonjs/core`
+9.28.0; the float noise is NOT VERIFIED on that version, and point 5 makes
+it harmless either way.
 
 ADR 0016 point 5 already sets the pattern for a dragged value: the viewer
 sends requests, one in flight, latest wins, and bodies move through the pose
 stream, never by local computation.
 
-NOT VERIFIED: whether each edit request is a separate step in an undo
-history, if the viewer has one; dragging would then fill it.
+The viewer has no undo history: an edit is undone by discarding the unsaved
+changes of the Pantin (`packages/viewer/src/controller/drive-actions.ts`,
+checked on 2026-10-02). Dragging therefore fills no history.
 
 ## Decision
 
@@ -82,5 +84,4 @@ history, if the viewer has one; dragging would then fill it.
   drag sends rounded values; a placement under a parent turned by a revolute
   joint lands where the gizmo was released; Escape restores the start
   value.
-- To measure: request rate while dragging on a Pantin of 50 assemblies, and
-  undo history behaviour if one exists.
+- To measure: request rate while dragging on a Pantin of 50 assemblies.

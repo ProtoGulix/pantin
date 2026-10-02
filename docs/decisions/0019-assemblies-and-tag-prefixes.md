@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-29
+- Amended by: ADR 0033
 - Extends: ADR 0017 (STEP import joints), ADR 0011 (kinematic joints)
 - Supersedes: ADR 0012 point 1 (tag names)
 - Depends on: ADR 0018 (type change keeps the id)

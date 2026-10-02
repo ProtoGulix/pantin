@@ -21,8 +21,12 @@ classify each face (plane, cylinder) with its geometry.
 
 NOT VERIFIED:
 
-- whether the converter already merges primitives per body (ADR 0009), in
-  which case the triangle to face mapping must be kept before merging;
+- how to keep the triangle to face mapping: the converter already merges
+  the faces of a body into one primitive (`writer.SetMergeFaces(True)` in
+  `glb_export.py`, checked on 2026-10-02), so the mapping is lost in the
+  written GLB. Either the sidecar walks the faces in the order the writer
+  merges them (to prove on real files), or the converter stops merging in
+  the writer and merges itself while recording the ranges;
 - the OpenCascade calls that classify faces and give their geometry
   (`BRepAdaptor_Surface` and its surface type are expected), and how face
   orientation must be read to get an outward normal;

@@ -1,6 +1,6 @@
 # 0033. Assembly placement, and joint frames relative to assemblies
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-02
 - Amends: ADR 0011 (point 1: reference configuration and the frame of joint
   origins and axes; point 4: what a pose carries), ADR 0019 (point 9: moving
@@ -32,10 +32,10 @@ A CAD assembly solver (constraints, closed loops) is not needed: bodies form
 a forest (ADR 0011 point 3), so a placement is a plain rigid transform along
 that forest. Closed kinematic loops stay out of scope.
 
-NOT VERIFIED here: the current `schema_version` of `pantin.json` (4 at
-ADR 0021, possibly higher since ADR 0022 and 0028), and whether the viewer
-applies a body pose on top of the node transform of its GLB or replaces it
-(`frames.ts`). Both are to be checked before implementation.
+Checked in the code on 2026-10-02: `pantin.json` is at `schema_version` 9
+(`PANTIN_SCHEMA_VERSION`, `packages/protocol/src/pantin.ts`), and the viewer
+composes a body pose with the reference transform of its node, it does not
+replace it (`displacedNodePlacement`, `packages/viewer/src/frames.ts`).
 
 ## Decision
 
@@ -83,7 +83,7 @@ applies a body pose on top of the node transform of its GLB or replaces it
 9. **Runtime.** A placement edit is a document edit: joint positions,
    setpoints and drive states are kept. The new poses reach the viewer like
    any other edit, paused clock included (ADR 0032).
-10. **Schema.** `schema_version` N to N+1. Migration: every assembly gets
+10. **Schema.** `schema_version` 9 to 10. Migration: every assembly gets
     the identity placement. Since every frame is then the Pantin frame,
     joint origins and axes keep their numbers. A document whose joints
     between assemblies break point 2 (two anchors, or a loop) cannot be
