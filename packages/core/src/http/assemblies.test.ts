@@ -115,7 +115,11 @@ describe("assemblies", () => {
       },
     );
     const pantin = PantinResponseSchema.parse(response.json);
-    expect(pantin.document.assemblies[1]).toEqual({ key: "carriage", name: "Chariot 3630" });
+    expect(pantin.document.assemblies[1]).toEqual({
+      key: "carriage",
+      name: "Chariot 3630",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    });
     expect(await tagNames()).toEqual(["carriage.axe-x.setpoint", "carriage.axe-x.position"]);
   });
 

@@ -62,7 +62,13 @@ export function pantinResponse(
     document: {
       schema_version: PANTIN_SCHEMA_VERSION,
       name: "Press",
-      assemblies: [{ key: "main", name: "main" }],
+      assemblies: [
+        {
+          key: "main",
+          name: "main",
+          placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+        },
+      ],
       bodies,
       joints,
       drives: [],

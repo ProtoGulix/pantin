@@ -74,3 +74,26 @@ export function compose(first: RigidTransform, second: RigidTransform): RigidTra
     translation: apply(first, second.translation),
   };
 }
+
+// The inverse of a rigid transform: the conjugate of a unit quaternion is its
+// inverse, so no division is needed.
+export function inverse({ rotation, translation }: RigidTransform): RigidTransform {
+  const [x, y, z, w] = rotation;
+  const inverseRotation: Quaternion = [-x, -y, -z, w];
+  const [tx, ty, tz] = rotate(inverseRotation, translation);
+  return { rotation: inverseRotation, translation: [-tx, -ty, -tz] };
+}
+
+// Exact comparison on purpose: callers use it to skip a composition that
+// would only add rounding (see kinematics.ts).
+export function isIdentityTransform({ rotation, translation }: RigidTransform): boolean {
+  return (
+    rotation[0] === 0 &&
+    rotation[1] === 0 &&
+    rotation[2] === 0 &&
+    rotation[3] === 1 &&
+    translation[0] === 0 &&
+    translation[1] === 0 &&
+    translation[2] === 0
+  );
+}

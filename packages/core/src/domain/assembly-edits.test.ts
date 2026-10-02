@@ -46,8 +46,16 @@ const PRESS: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Press",
   assemblies: [
-    { key: "id1s0400125e-0", name: "ID1S0400125E_0" },
-    { key: "id1s0400125e-0-2", name: "ID1S0400125E_0" },
+    {
+      key: "id1s0400125e-0",
+      name: "ID1S0400125E_0",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    },
+    {
+      key: "id1s0400125e-0-2",
+      name: "ID1S0400125E_0",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    },
   ],
   bodies: [
     body("body-1", "id1s0400125e-0"),
@@ -64,7 +72,11 @@ const PRESS: PantinDocument = {
 describe("renameAssemblyKey", () => {
   it("rewrites the key of the assembly and of its bodies, and reports the renamed tags", () => {
     const after = renameAssemblyKey(PRESS, "id1s0400125e-0", "verin_pince");
-    expect(after.assemblies[0]).toEqual({ key: "verin_pince", name: "ID1S0400125E_0" });
+    expect(after.assemblies[0]).toEqual({
+      key: "verin_pince",
+      name: "ID1S0400125E_0",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    });
     expect(after.bodies.map((item) => item.assembly).slice(0, 2)).toEqual([
       "verin_pince",
       "verin_pince",

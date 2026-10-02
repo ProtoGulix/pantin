@@ -25,7 +25,9 @@ function body(id: string) {
 const EMPTY: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Test",
-  assemblies: [{ key: "main", name: "main" }],
+  assemblies: [
+    { key: "main", name: "main", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+  ],
   bodies: ["a", "b", "c"].map(body),
   joints: [],
   drives: [],

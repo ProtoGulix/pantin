@@ -32,7 +32,13 @@ describe("newAssembly", () => {
   const document: PantinDocument = {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Press",
-    assemblies: [{ key: "verin-pince", name: "Verin pince" }],
+    assemblies: [
+      {
+        key: "verin-pince",
+        name: "Verin pince",
+        placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+      },
+    ],
     bodies: [],
     joints: [],
     drives: [],
@@ -44,6 +50,7 @@ describe("newAssembly", () => {
     expect(newAssembly(document, "Verin pince")).toEqual({
       key: "verin-pince-2",
       name: "Verin pince",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
     });
   });
 });

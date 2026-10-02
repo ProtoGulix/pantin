@@ -227,7 +227,13 @@ describe("schema version 1 on disk", () => {
     expect(onDisk).toEqual({
       schema_version: PANTIN_SCHEMA_VERSION,
       name: "Legacy",
-      assemblies: [{ key: "main", name: "main" }],
+      assemblies: [
+        {
+          key: "main",
+          name: "main",
+          placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+        },
+      ],
       bodies: [],
       joints: [],
       drives: [],

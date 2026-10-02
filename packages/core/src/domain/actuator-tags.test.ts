@@ -40,7 +40,9 @@ function slide(id: string, child: string): Joint {
 const PRESS: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Press",
-  assemblies: [{ key: "press", name: "Press" }],
+  assemblies: [
+    { key: "press", name: "Press", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+  ],
   bodies: ["frame", "rod-l", "rod-r", "rod-3"].map(body),
   joints: [slide("left", "rod-l"), slide("right", "rod-r"), slide("third", "rod-3")],
   drives: [

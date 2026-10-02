@@ -32,8 +32,16 @@ const twoCylinders = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Press",
   assemblies: [
-    { key: "verin_pince", name: "Vérin pince" },
-    { key: "verin_levage", name: "Vérin levage" },
+    {
+      key: "verin_pince",
+      name: "Vérin pince",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    },
+    {
+      key: "verin_levage",
+      name: "Vérin levage",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    },
   ],
   bodies: [
     body("body-1", "verin_pince"),
@@ -60,7 +68,14 @@ describe("PantinDocumentSchema assemblies", () => {
   it("accepts an empty assembly", () => {
     const withEmpty = {
       ...twoCylinders,
-      assemblies: [...twoCylinders.assemblies, { key: "spare", name: "Spare" }],
+      assemblies: [
+        ...twoCylinders.assemblies,
+        {
+          key: "spare",
+          name: "Spare",
+          placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+        },
+      ],
     };
     expect(issuesOf(withEmpty)).toEqual([]);
   });
@@ -74,7 +89,14 @@ describe("PantinDocumentSchema assemblies", () => {
   it("rejects two assemblies with the same key", () => {
     const twice = {
       ...twoCylinders,
-      assemblies: [...twoCylinders.assemblies, { key: "verin_pince", name: "Copy" }],
+      assemblies: [
+        ...twoCylinders.assemblies,
+        {
+          key: "verin_pince",
+          name: "Copy",
+          placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+        },
+      ],
     };
     expect(issuesOf(twice)).toContain(
       'Assembly key "verin_pince" is used twice; assembly keys must be unique.',

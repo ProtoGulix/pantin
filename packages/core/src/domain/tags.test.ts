@@ -49,8 +49,12 @@ const document: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Axis",
   assemblies: [
-    { key: "frame", name: "Frame" },
-    { key: "axis_800", name: "Axis 800" },
+    { key: "frame", name: "Frame", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+    {
+      key: "axis_800",
+      name: "Axis 800",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    },
   ],
   bodies: [body("rail", "frame"), body("carriage", "axis_800"), body("tool", "axis_800")],
   joints: [stroke, clamp],

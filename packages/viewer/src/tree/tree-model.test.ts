@@ -1,3 +1,4 @@
+import type { Assembly } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
@@ -104,6 +105,12 @@ describe("buildTree", () => {
   });
 });
 
+const gripper: Assembly = {
+  key: "gripper",
+  name: "Gripper",
+  placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+};
+
 describe("joints in assemblies", () => {
   const carriage = stepBody("carriage", "Carriage");
   const withJoints = buildTree(
@@ -144,7 +151,7 @@ describe("joints in assemblies", () => {
       ...between,
       document: {
         ...between.document,
-        assemblies: [...between.document.assemblies, { key: "gripper", name: "Gripper" }],
+        assemblies: [...between.document.assemblies, gripper],
       },
     };
     const tree = buildTree(sourceOf({ openPantin }), translate);

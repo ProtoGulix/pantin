@@ -25,8 +25,12 @@ const TWO_CYLINDERS: PantinDocument = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Press",
   assemblies: [
-    { key: "pince", name: "Pince" },
-    { key: "levage", name: "Levage" },
+    { key: "pince", name: "Pince", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+    {
+      key: "levage",
+      name: "Levage",
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    },
   ],
   bodies: [
     body("body-1", "pince"),

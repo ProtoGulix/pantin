@@ -58,7 +58,7 @@ describe("migration of drives to version 9", () => {
   it("turns a double-acting cylinder into a 5/3 closed-centre valve and a cylinder", () => {
     const old = { ...named, type: "double_acting_cylinder", speed: 0.2, joints: ["stroke"] };
     const result = migrated(old);
-    expect(result.schema_version).toBe(9);
+    expect(result.schema_version).toBe(PANTIN_SCHEMA_VERSION);
     expect(result.drives).toEqual([{ ...named, type: "valve_5_3_closed" }]);
     expect(result.actuators).toEqual([
       {

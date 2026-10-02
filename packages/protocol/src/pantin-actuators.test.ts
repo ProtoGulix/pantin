@@ -47,7 +47,9 @@ const cylinder = {
 const press = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Press",
-  assemblies: [{ key: "press", name: "Press" }],
+  assemblies: [
+    { key: "press", name: "Press", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+  ],
   bodies: ["frame", "rod-l", "rod-r", "stop", "spindle"].map(body),
   joints: [
     joint("left", "frame", "rod-l"),

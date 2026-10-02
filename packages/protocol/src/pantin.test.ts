@@ -38,7 +38,13 @@ describe("PantinDocumentSchema", () => {
   const validDocument = {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Linear axis",
-    assemblies: [{ key: "axis", name: "Axis 800" }],
+    assemblies: [
+      {
+        key: "axis",
+        name: "Axis 800",
+        placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+      },
+    ],
     bodies: [
       {
         id: "rail",

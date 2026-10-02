@@ -7,6 +7,7 @@ import { actuatorIssues } from "./pantin-actuators.ts";
 import { assemblyIssues } from "./pantin-assemblies.ts";
 import { driveIssues } from "./pantin-drives.ts";
 import { sensorIssues } from "./pantin-sensors.ts";
+import { PlacementSchema } from "./placement.ts";
 import { SensorSchema } from "./sensor.ts";
 
 // A Pantin is a folder on disk: `pantin.json` plus a `meshes/` directory.
@@ -16,9 +17,10 @@ import { SensorSchema } from "./sensor.ts";
 // version 4 assemblies and tag keys (ADR 0019), version 5 drives (ADR 0022),
 // version 6 joint sensors (ADR 0023), version 7 realistic switches (ADR 0025),
 // version 8 switch sides deduced from the stroke (ADR 0026), version 9
-// actuators apart from drives, which no longer list joints (ADR 0028). The
-// core migrates older documents on read.
-export const PANTIN_SCHEMA_VERSION = 9;
+// actuators apart from drives, which no longer list joints (ADR 0028), version
+// 10 a placement per assembly (ADR 0033). The core migrates older documents on
+// read.
+export const PANTIN_SCHEMA_VERSION = 10;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";
@@ -47,11 +49,15 @@ export const SourceNodeSchema = z.object({
 export type SourceNode = z.infer<typeof SourceNodeSchema>;
 
 // A group of bodies, as in a CAD assembly or a bill of materials (ADR 0019).
-// It never enters pose computation. Its key prefixes the tags of the joints
-// whose child body it holds, and changes only when explicitly renamed.
+// Its key prefixes the tags of the joints whose child body it holds, and
+// changes only when explicitly renamed. Its placement is a rigid transform
+// from the frame of its files to the frame of its anchor, which is the world
+// or the assembly of the parent body of the joint between assemblies that
+// reaches it. The anchor is derived from the joints, never stored (ADR 0033).
 export const AssemblySchema = z.object({
   key: KeySchema,
   name: DisplayNameSchema,
+  placement: PlacementSchema,
 });
 export type Assembly = z.infer<typeof AssemblySchema>;
 
@@ -69,6 +75,9 @@ export const BodySchema = z.object({
   }),
   // Path relative to the Pantin folder, e.g. "meshes/rail.glb"; ends in .glb or .stl.
   mesh: z.string().min(1),
+  // Relative to the assembly frame; absent means identity. Only the core
+  // writes it, when a body changes assembly (ADR 0033 point 7).
+  placement: PlacementSchema.optional(),
 });
 export type Body = z.infer<typeof BodySchema>;
 

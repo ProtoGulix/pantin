@@ -9,6 +9,7 @@ export * from "./drive-api.ts";
 export * from "./ids.ts";
 export * from "./joint.ts";
 export * from "./pantin.ts";
+export * from "./placement.ts";
 export * from "./sensor.ts";
 export * from "./sensor-api.ts";
 export * from "./tag.ts";

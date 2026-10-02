@@ -19,7 +19,9 @@ const V1_DOCUMENT = {
 const CURRENT_OF_V1 = {
   schema_version: PANTIN_SCHEMA_VERSION,
   name: "Axis",
-  assemblies: [{ key: "main", name: "main" }],
+  assemblies: [
+    { key: "main", name: "main", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+  ],
   bodies: V1_DOCUMENT.bodies.map((body) => ({ ...body, assembly: "main" })),
   joints: [],
   drives: [],

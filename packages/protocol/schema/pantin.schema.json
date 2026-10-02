@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 9
+      "const": 10
     },
     "name": {
       "type": "string",
@@ -24,9 +24,53 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "translation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rotation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            },
+            "required": ["translation", "rotation"],
+            "additionalProperties": false
           }
         },
-        "required": ["key", "name"],
+        "required": ["key", "name", "placement"],
         "additionalProperties": false
       }
     },
@@ -95,6 +139,50 @@
           "mesh": {
             "type": "string",
             "minLength": 1
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "translation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rotation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            },
+            "required": ["translation", "rotation"],
+            "additionalProperties": false
           }
         },
         "required": ["id", "name", "assembly", "source", "mesh"],

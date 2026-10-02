@@ -150,9 +150,10 @@ export type SetJointPositionRequest = z.infer<typeof SetJointPositionRequestSche
 export const QuaternionSchema = z.tuple([z.number(), z.number(), z.number(), z.number()]);
 export type Quaternion = z.infer<typeof QuaternionSchema>;
 
-// Rigid displacement of a body from its reference placement (as imported),
-// in the Pantin frame: first rotate by `rotation` about the Pantin origin,
-// then translate by `translation` (metres).
+// Rigid transform to apply to a body's mesh as its file places it (ADR 0033
+// point 5): its joint displacement composed with the world placement of its
+// assembly. In the Pantin frame: first rotate by `rotation` about the Pantin
+// origin, then translate by `translation` (metres).
 export const BodyPoseSchema = z.object({
   bodyId: BodyIdSchema,
   translation: Vector3Schema,

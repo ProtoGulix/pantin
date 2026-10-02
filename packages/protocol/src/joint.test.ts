@@ -28,7 +28,9 @@ function documentWith(joints: unknown[], bodyIds = ["rail", "carriage", "tool"])
   return {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Axis",
-    assemblies: [{ key: "axis", name: "Axis" }],
+    assemblies: [
+      { key: "axis", name: "Axis", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
+    ],
     bodies: bodyIds.map(body),
     joints,
     drives: [],

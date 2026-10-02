@@ -1,10 +1,14 @@
 {
-  "schema_version": 9,
+  "schema_version": 10,
   "name": "Axis",
   "assemblies": [
     {
       "key": "axis",
-      "name": "Linear axis"
+      "name": "Linear axis",
+      "placement": {
+        "translation": [0, 0, 0],
+        "rotation": [0, 0, 0, 1]
+      }
     }
   ],
   "bodies": [
