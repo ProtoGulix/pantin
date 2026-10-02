@@ -1,6 +1,6 @@
 # 0036. CAD navigation and standard views in the 3D view
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-10-02
 - Extends: ADR 0016 (viewer conventions), ADR 0034 (gizmo, browser settings)
 - Sources: spike 0007 (docs/spikes/0007-cad-navigation-and-standard-views.md)
