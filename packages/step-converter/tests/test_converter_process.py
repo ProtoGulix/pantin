@@ -94,11 +94,13 @@ def test_axis_lists_components_with_verbatim_names_and_paths(
         "components": [
             {
                 "file": "0.glb",
+                "faceFile": "0.faces.json",
                 "name": "rail",
                 "nodes": [{"name": "fixture_axis", "path": [0]}, {"name": "rail", "path": [0, 0]}],
             },
             {
                 "file": "1.glb",
+                "faceFile": "1.faces.json",
                 "name": "carriage",
                 "nodes": [
                     {"name": "fixture_axis", "path": [0]},
@@ -109,9 +111,16 @@ def test_axis_lists_components_with_verbatim_names_and_paths(
     }
 
 
-def test_axis_writes_one_glb_per_component(axis_run: tuple[ConverterRun, Path]) -> None:
+def test_axis_writes_one_glb_and_one_face_file_per_component(
+    axis_run: tuple[ConverterRun, Path],
+) -> None:
     _run, output_dir = axis_run
-    assert sorted(path.name for path in output_dir.iterdir()) == ["0.glb", "1.glb"]
+    assert sorted(path.name for path in output_dir.iterdir()) == [
+        "0.faces.json",
+        "0.glb",
+        "1.faces.json",
+        "1.glb",
+    ]
     rail = read_gltf_json(output_dir / "0.glb")
     assert {node["name"] for node in rail["nodes"]} == {"fixture_axis", "rail"}
 
@@ -150,7 +159,12 @@ def test_single_part_is_one_component(single_part_step: Path, tmp_path: Path) ->
     run = run_converter(single_part_step, tmp_path)
     assert run.exit_code == 0, run.stderr
     assert run.output["components"] == [
-        {"file": "0.glb", "name": "lonely_block", "nodes": [{"name": "lonely_block", "path": [0]}]}
+        {
+            "file": "0.glb",
+            "faceFile": "0.faces.json",
+            "name": "lonely_block",
+            "nodes": [{"name": "lonely_block", "path": [0]}],
+        }
     ]
     assert mesh_extent(read_gltf_json(tmp_path / "0.glb")) == pytest.approx([0.1, 0.1, 0.1])
 

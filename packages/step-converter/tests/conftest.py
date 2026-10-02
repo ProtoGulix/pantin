@@ -1,16 +1,18 @@
 """Builds small STEP files with OpenCascade at test time.
 
 The user's CAD files are never copied into the repository (ADR 0009), so every
-fixture is generated here: boxes placed in named assemblies.
+fixture is generated here: boxes placed in named assemblies, a bored block, and
+a block with a lone face.
 """
 
 import math
 from pathlib import Path
 
 import pytest
+from OCP.BRepAlgoAPI import BRepAlgoAPI_Cut
 from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
-from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
-from OCP.gp import gp_Ax1, gp_Dir, gp_Pnt, gp_Trsf, gp_Vec
+from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
+from OCP.gp import gp_Ax1, gp_Ax2, gp_Dir, gp_Pnt, gp_Trsf, gp_Vec
 from OCP.IFSelect import IFSelect_RetDone
 from OCP.Message import Message, Message_PrinterOStream
 from OCP.STEPCAFControl import STEPCAFControl_Writer
@@ -19,6 +21,8 @@ from OCP.TCollection import TCollection_ExtendedString
 from OCP.TDataStd import TDataStd_Name
 from OCP.TDF import TDF_Label
 from OCP.TDocStd import TDocStd_Document
+from OCP.TopAbs import TopAbs_FACE
+from OCP.TopExp import TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.XCAFDoc import XCAFDoc_DocumentTool, XCAFDoc_ShapeTool
 
@@ -27,6 +31,10 @@ RAIL_SIZE = (1000.0, 100.0, 50.0)
 CARRIAGE_SIZE = (100.0, 100.0, 100.0)
 CARRIAGE_TRANSLATION = (-400.0, 0.0, 20.0)
 AXIS_TRANSLATION_IN_MACHINE = (0.0, 0.0, 300.0)
+BORED_BLOCK_SIZE = (40.0, 30.0, 20.0)
+# A through hole along Z.
+BORE_CENTRE = (20.0, 15.0)
+BORE_RADIUS = 5.0
 
 
 def _named(label: TDF_Label, name: str) -> TDF_Label:
@@ -129,6 +137,31 @@ def nested_step(fixtures_dir: Path) -> Path:
     _named(shape_tool.AddComponent(machine, foot, foot_placement), "foot")
     shape_tool.UpdateAssemblies()
     return _write_document(document, fixtures_dir / "nested.step")
+
+
+@pytest.fixture(scope="session")
+def bored_block_step(fixtures_dir: Path) -> Path:
+    """One block with a through hole: plane and cylinder faces."""
+    document, shape_tool = _new_document()
+    block = BRepPrimAPI_MakeBox(*BORED_BLOCK_SIZE).Shape()
+    bore_axis = gp_Ax2(gp_Pnt(*BORE_CENTRE, -1.0), gp_Dir(0, 0, 1))
+    bore = BRepPrimAPI_MakeCylinder(bore_axis, BORE_RADIUS, BORED_BLOCK_SIZE[2] + 2.0).Shape()
+    _named(shape_tool.AddShape(BRepAlgoAPI_Cut(block, bore).Shape(), False), "bored_block")
+    return _write_document(document, fixtures_dir / "bored_block.step")
+
+
+@pytest.fixture(scope="session")
+def block_and_sheet_step(fixtures_dir: Path) -> Path:
+    """Assembly "covered_block": a box "block" and a lone face "sheet" lying on it."""
+    document, shape_tool = _new_document()
+    assembly = _named(shape_tool.NewShape(), "covered_block")
+    block = _box_part(shape_tool, "block_part", BORED_BLOCK_SIZE)
+    sheet_face = TopExp_Explorer(BRepPrimAPI_MakeBox(*BORED_BLOCK_SIZE).Shape(), TopAbs_FACE)
+    sheet = _named(shape_tool.AddShape(sheet_face.Current(), False), "sheet_part")
+    _named(shape_tool.AddComponent(assembly, block, TopLoc_Location()), "block")
+    _named(shape_tool.AddComponent(assembly, sheet, TopLoc_Location()), "sheet")
+    shape_tool.UpdateAssemblies()
+    return _write_document(document, fixtures_dir / "block_and_sheet.step")
 
 
 @pytest.fixture(scope="session")

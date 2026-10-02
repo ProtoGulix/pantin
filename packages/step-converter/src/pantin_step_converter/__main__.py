@@ -73,6 +73,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         except ConverterError as error:
             sys.stderr.write(f"pantin_step_converter: {error}\n")
             return EXIT_FAILURE
+        for component in result.components:
+            if component.face_file_problem is not None:
+                sys.stderr.write(
+                    f"pantin_step_converter: no face file for {component.name}: "
+                    f"{component.face_file_problem}\n"
+                )
         _write_json(result_stream, result.to_json())
         return EXIT_OK
 

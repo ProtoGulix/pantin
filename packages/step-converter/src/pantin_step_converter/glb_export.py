@@ -10,6 +10,7 @@ from OCP.collections import (
 )
 from OCP.Message import Message_ProgressRange
 from OCP.RWGltf import RWGltf_CafWriter
+from OCP.RWMesh import RWMesh_CoordinateSystemConverter
 from OCP.TCollection import TCollection_AsciiString
 from OCP.TDocStd import TDocStd_Document
 from OCP.TopoDS import TopoDS_Shape
@@ -32,12 +33,13 @@ def tessellate(shape: TopoDS_Shape, document_unit_in_metres: float) -> None:
 
 def export_component_glb(
     document: TDocStd_Document, component: LeafComponent, output_path: Path
-) -> None:
+) -> RWMesh_CoordinateSystemConverter:
     """Write the component with its ancestors, so that its placement stays a node transform.
 
     The writer converts lengths from the document unit to metres (glTF unit). It
     keeps the CAD axes (Z up) because no input coordinate system is set: the
-    core records the up axis instead of rotating the mesh.
+    core records the up axis instead of rotating the mesh. Returns the
+    converter the writer applied to node positions, for the face map.
     """
     roots = Sequence_TDF_Label()
     roots.Append(component.root_label)
@@ -50,6 +52,9 @@ def export_component_glb(
     writer = RWGltf_CafWriter(TCollection_AsciiString(str(output_path)), True)
     # One primitive per B-rep face would mean hundreds of draw calls per body.
     writer.SetMergeFaces(True)
+    # Explicit, although it is the default: a split would break a style's faces
+    # over several primitives, which the face map does not expect (ADR 0035).
+    writer.SetSplitIndices16(False)
     written = writer.Perform(
         document,
         roots,
@@ -60,3 +65,4 @@ def export_component_glb(
     if not written or not output_path.is_file():
         raise ConverterError(f"OpenCascade could not write {output_path.name}.")
     apply_cad_material_defaults(output_path)
+    return writer.CoordinateSystemConverter()

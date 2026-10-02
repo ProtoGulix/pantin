@@ -10,3 +10,10 @@ class UnusableStepFileError(ConverterError):
 
     The message reaches the user through the core, so it says what to do.
     """
+
+
+class FaceMapMismatchError(ConverterError):
+    """The written GLB does not match the faces walked in the writer's order (ADR 0035).
+
+    The body then gets no face file; the conversion itself goes on.
+    """

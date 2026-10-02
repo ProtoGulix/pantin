@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-28
 - Source: spike 0001 (docs/spikes/0001-step-to-mesh.md)
+- Amended by: ADR 0035 (face files)
 
 ## Context
 
@@ -32,7 +33,10 @@ approved on 2026-09-28 a Python converter run by the core.
      `{"sourceUnit": "mm", "components": [{"file": "0.glb", "name": "...",
      "nodes": [{"name": "...", "path": [0, 1]}]}]}`; each `file` is a GLB in
      `<dir>`, in metres, Z up, keeping the component placement as its node
-     transform so that all bodies show up in place.
+     transform so that all bodies show up in place. Each component also
+     has `faceFile`: the face file next to its GLB (ADR 0035), or `null`
+     when the converter could not prove the face map, the reason going to
+     stderr.
    - Exit code 2: the input is not a usable STEP file; stdout is
      `{"error": "<actionable message>"}`, mapped to `conversion_failed`.
    - Any other exit code, invalid JSON, or a run longer than the time limit

@@ -15,7 +15,7 @@ from pantin_step_converter.glb_materials import (
 BINARY_PAYLOAD = b"\x01\x02\x03\x04\x05\x06\x07\x08"
 
 
-def write_glb(path: Path, gltf: dict[str, Any]) -> Path:
+def write_glb(path: Path, gltf: object) -> Path:
     json_chunk = json.dumps(gltf).encode("utf-8")
     json_chunk += b" " * (-len(json_chunk) % 4)
     body = struct.pack("<II", len(json_chunk), 0x4E4F534A) + json_chunk
@@ -74,6 +74,13 @@ def test_rejects_a_file_that_is_not_a_glb(tmp_path: Path) -> None:
 
     with pytest.raises(ConverterError):
         apply_cad_material_defaults(not_glb)
+
+
+def test_rejects_a_glb_whose_json_is_not_an_object(tmp_path: Path) -> None:
+    glb = write_glb(tmp_path / "part.glb", [{"materials": [{}]}])
+
+    with pytest.raises(ConverterError):
+        apply_cad_material_defaults(glb)
 
 
 def test_rejects_a_truncated_glb(tmp_path: Path) -> None:
