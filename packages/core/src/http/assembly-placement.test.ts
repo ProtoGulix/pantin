@@ -110,7 +110,9 @@ describe("placing an assembly", () => {
       anchor: { kind: "assembly", key: "rail" },
     });
   });
+});
 
+describe("refusing a placement", () => {
   it("answers 404 for an unknown assembly", async () => {
     expect((await place("ghost", SIDEWAYS)).status).toBe(404);
   });
