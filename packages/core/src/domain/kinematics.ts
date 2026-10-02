@@ -7,6 +7,7 @@ import {
   inverse,
   isIdentityTransform,
   type RigidTransform,
+  unitTransform,
 } from "./rigid-transform.ts";
 
 // Pose of every body from the joint positions (ADR 0011 point 4, amended by
@@ -88,7 +89,10 @@ export function computePoses(
   const displacements = computeDisplacements(document, positions);
   return document.bodies.map((body) => {
     const world = worlds.get(body.assembly) ?? IDENTITY_TRANSFORM;
-    const reference = composeUnlessIdentity(world, body.placement ?? IDENTITY_TRANSFORM);
+    const reference = composeUnlessIdentity(
+      world,
+      body.placement === undefined ? IDENTITY_TRANSFORM : unitTransform(body.placement),
+    );
     // The displacement is returned as is when the reference is identity, as
     // before ADR 0033.
     const displacement = displacements.get(body.id) ?? IDENTITY_TRANSFORM;

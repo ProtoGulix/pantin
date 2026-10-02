@@ -97,3 +97,27 @@ export function isIdentityTransform({ rotation, translation }: RigidTransform): 
     translation[2] === 0
   );
 }
+
+// The schema lets a stored quaternion be up to 1e-6 off unit length, while
+// `inverse` and `rotate` assume a unit one. Documents are read as they are on
+// disk (a JSON Schema cannot hold a transform), so the core normalises where
+// it uses a placement. Left alone within rounding noise so that a document
+// with exact placements keeps its poses bit for bit.
+const UNIT_LENGTH_NOISE = 1e-12;
+
+export function unitTransform({ rotation, translation }: RigidTransform): RigidTransform {
+  const length = Math.hypot(...rotation);
+  if (Math.abs(length - 1) <= UNIT_LENGTH_NOISE) {
+    return { rotation, translation };
+  }
+  const [x, y, z, w] = rotation;
+  return { rotation: [x / length, y / length, z / length, w / length], translation };
+}
+
+// A transform as the plain arrays a document stores (a Placement).
+export function toPlacement({ rotation, translation }: RigidTransform): {
+  rotation: [number, number, number, number];
+  translation: [number, number, number];
+} {
+  return { rotation: [...rotation], translation: [...translation] };
+}

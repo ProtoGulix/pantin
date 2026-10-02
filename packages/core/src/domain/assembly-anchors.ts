@@ -1,5 +1,10 @@
 import type { Assembly, Body, Joint, PantinDocument } from "@pantin/protocol";
-import { compose, IDENTITY_TRANSFORM, type RigidTransform } from "./rigid-transform.ts";
+import {
+  compose,
+  IDENTITY_TRANSFORM,
+  type RigidTransform,
+  unitTransform,
+} from "./rigid-transform.ts";
 
 // Anchors of assemblies (ADR 0033 point 2), derived from the joints and never
 // stored. The protocol refuses documents where this derivation is ambiguous
@@ -37,7 +42,10 @@ export function computeWorldPlacements(
 ): Map<string, RigidTransform> {
   const anchors = deriveAssemblyAnchors(document);
   const placementOf = new Map(
-    document.assemblies.map((assembly: Assembly) => [assembly.key, assembly.placement]),
+    document.assemblies.map((assembly: Assembly) => [
+      assembly.key,
+      unitTransform(assembly.placement),
+    ]),
   );
   const worlds = new Map<string, RigidTransform>();
   // Anchors form a forest (document schema), so the recursion ends.
@@ -69,4 +77,9 @@ export function anchorSignature(
   return anchor === undefined
     ? ""
     : `${anchor.joint.parent}|${anchor.joint.child}|${anchor.assembly}`;
+}
+
+// The key of the assembly that `key` is anchored to; undefined: the world.
+export function anchorOfAssembly(document: AnchorSource, key: string): string | undefined {
+  return deriveAssemblyAnchors(document).get(key)?.assembly;
 }

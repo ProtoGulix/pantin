@@ -206,3 +206,13 @@ describe("computePoses with a body placement", () => {
     expectPoint(poseOf(document, [], "offset").translation, [1, 0.1, 0]);
   });
 });
+
+describe("computePoses with a quaternion slightly off unit length", () => {
+  it("reads it normalised, as a document from disk may hold it", () => {
+    const off: Placement = { translation: [1, 0, 0], rotation: [0, 0, 0, 1.0000005] };
+    const document = documentOf([assembly("a", off)], [body("fixed", "a")], []);
+    const { rotation } = poseOf(document, [], "fixed");
+    expectPoint([rotation[0], rotation[1], rotation[2]], [0, 0, 0]);
+    expect(rotation[3]).toBeCloseTo(1, 12);
+  });
+});

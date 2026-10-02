@@ -135,7 +135,9 @@ describe("paused pose cadence", () => {
     expect(client.snapshots[1]?.jointPositions[0]?.position).toBeCloseTo(0.02, 12);
     expect(client.snapshots[1]?.stepCount).toBe(0);
   });
+});
 
+describe("paused pose cadence limits", () => {
   it("does not send an edit before 1/30 s of wall time", async () => {
     await setRunning(false);
     await editPosition(0.02);
@@ -161,5 +163,26 @@ describe("paused pose cadence", () => {
     tickAfter(PERIOD_SECONDS);
     await flush();
     expect(client.snapshots).toHaveLength(1);
+  });
+});
+
+describe("a placement edit while paused", () => {
+  it("sends a placement edit, joint positions kept", async () => {
+    await setRunning(false);
+    await editPosition(0.02);
+    tickAfter(PERIOD_SECONDS);
+    await client.waitUntil(() => client.snapshots.length === 2);
+    const placed = await sendJsonRequest(
+      server,
+      "PUT",
+      "/api/pantins/axis/assemblies/rail/placement",
+      { translation: [0, 0.5, 0], rotation: [0, 0, 0, 1] },
+    );
+    expect(placed.status).toBe(200);
+    tickAfter(PERIOD_SECONDS);
+    await client.waitUntil(() => client.snapshots.length === 3);
+    const last = client.snapshots[2];
+    expect(last?.jointPositions[0]?.position).toBeCloseTo(0.02, 12);
+    expect(last?.bodies.find((body) => body.bodyId === "rail")?.translation).toEqual([0, 0.5, 0]);
   });
 });

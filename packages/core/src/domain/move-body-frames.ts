@@ -1,4 +1,4 @@
-import type { Joint, PantinDocument, Placement } from "@pantin/protocol";
+import type { Joint, PantinDocument } from "@pantin/protocol";
 import {
   anchorSignature,
   computeWorldPlacements,
@@ -12,6 +12,8 @@ import {
   isIdentityTransform,
   type RigidTransform,
   rotate,
+  toPlacement,
+  unitTransform,
 } from "./rigid-transform.ts";
 
 // Moving a body to another assembly (ADR 0033 point 7). No joint motion in
@@ -20,10 +22,6 @@ import {
 // position. Hence the world placement of every assembly is kept, unlike a
 // joint edit (keep-displayed-pose.ts) which changes displacements and has to
 // be solved on a key body.
-
-function toPlacement({ rotation, translation }: RigidTransform): Placement {
-  return { rotation: [...rotation], translation: [...translation] };
-}
 
 // `moved` is `document` with the body already in its new assembly, bodies and
 // joints otherwise untouched.
@@ -41,7 +39,10 @@ export function reframeMovedBody(
   }
   // W(N) ∘ B' = W(O) ∘ B: the mesh stays where it was.
   const frameChange = compose(inverse(worldOf(after.assembly)), worldOf(before.assembly));
-  const placement = compose(frameChange, before.placement ?? IDENTITY_TRANSFORM);
+  const placement = compose(
+    frameChange,
+    before.placement === undefined ? IDENTITY_TRANSFORM : unitTransform(before.placement),
+  );
   const { placement: _previous, ...rest } = after;
   const body = isIdentityTransform(placement)
     ? rest

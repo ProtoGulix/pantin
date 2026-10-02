@@ -3,6 +3,7 @@ import {
   RenameKeyRequestSchema,
   RenameRequestSchema,
   RenameTagKeyRequestSchema,
+  SetPlacementRequestSchema,
 } from "@pantin/protocol";
 import { suggestedKey } from "../domain/ids.ts";
 import { formatIssues, type Parser, parseWithSchema } from "../domain/validation.ts";
@@ -88,6 +89,24 @@ export const ASSEMBLY_ROUTES: readonly Route[] = [
       );
       const pantinId = pantinIdOf(context);
       const answer = await context.service.renameAssemblyKey(pantinId, assemblyKeyOf(context), key);
+      sendJson(context.response, 200, answer);
+    },
+  },
+  {
+    method: "PUT",
+    pattern: [...ASSEMBLY, "placement"],
+    handle: async (context) => {
+      const placement = parseWithSchema(
+        SetPlacementRequestSchema,
+        await readJsonBody(context.request),
+        "The placement",
+      );
+      const pantinId = pantinIdOf(context);
+      const answer = await context.service.setAssemblyPlacement(
+        pantinId,
+        assemblyKeyOf(context),
+        placement,
+      );
       sendJson(context.response, 200, answer);
     },
   },

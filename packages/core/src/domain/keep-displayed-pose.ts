@@ -1,11 +1,18 @@
-import type { Body, PantinDocument, Placement } from "@pantin/protocol";
+import type { Body, PantinDocument } from "@pantin/protocol";
 import {
   anchorSignature,
   computeWorldPlacements,
   deriveAssemblyAnchors,
 } from "./assembly-anchors.ts";
 import { computeDisplacements, computePoses } from "./kinematics.ts";
-import { compose, IDENTITY_TRANSFORM, inverse, type RigidTransform } from "./rigid-transform.ts";
+import {
+  compose,
+  IDENTITY_TRANSFORM,
+  inverse,
+  type RigidTransform,
+  toPlacement,
+  unitTransform,
+} from "./rigid-transform.ts";
 
 // Joint edits keep what is on screen (ADR 0033 point 6; body moves are in
 // move-body-frames.ts). "On screen" is the displayed pose, joint displacements
@@ -51,11 +58,6 @@ function keyBody(
   return inAssembly[0];
 }
 
-// Placements are stored as plain arrays, like every document value.
-function toPlacement({ rotation, translation }: RigidTransform): Placement {
-  return { rotation: [...rotation], translation: [...translation] };
-}
-
 function withPlacement(document: PantinDocument, key: string, placement: RigidTransform) {
   const assemblies = document.assemblies.map((assembly) =>
     assembly.key === key ? { ...assembly, placement: toPlacement(placement) } : assembly,
@@ -84,7 +86,7 @@ function reanchorAssembly(
   const displacement = computeDisplacements(neutral, positions).get(body.id) ?? IDENTITY_TRANSFORM;
   const target = compose(
     before.get(body.id) ?? IDENTITY_TRANSFORM,
-    inverse(body.placement ?? IDENTITY_TRANSFORM),
+    inverse(body.placement === undefined ? IDENTITY_TRANSFORM : unitTransform(body.placement)),
   );
   const anchor = anchors.get(key);
   if (anchor === undefined) {

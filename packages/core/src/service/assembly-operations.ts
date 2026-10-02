@@ -1,10 +1,13 @@
 import {
+  type AssemblyPlacementResponse,
   type PantinDocument,
   PantinDocumentSchema,
   type PantinId,
   type PantinResponse,
+  type Placement,
   type RenamedTagsResponse,
 } from "@pantin/protocol";
+import { anchorOfAssembly } from "../domain/assembly-anchors.ts";
 import {
   createAssembly,
   deleteAssembly,
@@ -12,6 +15,7 @@ import {
   renameAssembly,
   renameAssemblyKey,
   renameTagKey,
+  setAssemblyPlacement,
 } from "../domain/assembly-edits.ts";
 import { renamedTags } from "../domain/tags.ts";
 import { parseWithSchema } from "../domain/validation.ts";
@@ -50,6 +54,23 @@ async function editWithTags(
   return { pantin: response, renamedTags: renamedTags(before, after) };
 }
 
+async function placeAssembly(
+  context: ServiceContext,
+  pantinId: PantinId,
+  key: string,
+  placement: Placement,
+): Promise<AssemblyPlacementResponse> {
+  const { after } = await applyEdit(context, pantinId, (document) =>
+    setAssemblyPlacement(document, key, placement),
+  );
+  const stored = after.assemblies.find((assembly) => assembly.key === key);
+  const anchor = anchorOfAssembly(after, key);
+  return {
+    placement: stored?.placement ?? placement,
+    anchor: anchor === undefined ? { kind: "world" } : { kind: "assembly", key: anchor },
+  };
+}
+
 export function assemblyOperations(context: ServiceContext) {
   return {
     createAssembly: (pantinId: PantinId, name: string) =>
@@ -62,6 +83,8 @@ export function assemblyOperations(context: ServiceContext) {
       editWithTags(context, pantinId, (document) => renameAssemblyKey(document, key, newKey)),
     renameTagKey: (pantinId: PantinId, jointId: string, tagKey: string) =>
       editWithTags(context, pantinId, (document) => renameTagKey(document, jointId, tagKey)),
+    setAssemblyPlacement: (pantinId: PantinId, key: string, placement: Placement) =>
+      placeAssembly(context, pantinId, key, placement),
     moveBody: (pantinId: PantinId, bodyId: string, assembly: string) =>
       editWithTags(context, pantinId, (document) => moveBody(document, bodyId, assembly)),
   };

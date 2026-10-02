@@ -1,8 +1,9 @@
-import type { Assembly, PantinDocument } from "@pantin/protocol";
+import type { Assembly, PantinDocument, Placement } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { newAssembly } from "./assemblies.ts";
 import { reframeMovedBody } from "./move-body-frames.ts";
+import { toPlacement, unitTransform } from "./rigid-transform.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
@@ -146,4 +147,22 @@ export function moveBody(
     throw new ApiError("conflict", conflict);
   }
   return reframeMovedBody(document, moved, bodyId);
+}
+
+// The placement comes from the schema (finite, quaternion within tolerance)
+// and is stored normalised. It is relative to the anchor, which this edit does
+// not change; nothing else is rewritten, so positions and setpoints stay
+// valid (ADR 0033 point 9).
+export function setAssemblyPlacement(
+  document: PantinDocument,
+  key: string,
+  placement: Placement,
+): PantinDocument {
+  findAssembly(document, key);
+  const assemblies = document.assemblies.map((assembly) =>
+    assembly.key === key
+      ? { ...assembly, placement: toPlacement(unitTransform(placement)) }
+      : assembly,
+  );
+  return { ...document, assemblies };
 }
