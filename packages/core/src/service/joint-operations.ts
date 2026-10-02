@@ -62,7 +62,11 @@ export async function createJoint(
   // A body reserved by an import in flight may still be rolled back: link
   // only bodies whose import has settled.
   await waitForImports(openPantin);
-  const { document, joint } = addJointToDocument(openPantin.document, request);
+  const { document, joint } = addJointToDocument(
+    openPantin.document,
+    request,
+    openPantin.jointPositions,
+  );
   openPantin.document = document;
   return joint;
 }
@@ -76,7 +80,12 @@ export async function updateJoint(
   const openPantin = await loadPantin(context, pantinId);
   await waitForImports(openPantin);
   const before = findJoint(pantinId, openPantin, jointId);
-  const { document, joint } = updateJointInDocument(openPantin.document, jointId, request);
+  const { document, joint } = updateJointInDocument(
+    openPantin.document,
+    jointId,
+    request,
+    openPantin.jointPositions,
+  );
   openPantin.document = document;
   // A position or setpoint in another unit means nothing any more (ADR 0020),
   // and a joint that became fixed has neither (ADR 0018).
@@ -103,7 +112,11 @@ export async function deleteJoint(
   // would then remove (ADR 0017 point 4).
   await waitForImports(openPantin);
   findJoint(pantinId, openPantin, jointId);
-  openPantin.document = deleteJointFromDocument(openPantin.document, jointId);
+  openPantin.document = deleteJointFromDocument(
+    openPantin.document,
+    jointId,
+    openPantin.jointPositions,
+  );
   forgetJointRuntimeState(openPantin, jointId);
   return toResponse(pantinId, openPantin);
 }

@@ -175,3 +175,55 @@ describe("unknown targets and no-op changes", () => {
     }
   });
 });
+
+// The fixture already holds the joint "axe-x" from rail to carriage.
+const BODY_ASSEMBLY = "/api/pantins/axis/bodies/chape/assembly";
+
+function fixedJoint(name: string, parent: string, child: string) {
+  return { type: "fixed", name, parent, child, origin: [0, 0, 0], axis: [0, 0, 1] };
+}
+
+async function importChape(): Promise<void> {
+  await importMesh(server, "axis", "fileName=chape.stl&unit=mm", buildAsciiStl());
+}
+
+describe("anchor refusals (ADR 0033 point 2)", () => {
+  it("answers 409 naming the joint in place when an assembly gets a second anchor", async () => {
+    await importChape();
+    await sendJsonRequest(server, "PUT", BODY_ASSEMBLY, { assembly: "carriage" });
+    const response = await sendJsonRequest(
+      server,
+      "POST",
+      "/api/pantins/axis/joints",
+      fixedJoint("Second", "rail", "chape"),
+    );
+    expect(response.status).toBe(409);
+    expect(response.body).toContain('already anchored by joint \\"axe-x\\"');
+  });
+
+  it("answers 409 when a joint would close a loop of anchors", async () => {
+    await importChape();
+    await sendJsonRequest(server, "PUT", BODY_ASSEMBLY, { assembly: "carriage" });
+    const response = await sendJsonRequest(
+      server,
+      "POST",
+      "/api/pantins/axis/joints",
+      fixedJoint("Back", "chape", "rail"),
+    );
+    expect(response.status).toBe(409);
+    expect(response.body).toContain("loop");
+  });
+
+  it("answers 409 when moving a body would close a loop of anchors", async () => {
+    await importChape();
+    const link = await sendJsonRequest(
+      server,
+      "POST",
+      "/api/pantins/axis/joints",
+      fixedJoint("Link", "chape", "rail"),
+    );
+    expect(link.status).toBe(201);
+    const moved = await sendJsonRequest(server, "PUT", BODY_ASSEMBLY, { assembly: "carriage" });
+    expect(moved.status).toBe(409);
+  });
+});

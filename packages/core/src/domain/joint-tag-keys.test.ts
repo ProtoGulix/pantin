@@ -5,6 +5,7 @@ import {
   type PantinDocument,
 } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { NO_POSITIONS } from "../test-support/no-positions.ts";
 import { addJointToDocument, updateJointInDocument } from "./joint-rules.ts";
 
 // Tag keys of joints (ADR 0019 point 5): derived from the name at creation,
@@ -57,11 +58,15 @@ function rod(parent: string, child: string, name = "Tige"): CreateJointRequest {
   };
 }
 
-const withFirstRod = addJointToDocument(TWO_CYLINDERS, rod("body-1", "rod-1")).document;
+const withFirstRod = addJointToDocument(
+  TWO_CYLINDERS,
+  rod("body-1", "rod-1"),
+  NO_POSITIONS,
+).document;
 
 describe("joint tag keys", () => {
   it("gives the same tag key to joints in two assemblies, and different ids", () => {
-    const second = addJointToDocument(withFirstRod, rod("body-2", "rod-2"));
+    const second = addJointToDocument(withFirstRod, rod("body-2", "rod-2"), NO_POSITIONS);
     expect(second.document.joints.map(({ id, tagKey }) => [id, tagKey])).toEqual([
       ["tige", "tige"],
       ["tige-2", "tige"],
@@ -69,20 +74,25 @@ describe("joint tag keys", () => {
   });
 
   it("makes the tag key unique inside one assembly", () => {
-    const again = addJointToDocument(withFirstRod, rod("body-1", "stop-1"));
+    const again = addJointToDocument(withFirstRod, rod("body-1", "stop-1"), NO_POSITIONS);
     expect(again.joint.tagKey).toBe("tige-2");
   });
 
   it("keeps the tag key when the joint is renamed", () => {
-    const renamed = updateJointInDocument(withFirstRod, "tige", rod("body-1", "rod-1", "Rod"));
+    const renamed = updateJointInDocument(
+      withFirstRod,
+      "tige",
+      rod("body-1", "rod-1", "Rod"),
+      NO_POSITIONS,
+    );
     expect(renamed.joint.tagKey).toBe("tige");
   });
 
   it("refuses a new child in an assembly where the tag key is taken", () => {
-    const both = addJointToDocument(withFirstRod, rod("body-2", "rod-2")).document;
+    const both = addJointToDocument(withFirstRod, rod("body-2", "rod-2"), NO_POSITIONS).document;
     // "tige-2" keeps its tag key "tige", already used in the assembly of body-1.
-    expect(() => updateJointInDocument(both, "tige-2", rod("rod-2", "body-1"))).toThrow(
-      'Tag key "tige" of joint "tige-2" is already used in the assembly of body "body-1".',
-    );
+    expect(() =>
+      updateJointInDocument(both, "tige-2", rod("rod-2", "body-1"), NO_POSITIONS),
+    ).toThrow('Tag key "tige" of joint "tige-2" is already used in the assembly of body "body-1".');
   });
 });

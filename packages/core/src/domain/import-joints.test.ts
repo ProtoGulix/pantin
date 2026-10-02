@@ -1,5 +1,11 @@
-import { type Body, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
+import {
+  type Body,
+  type CreateJointRequest,
+  PANTIN_SCHEMA_VERSION,
+  type PantinDocument,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { NO_POSITIONS } from "../test-support/no-positions.ts";
 import { addStarJoints } from "./import-joints.ts";
 import { addJointToDocument } from "./joint-rules.ts";
 
@@ -27,6 +33,15 @@ function documentWith(bodies: Body[]): PantinDocument {
     sensors: [],
   };
 }
+
+const FIXED_REQUEST: CreateJointRequest = {
+  type: "fixed",
+  name: "joint",
+  parent: "",
+  child: "",
+  origin: [0, 0, 0],
+  axis: [0, 0, 1],
+};
 
 describe("addStarJoints", () => {
   it("adds no joint for a single body", () => {
@@ -66,14 +81,12 @@ describe("addStarJoints", () => {
   it("keeps joint ids unique against the joints already in the document", () => {
     const earlier = [body("frame"), body("plate")];
     const imported = [body("rail"), body("plate-2", "plate")];
-    const withEarlierJoint = addJointToDocument(documentWith([...earlier, ...imported]), {
-      type: "fixed",
-      name: "plate",
-      parent: "frame",
-      child: "plate",
-      origin: [0, 0, 0],
-      axis: [0, 0, 1],
-    }).document;
+    const link = { ...FIXED_REQUEST, name: "plate", parent: "frame", child: "plate" };
+    const withEarlierJoint = addJointToDocument(
+      documentWith([...earlier, ...imported]),
+      link,
+      NO_POSITIONS,
+    ).document;
     const { joints } = addStarJoints(withEarlierJoint, imported);
     expect(joints.map((joint) => joint.id)).toEqual(["plate-2"]);
   });

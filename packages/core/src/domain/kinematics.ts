@@ -40,10 +40,12 @@ function worldMotion(local: RigidTransform, assemblyWorld: RigidTransform): Rigi
   return compose(compose(assemblyWorld, local), inverse(assemblyWorld));
 }
 
-export function computePoses(
+// D(b) of every body: the displacement from where the reference places it.
+// Exposed because the edits that keep the displayed pose need it (keep-displayed-pose.ts).
+export function computeDisplacements(
   document: PantinDocument,
   positions: ReadonlyMap<string, number>,
-): BodyPose[] {
+): Map<string, RigidTransform> {
   const parentJointOf = new Map(document.joints.map((joint) => [joint.child, joint]));
   const bodyById = new Map(document.bodies.map((body) => [body.id, body]));
   const worlds = computeWorldPlacements(document);
@@ -72,14 +74,24 @@ export function computePoses(
     displacements.set(bodyId, displacement);
     return displacement;
   };
+  for (const body of document.bodies) {
+    displacementOf(body.id);
+  }
+  return displacements;
+}
+
+export function computePoses(
+  document: PantinDocument,
+  positions: ReadonlyMap<string, number>,
+): BodyPose[] {
+  const worlds = computeWorldPlacements(document);
+  const displacements = computeDisplacements(document, positions);
   return document.bodies.map((body) => {
-    const reference = composeUnlessIdentity(
-      worldOfBody(body.id),
-      body.placement ?? IDENTITY_TRANSFORM,
-    );
+    const world = worlds.get(body.assembly) ?? IDENTITY_TRANSFORM;
+    const reference = composeUnlessIdentity(world, body.placement ?? IDENTITY_TRANSFORM);
     // The displacement is returned as is when the reference is identity, as
     // before ADR 0033.
-    const displacement = displacementOf(body.id);
+    const displacement = displacements.get(body.id) ?? IDENTITY_TRANSFORM;
     const { rotation, translation } = isIdentityTransform(reference)
       ? displacement
       : compose(displacement, reference);

@@ -6,14 +6,28 @@ import {
   PantinDocumentSchema,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
+import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { makeUniqueId, slugifyDisplayName } from "./ids.ts";
+import { haveSameCoordinateUnit } from "./joint-types/registry.ts";
+import { keepDisplayedPose } from "./keep-displayed-pose.ts";
 import { addJoint, removeJoint, replaceJoint } from "./pantin-document.ts";
 import { tagKeyOwners } from "./tag-keys.ts";
 import { parseWithSchema } from "./validation.ts";
 
 // Adding or changing a joint in a document (ADR 0011 point 3): the joints
 // must stay a forest of known bodies. Pure: returns the new document and the
-// stored joint.
+// stored joint. `positions` are the current joint positions: a joint that
+// changes the anchor of an assembly keeps the displayed pose (ADR 0033
+// point 6, keep-displayed-pose.ts).
+
+// Refused before validation so that the answer is a conflict naming the joint
+// in place (ADR 0033 point 2), not a schema error.
+function refuseAnchorConflict(next: PantinDocument, jointId: string): void {
+  const conflict = findAnchorConflict(next, new Set([jointId]));
+  if (conflict !== undefined) {
+    throw new ApiError("conflict", conflict);
+  }
+}
 
 function isAncestor(document: PantinDocument, candidate: string, bodyId: string): boolean {
   const parentOf = new Map(document.joints.map((joint) => [joint.child, joint.parent]));
@@ -68,6 +82,7 @@ function tagKeysNextTo(document: PantinDocument, childId: string): Set<string> {
 export function addJointToDocument(
   document: PantinDocument,
   request: CreateJointRequest,
+  positions: ReadonlyMap<string, number>,
 ): { document: PantinDocument; joint: Joint } {
   const problem = linkProblem(document, request);
   if (problem !== undefined) {
@@ -78,7 +93,13 @@ export function addJointToDocument(
   const id = makeUniqueId(baseKey, takenIds);
   const tagKey = makeUniqueId(baseKey, tagKeysNextTo(document, request.child));
   const joint: Joint = { id, tagKey, ...request };
-  return validatedJoint(addJoint(document, joint), id, "The Pantin with the new joint");
+  const added = addJoint(document, joint);
+  refuseAnchorConflict(added, id);
+  return validatedJoint(
+    keepDisplayedPose(document, added, positions),
+    id,
+    "The Pantin with the new joint",
+  );
 }
 
 // Every field of the request may change, the type included (ADR 0018); the
@@ -87,6 +108,7 @@ export function updateJointInDocument(
   document: PantinDocument,
   jointId: string,
   request: CreateJointRequest,
+  positions: ReadonlyMap<string, number>,
 ): { document: PantinDocument; joint: Joint } {
   const existing = document.joints.find((joint) => joint.id === jointId);
   if (existing === undefined) {
@@ -98,6 +120,9 @@ export function updateJointInDocument(
   if (problem !== undefined) {
     throw new ApiError("invalid_request", problem);
   }
+  const joint: Joint = { id: jointId, tagKey: existing.tagKey, ...request };
+  const replaced = replaceJoint(document, joint);
+  refuseAnchorConflict(replaced, jointId);
   // A new child in another assembly may already use this tag key there.
   if (tagKeysNextTo(others, request.child).has(existing.tagKey)) {
     throw new ApiError(
@@ -108,9 +133,14 @@ export function updateJointInDocument(
   if (JOINT_COORDINATE_UNITS[request.type] === null) {
     sensorsWatchingGuard(document, jointId);
   }
-  const joint: Joint = { id: jointId, tagKey: existing.tagKey, ...request };
+  // A joint whose coordinate unit changes restarts at 0 (ADR 0020): the
+  // displayed pose after the edit is the one with that position forgotten.
+  const kept = new Map(positions);
+  if (!haveSameCoordinateUnit(existing, joint)) {
+    kept.delete(jointId);
+  }
   return validatedJoint(
-    replaceJoint(document, joint),
+    keepDisplayedPose(document, replaced, kept),
     jointId,
     "The Pantin with the changed joint",
   );
@@ -118,7 +148,11 @@ export function updateJointInDocument(
 
 // A moved or watched joint cannot go: its actuator would move nothing, or a
 // joint that is no longer there (ADR 0028 point 9, ADR 0023 point 5).
-export function deleteJointFromDocument(document: PantinDocument, jointId: string): PantinDocument {
+export function deleteJointFromDocument(
+  document: PantinDocument,
+  jointId: string,
+  positions: ReadonlyMap<string, number>,
+): PantinDocument {
   const actuator = document.actuators.find((candidate) => candidate.joints.includes(jointId));
   if (actuator !== undefined) {
     throw new ApiError(
@@ -127,7 +161,12 @@ export function deleteJointFromDocument(document: PantinDocument, jointId: strin
     );
   }
   sensorsWatchingGuard(document, jointId);
-  return removeJoint(document, jointId);
+  const removed = removeJoint(document, jointId);
+  return parseWithSchema(
+    PantinDocumentSchema,
+    keepDisplayedPose(document, removed, positions),
+    "The Pantin without the joint",
+  );
 }
 
 // A sensor reads a joint's coordinate: the joint must keep one (ADR 0023 point 5).

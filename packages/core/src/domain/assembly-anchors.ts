@@ -57,3 +57,16 @@ export function computeWorldPlacements(
   }
   return worlds;
 }
+
+// The link and the assembly it hangs from: a placement is relative to that
+// assembly's frame, so changing it invalidates the placement even when the
+// link is the same.
+export function anchorSignature(
+  anchors: ReturnType<typeof deriveAssemblyAnchors>,
+  key: string,
+): string {
+  const anchor = anchors.get(key);
+  return anchor === undefined
+    ? ""
+    : `${anchor.joint.parent}|${anchor.joint.child}|${anchor.assembly}`;
+}

@@ -1,6 +1,7 @@
 import type { Joint, PantinDocument } from "@pantin/protocol";
 import { PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { NO_POSITIONS } from "../test-support/no-positions.ts";
 import { deleteJointFromDocument } from "./joint-rules.ts";
 import { commandTagOf, describeTags, renamedTags } from "./tags.ts";
 
@@ -122,12 +123,11 @@ describe("tags with drives and actuators", () => {
 
 describe("joint deletion and actuators", () => {
   it("refuses to delete a moved joint, naming its actuator", () => {
-    expect(() => deleteJointFromDocument(PRESS, "left")).toThrow(
+    expect(() => deleteJointFromDocument(PRESS, "left", NO_POSITIONS)).toThrow(
       'Joint "left" is moved by actuator "cylinder". Remove it from the actuator, or delete the actuator, first.',
     );
-    expect(deleteJointFromDocument(PRESS, "third").joints.map((joint) => joint.id)).toEqual([
-      "left",
-      "right",
-    ]);
+    expect(
+      deleteJointFromDocument(PRESS, "third", NO_POSITIONS).joints.map((joint) => joint.id),
+    ).toEqual(["left", "right"]);
   });
 });

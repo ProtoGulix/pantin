@@ -1,6 +1,8 @@
 import type { Assembly, PantinDocument } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
+import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { newAssembly } from "./assemblies.ts";
+import { reframeMovedBody } from "./move-body-frames.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
@@ -134,5 +136,14 @@ export function moveBody(
     );
   }
   const bodies = document.bodies.map((body) => (body.id === bodyId ? { ...body, assembly } : body));
-  return { ...document, bodies };
+  const moved = { ...document, bodies };
+  // The move may turn joints of the body into joints between assemblies.
+  const touching = document.joints.filter(
+    (joint) => joint.parent === bodyId || joint.child === bodyId,
+  );
+  const conflict = findAnchorConflict(moved, new Set(touching.map(({ id }) => id)));
+  if (conflict !== undefined) {
+    throw new ApiError("conflict", conflict);
+  }
+  return reframeMovedBody(document, moved, bodyId);
 }
