@@ -78,7 +78,7 @@ describe("inspector of an assembly", () => {
   const view = viewOf(assemblyNodeId("press", "b"));
 
   it("shows its properties and the hints of the families it has no device of", () => {
-    expect(ids(view.groups)).toEqual(["general"]);
+    expect(ids(view.groups)).toEqual(["general", "assemblyPlacement"]);
     expect(view.subject).toBe(document.assemblies[1]?.name);
     expect(view.hints).toHaveLength(3);
   });
@@ -93,6 +93,7 @@ describe("inspector of an assembly", () => {
   it("limits the index to its own devices", () => {
     expect(ids(viewOf(assemblyNodeId("press", "a")).groups)).toEqual([
       "general",
+      "assemblyPlacement",
       "driveIndex",
       "actuatorIndex",
       "sensorIndex",

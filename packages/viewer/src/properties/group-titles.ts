@@ -8,6 +8,7 @@ export const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   mesh: "properties.group.mesh",
   sourceNodes: "properties.group.sourceNodes",
   placement: "properties.group.placement",
+  assemblyPlacement: "properties.group.assemblyPlacement",
   parameters: "properties.group.parameters",
   joints: "properties.group.joints",
   commands: "inspector.group.commands",

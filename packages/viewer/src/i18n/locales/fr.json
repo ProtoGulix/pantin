@@ -415,5 +415,15 @@
   "clock.stepLabel": "Nombre de pas simulés",
   "clock.warning": "La simulation prend du retard sur le temps réel ({ratio} %)",
   "clock.warning.dropped": "La simulation prend du retard sur le temps réel",
-  "clock.warning.hint": "Le cœur n'arrive pas à exécuter tous les pas dus : le temps simulé s'écarte du temps réel. Sans automate, ce n'est qu'un ralentissement ; une fois un automate connecté, ses temporisations suivent l'horloge réelle et pourraient expirer à tort."
+  "clock.warning.hint": "Le cœur n'arrive pas à exécuter tous les pas dus : le temps simulé s'écarte du temps réel. Sans automate, ce n'est qu'un ralentissement ; une fois un automate connecté, ses temporisations suivent l'horloge réelle et pourraient expirer à tort.",
+  "properties.group.assemblyPlacement": "Placement",
+  "placement.field.x": "X",
+  "placement.field.y": "Y",
+  "placement.field.z": "Z",
+  "placement.field.rx": "RX",
+  "placement.field.ry": "RY",
+  "placement.field.rz": "RZ",
+  "placement.anchor": "Repère",
+  "placement.anchor.world": "monde",
+  "placement.invalid": "Le placement n'est pas valide : tapez un nombre dans chaque champ."
 }

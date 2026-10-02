@@ -103,3 +103,36 @@ describe("PantinApiClient keys", () => {
     expect(error.message).toContain('Try "verin-pince".');
   });
 });
+
+describe("PantinApiClient placement", () => {
+  it("sends the placement with PUT and returns the stored one with its anchor", async () => {
+    const answer = {
+      placement: { translation: [0.1, 0, 0], rotation: [0, 0, 0, 1] },
+      anchor: { kind: "assembly", key: "axis" },
+    };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const placement = {
+      translation: [0.1, 0, 0] as [number, number, number],
+      rotation: [0, 0, 0, 1] as [number, number, number, number],
+    };
+    expect(
+      await createPantinApiClient(fetchFunction).setAssemblyPlacement("press", "clevis", placement),
+    ).toEqual(answer);
+    expect([requests[0]?.init?.method, requests[0]?.url, requests[0]?.init?.body]).toEqual([
+      "PUT",
+      "/api/pantins/press/assemblies/clevis/placement",
+      JSON.stringify(placement),
+    ]);
+  });
+
+  it("refuses a rotation that is not a unit quaternion before sending anything", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse({}));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).setAssemblyPlacement("press", "clevis", {
+        translation: [0, 0, 0],
+        rotation: [0, 0, 0, 2],
+      }),
+    );
+    expect([error.kind, requests.length]).toEqual(["invalid_input", 0]);
+  });
+});

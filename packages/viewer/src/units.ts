@@ -17,11 +17,11 @@ export function millimetresToMetres(millimetres: number): number {
   return millimetres / MILLIMETRES_PER_METRE;
 }
 
-function radiansToDegrees(radians: number): number {
+export function radiansToDegrees(radians: number): number {
   return radians * DEGREES_PER_RADIAN;
 }
 
-function degreesToRadians(degrees: number): number {
+export function degreesToRadians(degrees: number): number {
   return degrees / DEGREES_PER_RADIAN;
 }
 

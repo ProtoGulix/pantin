@@ -4,6 +4,7 @@ import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
 import { jointGroups } from "./joint-groups.ts";
+import { assemblyPlacementGroup, bodyPlacementGroup } from "./placement-groups.ts";
 import { type GroupDraft, linkRow, type PropertyRow, renameEditor, row } from "./property-rows.ts";
 
 // The CODESYS-like "Property | Value" groups of a tree node, as plain data
@@ -48,6 +49,7 @@ function assemblyGroups(
         row("bodyCount", t("properties.bodyCount"), String(bodyCount)),
       ],
     },
+    assemblyPlacementGroup(assembly, pantin, t),
   ];
 }
 
@@ -113,6 +115,7 @@ function bodyGroups(
         assemblyRow(body, pantin, t),
       ],
     },
+    ...bodyPlacementGroup(body, pantin, t),
     { id: "joints", rows: bodyJointRows(body, pantin, t) },
     {
       id: "source",

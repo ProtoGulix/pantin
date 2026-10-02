@@ -122,6 +122,18 @@ describe("properties of assemblies (ADR 0019)", () => {
           ["Nombre de corps", "1"],
         ],
       ],
+      [
+        "Placement",
+        [
+          ["Repère", "monde"],
+          ["X (mm)", "0"],
+          ["Y (mm)", "0"],
+          ["Z (mm)", "0"],
+          ["RX (°)", "0"],
+          ["RY (°)", "0"],
+          ["RZ (°)", "0"],
+        ],
+      ],
     ]);
     const key = groups[0]?.rows.find((entry) => entry.id === "key");
     expect(key?.edit).toEqual({

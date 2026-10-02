@@ -6,6 +6,7 @@
 
 import type { DriveType, JointCoordinateUnit } from "@pantin/protocol";
 import type { DeviceRef } from "../device-selection.ts";
+import type { PlacementField } from "../placement-units.ts";
 
 export type PropertyGroupId =
   | "general"
@@ -13,6 +14,8 @@ export type PropertyGroupId =
   | "mesh"
   | "sourceNodes"
   | "placement"
+  // An assembly's or a body's placement in its anchor frame (ADR 0034).
+  | "assemblyPlacement"
   | "parameters"
   | "joints"
   // Inspector groups (ADR 0030).
@@ -37,6 +40,8 @@ export type EditTarget =
   // Choosing another type opens the joint form with it (ADR 0018).
   | { kind: "jointType"; pantinId: string; jointId: string }
   | { kind: "bodyAssembly"; pantinId: string; bodyId: string }
+  // One of the six typed values of an assembly's placement (ADR 0034 point 1).
+  | { kind: "assemblyPlacement"; pantinId: string; key: string; field: PlacementField }
   // A field of a device in the open Pantin: "name", a parameter field, or a
   // sensor input key ("range.lower"), by the device form's field ids.
   | { kind: "deviceField"; device: DeviceRef; fieldId: string };
