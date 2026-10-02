@@ -205,4 +205,13 @@ describe("triad", () => {
       expect(segment.visible).toBe(segment.axis !== endOn);
     }
   });
+
+  it("starts on the cube's corner as the perspective shows it", () => {
+    const { alpha, beta } = anglesFromDirection(STANDARD_VIEWS.front.camera);
+    // The front face is 30 px towards the viewer: 300 / (300 - 30) larger.
+    const [x] = triadSegments(coreBasisOf(alpha, beta), 30, 81, 300);
+    expect(x?.from.x).toBeCloseTo((-30 * 300) / 270, 6);
+    expect(x?.from.y).toBeCloseTo((30 * 300) / 270, 6);
+    expect(x?.to.x).toBeCloseTo((51 * 300) / 270, 6);
+  });
 });

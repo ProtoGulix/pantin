@@ -26,6 +26,8 @@ const CELL_PIXELS = 20;
 const HALF_SIZE = 1.5 * CELL_PIXELS;
 // Longer than the cube's edge, so each tip reaches past it.
 const TRIAD_LENGTH = 1.35 * 3 * CELL_PIXELS;
+// Pixels, as CSS perspective: set here so the triad is projected the same way.
+const CUBE_PERSPECTIVE = 300;
 // Letters sit this far beyond the tip of their axis, along it.
 const LETTER_OFFSET = 7;
 
@@ -42,6 +44,7 @@ export class ViewCube {
   constructor(root: HTMLElement, focusTarget: HTMLElement) {
     this.root = root;
     this.focusTarget = focusTarget;
+    root.style.perspective = `${CUBE_PERSPECTIVE}px`;
     const scene = element("div", { className: "view-cube__scene" });
     this.cells = cubeCells().map((cell) => ({ cell, node: this.cellNode(cell) }));
     this.faces = this.cells
@@ -110,7 +113,7 @@ export class ViewCube {
       const lightness = faceLightness(basis, STANDARD_VIEWS[face.face].camera);
       node.style.background = `hsl(220 8% ${lightness.toFixed(1)}%)`;
     }
-    for (const segment of triadSegments(basis, HALF_SIZE, TRIAD_LENGTH)) {
+    for (const segment of triadSegments(basis, HALF_SIZE, TRIAD_LENGTH, CUBE_PERSPECTIVE)) {
       showSegment(this.triad[segment.axis], segment);
     }
   }

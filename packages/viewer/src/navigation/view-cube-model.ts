@@ -167,11 +167,28 @@ const TRIAD_AXES: readonly { axis: TriadAxis; direction: Vector3Tuple }[] = [
   { axis: "z", direction: [0, 0, 1] },
 ];
 
-/** The triad drawn flat under the cube: where each axis goes on screen. */
-export function triadSegments(basis: CoreBasis, halfSize: number, length: number): TriadSegment[] {
-  const origin = toCss(basis, scaled(TRIAD_ORIGIN, halfSize));
+// Where CSS `perspective` puts a point (z towards the viewer) on screen, the
+// perspective origin being the cube's centre. The faces get it from the
+// browser; the flat triad must get the same, or it drifts off their edges.
+function inPerspective([x, y, z]: Vector3Tuple, perspective: number): Vector3Tuple {
+  const factor = Number.isFinite(perspective) ? perspective / (perspective - z) : 1;
+  return [x * factor, y * factor, z];
+}
+
+/**
+ * The triad drawn flat under the cube: where each axis goes on screen, with
+ * the cube's CSS perspective in pixels (Infinity for none).
+ */
+export function triadSegments(
+  basis: CoreBasis,
+  halfSize: number,
+  length: number,
+  perspective = Number.POSITIVE_INFINITY,
+): TriadSegment[] {
+  const start = scaled(TRIAD_ORIGIN, halfSize);
+  const origin = inPerspective(toCss(basis, start), perspective);
   return TRIAD_AXES.map(({ axis, direction }) => {
-    const tip = toCss(basis, add(scaled(TRIAD_ORIGIN, halfSize), scaled(direction, length)));
+    const tip = inPerspective(toCss(basis, add(start, scaled(direction, length))), perspective);
     const projected = Math.hypot(tip[0] - origin[0], tip[1] - origin[1]);
     return {
       axis,

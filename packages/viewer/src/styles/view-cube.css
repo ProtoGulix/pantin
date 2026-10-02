@@ -10,7 +10,7 @@
   height: 60px;
   /* The cube alone takes the mouse; the rest keeps middle drag and wheel for the canvas. */
   pointer-events: none;
-  perspective: 300px;
+  /* perspective is set by ui/view-cube.ts, which projects the triad with it. */
 }
 
 .view-cube[hidden] {
