@@ -118,3 +118,66 @@ export function cellTransform(cell: CubeCell, basis: CoreBasis, step: number): s
   const numbers = [...first, 0, ...second, 0, ...third, 0, ...origin, 1];
   return `matrix3d(${numbers.map((value) => Number(value.toFixed(5))).join(",")})`;
 }
+
+// A fixed light up, left and in front of the screen. The shade of a face
+// comes from its normal in the camera frame, so the faces keep their relative
+// brightness as the cube turns and the volume reads as a solid.
+const LIGHT_ON_SCREEN: Vector3Tuple = normalised([-0.35, 0.55, 0.75]);
+const DARKEST_LIGHTNESS = 70;
+const LIGHTNESS_RANGE = 22;
+
+/** Lightness in percent (0 to 100) of a face with this outward normal, for a light grey cube. */
+export function faceLightness(basis: CoreBasis, normal: Vector3Tuple): number {
+  const onScreen = toCss(basis, normal);
+  // CSS y points down, the light is given with y up.
+  const lambert = Math.max(
+    0,
+    onScreen[0] * LIGHT_ON_SCREEN[0] -
+      onScreen[1] * LIGHT_ON_SCREEN[1] +
+      onScreen[2] * LIGHT_ON_SCREEN[2],
+  );
+  return DARKEST_LIGHTNESS + LIGHTNESS_RANGE * lambert;
+}
+
+export type TriadAxis = "x" | "y" | "z";
+
+export interface TriadSegment {
+  axis: TriadAxis;
+  // Pixels from the cube's centre, x right and y down on screen.
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  // False for an axis seen end on, whose projection is float noise: its
+  // letter would land in an arbitrary direction next to the cube.
+  visible: boolean;
+}
+
+// Below this share of its length on screen, an axis counts as seen end on.
+const END_ON_SHARE = 0.25;
+
+// As in Fusion 360, the axes start at the front bottom left corner (-X, -Y,
+// -Z), run along the cube's edges and reach past it. The triad is drawn
+// under the opaque faces, so the part of an axis behind the cube is hidden
+// and its tip shows where it leaves the cube. (The corner farthest from the
+// isometric view projects onto the nearest one and put the axes over the
+// faces.)
+const TRIAD_ORIGIN: Vector3Tuple = [-1, -1, -1];
+const TRIAD_AXES: readonly { axis: TriadAxis; direction: Vector3Tuple }[] = [
+  { axis: "x", direction: [1, 0, 0] },
+  { axis: "y", direction: [0, 1, 0] },
+  { axis: "z", direction: [0, 0, 1] },
+];
+
+/** The triad drawn flat under the cube: where each axis goes on screen. */
+export function triadSegments(basis: CoreBasis, halfSize: number, length: number): TriadSegment[] {
+  const origin = toCss(basis, scaled(TRIAD_ORIGIN, halfSize));
+  return TRIAD_AXES.map(({ axis, direction }) => {
+    const tip = toCss(basis, add(scaled(TRIAD_ORIGIN, halfSize), scaled(direction, length)));
+    const projected = Math.hypot(tip[0] - origin[0], tip[1] - origin[1]);
+    return {
+      axis,
+      from: { x: origin[0], y: origin[1] },
+      to: { x: tip[0], y: tip[1] },
+      visible: projected >= END_ON_SHARE * length,
+    };
+  });
+}

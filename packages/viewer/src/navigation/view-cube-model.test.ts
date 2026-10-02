@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Vector3Tuple } from "../frames.ts";
 import { anglesFromDirection, STANDARD_VIEWS } from "./standard-views.ts";
-import { cellTransform, coreBasisOf, cubeCells, directionKey } from "./view-cube-model.ts";
+import {
+  cellTransform,
+  coreBasisOf,
+  cubeCells,
+  directionKey,
+  faceLightness,
+  triadSegments,
+} from "./view-cube-model.ts";
 
 function expectClose(actual: readonly number[], expected: readonly number[]): void {
   expected.forEach((value, index) => {
@@ -112,5 +119,90 @@ describe("types", () => {
   it("accepts a core direction tuple", () => {
     const direction: Vector3Tuple = [0, -1, 0];
     expect(directionKey(direction)).toBe("0.000,-1.000,0.000");
+  });
+});
+
+describe("face lightness", () => {
+  const basisOf = (id: "front" | "right" | "top" | "isometric") => {
+    const { alpha, beta } = anglesFromDirection(STANDARD_VIEWS[id].camera);
+    return coreBasisOf(alpha, beta);
+  };
+
+  it("stays in the light grey range", () => {
+    for (const face of ["front", "back", "left", "right", "top", "bottom"] as const) {
+      const lightness = faceLightness(basisOf("isometric"), STANDARD_VIEWS[face].camera);
+      expect(lightness).toBeGreaterThanOrEqual(70);
+      expect(lightness).toBeLessThanOrEqual(92);
+    }
+  });
+
+  it("tells the three faces of the isometric view apart", () => {
+    const basis = basisOf("isometric");
+    const shades = (["front", "right", "top"] as const).map((face) =>
+      faceLightness(basis, STANDARD_VIEWS[face].camera),
+    );
+    expect(new Set(shades.map((value) => value.toFixed(2))).size).toBe(3);
+  });
+
+  it("lights the face that looks at the viewer more than one seen edge on", () => {
+    const front = basisOf("front");
+    expect(faceLightness(front, STANDARD_VIEWS.front.camera)).toBeGreaterThan(
+      faceLightness(front, STANDARD_VIEWS.right.camera),
+    );
+  });
+
+  it("lights a face turned towards the light's side more than the opposite side", () => {
+    const front = basisOf("front");
+    // The light comes from the upper left: Top (up) and Left are brighter than Bottom and Right.
+    expect(faceLightness(front, STANDARD_VIEWS.top.camera)).toBeGreaterThan(
+      faceLightness(front, STANDARD_VIEWS.bottom.camera),
+    );
+    expect(faceLightness(front, STANDARD_VIEWS.left.camera)).toBeGreaterThan(
+      faceLightness(front, STANDARD_VIEWS.right.camera),
+    );
+  });
+});
+
+describe("triad", () => {
+  it("runs along +X to the right and +Z up on screen in the Front view", () => {
+    const { alpha, beta } = anglesFromDirection(STANDARD_VIEWS.front.camera);
+    const [x, , z] = triadSegments(coreBasisOf(alpha, beta), 30, 36);
+    expect(x?.to.x).toBeCloseTo((x?.from.x ?? 0) + 36, 4);
+    expect(x?.to.y).toBeCloseTo(x?.from.y ?? 0, 4);
+    expect(z?.to.x).toBeCloseTo(z?.from.x ?? 0, 4);
+    // Up on screen is negative CSS y.
+    expect(z?.to.y).toBeCloseTo((z?.from.y ?? 0) - 36, 4);
+  });
+
+  it("starts the three axes at the same corner, the bottom left of the Front view", () => {
+    const { alpha, beta } = anglesFromDirection(STANDARD_VIEWS.front.camera);
+    const segments = triadSegments(coreBasisOf(alpha, beta), 30, 36);
+    for (const segment of segments) {
+      expect(segment.from.x).toBeCloseTo(-30, 4);
+      expect(segment.from.y).toBeCloseTo(30, 4);
+    }
+  });
+
+  it("shows three distinct axes in the isometric view", () => {
+    const { alpha, beta } = anglesFromDirection(STANDARD_VIEWS.isometric.camera);
+    const ends = triadSegments(coreBasisOf(alpha, beta), 30, 36).map(
+      (segment) => `${segment.to.x.toFixed(1)},${segment.to.y.toFixed(1)}`,
+    );
+    expect(new Set(ends).size).toBe(3);
+  });
+
+  it.each([
+    ["front", "y"],
+    ["back", "y"],
+    ["right", "x"],
+    ["left", "x"],
+    ["top", "z"],
+    ["bottom", "z"],
+  ] as const)("hides the axis seen end on in the %s view", (view, endOn) => {
+    const { alpha, beta } = anglesFromDirection(STANDARD_VIEWS[view].camera);
+    const segments = triadSegments(coreBasisOf(alpha, beta), 30, 81);
+    for (const segment of segments) {
+      expect(segment.visible).toBe(segment.axis !== endOn);
+    }
   });
 });

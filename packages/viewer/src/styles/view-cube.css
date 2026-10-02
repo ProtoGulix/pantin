@@ -1,14 +1,16 @@
-/* View cube, top right of the 3D view (ADR 0036 point 5). Tokens in base.css. */
+/* View cube, top right of the 3D view (ADR 0036 point 5): a small light-grey
+   solid with its faces named, and the X, Y, Z axes reaching past it. */
 .view-cube {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  /* Room for the axis tips and their letters, which reach past the cube. */
+  top: 44px;
+  right: 44px;
   z-index: 1;
-  width: 90px;
-  height: 90px;
+  width: 60px;
+  height: 60px;
   /* The cube alone takes the mouse; the rest keeps middle drag and wheel for the canvas. */
   pointer-events: none;
-  perspective: 420px;
+  perspective: 300px;
 }
 
 .view-cube[hidden] {
@@ -22,46 +24,59 @@
   transform-style: preserve-3d;
 }
 
+/* The face: solid, shaded from the camera each frame, edges darker, name engraved. */
+.view-cube__face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 60px;
+  color: #4a4f57;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  background: #d9dce1;
+  border: 1px solid #8d939c;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+
+/* The 3 x 3 zones of a face: not drawn until hovered. */
 .view-cube__cell {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
   padding: 0;
-  font: inherit;
-  color: transparent;
-  background: var(--surface-3);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: none;
   cursor: pointer;
   backface-visibility: hidden;
   pointer-events: auto;
 }
 
-/* The name of a face: as wide as the face, over its centre cell, not clickable. */
-.view-cube__label {
+.view-cube__cell.is-hot {
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.view-cube__triad {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 90px;
-  height: 30px;
-  margin: -15px 0 0 -45px;
-  font-size: 11px;
-  line-height: 30px;
-  color: var(--text);
-  text-align: center;
-  white-space: nowrap;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
   pointer-events: none;
-  backface-visibility: hidden;
 }
 
-.view-cube__cell--edge,
-.view-cube__cell--corner {
-  color: transparent;
-  background: var(--surface-2);
-}
-
-.view-cube__cell.is-hot {
-  background: var(--accent);
+.view-cube__letter {
+  font-size: 9px;
+  font-weight: 700;
 }
