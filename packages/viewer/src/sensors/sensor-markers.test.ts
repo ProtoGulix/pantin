@@ -62,4 +62,21 @@ describe("sensorMarkersOf", () => {
   it("draws nothing without a Pantin", () => {
     expect(sensorMarkersOf(undefined)).toEqual([]);
   });
+
+  it("draws from the parent body's frame when that body is placed in its assembly", () => {
+    const placedRail = {
+      ...railBody,
+      placement: {
+        translation: [0.1, 0, 0] as [number, number, number],
+        rotation: [0, 0, 0, 1] as [number, number, number, number],
+      },
+    };
+    const placedDocument: PantinDocument = {
+      ...document,
+      bodies: document.bodies.map((body) => (body.id === railBody.id ? placedRail : body)),
+    };
+    const [max] = sensorMarkersOf(placedDocument);
+    expect(max?.origin[0]).toBeCloseTo(slideJoint.origin[0] - 0.1, 12);
+    expect(max?.axis).toEqual(slideJoint.axis);
+  });
 });

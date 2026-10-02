@@ -9,6 +9,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { coreDisplacementToBabylon, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
+import type { LatestPose } from "./body-highlights.ts";
 import type { LoadedBody } from "./body-loader.ts";
 import { arcAboutAxis, placeAlongAxis } from "./sensor-marker-plan.ts";
 
@@ -35,7 +36,8 @@ export interface SensorMarkers {
   setStates(values: ReadonlyMap<string, number>): void;
   setHidden(bodyIds: ReadonlySet<string>): void;
   followPose(bodyId: string, translation: Vector3Tuple, rotation: QuaternionTuple): void;
-  resetPose(): void;
+  /** Poses were forgotten: markers are hidden until their parent body has a pose again. */
+  forgetPoses(): void;
 }
 
 interface Drawn {
@@ -81,8 +83,16 @@ function markerMeshes(scene: Scene, marker: SensorMarker, node: TransformNode, e
 }
 
 // One node per parent body, carrying that body's displacement: its markers hang from it.
-function poseRoots(scene: Scene) {
+// A root without a pose is disabled: the reference placement is where no body
+// stands once assemblies are placed (ADR 0033), so drawing there would mislead.
+function poseRoots(scene: Scene, latestPose: LatestPose) {
   const roots = new Map<string, TransformNode>();
+  const place = (root: TransformNode, translation: Vector3Tuple, rotation: QuaternionTuple) => {
+    const displacement = coreDisplacementToBabylon(translation, rotation);
+    root.position.copyFromFloats(...displacement.translation);
+    root.rotationQuaternion?.copyFromFloats(...displacement.rotation);
+    root.setEnabled(true);
+  };
   return {
     rootOf: (bodyId: string) => {
       const existing = roots.get(bodyId);
@@ -91,15 +101,19 @@ function poseRoots(scene: Scene) {
       }
       const root = new TransformNode(`sensor-root-${bodyId}`, scene);
       root.rotationQuaternion = Quaternion.Identity();
+      const known = latestPose(bodyId);
+      if (known === undefined) {
+        root.setEnabled(false);
+      } else {
+        place(root, known.translation, known.rotation);
+      }
       roots.set(bodyId, root);
       return root;
     },
     follow: (bodyId: string, translation: Vector3Tuple, rotation: QuaternionTuple) => {
       const root = roots.get(bodyId);
       if (root !== undefined) {
-        const displacement = coreDisplacementToBabylon(translation, rotation);
-        root.position.copyFromFloats(...displacement.translation);
-        root.rotationQuaternion?.copyFromFloats(...displacement.rotation);
+        place(root, translation, rotation);
       }
     },
     /** Drops the nodes of bodies no marker hangs from any more, such as another Pantin's. */
@@ -111,10 +125,9 @@ function poseRoots(scene: Scene) {
         }
       }
     },
-    reset: () => {
+    forget: () => {
       for (const root of roots.values()) {
-        root.position.setAll(0);
-        root.rotationQuaternion?.copyFromFloats(0, 0, 0, 1);
+        root.setEnabled(false);
       }
     },
   };
@@ -162,12 +175,13 @@ function drawMarker(
 export function createSensorMarkers(
   scene: Scene,
   loadedBodies: ReadonlyMap<string, LoadedBody>,
+  latestPose: LatestPose,
 ): SensorMarkers {
   const materials = {
     on: material(scene, "sensor-on-material", ON_COLOR),
     off: material(scene, "sensor-off-material", OFF_COLOR),
   };
-  const roots = poseRoots(scene);
+  const roots = poseRoots(scene, latestPose);
   let markers: readonly SensorMarker[] = [];
   let shownKey: string | null = null;
   let drawn: Drawn[] = [];
@@ -212,6 +226,6 @@ export function createSensorMarkers(
       paint();
     },
     followPose: roots.follow,
-    resetPose: roots.reset,
+    forgetPoses: roots.forget,
   };
 }

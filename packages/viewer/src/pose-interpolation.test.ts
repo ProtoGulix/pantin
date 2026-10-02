@@ -126,3 +126,15 @@ describe("PoseInterpolator edge cases", () => {
     expect(poseAt(interpolator, start, "a")).toBeNull();
   });
 });
+
+describe("PoseInterpolator.latestPose", () => {
+  it("gives the latest snapshot's pose of a body, nothing before one or after a reset", () => {
+    const poses = new PoseInterpolator();
+    expect(poses.latestPose("a")).toBeUndefined();
+    poses.push(snapshot([{ id: "a", t: [1, 2, 3] }]), 0);
+    expect(poses.latestPose("a")?.translation).toEqual([1, 2, 3]);
+    expect(poses.latestPose("ghost")).toBeUndefined();
+    poses.reset();
+    expect(poses.latestPose("a")).toBeUndefined();
+  });
+});

@@ -55,3 +55,26 @@ describe("jointPreviewOf", () => {
     expect(jointPreviewOf({ ...opened, jointForm: zeroAxis })?.axis).toBeNull();
   });
 });
+
+describe("jointPreviewOf under a body placement", () => {
+  it("shows origin and axis as seen from a placed parent body (ADR 0033)", () => {
+    const placedRail = {
+      ...railBody,
+      placement: {
+        translation: [0.1, 0, 0] as [number, number, number],
+        rotation: [0, 0, 0, 1] as [number, number, number, number],
+      },
+    };
+    const placed = withOpenPantin(
+      initialViewerState("en"),
+      pantinResponse(false, [placedRail, stepBody("carriage", "N_1")], "press", [hingeJoint]),
+    );
+    const preview = jointPreviewOf({
+      ...placed,
+      selection: nodeSelection(jointNodeId("press", "hinge")),
+    });
+    expect(preview?.origin?.[0]).toBeCloseTo(-0.09, 12);
+    expect(preview?.origin?.[2]).toBeCloseTo(0.02, 12);
+    expect(preview?.axis).toEqual([0, 0, 1]);
+  });
+});

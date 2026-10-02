@@ -81,6 +81,15 @@ export class PoseInterpolator {
     this.latest = { receivedAtMs: nowMs, poses: copyPoses(snapshot) };
   }
 
+  /**
+   * The latest snapshot's pose of a body, not the blend: for a body that
+   * appears after the snapshot arrived. Read only; undefined before the first
+   * snapshot or for a body it does not list.
+   */
+  latestPose(bodyId: string): InterpolatedPose | undefined {
+    return this.latest?.poses.get(bodyId);
+  }
+
   reset(): void {
     this.previous = null;
     this.latest = null;

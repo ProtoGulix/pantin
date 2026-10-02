@@ -42,7 +42,7 @@ export interface Viewport {
   frameBodies(bodyIds: readonly string[] | null): void;
   /** Feeds one snapshot of the pose stream; bodies follow it from the next frame. */
   pushPoses(snapshot: PoseSnapshot): void;
-  /** Forgets every pose: bodies go back to their reference placement. */
+  /** Forgets every pose; overlays hide until the next snapshot (bodies are replaced with the Pantin). */
   clearPoses(): void;
   /** Colours a joint's bodies and draws its axis; null goes back to the selection. */
   showJointPreview(preview: JointPreview | null): void;
@@ -147,6 +147,12 @@ function applyVisibility(context: ViewportContext): void {
 function addLoadedBody(context: ViewportContext, bodyId: string, loaded: LoadedBody): void {
   context.loadedBodies.set(bodyId, loaded);
   loaded.node.setEnabled(!context.hiddenBodyIds.has(bodyId));
+  // A body whose mesh arrives after the snapshot takes its pose at once, so
+  // that framing and arrow sizes see it where it stands, not at its file's place.
+  const known = context.poses.latestPose(bodyId);
+  if (known !== undefined) {
+    loaded.setDisplacement(known.translation, known.rotation);
+  }
   for (const mesh of loaded.meshes) {
     context.bodyIdByMesh.set(mesh, bodyId);
     context.stage.shadowGenerator.addShadowCaster(mesh, false);
@@ -239,12 +245,15 @@ function applyPosesEachFrame(context: ViewportContext): void {
   context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
 }
 
-function resetPlacements(context: ViewportContext): void {
-  for (const loaded of context.loadedBodies.values()) {
-    loaded.setDisplacement([0, 0, 0], [0, 0, 0, 1]);
-  }
-  context.highlights.resetPose();
-  context.sensorMarkers.resetPose();
+// Poses are forgotten only when the open Pantin changes or closes, and body
+// keys include the Pantin id, so showBodies removes those bodies. They are NOT
+// reset to the identity displacement: with placements (ADR 0033) their resting
+// place is W . B, which the viewer does not compute. Overlays hide until poses
+// arrive instead.
+function forgetPoses(context: ViewportContext): void {
+  context.poses.reset();
+  context.highlights.forgetPoses();
+  context.sensorMarkers.forgetPoses();
 }
 
 export function createViewport(
@@ -255,6 +264,8 @@ export function createViewport(
   const engine = createEngine(canvas);
   const scene = new Scene(engine);
   const loadedBodies = new Map<string, LoadedBody>();
+  const poses = new PoseInterpolator();
+  const latestPose = (bodyId: string) => poses.latestPose(bodyId);
   const context: ViewportContext = {
     scene,
     camera: createCamera(scene, canvas),
@@ -262,9 +273,9 @@ export function createViewport(
     wantedKeys: new Map(),
     loadedBodies,
     bodyIdByMesh: new Map(),
-    poses: new PoseInterpolator(),
-    highlights: createBodyHighlights(scene, loadedBodies),
-    sensorMarkers: createSensorMarkers(scene, loadedBodies),
+    poses,
+    highlights: createBodyHighlights(scene, loadedBodies, latestPose),
+    sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
     hiddenBodyIds: new Set(),
   };
   listenToPicks(context, callbacks);
@@ -274,10 +285,7 @@ export function createViewport(
     showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
     frameBodies: (bodyIds) => frameBodies(context, bodyIds),
     pushPoses: (snapshot) => context.poses.push(snapshot, performance.now()),
-    clearPoses: () => {
-      context.poses.reset();
-      resetPlacements(context);
-    },
+    clearPoses: () => forgetPoses(context),
     setSelectedBodies: (bodyIds) => context.highlights.setSelectedBodies(bodyIds),
     setHiddenBodies: (bodyIds) => {
       context.hiddenBodyIds = bodyIds;

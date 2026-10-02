@@ -1,5 +1,7 @@
-import type { Vector3 } from "@pantin/protocol";
+import type { PantinDocument, Vector3 } from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
+import type { Vector3Tuple } from "../frames.ts";
+import { inBodyFrame } from "../placement-frame.ts";
 import { selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
@@ -15,15 +17,17 @@ import {
 
 // What the 3D view shows of the joint being created or the selected one: its
 // two bodies, coloured, and an arrow along its axis in the positive sense.
-// Core frame, SI, reference configuration.
+// Core frame, SI, reference configuration. Origin and axis are given as seen
+// from the parent body's own frame (placement-frame.ts), because the arrow
+// follows that body's pose.
 
 export interface JointPreview {
   parentBodyId: string;
   childBodyId: string;
   // Null while the form holds a value that is not a number: no arrow then.
-  origin: Vector3 | null;
+  origin: Vector3Tuple | null;
   // Null as well for the zero vector, which has no direction.
-  axis: Vector3 | null;
+  axis: Vector3Tuple | null;
   // An actuator moves this joint (ADR 0028): the arrow says so by its colour.
   driven: boolean;
 }
@@ -47,21 +51,48 @@ function isDriven(state: ViewerState, jointId: string | null): boolean {
   );
 }
 
-function formPreview(form: JointFormState, driven: boolean): JointPreview {
-  const axis = formVector(form, "axis");
+// Origin and axis arrive in the frame of the parent body's assembly (ADR 0033).
+function previewOf(
+  document: PantinDocument | undefined,
+  joint: { parentBodyId: string; childBodyId: string; driven: boolean },
+  origin: Vector3 | null,
+  axis: Vector3 | null,
+): JointPreview {
+  const parent = document?.bodies.find((body) => body.id === joint.parentBodyId);
+  const drawn = inBodyFrame(origin ?? [0, 0, 0], axis ?? [0, 0, 1], parent?.placement);
   return {
-    driven,
-    parentBodyId: form.values[FIELD_PARENT] ?? "",
-    childBodyId: form.values[FIELD_CHILD] ?? "",
-    origin: formVector(form, "origin"),
-    axis: axis?.some((component) => component !== 0) ? axis : null,
+    ...joint,
+    origin: origin === null ? null : drawn.origin,
+    axis: axis === null ? null : drawn.axis,
   };
+}
+
+function formPreview(
+  document: PantinDocument | undefined,
+  form: JointFormState,
+  driven: boolean,
+): JointPreview {
+  const axis = formVector(form, "axis");
+  return previewOf(
+    document,
+    {
+      driven,
+      parentBodyId: form.values[FIELD_PARENT] ?? "",
+      childBodyId: form.values[FIELD_CHILD] ?? "",
+    },
+    formVector(form, "origin"),
+    axis?.some((component) => component !== 0) ? axis : null,
+  );
 }
 
 /** The form wins over the selection: it is what the user is working on. */
 export function jointPreviewOf(state: ViewerState): JointPreview | null {
   if (state.jointForm !== null) {
-    return formPreview(state.jointForm, isDriven(state, state.jointForm.jointId));
+    return formPreview(
+      state.openPantin?.document,
+      state.jointForm,
+      isDriven(state, state.jointForm.jointId),
+    );
   }
   const nodeId = selectedNodeIdOf(state.selection);
   const ref = nodeId === null ? null : parseNodeId(nodeId);
@@ -71,11 +102,10 @@ export function jointPreviewOf(state: ViewerState): JointPreview | null {
       : undefined;
   return joint === undefined
     ? null
-    : {
-        parentBodyId: joint.parent,
-        childBodyId: joint.child,
-        origin: joint.origin,
-        axis: joint.axis,
-        driven: isDriven(state, joint.id),
-      };
+    : previewOf(
+        state.openPantin?.document,
+        { parentBodyId: joint.parent, childBodyId: joint.child, driven: isDriven(state, joint.id) },
+        joint.origin,
+        joint.axis,
+      );
 }

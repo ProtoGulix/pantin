@@ -145,7 +145,7 @@ export class ViewerStore {
   }
 
   // Poses follow the open Pantin: closed or replaced, the stream stops and the
-  // bodies return to their reference placement.
+  // poses are forgotten; the old Pantin's bodies are replaced anyway.
   private followPoses(pantinId: string | null, viewport: Viewport): void {
     if (pantinId === this.followedPantinId) {
       return;
