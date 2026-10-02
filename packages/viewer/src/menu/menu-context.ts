@@ -1,3 +1,4 @@
+import { isAligning } from "../alignment/alignment-view.ts";
 import { type CentralLayout, showsViewport } from "../central-layout.ts";
 import type { DeviceKind } from "../device-selection.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
@@ -23,6 +24,8 @@ export interface MenuContext {
   // The placement gizmo (ADR 0034): on, and whether one assembly is selected to use it on.
   gizmoMode: DragKind | null;
   gizmoAvailable: boolean;
+  // An alignment is under way (ADR 0035).
+  aligning: boolean;
   // The mouse preset and the other settings of the 3D view (ADR 0036).
   navigation: NavigationSettings;
   // The standard views need the 3D view to be on screen (ADR 0036 point 4).
@@ -50,6 +53,7 @@ export function menuContext(state: ViewerState): MenuContext {
     centralLayout: state.centralLayout,
     gizmoMode: state.gizmoMode,
     gizmoAvailable: canUseGizmo(state),
+    aligning: isAligning(state),
     navigation: state.navigation,
     viewsAvailable: state.openPantin !== null && showsViewport(state.centralLayout),
   };

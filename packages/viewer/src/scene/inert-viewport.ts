@@ -6,6 +6,8 @@ import type { Viewport } from "./viewport.ts";
 export function createInertViewport(): Viewport {
   const ignore = () => undefined;
   return {
+    setAlignmentPicking: ignore,
+    showFaceHighlights: ignore,
     showBodies: ignore,
     setSelectedBodies: ignore,
     setHiddenBodies: ignore,

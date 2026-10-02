@@ -3,6 +3,7 @@ import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
 import { effectiveLayout, parseStoredLayout } from "./central-layout.ts";
 import type { ClockView } from "./clock/clock-model.ts";
 import type { ConsoleView } from "./console/console-view.ts";
+import { receiveAlignmentPick } from "./controller/alignment-actions.ts";
 import { refreshConsole } from "./controller/console-actions.ts";
 import {
   createPanelIntents,
@@ -20,6 +21,7 @@ import { parseStoredNavigation, serializeNavigation } from "./navigation/navigat
 import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
+import { AlignmentPanel } from "./ui/alignment-panel.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
 import { CentralArea } from "./ui/central-area.ts";
 import { ConsolePanel } from "./ui/console-panel.ts";
@@ -87,19 +89,16 @@ function createScreen(): Screen {
   const canvas = requireElement("#viewport-canvas", HTMLCanvasElement);
   const hint = requireElement("#viewport-hint", HTMLElement);
   const sidePanel = new SidePanel(panel, requireElement(".layout", HTMLElement));
-  const welcome = new WelcomeDialog(requireElement("#welcome", HTMLElement), (mode) => {
-    if (mode === "edit") {
-      sidePanel.focusTree();
-    } else {
-      canvas.focus();
-    }
-  });
+  const welcome = new WelcomeDialog(requireElement("#welcome", HTMLElement), (mode) =>
+    mode === "edit" ? sidePanel.focusTree() : canvas.focus(),
+  );
   const diagram = createDiagramView();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
   const consolePanel = createConsolePanel(panel);
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const viewCube = new ViewCube(requireElement("#view-cube", HTMLElement), canvas);
+  const alignmentPanel = new AlignmentPanel(requireElement("#alignment-panel", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
     canvas,
@@ -117,6 +116,7 @@ function createScreen(): Screen {
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
       viewCube.render(view, intents);
+      alignmentPanel.render(view.alignment, view.translate, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
     showJointPositions: (positions) => inspector.showJointPositions(positions),
@@ -146,6 +146,7 @@ function createViewportOrInert(
         onPlacementDragged: (assemblyKey, placement) =>
           dragPlacement(store, assemblyKey, placement),
         onPlacementDragEnded: () => void finishPlacementDrag(store),
+        onAlignmentPick: (pick) => void receiveAlignmentPick(store, pick),
         onLoadError: (bodyName, reason) =>
           store.update({
             ...store.state,

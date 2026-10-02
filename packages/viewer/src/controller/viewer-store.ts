@@ -1,10 +1,12 @@
 import type {
   DriveRuntime,
+  FaceFile,
   JointPosition,
   PantinResponse,
   PoseSnapshot,
   SimulationClockState,
 } from "@pantin/protocol";
+import { alignmentHighlightsOf, isAligning } from "../alignment/alignment-view.ts";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
 import { type CentralLayout, shouldRender } from "../central-layout.ts";
@@ -94,6 +96,8 @@ export class ViewerStore {
   readingTags = false;
   // The dragged placements of the gizmo, one request in flight (ADR 0034 point 4).
   placementSender: LatestWinsSender<DraggedPlacement> | null = null;
+  // Face files of the open Pantins, by Pantin and mesh path (ADR 0035), downloaded once.
+  readonly faceFiles = new Map<string, Promise<FaceFile | null>>();
   // Same for the console (ADR 0031 point 4).
   readingConsole = false;
   // The lines of the open Pantin's console, outside ViewerState: see console-state.ts.
@@ -154,6 +158,8 @@ export class ViewerStore {
     viewport.showJointPreview(jointPreviewOf(next));
     viewport.showSensorMarkers(sensorMarkersOf(document));
     viewport.showPlacementGizmo(gizmoSpecOf(next));
+    viewport.setAlignmentPicking(isAligning(next));
+    viewport.showFaceHighlights(alignmentHighlightsOf(next));
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */

@@ -89,6 +89,20 @@ const MENUS: readonly MenuDefinition[] = [
       "separator",
       gizmoItem("gizmoMove", "menubar.edit.gizmoMove", "g", "shortcut.gizmoMove", "move"),
       gizmoItem("gizmoRotate", "menubar.edit.gizmoRotate", "r", "shortcut.gizmoRotate", "rotate"),
+      {
+        // ADR 0035: on the selected assembly, like the gizmo; checked while aligning.
+        ...item(
+          "align",
+          "menubar.edit.align",
+          (context) => context.gizmoAvailable || context.aligning,
+          {
+            key: "a",
+            primaryModifier: false,
+            labelKey: "shortcut.align",
+          },
+        ),
+        checked: (context) => context.aligning,
+      },
     ],
   },
   {

@@ -1,4 +1,8 @@
 import {
+  type AlignRequest,
+  AlignRequestSchema,
+  type AlignResponse,
+  AlignResponseSchema,
   type AssemblyPlacementResponse,
   AssemblyPlacementResponseSchema,
   MoveBodyRequestSchema,
@@ -35,6 +39,9 @@ export interface AssemblyRoutes {
     key: string,
     placement: Placement,
   ): Promise<AssemblyPlacementResponse>;
+  // Moves the assembly by the motion its picks ask for (ADR 0035): the
+  // answer is the stored placement; read the Pantin again.
+  alignAssembly(pantinId: string, key: string, request: AlignRequest): Promise<AlignResponse>;
 }
 
 function assemblyUrl(pantinId: string, key: string, suffix = ""): string {
@@ -73,6 +80,11 @@ export function assemblyRoutes(send: SendJson): AssemblyRoutes {
       const request = validInputOrThrow(SetPlacementRequestSchema, placement);
       const url = assemblyUrl(pantinId, key, "/placement");
       return send(url, jsonRequest("PUT", request), AssemblyPlacementResponseSchema);
+    },
+    alignAssembly: async (pantinId, key, request) => {
+      const valid = validInputOrThrow(AlignRequestSchema, request);
+      const url = assemblyUrl(pantinId, key, "/align");
+      return send(url, jsonRequest("POST", valid), AlignResponseSchema);
     },
   };
 }

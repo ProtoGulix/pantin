@@ -139,6 +139,32 @@ describe("PantinApiClient import", () => {
   });
 });
 
+describe("PantinApiClient face files (ADR 0035)", () => {
+  it("fetches the face file next to a GLB mesh, null when the body has none", async () => {
+    const faceFile = { formatVersion: 1, writer: "w", solid: true, primitives: [], faces: [] };
+    const found = fakeFetch(new Response(JSON.stringify(faceFile)));
+    const client = createPantinApiClient(found.fetchFunction);
+    expect(await client.fetchFaceFile("press", "meshes/rail.glb")).toEqual(faceFile);
+    expect(found.requests[0]?.url).toBe("/api/pantins/press/meshes/rail.faces.json");
+    const missing = createPantinApiClient(
+      fakeFetch(new Response("", { status: 404 })).fetchFunction,
+    );
+    expect(await missing.fetchFaceFile("press", "meshes/rail.glb")).toBeNull();
+    // An STL body never has one: nothing is asked.
+    expect(await missing.fetchFaceFile("press", "meshes/rail.stl")).toBeNull();
+  });
+
+  it("counts an unreadable face file as none, and reports a failed request", async () => {
+    const unreadable = fakeFetch(new Response(JSON.stringify({ formatVersion: 9 })));
+    const client = createPantinApiClient(unreadable.fetchFunction);
+    expect(await client.fetchFaceFile("press", "meshes/rail.glb")).toBeNull();
+    const failing = fakeFetch(jsonResponse({ error: { code: "internal", message: "x" } }, 500));
+    await expect(
+      createPantinApiClient(failing.fetchFunction).fetchFaceFile("press", "meshes/rail.glb"),
+    ).rejects.toThrow();
+  });
+});
+
 describe("meshFileNameFromPath", () => {
   it("extracts the file name under meshes/", () => {
     expect(meshFileNameFromPath("meshes/rail.glb")).toBe("rail.glb");

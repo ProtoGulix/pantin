@@ -4,6 +4,8 @@ import { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
+import type { FaceHighlight } from "../alignment/alignment-session.ts";
+import type { ViewportPick } from "../alignment/pick-resolution.ts";
 import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
@@ -11,6 +13,7 @@ import type { CameraAngles } from "../navigation/standard-views.ts";
 import type { InterpolatedPose } from "../pose-interpolation.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
+import { viewportPickOf } from "./alignment-pick.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
@@ -34,6 +37,8 @@ export interface ViewportCallbacks {
   // frame of the anchor, then the end of the drag (also after Escape).
   onPlacementDragged(assemblyKey: string, placement: RigidTransform): void;
   onPlacementDragEnded(): void;
+  // A click while aligning (ADR 0035 point 3); null when it hit no body.
+  onAlignmentPick(pick: ViewportPick | null): void;
 }
 
 export interface Viewport {
@@ -69,6 +74,10 @@ export interface Viewport {
   showView(angles: CameraAngles): void;
   /** Alpha and beta of the camera when they change, for the view cube; also once at once. */
   onCameraOrientation(listener: (alpha: number, beta: number) => void): void;
+  /** True: a click is an alignment pick (ADR 0035 point 3); false: it selects. */
+  setAlignmentPicking(active: boolean): void;
+  /** Tints the faces picked for an alignment; an empty list removes them. */
+  showFaceHighlights(highlights: readonly FaceHighlight[]): void;
 }
 
 function removeBody(context: ViewportContext, bodyId: string): void {
@@ -136,6 +145,13 @@ function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): 
     }
     const { scene, bodyIdByMesh } = context;
     const pick = pickBody(context, scene.pointerX, scene.pointerY);
+    if (context.alignmentPicking) {
+      // A double click is a tap then a double tap: one pick, not two.
+      if (type === PointerEventTypes.POINTERTAP) {
+        callbacks.onAlignmentPick(viewportPickOf(context, pick));
+      }
+      return;
+    }
     const pickedMesh = pick.hit ? pick.pickedMesh : null;
     const bodyId = pickedMesh === null ? null : (bodyIdByMesh.get(pickedMesh) ?? null);
     callbacks.onBodyPicked(bodyId, type === PointerEventTypes.POINTERDOUBLETAP);
@@ -253,5 +269,9 @@ export function createViewport(
     setNavigation: (settings) => navigation.apply(settings),
     showView: (angles) => navigation.showView(angles),
     onCameraOrientation: (listener) => navigation.onOrientation(listener),
+    setAlignmentPicking: (active) => {
+      context.alignmentPicking = active;
+    },
+    showFaceHighlights: (highlights) => context.faceHighlights.show(highlights),
   };
 }

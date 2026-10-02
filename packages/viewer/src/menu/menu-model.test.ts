@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { newAlignmentSession } from "../alignment/alignment-session.ts";
 import { withConsoleToggled } from "../console/console-state.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, pantinSummaries, withNode } from "../test-fixtures.ts";
-import { bodyNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, sourceNodeNodeId } from "../tree/node-ids.ts";
 import { withSelection } from "../tree/tree-state.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import {
@@ -105,6 +106,29 @@ describe("menu bar model console", () => {
   it("checks Console while the panel is open", () => {
     const opened = { ...editing(false), console: withConsoleToggled(editing(false).console) };
     expect(consoleEntry(opened)).toMatchObject({ checked: true });
+  });
+});
+
+describe("menu bar model alignment (ADR 0035)", () => {
+  const alignEntry = (state: ViewerState) =>
+    buildMenuBar(state, translate)[1]?.entries.find(
+      (entry) => entry.type === "item" && entry.command === "align",
+    );
+  const onAssembly = withNode(editing(false), assemblyNodeId("press", "main"));
+
+  it("offers Aligner… on a selected assembly, with A, unchecked", () => {
+    expect(alignEntry(onAssembly)).toMatchObject({
+      label: "Aligner…",
+      shortcutLabel: "A",
+      enabled: true,
+      checked: false,
+    });
+    expect(alignEntry(editing(false))).toMatchObject({ enabled: false });
+  });
+
+  it("checks it while aligning, and keeps it enabled to stop", () => {
+    const aligning = { ...editing(false), alignment: newAlignmentSession("press", "main") };
+    expect(alignEntry(aligning)).toMatchObject({ enabled: true, checked: true });
   });
 });
 
@@ -227,6 +251,7 @@ describe("shortcut listing", () => {
       { keys: "Suppr", action: "Supprimer" },
       { keys: "G", action: "Déplacer" },
       { keys: "R", action: "Tourner" },
+      { keys: "A", action: "Aligner…" },
       { keys: "F", action: "Tout cadrer" },
       { keys: "Ctrl+1", action: "Face" },
       { keys: "Ctrl+2", action: "Arrière" },

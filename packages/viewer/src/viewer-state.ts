@@ -1,5 +1,6 @@
 import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
+import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
@@ -98,6 +99,8 @@ export interface ViewerState {
   // setting of the viewer kept in the browser. Display state, never saved.
   gizmoMode: DragKind | null;
   gizmoSteps: SnapSteps;
+  // The alignment under way (ADR 0035), or null. Display state, never saved.
+  alignment: AlignmentSession | null;
   // The mouse preset, wheel direction, arrow step and projection of the 3D
   // view (ADR 0036), kept in the browser like the steps. Never saved.
   navigation: NavigationSettings;
@@ -153,6 +156,7 @@ export function initialViewerState(
     inspectorFocus: null,
     console: INITIAL_CONSOLE_STATE,
     gizmoMode: null,
+    alignment: null,
     gizmoSteps,
     navigation,
   };
@@ -182,6 +186,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     jointForm: null,
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
+    alignment: null,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,

@@ -6,6 +6,7 @@ import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts"
 import type { LoadedBody } from "./body-loader.ts";
 import { createCamera } from "./camera-framing.ts";
 import { type CameraView, createCameraView } from "./camera-view.ts";
+import { createFaceHighlights, type FaceHighlights } from "./face-highlights.ts";
 import {
   createPlacementGizmo,
   type PlacementGizmo,
@@ -30,6 +31,9 @@ export interface ViewportContext {
   sensorMarkers: SensorMarkers;
   placementGizmo: PlacementGizmo;
   hiddenBodyIds: ReadonlySet<string>;
+  // While aligning (ADR 0035), a click is a pick, not a selection.
+  alignmentPicking: boolean;
+  faceHighlights: FaceHighlights;
 }
 
 export function createContext(
@@ -54,5 +58,7 @@ export function createContext(
     sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
     placementGizmo: createPlacementGizmo(scene, placementCallbacks),
     hiddenBodyIds: new Set(),
+    alignmentPicking: false,
+    faceHighlights: createFaceHighlights(scene, loadedBodies),
   };
 }

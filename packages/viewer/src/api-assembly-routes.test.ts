@@ -1,4 +1,4 @@
-import { PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
+import { type AlignRequest, PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createPantinApiClient } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
@@ -30,6 +30,31 @@ const renamed = {
   pantin,
   renamedTags: [{ from: "id1s0400125e-0.tige.setpoint", to: "verin_pince.tige.setpoint" }],
 };
+
+describe("PantinApiClient alignment (ADR 0035)", () => {
+  it("posts the picks to the assembly's align route", async () => {
+    const answer = {
+      placement: { translation: [0, 0, 0.1], rotation: [0, 0, 0, 1] },
+      anchor: { kind: "world" },
+      targetDisplaced: false,
+    };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const request: AlignRequest = {
+      kind: "plane_on_plane",
+      picks: [
+        { kind: "face", body: "block", face: 0, point: [0, 0, 0] },
+        { kind: "face", body: "base", face: 0, point: [0, 0, 0.1] },
+      ],
+    };
+    const result = await createPantinApiClient(fetchFunction).alignAssembly(
+      "press",
+      "main",
+      request,
+    );
+    expect(result).toEqual(answer);
+    expect(requests[0]).toMatchObject({ url: "/api/pantins/press/assemblies/main/align" });
+  });
+});
 
 describe("PantinApiClient assemblies", () => {
   it.each([

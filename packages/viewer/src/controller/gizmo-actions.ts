@@ -8,7 +8,10 @@ import type { ViewerStore } from "./viewer-store.ts";
 /** The same command again turns the gizmo off. */
 export function toggleGizmo(store: ViewerStore, kind: DragKind): void {
   const { gizmoMode } = store.state;
-  store.update({ ...store.state, gizmoMode: gizmoMode === kind ? null : kind });
+  const next = gizmoMode === kind ? null : kind;
+  // One tool at a time: the gizmo ends an alignment (ADR 0035).
+  const alignment = next === null ? store.state.alignment : null;
+  store.update({ ...store.state, gizmoMode: next, alignment });
 }
 
 /** A typed step; text that is not a positive number leaves the step as it was. */

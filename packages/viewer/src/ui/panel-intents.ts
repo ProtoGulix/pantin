@@ -155,6 +155,14 @@ export interface PanelIntents {
   // A step of the placement gizmo typed in the toolbar (ADR 0034 point 5), in mm or degrees.
   setGizmoStep(field: keyof SnapSteps, text: string): void;
 
+  // The alignment panel (ADR 0035); the 3D view reports its picks directly.
+  chooseAlignmentKind(kind: string): void;
+  setAlignmentText(field: "offset" | "rotation", text: string): void;
+  setAlignmentFlip(flip: boolean): void;
+  setAlignmentFixedJoint(fixedJoint: boolean): void;
+  restartAlignment(): void;
+  applyAlignment(): void;
+
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;
   changeLanguage(language: string): void;

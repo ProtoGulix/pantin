@@ -4,7 +4,7 @@ import { element, iconButton } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // "Déplacer" and "Tourner" of the toolbar (ADR 0034 point 3) and, while one is
-// on, the two steps of the gizmo (point 5).
+// on, the two steps of the gizmo (point 5); then "Aligner" (ADR 0035).
 
 function stepInput(
   view: PanelView,
@@ -24,6 +24,19 @@ function stepInput(
   });
   input.addEventListener("change", () => intents.setGizmoStep(field, input.value));
   return input;
+}
+
+// "Aligner" (ADR 0035): pressed while an alignment is under way.
+function alignToggle(view: PanelView, intents: PanelIntents): HTMLElement {
+  const { toolbar, translate } = view;
+  const created = iconButton(
+    "align",
+    translate("toolbar.align"),
+    () => intents.runMenuCommand("align"),
+    !toolbar.alignAvailable,
+  );
+  created.setAttribute("aria-pressed", String(toolbar.aligning));
+  return created;
 }
 
 export function gizmoControls(view: PanelView, intents: PanelIntents): HTMLElement[] {
@@ -52,5 +65,6 @@ export function gizmoControls(view: PanelView, intents: PanelIntents): HTMLEleme
     toolbar.gizmoMode === "rotate"
       ? stepInput(view, intents, "rotationDegrees", translate("toolbar.gizmoStepRotation"))
       : null,
+    alignToggle(view, intents),
   ].filter((control) => control !== null);
 }

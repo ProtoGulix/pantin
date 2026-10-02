@@ -1,0 +1,92 @@
+/* Alignment panel, top left of the 3D view (ADR 0035): the kind, the picks
+   in order, the parameters, then Recommencer and Aligner. */
+.alignment-panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  width: 300px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  color: var(--text);
+  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alignment-panel[hidden] {
+  display: none;
+}
+
+.alignment-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.alignment-panel__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.alignment-panel__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.alignment-panel__steps {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.alignment-panel__step {
+  display: flex;
+  flex-direction: column;
+}
+
+.alignment-panel__step-detail {
+  color: var(--text-muted);
+}
+
+.alignment-panel__step--current .alignment-panel__step-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.alignment-panel__step--done .alignment-panel__step-detail {
+  color: var(--success);
+}
+
+.alignment-panel__parameters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alignment-panel__number {
+  width: 80px;
+}
+
+.alignment-panel__note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.alignment-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -19,7 +19,7 @@ import { AssemblyPlacementResponseSchema } from "./assembly-api.ts";
 // Registry of alignment kinds (ADR 0035 point 9). Each kind lives in
 // alignment-kinds/<kind>.ts; adding one means listing its request schema
 // below and its descriptor in the record (the compiler asks for it), then
-// its motion in the core.
+// its motion in the core. Steps: docs/guides/adding-an-alignment-kind.md.
 
 export {
   type AlignmentKindDescriptor,

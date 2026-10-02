@@ -3,6 +3,7 @@ import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { deleteActuator } from "./actuator-actions.ts";
+import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
@@ -129,6 +130,9 @@ export function runMenuCommand(
       return;
     case "gizmoRotate":
       toggleGizmo(store, "rotate");
+      return;
+    case "align":
+      toggleAlignment(store);
       return;
     case "newJoint":
       openJointForm(store);

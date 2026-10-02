@@ -1,3 +1,4 @@
+import { type AlignmentView, buildAlignmentView, isAligning } from "./alignment/alignment-view.ts";
 import { type CentralLayout, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
@@ -36,6 +37,10 @@ interface ToolbarView {
   gizmoMode: ViewerState["gizmoMode"];
   gizmoAvailable: boolean;
   gizmoSteps: SnapSteps;
+  // An alignment is under way (ADR 0035): its toggle is pressed. It can be
+  // started on the same selection as the gizmo, and stopped at any time.
+  aligning: boolean;
+  alignAvailable: boolean;
 }
 
 export interface MessageView {
@@ -72,6 +77,8 @@ export interface PanelView {
   inspector: InspectorView;
   // The Pantin console and its counter (ADR 0031); null with no Pantin open.
   console: ConsoleView | null;
+  // The alignment panel (ADR 0035), or null when no alignment is under way.
+  alignment: AlignmentView | null;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -91,6 +98,8 @@ function buildToolbarView(state: ViewerState): ToolbarView {
     gizmoMode: state.gizmoMode,
     gizmoAvailable: canUseGizmo(state),
     gizmoSteps: state.gizmoSteps,
+    aligning: isAligning(state),
+    alignAvailable: canUseGizmo(state) || isAligning(state),
   };
 }
 
@@ -149,5 +158,6 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
       state.language,
       translate,
     ),
+    alignment: buildAlignmentView(state, translate),
   };
 }

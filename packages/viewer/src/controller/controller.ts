@@ -15,6 +15,14 @@ import type { PanelIntents } from "../ui/panel-intents.ts";
 import type { WelcomeTab } from "../viewer-state.ts";
 import { actuatorIntents } from "./actuator-intents.ts";
 import {
+  applyAlignment,
+  chooseAlignmentKind,
+  restartAlignment,
+  setAlignmentFixedJoint,
+  setAlignmentFlip,
+  setAlignmentText,
+} from "./alignment-actions.ts";
+import {
   createAssembly,
   dropBody,
   toggleAssemblyHidden,
@@ -192,6 +200,12 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...clockIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     setGizmoStep: (field, text) => setGizmoStep(store, field, text),
+    chooseAlignmentKind: (kind) => chooseAlignmentKind(store, kind),
+    setAlignmentText: (field, text) => setAlignmentText(store, field, text),
+    setAlignmentFlip: (flip) => setAlignmentFlip(store, flip),
+    setAlignmentFixedJoint: (fixedJoint) => setAlignmentFixedJoint(store, fixedJoint),
+    restartAlignment: () => restartAlignment(store),
+    applyAlignment: () => void applyAlignment(store),
     showViewFromDirection: (direction) => showViewFromDirection(store, direction),
     togglePropertyGroup: (groupId) =>
       store.update({

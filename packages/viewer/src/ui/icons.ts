@@ -13,6 +13,7 @@ type ToolIcon =
   | "frame-selection"
   | "gizmo-move"
   | "gizmo-rotate"
+  | "align"
   | "chevron"
   | "error"
   | "warning"
@@ -57,6 +58,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
     "M8 1.5v13 M1.5 8h13 M6 3.5 8 1.5l2 2 M6 12.5l2 2 2-2 M3.5 6 1.5 8l2 2 M12.5 6l2 2-2 2",
   // An arc with its arrow head: turn.
   "gizmo-rotate": "M13 8A5 5 0 1 1 8 3 M8 .8 10.5 3 8 5.2",
+  // A part brought down onto a plate: align.
+  align: "M2 13.5h12 M5 4.5h6v4H5Z M8 9.5v2.5 M6.5 10.8 8 12.3l1.5-1.5",
   chevron: "M6 3.5 10.5 8 6 12.5",
   error: `${CIRCLE} M8 4.5v4 M8 10.8v.7`,
   warning: "M8 2 14.5 13.5h-13Z M8 6.5v3.5 M8 11.6v.6",

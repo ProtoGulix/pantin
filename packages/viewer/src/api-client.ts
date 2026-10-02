@@ -3,6 +3,9 @@ import {
   type Body,
   BodyResponseSchema,
   CreatePantinRequestSchema,
+  type FaceFile,
+  FaceFileSchema,
+  faceFilePathOf,
   ImportBodiesResponseSchema,
   type ImportBodyQuery,
   ImportBodyQuerySchema,
@@ -56,6 +59,8 @@ export interface PantinApiClient
   // The whole Pantin comes back: the body is gone and unsavedChanges is set.
   deleteBody(pantinId: string, bodyId: string): Promise<PantinResponse>;
   fetchMeshBytes(pantinId: string, meshPath: string): Promise<ArrayBuffer>;
+  // The face file next to a GLB mesh (ADR 0035), null when the body has none.
+  fetchFaceFile(pantinId: string, meshPath: string): Promise<FaceFile | null>;
 }
 
 // A body's mesh path is "meshes/<file name>" relative to the Pantin folder;
@@ -113,7 +118,7 @@ function pantinRoutes(send: SendJson): PantinRoutes {
 
 type BodyRoutes = Pick<
   PantinApiClient,
-  "importBodies" | "renameBody" | "deleteBody" | "fetchMeshBytes"
+  "importBodies" | "renameBody" | "deleteBody" | "fetchMeshBytes" | "fetchFaceFile"
 >;
 
 function bodyRoutes(send: SendJson, fetchFunction: FetchFunction): BodyRoutes {
@@ -148,6 +153,24 @@ function bodyRoutes(send: SendJson, fetchFunction: FetchFunction): BodyRoutes {
         throw await failureFromResponse(response);
       }
       return response.arrayBuffer();
+    },
+    fetchFaceFile: async (pantinId, meshPath) => {
+      const faceFilePath = faceFilePathOf(meshPath);
+      if (faceFilePath === undefined) {
+        return null;
+      }
+      const fileName = meshFileNameFromPath(faceFilePath);
+      const url = pantinUrl(pantinId, `/meshes/${encodeURIComponent(fileName)}`);
+      const response = await sendRequest(fetchFunction, url, { method: "GET" });
+      if (response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw await failureFromResponse(response);
+      }
+      // A face file the viewer cannot read counts as none, as in the core.
+      const parsed = FaceFileSchema.safeParse(await response.json().catch(() => undefined));
+      return parsed.success ? parsed.data : null;
     },
   };
 }
