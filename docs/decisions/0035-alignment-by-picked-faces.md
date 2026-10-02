@@ -1,6 +1,6 @@
 # 0035. Alignment by picked faces
 
-- Status: proposed
+- Status: accepted (2026-10-02)
 - Date: 2026-10-02
 - Depends on: ADR 0033 (assembly placement), ADR 0034 (placement editing)
 - Extends: ADR 0009 (STEP import converter), ADR 0019 point 13 (selection
@@ -20,17 +20,29 @@ primitives per body is needed to keep draw calls low. The converter
 therefore knows, for every triangle, the B-rep face it comes from, and can
 classify each face (plane, cylinder) with its geometry.
 
-Checked on 2026-10-02:
+Checked on 2026-10-02 (spike 0008 for the writer and the face geometry):
 
 - The converter merges the faces of a body in the writer
   (`writer.SetMergeFaces(True)` in `glb_export.py`), so the triangle to
-  face mapping is lost in the written GLB.
+  face mapping is not written in the GLB.
 - The converter pins `cadquery-ocp-novtk==8.0.1.0.0`, which ships
-  OpenCascade 8.0.1 (`libTKRWMesh...so.8.0.1`). Its binding exposes
-  `SetSplitIndices16` (default false), `CoordinateSystemConverter`,
-  `RWMesh_FaceIterator` and `RWMesh_ShapeIterator`, `BRepAdaptor_Surface`
-  and `BRep_Tool.Triangulation_s`. No OpenCascade source or header is in the
-  virtual environment.
+  OpenCascade 8.0.1 (tag `V8_0_1`). In its source, merged faces are grouped
+  into one primitive per face style, in the order each style first appears;
+  inside a primitive, faces keep the `TopExp_Explorer` order of the node's
+  reference label, empty faces are skipped, each face writes its own block
+  of nodes, and a reversed face gets its triangles' winding swapped.
+- On three CADENAS files (6 bodies: the linear axis, the cylinder of
+  Pantins "test2" and "test3", a Michaud Chailly part), a map rebuilt in
+  that order matches the GLB exactly (every position and every index,
+  0 mismatches; 2 primitives for the rail and the cylinder body, which have
+  two styles). The largest face file weighs 41 kB, against 607 kB of GLB.
+- Reversing the plane normal of a `TopAbs_REVERSED` face gives the outward
+  normal on all 697 planes of the 6 bodies.
+- The chain of glTF node transforms equals the OCCT document node location
+  scaled to metres, exactly: geometry computed in the reference label frame
+  and moved by that location is in the frame the mesh file places the body
+  in. Mixing the located component shape with unlocated faces gave wrong
+  normals during the spike.
 - The viewer (Babylon 9.28.0) already picks bodies with `scene.pick`
   (`pickBody` in `packages/viewer/src/scene/viewport.ts`, ADR 0019
   point 13). It does not merge meshes: no `MergeMeshes`, instance, sub mesh
@@ -38,49 +50,44 @@ Checked on 2026-10-02:
 - In the Babylon 9.28.0 sources: the glTF loader makes one Babylon mesh per
   primitive (`<name>_primitive<i>`) when a glTF mesh has several, tags each
   with its glTF pointer (`_internalMetadata.gltf.pointers`,
-  `/meshes/<m>/primitives/<p>`), and makes instances when several nodes
-  share a glTF mesh (`createInstances`, true by default).
+  `/meshes/<m>/primitives/<p>`), and makes instances only when several
+  nodes share a glTF mesh, which no converted GLB does (one mesh, one node).
   `PickingInfo.faceId` is the triangle index in the whole index buffer of
   the picked mesh (sub mesh face id plus `indexStart / 3`).
 
 NOT VERIFIED:
 
-- How `RWGltf_CafWriter` 8.0.1 groups merged faces into primitives (by
-  style, through `RWGltf_StyledShape` or otherwise) and in which order it
-  walks them (the iteration changed in 7.9 with `RWMesh_ShapeIterator`).
-  It has to be read in the 8.0.1 source.
-- Whether the writer keeps the triangle order and winding of each face's
-  `Poly_Triangulation`, and how it handles reversed faces.
-- How face orientation must be read to get an outward normal (a reversed
-  face flips the surface normal is expected), and what "outward" means for a
-  body that is not a closed solid.
-- The behaviour on a STEP from ZW3D (spike 5); spike 0001 used a CADENAS
-  file.
-- That a Babylon pick on an `InstancedMesh` gives a `faceId` in its source
-  mesh's index buffer (expected, since an instance shares the geometry).
+- A STEP exported by ZW3D (spike 5): styles, empty faces, bodies that are
+  not closed solids, and what "outward" means for them. No ZW3D export is
+  available; the user accepted this ADR without it on 2026-10-02. The
+  control of point 2 keeps it safe: a file it fails on gets no face file,
+  and the fallback pick still works.
+- A body with more than 65535 nodes in one primitive (32 bit indices, no
+  split, according to the source).
 
 ## Decision
 
-1. **Spike first.** A spike on the user's real files (the CADENAS axis and a
-   ZW3D export) settles the points marked NOT VERIFIED and measures the size
-   of the face file on the largest body. This ADR moves to accepted only
-   after it. For the writer:
+1. **Spike first.** Spike 0008 checked the writer on three CADENAS files
+   and measured the face file sizes. A ZW3D export, when one is available,
+   goes through the same check (NOT VERIFIED above). For the writer:
    - the OpenCascade version stays pinned by the converter's dependency, and
      the face file records it; a version change reruns the control of
      point 2;
    - the converter sets `SetSplitIndices16(False)` explicitly instead of
      relying on the default, so a primitive is never split by index count;
-   - the primitive grouping and the face order are read in the source of the
-     pinned version, not guessed.
+   - the primitive grouping and the face order follow the source of the
+     pinned version (spike 0008), and the control of point 2 proves them on
+     every conversion.
 2. **Face file.** For each STEP body, the converter writes a file next to its
    GLB (`meshes/<body>.faces.json`, schema in the protocol). It walks the
    faces in the writer's order and, for each primitive (glTF mesh and
    primitive index), lists triangle ranges and the face index of each range.
    For each face: its kind and its geometry: plane (a point, outward
    normal), cylinder (a point on the axis, direction, radius), other (no
-   geometry). Geometry is in metres, in the frame where the mesh file places
-   the body (after the GLB node transforms), which is the assembly frame of
-   ADR 0033 point 1; the core composes it with the body placement
+   geometry). Geometry is computed in the frame of the node's reference
+   label, then moved once by the node location and given in metres: the
+   frame where the mesh file places the body (after the GLB node
+   transforms), which is the assembly frame of ADR 0033 point 1; the core composes it with the body placement
    (ADR 0033 point 7) when there is one. The file says whether the body is
    a closed solid; on a body that is not, normals keep the face orientation
    and only flip can correct them.
@@ -218,10 +225,13 @@ NOT VERIFIED:
   have no face file: only the fallback pick works on them. Pantin has no
   route to import a body again in place (only `POST .../bodies`, which adds
   bodies); such a route is backlog.
-- Exit criterion: on the user's files, the clevis is mounted on the carriage
-  with "plan sur plan" (clevis mounting face on carriage mounting face) then
-  "axe sur axe" (a clevis hole on a tapped hole of the carriage), then "axe
-  sur axe autour d'un pivot" (a second hole, the first as pivot). Measured
-  by the core from the face files and the resulting poses: distance between
-  the two contact planes below 0.01 mm, and distance between the axes of
-  each pair of holes, at the contact plane, below 0.01 mm.
+- Exit criterion: on the user's files, the bearing block
+  `michaud_chailly_B9-GHBR-20-PP` (two Ø5.3 mm holes 40 mm apart) is
+  mounted on the carriage of `3630.00.0800N_0` (tapped holes 40 mm apart)
+  with "plan sur plan" (block mounting face on carriage mounting face), then
+  "axe sur axe" (a block hole on a tapped hole), then "axe sur axe autour
+  d'un pivot" (the other hole, the first as pivot). The clevis STEP
+  (`ND032a.stp`) is not available, hence this part. Measured by the core
+  from the face files and the resulting poses: distance between the two
+  contact planes below 0.01 mm, and distance between the axes of each pair
+  of holes, at the contact plane, below 0.01 mm.
