@@ -2,6 +2,8 @@ import { type CentralLayout, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
 import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
+import { canUseGizmo } from "./gizmo/gizmo-spec.ts";
+import type { SnapSteps } from "./gizmo/placement-snapping.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
@@ -29,6 +31,11 @@ interface ToolbarView {
   frameSelectionEnabled: boolean;
   // What the central area shows: 3D, the chain diagram, or both (ADR 0030).
   centralLayout: CentralLayout;
+  // The placement gizmo (ADR 0034): which one is on, whether an assembly is
+  // selected to use it on, and its steps.
+  gizmoMode: ViewerState["gizmoMode"];
+  gizmoAvailable: boolean;
+  gizmoSteps: SnapSteps;
 }
 
 export interface MessageView {
@@ -81,6 +88,9 @@ function buildToolbarView(state: ViewerState): ToolbarView {
     frameAllEnabled: hasBodies && viewportShown,
     frameSelectionEnabled: hasBodies && selectedNodeIdOf(state.selection) !== null && viewportShown,
     centralLayout: state.centralLayout,
+    gizmoMode: state.gizmoMode,
+    gizmoAvailable: canUseGizmo(state),
+    gizmoSteps: state.gizmoSteps,
   };
 }
 

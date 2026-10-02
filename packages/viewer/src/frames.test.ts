@@ -2,6 +2,7 @@ import type { LengthUnit, UpAxis } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   applyMatrix3,
+  babylonDisplacementToCore,
   babylonToCorePosition,
   bodyNodeTransform,
   coreDisplacementToBabylon,
@@ -237,3 +238,14 @@ function matrixToQuaternion(matrix: Matrix3): QuaternionTuple {
   expectClose(matrix[2], [0, 0, 1]);
   return [0, 0, 0, 1];
 }
+
+describe("babylonDisplacementToCore", () => {
+  it("undoes coreDisplacementToBabylon", () => {
+    const rotation: QuaternionTuple = [0.1, -0.5, 0.3, Math.sqrt(1 - 0.35)];
+    const translation: Vector3Tuple = [0.2, -0.4, 0.9];
+    const inBabylon = coreDisplacementToBabylon(translation, rotation);
+    const back = babylonDisplacementToCore(inBabylon.translation, inBabylon.rotation);
+    expect(back.translation).toEqual(translation);
+    expect(back.rotation).toEqual(rotation);
+  });
+});

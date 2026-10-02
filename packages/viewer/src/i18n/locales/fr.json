@@ -425,5 +425,13 @@
   "placement.field.rz": "RZ",
   "placement.anchor": "Repère",
   "placement.anchor.world": "monde",
-  "placement.invalid": "Le placement n'est pas valide : tapez un nombre dans chaque champ."
+  "placement.invalid": "Le placement n'est pas valide : tapez un nombre dans chaque champ.",
+  "menubar.edit.gizmoMove": "Déplacer",
+  "menubar.edit.gizmoRotate": "Tourner",
+  "shortcut.gizmoMove": "G",
+  "shortcut.gizmoRotate": "R",
+  "toolbar.gizmoMove": "Déplacer l'assemblage sélectionné (G)",
+  "toolbar.gizmoRotate": "Tourner l'assemblage sélectionné (R)",
+  "toolbar.gizmoStepTranslation": "Pas du déplacement, en mm (Ctrl enfoncé : sans pas)",
+  "toolbar.gizmoStepRotation": "Pas de la rotation, en degrés (Ctrl enfoncé : sans pas)"
 }

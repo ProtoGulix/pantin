@@ -11,6 +11,8 @@ type ToolIcon =
   | "import"
   | "frame-all"
   | "frame-selection"
+  | "gizmo-move"
+  | "gizmo-rotate"
   | "chevron"
   | "error"
   | "warning"
@@ -50,6 +52,11 @@ const PATHS: Readonly<Record<IconName, string>> = {
   import: "M8 2v8 M5 7l3 3 3-3 M2.5 11v2.5h11V11",
   "frame-all": CORNERS,
   "frame-selection": `${CORNERS} M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z`,
+  // Four arrows from the centre: move.
+  "gizmo-move":
+    "M8 1.5v13 M1.5 8h13 M6 3.5 8 1.5l2 2 M6 12.5l2 2 2-2 M3.5 6 1.5 8l2 2 M12.5 6l2 2-2 2",
+  // An arc with its arrow head: turn.
+  "gizmo-rotate": "M13 8A5 5 0 1 1 8 3 M8 .8 10.5 3 8 5.2",
   chevron: "M6 3.5 10.5 8 6 12.5",
   error: `${CIRCLE} M8 4.5v4 M8 10.8v.7`,
   warning: "M8 2 14.5 13.5h-13Z M8 6.5v3.5 M8 11.6v.6",

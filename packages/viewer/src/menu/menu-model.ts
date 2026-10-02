@@ -1,89 +1,24 @@
-import { CENTRAL_LAYOUTS, type CentralLayout, showsViewport } from "../central-layout.ts";
+import { CENTRAL_LAYOUTS, showsViewport } from "../central-layout.ts";
 import { isDeviceKind } from "../device-selection.ts";
-import { LANGUAGES, type Language, type MessageKey, type Translate } from "../i18n/translate.ts";
+import { LANGUAGES, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type MenuContext, menuContext } from "./menu-context.ts";
+import {
+  gizmoItem,
+  item,
+  languageItem,
+  layoutItem,
+  type MenuCommand,
+  type MenuDefinition,
+  type MenuEntryDefinition,
+  type MenuId,
+  type Shortcut,
+} from "./menu-definitions.ts";
+
+export type { MenuCommand } from "./menu-definitions.ts";
 
 // The menu bar as data: menus, items, enable rules and keyboard shortcuts.
 // Adding an item (e.g. Fichier > Exporter) is adding one entry to MENUS.
-
-export type MenuCommand =
-  | "welcome"
-  | "open"
-  | "save"
-  | "import"
-  | "close"
-  | "newJoint"
-  | "rename"
-  | "delete"
-  | "frameAll"
-  | "frameSelection"
-  | "toggleInspector"
-  | "toggleConsole"
-  | "cycleLayout"
-  | `layout:${CentralLayout}`
-  | `language:${Language}`;
-
-type MenuId = "file" | "edit" | "view";
-
-interface Shortcut {
-  key: string;
-  // Ctrl on Windows and Linux, Cmd on macOS.
-  primaryModifier: boolean;
-  labelKey: MessageKey;
-}
-
-interface MenuItemDefinition {
-  command: MenuCommand;
-  label(translate: Translate): string;
-  shortcut?: Shortcut;
-  enabled(context: MenuContext): boolean;
-  checked?(context: MenuContext): boolean;
-}
-
-type MenuEntryDefinition = MenuItemDefinition | "separator";
-
-interface MenuDefinition {
-  id: MenuId;
-  labelKey: MessageKey;
-  entries: readonly MenuEntryDefinition[];
-}
-
-const always = () => true;
-
-function item(
-  command: MenuCommand,
-  labelKey: MessageKey,
-  enabled: (context: MenuContext) => boolean,
-  shortcut?: Shortcut,
-): MenuItemDefinition {
-  const base = { command, label: (translate: Translate) => translate(labelKey), enabled };
-  return shortcut === undefined ? base : { ...base, shortcut };
-}
-
-function languageItem(language: Language): MenuItemDefinition {
-  return {
-    command: `language:${language}`,
-    label: (translate) =>
-      translate("menubar.view.language", { language: translate(`language.${language}`) }),
-    enabled: always,
-    checked: (context) => context.language === language,
-  };
-}
-
-const LAYOUT_LABEL_KEYS: Readonly<Record<CentralLayout, MessageKey>> = {
-  "3d": "menubar.view.layout3d",
-  diagram: "menubar.view.layoutDiagram",
-  both: "menubar.view.layoutBoth",
-};
-
-// Explicit entries next to the F4 cycle, checked on the layout in use (ADR 0030).
-function layoutItem(layout: CentralLayout): MenuItemDefinition {
-  return {
-    ...item(`layout:${layout}`, LAYOUT_LABEL_KEYS[layout], (context) => context.editing),
-    checked: (context) => context.centralLayout === layout,
-  };
-}
 
 const MENUS: readonly MenuDefinition[] = [
   {
@@ -144,6 +79,9 @@ const MENUS: readonly MenuDefinition[] = [
           labelKey: "shortcut.delete",
         },
       ),
+      "separator",
+      gizmoItem("gizmoMove", "menubar.edit.gizmoMove", "g", "shortcut.gizmoMove", "move"),
+      gizmoItem("gizmoRotate", "menubar.edit.gizmoRotate", "r", "shortcut.gizmoRotate", "rotate"),
     ],
   },
   {

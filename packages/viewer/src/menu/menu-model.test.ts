@@ -228,6 +228,8 @@ describe("shortcut listing", () => {
       { keys: "Ctrl+S", action: "Enregistrer" },
       { keys: "F2", action: "Renommer" },
       { keys: "Suppr", action: "Supprimer" },
+      { keys: "G", action: "Déplacer" },
+      { keys: "R", action: "Tourner" },
       { keys: "F8", action: "Console" },
       { keys: "F4", action: "Changer la vue centrale" },
     ]);

@@ -3,6 +3,7 @@ import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
+import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
@@ -147,6 +148,9 @@ export interface PanelIntents {
   // The transport bar (ADR 0032 point 10): run or pause, and a number of steps while paused.
   toggleClockRunning(): void;
   stepClock(steps: number): void;
+
+  // A step of the placement gizmo typed in the toolbar (ADR 0034 point 5), in mm or degrees.
+  setGizmoStep(field: keyof SnapSteps, text: string): void;
 
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;

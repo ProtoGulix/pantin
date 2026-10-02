@@ -8,13 +8,19 @@ import type { PantinDocument } from "@pantin/protocol";
 // document where it would be ambiguous, so the last such joint wins here
 // exactly as it does there.
 
-/** The key of the assembly that `key` is anchored to; null: the world. */
-export function anchorOfAssembly(
-  document: Pick<PantinDocument, "bodies" | "joints">,
-  key: string,
-): string | null {
+type AnchorDocument = Pick<PantinDocument, "bodies" | "joints">;
+
+export interface AnchorLink {
+  // Key of the anchor assembly.
+  anchor: string;
+  // The body of the assembly that the anchoring joint moves.
+  childBodyId: string;
+}
+
+/** The link that anchors the assembly `key` to another assembly; null: the world. */
+export function anchorLinkOf(document: AnchorDocument, key: string): AnchorLink | null {
   const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
-  let anchor: string | null = null;
+  let link: AnchorLink | null = null;
   for (const joint of document.joints) {
     const parentAssembly = assemblyOf.get(joint.parent);
     if (
@@ -22,8 +28,13 @@ export function anchorOfAssembly(
       parentAssembly !== undefined &&
       parentAssembly !== key
     ) {
-      anchor = parentAssembly;
+      link = { anchor: parentAssembly, childBodyId: joint.child };
     }
   }
-  return anchor;
+  return link;
+}
+
+/** The key of the assembly that `key` is anchored to; null: the world. */
+export function anchorOfAssembly(document: AnchorDocument, key: string): string | null {
+  return anchorLinkOf(document, key)?.anchor ?? null;
 }

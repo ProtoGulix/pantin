@@ -24,6 +24,7 @@ import { clockIntents } from "./clock-actions.ts";
 import { consoleIntents } from "./console-actions.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
+import { setGizmoStep } from "./gizmo-actions.ts";
 import {
   cancelImport,
   changeImportOptions,
@@ -189,6 +190,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...consoleIntents(store),
     ...clockIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
+    setGizmoStep: (field, text) => setGizmoStep(store, field, text),
     togglePropertyGroup: (groupId) =>
       store.update({
         ...store.state,

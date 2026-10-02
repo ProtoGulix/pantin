@@ -6,6 +6,7 @@ import { deleteActuator } from "./actuator-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
+import { toggleGizmo } from "./gizmo-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
 import { deleteSensor } from "./sensor-actions.ts";
@@ -103,6 +104,12 @@ export function runMenuCommand(
       void savePantin(store);
       return;
     case "import":
+      return;
+    case "gizmoMove":
+      toggleGizmo(store, "move");
+      return;
+    case "gizmoRotate":
+      toggleGizmo(store, "rotate");
       return;
     case "newJoint":
       openJointForm(store);

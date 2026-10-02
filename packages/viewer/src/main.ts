@@ -10,8 +10,10 @@ import {
   startViewer,
 } from "./controller/controller.ts";
 import { refreshTagValues } from "./controller/drive-commands.ts";
+import { dragPlacement, finishPlacementDrag } from "./controller/placement-actions.ts";
 import { type StorePorts, ViewerStore } from "./controller/viewer-store.ts";
 import type { DiagramModel } from "./diagram/diagram-view-model.ts";
+import { parseStoredSteps, serializeSteps } from "./gizmo/gizmo-steps.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { errorMessage, type PanelMessage } from "./messages.ts";
 import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
@@ -130,6 +132,9 @@ function createViewportOrInert(
       (pantinId, body) => api.fetchMeshBytes(pantinId, body.mesh),
       {
         onBodyPicked: (bodyId, doubleClick) => selectBodyFromViewport(store, bodyId, doubleClick),
+        onPlacementDragged: (assemblyKey, placement) =>
+          dragPlacement(store, assemblyKey, placement),
+        onPlacementDragEnded: () => void finishPlacementDrag(store),
         onLoadError: (bodyName, reason) =>
           store.update({
             ...store.state,
@@ -193,6 +198,7 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
     }),
     storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
+    storeGizmoSteps: (steps) => writeStoredText(STORAGE_KEYS.gizmoSteps, serializeSteps(steps)),
   };
 }
 
@@ -203,6 +209,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
     createPorts(screen, api, late),
     language,
     parseStoredLayout(readStoredText(STORAGE_KEYS.centralLayout)),
+    parseStoredSteps(readStoredText(STORAGE_KEYS.gizmoSteps)),
   );
   late.store = store;
   late.intents = createPanelIntents(store);

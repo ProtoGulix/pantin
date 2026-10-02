@@ -1,5 +1,7 @@
 import type { CentralLayout } from "../central-layout.ts";
 import type { DeviceKind } from "../device-selection.ts";
+import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
+import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language } from "../i18n/translate.ts";
 import type { Selection } from "../selection.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
@@ -17,6 +19,9 @@ export interface MenuContext {
   inspectorOpen: boolean;
   consoleOpen: boolean;
   centralLayout: CentralLayout;
+  // The placement gizmo (ADR 0034): on, and whether one assembly is selected to use it on.
+  gizmoMode: DragKind | null;
+  gizmoAvailable: boolean;
 }
 
 function selectedKindOf(selection: Selection | null): MenuContext["selectedKind"] {
@@ -38,5 +43,7 @@ export function menuContext(state: ViewerState): MenuContext {
     inspectorOpen: state.inspectorOpen,
     consoleOpen: state.console.open,
     centralLayout: state.centralLayout,
+    gizmoMode: state.gizmoMode,
+    gizmoAvailable: canUseGizmo(state),
   };
 }

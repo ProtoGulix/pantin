@@ -5,6 +5,7 @@ import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts"
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
+import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
@@ -92,6 +93,10 @@ export interface ViewerState {
   inspectorFocus: InspectorFocusRequest | null;
   // The Pantin console at the bottom of the central area (ADR 0031).
   console: ConsoleState;
+  // The placement gizmo (ADR 0034): what it does while on, and its steps, a
+  // setting of the viewer kept in the browser. Display state, never saved.
+  gizmoMode: DragKind | null;
+  gizmoSteps: SnapSteps;
 }
 
 export interface InspectorFocusRequest {
@@ -105,6 +110,7 @@ const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 export function initialViewerState(
   language: Language,
   centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
+  gizmoSteps: SnapSteps = DEFAULT_SNAP_STEPS,
 ): ViewerState {
   return {
     language,
@@ -141,6 +147,8 @@ export function initialViewerState(
     pendingFeedReplacement: null,
     inspectorFocus: null,
     console: INITIAL_CONSOLE_STATE,
+    gizmoMode: null,
+    gizmoSteps,
   };
 }
 

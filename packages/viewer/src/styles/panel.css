@@ -225,3 +225,14 @@
 .joint-form__unit {
   color: var(--text-faint);
 }
+
+.gizmo-step {
+  width: 44px;
+  height: 20px;
+  padding: 0 4px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}

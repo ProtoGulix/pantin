@@ -21,6 +21,10 @@ import { buildConsoleView, type ConsoleView } from "../console/console-view.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
+import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
+import { gizmoSpecOf } from "../gizmo/gizmo-spec.ts";
+import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
+import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
@@ -70,6 +74,7 @@ export interface StorePorts {
   poseStream: PoseStreamClient;
   storeLanguage(language: Language): void;
   storeCentralLayout(layout: CentralLayout): void;
+  storeGizmoSteps(steps: SnapSteps): void;
 }
 
 export class ViewerStore {
@@ -85,6 +90,8 @@ export class ViewerStore {
   tagValues: ReadonlyMap<string, number> = new Map();
   // One tag read at a time: a slow core must not pile requests up.
   readingTags = false;
+  // The dragged placements of the gizmo, one request in flight (ADR 0034 point 4).
+  placementSender: LatestWinsSender<DraggedPlacement> | null = null;
   // Same for the console (ADR 0031 point 4).
   readingConsole = false;
   // The lines of the open Pantin's console, outside ViewerState: see console-state.ts.
@@ -102,9 +109,14 @@ export class ViewerStore {
   readonly chainLinksOf = createChainLinksCache();
   private readonly buildDiagramModel = createDiagramModelBuilder(this.chainLinksOf);
 
-  constructor(ports: StorePorts, language: Language, centralLayout?: CentralLayout) {
+  constructor(
+    ports: StorePorts,
+    language: Language,
+    centralLayout?: CentralLayout,
+    gizmoSteps?: SnapSteps,
+  ) {
     this.ports = ports;
-    this.state = initialViewerState(language, centralLayout);
+    this.state = initialViewerState(language, centralLayout, gizmoSteps);
   }
 
   update(next: ViewerState): void {
@@ -137,6 +149,7 @@ export class ViewerStore {
     );
     viewport.showJointPreview(jointPreviewOf(next));
     viewport.showSensorMarkers(sensorMarkersOf(document));
+    viewport.showPlacementGizmo(gizmoSpecOf(next));
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */

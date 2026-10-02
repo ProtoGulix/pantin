@@ -187,6 +187,19 @@ export function coreDisplacementToBabylon(
   return { translation: coreToBabylonPosition(translation), rotation: [-x, -z, -y, w] };
 }
 
+/**
+ * The inverse of coreDisplacementToBabylon: the displacement of a Babylon node
+ * (a gizmo's) as a displacement of the core frame. The swap is its own
+ * inverse, so the same swap of the components undoes it.
+ */
+export function babylonDisplacementToCore(
+  translation: Vector3Tuple,
+  rotation: QuaternionTuple,
+): { translation: Vector3Tuple; rotation: QuaternionTuple } {
+  const [x, y, z, w] = rotation;
+  return { translation: babylonToCorePosition(translation), rotation: [-x, -z, -y, w] };
+}
+
 /** Hamilton product: applies `right` first, then `left`. */
 export function multiplyQuaternions(
   left: QuaternionTuple,

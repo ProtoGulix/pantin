@@ -1,21 +1,22 @@
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js";
+import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js";
 import "@babylonjs/core/Culling/ray.js";
 import { Engine } from "@babylonjs/core/Engines/engine.js";
 import { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
-import { babylonToCorePosition } from "../frames.ts";
+import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import { type InterpolatedPose, PoseInterpolator } from "../pose-interpolation.ts";
+import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
-import { boundsOfBodies } from "./body-bounds.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
+import { createCamera, frameBodies } from "./camera-framing.ts";
+import { createPlacementGizmo, type PlacementGizmo } from "./placement-gizmo.ts";
 import { createRenderSwitch } from "./render-switch.ts";
-import { bodyRenderKey, floorHeight, frameBounds, planSceneSync } from "./scene-plan.ts";
+import { bodyRenderKey, planSceneSync } from "./scene-plan.ts";
 import { createSensorMarkers, type SensorMarkers } from "./sensor-markers.ts";
 import { createStage, type Stage } from "./stage.ts";
 
@@ -31,6 +32,10 @@ export interface ViewportCallbacks {
   onBodyPicked(bodyId: string | null, doubleClick: boolean): void;
   // Raw reason in English; the caller translates the message around it.
   onLoadError(bodyName: string, reason: string): void;
+  // The placement gizmo (ADR 0034): the placement the drag asks for, in the
+  // frame of the anchor, then the end of the drag (also after Escape).
+  onPlacementDragged(assemblyKey: string, placement: RigidTransform): void;
+  onPlacementDragEnded(): void;
 }
 
 export interface Viewport {
@@ -56,9 +61,11 @@ export interface Viewport {
    * first frame after a restart shows the latest ones.
    */
   setRendering(active: boolean): void;
+  /** The gizmo of the selected assembly, or null to remove it (ADR 0034 point 3). */
+  showPlacementGizmo(spec: PlacementGizmoSpec | null): void;
+  /** After a drag: the Pantin was read again, the gizmo follows the assembly again. */
+  releasePlacementGizmo(): void;
 }
-
-const RIGHT_MOUSE_BUTTON = 2;
 
 interface ViewportContext {
   scene: Scene;
@@ -71,58 +78,8 @@ interface ViewportContext {
   poses: PoseInterpolator;
   highlights: BodyHighlights;
   sensorMarkers: SensorMarkers;
+  placementGizmo: PlacementGizmo;
   hiddenBodyIds: ReadonlySet<string>;
-}
-
-function createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
-  // Looking from core -Y towards +Y, slightly from the right and above.
-  const camera = new ArcRotateCamera("camera", -2.0, 1.1, 3, Vector3.Zero(), scene);
-  camera.wheelDeltaPercentage = 0.01;
-  // Pan with a right-button drag or Ctrl + left-button drag. Default actions
-  // must be prevented, otherwise the browser's context menu opens on the right
-  // button and cancels the drag.
-  camera.attachControl(false, true, RIGHT_MOUSE_BUTTON);
-  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-  return camera;
-}
-
-function framingOf(context: ViewportContext, framed: (bodyId: string) => boolean) {
-  const { minimum, maximum } = boundsOfBodies(context.loadedBodies, framed);
-  return frameBounds(minimum, maximum, context.camera.fov);
-}
-
-// Around every loaded body, hidden ones included, so hiding an assembly does
-// not move the floor.
-function fitStageToBodies(context: ViewportContext): void {
-  const { minimum, maximum } = boundsOfBodies(context.loadedBodies, () => true);
-  const ground = frameBounds(minimum, maximum, context.camera.fov);
-  context.stage.fitToBodies(
-    babylonToCorePosition(ground.target),
-    ground.radius / 2,
-    floorHeight(minimum[1]),
-  );
-}
-
-// null frames every visible body and refits the floor; a list frames only its
-// visible bodies and leaves the floor as it is.
-function frameBodies(context: ViewportContext, bodyIds: readonly string[] | null): void {
-  if (bodyIds === null) {
-    fitStageToBodies(context);
-  }
-  const visible = (bodyId: string) =>
-    !context.hiddenBodyIds.has(bodyId) && (bodyIds === null || bodyIds.includes(bodyId));
-  // Everything asked for is hidden: keep the camera where it is.
-  if (context.loadedBodies.size > 0 && ![...context.loadedBodies.keys()].some(visible)) {
-    return;
-  }
-  const framing = framingOf(context, visible);
-  const { camera } = context;
-  camera.setTarget(Vector3.FromArray(framing.target));
-  camera.radius = framing.radius;
-  camera.lowerRadiusLimit = framing.radius * 0.01;
-  camera.minZ = framing.radius * 0.001;
-  camera.maxZ = framing.radius * 100;
-  camera.panningSensibility = 1000 / framing.radius;
 }
 
 function removeBody(context: ViewportContext, bodyId: string): void {
@@ -241,6 +198,7 @@ function applyPosesEachFrame(context: ViewportContext): void {
     context.loadedBodies.get(bodyId)?.setDisplacement(pose.translation, pose.rotation);
     context.highlights.followPose(bodyId, pose.translation, pose.rotation);
     context.sensorMarkers.followPose(bodyId, pose.translation, pose.rotation);
+    context.placementGizmo.followPose(bodyId, pose.translation, pose.rotation);
   };
   context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
 }
@@ -254,6 +212,7 @@ function forgetPoses(context: ViewportContext): void {
   context.poses.reset();
   context.highlights.forgetPoses();
   context.sensorMarkers.forgetPoses();
+  context.placementGizmo.forgetPoses();
 }
 
 export function createViewport(
@@ -276,6 +235,10 @@ export function createViewport(
     poses,
     highlights: createBodyHighlights(scene, loadedBodies, latestPose),
     sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
+    placementGizmo: createPlacementGizmo(scene, {
+      onDragged: callbacks.onPlacementDragged,
+      onDragEnded: callbacks.onPlacementDragEnded,
+    }),
     hiddenBodyIds: new Set(),
   };
   listenToPicks(context, callbacks);
@@ -296,5 +259,7 @@ export function createViewport(
     showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
     showTagStates: (values) => context.sensorMarkers.setStates(values),
     setRendering,
+    showPlacementGizmo: (spec) => context.placementGizmo.show(spec),
+    releasePlacementGizmo: () => context.placementGizmo.release(),
   };
 }

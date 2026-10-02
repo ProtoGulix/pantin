@@ -425,5 +425,13 @@
   "placement.field.rz": "RZ",
   "placement.anchor": "Frame",
   "placement.anchor.world": "world",
-  "placement.invalid": "The placement is not valid: type a number in each field."
+  "placement.invalid": "The placement is not valid: type a number in each field.",
+  "menubar.edit.gizmoMove": "Move",
+  "menubar.edit.gizmoRotate": "Rotate",
+  "shortcut.gizmoMove": "G",
+  "shortcut.gizmoRotate": "R",
+  "toolbar.gizmoMove": "Move the selected assembly (G)",
+  "toolbar.gizmoRotate": "Rotate the selected assembly (R)",
+  "toolbar.gizmoStepTranslation": "Move step, in mm (hold Ctrl: no step)",
+  "toolbar.gizmoStepRotation": "Rotation step, in degrees (hold Ctrl: no step)"
 }

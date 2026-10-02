@@ -38,6 +38,7 @@ export function testStore(
       showConsoleLive: () => undefined,
       showClock: () => undefined,
       storeCentralLayout,
+      storeGizmoSteps: () => undefined,
       ...ports,
     },
     "fr",

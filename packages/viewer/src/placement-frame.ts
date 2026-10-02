@@ -1,4 +1,5 @@
 import type { QuaternionTuple, Vector3Tuple } from "./frames.ts";
+import { conjugate, rotateVector } from "./rigid-transform.ts";
 
 // Display arithmetic in the core frame (like frames.ts, no simulation).
 //
@@ -20,22 +21,6 @@ export interface DrawnFrame {
   axis: Vector3Tuple;
 }
 
-function conjugate([x, y, z, w]: QuaternionTuple): QuaternionTuple {
-  return [-x, -y, -z, w];
-}
-
-// Rotation of a vector by a unit quaternion: v + 2w(u x v) + 2 u x (u x v).
-function rotate([x, y, z, w]: QuaternionTuple, [vx, vy, vz]: Vector3Tuple): Vector3Tuple {
-  const tx = 2 * (y * vz - z * vy);
-  const ty = 2 * (z * vx - x * vz);
-  const tz = 2 * (x * vy - y * vx);
-  return [
-    vx + w * tx + (y * tz - z * ty),
-    vy + w * ty + (z * tx - x * tz),
-    vz + w * tz + (x * ty - y * tx),
-  ];
-}
-
 /**
  * Origin and axis (frame of the parent body's assembly) as seen from the
  * parent body's file frame. Identity for a body without placement, which
@@ -52,7 +37,7 @@ export function inBodyFrame(
   const inverse = conjugate(bodyPlacement.rotation);
   const [tx, ty, tz] = bodyPlacement.translation;
   return {
-    origin: rotate(inverse, [origin[0] - tx, origin[1] - ty, origin[2] - tz]),
-    axis: rotate(inverse, axis),
+    origin: rotateVector(inverse, [origin[0] - tx, origin[1] - ty, origin[2] - tz]),
+    axis: rotateVector(inverse, axis),
   };
 }

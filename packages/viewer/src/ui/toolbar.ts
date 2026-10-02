@@ -2,6 +2,7 @@ import type { CentralLayout } from "../central-layout.ts";
 import type { PanelView } from "../view-model.ts";
 import { createConsoleCounter } from "./console-counter.ts";
 import { element, iconButton } from "./dom.ts";
+import { gizmoControls } from "./gizmo-controls.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // Compact quick-access bar under the menu bar, with the buttons of the edit
@@ -86,6 +87,8 @@ function editButtons(
       intents.frameSelection,
       !toolbar.frameSelectionEnabled,
     ),
+    element("span", { className: "toolbar__separator", attributes: { role: "separator" } }),
+    ...gizmoControls(view, intents),
     element("span", { className: "toolbar__separator", attributes: { role: "separator" } }),
     viewSwitch(view, intents),
   ];
