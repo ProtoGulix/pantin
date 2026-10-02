@@ -27,7 +27,6 @@ import {
 // them to stay and no single frame can hold two displaced subtrees.
 
 type Anchors = ReturnType<typeof deriveAssemblyAnchors>;
-type Poses = ReadonlyMap<string, RigidTransform>;
 
 function affectedAssemblies(oldDocument: PantinDocument, newDocument: PantinDocument): Set<string> {
   const oldAnchors = deriveAssemblyAnchors(oldDocument);
@@ -73,31 +72,60 @@ function anchorDepth(anchors: Anchors, key: string): number {
   return depth;
 }
 
-function reanchorAssembly(
+// The topmost ancestor of `body` along joints whose parent is also in the
+// assembly `key`: below it, every joint of the chain turns about W(key).
+function topAncestorInAssembly(document: PantinDocument, key: string, body: Body): string {
+  const assemblyOf = new Map(
+    document.bodies.map((candidate) => [candidate.id, candidate.assembly]),
+  );
+  const parentJointOf = new Map(document.joints.map((joint) => [joint.child, joint]));
+  let top = body.id;
+  for (let joint = parentJointOf.get(top); joint !== undefined; joint = parentJointOf.get(top)) {
+    if (assemblyOf.get(joint.parent) !== key) {
+      break;
+    }
+    top = joint.parent;
+  }
+  return top;
+}
+
+/**
+ * The placement of assembly `key` that gives `body`, one of its bodies, the
+ * displayed pose `pose` at the current joint positions (ADR 0033 point 6,
+ * reused by alignments, ADR 0035). The rest of the document is unchanged.
+ *
+ * With e the top ancestor of k inside X, D(e) does not depend on W(X), and
+ * the joints from e down to k turn about W(X): D(k) = D(e) W M W⁻¹. The pose
+ * T = D(k) W B then gives W = D(e)⁻¹ T B⁻¹ M⁻¹, and the placement is
+ * A⁻¹ W, A being the world placement of the anchor (identity without one).
+ * M is read at placement identity, where W = A: M = A⁻¹ D(e)⁻¹ D(k) A.
+ */
+export function placementGivingPose(
   document: PantinDocument,
   key: string,
   body: Body,
-  anchors: Anchors,
-  before: Poses,
+  pose: RigidTransform,
   positions: ReadonlyMap<string, number>,
-): PantinDocument {
-  // D(k) must not depend on the placement being solved for.
+): RigidTransform {
   const neutral = withPlacement(document, key, IDENTITY_TRANSFORM);
-  const displacement = computeDisplacements(neutral, positions).get(body.id) ?? IDENTITY_TRANSFORM;
+  const displacements = computeDisplacements(neutral, positions);
+  const displacementOf = (bodyId: string) => displacements.get(bodyId) ?? IDENTITY_TRANSFORM;
+  const top = displacementOf(topAncestorInAssembly(document, key, body));
+  const anchor = deriveAssemblyAnchors(document).get(key);
+  const anchorWorld =
+    anchor === undefined
+      ? IDENTITY_TRANSFORM
+      : (computeWorldPlacements(neutral).get(anchor.assembly) ?? IDENTITY_TRANSFORM);
+  const inside = compose(
+    compose(inverse(anchorWorld), inverse(top)),
+    compose(displacementOf(body.id), anchorWorld),
+  );
   const target = compose(
-    before.get(body.id) ?? IDENTITY_TRANSFORM,
+    pose,
     inverse(body.placement === undefined ? IDENTITY_TRANSFORM : unitTransform(body.placement)),
   );
-  const anchor = anchors.get(key);
-  if (anchor === undefined) {
-    // Unanchored: joints inside X turn about W(X) too, so D(k) = W M W⁻¹ and
-    // the pose T = W M B gives W = T B⁻¹ M⁻¹, M being D(k) computed at W = I.
-    return withPlacement(document, key, compose(target, inverse(displacement)));
-  }
-  // Anchored: k's chain never re-enters X, D(k) does not depend on W(X).
-  const world = compose(inverse(displacement), target);
-  const anchorWorld = computeWorldPlacements(neutral).get(anchor.assembly) ?? IDENTITY_TRANSFORM;
-  return withPlacement(document, key, compose(inverse(anchorWorld), world));
+  const world = compose(compose(inverse(top), target), inverse(inside));
+  return compose(inverse(anchorWorld), world);
 }
 
 // `newDocument` is `oldDocument` after the structural edit, placements still
@@ -130,7 +158,12 @@ export function keepDisplayedPose(
   for (const key of ordered) {
     const body = keyBody(key, oldAnchors, newAnchors, document);
     if (body !== undefined) {
-      document = reanchorAssembly(document, key, body, newAnchors, before, positions);
+      const pose = before.get(body.id) ?? IDENTITY_TRANSFORM;
+      document = withPlacement(
+        document,
+        key,
+        placementGivingPose(document, key, body, pose, positions),
+      );
     }
   }
   return document;

@@ -16,6 +16,8 @@ import { z } from "zod";
 
 export const FACE_FILE_FORMAT_VERSION = 1;
 export const FACE_FILE_EXTENSION = ".faces.json";
+// What the core reads at most; the largest face file of spike 0008 weighs 41 kB.
+export const MAX_FACE_FILE_BYTES = 16 * 1024 * 1024;
 
 const Vector3Schema = z.tuple([z.number().finite(), z.number().finite(), z.number().finite()]);
 

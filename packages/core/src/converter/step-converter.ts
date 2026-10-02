@@ -1,7 +1,7 @@
 import { lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type FaceFile, FaceFileSchema } from "@pantin/protocol";
+import { type FaceFile, FaceFileSchema, MAX_FACE_FILE_BYTES } from "@pantin/protocol";
 import { hasGlbHeader } from "../domain/glb.ts";
 import type { ConvertedComponent } from "../domain/step-bodies.ts";
 import { formatIssues } from "../domain/validation.ts";
@@ -30,9 +30,6 @@ const DEFAULT_LIMITS: ProcessLimits = {
   killGraceMs: 2_000,
   maxOutputBytes: 1024 * 1024,
 };
-
-// The largest face file of spike 0008 weighs 41 kB.
-const MAX_FACE_FILE_BYTES = 16 * 1024 * 1024;
 
 function conversionFailed(message: string): ApiError {
   return new ApiError("conversion_failed", message);

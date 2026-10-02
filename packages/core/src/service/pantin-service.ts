@@ -1,4 +1,5 @@
 import type {
+  AlignRequest,
   CreateJointRequest,
   ImportBodyQuery,
   PantinId,
@@ -16,6 +17,7 @@ import {
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
+import { alignAssembly } from "./alignment-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
 import { clockOperations, toClockState } from "./clock-operations.ts";
@@ -183,6 +185,8 @@ export function createPantinService(
     writeTag: (pantinId: PantinId, tagName: string, value: number) =>
       writeTag(context, pantinId, tagName, value),
     readConsole: (pantinId: PantinId, after: number) => readConsole(context, pantinId, after),
+    alignAssembly: (pantinId: PantinId, key: string, request: AlignRequest) =>
+      alignAssembly(context, pantinId, key, request),
     runSimulationSteps: (tick: SimulationTick) => runSimulationSteps(context, tick),
     ...clockOperations(context),
     ...assemblyOperations(context),

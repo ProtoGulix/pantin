@@ -1,4 +1,5 @@
 import {
+  AlignRequestSchema,
   MoveBodyRequestSchema,
   RenameKeyRequestSchema,
   RenameRequestSchema,
@@ -107,6 +108,20 @@ export const ASSEMBLY_ROUTES: readonly Route[] = [
         assemblyKeyOf(context),
         placement,
       );
+      sendJson(context.response, 200, answer);
+    },
+  },
+  {
+    method: "POST",
+    pattern: [...ASSEMBLY, "align"],
+    handle: async (context) => {
+      const request = parseWithSchema(
+        AlignRequestSchema,
+        await readJsonBody(context.request),
+        "The alignment",
+      );
+      const pantinId = pantinIdOf(context);
+      const answer = await context.service.alignAssembly(pantinId, assemblyKeyOf(context), request);
       sendJson(context.response, 200, answer);
     },
   },

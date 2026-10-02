@@ -11,7 +11,7 @@ export const IDENTITY_TRANSFORM: RigidTransform = {
   translation: [0, 0, 0],
 };
 
-function add([ax, ay, az]: Vector3, [bx, by, bz]: Vector3): Vector3 {
+export function add([ax, ay, az]: Vector3, [bx, by, bz]: Vector3): Vector3 {
   return [ax + bx, ay + by, az + bz];
 }
 

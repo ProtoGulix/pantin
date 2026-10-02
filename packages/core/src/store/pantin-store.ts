@@ -4,6 +4,7 @@ import { lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "no
 import { join, resolve } from "node:path";
 import {
   faceFilePathOf,
+  MAX_FACE_FILE_BYTES,
   PANTIN_DOCUMENT_FILE_NAME,
   PANTIN_MESHES_DIRECTORY_NAME,
   type PantinId,
@@ -28,6 +29,8 @@ export type PantinStore = {
   writeMesh(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
   // The face file of a GLB mesh (ADR 0035), written after the mesh.
   writeFaceFile(pantinId: PantinId, meshPath: string, bytes: Uint8Array): Promise<void>;
+  // The text of a GLB mesh's face file; undefined when it has none.
+  readFaceFile(pantinId: PantinId, meshPath: string): Promise<string | undefined>;
   // Serves a mesh, or the face file of one: any file of the meshes folder.
   openMesh(pantinId: PantinId, meshPath: string): Promise<MeshFile>;
   // Deletes the mesh and its face file, if any.
@@ -167,6 +170,32 @@ async function openMesh(paths: Paths, pantinId: PantinId, meshPath: string): Pro
   }
 }
 
+async function readFaceFile(
+  paths: Paths,
+  pantinId: PantinId,
+  meshPath: string,
+): Promise<string | undefined> {
+  const faceFilePath = faceFilePathOf(meshPath);
+  if (faceFilePath === undefined) {
+    return undefined;
+  }
+  const path = pathInPantin(paths, pantinId, faceFilePath);
+  try {
+    await assertRealPathInside(paths.pantinsDirectory, meshesDirectory(paths, pantinId));
+    // lstat: a symbolic link is never read, wherever it points.
+    const stats = await lstat(path);
+    if (!stats.isFile() || stats.size > MAX_FACE_FILE_BYTES) {
+      return undefined;
+    }
+    return await readFile(path, "utf8");
+  } catch (error) {
+    if (isErrorWithCode(error, "ENOENT")) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
 // Used to roll back a failed import; a missing file is not an error.
 async function deleteMesh(paths: Paths, pantinId: PantinId, meshPath: string): Promise<void> {
   await assertRealPathInside(paths.pantinsDirectory, meshesDirectory(paths, pantinId));
@@ -189,6 +218,7 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     writeMesh: (pantinId, meshPath, bytes) => writeMeshesFile(paths, pantinId, meshPath, bytes),
     writeFaceFile: (pantinId, meshPath, bytes) =>
       writeMeshesFile(paths, pantinId, requireFaceFilePath(meshPath), bytes),
+    readFaceFile: (pantinId, meshPath) => readFaceFile(paths, pantinId, meshPath),
     openMesh: (pantinId, meshPath) => openMesh(paths, pantinId, meshPath),
     deleteMesh: (pantinId, meshPath) => deleteMesh(paths, pantinId, meshPath),
     // Relative to the pantins directory: error messages never reveal absolute paths.
