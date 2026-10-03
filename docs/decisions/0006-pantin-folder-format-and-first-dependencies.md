@@ -52,7 +52,7 @@ rename, save and reopen. The product word is "Pantin" (user decision,
 ## Consequences
 
 - A mesh imported and never saved leaves an orphan file in `meshes/`;
-  cleaning it is backlog, not this slice.
+  cleaning it is backlog, not this slice. Done by ADR 0038.
 - Once loaded, a Pantin stays in the core's memory: an external edit of
   `pantin.json` (text editor, git pull) is not seen until the core restarts,
   and `unsavedChanges` does not reflect it. Detecting external changes is
