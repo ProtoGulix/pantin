@@ -18,6 +18,20 @@ function isReferencedOnDisk(openPantin: OpenPantin, meshPath: string): boolean {
   return openPantin.savedMeshPaths.has(meshPath) || openPantin.writingMeshPaths.has(meshPath);
 }
 
+/**
+ * Every mesh path that something still uses (ADR 0038 point 4): the in-memory
+ * document, the saved pantin.json, a save in progress and the deletions
+ * waiting for the next save. A mesh file outside this set is an orphan.
+ */
+export function meshPathsToKeep(openPantin: OpenPantin): Set<string> {
+  return new Set([
+    ...meshPathsOf(openPantin.document),
+    ...openPantin.savedMeshPaths,
+    ...openPantin.writingMeshPaths,
+    ...openPantin.pendingMeshDeletions,
+  ]);
+}
+
 // Called when no body of the in-memory document uses `meshPath` any more.
 export async function releaseMesh(
   context: ServiceContext,
@@ -84,11 +98,14 @@ async function writeDocument(
 }
 
 // Runs `task` after the saves and discards already queued for this Pantin.
-async function runQueued(openPantin: OpenPantin, task: () => Promise<void>): Promise<void> {
+export async function runQueued<Result>(
+  openPantin: OpenPantin,
+  task: () => Promise<Result>,
+): Promise<Result> {
   const running = openPantin.saveQueue.then(task);
   // The queue continues after a failure; this caller still gets the error.
   openPantin.saveQueue = running.catch(() => undefined);
-  await running;
+  return await running;
 }
 
 export async function savePantin(

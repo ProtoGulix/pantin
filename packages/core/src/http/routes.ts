@@ -13,6 +13,7 @@ import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
 import { CLOCK_ROUTES } from "./clock-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
+import { ORPHAN_MESH_ROUTES } from "./orphan-mesh-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
@@ -169,6 +170,7 @@ export const ROUTES: readonly Route[] = [
   ...SENSOR_ROUTES,
   ...POSE_STREAM_ROUTES,
   ...CLOCK_ROUTES,
+  ...ORPHAN_MESH_ROUTES,
   ...TAG_ROUTES,
 ];
 

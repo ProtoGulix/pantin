@@ -10,6 +10,7 @@ export * from "./drive-api.ts";
 export * from "./face-file.ts";
 export * from "./ids.ts";
 export * from "./joint.ts";
+export * from "./orphan-mesh-api.ts";
 export * from "./pantin.ts";
 export * from "./placement.ts";
 export * from "./sensor.ts";

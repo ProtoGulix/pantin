@@ -91,18 +91,25 @@ Facts checked in the code on 2026-10-03:
    used by the in-memory document (Context), and the service also waits
    for them first (`loadSettledPantin`).
 
-   The comparison is lenient on purpose. A body path is normalised: `\`
-   becomes `/`, then POSIX `normalize`. If its folder is then `meshes`,
-   its file name keeps every `meshes/` file with the same name, ignoring
-   case. An error therefore keeps a file and never deletes a used one.
-   That way a hand-edited `./meshes/Rail.GLB` still protects
-   `rail.glb`.
+   The comparison over-keeps on purpose. A body path is normalised: `\`
+   becomes `/`, then it is resolved the way the store resolves it
+   (relative to the Pantin folder, absolute paths as they are). If the
+   resolved parent folder is named `meshes`, ignoring case, wherever it
+   is, its file name keeps every `meshes/` file with the same name,
+   ignoring case. An error therefore keeps a file and never deletes a
+   used one. That way hand-edited `./meshes/Rail.GLB`,
+   `Meshes/rail.glb`, `../<pantinId>/meshes/rail.glb` or an absolute
+   path still protect `rail.glb`. (Amended at review, 2026-10-03: plain
+   `normalize` missed paths that leave and re-enter the Pantin folder.)
 
 2. **Only `meshes/`.** The cleanup never touches `pantin.json`, its
    temporary files or anything outside `meshes/`. Every path is
-   `resolveInside(meshes, fileName)`. The `meshes/` folder is checked
-   with `assertRealPathInside`, as in the existing store functions, so a
-   symbolic link on the folder itself answers 400 `invalid_request`.
+   `resolveInside(meshes, fileName)`. Both routes answer 400
+   `invalid_request` when the Pantin folder or `meshes/` is a symbolic
+   link, or when `realpath(meshes)` is not
+   `join(realpath(pantinFolder), "meshes")`. Checking only that the folder
+   stays inside the pantins directory is not enough: a link to another
+   Pantin's `meshes/` would list that Pantin's used files as orphans.
    `lstat` checks each file. Deletion uses `unlink`, which removes a
    link itself and never what it points to.
 
@@ -122,8 +129,10 @@ Facts checked in the code on 2026-10-03:
      - 200 names of 255 characters fit in the 64 KiB body limit.
    - **Recompute and intersect.** The core recomputes the orphans at
      deletion time and deletes only the names that are both requested
-     and still orphans. Just before each `unlink`, it checks the keep
-     rule again without an `await` in between. A file that became used
+     and still orphans. For each file the store first checks the folder
+     and `lstat`s the file, then calls the keep-rule re-check
+     synchronously right before `unlink`, without an `await` in between;
+     a file the re-check keeps ends in `skipped`. A file that became used
      after the preview is therefore never deleted.
    - `OrphanMeshDeletionResponse` is
      `{ deleted: OrphanMeshFile[], skipped: string[], failed: { fileName,
@@ -138,7 +147,8 @@ Facts checked in the code on 2026-10-03:
      The request still answers 200: every file has its own outcome, and
      the document did not change. Errors before the loop answer as usual:
      - 404 for an unknown Pantin;
-     - 400 for an invalid body or a symbolic link on `meshes/`;
+     - 400 for an invalid body or a linked folder (point 2), 415 for a
+       wrong content type (the existing `readJsonBody` rule);
      - 500 when the listing itself fails.
    - The route uses a verb in its URL, `POST .../delete`, like `save`
      and `discard`.
@@ -265,7 +275,8 @@ Facts checked in the code on 2026-10-03:
 
 - The `test` Pantin's `3630-00-0800n-0.glb` can be removed from the
   menu, which frees the id `3630-00-0800n-0`.
-- The backlog file `clean-orphan-meshes.md` shrinks to the deferred
+- The backlog file `clean-orphan-meshes.md` becomes
+  `retry-deferred-mesh-deletions.md`, about the deferred
   deletion subject: a failed pending deletion makes the save request
   fail after `pantin.json` was written, and is not retried.
 - ADR 0006's consequence "cleaning it is backlog" points to this ADR.
@@ -338,7 +349,8 @@ Tests:
     the same `unsavedChanges` before and after.
 17. HTTP: these bodies answer 400: names `""`, `".."`,
     `"../pantin.json"` and `"a/b.glb"`, 201 names, a body that is not
-    an array, a wrong content type. `pantin.json` is unchanged.
+    an array; a wrong content type answers 415. `pantin.json` is
+    unchanged.
 18. HTTP: a symbolic link on `meshes/` pointing outside answers 400 on
     both routes.
 

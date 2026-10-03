@@ -44,6 +44,7 @@ import {
   toResponse,
   updateDocument,
 } from "./open-pantins.ts";
+import { orphanMeshOperations } from "./orphan-mesh-cleanup.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { listTags, runSimulationSteps, writeTag } from "./simulation.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
@@ -91,6 +92,10 @@ async function listPantins(context: ServiceContext): Promise<PantinSummary[]> {
     });
   }
   return summaries;
+}
+
+async function getPantin(context: ServiceContext, pantinId: PantinId): Promise<PantinResponse> {
+  return toResponse(pantinId, await loadPantin(context, pantinId));
 }
 
 async function createPantin(context: ServiceContext, name: string): Promise<PantinResponse> {
@@ -157,8 +162,7 @@ export function createPantinService(
   return {
     listPantins: () => listPantins(context),
     createPantin: (name: string) => createPantin(context, name),
-    getPantin: async (pantinId: PantinId) =>
-      toResponse(pantinId, await loadPantin(context, pantinId)),
+    getPantin: (pantinId: PantinId) => getPantin(context, pantinId),
     renamePantin: (pantinId: PantinId, name: string) =>
       updateDocument(context, pantinId, (document) => renamePantinDocument(document, name)),
     savePantin: (pantinId: PantinId) => savePantin(context, pantinId),
@@ -193,6 +197,7 @@ export function createPantinService(
     ...driveOperations(context),
     ...actuatorOperations(context),
     ...sensorOperations(context),
+    ...orphanMeshOperations(context),
   };
 }
 

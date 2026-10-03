@@ -5,11 +5,14 @@ import { join, resolve } from "node:path";
 import {
   faceFilePathOf,
   MAX_FACE_FILE_BYTES,
+  type MeshFolderFileName,
+  type OrphanMeshFile,
   PANTIN_DOCUMENT_FILE_NAME,
   PANTIN_MESHES_DIRECTORY_NAME,
   type PantinId,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
+import { deleteMeshFolderFile, listMeshFolderFiles } from "./mesh-folder-files.ts";
 import { assertRealPathInside, isErrorWithCode, resolveInside } from "./safe-paths.ts";
 
 // File system side of the Pantins: one folder per Pantin inside the pantins
@@ -35,6 +38,18 @@ export type PantinStore = {
   openMesh(pantinId: PantinId, meshPath: string): Promise<MeshFile>;
   // Deletes the mesh and its face file, if any.
   deleteMesh(pantinId: PantinId, meshPath: string): Promise<void>;
+  // The regular files directly in the meshes folder, with their sizes (ADR
+  // 0038): subfolders, links and special files are left out. A missing folder
+  // gives an empty list.
+  listMeshFolderFiles(pantinId: PantinId): Promise<OrphanMeshFile[]>;
+  // Unlinks one regular file of the meshes folder, and only that file: a link
+  // is never followed. `mayDelete` is called synchronously just before the
+  // unlink; when it answers false the file stays ("kept"). I/O errors are thrown.
+  deleteMeshFolderFile(
+    pantinId: PantinId,
+    fileName: MeshFolderFileName,
+    mayDelete: () => boolean,
+  ): Promise<"deleted" | "missing" | "not_a_file" | "kept">;
   describeDocumentLocation(pantinId: PantinId): string;
 };
 
@@ -42,6 +57,10 @@ type Paths = { pantinsDirectory: string };
 
 function pathInPantin(paths: Paths, pantinId: PantinId, relativePath: string): string {
   return resolveInside(resolveInside(paths.pantinsDirectory, pantinId), relativePath);
+}
+
+function pantinFolder(paths: Paths, pantinId: PantinId): string {
+  return resolveInside(paths.pantinsDirectory, pantinId);
 }
 
 function meshesDirectory(paths: Paths, pantinId: PantinId): string {
@@ -221,6 +240,15 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     readFaceFile: (pantinId, meshPath) => readFaceFile(paths, pantinId, meshPath),
     openMesh: (pantinId, meshPath) => openMesh(paths, pantinId, meshPath),
     deleteMesh: (pantinId, meshPath) => deleteMesh(paths, pantinId, meshPath),
+    listMeshFolderFiles: (pantinId) =>
+      listMeshFolderFiles(paths.pantinsDirectory, pantinFolder(paths, pantinId)),
+    deleteMeshFolderFile: (pantinId, fileName, mayDelete) =>
+      deleteMeshFolderFile(
+        paths.pantinsDirectory,
+        pantinFolder(paths, pantinId),
+        fileName,
+        mayDelete,
+      ),
     // Relative to the pantins directory: error messages never reveal absolute paths.
     describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
   };
