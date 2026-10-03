@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-29
-- Amended by: ADR 0033
+- Amended by: ADR 0033, ADR 0037
 - Extends: ADR 0017 (STEP import joints), ADR 0011 (kinematic joints)
 - Supersedes: ADR 0012 point 1 (tag names)
 - Depends on: ADR 0018 (type change keeps the id)
@@ -92,6 +92,8 @@ bringing assemblies forward from phases 8 and 9.
    lists the renamed tags `[{ from, to }]`, and the viewer shows them.
 10. Deleting a non-empty assembly is refused (`conflict`), with a message
     asking to move or delete its bodies first.
+    Amended by ADR 0037: an explicit deletion with contents removes the
+    assembly and everything it holds.
 11. Assemblies are flat: no nesting (the converter flattens STEP
     sub-assemblies, assembly.py:49-80).
 12. schema_version 3 -> 4. Migration: one assembly with key `main`, named
