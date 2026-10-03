@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Amended by: ADR 0039 (point 2: assembly, body and joint; width and open
+  state)
 - Depends on: ADR 0028, ADR 0029
 - Amends: ADR 0028 (point 13: the right-hand panel), ADR 0029 (points 5, 7,
   9 and 10: edge labels, keyboard, selection, place in the viewer and

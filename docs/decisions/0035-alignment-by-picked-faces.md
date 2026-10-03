@@ -3,6 +3,8 @@
 - Status: accepted (2026-10-02); points 9 and 10 added 2026-10-02 with the
   user's approval, before the core and viewer tranches
 - Date: 2026-10-02
+- Amended by: ADR 0039 (points 3, 6 and 8: the alignment panel becomes a
+  section of the inspector)
 - Depends on: ADR 0033 (assembly placement), ADR 0034 (placement editing)
 - Extends: ADR 0009 (STEP import converter), ADR 0019 point 13 (selection
   in 3D)
