@@ -7,6 +7,8 @@ import { assemblyNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import {
   applyAlignment,
+  chooseAlignmentKind,
+  chooseAlignmentPick,
   receiveAlignmentPick,
   setAlignmentFixedJoint,
   toggleAlignment,
@@ -174,5 +176,60 @@ describe("applying an alignment", () => {
     await pickBoth(store);
     await applyAlignment(store);
     expect(store.state.message?.key).toBe("alignment.targetDisplaced");
+  });
+});
+
+describe("picking again and aligning again", () => {
+  it("replaces a chosen pick with the next click and keeps the other", async () => {
+    const { store } = alignmentStore();
+    await pickBoth(store);
+    const target = store.state.alignment?.picks[1];
+    chooseAlignmentPick(store, 0);
+    expect(store.state.alignment?.currentPick).toBe(0);
+    await receiveAlignmentPick(store, click("block"));
+    expect(store.state.alignment?.picks[1]).toBe(target);
+    expect(store.state.alignment?.currentPick).toBeNull();
+    expect(store.state.message).toBeNull();
+    // Every pick is made again: a further click is refused.
+    await receiveAlignmentPick(store, click("block"));
+    expect(store.state.message?.key).toBe("alignment.refusal.allPicked");
+  });
+
+  it("keeps the kind and the parameters for the next alignment", async () => {
+    const { store } = alignmentStore();
+    chooseAlignmentKind(store, "plane_on_plane");
+    toggleAlignment(store);
+    store.state = {
+      ...store.state,
+      alignment: store.state.alignment && {
+        ...store.state.alignment,
+        flip: true,
+        offsetText: "2",
+        fixedJoint: true,
+      },
+    };
+    await receiveAlignmentPick(store, click("block"));
+    await receiveAlignmentPick(store, click("frame"));
+    await applyAlignment(store);
+    expect(store.state.alignment).toMatchObject({
+      kind: "plane_on_plane",
+      flip: true,
+      offsetText: "2",
+      fixedJoint: true,
+      picks: [null, null],
+      currentPick: null,
+    });
+  });
+});
+
+describe("cancelling a re-pick", () => {
+  it("cancels a re-pick on a second choice and keeps the old pick", async () => {
+    const { store } = alignmentStore();
+    await pickBoth(store);
+    const first = store.state.alignment?.picks[0];
+    chooseAlignmentPick(store, 0);
+    chooseAlignmentPick(store, 0);
+    expect(store.state.alignment).toMatchObject({ currentPick: null });
+    expect(store.state.alignment?.picks[0]).toBe(first);
   });
 });

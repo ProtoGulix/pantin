@@ -33,7 +33,7 @@ const document = documentOf({
 const pantin = { id: "press", unsavedChanges: false, document };
 const opened = withOpenPantin(initialViewerState("fr"), pantin);
 
-const inspectorOf = (state: ViewerState) => buildInspectorView(state, t);
+const inspectorOf = (state: ViewerState) => buildInspectorView(state, t, false);
 const selecting = (nodeId: string) => inspectorOf(withNode(opened, nodeId));
 const device = (kind: "drive" | "actuator" | "sensor", id: string) =>
   inspectorOf(withSelection(opened, { kind, id }));

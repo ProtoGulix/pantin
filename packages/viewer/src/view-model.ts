@@ -1,4 +1,3 @@
-import { type AlignmentView, buildAlignmentView } from "./alignment/alignment-view.ts";
 import { type CentralLayout, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
@@ -66,8 +65,6 @@ export interface PanelView {
   inspector: InspectorView;
   // The Pantin console and its counter (ADR 0031); null with no Pantin open.
   console: ConsoleView | null;
-  // The alignment panel (ADR 0035), or null when no alignment is under way.
-  alignment: AlignmentView | null;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -116,7 +113,11 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
-export function buildPanelView(state: ViewerState, consoleList: ClientConsole): PanelView {
+export function buildPanelView(
+  state: ViewerState,
+  consoleList: ClientConsole,
+  clockRunning: boolean,
+): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
   return {
@@ -134,7 +135,7 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
     viewportHint: translate(
       mode === "list" ? "page.viewportEmpty" : `page.viewportHint.${state.navigation.preset}`,
     ),
-    inspector: buildInspectorView(state, translate),
+    inspector: buildInspectorView(state, translate, clockRunning),
     console: buildConsoleView(
       state.console,
       consoleList,
@@ -142,6 +143,5 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
       state.language,
       translate,
     ),
-    alignment: buildAlignmentView(state, translate),
   };
 }

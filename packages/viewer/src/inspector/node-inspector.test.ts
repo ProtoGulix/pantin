@@ -51,7 +51,7 @@ const opened = withOpenPantin(initialViewerState("en"), {
 });
 
 const viewOf = (nodeId: string, state: ViewerState = opened) =>
-  buildInspectorView(withNode(state, nodeId), t);
+  buildInspectorView(withNode(state, nodeId), t, false);
 const ids = (groups: PropertyGroup[]) => groups.map((group) => group.id);
 const rowsOf = (groups: PropertyGroup[], id: string): PropertyRow[] =>
   groups.find((group) => group.id === id)?.rows ?? [];
@@ -191,7 +191,7 @@ describe("inspector of a joint", () => {
 
   it("carries the joint form being filled", () => {
     const form = initialJointForm(document.bodies);
-    expect(buildInspectorView({ ...opened, jointForm: form }, t).jointForm).not.toBeNull();
+    expect(buildInspectorView({ ...opened, jointForm: form }, t, false).jointForm).not.toBeNull();
     expect(view.jointForm).toBeNull();
   });
 });
@@ -230,10 +230,10 @@ describe("collapsed groups, by stable id", () => {
   it("keeps General folded across tree kinds and devices, which share the group on purpose", () => {
     const state = folded(opened, "general");
     const kinds = [
-      buildInspectorView(withNode(state, pantinNodeId("press")), t),
-      buildInspectorView(withNode(state, bodyNodeId("press", "s1")), t),
-      buildInspectorView(withNode(state, jointNodeId("press", "j1")), t),
-      buildInspectorView(withSelection(state, { kind: "drive", id: "v1" }), t),
+      buildInspectorView(withNode(state, pantinNodeId("press")), t, false),
+      buildInspectorView(withNode(state, bodyNodeId("press", "s1")), t, false),
+      buildInspectorView(withNode(state, jointNodeId("press", "j1")), t, false),
+      buildInspectorView(withSelection(state, { kind: "drive", id: "v1" }), t, false),
     ];
     expect(kinds.map(collapsedIds)).toEqual([["general"], ["general"], ["general"], ["general"]]);
   });
@@ -241,11 +241,11 @@ describe("collapsed groups, by stable id", () => {
   it("does not fold a group of another kind that merely sits beside it", () => {
     // A body's joints, and a joint's links, are different groups with different ids.
     const state = folded(opened, "joints");
-    expect(collapsedIds(buildInspectorView(withNode(state, bodyNodeId("press", "s1")), t))).toEqual(
-      ["joints"],
-    );
     expect(
-      collapsedIds(buildInspectorView(withNode(state, jointNodeId("press", "j1")), t)),
+      collapsedIds(buildInspectorView(withNode(state, bodyNodeId("press", "s1")), t, false)),
+    ).toEqual(["joints"]);
+    expect(
+      collapsedIds(buildInspectorView(withNode(state, jointNodeId("press", "j1")), t, false)),
     ).toEqual([]);
   });
 });

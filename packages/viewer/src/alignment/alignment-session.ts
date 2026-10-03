@@ -35,6 +35,9 @@ export interface AlignmentSession {
   kind: AlignmentKind;
   // One entry per pick of the kind's descriptor, null until picked.
   picks: readonly (AlignmentPickState | null)[];
+  // A done pick the user chose to replace: the next click fills it, the other
+  // picks are kept (ADR 0039 point 4). Null: the first pick still missing.
+  currentPick: number | null;
   flip: boolean;
   // As typed: millimetres and degrees (CLAUDE.md section 5).
   offsetText: string;
@@ -53,6 +56,7 @@ export function newAlignmentSession(pantinId: string, assemblyKey: string): Alig
     assemblyKey,
     kind,
     picks: emptyPicks(kind),
+    currentPick: null,
     flip: false,
     offsetText: "0",
     rotationText: "0",
@@ -62,25 +66,44 @@ export function newAlignmentSession(pantinId: string, assemblyKey: string): Alig
 
 /** Another kind starts its picks over; the parameters stay as typed. */
 export function withKind(session: AlignmentSession, kind: AlignmentKind): AlignmentSession {
-  return { ...session, kind, picks: emptyPicks(kind) };
+  return { ...session, kind, picks: emptyPicks(kind), currentPick: null };
 }
 
 export function withoutPicks(session: AlignmentSession): AlignmentSession {
-  return { ...session, picks: emptyPicks(session.kind) };
+  return { ...session, picks: emptyPicks(session.kind), currentPick: null };
 }
 
 /** The pick the next click fills, or null when every pick is made. */
 export function nextPickIndex(session: AlignmentSession): number | null {
+  if (session.currentPick !== null) {
+    return session.currentPick;
+  }
   const index = session.picks.indexOf(null);
   return index === -1 ? null : index;
 }
 
+/**
+ * Makes pick `index` the one the next click fills; the others stay. Choosing
+ * the pick already being replaced cancels it: the old pick is kept.
+ */
+export function withCurrentPick(session: AlignmentSession, index: number): AlignmentSession {
+  if (index < 0 || index >= session.picks.length) {
+    return session;
+  }
+  return { ...session, currentPick: session.currentPick === index ? null : index };
+}
+
+/** The pick fills its place; the next click follows the first pick still missing. */
 export function withPick(
   session: AlignmentSession,
   index: number,
   pick: AlignmentPickState,
 ): AlignmentSession {
-  return { ...session, picks: session.picks.map((current, at) => (at === index ? pick : current)) };
+  return {
+    ...session,
+    picks: session.picks.map((current, at) => (at === index ? pick : current)),
+    currentPick: null,
+  };
 }
 
 export type AlignRequestOutcome =

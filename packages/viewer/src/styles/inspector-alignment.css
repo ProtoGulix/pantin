@@ -1,0 +1,85 @@
+/* Alignment block of the "Positionnement" section (ADR 0035, ADR 0039): the
+   kind, the picks in order, the parameters, then Recommencer and Aligner. */
+.alignment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.alignment__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.alignment__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.alignment__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alignment__step {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.alignment__step {
+  cursor: pointer;
+}
+
+button.alignment__step:hover {
+  background: var(--hover);
+}
+
+.alignment__step-detail {
+  color: var(--text-muted);
+}
+
+.alignment__step--done .alignment__step-detail {
+  color: var(--success);
+}
+
+.alignment__step--current {
+  background: var(--accent-soft);
+}
+
+.alignment__step--current .alignment__step-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.alignment__number {
+  width: 80px;
+}
+
+.alignment__note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.alignment__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

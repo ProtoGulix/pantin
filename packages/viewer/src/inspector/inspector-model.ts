@@ -147,7 +147,11 @@ function emptyInspector(t: Translate): InspectorView {
   };
 }
 
-export function buildInspectorView(state: ViewerState, t: Translate): InspectorView {
+export function buildInspectorView(
+  state: ViewerState,
+  t: Translate,
+  clockRunning: boolean,
+): InspectorView {
   const pantin = state.openPantin;
   if (pantin === null || !state.inspectorOpen) {
     return emptyInspector(t);
@@ -174,7 +178,7 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
     driveForm: buildDriveFormView(state, document, t),
     actuatorForm: buildActuatorFormView(state, document, t),
     sensorForm: buildSensorFormView(state, document, t),
-    positioning: buildPositioningView(state, t),
+    positioning: buildPositioningView(state, t, clockRunning),
     groups,
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),

@@ -4,7 +4,9 @@ import {
   alignRequestOf,
   newAlignmentSession,
   nextPickIndex,
+  withCurrentPick,
   withKind,
+  withoutPicks,
   withPick,
 } from "./alignment-session.ts";
 
@@ -67,5 +69,37 @@ describe("alignment session", () => {
       ok: false,
       reason: "invalidOffset",
     });
+  });
+});
+
+describe("replacing a pick", () => {
+  it("replaces a chosen pick, keeps the others, then follows the next missing one", () => {
+    const repicking = withCurrentPick(twoPicks, 0);
+    expect(nextPickIndex(repicking)).toBe(0);
+    const replaced = withPick(repicking, 0, facePick("block", 7));
+    expect(replaced.picks.map((state) => state?.pick)).toEqual([
+      facePick("block", 7).pick,
+      facePick("base", 0).pick,
+    ]);
+    expect(replaced.currentPick).toBeNull();
+    expect(nextPickIndex(replaced)).toBeNull();
+    const partial = withCurrentPick(
+      withPick(newAlignmentSession("bench", "block"), 0, facePick("block", 0)),
+      0,
+    );
+    expect(nextPickIndex(withPick(partial, 0, facePick("block", 1)))).toBe(1);
+  });
+
+  it("cancels the re-pick when the same pick is chosen again, keeping the old pick", () => {
+    const cancelled = withCurrentPick(withCurrentPick(twoPicks, 0), 0);
+    expect(cancelled.currentPick).toBeNull();
+    expect(cancelled.picks).toBe(twoPicks.picks);
+    expect(nextPickIndex(cancelled)).toBeNull();
+  });
+
+  it("ignores a pick that does not exist and drops it with the kind or a restart", () => {
+    expect(withCurrentPick(twoPicks, 5)).toBe(twoPicks);
+    expect(withKind(withCurrentPick(twoPicks, 1), "axis_on_axis").currentPick).toBeNull();
+    expect(withoutPicks(withCurrentPick(twoPicks, 1)).currentPick).toBeNull();
   });
 });

@@ -1,8 +1,12 @@
 import type { PoseSnapshot, SimulationClockState } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { newAlignmentSession } from "../alignment/alignment-session.ts";
 import { PantinApiError } from "../api-transport.ts";
 import type { ClockView } from "../clock/clock-model.ts";
 import { consolePantin } from "../console/console-fixtures.ts";
+import { withNode } from "../test-fixtures.ts";
+import { assemblyNodeId } from "../tree/node-ids.ts";
+import type { PanelView } from "../view-model.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { clockIntents } from "./clock-actions.ts";
 import { createPanelIntents } from "./controller.ts";
@@ -31,10 +35,11 @@ interface Calls {
   steps: number[];
   panels: number;
   clocks: ClockView[];
+  lastPanel: PanelView | null;
 }
 
 function openStore(answer: SimulationClockState = clockOf({ running: false })) {
-  const calls: Calls = { running: [], steps: [], panels: 0, clocks: [] };
+  const calls: Calls = { running: [], steps: [], panels: 0, clocks: [], lastPanel: null };
   const store = testStore(
     {
       getPantin: async () => consolePantin,
@@ -50,8 +55,9 @@ function openStore(answer: SimulationClockState = clockOf({ running: false })) {
     {},
     undefined,
     {
-      renderPanel: () => {
+      renderPanel: (view) => {
         calls.panels += 1;
+        calls.lastPanel = view;
       },
       showClock: (view) => calls.clocks.push(view),
     },
@@ -240,5 +246,27 @@ describe("the store and the clock", () => {
     store.update({ ...store.state, openPantin: null });
     expect(store.clockModel.state).toBeNull();
     expect(store.clockView().visible).toBe(false);
+  });
+});
+
+describe("the alignment block and the clock", () => {
+  it("redraws the panel once when the clock starts while aligning, not on every pose", () => {
+    const { store, calls } = openStore();
+    const id = consolePantin.id;
+    store.update({
+      ...withNode(store.state, assemblyNodeId(id, "a")),
+      alignment: newAlignmentSession(id, "a"),
+    });
+    calls.panels = 0;
+    store.receiveClock(clockOf({ running: true }));
+    expect(calls.panels).toBe(1);
+    expect(calls.lastPanel?.inspector.positioning?.alignment?.clockNote).not.toBeNull();
+    store.receivePose(snapshotAt(1));
+    store.receivePose(snapshotAt(2));
+    store.receiveClock(clockOf({ running: true, step: 3 }));
+    expect(calls.panels).toBe(1);
+    store.receiveClock(clockOf({ running: false }));
+    expect(calls.panels).toBe(2);
+    expect(calls.lastPanel?.inspector.positioning?.alignment?.clockNote).toBeNull();
   });
 });

@@ -2,10 +2,10 @@ import type { AlignmentKind } from "@pantin/protocol";
 import type { MessageKey } from "../i18n/translate.ts";
 import type { PickRefusal } from "./pick-resolution.ts";
 
-// Words of the alignment panel (ADR 0035). Typed on the protocol's kinds: a
+// Words of the alignment block of the inspector (ADR 0035, 0039). Typed on the protocol's kinds: a
 // new kind does not compile until it has its name and one label per pick.
 
-// The order of the kinds in the panel; their names below are required per kind.
+// The order of the kinds in the block; their names below are required per kind.
 export const ALIGNMENT_KIND_ORDER = [
   "plane_on_plane",
   "axis_on_axis",

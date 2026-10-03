@@ -1,5 +1,5 @@
 import type { PantinResponse } from "@pantin/protocol";
-import { isAligning } from "../alignment/alignment-view.ts";
+import { type AlignmentView, buildAlignmentView, isAligning } from "../alignment/alignment-view.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
@@ -39,6 +39,9 @@ export interface PositioningView {
   bodyLine: string | null;
   tools: PositioningToolView[];
   step: PositioningStepView | null;
+  // While an alignment is under way (ADR 0039 point 4): shown below the tools,
+  // for a body too, as the session is bound to its assembly, not to the selection.
+  alignment: AlignmentView | null;
 }
 
 function toolsOf(state: ViewerState, t: Translate): PositioningToolView[] {
@@ -78,7 +81,11 @@ function selectedRef(state: ViewerState, pantin: PantinResponse) {
   return ref !== null && ref.pantinId === pantin.id ? ref : null;
 }
 
-export function buildPositioningView(state: ViewerState, t: Translate): PositioningView | null {
+export function buildPositioningView(
+  state: ViewerState,
+  t: Translate,
+  clockRunning: boolean,
+): PositioningView | null {
   const pantin = state.openPantin;
   const ref = pantin === null ? null : selectedRef(state, pantin);
   if (pantin === null || ref === null) {
@@ -99,6 +106,7 @@ export function buildPositioningView(state: ViewerState, t: Translate): Position
       bodyLine: null,
       tools: toolsOf(state, t),
       step: stepOf(state, t),
+      alignment: buildAlignmentView(state, t, clockRunning),
     };
   }
   if (ref.kind === "body") {
@@ -112,6 +120,7 @@ export function buildPositioningView(state: ViewerState, t: Translate): Position
           bodyLine: t("positioning.bodyLine", { name: assembly?.name ?? body.assembly }),
           tools: toolsOf(state, t),
           step: null,
+          alignment: buildAlignmentView(state, t, clockRunning),
         };
   }
   return null;

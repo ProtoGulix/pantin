@@ -133,7 +133,7 @@ export class ViewerStore {
       this.consolePantinId = next.openPantin?.id ?? null;
       this.consoleList = EMPTY_CLIENT_CONSOLE;
     }
-    this.ports.renderPanel(buildPanelView(next, this.consoleList));
+    this.renderPanel();
     this.ports.showJointPositions(this.jointPositions);
     this.ports.showInspectorLive(this.tagValues, this.driveRuntime);
     const viewport = this.ports.viewport();
@@ -198,6 +198,12 @@ export class ViewerStore {
     this.setClockModel(clockAfterClockState(this.clockModel, state));
   }
 
+  private renderPanel(): void {
+    this.ports.renderPanel(
+      buildPanelView(this.state, this.consoleList, this.clockModel.state?.running === true),
+    );
+  }
+
   clockView(): ClockView {
     const { state } = this;
     return buildClockView(
@@ -211,7 +217,12 @@ export class ViewerStore {
   // The bar is written in place: no state update, whatever changed.
   private setClockModel(next: ClockModel): void {
     if (next !== this.clockModel) {
+      const wasRunning = this.clockModel.state?.running === true;
       this.clockModel = next;
+      // The alignment block says so while the clock runs (ADR 0039 point 4).
+      if (wasRunning !== (next.state?.running === true) && isAligning(this.state)) {
+        this.renderPanel();
+      }
       this.ports.showClock(this.clockView());
     }
   }

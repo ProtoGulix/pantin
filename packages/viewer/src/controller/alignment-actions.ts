@@ -9,6 +9,7 @@ import {
   type AlignmentSession,
   alignRequestOf,
   newAlignmentSession,
+  withCurrentPick,
   withKind,
   withoutPicks,
   withPick,
@@ -78,6 +79,11 @@ export function setAlignmentFlip(store: ViewerStore, flip: boolean): void {
 
 export function setAlignmentFixedJoint(store: ViewerStore, fixedJoint: boolean): void {
   updateSession(store, (session) => ({ ...session, fixedJoint }));
+}
+
+/** A done pick row was clicked: the next click in 3D replaces that pick. */
+export function chooseAlignmentPick(store: ViewerStore, index: number): void {
+  updateSession(store, (session) => withCurrentPick(session, index));
 }
 
 export function restartAlignment(store: ViewerStore): void {

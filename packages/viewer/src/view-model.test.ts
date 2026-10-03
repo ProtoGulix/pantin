@@ -16,7 +16,8 @@ import {
 } from "./viewer-state.ts";
 
 // The console lines are not what these tests are about.
-const buildPanelView = (state: ViewerState) => buildPanelViewWith(state, EMPTY_CLIENT_CONSOLE);
+const buildPanelView = (state: ViewerState) =>
+  buildPanelViewWith(state, EMPTY_CLIENT_CONSOLE, false);
 
 function opened(unsavedChanges: boolean, language: "fr" | "en" = "fr"): ViewerState {
   return withOpenPantin(
@@ -180,7 +181,6 @@ describe("message line and language", () => {
 
   it("has no properties of its own: the left column is the tree and its notifications", () => {
     expect(Object.keys(buildPanelView(opened(false))).sort()).toEqual([
-      "alignment",
       "console",
       "contextMenu",
       "importForm",

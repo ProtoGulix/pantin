@@ -15,24 +15,26 @@ export function captureFocus(root: HTMLElement): FocusSnapshot | null {
   if (!root.contains(active) || !key) {
     return null;
   }
-  if (active instanceof HTMLInputElement) {
+  if (active instanceof HTMLInputElement && active.type === "text") {
     const { value, selectionStart, selectionEnd } = active;
     return { key, value, selectionStart, selectionEnd };
   }
-  // A button keeps no text of its own.
-  return active instanceof HTMLButtonElement
+  // A button, a checkbox or a list keeps no text of its own.
+  return active instanceof HTMLButtonElement ||
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLSelectElement
     ? { key, value: "", selectionStart: null, selectionEnd: null }
     : null;
 }
 
 export function restoreFocus(root: HTMLElement, snapshot: FocusSnapshot | null): void {
-  const target = [...root.querySelectorAll("input, button")].find(
+  const target = [...root.querySelectorAll("input, button, select")].find(
     (candidate) => candidate.getAttribute("data-focus-key") === snapshot?.key,
   );
   if (snapshot === null || target === undefined || document.activeElement === target) {
     return;
   }
-  if (target instanceof HTMLInputElement) {
+  if (target instanceof HTMLInputElement && target.type === "text") {
     target.value = snapshot.value;
     target.focus();
     target.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);

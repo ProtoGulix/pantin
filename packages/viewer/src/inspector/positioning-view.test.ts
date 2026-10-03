@@ -17,7 +17,7 @@ const open = withOpenPantin(initialViewerState("fr"), pantinResponse(false));
 const select = (state: ViewerState, nodeId: string): ViewerState =>
   withSelection(state, nodeSelection(nodeId));
 const assembly = select(open, assemblyNodeId("press", "main"));
-const viewOf = (state: ViewerState) => buildPositioningView(state, t);
+const viewOf = (state: ViewerState) => buildPositioningView(state, t, false);
 const pressed = (state: ViewerState) =>
   viewOf(state)
     ?.tools.filter((tool) => tool.pressed)
@@ -65,6 +65,13 @@ describe("positioning of an assembly", () => {
     expect(pressed(aligning)).toEqual(["align"]);
   });
 
+  it("holds the alignment block only while an alignment is under way", () => {
+    expect(viewOf(assembly)?.alignment).toBeNull();
+    const aligning = { ...assembly, alignment: newAlignmentSession("press", "main") };
+    expect(viewOf(aligning)?.alignment?.kind).toBe("plane_on_plane");
+    expect(buildPositioningView(aligning, t, true)?.alignment?.clockNote).not.toBeNull();
+  });
+
   it("disables the tools while the diagram alone hides the 3D view", () => {
     const view = viewOf({ ...assembly, centralLayout: "diagram" });
     expect(view?.tools.every((tool) => tool.disabled)).toBe(true);
@@ -85,12 +92,14 @@ describe("positioning of a body", () => {
     expect(view?.bodyLine).toBe("Se place avec l'assemblage « main »");
     expect(view?.tools.map((tool) => tool.command)).toEqual(["gizmoMove", "gizmoRotate", "align"]);
     expect(view?.step).toBeNull();
+    expect(view?.alignment).toBeNull();
   });
 
   it("keeps today's availability: tools off unless an alignment can be stopped", () => {
     expect(viewOf(body)?.tools.every((tool) => tool.disabled)).toBe(true);
     const aligning = { ...body, alignment: newAlignmentSession("press", "main") };
     expect(viewOf(aligning)?.tools.map((tool) => tool.disabled)).toEqual([true, true, false]);
+    expect(viewOf(aligning)?.alignment).not.toBeNull();
   });
 });
 
@@ -103,7 +112,7 @@ describe("no positioning", () => {
 
 describe("toolbar", () => {
   it("carries no gizmo or alignment field: they are the inspector's", () => {
-    const keys = Object.keys(buildPanelView(open, EMPTY_CLIENT_CONSOLE).toolbar);
+    const keys = Object.keys(buildPanelView(open, EMPTY_CLIENT_CONSOLE, false).toolbar);
     expect(keys.filter((key) => /gizmo|align/i.test(key))).toEqual([]);
   });
 });

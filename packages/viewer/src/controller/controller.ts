@@ -17,6 +17,7 @@ import { actuatorIntents } from "./actuator-intents.ts";
 import {
   applyAlignment,
   chooseAlignmentKind,
+  chooseAlignmentPick,
   restartAlignment,
   setAlignmentFixedJoint,
   setAlignmentFlip,
@@ -201,6 +202,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     setGizmoStep: (field, text) => setGizmoStep(store, field, text),
     chooseAlignmentKind: (kind) => chooseAlignmentKind(store, kind),
+    chooseAlignmentPick: (index) => chooseAlignmentPick(store, index),
     setAlignmentText: (field, text) => setAlignmentText(store, field, text),
     setAlignmentFlip: (flip) => setAlignmentFlip(store, flip),
     setAlignmentFixedJoint: (fixedJoint) => setAlignmentFixedJoint(store, fixedJoint),

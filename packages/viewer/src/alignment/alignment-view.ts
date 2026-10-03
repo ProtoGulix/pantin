@@ -14,14 +14,16 @@ import {
   nextPickIndex,
 } from "./alignment-session.ts";
 
-// What the alignment panel shows (ADR 0035 points 3, 5, 6 and 8), as plain
-// data: the kind, one line per pick, the parameters the kind has, and the
-// fixed joint shortcut.
+// What the alignment block of the inspector shows (ADR 0035 points 3, 5, 6 and
+// 8, ADR 0039 point 4), as plain data: the kind, one line per pick, the
+// parameters the kind has, and the fixed joint shortcut.
 
 export interface AlignmentStepView {
   label: string;
   status: "done" | "current" | "waiting";
   detail: string;
+  // A pick is made here: its row is a button, to replace it or cancel that.
+  picked: boolean;
 }
 
 export interface AlignmentView {
@@ -34,6 +36,8 @@ export interface AlignmentView {
   offsetText: string | null;
   rotationText: string | null;
   fixedJoint: { checked: boolean; enabled: boolean; note: string | null };
+  // Said only while the simulation clock runs: the target may move.
+  clockNote: string | null;
   applyEnabled: boolean;
 }
 
@@ -46,14 +50,17 @@ function stepsOf(document: PantinDocument, session: AlignmentSession, t: Transla
   const next = nextPickIndex(session);
   return ALIGNMENT_PICK_LABELS[session.kind].map((labelKey, index): AlignmentStepView => {
     const state = session.picks[index] ?? null;
-    if (state !== null) {
-      return { label: t(labelKey), status: "done", detail: pickDetail(document, state, t) };
+    const label = t(labelKey);
+    // A pick being replaced reads as the current one until the click lands.
+    if (index !== next && state !== null) {
+      return { label, status: "done", detail: pickDetail(document, state, t), picked: true };
     }
     const current = index === next;
     return {
-      label: t(labelKey),
+      label,
       status: current ? "current" : "waiting",
       detail: t(current ? "alignment.step.current" : "alignment.step.waiting"),
+      picked: state !== null,
     };
   });
 }
@@ -99,7 +106,11 @@ export function alignmentHighlightsOf(state: ViewerState): FaceHighlight[] {
   );
 }
 
-export function buildAlignmentView(state: ViewerState, t: Translate): AlignmentView | null {
+export function buildAlignmentView(
+  state: ViewerState,
+  t: Translate,
+  clockRunning: boolean,
+): AlignmentView | null {
   const session = activeSession(state);
   const { openPantin } = state;
   const assembly = openPantin?.document.assemblies.find(
@@ -122,6 +133,7 @@ export function buildAlignmentView(state: ViewerState, t: Translate): AlignmentV
     offsetText: parameters.includes("offset") ? session.offsetText : null,
     rotationText: parameters.includes("rotation") ? session.rotationText : null,
     fixedJoint: fixedJointOf(document, session, t),
+    clockNote: clockRunning ? t("alignment.clockNote") : null,
     applyEnabled: nextPickIndex(session) === null && state.pendingRequestCount === 0,
   };
 }

@@ -21,7 +21,6 @@ import { parseStoredNavigation, serializeNavigation } from "./navigation/navigat
 import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
 import { createViewport, type Viewport } from "./scene/viewport.ts";
-import { AlignmentPanel } from "./ui/alignment-panel.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-storage.ts";
 import { CentralArea } from "./ui/central-area.ts";
 import { ConsolePanel } from "./ui/console-panel.ts";
@@ -98,7 +97,6 @@ function createScreen(): Screen {
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const viewCube = new ViewCube(requireElement("#view-cube", HTMLElement), canvas);
-  const alignmentPanel = new AlignmentPanel(requireElement("#alignment-panel", HTMLElement));
   const menuBar = new MenuBar(requireElement("#menu-bar", HTMLElement), sidePanel.callbacks);
   return {
     canvas,
@@ -116,7 +114,6 @@ function createScreen(): Screen {
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
       viewCube.render(view, intents);
-      alignmentPanel.render(view.alignment, view.translate, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
     showJointPositions: (positions) => inspector.showJointPositions(positions),

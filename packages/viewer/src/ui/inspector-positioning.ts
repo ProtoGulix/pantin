@@ -1,6 +1,7 @@
 import type { Translate } from "../i18n/translate.ts";
 import type { PositioningView } from "../inspector/positioning-view.ts";
 import { button, element } from "./dom.ts";
+import { renderAlignment } from "./inspector-alignment.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { renderPropertiesGrid } from "./properties-grid.ts";
 
@@ -62,5 +63,6 @@ export function renderPositioning(
       : element("p", { className: "inspector__empty", text: view.bodyLine }),
     toolRow(view, t, intents),
     view.step === null ? null : stepInput(view.step, intents),
+    view.alignment === null ? null : renderAlignment(view.alignment, t, intents),
   ]);
 }
