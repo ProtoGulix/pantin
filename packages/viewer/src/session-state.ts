@@ -1,7 +1,7 @@
-import type { PantinResponse } from "@pantin/protocol";
+import type { AssemblyDeletion, PantinResponse } from "@pantin/protocol";
 import { infoMessage } from "./messages.ts";
 import { nodeSelection } from "./selection.ts";
-import { pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
+import { assemblyNodeId, pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
 import { withSelection } from "./tree/tree-state.ts";
 import { type ViewerState, type WelcomeTab, withOpenPantin } from "./viewer-state.ts";
 
@@ -29,6 +29,7 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     closePrompt: false,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteAssembly: null,
     pendingFeedReplacement: null,
     jointForm: null,
   };
@@ -46,6 +47,7 @@ export function withCloseRequested(state: ViewerState): ViewerState {
         contextMenu: null,
         pendingDeleteBodyId: null,
         pendingDeleteJointId: null,
+        pendingDeleteAssembly: null,
         pendingFeedReplacement: null,
       }
     : withPantinClosed(state);
@@ -105,6 +107,7 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     ...withSelection(state, nodeSelection(nodeId)),
     pendingDeleteBodyId: bodyExists ? bodyId : null,
     pendingDeleteJointId: jointExists ? jointId : null,
+    pendingDeleteAssembly: null,
     pendingFeedReplacement: null,
     contextMenu: null,
     closePrompt: false,
@@ -112,7 +115,35 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
 }
 
 export function withDeleteCancelled(state: ViewerState): ViewerState {
-  return { ...state, pendingDeleteBodyId: null, pendingDeleteJointId: null };
+  return {
+    ...state,
+    pendingDeleteBodyId: null,
+    pendingDeleteJointId: null,
+    pendingDeleteAssembly: null,
+  };
+}
+
+/** The core's preview of an assembly deletion arrived: ask, with what would go. */
+export function withAssemblyDeleteRequested(
+  state: ViewerState,
+  contents: AssemblyDeletion,
+): ViewerState {
+  // The close prompt came first and stays: one prompt at a time.
+  if (state.closePrompt) {
+    return state;
+  }
+  return {
+    ...withSelection(
+      state,
+      nodeSelection(assemblyNodeId(state.openPantin?.id ?? "", contents.assembly.key)),
+    ),
+    pendingDeleteBodyId: null,
+    pendingDeleteJointId: null,
+    pendingDeleteAssembly: { key: contents.assembly.key, contents },
+    pendingFeedReplacement: null,
+    contextMenu: null,
+    closePrompt: false,
+  };
 }
 
 /** The core answered the DELETE with the whole Pantin: show it, select the Pantin. */

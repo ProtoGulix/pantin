@@ -9,7 +9,11 @@ import {
   withPantinClosed,
 } from "../session-state.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import { deleteAssembly } from "./assembly-actions.ts";
+import {
+  confirmDeleteAssembly,
+  deleteAssembly,
+  requestAssemblyDeletion,
+} from "./assembly-actions.ts";
 import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { refreshPantinList, savePantin } from "./pantin-actions.ts";
@@ -77,6 +81,15 @@ async function saveThenClose(store: ViewerStore): Promise<void> {
   }
 }
 
+function confirmPendingDelete(store: ViewerStore): Promise<void> {
+  if (store.state.pendingDeleteAssembly !== null) {
+    return confirmDeleteAssembly(store);
+  }
+  return store.state.pendingDeleteJointId === null
+    ? confirmDelete(store)
+    : confirmDeleteJoint(store);
+}
+
 export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
   switch (action) {
     case "saveAndClose":
@@ -89,9 +102,7 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
       store.update(withCloseCancelled(store.state));
       return;
     case "confirmDelete":
-      void (store.state.pendingDeleteJointId === null
-        ? confirmDelete(store)
-        : confirmDeleteJoint(store));
+      void confirmPendingDelete(store);
       return;
     case "cancelDelete":
       store.update(withDeleteCancelled(store.state));
@@ -107,10 +118,23 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
 
 export function requestDelete(store: ViewerStore, nodeId: string): void {
   const ref = parseNodeId(nodeId);
-  // Only an empty assembly can be deleted: nothing is lost, no prompt.
   if (ref?.kind === "assembly") {
-    void deleteAssembly(store, ref.pantinId, ref.key);
+    void deleteAssemblyNode(store, ref.pantinId, ref.key);
     return;
   }
   store.update(withDeleteRequested(store.state, nodeId));
+}
+
+// An empty assembly (no body, drive, actuator or sensor) goes at once; any
+// other asks the core what the deletion would remove (ADR 0037 point 7).
+function deleteAssemblyNode(store: ViewerStore, pantinId: string, key: string): Promise<void> {
+  const document = store.state.openPantin?.document;
+  const holdsSomething =
+    document !== undefined &&
+    [document.bodies, document.drives, document.actuators, document.sensors].some((items) =>
+      items.some((item) => item.assembly === key),
+    );
+  return holdsSomething
+    ? requestAssemblyDeletion(store, pantinId, key)
+    : deleteAssembly(store, pantinId, key);
 }

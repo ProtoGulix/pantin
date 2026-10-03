@@ -22,6 +22,16 @@ export function renderPromptLine(
   });
   const text = element("div", { className: "prompt-line__text", text: prompt.text });
   text.id = "prompt-line-text";
+  const details =
+    prompt.details === undefined || prompt.details.length === 0
+      ? []
+      : [
+          element(
+            "ul",
+            { className: "prompt-line__details" },
+            prompt.details.map((detail) => element("li", { text: detail })),
+          ),
+        ];
   const line = element(
     "div",
     {
@@ -30,6 +40,7 @@ export function renderPromptLine(
     },
     [
       element("div", { className: "prompt-line__question" }, [icon("info"), text]),
+      ...details,
       element("div", { className: "prompt-line__actions" }, buttons),
     ],
   );

@@ -161,3 +161,45 @@ describe("PantinApiClient placement", () => {
     expect([error.kind, requests.length]).toEqual(["invalid_input", 0]);
   });
 });
+
+describe("PantinApiClient assembly deletion with contents (ADR 0037)", () => {
+  const deletion = {
+    assembly: { key: "verin_pince", name: "Vérin pince" },
+    bodies: [{ id: "rod", name: "Tige" }],
+    joints: [{ id: "slide", name: "Glissière", betweenAssemblies: false }],
+    drives: [],
+    actuators: [],
+    sensors: [],
+    reanchoredAssemblies: [{ key: "pince", name: "Pince" }],
+    removedTags: ["verin_pince.slide.setpoint"],
+    addedTags: [],
+  };
+
+  it("reads the preview with GET .../deletion", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(deletion));
+    const result = await createPantinApiClient(fetchFunction).previewAssemblyDeletion(
+      "press",
+      "verin_pince",
+    );
+    expect([requests[0]?.init?.method, requests[0]?.url]).toEqual([
+      "GET",
+      "/api/pantins/press/assemblies/verin_pince/deletion",
+    ]);
+    expect(result).toEqual(deletion);
+  });
+
+  it("deletes with DELETE ?contents=delete and parses the whole answer", async () => {
+    const answer = { pantin, deleted: deletion, retainedMeshFiles: ["meshes/rod.glb"] };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const result = await createPantinApiClient(fetchFunction).deleteAssemblyWithContents(
+      "press",
+      "verin_pince",
+    );
+    expect([requests[0]?.init?.method, requests[0]?.url]).toEqual([
+      "DELETE",
+      "/api/pantins/press/assemblies/verin_pince?contents=delete",
+    ]);
+    expect(result.retainedMeshFiles).toEqual(["meshes/rod.glb"]);
+    expect(result.deleted.joints[0]?.betweenAssemblies).toBe(false);
+  });
+});

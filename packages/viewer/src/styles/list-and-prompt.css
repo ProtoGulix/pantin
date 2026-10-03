@@ -88,6 +88,13 @@
   color: var(--accent);
 }
 
+.prompt-line__details {
+  margin: 0;
+  padding-left: 28px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 .prompt-line__actions {
   display: flex;
   flex-wrap: wrap;

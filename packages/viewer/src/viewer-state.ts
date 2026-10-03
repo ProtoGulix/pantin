@@ -1,4 +1,10 @@
-import type { Body, FaultsResponse, PantinResponse, PantinSummary } from "@pantin/protocol";
+import type {
+  AssemblyDeletion,
+  Body,
+  FaultsResponse,
+  PantinResponse,
+  PantinSummary,
+} from "@pantin/protocol";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
@@ -38,6 +44,11 @@ interface PendingDiagramLink {
   replaced: ReplacedFeed;
 }
 
+interface PendingAssemblyDeletion {
+  key: string;
+  contents: AssemblyDeletion;
+}
+
 export interface ViewerState {
   language: Language;
   pantins: readonly PantinSummary[];
@@ -71,6 +82,9 @@ export interface ViewerState {
   pendingDeleteBodyId: string | null;
   // Same for a joint.
   pendingDeleteJointId: string | null;
+  // Same for an assembly with its contents (ADR 0037): the core's preview,
+  // shown in the prompt and kept to name what the user agreed to remove.
+  pendingDeleteAssembly: PendingAssemblyDeletion | null;
   // The open "New joint" form, or null.
   jointForm: JointFormState | null;
   // Hidden and isolated assemblies of the 3D view (ADR 0019): never saved.
@@ -142,6 +156,7 @@ export function initialViewerState(
     closePrompt: false,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteAssembly: null,
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
@@ -183,6 +198,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     closePrompt: false,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteAssembly: null,
     jointForm: null,
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,

@@ -4,6 +4,7 @@ import { buildPromptView } from "./panel/prompt-model.ts";
 import { nodeSelection, selectedDeviceOf, selectedNodeIdOf } from "./selection.ts";
 import {
   viewModeOf,
+  withAssemblyDeleteRequested,
   withBodyDeleted,
   withCloseCancelled,
   withCloseRequested,
@@ -238,5 +239,40 @@ describe("a device selected while the Pantin changes", () => {
     const closed = withPantinClosed(onDevice);
     expect(selectedDeviceOf(closed.selection)).toBeNull();
     expect(selectedNodeIdOf(closed.selection)).toBeNull();
+  });
+});
+
+describe("deleting an assembly with its contents", () => {
+  const contents = {
+    assembly: { key: "main", name: "main" },
+    bodies: [{ id: "rail", name: "Linear rail" }],
+    joints: [],
+    drives: [],
+    actuators: [],
+    sensors: [],
+    reanchoredAssemblies: [],
+    removedTags: [],
+    addedTags: [],
+  };
+  const asking = withAssemblyDeleteRequested(editing(false), contents);
+
+  it("records the preview and clears the other pending requests", () => {
+    expect(asking.pendingDeleteAssembly?.key).toBe("main");
+    expect(asking).toMatchObject({ pendingDeleteBodyId: null, pendingDeleteJointId: null });
+  });
+
+  it("is reset by cancel, a close request, a body request and closing", () => {
+    expect(withDeleteCancelled(asking).pendingDeleteAssembly).toBeNull();
+    const unsaved = { ...asking, openPantin: pantinResponse(true) };
+    expect(withCloseRequested(unsaved).pendingDeleteAssembly).toBeNull();
+    expect(
+      withDeleteRequested(asking, bodyNodeId("press", "rail")).pendingDeleteAssembly,
+    ).toBeNull();
+    expect(withPantinClosed(asking).pendingDeleteAssembly).toBeNull();
+  });
+
+  it("leaves the close prompt alone when the preview arrives after it", () => {
+    const closing = withCloseRequested(editing(true));
+    expect(withAssemblyDeleteRequested(closing, contents)).toBe(closing);
   });
 });

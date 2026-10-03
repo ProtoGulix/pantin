@@ -74,6 +74,7 @@ export function linkDiagramNodes(store: ViewerStore, from: Endpoint, to: Endpoin
       pendingFeedReplacement,
       pendingDeleteBodyId: null,
       pendingDeleteJointId: null,
+      pendingDeleteAssembly: null,
       contextMenu: null,
       message: null,
     });

@@ -146,6 +146,24 @@ describe("the feed prompt", () => {
     expect(store.state.pendingFeedReplacement).not.toBeNull();
   });
 
+  it("replaces an assembly delete prompt too", () => {
+    const { store } = openStore();
+    const contents = {
+      assembly: { key: "a", name: "a" },
+      bodies: [],
+      joints: [],
+      drives: [],
+      actuators: [],
+      sensors: [],
+      reanchoredAssemblies: [],
+      removedTags: [],
+      addedTags: [],
+    };
+    store.update({ ...store.state, pendingDeleteAssembly: { key: "a", contents } });
+    linkDiagramNodes(store, output("v2", "port_2"), input("cyl1", "cap"));
+    expect(store.state.pendingDeleteAssembly).toBeNull();
+  });
+
   it("shows the refusal when the link no longer holds at confirm time", () => {
     const { store, updates } = openStore();
     // A held link whose drive does not exist any more in the document.

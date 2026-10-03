@@ -3,6 +3,10 @@ import {
   AlignRequestSchema,
   type AlignResponse,
   AlignResponseSchema,
+  type AssemblyDeletion,
+  type AssemblyDeletionResponse,
+  AssemblyDeletionResponseSchema,
+  AssemblyDeletionSchema,
   type AssemblyPlacementResponse,
   AssemblyPlacementResponseSchema,
   MoveBodyRequestSchema,
@@ -29,6 +33,12 @@ export interface AssemblyRoutes {
   renameAssembly(pantinId: string, key: string, name: string): Promise<PantinResponse>;
   // Refused by the core while the assembly holds bodies.
   deleteAssembly(pantinId: string, key: string): Promise<PantinResponse>;
+  // Dry run of the deletion with contents (ADR 0037): what would go, by name.
+  // A 409 carries the core's message when another assembly's item blocks it.
+  previewAssemblyDeletion(pantinId: string, key: string): Promise<AssemblyDeletion>;
+  // `?contents=delete`: the assembly with its bodies, joints, drives,
+  // actuators and sensors, in one step.
+  deleteAssemblyWithContents(pantinId: string, key: string): Promise<AssemblyDeletionResponse>;
   renameAssemblyKey(pantinId: string, key: string, newKey: string): Promise<RenamedTagsResponse>;
   renameTagKey(pantinId: string, jointId: string, tagKey: string): Promise<RenamedTagsResponse>;
   moveBody(pantinId: string, bodyId: string, assembly: string): Promise<RenamedTagsResponse>;
@@ -61,6 +71,14 @@ export function assemblyRoutes(send: SendJson): AssemblyRoutes {
     },
     deleteAssembly: (pantinId, key) =>
       send(assemblyUrl(pantinId, key), jsonRequest("DELETE"), PantinResponseSchema),
+    previewAssemblyDeletion: (pantinId, key) =>
+      send(assemblyUrl(pantinId, key, "/deletion"), jsonRequest("GET"), AssemblyDeletionSchema),
+    deleteAssemblyWithContents: (pantinId, key) =>
+      send(
+        `${assemblyUrl(pantinId, key)}?contents=delete`,
+        jsonRequest("DELETE"),
+        AssemblyDeletionResponseSchema,
+      ),
     renameAssemblyKey: async (pantinId, key, newKey) => {
       const request: RenameKeyRequest = { key: newKey };
       const url = assemblyUrl(pantinId, key, "/key");

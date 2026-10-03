@@ -1,4 +1,5 @@
 import type { RenamedTag, RenamedTagsResponse } from "@pantin/protocol";
+import { withAssemblyContentsDeleted } from "../assembly-deletion-state.ts";
 import {
   type AssemblyDisplay,
   withAssemblyHiddenToggled,
@@ -10,11 +11,12 @@ import { createTranslator, pluralKey } from "../i18n/translate.ts";
 import { infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { nodeSelection } from "../selection.ts";
+import { withAssemblyDeleteRequested } from "../session-state.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { bodyMoveOf } from "../tree/tree-drop.ts";
 import { withRevealedNode, withSelection, withTreeStateCarried } from "../tree/tree-state.ts";
 import type { ViewerState } from "../viewer-state.ts";
-import { editPantin } from "./pantin-actions.ts";
+import { editPantin, refreshPantinList } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Assemblies and keys (ADR 0019). Every key change may rename tags: the core
@@ -130,7 +132,7 @@ export async function createAssembly(store: ViewerStore, pantinId: string): Prom
   store.update({ ...withRevealedNode(store.state, nodeId), renamingNodeId: nodeId });
 }
 
-/** Only an empty assembly can go: the core refuses the others, with a message. */
+/** An empty assembly goes at once, as before: nothing is lost, no prompt. */
 export async function deleteAssembly(store: ViewerStore, pantinId: string, key: string) {
   const pantin = await editPantin(store, pantinId, (id) => store.ports.api.deleteAssembly(id, key));
   if (pantin !== undefined) {
@@ -140,4 +142,40 @@ export async function deleteAssembly(store: ViewerStore, pantinId: string, key: 
       assemblyDisplay,
     });
   }
+}
+
+/**
+ * Any other assembly: the core's dry run first (ADR 0037 point 7). Its
+ * refusal (409) goes to the message line and no prompt opens.
+ */
+export async function requestAssemblyDeletion(
+  store: ViewerStore,
+  pantinId: string,
+  key: string,
+): Promise<void> {
+  await store.run(
+    () => store.ports.api.previewAssemblyDeletion(pantinId, key),
+    (current, contents) =>
+      store.requestedPantinId === pantinId
+        ? withAssemblyDeleteRequested(current, contents)
+        : current,
+  );
+}
+
+/** "Supprimer" on the prompt: the deletion with contents, then the viewer forgets what went. */
+export async function confirmDeleteAssembly(store: ViewerStore): Promise<void> {
+  const open = store.state.openPantin;
+  const pending = store.state.pendingDeleteAssembly;
+  const exists = open?.document.assemblies.some(({ key }) => key === pending?.key) ?? false;
+  if (open === null || pending === null || !exists) {
+    return;
+  }
+  await store.run(
+    () => store.ports.api.deleteAssemblyWithContents(open.id, pending.key),
+    (current, response) =>
+      store.requestedPantinId === response.pantin.id
+        ? withAssemblyContentsDeleted(current, response)
+        : current,
+  );
+  await refreshPantinList(store);
 }
