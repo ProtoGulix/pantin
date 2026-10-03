@@ -246,6 +246,6 @@ describe("sensor keys", () => {
     expect(SensorResponseSchema.parse(moved.json).sensor.assembly).toBe("spare");
     const refused = await sendRaw(axis.server, "DELETE", "/api/pantins/axis/assemblies/spare");
     expect(refused.status).toBe(409);
-    expect(JSON.stringify(refused.json)).toContain('holds sensor \\"extended\\"');
+    expect(JSON.stringify(refused.json)).toContain("holds 1 sensor");
   });
 });

@@ -176,7 +176,7 @@ describe("assembly display names and deletion", () => {
     const { document, assembly } = createAssembly(PRESS, "Spare");
     expect(deleteAssembly(document, assembly.key).assemblies).toEqual(PRESS.assemblies);
     expect(() => deleteAssembly(PRESS, "id1s0400125e-0")).toThrow(
-      'Assembly "ID1S0400125E_0" still holds 2 bodies. Move or delete them first.',
+      'Assembly "ID1S0400125E_0" still holds 2 bodies, 1 joint. Delete it with its contents (DELETE with contents=delete), or move or delete them first.',
     );
   });
 });
@@ -225,7 +225,7 @@ describe("assembly edits and actuators (ADR 0028)", () => {
       actuators: [{ ...cylinder, feed: undefined, joints: [] }],
     };
     expect(() => deleteAssembly(emptied, "id1s0400125e-0")).toThrow(
-      'Assembly "ID1S0400125E_0" still holds actuator "cylinder". Move or delete it first.',
+      'Assembly "ID1S0400125E_0" still holds 1 actuator.',
     );
   });
 });
@@ -234,7 +234,7 @@ describe("assembly deletion and tag keys with drives (ADR 0022)", () => {
   it("refuses to delete an assembly that still holds a drive", () => {
     const emptied = { ...withValve, bodies: [], joints: [] };
     expect(() => deleteAssembly(emptied, "id1s0400125e-0")).toThrow(
-      'Assembly "ID1S0400125E_0" still holds drive "valve". Move or delete it first.',
+      'Assembly "ID1S0400125E_0" still holds 1 drive.',
     );
   });
 

@@ -12,7 +12,11 @@ import { type OpenPantin, type ServiceContext, toResponse } from "./open-pantins
 // of the joints: one that no actuator moves any more stops, one that an
 // actuator moves now forgets its setpoint (its tag is gone, ADR 0028 point 9).
 
-function tidyJoints(openPantin: OpenPantin, before: readonly string[], after: readonly string[]) {
+export function tidyJoints(
+  openPantin: OpenPantin,
+  before: readonly string[],
+  after: readonly string[],
+) {
   for (const jointId of before.filter((id) => !after.includes(id))) {
     openPantin.jointVelocities.delete(jointId);
   }

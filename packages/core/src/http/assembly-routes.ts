@@ -1,5 +1,6 @@
 import {
   AlignRequestSchema,
+  AssemblyDeletionQuerySchema,
   MoveBodyRequestSchema,
   RenameKeyRequestSchema,
   RenameRequestSchema,
@@ -71,11 +72,28 @@ export const ASSEMBLY_ROUTES: readonly Route[] = [
     pattern: ASSEMBLY,
     handle: async (context) => {
       const key = assemblyKeyOf(context);
-      sendJson(
-        context.response,
-        200,
-        await context.service.deleteAssembly(pantinIdOf(context), key),
+      const pantinId = pantinIdOf(context);
+      const { contents } = parseWithSchema(
+        AssemblyDeletionQuerySchema,
+        Object.fromEntries(context.query),
+        "The deletion query",
       );
+      const answer =
+        contents === "delete"
+          ? await context.service.deleteAssemblyWithContents(pantinId, key)
+          : await context.service.deleteAssembly(pantinId, key);
+      sendJson(context.response, 200, answer);
+    },
+  },
+  {
+    method: "GET",
+    pattern: [...ASSEMBLY, "deletion"],
+    handle: async (context) => {
+      const answer = await context.service.previewAssemblyDeletion(
+        pantinIdOf(context),
+        assemblyKeyOf(context),
+      );
+      sendJson(context.response, 200, answer);
     },
   },
   {

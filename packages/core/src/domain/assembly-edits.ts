@@ -2,6 +2,7 @@ import type { Assembly, PantinDocument, Placement } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { newAssembly } from "./assemblies.ts";
+import { contentsOfAssembly, describeContents, findAssembly } from "./assembly-contents.ts";
 import { reframeMovedBody } from "./move-body-frames.ts";
 import { toPlacement, unitTransform } from "./rigid-transform.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
@@ -9,14 +10,6 @@ import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
 // Assembly and joint keys change only here, drive keys in drive-rules.ts and
 // sensor keys in sensor-rules.ts: the only edits that rename tags.
-
-function findAssembly(document: PantinDocument, key: string): Assembly {
-  const assembly = document.assemblies.find((candidate) => candidate.key === key);
-  if (assembly === undefined) {
-    throw new ApiError("not_found", `This Pantin has no assembly "${key}".`);
-  }
-  return assembly;
-}
 
 export function createAssembly(
   document: PantinDocument,
@@ -39,28 +32,16 @@ export function renameAssembly(
   return { ...document, assemblies };
 }
 
+// Only an empty assembly goes: the cascade is deleteAssemblyWithContents
+// (ADR 0037), which the message points to.
 export function deleteAssembly(document: PantinDocument, key: string): PantinDocument {
   const assembly = findAssembly(document, key);
-  const count = document.bodies.filter((body) => body.assembly === key).length;
-  if (count > 0) {
-    const bodies = count === 1 ? "1 body" : `${count} bodies`;
+  const holds = describeContents(contentsOfAssembly(document, key));
+  if (holds !== "") {
     throw new ApiError(
       "conflict",
-      `Assembly "${assembly.name}" still holds ${bodies}. Move or delete them first.`,
+      `Assembly "${assembly.name}" still holds ${holds}. Delete it with its contents (DELETE with contents=delete), or move or delete them first.`,
     );
-  }
-  for (const [kind, owners] of [
-    ["drive", document.drives],
-    ["actuator", document.actuators],
-    ["sensor", document.sensors],
-  ] as const) {
-    const ids = owners.filter((owner) => owner.assembly === key).map(({ id }) => id);
-    if (ids.length > 0) {
-      throw new ApiError(
-        "conflict",
-        `Assembly "${assembly.name}" still holds ${kind} "${ids.join('", "')}". Move or delete it first.`,
-      );
-    }
   }
   return { ...document, assemblies: document.assemblies.filter((item) => item.key !== key) };
 }

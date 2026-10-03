@@ -132,7 +132,7 @@ describe("assemblies", () => {
     expect(deleted.status).toBe(200);
     const refused = await sendRaw(server, "DELETE", "/api/pantins/axis/assemblies/rail");
     expect(refused.status).toBe(409);
-    expect(refused.body).toContain("Move or delete them first");
+    expect(refused.body).toContain("contents=delete");
   });
 
   it("moves a body with its parent joint, whose tags follow", async () => {

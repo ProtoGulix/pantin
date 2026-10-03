@@ -19,6 +19,7 @@ import {
 } from "../domain/assembly-edits.ts";
 import { renamedTags } from "../domain/tags.ts";
 import { parseWithSchema } from "../domain/validation.ts";
+import { deleteAssemblyWithContentsOf, previewAssemblyDeletion } from "./assembly-deletion.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
@@ -79,6 +80,10 @@ export function assemblyOperations(context: ServiceContext) {
       editPantin(context, pantinId, (document) => renameAssembly(document, key, name)),
     deleteAssembly: (pantinId: PantinId, key: string) =>
       editPantin(context, pantinId, (document) => deleteAssembly(document, key)),
+    previewAssemblyDeletion: (pantinId: PantinId, key: string) =>
+      previewAssemblyDeletion(context, pantinId, key),
+    deleteAssemblyWithContents: (pantinId: PantinId, key: string) =>
+      deleteAssemblyWithContentsOf(context, pantinId, key),
     renameAssemblyKey: (pantinId: PantinId, key: string, newKey: string) =>
       editWithTags(context, pantinId, (document) => renameAssemblyKey(document, key, newKey)),
     renameTagKey: (pantinId: PantinId, jointId: string, tagKey: string) =>

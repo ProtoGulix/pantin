@@ -25,7 +25,7 @@ import { loadPantin, type OpenPantin, type ServiceContext, toResponse } from "./
 // tidies the runtime state, so that nothing stale comes back: a changed or
 // deleted drive forgets its commands, state, port states, feedback and fault.
 
-function forgetDriveRuntimeState(
+export function forgetDriveRuntimeState(
   context: ServiceContext,
   openPantin: OpenPantin,
   driveId: string,

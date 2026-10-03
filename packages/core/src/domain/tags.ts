@@ -223,16 +223,37 @@ function ownerId(owner: TagOwner): string {
   }
 }
 
+const tagKeyOf = (entry: TagEntry) => `${ownerId(entry.owner)}/${entry.member}`;
+
 /**
  * Every tag whose name differs between two versions of a document, paired by
  * owner and member. A tag that appears or disappears (a joint that became
  * fixed, or driven) is not a rename, so it is not listed.
  */
 export function renamedTags(before: PantinDocument, after: PantinDocument): RenamedTag[] {
-  const key = (entry: TagEntry) => `${ownerId(entry.owner)}/${entry.member}`;
-  const oldNames = new Map(tagEntries(before).map((entry) => [key(entry), entry.name]));
+  const oldNames = new Map(tagEntries(before).map((entry) => [tagKeyOf(entry), entry.name]));
   return tagEntries(after).flatMap((entry) => {
-    const from = oldNames.get(key(entry));
+    const from = oldNames.get(tagKeyOf(entry));
     return from === undefined || from === entry.name ? [] : [{ from, to: entry.name }];
   });
+}
+
+/**
+ * The tag names that exist only before, and only after, paired by owner and
+ * member like `renamedTags`: a renamed tag is in neither list.
+ */
+export function vanishedAndAppearedTags(
+  before: PantinDocument,
+  after: PantinDocument,
+): { removedTags: string[]; addedTags: string[] } {
+  const beforeEntries = tagEntries(before);
+  const afterEntries = tagEntries(after);
+  const keysBefore = new Set(beforeEntries.map(tagKeyOf));
+  const keysAfter = new Set(afterEntries.map(tagKeyOf));
+  return {
+    removedTags: beforeEntries
+      .filter((entry) => !keysAfter.has(tagKeyOf(entry)))
+      .map((e) => e.name),
+    addedTags: afterEntries.filter((entry) => !keysBefore.has(tagKeyOf(entry))).map((e) => e.name),
+  };
 }
