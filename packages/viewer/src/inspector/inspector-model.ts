@@ -16,6 +16,7 @@ import { actuatorGroups } from "./actuator-inspector.ts";
 import { driveGroups } from "./drive-inspector.ts";
 import { type InspectorContent, type InspectorContext, NOTHING } from "./inspector-context.ts";
 import { nodeInspectorContent } from "./node-inspector.ts";
+import { buildPositioningView, type PositioningView } from "./positioning-view.ts";
 import { sensorGroups } from "./sensor-inspector.ts";
 
 // The right-hand panel as data (ADR 0030 point 2): the only properties panel,
@@ -40,6 +41,9 @@ export interface InspectorView {
   driveForm: DriveFormView | null;
   actuatorForm: ActuatorFormView | null;
   sensorForm: SensorFormView | null;
+  // The "Positionnement" section (ADR 0039), above the groups; null when the
+  // selection cannot be placed.
+  positioning: PositioningView | null;
   groups: PropertyGroup[];
   // Said instead of an empty grid.
   note: string | null;
@@ -134,6 +138,7 @@ function emptyInspector(t: Translate): InspectorView {
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,
+    positioning: null,
     groups: [],
     note: null,
     hints: [],
@@ -169,6 +174,7 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
     driveForm: buildDriveFormView(state, document, t),
     actuatorForm: buildActuatorFormView(state, document, t),
     sensorForm: buildSensorFormView(state, document, t),
+    positioning: buildPositioningView(state, t),
     groups,
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),

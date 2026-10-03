@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { fieldsToPlacement } from "../placement-units.ts";
 import { hingeJoint, pantinResponse, railBody, sourceOf, stepBody } from "../test-fixtures.ts";
-import { assemblyNodeId, bodyNodeId } from "../tree/node-ids.ts";
+import { bodyNodeId } from "../tree/node-ids.ts";
+import { assemblyPlacementGroup } from "./placement-groups.ts";
 import { titledNodeGroups } from "./properties-test-helpers.ts";
 
-// The Placement group (ADR 0034 points 1, 2 and 6).
+// The placement fields of an assembly and the read only group of a body (ADR 0034
+// points 1, 2 and 6); the section that shows the first is positioning-view.ts.
 
 const t = createTranslator("fr");
 const turned = fieldsToPlacement({ x: 250, y: -10, z: 0.5, rx: 0, ry: 0, rz: 90 });
@@ -31,13 +33,17 @@ function twoAssemblies(extraBody?: Partial<Body>): PantinResponse {
 
 function placementGroup(pantin: PantinResponse, nodeId: string) {
   const groups = titledNodeGroups(sourceOf({ openPantin: pantin }), nodeId, t);
-  return groups.find((group) => group.id === "assemblyPlacement");
+  return groups.find((group) => group.id === "bodyPlacement");
+}
+
+function assemblyFields(pantin: PantinResponse, key: string) {
+  const assembly = pantin.document.assemblies.find((candidate) => candidate.key === key);
+  return assembly === undefined ? undefined : assemblyPlacementGroup(assembly, pantin, t);
 }
 
 describe("placement of an assembly", () => {
   it("lists X, Y, Z in mm and RX, RY, RZ in degrees, editable, with the anchor first", () => {
-    const group = placementGroup(twoAssemblies(), assemblyNodeId("press", "clevis"));
-    expect(group?.title).toBe("Placement");
+    const group = assemblyFields(twoAssemblies(), "clevis");
     expect(group?.rows.map((row) => [row.label, row.value])).toEqual([
       ["Repère", "main"],
       ["X (mm)", "250"],
@@ -55,7 +61,7 @@ describe("placement of an assembly", () => {
   });
 
   it("names the world as the frame of an assembly with no incoming joint", () => {
-    const group = placementGroup(twoAssemblies(), assemblyNodeId("press", "main"));
+    const group = assemblyFields(twoAssemblies(), "main");
     expect(group?.rows[0]).toMatchObject({ label: "Repère", value: "monde" });
   });
 });

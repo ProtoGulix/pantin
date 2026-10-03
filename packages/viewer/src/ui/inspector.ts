@@ -6,6 +6,7 @@ import { renderActuatorForm, renderDriveForm, renderSensorForm } from "./device-
 import { button, element, iconButton } from "./dom.ts";
 import { captureFocus, focusField, restoreFocus } from "./focus.ts";
 import { showInspectorLive } from "./inspector-live.ts";
+import { renderPositioning } from "./inspector-positioning.ts";
 import { renderJointForm } from "./joint-form.ts";
 import { JointSliderControl } from "./joint-slider.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -95,6 +96,7 @@ export class Inspector {
           ? null
           : element("h3", { className: "inspector__subject", text: view.subject }),
         deviceButtons(view, t, intents),
+        view.positioning === null ? null : renderPositioning(view.positioning, t, intents),
       ].filter((part) => part !== null),
     );
     this.lower.replaceChildren(

@@ -112,3 +112,23 @@
   padding: 0;
   border-bottom: 0;
 }
+
+.positioning {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.positioning__tool[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.positioning__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 4px;
+  line-height: var(--row-height);
+  background: var(--surface-2);
+}

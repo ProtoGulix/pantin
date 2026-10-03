@@ -14,8 +14,10 @@ export type PropertyGroupId =
   | "mesh"
   | "sourceNodes"
   | "placement"
-  // An assembly's or a body's placement in its anchor frame (ADR 0034).
+  // An assembly's placement in its anchor frame (ADR 0034), shown by the
+  // "Positionnement" section (ADR 0039); a body's, read only, in the grid.
   | "assemblyPlacement"
+  | "bodyPlacement"
   | "parameters"
   | "joints"
   // Inspector groups (ADR 0030).

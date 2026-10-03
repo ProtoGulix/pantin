@@ -45,7 +45,7 @@ const HINGE_GROUPS = [
     ],
   ],
   [
-    "Position",
+    "Repère de la liaison",
     [
       ["Axe", "Z"],
       ["Sens", "Positif (+)"],

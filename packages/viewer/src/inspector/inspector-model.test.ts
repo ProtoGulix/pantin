@@ -224,11 +224,7 @@ describe("index of the Pantin and of an assembly", () => {
 
   it("limits an assembly's index to its own devices", () => {
     const view = selecting(assemblyNodeId("press", "b"));
-    expect(view.groups.map((group) => group.id)).toEqual([
-      "general",
-      "assemblyPlacement",
-      "driveIndex",
-    ]);
+    expect(view.groups.map((group) => group.id)).toEqual(["general", "driveIndex"]);
     expect(rowsOf(view.groups, "driveIndex").map((row) => row.label)).toEqual(["inv"]);
   });
 });

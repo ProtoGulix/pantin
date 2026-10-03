@@ -78,7 +78,7 @@ describe("inspector of an assembly", () => {
   const view = viewOf(assemblyNodeId("press", "b"));
 
   it("shows its properties and the hints of the families it has no device of", () => {
-    expect(ids(view.groups)).toEqual(["general", "assemblyPlacement"]);
+    expect(ids(view.groups)).toEqual(["general"]);
     expect(view.subject).toBe(document.assemblies[1]?.name);
     expect(view.hints).toHaveLength(3);
   });
@@ -93,7 +93,6 @@ describe("inspector of an assembly", () => {
   it("limits the index to its own devices", () => {
     expect(ids(viewOf(assemblyNodeId("press", "a")).groups)).toEqual([
       "general",
-      "assemblyPlacement",
       "driveIndex",
       "actuatorIndex",
       "sensorIndex",
@@ -194,6 +193,29 @@ describe("inspector of a joint", () => {
     const form = initialJointForm(document.bodies);
     expect(buildInspectorView({ ...opened, jointForm: form }, t).jointForm).not.toBeNull();
     expect(view.jointForm).toBeNull();
+  });
+});
+
+describe("positioning section and joint titles (ADR 0039)", () => {
+  it("puts the placement fields in the section, not in the grid, for an assembly", () => {
+    const view = viewOf(assemblyNodeId("press", "b"));
+    expect(view.positioning?.group?.rows).toHaveLength(7);
+    expect(view.groups.map((group) => group.id)).not.toContain("assemblyPlacement");
+  });
+
+  it("has a section for a body, none for a joint or the Pantin", () => {
+    expect(viewOf(bodyNodeId("press", "s1")).positioning?.bodyLine).toContain(
+      "Placed with the assembly",
+    );
+    expect(viewOf(jointNodeId("press", "j1")).positioning).toBeNull();
+    expect(viewOf(pantinNodeId("press")).positioning).toBeNull();
+  });
+
+  it("gives a joint distinct titles for its frame and its live position", () => {
+    const titles = viewOf(jointNodeId("press", "j1")).groups.map((group) => group.title);
+    expect(titles).toContain("Joint frame");
+    expect(titles).toContain("Position");
+    expect(new Set(titles).size).toBe(titles.length);
   });
 });
 
