@@ -13,6 +13,7 @@ export type MenuCommand =
   | "open"
   | "save"
   | "import"
+  | "cleanOrphans"
   | "close"
   | "newJoint"
   | "rename"

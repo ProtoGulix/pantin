@@ -64,6 +64,7 @@ describe("menu bar model", () => {
       ["Ouvrir…", null],
       ["Enregistrer", "Ctrl+S"],
       ["Importer…", null],
+      ["Nettoyer les fichiers orphelins…", null],
       ["Fermer", null],
     ]);
   });
@@ -71,6 +72,15 @@ describe("menu bar model", () => {
   it("in the list view, shows the welcome dialog, opens, frames nothing and switches language", () => {
     expect(enabledCommands(listing)).toEqual(LIST_VIEW_COMMANDS);
     expect(enabledCommands(editing(false))).not.toContain("welcome");
+  });
+
+  it("enables the orphan cleanup only with a Pantin open, idle and not importing", () => {
+    expect(enabledCommands(listing)).not.toContain("cleanOrphans");
+    expect(enabledCommands(editing(false))).toContain("cleanOrphans");
+    const busy = { ...editing(false), pendingRequestCount: 1 };
+    expect(enabledCommands(busy)).not.toContain("cleanOrphans");
+    const importing = { ...editing(false), importInProgress: true };
+    expect(enabledCommands(importing)).not.toContain("cleanOrphans");
   });
 
   it("enables Enregistrer only with unsaved changes", () => {

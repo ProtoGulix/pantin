@@ -69,6 +69,7 @@ export function withAssemblyContentsDeleted(
     {
       ...state,
       pendingDeleteAssembly: null,
+      pendingOrphanCleanup: null,
       pendingDeleteBodyId: null,
       pendingDeleteJointId: null,
     },

@@ -284,6 +284,15 @@ Facts checked in the code on 2026-10-03:
   `listMeshFileNames` stays as it is: when the import avoids names, it
   must count every name, directories included.
 - `mesh-lifecycle.ts` exports `runQueued` and `meshPathsToKeep`.
+- Accepted limits of the viewer (found at review of I2): the result
+  message keeps the freed size formatted in the language of the moment,
+  so a language switch re-translates the text but not the size. If a
+  batch fails after earlier batches succeeded, the viewer shows the
+  error and keeps the prompt without reporting the partial deletions; a
+  retry lists those files as skipped. The core re-checks every name, so
+  neither case is unsafe.
+- Pinned on Node 24: French sizes read `1,2 Mo` with a narrow no-break
+  space (U+202F); English bytes read `512 byte`.
 - To verify next: the exact `Intl.NumberFormat` output in French
   (NOT VERIFIED). On Windows, `unlink` of a file the viewer or another
   program keeps open (`EBUSY` or `EPERM`) is NOT VERIFIED. It is

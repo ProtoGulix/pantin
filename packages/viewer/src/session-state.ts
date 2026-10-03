@@ -30,6 +30,7 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
+    pendingOrphanCleanup: null,
     pendingFeedReplacement: null,
     jointForm: null,
   };
@@ -48,6 +49,7 @@ export function withCloseRequested(state: ViewerState): ViewerState {
         pendingDeleteBodyId: null,
         pendingDeleteJointId: null,
         pendingDeleteAssembly: null,
+        pendingOrphanCleanup: null,
         pendingFeedReplacement: null,
       }
     : withPantinClosed(state);
@@ -108,6 +110,7 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     pendingDeleteBodyId: bodyExists ? bodyId : null,
     pendingDeleteJointId: jointExists ? jointId : null,
     pendingDeleteAssembly: null,
+    pendingOrphanCleanup: null,
     pendingFeedReplacement: null,
     contextMenu: null,
     closePrompt: false,
@@ -120,7 +123,12 @@ export function withDeleteCancelled(state: ViewerState): ViewerState {
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
+    pendingOrphanCleanup: null,
   };
+}
+
+export function withOrphanCleanupCancelled(state: ViewerState): ViewerState {
+  return { ...state, pendingOrphanCleanup: null };
 }
 
 /** The core's preview of an assembly deletion arrived: ask, with what would go. */
@@ -140,6 +148,7 @@ export function withAssemblyDeleteRequested(
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: { key: contents.assembly.key, contents },
+    pendingOrphanCleanup: null,
     pendingFeedReplacement: null,
     contextMenu: null,
     closePrompt: false,

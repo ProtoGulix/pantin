@@ -276,3 +276,19 @@ describe("deleting an assembly with its contents", () => {
     expect(withAssemblyDeleteRequested(closing, contents)).toBe(closing);
   });
 });
+
+describe("pendingOrphanCleanup (ADR 0038)", () => {
+  const list = { files: [{ fileName: "a.glb", sizeInBytes: 5 }], totalSizeInBytes: 5 };
+  const asking: ViewerState = { ...editing(false), pendingOrphanCleanup: list };
+
+  it("is reset by a close request, a delete request, closing and opening another Pantin", () => {
+    const unsaved = { ...asking, openPantin: pantinResponse(true) };
+    expect(withCloseRequested(unsaved).pendingOrphanCleanup).toBeNull();
+    expect(
+      withDeleteRequested(asking, bodyNodeId("press", "rail")).pendingOrphanCleanup,
+    ).toBeNull();
+    expect(withPantinClosed(asking).pendingOrphanCleanup).toBeNull();
+    const another = { ...pantinResponse(false), id: "other" };
+    expect(withOpenPantin(asking, another).pendingOrphanCleanup).toBeNull();
+  });
+});

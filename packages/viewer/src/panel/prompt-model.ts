@@ -1,6 +1,8 @@
+import type { OrphanMeshList } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { assemblyDeletionDetails } from "./assembly-deletion-details.ts";
+import { orphanCleanupDetails, orphanCleanupPromptText } from "./orphan-cleanup-details.ts";
 
 // The inline confirmation line (never window.confirm): closing with unsaved
 // changes, or deleting a body, a joint or an assembly with its contents.
@@ -11,6 +13,8 @@ export type PromptAction =
   | "cancelClose"
   | "confirmDelete"
   | "cancelDelete"
+  | "confirmOrphanCleanup"
+  | "cancelOrphanCleanup"
   | "confirmReplaceFeed"
   | "cancelReplaceFeed";
 
@@ -36,6 +40,22 @@ function deletePrompt(
     actions: [
       { action: "confirmDelete", label: t("prompt.delete.confirm"), primary: true },
       { action: "cancelDelete", label: t("prompt.delete.cancel"), primary: false },
+    ],
+  };
+}
+
+function orphanCleanupPrompt(
+  orphans: OrphanMeshList,
+  state: ViewerState,
+  t: Translate,
+): PromptView {
+  return {
+    text: orphanCleanupPromptText(orphans, state.language),
+    details: orphanCleanupDetails(orphans, state.language),
+    enabled: state.pendingRequestCount === 0,
+    actions: [
+      { action: "confirmOrphanCleanup", label: t("prompt.orphanCleanup.confirm"), primary: true },
+      { action: "cancelOrphanCleanup", label: t("prompt.orphanCleanup.cancel"), primary: false },
     ],
   };
 }
@@ -80,6 +100,10 @@ export function buildPromptView(state: ViewerState, t: Translate): PromptView | 
     }
     const text = t("prompt.deleteAssembly.text", { name: assembly.contents.assembly.name });
     return deletePrompt(text, state, t, assemblyDeletionDetails(assembly.contents, t));
+  }
+  const orphans = state.pendingOrphanCleanup;
+  if (orphans !== null) {
+    return orphanCleanupPrompt(orphans, state, t);
   }
   const joint = open.document.joints.find(
     (candidate) => candidate.id === state.pendingDeleteJointId,

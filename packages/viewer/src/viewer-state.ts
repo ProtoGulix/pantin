@@ -2,6 +2,7 @@ import type {
   AssemblyDeletion,
   Body,
   FaultsResponse,
+  OrphanMeshList,
   PantinResponse,
   PantinSummary,
 } from "@pantin/protocol";
@@ -85,6 +86,8 @@ export interface ViewerState {
   // Same for an assembly with its contents (ADR 0037): the core's preview,
   // shown in the prompt and kept to name what the user agreed to remove.
   pendingDeleteAssembly: PendingAssemblyDeletion | null;
+  // The orphan mesh files the core listed (ADR 0038), waiting for the user to confirm.
+  pendingOrphanCleanup: OrphanMeshList | null;
   // The open "New joint" form, or null.
   jointForm: JointFormState | null;
   // Hidden and isolated assemblies of the 3D view (ADR 0019): never saved.
@@ -157,6 +160,7 @@ export function initialViewerState(
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
+    pendingOrphanCleanup: null,
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
@@ -199,6 +203,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
+    pendingOrphanCleanup: null,
     jointForm: null,
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,

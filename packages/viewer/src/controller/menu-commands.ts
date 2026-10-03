@@ -16,6 +16,7 @@ import {
   togglePerspective,
   toggleReverseWheel,
 } from "./navigation-actions.ts";
+import { requestOrphanCleanup } from "./orphan-cleanup-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
 import { deleteSensor } from "./sensor-actions.ts";
 import { requestClose, requestDelete } from "./session-actions.ts";
@@ -124,6 +125,9 @@ export function runMenuCommand(
       void savePantin(store);
       return;
     case "import":
+      return;
+    case "cleanOrphans":
+      void requestOrphanCleanup(store);
       return;
     case "gizmoMove":
       toggleGizmo(store, "move");

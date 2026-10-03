@@ -49,6 +49,11 @@ const MENUS: readonly MenuDefinition[] = [
         "menubar.file.import",
         (context) => context.editing && !context.busy && !context.importing,
       ),
+      item(
+        "cleanOrphans",
+        "menubar.file.cleanOrphans",
+        (context) => context.editing && !context.busy && !context.importing,
+      ),
       "separator",
       item("close", "menubar.file.close", (context) => context.editing),
     ],
