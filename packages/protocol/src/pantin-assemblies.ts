@@ -7,10 +7,11 @@ import type { z } from "zod";
 // anchor rules of ADR 0033: an assembly has at most one incoming joint between
 // assemblies and anchors form a forest. The core derives the anchors again
 // for pose computation (core/domain/assembly-anchors.ts); this module only
-// refuses documents where that derivation would be ambiguous.
+// refuses documents where that derivation would be ambiguous. Last, the
+// structure tree of ADR 0040: a parent must exist and parents form no loop.
 
 type DocumentShape = {
-  assemblies: readonly { key: string }[];
+  assemblies: readonly { key: string; parent?: string | undefined }[];
   bodies: readonly { id: string; assembly: string }[];
   joints: readonly { id: string; parent: string; child: string; tagKey: string }[];
   drives: readonly { id: string; assembly: string; tagKey: string }[];
@@ -38,6 +39,7 @@ export function assemblyIssues(document: DocumentShape, context: z.RefinementCtx
       });
     }
   }
+  parentIssues(document.assemblies, keys, context);
   tagKeyIssues(document, context);
   anchorIssues(document, context);
 }
@@ -132,6 +134,52 @@ function tagKeyIssues(document: DocumentShape, context: z.RefinementCtx): void {
         });
       }
       seen.add(tagPrefix);
+    }
+  }
+}
+
+// Reports each unknown parent, then the first loop met when following parents
+// up from every assembly (a self parent is a loop of one). Duplicate keys are
+// reported above, so the last assembly of a key wins here.
+function parentIssues(
+  assemblies: DocumentShape["assemblies"],
+  keys: ReadonlySet<string>,
+  context: z.RefinementCtx,
+): void {
+  const parentOf = new Map<string, string>();
+  for (const [index, assembly] of assemblies.entries()) {
+    if (assembly.parent === undefined) {
+      continue;
+    }
+    if (keys.has(assembly.parent)) {
+      parentOf.set(assembly.key, assembly.parent);
+      continue;
+    }
+    context.addIssue({
+      code: "custom",
+      path: ["assemblies", index, "parent"],
+      message: `Assembly "${assembly.key}" has parent "${assembly.parent}", which does not exist. Create that assembly or remove the parent.`,
+    });
+  }
+  for (const start of parentOf.keys()) {
+    const path: string[] = [];
+    let current: string | undefined = start;
+    while (current !== undefined) {
+      const loopStart = path.indexOf(current);
+      if (loopStart >= 0) {
+        const members = path.slice(loopStart).map((key) => `"${key}"`);
+        context.addIssue({
+          code: "custom",
+          path: ["assemblies"],
+          message:
+            members.length === 1
+              ? `Assembly ${members[0]} is its own parent; an assembly cannot contain itself.`
+              : `Assembly parents form a loop: ${members.join(" in ")} in "${current}". An assembly cannot contain itself; remove one parent.`,
+        });
+        return;
+      }
+      path.push(current);
+      current = parentOf.get(current);
     }
   }
 }

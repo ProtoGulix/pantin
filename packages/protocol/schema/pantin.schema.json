@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 10
+      "const": 11
     },
     "name": {
       "type": "string",
@@ -68,6 +68,10 @@
             },
             "required": ["translation", "rotation"],
             "additionalProperties": false
+          },
+          "parent": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
           }
         },
         "required": ["key", "name", "placement"],

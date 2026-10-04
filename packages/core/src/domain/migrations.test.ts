@@ -83,6 +83,21 @@ describe("migratePantinDocument to version 7 (ADR 0025)", () => {
   });
 });
 
+describe("migratePantinDocument to version 11 (ADR 0040)", () => {
+  it("gives no assembly a parent, so existing structures stay flat", () => {
+    const assemblies = [
+      { key: "a", name: "A" },
+      { key: "b", name: "B" },
+    ];
+    const migrated = migratePantinDocument(
+      { ...CURRENT_OF_V1, schema_version: 10, assemblies },
+      "p",
+    );
+    expect(migrated).toEqual({ ...CURRENT_OF_V1, assemblies });
+    expect(migrated).toMatchObject({ schema_version: 11 });
+  });
+});
+
 describe("migratePantinDocument on unusual input", () => {
   it("leaves malformed bodies and joints to the schema, which reports them", () => {
     const malformed = {

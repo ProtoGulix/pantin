@@ -18,9 +18,9 @@ import { SensorSchema } from "./sensor.ts";
 // version 6 joint sensors (ADR 0023), version 7 realistic switches (ADR 0025),
 // version 8 switch sides deduced from the stroke (ADR 0026), version 9
 // actuators apart from drives, which no longer list joints (ADR 0028), version
-// 10 a placement per assembly (ADR 0033). The core migrates older documents on
-// read.
-export const PANTIN_SCHEMA_VERSION = 10;
+// 10 a placement per assembly (ADR 0033), version 11 an optional parent per
+// assembly (ADR 0040). The core migrates older documents on read.
+export const PANTIN_SCHEMA_VERSION = 11;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";
@@ -54,10 +54,13 @@ export type SourceNode = z.infer<typeof SourceNodeSchema>;
 // from the frame of its files to the frame of its anchor, which is the world
 // or the assembly of the parent body of the joint between assemblies that
 // reaches it. The anchor is derived from the joints, never stored (ADR 0033).
+// `parent` is the key of the assembly that contains this one, absent at top
+// level. It is product structure only, independent of the anchors (ADR 0040).
 export const AssemblySchema = z.object({
   key: KeySchema,
   name: DisplayNameSchema,
   placement: PlacementSchema,
+  parent: KeySchema.optional(),
 });
 export type Assembly = z.infer<typeof AssemblySchema>;
 
