@@ -2,6 +2,7 @@ import type { AssemblyDeletion, AssemblyDeletionResponse } from "@pantin/protoco
 import { withAssemblyRemoved } from "./assembly-display.ts";
 import { FIELD_CHILD, FIELD_PARENT } from "./joints/joint-form.ts";
 import { infoMessage } from "./messages.ts";
+import { withPreviousPlacementDropped } from "./previous-placement.ts";
 import { nodeSelection } from "./selection.ts";
 import { pantinNodeId } from "./tree/node-ids.ts";
 import { withSelection } from "./tree/tree-state.ts";
@@ -89,12 +90,16 @@ export function withAssemblyContentsDeleted(
           }),
           detail: retainedMeshFiles.join(", "),
         };
+  const removedKeys = [deleted.assembly.key, ...deleted.descendantAssemblies.map(({ key }) => key)];
   return {
-    ...withFormsClosed(withSelection(shown, nodeSelection(pantinNodeId(pantin.id))), deleted),
-    assemblyDisplay: withAssemblyRemoved(shown.assemblyDisplay, [
-      deleted.assembly.key,
-      ...deleted.descendantAssemblies.map(({ key }) => key),
-    ]),
+    ...withFormsClosed(
+      withPreviousPlacementDropped(
+        withSelection(shown, nodeSelection(pantinNodeId(pantin.id))),
+        removedKeys,
+      ),
+      deleted,
+    ),
+    assemblyDisplay: withAssemblyRemoved(shown.assemblyDisplay, removedKeys),
     alignment: alignmentOutlives(shown, deleted) ? shown.alignment : null,
     message,
   };

@@ -9,6 +9,10 @@ import {
 } from "../assembly-display.ts";
 import { createTranslator, pluralKey } from "../i18n/translate.ts";
 import { infoMessage } from "../messages.ts";
+import {
+  withPreviousPlacementDropped,
+  withPreviousPlacementKeyRenamed,
+} from "../previous-placement.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { nodeSelection } from "../selection.ts";
 import { withAssemblyDeleteRequested } from "../session-state.ts";
@@ -59,7 +63,7 @@ function stateAfterKeyEdit(
       assemblyNodeId(target.pantinId, value),
     );
     const assemblyDisplay = withAssemblyKeyRenamed(before.assemblyDisplay, target.key, value);
-    return { ...carried, assemblyDisplay };
+    return withPreviousPlacementKeyRenamed({ ...carried, assemblyDisplay }, target.key, value);
   }
   return target.kind === "bodyAssembly"
     ? withRevealedNode(store.state, bodyNodeId(target.pantinId, target.bodyId))
@@ -140,7 +144,10 @@ export async function deleteAssembly(store: ViewerStore, pantinId: string, key: 
   if (pantin !== undefined) {
     const assemblyDisplay = withAssemblyRemoved(store.state.assemblyDisplay, key);
     store.update({
-      ...withSelection(store.state, nodeSelection(pantinNodeId(pantinId))),
+      ...withPreviousPlacementDropped(
+        withSelection(store.state, nodeSelection(pantinNodeId(pantinId))),
+        key,
+      ),
       assemblyDisplay,
     });
   }

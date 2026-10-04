@@ -1,5 +1,6 @@
 import type { AssemblyDeletion, PantinResponse } from "@pantin/protocol";
 import { infoMessage } from "./messages.ts";
+import { NO_PREVIOUS_PLACEMENTS } from "./previous-placement.ts";
 import { nodeSelection } from "./selection.ts";
 import { assemblyNodeId, pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
 import { withSelection } from "./tree/tree-state.ts";
@@ -21,6 +22,7 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     ...withSelection(state, null),
     listSelectedPantinId: state.openPantin?.id ?? state.listSelectedPantinId,
     openPantin: null,
+    previousPlacements: NO_PREVIOUS_PLACEMENTS,
     welcomeHidden: false,
     expandedNodeIds: new Set(),
     contextMenu: null,

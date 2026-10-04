@@ -21,6 +21,7 @@ import { DEFAULT_INSPECTOR_PREFERENCES, type InspectorPreferences } from "./layo
 import type { PanelMessage } from "./messages.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
 import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.ts";
+import { NO_PREVIOUS_PLACEMENTS, type PreviousPlacements } from "./previous-placement.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
 import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
@@ -124,6 +125,9 @@ export interface ViewerState {
   // while it lasts, and typed text that is not a number. Display state.
   placementDraft: PlacementDraft | null;
   placementInvalid: InvalidPlacementText | null;
+  // The placement each assembly had before its last placement edit (ADR 0039
+  // point 11), by assembly key, for the open Pantin only. Display state.
+  previousPlacements: PreviousPlacements;
   // The mouse preset, wheel direction, arrow step and projection of the 3D
   // view (ADR 0036), kept in the browser like the steps. Never saved.
   navigation: NavigationSettings;
@@ -190,6 +194,7 @@ export function initialViewerState(
     inspectorFocus: null,
     console: INITIAL_CONSOLE_STATE,
     ...NO_TOOL_STATE,
+    previousPlacements: NO_PREVIOUS_PLACEMENTS,
     gizmoSteps,
     navigation,
   };
@@ -224,6 +229,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     alignment: null,
     placementDraft: null,
     placementInvalid: null,
+    previousPlacements: NO_PREVIOUS_PLACEMENTS,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,

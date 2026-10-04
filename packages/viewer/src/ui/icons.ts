@@ -30,6 +30,7 @@ type ToolIcon =
   | "move"
   | "rotate"
   | "align"
+  | "restore-placement"
   | "edit"
   | "delete";
 
@@ -81,6 +82,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   "add-sensor": `M1.5 8h4v4h-4Z M7.5 7.5a3 3 0 0 1 0 5 M9.8 6a5 5 0 0 1 0 8 ${ADD_BADGE}`,
   move: "M8 1.5v13 M1.5 8h13 M6 3.5l2-2 2 2 M6 12.5l2 2 2-2 M3.5 6l-2 2 2 2 M12.5 6l2 2-2 2",
   rotate: "M13 8a5 5 0 1 1-1.46-3.54 M11.6 1.6v2.9H8.7",
+  // An arrow going back round: restore the previous placement.
+  "restore-placement": "M2.5 8a5.5 5.5 0 1 1 1.6 3.9 M2.5 3.5V8H7",
   // Two blocks pushed against one line.
   align: "M2 2v12 M4.5 3.5h8v3h-8Z M4.5 9.5h5v3h-5Z",
   edit: "M10.5 2.5l3 3L6 13H3v-3Z M9 4l3 3",

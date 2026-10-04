@@ -76,7 +76,17 @@ function positioningGroup(view: PositioningView, intents: PanelIntents): HTMLEle
     created.setAttribute("aria-pressed", String(tool.pressed));
     return created;
   });
-  return view.step === null ? tools : [...tools, stepInput(view.step, intents)];
+  const restore = iconButton(
+    "restore-placement",
+    view.restore.label,
+    () => intents.restorePreviousPlacement(),
+    view.restore.disabled,
+  );
+  restore.title = view.restore.title;
+  restore.setAttribute("data-focus-key", "positioning-restore");
+  return view.step === null
+    ? [...tools, restore]
+    : [...tools, stepInput(view.step, intents), restore];
 }
 
 function deviceGroup(view: InspectorView, t: Translate, intents: PanelIntents): HTMLElement[] {

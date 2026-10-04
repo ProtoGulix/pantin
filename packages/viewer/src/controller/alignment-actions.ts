@@ -21,7 +21,9 @@ import { toolAssemblyKeyOf } from "../gizmo/gizmo-spec.ts";
 import { withToolTarget } from "../gizmo/tool-rules.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { describeFailure, errorMessage, infoMessage, type PanelMessage } from "../messages.ts";
+import { placementBeforeEdit } from "../previous-placement.ts";
 import { editPantin } from "./pantin-actions.ts";
+import { keepPreviousPlacement } from "./placement-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Alignment by picked faces (ADR 0035 points 3, 6 and 8): the session lives
@@ -219,10 +221,12 @@ export async function applyAlignment(store: ViewerStore): Promise<void> {
     store.update({ ...store.state, message: errorMessage(REQUEST_ERRORS[outcome.reason]) });
     return;
   }
+  const previous = placementBeforeEdit(store.state, session.assemblyKey);
   const result = await alignThenLink(store, session, outcome.request);
   if (result === undefined) {
     return;
   }
+  keepPreviousPlacement(store, session.pantinId, session.assemblyKey, previous);
   const current = store.state.alignment;
   store.update({
     ...store.state,

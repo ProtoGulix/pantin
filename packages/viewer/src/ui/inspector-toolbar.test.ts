@@ -44,6 +44,7 @@ const positioning: PositioningView = {
     { command: "align", label: "align", pressed: false, disabled: false },
   ],
   step: { field: "translationMillimetres", label: "step", value: "10" },
+  restore: { label: "restore", title: "restore", disabled: false },
   alignment: null,
 };
 
@@ -82,10 +83,19 @@ describe("the inspector tool bar", () => {
       "rotate",
       "align",
       "step",
+      "restore",
       "|",
       "drives.edit",
       "drives.delete",
     ]);
+  });
+
+  it("shows why the restore button is off in its tooltip", () => {
+    const off = { label: "restore", title: "restore: no edit", disabled: true };
+    const items = render({ positioning: { ...positioning, restore: off } });
+    const button = items.find((item) => item.attributes.get("aria-label") === "restore");
+    expect(button?.disabled).toBe(true);
+    expect(button?.title).toBe("restore: no edit");
   });
 
   it("marks the tool that is on as pressed", () => {

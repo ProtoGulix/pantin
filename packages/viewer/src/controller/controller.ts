@@ -62,6 +62,7 @@ import {
   renameNode,
   savePantin,
 } from "./pantin-actions.ts";
+import { restorePreviousPlacement } from "./placement-actions.ts";
 import { cancelPropertyEdit, commitPropertyEdit } from "./property-actions.ts";
 import { sensorIntents } from "./sensor-intents.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
@@ -203,6 +204,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...clockIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     turnToolOff: () => turnToolOff(store),
+    restorePreviousPlacement: () => void restorePreviousPlacement(store),
     setGizmoStep: (field, text) => setGizmoStep(store, field, text),
     chooseAlignmentKind: (kind) => chooseAlignmentKind(store, kind),
     chooseAlignmentPick: (index) => chooseAlignmentPick(store, index),
