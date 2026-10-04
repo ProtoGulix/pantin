@@ -99,6 +99,13 @@ export interface PropertyRow {
   link: RowLink | null;
   // Written in place after every tag read, or null.
   live: LiveSource | null;
+  // Typed text that is not valid: shown in the field in place of `value`, which
+  // stays the document's (ADR 0039 point 5).
+  invalidText?: string;
+  // The value is the one a gizmo drag last sent, not yet the document's.
+  dragged?: boolean;
+  // The focus key of the field Enter moves to, when it moves on.
+  nextFocusKey?: string;
 }
 
 export interface PropertyGroup {
@@ -106,9 +113,11 @@ export interface PropertyGroup {
   title: string;
   collapsed: boolean;
   rows: PropertyRow[];
+  // One line under the group's rows: why a typed value was refused.
+  error?: string;
 }
 
-export type GroupDraft = { id: PropertyGroupId; rows: PropertyRow[] };
+export type GroupDraft = { id: PropertyGroupId; rows: PropertyRow[]; error?: string };
 
 export function row(
   id: string,

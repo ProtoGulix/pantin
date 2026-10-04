@@ -45,3 +45,17 @@ describe("enterAction", () => {
     expect(enterAction(false, false)).toBe("commitDirectly");
   });
 });
+
+describe("EditSession over a base value (a field showing refused text)", () => {
+  it("commits the shown text again, as it differs from the base", () => {
+    const session = new EditSession("100");
+    session.begin();
+    expect(session.finish("abc")).toEqual({ type: "commit", value: "abc" });
+  });
+
+  it("counts the base typed back as unchanged", () => {
+    const session = new EditSession("100");
+    session.begin();
+    expect(session.finish(" 100 ")).toEqual({ type: "cancel" });
+  });
+});

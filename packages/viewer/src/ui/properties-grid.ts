@@ -1,5 +1,6 @@
 import type { Translate } from "../i18n/translate.ts";
 import {
+  type EditTarget,
   liveKey,
   type PropertyGroup,
   type PropertyRow,
@@ -60,11 +61,48 @@ function editorCell(
         translate("properties.editSelectLabel", { property: row.label }),
         (value) => (value === editor.selected ? undefined : commit(value)),
       )
-    : committingTextInput(row.value, {
-        label: translate("properties.editLabel", { property: row.label }),
-        focusKey: rowFocusKey(row.id),
-        onCommit: commit,
-      });
+    : textEditor(row, editor.target, commit, translate, intents);
+}
+
+// A text field. A refused text stays in it, marked. Leaving the field with that
+// text commits it again: still refused, the mark stays and no request is sent.
+// Escape, or typing the document's value back, clears the mark (ADR 0039 point 5).
+// Enter moves on when the row says so.
+function textEditor(
+  row: PropertyRow,
+  target: EditTarget,
+  commit: (value: string) => void,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLInputElement {
+  const { nextFocusKey } = row;
+  const input = committingTextInput(row.invalidText ?? row.value, {
+    label: translate("properties.editLabel", { property: row.label }),
+    focusKey: rowFocusKey(row.id),
+    baseValue: row.value,
+    onCommit: commit,
+    onCancel: () => intents.cancelPropertyEdit(target),
+    ...(nextFocusKey === undefined
+      ? {}
+      : { focusOnEnter: () => focusNextField(input, nextFocusKey) }),
+  });
+  if (row.invalidText !== undefined) {
+    input.setAttribute("aria-invalid", "true");
+    input.classList.add("is-invalid");
+  }
+  if (row.dragged === true) {
+    input.classList.add("is-dragged");
+    input.setAttribute("data-dragged", "true");
+  }
+  return input;
+}
+
+function focusNextField(from: HTMLElement, focusKey: string): void {
+  const next = [...(from.closest("table")?.querySelectorAll("input") ?? [])].find(
+    (candidate) => candidate.getAttribute("data-focus-key") === focusKey,
+  );
+  next?.focus();
+  next?.select();
 }
 
 function valueCell(
@@ -131,6 +169,20 @@ function dataRow(
   return line;
 }
 
+// Why a typed value was refused, on one line under the group (role="alert").
+function errorRow(group: PropertyGroup): HTMLElement | null {
+  if (group.error === undefined || group.collapsed) {
+    return null;
+  }
+  return element("tr", {}, [
+    element("td", {
+      className: "property-grid__error",
+      text: group.error,
+      attributes: { colspan: "2", role: "alert" },
+    }),
+  ]);
+}
+
 function groupBody(group: PropertyGroup, translate: Translate, intents: PanelIntents): HTMLElement {
   const toggle = element(
     "button",
@@ -150,7 +202,7 @@ function groupBody(group: PropertyGroup, translate: Translate, intents: PanelInt
   const rows = group.collapsed
     ? []
     : group.rows.map((row) => dataRow(group, row, translate, intents));
-  return element("tbody", {}, [header, ...rows]);
+  return element("tbody", {}, [header, ...rows, errorRow(group)]);
 }
 
 export function renderPropertiesGrid(

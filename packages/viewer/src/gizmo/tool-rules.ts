@@ -55,6 +55,26 @@ export function withToolRules(state: ViewerState): ViewerState {
 }
 
 /**
+ * Feedback kept in the placement fields belongs to one assembly: it goes when
+ * the selection leaves that assembly (ADR 0039 point 5).
+ */
+export function withPlacementFeedbackRules(state: ViewerState): ViewerState {
+  const { placementDraft, placementInvalid } = state;
+  if (placementDraft === null && placementInvalid === null) {
+    return state;
+  }
+  const key = toolAssemblyKeyOf(state);
+  const keeps = (kept: { key: string } | null) => kept !== null && kept.key === key;
+  return keeps(placementDraft) && keeps(placementInvalid)
+    ? state
+    : {
+        ...state,
+        placementDraft: keeps(placementDraft) ? placementDraft : null,
+        placementInvalid: keeps(placementInvalid) ? placementInvalid : null,
+      };
+}
+
+/**
  * What G, R and A prepare before a tool starts: a selected body gives way to
  * its assembly, the inspector opens and "Positionnement" unfolds. The focus
  * is left alone.

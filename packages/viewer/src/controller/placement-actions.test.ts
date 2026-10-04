@@ -2,10 +2,14 @@ import type { Placement } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
 import type { PantinApiClient } from "../api-client.ts";
 import { fieldsToPlacement, placementToFields } from "../placement-units.ts";
+import { nodeSelection } from "../selection.ts";
 import { pantinResponse } from "../test-fixtures.ts";
+import { assemblyNodeId } from "../tree/node-ids.ts";
+import { withSelection } from "../tree/tree-state.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import { setPlacementField } from "./placement-actions.ts";
+import { cancelPropertyEdit } from "./property-actions.ts";
 
 // Typed placement values reach the request in SI and come back as typed (ADR 0034).
 
@@ -30,7 +34,10 @@ function openStore(setAssemblyPlacement: PantinApiClient["setAssemblyPlacement"]
     setAssemblyPlacement,
   });
   store.requestedPantinId = pantin.id;
-  store.state = withOpenPantin(store.state, pantin);
+  store.state = withSelection(
+    withOpenPantin(store.state, pantin),
+    nodeSelection(assemblyNodeId("press", "main")),
+  );
   return store;
 }
 
@@ -55,11 +62,29 @@ describe("setPlacementField", () => {
     expect(placementToFields(placement ?? stored).rz).toBeCloseTo(-30, 9);
   });
 
-  it("sends nothing for text that is not a number, and says so", async () => {
+  it("sends nothing for text that is not a number, keeps it, and leaves the message line", async () => {
     const send = recorder();
     const store = openStore(send);
     await setPlacementField(store, target("x"), "abc");
     expect(send).not.toHaveBeenCalled();
-    expect(store.state.message?.key).toBe("placement.invalid");
+    expect(store.state.placementInvalid).toEqual({
+      pantinId: "press",
+      key: "main",
+      field: "x",
+      text: "abc",
+    });
+    expect(store.state.message).toBeNull();
+  });
+
+  it("drops the kept text once the field commits a number, or is cancelled", async () => {
+    const store = openStore(recorder());
+    await setPlacementField(store, target("x"), "abc");
+    await setPlacementField(store, target("x"), "12");
+    expect(store.state.placementInvalid).toBeNull();
+    await setPlacementField(store, target("rz"), "abc");
+    cancelPropertyEdit(store, target("x"));
+    expect(store.state.placementInvalid?.field).toBe("rz");
+    cancelPropertyEdit(store, target("rz"));
+    expect(store.state.placementInvalid).toBeNull();
   });
 });

@@ -62,7 +62,7 @@ import {
   renameNode,
   savePantin,
 } from "./pantin-actions.ts";
-import { commitPropertyEdit } from "./property-actions.ts";
+import { cancelPropertyEdit, commitPropertyEdit } from "./property-actions.ts";
 import { sensorIntents } from "./sensor-intents.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
 import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
@@ -115,6 +115,7 @@ function treeIntents(store: ViewerStore) {
     commitRename: (nodeId: string, name: string) => void renameNode(store, nodeId, name),
     commitPropertyEdit: (target: EditTarget, value: string) =>
       void commitPropertyEdit(store, target, value),
+    cancelPropertyEdit: (target: EditTarget) => cancelPropertyEdit(store, target),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
     requestDelete: (nodeId: string) => requestDelete(store, nodeId),
     dropBody: (dragged: string, target: string) => dropBody(store, dragged, target),

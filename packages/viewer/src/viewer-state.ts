@@ -19,6 +19,7 @@ import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import type { PanelMessage } from "./messages.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
+import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
 import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
@@ -118,6 +119,10 @@ export interface ViewerState {
   gizmoSteps: SnapSteps;
   // The alignment under way (ADR 0035), or null. Display state, never saved.
   alignment: AlignmentSession | null;
+  // Placement field feedback (ADR 0039 point 5): the last placement a drag sent
+  // while it lasts, and typed text that is not a number. Display state.
+  placementDraft: PlacementDraft | null;
+  placementInvalid: InvalidPlacementText | null;
   // The mouse preset, wheel direction, arrow step and projection of the 3D
   // view (ADR 0036), kept in the browser like the steps. Never saved.
   navigation: NavigationSettings;
@@ -130,6 +135,14 @@ export interface InspectorFocusRequest {
 
 // Faults are runtime state of the core, cleared when a Pantin opens.
 const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
+
+// No positioning tool on, no alignment, nothing kept in the placement fields.
+const NO_TOOL_STATE = {
+  gizmoMode: null,
+  alignment: null,
+  placementDraft: null,
+  placementInvalid: null,
+} as const;
 
 export function initialViewerState(
   language: Language,
@@ -174,8 +187,7 @@ export function initialViewerState(
     pendingFeedReplacement: null,
     inspectorFocus: null,
     console: INITIAL_CONSOLE_STATE,
-    gizmoMode: null,
-    alignment: null,
+    ...NO_TOOL_STATE,
     gizmoSteps,
     navigation,
   };
@@ -208,6 +220,8 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     alignment: null,
+    placementDraft: null,
+    placementInvalid: null,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,

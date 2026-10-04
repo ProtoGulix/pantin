@@ -4,6 +4,7 @@ import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
+import { placementFeedbackOf } from "../placement-feedback.ts";
 import { GROUP_TITLES } from "../properties/group-titles.ts";
 import { assemblyPlacementGroup } from "../properties/placement-groups.ts";
 import type { PropertyGroup } from "../properties/property-rows.ts";
@@ -98,7 +99,13 @@ export function buildPositioningView(
     if (assembly === undefined) {
       return null;
     }
-    const draft = assemblyPlacementGroup(assembly, pantin, t);
+    const feedback = placementFeedbackOf(
+      state.placementDraft,
+      state.placementInvalid,
+      pantin.id,
+      assembly.key,
+    );
+    const draft = assemblyPlacementGroup(assembly, pantin, t, feedback);
     const collapsed = state.collapsedPropertyGroups.has(draft.id);
     return {
       title,

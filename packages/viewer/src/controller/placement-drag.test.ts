@@ -1,6 +1,9 @@
 import type { Placement } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
+import { nodeSelection } from "../selection.ts";
 import { pantinResponse } from "../test-fixtures.ts";
+import { assemblyNodeId } from "../tree/node-ids.ts";
+import { withSelection } from "../tree/tree-state.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import { dragPlacement, finishPlacementDrag } from "./placement-actions.ts";
@@ -32,7 +35,10 @@ function dragStore(release: () => void = () => undefined) {
     { releasePlacementGizmo: release },
   );
   store.requestedPantinId = pantin.id;
-  store.state = withOpenPantin(store.state, pantin);
+  store.state = withSelection(
+    withOpenPantin(store.state, pantin),
+    nodeSelection(assemblyNodeId("press", "main")),
+  );
   return { store, sent, finishers, getPantin };
 }
 
@@ -77,7 +83,44 @@ describe("dragging a placement", () => {
     await flush();
     expect(sent.at(-1)?.translation).toEqual([0, 0, 0]);
   });
+});
 
+describe("the fields during a drag", () => {
+  it("shows the last placement sent in display units during the drag, the document after", async () => {
+    const { store, finishers } = dragStore();
+    dragPlacement(store, "main", at(0.001));
+    dragPlacement(store, "main", at(0.0025));
+    expect(store.state.placementDraft).toMatchObject({
+      pantinId: "press",
+      key: "main",
+      fields: { x: 2.5, y: 0, z: 0 },
+    });
+    const finished = finishPlacementDrag(store);
+    await flush();
+    finishers[0]?.();
+    await flush();
+    finishers[1]?.();
+    await finished;
+    expect(store.state.placementDraft).toBeNull();
+  });
+});
+
+describe("two drags in a row", () => {
+  it("lets the end of the first leave the draft of the second", async () => {
+    const { store, finishers } = dragStore();
+    dragPlacement(store, "main", at(0.001));
+    const finished = finishPlacementDrag(store);
+    dragPlacement(store, "main", at(0.004));
+    await flush();
+    finishers[0]?.();
+    await flush();
+    finishers[1]?.();
+    await finished;
+    expect(store.state.placementDraft?.fields.x).toBe(4);
+  });
+});
+
+describe("freeing the gizmo", () => {
   it("frees the gizmo even when no Pantin is open", async () => {
     const release = vi.fn();
     const store = testStore({}, { releasePlacementGizmo: release });

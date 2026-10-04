@@ -83,6 +83,50 @@ describe("positioning of an assembly", () => {
   });
 });
 
+describe("edit feedback of the placement fields", () => {
+  const rows = (state: ViewerState) => viewOf(state)?.group?.rows ?? [];
+  const rowOf = (state: ViewerState, id: string) => rows(state).find((row) => row.id === id);
+
+  it("moves Enter from each field to the next one, and from RZ nowhere", () => {
+    const next = rows(assembly).map((row) => row.nextFocusKey);
+    expect(next).toEqual([
+      undefined,
+      "property-placement-y",
+      "property-placement-z",
+      "property-placement-rx",
+      "property-placement-ry",
+      "property-placement-rz",
+      undefined,
+    ]);
+  });
+
+  it("keeps the refused text on its row and explains under the group", () => {
+    const state: ViewerState = {
+      ...assembly,
+      placementInvalid: { pantinId: "press", key: "main", field: "y", text: "abc" },
+    };
+    expect(rowOf(state, "placement-y")?.invalidText).toBe("abc");
+    expect(rowOf(state, "placement-x")?.invalidText).toBeUndefined();
+    expect(viewOf(state)?.group?.error).toBe("Valeur refusée : tapez un nombre.");
+    expect(viewOf(assembly)?.group?.error).toBeUndefined();
+  });
+
+  it("shows the dragged placement in display units, marked, for that assembly only", () => {
+    const fields = { x: 12.5, y: 0, z: 0, rx: 0, ry: 0, rz: 45 };
+    const state: ViewerState = {
+      ...assembly,
+      placementDraft: { pantinId: "press", key: "main", fields },
+    };
+    expect(rowOf(state, "placement-x")).toMatchObject({ value: "12.5", dragged: true });
+    expect(rowOf(state, "placement-rz")).toMatchObject({ value: "45", dragged: true });
+    const elsewhere: ViewerState = {
+      ...assembly,
+      placementDraft: { pantinId: "press", key: "other", fields },
+    };
+    expect(rowOf(elsewhere, "placement-x")?.dragged).toBeUndefined();
+  });
+});
+
 describe("positioning of a body", () => {
   const body = select(open, bodyNodeId("press", railBody.id));
 

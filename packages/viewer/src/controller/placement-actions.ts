@@ -1,8 +1,8 @@
 import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
 import { createLatestWinsSender, type LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import { parseNumber } from "../joints/joint-form.ts";
-import { describeFailure, errorMessage } from "../messages.ts";
-import { fieldsToPlacement, placementToFields } from "../placement-units.ts";
+import { describeFailure } from "../messages.ts";
+import { fieldsToPlacement, type PlacementField, placementToFields } from "../placement-units.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import { editPantin } from "./pantin-actions.ts";
@@ -24,6 +24,22 @@ function placementSenderOf(store: ViewerStore): LatestWinsSender<DraggedPlacemen
 // it, and bodies moving through the pose stream, never here. The request holds
 // the whole placement, the five other values coming from the current document.
 
+/** Drops the refused text kept for a field, when it is that field's. */
+export function clearInvalidPlacement(
+  store: ViewerStore,
+  target: { pantinId: string; key: string; field: PlacementField },
+): void {
+  const kept = store.state.placementInvalid;
+  if (
+    kept !== null &&
+    kept.pantinId === target.pantinId &&
+    kept.key === target.key &&
+    kept.field === target.field
+  ) {
+    store.update({ ...store.state, placementInvalid: null });
+  }
+}
+
 /** Sends the placement with one field replaced by the typed text (display units). */
 export async function setPlacementField(
   store: ViewerStore,
@@ -37,9 +53,14 @@ export async function setPlacementField(
   }
   const typed = parseNumber(text);
   if (!Number.isFinite(typed)) {
-    store.update({ ...store.state, message: errorMessage("placement.invalid") });
+    // The text stays in the field, marked; nothing is sent (ADR 0039 point 5).
+    store.update({
+      ...store.state,
+      placementInvalid: { pantinId: open.id, key: assembly.key, field: target.field, text },
+    });
     return;
   }
+  clearInvalidPlacement(store, target);
   const edited = fieldsToPlacement({
     ...placementToFields(assembly.placement),
     [target.field]: typed,
@@ -76,13 +97,31 @@ export function dragPlacement(
     placement: { translation: [x, y, z], rotation: [qx, qy, qz, qw] },
   };
   placementSenderOf(store).push(value);
+  // The fields follow the drag with the value just asked of the core, not a pose
+  // computed here; the document read again replaces it on release.
+  store.update({
+    ...store.state,
+    placementDraft: {
+      pantinId: open.id,
+      key: assemblyKey,
+      fields: placementToFields(value.placement),
+    },
+  });
 }
 
 /** The drag ended or was cancelled: wait for the last request, read the Pantin, free the gizmo. */
 export async function finishPlacementDrag(store: ViewerStore): Promise<void> {
   const open = store.state.openPantin;
-  if (open !== null) {
-    await editPantin(store, open.id, () => placementSenderOf(store).settled());
+  const finishing = store.state.placementDraft;
+  try {
+    if (open !== null) {
+      await editPantin(store, open.id, () => placementSenderOf(store).settled());
+    }
+  } finally {
+    // A newer drag may have started meanwhile: its draft is not this one's to clear.
+    if (store.state.placementDraft === finishing) {
+      store.update({ ...store.state, placementDraft: null });
+    }
   }
   store.ports.viewport().releasePlacementGizmo();
 }

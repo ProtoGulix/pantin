@@ -47,6 +47,8 @@ export interface PanelIntents {
   cancelRename(): void;
   // A committed edit of a grid (rename, joint field, device field...).
   commitPropertyEdit(target: EditTarget, value: string): void;
+  // Escape, or leaving a field unchanged: drops what it kept (a refused text).
+  cancelPropertyEdit(target: EditTarget): void;
   requestDelete(nodeId: string): void;
   openContextMenu(nodeId: string, x: number, y: number): void;
   closeContextMenu(): void;

@@ -27,7 +27,7 @@ import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
 import { gizmoSpecOf } from "../gizmo/gizmo-spec.ts";
 import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
-import { withToolRules } from "../gizmo/tool-rules.ts";
+import { withPlacementFeedbackRules, withToolRules } from "../gizmo/tool-rules.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
@@ -129,7 +129,7 @@ export class ViewerStore {
 
   update(requested: ViewerState): void {
     // The tools follow the selection, the layout and the inspector (ADR 0039 point 3).
-    const next = withToolRules(requested);
+    const next = withPlacementFeedbackRules(withToolRules(requested));
     // A restart on another assembly reads face files again, like a new alignment.
     if (requested.alignment !== null && next.alignment !== requested.alignment) {
       this.faceFiles.clear();

@@ -466,7 +466,7 @@
   "placement.field.rz": "RZ",
   "placement.anchor": "Repère",
   "placement.anchor.world": "monde",
-  "placement.invalid": "Le placement n'est pas valide : tapez un nombre dans chaque champ.",
+  "placement.invalidNote": "Valeur refusée : tapez un nombre.",
   "menubar.edit.gizmoMove": "Déplacer",
   "menubar.edit.gizmoRotate": "Tourner",
   "shortcut.gizmoMove": "G",
