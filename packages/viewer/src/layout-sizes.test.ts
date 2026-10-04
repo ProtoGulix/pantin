@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   CONSOLE_HEIGHT_DEFAULT,
+  clampColumns,
   clampConsoleHeight,
-  clampPanelWidth,
   clampSplitRatio,
-  PANEL_WIDTH_DEFAULT,
   parseStoredNumber,
   SPLIT_RATIO_DEFAULT,
   SPLITTER_KEYBOARD_STEP,
@@ -12,16 +11,6 @@ import {
 } from "./layout-sizes.ts";
 
 describe("layout sizes", () => {
-  it("keeps the panel between its minimum and what leaves room for the 3D view", () => {
-    expect(clampPanelWidth(100, 1600)).toBe(220);
-    expect(clampPanelWidth(400.4, 1600)).toBe(400);
-    expect(clampPanelWidth(1500, 1600)).toBe(1280);
-  });
-
-  it("falls back to the default width on a corrupt value", () => {
-    expect(clampPanelWidth(Number.NaN, 1600)).toBe(PANEL_WIDTH_DEFAULT);
-  });
-
   it("parses stored numbers defensively", () => {
     expect(parseStoredNumber("360", 1)).toBe(360);
     expect(parseStoredNumber(null, 1)).toBe(1);
@@ -69,5 +58,50 @@ describe("console height", () => {
     expect(clampConsoleHeight(300, 100)).toBe(80);
     expect(clampConsoleHeight(Number.NaN, 800)).toBe(CONSOLE_HEIGHT_DEFAULT);
     expect(clampConsoleHeight(Number.POSITIVE_INFINITY, 800)).toBe(CONSOLE_HEIGHT_DEFAULT);
+  });
+
+  it("keeps both columns when the 3D view has room", () => {
+    expect(clampColumns({ panel: 320, inspector: 340 }, 1600)).toEqual({
+      panel: 320,
+      inspector: 340,
+    });
+  });
+
+  it("narrows the inspector first, then the left column", () => {
+    expect(clampColumns({ panel: 320, inspector: 340 }, 950)).toEqual({
+      panel: 320,
+      inspector: 302,
+    });
+    expect(clampColumns({ panel: 320, inspector: 340 }, 850)).toEqual({
+      panel: 262,
+      inspector: 260,
+    });
+  });
+
+  it("never goes under the minimum of a column", () => {
+    expect(clampColumns({ panel: 100, inspector: 100 }, 1600)).toEqual({
+      panel: 220,
+      inspector: 260,
+    });
+  });
+
+  it("falls back to the defaults on corrupt widths", () => {
+    expect(clampColumns({ panel: Number.NaN, inspector: Number.NaN }, 1600)).toEqual({
+      panel: 320,
+      inspector: 340,
+    });
+  });
+
+  it("counts a hidden inspector and its splitter for nothing", () => {
+    expect(clampColumns({ panel: 600, inspector: 340 }, 1000, false)).toEqual({
+      panel: 600,
+      inspector: 340,
+    });
+    expect(clampColumns({ panel: 900, inspector: 340 }, 1000, false).panel).toBe(676);
+  });
+
+  it("keeps 320 px for the 3D view with both splitters", () => {
+    const { panel, inspector } = clampColumns({ panel: 900, inspector: 900 }, 1200);
+    expect(1200 - panel - inspector - 8).toBeGreaterThanOrEqual(320);
   });
 });

@@ -16,6 +16,7 @@ import { type StorePorts, ViewerStore } from "./controller/viewer-store.ts";
 import type { DiagramModel } from "./diagram/diagram-view-model.ts";
 import { parseStoredSteps, serializeSteps } from "./gizmo/gizmo-steps.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
+import { parseStoredGroups, parseStoredOpen, serializeGroups } from "./layout-preferences.ts";
 import { errorMessage, type PanelMessage } from "./messages.ts";
 import { parseStoredNavigation, serializeNavigation } from "./navigation/navigation-settings.ts";
 import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
@@ -210,6 +211,9 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
     storeGizmoSteps: (steps) => writeStoredText(STORAGE_KEYS.gizmoSteps, serializeSteps(steps)),
     storeNavigation: (settings) =>
       writeStoredText(STORAGE_KEYS.navigation, serializeNavigation(settings)),
+    storeInspectorOpen: (open) => writeStoredText(STORAGE_KEYS.inspectorOpen, String(open)),
+    storeCollapsedGroups: (groups) =>
+      writeStoredText(STORAGE_KEYS.collapsedGroups, serializeGroups(groups)),
   };
 }
 
@@ -222,6 +226,10 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
     parseStoredLayout(readStoredText(STORAGE_KEYS.centralLayout)),
     parseStoredSteps(readStoredText(STORAGE_KEYS.gizmoSteps)),
     parseStoredNavigation(readStoredText(STORAGE_KEYS.navigation)),
+    {
+      inspectorOpen: parseStoredOpen(readStoredText(STORAGE_KEYS.inspectorOpen)),
+      collapsedGroups: parseStoredGroups(readStoredText(STORAGE_KEYS.collapsedGroups)),
+    },
   );
   late.store = store;
   late.intents = createPanelIntents(store);

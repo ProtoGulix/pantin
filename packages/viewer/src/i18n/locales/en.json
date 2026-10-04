@@ -89,6 +89,7 @@
   "error.code.conversion_failed": "STEP conversion failed: check that the file opens in your CAD, re-export it as STEP (AP214 or AP242) or export it as GLB or STL.",
   "error.code.internal_error": "Internal core error; see its log.",
   "splitter.panel": "Resize the panel",
+  "splitter.inspector": "Resize the inspector",
   "splitter.central": "Resize the 3D view and the diagram",
   "page.viewportEmpty": "Open a Pantin to see its bodies in 3D.",
   "menubar.label": "Menu bar",

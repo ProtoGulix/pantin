@@ -212,11 +212,11 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     restartAlignment: () => restartAlignment(store),
     applyAlignment: () => void applyAlignment(store),
     showViewFromDirection: (direction) => showViewFromDirection(store, direction),
-    togglePropertyGroup: (groupId) =>
-      store.update({
-        ...store.state,
-        collapsedPropertyGroups: toggledSet(store.state.collapsedPropertyGroups, groupId),
-      }),
+    togglePropertyGroup: (groupId) => {
+      const collapsedPropertyGroups = toggledSet(store.state.collapsedPropertyGroups, groupId);
+      store.update({ ...store.state, collapsedPropertyGroups });
+      store.ports.storeCollapsedGroups(collapsedPropertyGroups);
+    },
     dismissMessage: () => store.update({ ...store.state, message: null }),
     changeLanguage,
   };

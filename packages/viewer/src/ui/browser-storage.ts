@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
   consoleHeight: "pantin.viewer.consoleHeight",
   gizmoSteps: "pantin.viewer.gizmoSteps",
   navigation: "pantin.viewer.navigation",
+  inspectorWidth: "pantin.viewer.inspectorWidth",
+  inspectorOpen: "pantin.viewer.inspectorOpen",
+  collapsedGroups: "pantin.viewer.collapsedGroups",
 } as const;
 
 export function readStoredText(key: string): string | null {

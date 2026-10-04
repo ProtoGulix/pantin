@@ -17,6 +17,7 @@ import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/place
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
+import { DEFAULT_INSPECTOR_PREFERENCES, type InspectorPreferences } from "./layout-preferences.ts";
 import type { PanelMessage } from "./messages.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
 import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.ts";
@@ -149,6 +150,7 @@ export function initialViewerState(
   centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
   gizmoSteps: SnapSteps = DEFAULT_SNAP_STEPS,
   navigation: NavigationSettings = DEFAULT_NAVIGATION,
+  inspector: InspectorPreferences = DEFAULT_INSPECTOR_PREFERENCES,
 ): ViewerState {
   return {
     language,
@@ -157,7 +159,7 @@ export function initialViewerState(
     expandedNodeIds: new Set(),
     selection: null,
     renamingNodeId: null,
-    collapsedPropertyGroups: new Set(),
+    collapsedPropertyGroups: inspector.collapsedGroups,
     customAxisJointIds: new Set(),
     creatingPantin: false,
     contextMenu: null,
@@ -177,7 +179,7 @@ export function initialViewerState(
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
-    inspectorOpen: true,
+    inspectorOpen: inspector.inspectorOpen,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,

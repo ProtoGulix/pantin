@@ -30,6 +30,7 @@ import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import { withPlacementFeedbackRules, withToolRules } from "../gizmo/tool-rules.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
+import type { InspectorPreferences } from "../layout-preferences.ts";
 import { describeFailure } from "../messages.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
@@ -80,6 +81,8 @@ export interface StorePorts {
   storeCentralLayout(layout: CentralLayout): void;
   storeGizmoSteps(steps: SnapSteps): void;
   storeNavigation(settings: NavigationSettings): void;
+  storeInspectorOpen(open: boolean): void;
+  storeCollapsedGroups(groups: ReadonlySet<string>): void;
 }
 
 export class ViewerStore {
@@ -122,9 +125,10 @@ export class ViewerStore {
     centralLayout?: CentralLayout,
     gizmoSteps?: SnapSteps,
     navigation?: NavigationSettings,
+    inspector?: InspectorPreferences,
   ) {
     this.ports = ports;
-    this.state = initialViewerState(language, centralLayout, gizmoSteps, navigation);
+    this.state = initialViewerState(language, centralLayout, gizmoSteps, navigation, inspector);
   }
 
   update(requested: ViewerState): void {

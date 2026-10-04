@@ -40,6 +40,8 @@ export function testStore(
       storeCentralLayout,
       storeGizmoSteps: () => undefined,
       storeNavigation: () => undefined,
+      storeInspectorOpen: () => undefined,
+      storeCollapsedGroups: () => undefined,
       ...ports,
     },
     "fr",

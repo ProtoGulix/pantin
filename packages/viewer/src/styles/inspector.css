@@ -3,11 +3,16 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 340px;
+  width: var(--inspector-width, 340px);
   padding: 8px;
   overflow-y: auto;
   background: var(--surface-1);
   border-left: 1px solid var(--border);
+}
+
+/* Its splitter, on the left edge, leaves with it. */
+.splitter--inspector:has(+ .inspector[hidden]) {
+  display: none;
 }
 
 .inspector[hidden] {

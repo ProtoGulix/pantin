@@ -9,12 +9,51 @@ const VIEWPORT_WIDTH_MINIMUM = 320;
 // Keyboard step of a splitter, in pixels.
 export const SPLITTER_KEYBOARD_STEP = 16;
 
-export function clampPanelWidth(width: number, windowWidth: number): number {
-  const maximum = Math.max(PANEL_WIDTH_MINIMUM, windowWidth - VIEWPORT_WIDTH_MINIMUM);
-  if (!Number.isFinite(width)) {
-    return Math.min(PANEL_WIDTH_DEFAULT, maximum);
+export const INSPECTOR_WIDTH_DEFAULT = 340;
+const INSPECTOR_WIDTH_MINIMUM = 260;
+
+export interface ColumnWidths {
+  panel: number;
+  inspector: number;
+}
+
+function safeWidth(width: number, fallback: number, minimum: number): number {
+  return Number.isFinite(width) ? Math.max(width, minimum) : fallback;
+}
+
+// Each splitter between a column and the 3D view.
+const SPLITTER_WIDTH = 4;
+
+/**
+ * Both side columns, so that the 3D view keeps its minimum width: the inspector
+ * narrows first, then the left column. A hidden inspector counts for nothing,
+ * nor does its splitter. Each column keeps its own minimum, so a very narrow
+ * window overflows rather than crushing a column (ADR 0039 point 8).
+ */
+export function clampColumns(
+  wanted: ColumnWidths,
+  windowWidth: number,
+  inspectorOpen = true,
+): ColumnWidths {
+  const panel = safeWidth(wanted.panel, PANEL_WIDTH_DEFAULT, PANEL_WIDTH_MINIMUM);
+  const inspector = safeWidth(wanted.inspector, INSPECTOR_WIDTH_DEFAULT, INSPECTOR_WIDTH_MINIMUM);
+  const splitters = inspectorOpen ? 2 * SPLITTER_WIDTH : SPLITTER_WIDTH;
+  const available = windowWidth - VIEWPORT_WIDTH_MINIMUM - splitters;
+  if (!inspectorOpen) {
+    return {
+      panel: Math.round(Math.max(PANEL_WIDTH_MINIMUM, Math.min(panel, available))),
+      inspector,
+    };
   }
-  return Math.round(Math.min(Math.max(width, PANEL_WIDTH_MINIMUM), maximum));
+  const narrowedInspector = Math.max(
+    INSPECTOR_WIDTH_MINIMUM,
+    Math.min(inspector, available - panel),
+  );
+  const narrowedPanel = Math.max(
+    PANEL_WIDTH_MINIMUM,
+    Math.min(panel, available - narrowedInspector),
+  );
+  return { panel: Math.round(narrowedPanel), inspector: Math.round(narrowedInspector) };
 }
 
 export function parseStoredNumber(text: string | null, fallback: number): number {

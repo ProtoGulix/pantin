@@ -109,3 +109,20 @@ describe("multi-body import", () => {
     expect(failed.pendingImport?.fileName).toBe("3630.step");
   });
 });
+
+describe("initialViewerState inspector preferences", () => {
+  it("starts from the stored open state and folded groups", () => {
+    const state = initialViewerState("fr", undefined, undefined, undefined, {
+      inspectorOpen: false,
+      collapsedGroups: new Set(["placement"]),
+    });
+    expect(state.inspectorOpen).toBe(false);
+    expect(state.collapsedPropertyGroups.has("placement")).toBe(true);
+  });
+
+  it("opens the inspector with no group folded by default", () => {
+    const state = initialViewerState("fr");
+    expect(state.inspectorOpen).toBe(true);
+    expect(state.collapsedPropertyGroups.size).toBe(0);
+  });
+});
