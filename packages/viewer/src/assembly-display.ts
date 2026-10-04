@@ -1,4 +1,5 @@
-import type { PantinDocument } from "@pantin/protocol";
+import type { Assembly, PantinDocument } from "@pantin/protocol";
+import { assemblyChain, assemblySubtreeKeys, nextPickedAssembly } from "./assembly-tree.ts";
 import { assemblyNodeId, bodyNodeId, parseNodeId } from "./tree/node-ids.ts";
 
 // What the 3D view shows of assemblies (ADR 0019 point 13), as pure
@@ -16,11 +17,13 @@ export const NO_ASSEMBLY_DISPLAY: AssemblyDisplay = {
   isolatedAssemblyKey: null,
 };
 
+// The bodies of the assembly and of every assembly below it (ADR 0040).
 function bodiesOf(document: PantinDocument, key: string): string[] {
-  return document.bodies.filter((body) => body.assembly === key).map((body) => body.id);
+  const keys = assemblySubtreeKeys(document.assemblies, key);
+  return document.bodies.filter((body) => keys.has(body.assembly)).map((body) => body.id);
 }
 
-/** Bodies the selected node stands for: a body, or every body of an assembly. */
+/** Bodies the selected node stands for: a body, or every body of an assembly's subtree. */
 export function selectedBodyIds(document: PantinDocument, nodeId: string | null): Set<string> {
   const ref = nodeId === null ? null : parseNodeId(nodeId);
   if (ref?.kind === "body" || ref?.kind === "sourceNode") {
@@ -29,46 +32,87 @@ export function selectedBodyIds(document: PantinDocument, nodeId: string | null)
   return new Set(ref?.kind === "assembly" ? bodiesOf(document, ref.key) : []);
 }
 
-/** Hidden itself, or another assembly is isolated. */
-export function isAssemblyHidden(display: AssemblyDisplay, key: string): boolean {
+/**
+ * Hidden itself, or outside the isolated assembly's subtree. Hiding is stored
+ * per assembly, one key for each assembly of the hidden subtree, so that a
+ * sub-assembly can be shown again alone. Without `assemblies` the structure
+ * tree is ignored (a flat Pantin).
+ */
+export function isAssemblyHidden(
+  display: AssemblyDisplay,
+  key: string,
+  assemblies: readonly Assembly[] = [],
+): boolean {
   const { hiddenAssemblyKeys, isolatedAssemblyKey } = display;
-  return isolatedAssemblyKey === null ? hiddenAssemblyKeys.has(key) : key !== isolatedAssemblyKey;
+  if (isolatedAssemblyKey === null) {
+    return hiddenAssemblyKeys.has(key);
+  }
+  return !(
+    key === isolatedAssemblyKey || assemblyChain(assemblies, key).includes(isolatedAssemblyKey)
+  );
 }
 
 export function hiddenBodyIds(document: PantinDocument, display: AssemblyDisplay): Set<string> {
   return new Set(
     document.bodies
-      .filter((body) => isAssemblyHidden(display, body.assembly))
+      .filter((body) => isAssemblyHidden(display, body.assembly, document.assemblies))
       .map((body) => body.id),
   );
 }
 
-/** A click selects the body's assembly, a double click the body itself. */
+/**
+ * What a click in the 3D view selects (ADR 0040 point 9): the top-level
+ * assembly of the picked body; each double click goes one level down from the
+ * selected assembly, down to the body. A click leaves a selected ancestor of
+ * the body alone, since a double click is a click then a double click.
+ */
 export function pickedNodeId(
   document: PantinDocument,
   pantinId: string,
   bodyId: string,
   doubleClick: boolean,
+  selectedNodeId: string | null,
 ): string {
   const assembly = document.bodies.find((body) => body.id === bodyId)?.assembly;
-  return doubleClick || assembly === undefined
-    ? bodyNodeId(pantinId, bodyId)
-    : assemblyNodeId(pantinId, assembly);
+  if (assembly === undefined) {
+    return bodyNodeId(pantinId, bodyId);
+  }
+  const selectedRef = selectedNodeId === null ? null : parseNodeId(selectedNodeId);
+  const selectedKey = selectedRef?.kind === "assembly" ? selectedRef.key : null;
+  const picked = nextPickedAssembly(
+    assemblyChain(document.assemblies, assembly),
+    selectedKey,
+    doubleClick,
+  );
+  return picked === null ? bodyNodeId(pantinId, bodyId) : assemblyNodeId(pantinId, picked);
 }
 
 /**
- * Shows a hidden assembly or hides a shown one, as seen on screen: an
- * isolation in force becomes the equivalent hidden set first, so the eye of
- * the tree always matches the 3D view.
+ * Shows a hidden assembly or hides a shown one, with its whole subtree, as
+ * seen on screen: an isolation in force becomes the equivalent hidden set
+ * first, so the eye of the tree always matches the 3D view. Showing also
+ * shows the ancestors, since a body cannot appear inside a hidden container.
  */
 export function withAssemblyHiddenToggled(
   display: AssemblyDisplay,
   key: string,
-  allKeys: readonly string[],
+  assemblies: readonly Assembly[],
 ): AssemblyDisplay {
-  const hidden = new Set(allKeys.filter((candidate) => isAssemblyHidden(display, candidate)));
-  if (!hidden.delete(key)) {
+  const hidden = new Set(
+    assemblies
+      .map((assembly) => assembly.key)
+      .filter((candidate) => isAssemblyHidden(display, candidate, assemblies)),
+  );
+  const subtree = assemblySubtreeKeys(assemblies, key);
+  if (hidden.has(key)) {
+    for (const shown of [...subtree, ...assemblyChain(assemblies, key)]) {
+      hidden.delete(shown);
+    }
+  } else {
     hidden.add(key);
+    for (const covered of subtree) {
+      hidden.add(covered);
+    }
   }
   return { hiddenAssemblyKeys: hidden, isolatedAssemblyKey: null };
 }

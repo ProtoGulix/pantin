@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { assemblyChain } from "../assembly-tree.ts";
 import { deviceExists } from "../device-selection.ts";
 import { nodeSelection, type Selection } from "../selection.ts";
 import {
@@ -49,6 +50,21 @@ function assemblyNodeOf(document: PantinDocument, pantinId: string, bodyId: stri
   return key === undefined ? pantinNodeId(pantinId) : assemblyNodeId(pantinId, key);
 }
 
+// The assembly nodes holding an assembly, top level first, itself excluded.
+function enclosingAssemblyNodes(document: PantinDocument, pantinId: string, key: string): string[] {
+  return assemblyChain(document.assemblies, key)
+    .slice(0, -1)
+    .map((enclosing) => assemblyNodeId(pantinId, enclosing));
+}
+
+// Every assembly node from the top level down to the one holding the body.
+function assemblyPathOf(document: PantinDocument, pantinId: string, bodyId: string): string[] {
+  const key = document.bodies.find((body) => body.id === bodyId)?.assembly;
+  return key === undefined
+    ? []
+    : [...enclosingAssemblyNodes(document, pantinId, key), assemblyNodeId(pantinId, key)];
+}
+
 // A joint is listed under its assembly when both bodies share it, otherwise
 // in the "between assemblies" folder (tree-model.ts).
 function jointContainerOf(document: PantinDocument, pantinId: string, jointId: string): string {
@@ -60,25 +76,36 @@ function jointContainerOf(document: PantinDocument, pantinId: string, jointId: s
     : folderNodeId(pantinId, "betweenAssemblies");
 }
 
+// The expansion path to the node listing a joint that holds no body.
+function jointContainerPath(document: PantinDocument, pantinId: string, jointId: string): string[] {
+  const container = jointContainerOf(document, pantinId, jointId);
+  const ref = parseNodeId(container);
+  return ref?.kind === "assembly"
+    ? [pantinNodeId(pantinId), ...enclosingAssemblyNodes(document, pantinId, ref.key), container]
+    : [pantinNodeId(pantinId), container];
+}
+
 /** Nodes to expand so that the node becomes visible, root first. */
 function ancestorsOf(ref: NodeRef, document: PantinDocument): string[] {
   const pantin = pantinNodeId(ref.pantinId);
+  const holdingAssemblies = (bodyId: string) => assemblyPathOf(document, ref.pantinId, bodyId);
   const bodyPath = (bodyId: string) => [
     pantin,
-    assemblyNodeOf(document, ref.pantinId, bodyId),
+    ...holdingAssemblies(bodyId),
     bodyNodeId(ref.pantinId, bodyId),
   ];
   switch (ref.kind) {
     case "pantin":
       return [];
     case "folder":
-    case "assembly":
       return [pantin];
+    case "assembly":
+      return [pantin, ...enclosingAssemblyNodes(document, ref.pantinId, ref.key)];
     case "body":
-      return [pantin, assemblyNodeOf(document, ref.pantinId, ref.bodyId)];
+      return [pantin, ...holdingAssemblies(ref.bodyId)];
     case "joint":
       return ref.underBodyId === null
-        ? [pantin, jointContainerOf(document, ref.pantinId, ref.jointId)]
+        ? jointContainerPath(document, ref.pantinId, ref.jointId)
         : bodyPath(ref.underBodyId);
     case "sourceNode":
       return bodyPath(ref.bodyId);

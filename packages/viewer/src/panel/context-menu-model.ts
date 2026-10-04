@@ -1,5 +1,5 @@
 import { actuatorOfJoint, movableJoints } from "../actuators/actuator-joints.ts";
-import { type AssemblyDisplay, isAssemblyHidden } from "../assembly-display.ts";
+import type { AssemblyDisplay } from "../assembly-display.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { endSwitchRequests } from "../sensors/joint-sensors.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
@@ -100,9 +100,14 @@ function isActuated(ref: NodeRef, state: ViewerState): boolean {
 
 // The visibility entries say what they will do: show a hidden assembly, or
 // show every assembly again once one is isolated.
-function labelKeyOf(action: ContextAction, ref: NodeRef, display: AssemblyDisplay): MessageKey {
+function labelKeyOf(
+  action: ContextAction,
+  ref: NodeRef,
+  display: AssemblyDisplay,
+  hidden: boolean,
+): MessageKey {
   if (ref.kind === "assembly" && action === "toggleAssemblyHidden") {
-    return isAssemblyHidden(display, ref.key) ? "menu.showAssembly" : "menu.hideAssembly";
+    return hidden ? "menu.showAssembly" : "menu.hideAssembly";
   }
   if (ref.kind === "assembly" && action === "toggleAssemblyIsolated") {
     return display.isolatedAssemblyKey === ref.key
@@ -131,7 +136,7 @@ export function buildContextMenuView(state: ViewerState, t: Translate): ContextM
         label: t(
           action === "actuateJoint" && isActuated(ref, state)
             ? "menu.editJointActuator"
-            : labelKeyOf(action, ref, state.assemblyDisplay),
+            : labelKeyOf(action, ref, state.assemblyDisplay, node.visibility === "hidden"),
         ),
       })),
   };

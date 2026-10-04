@@ -99,8 +99,10 @@ function withDisplayOf(
 }
 
 export function toggleAssemblyHidden(store: ViewerStore, nodeId: string): void {
-  const keys = store.state.openPantin?.document.assemblies.map((assembly) => assembly.key) ?? [];
-  withDisplayOf(store, nodeId, (display, key) => withAssemblyHiddenToggled(display, key, keys));
+  const assemblies = store.state.openPantin?.document.assemblies ?? [];
+  withDisplayOf(store, nodeId, (display, key) =>
+    withAssemblyHiddenToggled(display, key, assemblies),
+  );
 }
 
 export function toggleAssemblyIsolated(store: ViewerStore, nodeId: string): void {

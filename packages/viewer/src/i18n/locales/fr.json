@@ -209,6 +209,7 @@
   "joint.slider.label": "Position de « {name} »",
   "tree.jointsBetweenAssemblies": "Liaisons entre assemblages",
   "properties.assembly": "Assemblage",
+  "properties.parentAssembly": "Contenu dans",
   "properties.assemblyKey": "Clé (préfixe des tags)",
   "properties.tagKey": "Clé de tag",
   "properties.tags": "Tags",

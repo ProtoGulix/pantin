@@ -5,6 +5,7 @@ import {
   isAssemblyHidden,
   NO_ASSEMBLY_DISPLAY,
 } from "../assembly-display.ts";
+import { childAssemblies } from "../assembly-tree.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
@@ -165,7 +166,7 @@ function assemblyNode(
   translate: Translate,
 ): TreeNode {
   const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
-  const hidden = isAssemblyHidden(display, assembly.key);
+  const hidden = isAssemblyHidden(display, assembly.key, pantin.document.assemblies);
   const joints = pantin.document.joints.filter(
     (joint) => isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === assembly.key,
   );
@@ -181,7 +182,11 @@ function assemblyNode(
     visibility: hidden ? "hidden" : "shown",
     wiring: null,
     stateLabel: hidden ? translate("tree.hidden") : null,
+    // Sub-assemblies first (structure), then bodies and internal joints (ADR 0040).
     children: [
+      ...childAssemblies(pantin.document.assemblies, assembly.key).map((child) =>
+        assemblyNode(pantin, child, display, translate),
+      ),
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
       ...joints.map((joint) => jointNode(pantin, joint, translate)),
     ],
@@ -224,7 +229,7 @@ function pantinNode(
     wiring: null,
     stateLabel: null,
     children: [
-      ...pantin.document.assemblies.map((assembly) =>
+      ...childAssemblies(pantin.document.assemblies, undefined).map((assembly) =>
         assemblyNode(pantin, assembly, display, translate),
       ),
       betweenAssembliesFolder(pantin, translate),

@@ -28,8 +28,8 @@ export type MeshBytesLoader = (pantinId: string, body: Body) => Promise<ArrayBuf
 
 export interface ViewportCallbacks {
   // doubleClick: the second click of a double click, which follows a first
-  // pick of the same body (ADR 0019: a click selects the assembly, a double
-  // click the body).
+  // pick of the same body (ADR 0040 point 9: a click selects the top-level
+  // assembly, each double click goes one level down, down to the body).
   onBodyPicked(bodyId: string | null, doubleClick: boolean): void;
   // Raw reason in English; the caller translates the message around it.
   onLoadError(bodyName: string, reason: string): void;

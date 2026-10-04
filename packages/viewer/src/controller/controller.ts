@@ -220,8 +220,9 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
 }
 
 /**
- * A click in the 3D view selects the body's assembly, a double click the body
- * (ADR 0019 point 13); either is revealed in the tree.
+ * A click in the 3D view selects the top-level assembly of the body, each
+ * double click goes one level down, down to the body (ADR 0040 point 9);
+ * the result is revealed in the tree.
  */
 export function selectBodyFromViewport(
   store: ViewerStore,
@@ -234,7 +235,16 @@ export function selectBodyFromViewport(
     return;
   }
   store.update(
-    withRevealedNode(store.state, pickedNodeId(open.document, open.id, bodyId, doubleClick)),
+    withRevealedNode(
+      store.state,
+      pickedNodeId(
+        open.document,
+        open.id,
+        bodyId,
+        doubleClick,
+        selectedNodeIdOf(store.state.selection),
+      ),
+    ),
   );
 }
 
