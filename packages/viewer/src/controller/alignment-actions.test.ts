@@ -2,8 +2,9 @@ import type { AlignRequest, CreateJointRequest, FaceFile, PantinResponse } from 
 import { describe, expect, it, vi } from "vitest";
 import type { ViewportPick } from "../alignment/pick-resolution.ts";
 import { bodyOf, documentOf } from "../diagram/diagram-fixtures.ts";
+import { selectedNodeIdOf } from "../selection.ts";
 import { withNode } from "../test-fixtures.ts";
-import { assemblyNodeId } from "../tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, jointNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import {
   applyAlignment,
@@ -13,7 +14,9 @@ import {
   setAlignmentFixedJoint,
   toggleAlignment,
 } from "./alignment-actions.ts";
+import { createPanelIntents } from "./controller.ts";
 import { testStore } from "./controller-test-helpers.ts";
+import { toggleInspector } from "./drive-actions.ts";
 import { toggleGizmo } from "./gizmo-actions.ts";
 
 // Aligning from the viewer (ADR 0035): the session, the picks checked at once,
@@ -22,7 +25,10 @@ import { toggleGizmo } from "./gizmo-actions.ts";
 const PANTIN: PantinResponse = {
   id: "bench",
   unsavedChanges: false,
-  document: documentOf({ assemblies: ["a", "block"], bodies: [bodyOf("block", "block")] }),
+  document: documentOf({
+    assemblies: ["a", "block"],
+    bodies: [bodyOf("block", "block")],
+  }),
 };
 
 const FACE_FILE: FaceFile = {
@@ -88,6 +94,57 @@ describe("alignment session in the viewer", () => {
     toggleAlignment(store);
     expect(store.state).toMatchObject({ gizmoMode: null, alignment: { assemblyKey: "block" } });
     toggleAlignment(store);
+    expect(store.state.alignment).toBeNull();
+  });
+});
+
+describe("alignment follows the selection", () => {
+  it("from a body moves the selection to its assembly and opens the inspector", () => {
+    const { store } = alignmentStore();
+    store.update({ ...withNode(store.state, bodyNodeId("bench", "block")), inspectorOpen: false });
+    toggleAlignment(store);
+    expect(selectedNodeIdOf(store.state.selection)).toBe(assemblyNodeId("bench", "block"));
+    expect(store.state).toMatchObject({ inspectorOpen: true, alignment: { assemblyKey: "block" } });
+  });
+  it("A with a body of the aligned assembly selected stops the alignment", () => {
+    const { store } = alignmentStore();
+    toggleAlignment(store);
+    createPanelIntents(store).selectNode(bodyNodeId("bench", "block"));
+    expect(store.state.alignment).not.toBeNull();
+    toggleAlignment(store);
+    expect(store.state.alignment).toBeNull();
+  });
+
+  it("A with a body of another assembly moves to it and starts there", () => {
+    const { store } = alignmentStore();
+    toggleAlignment(store);
+    createPanelIntents(store).selectNode(bodyNodeId("bench", "frame"));
+    toggleAlignment(store);
+    expect(store.state.alignment?.assemblyKey).toBe("a");
+    expect(selectedNodeIdOf(store.state.selection)).toBe(assemblyNodeId("bench", "a"));
+  });
+});
+
+describe("alignment follows the selection to another assembly", () => {
+  it("restarts with no picks on another assembly, keeping the kind", async () => {
+    const { store } = alignmentStore();
+    await pickBoth(store);
+    chooseAlignmentKind(store, "axis_on_axis");
+    createPanelIntents(store).selectNode(assemblyNodeId("bench", "a"));
+    expect(store.state.alignment).toMatchObject({ assemblyKey: "a", kind: "axis_on_axis" });
+    expect(store.state.alignment?.picks.every((pick) => pick === null)).toBe(true);
+  });
+});
+
+describe("alignment ends with its conditions", () => {
+  it("ends on a closed inspector or a joint", () => {
+    const { store } = alignmentStore();
+    toggleAlignment(store);
+    toggleInspector(store);
+    expect(store.state.alignment).toBeNull();
+    toggleInspector(store);
+    toggleAlignment(store);
+    createPanelIntents(store).selectNode(jointNodeId("bench", "j1"));
     expect(store.state.alignment).toBeNull();
   });
 

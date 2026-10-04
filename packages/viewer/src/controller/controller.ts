@@ -1,5 +1,6 @@
 import { pickedNodeId } from "../assembly-display.ts";
 import type { DeviceRef } from "../device-selection.ts";
+import { isToolOn } from "../gizmo/tool-rules.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
@@ -33,7 +34,7 @@ import { clockIntents } from "./clock-actions.ts";
 import { consoleIntents } from "./console-actions.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
-import { setGizmoStep } from "./gizmo-actions.ts";
+import { setGizmoStep, turnToolOff } from "./gizmo-actions.ts";
 import {
   cancelImport,
   changeImportOptions,
@@ -200,6 +201,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...consoleIntents(store),
     ...clockIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
+    turnToolOff: () => turnToolOff(store),
     setGizmoStep: (field, text) => setGizmoStep(store, field, text),
     chooseAlignmentKind: (kind) => chooseAlignmentKind(store, kind),
     chooseAlignmentPick: (index) => chooseAlignmentPick(store, index),
@@ -231,7 +233,10 @@ export function selectBodyFromViewport(
 ): void {
   const open = store.state.openPantin;
   if (bodyId === null || open === null) {
-    store.update(withSelection(store.state, null));
+    // A missed click must not drop the assembly a tool works on (ADR 0039 point 3).
+    if (!isToolOn(store.state)) {
+      store.update(withSelection(store.state, null));
+    }
     return;
   }
   store.update(

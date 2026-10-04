@@ -58,3 +58,18 @@ export function menuContext(state: ViewerState): MenuContext {
     viewsAvailable: state.openPantin !== null && showsViewport(state.centralLayout),
   };
 }
+
+/** What a plain Escape does once every component that handles it has had its say. */
+export type EscapeCommand = "turnToolOff";
+
+/**
+ * The last link of the Escape chain (ADR 0039 point 6): after the gizmo drag,
+ * the text field, the menus and prompts, a positioning tool goes off. An open
+ * context menu closes first.
+ */
+export function escapeCommand(state: ViewerState): EscapeCommand | null {
+  if (state.contextMenu !== null) {
+    return null;
+  }
+  return state.gizmoMode !== null || state.alignment !== null ? "turnToolOff" : null;
+}

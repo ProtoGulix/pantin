@@ -10,7 +10,7 @@ import { initialJointForm } from "../joints/joint-form.ts";
 import { buildPromptView } from "../panel/prompt-model.ts";
 import { selectedNodeIdOf } from "../selection.ts";
 import { initialSensorForm } from "../sensors/sensor-form.ts";
-import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
+import { pantinResponse, railBody, stepBody, withNode } from "../test-fixtures.ts";
 import { assemblyNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -155,11 +155,11 @@ describe("the assembly deletion prompt", () => {
 });
 
 describe("the assembly deletion prompt, other sessions", () => {
-  it("keeps an alignment and a form that the deleted assembly does not concern", async () => {
+  it("ends the alignment with the selection, and keeps a form the deleted assembly does not concern", async () => {
     const store = await askedStore({ deleteAssemblyWithContents: async () => answer() });
     const alignment = newAlignmentSession("press", "other");
     store.update({
-      ...store.state,
+      ...withNode(store.state, assemblyNodeId("press", "other")),
       alignment,
       sensorForm: {
         sensorId: "s9",
@@ -174,7 +174,8 @@ describe("the assembly deletion prompt, other sessions", () => {
     await vi.waitFor(() =>
       expect(store.state.message?.key).toBe("message.assemblyContentsDeleted"),
     );
-    expect(store.state.alignment).toBe(alignment);
+    // The selection goes to the Pantin, which no tool can act on (ADR 0039 point 3).
+    expect(store.state.alignment).toBeNull();
     expect(store.state.sensorForm?.sensorId).toBe("s9");
   });
 });

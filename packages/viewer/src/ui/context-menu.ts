@@ -67,6 +67,8 @@ function menuItem(
 function listenToMenuKeys(menu: HTMLElement, intents: PanelIntents): void {
   menu.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      // Handled here: the window's Escape must not also end a positioning tool.
+      event.preventDefault();
       intents.closeContextMenu();
     } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();

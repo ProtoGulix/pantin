@@ -27,6 +27,7 @@ import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
 import { gizmoSpecOf } from "../gizmo/gizmo-spec.ts";
 import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
+import { withToolRules } from "../gizmo/tool-rules.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import { describeFailure } from "../messages.ts";
@@ -126,7 +127,13 @@ export class ViewerStore {
     this.state = initialViewerState(language, centralLayout, gizmoSteps, navigation);
   }
 
-  update(next: ViewerState): void {
+  update(requested: ViewerState): void {
+    // The tools follow the selection, the layout and the inspector (ADR 0039 point 3).
+    const next = withToolRules(requested);
+    // A restart on another assembly reads face files again, like a new alignment.
+    if (requested.alignment !== null && next.alignment !== requested.alignment) {
+      this.faceFiles.clear();
+    }
     this.state = next;
     // Another Pantin, or none: its lines are gone, and so is the clear point.
     if ((next.openPantin?.id ?? null) !== this.consolePantinId) {

@@ -4,7 +4,7 @@ import { pantinResponse, railBody } from "../test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { withSelection } from "../tree/tree-state.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
-import { canUseGizmo, gizmoSpecOf } from "./gizmo-spec.ts";
+import { canUseGizmo, gizmoSpecOf, toolAssemblyKeyOf } from "./gizmo-spec.ts";
 
 const open = withOpenPantin(initialViewerState("fr"), pantinResponse(false));
 const select = (state: ViewerState, nodeId: string): ViewerState =>
@@ -35,8 +35,16 @@ describe("the gizmo of a state", () => {
     ).toBeNull();
   });
 
-  it("can be switched on only with an assembly selected", () => {
+  it("can be switched on with an assembly or one of its bodies selected", () => {
     expect(canUseGizmo(select(open, assemblyNodeId("press", "main")))).toBe(true);
-    expect(canUseGizmo(select(open, bodyNodeId("press", railBody.id)))).toBe(false);
+    expect(canUseGizmo(select(open, bodyNodeId("press", railBody.id)))).toBe(true);
+    expect(canUseGizmo(select(open, pantinNodeId("press")))).toBe(false);
+    expect(canUseGizmo({ ...open, selection: null })).toBe(false);
+  });
+
+  it("names the assembly a body is placed with", () => {
+    expect(toolAssemblyKeyOf(select(open, bodyNodeId("press", railBody.id)))).toBe("main");
+    expect(toolAssemblyKeyOf(select(open, assemblyNodeId("press", "main")))).toBe("main");
+    expect(toolAssemblyKeyOf(select(open, pantinNodeId("press")))).toBeNull();
   });
 });

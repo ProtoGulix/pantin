@@ -1,8 +1,9 @@
+import { escapeCommand } from "../menu/menu-context.ts";
 import { shortcutForKeyPress } from "../menu/menu-model.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
-// Window-wide keyboard shortcuts of the menu bar (Ctrl+S, F2, Suppr). The
+// Window-wide keyboard shortcuts of the menu bar (Ctrl+S, F2, Suppr, Escape). The
 // rules live in the menu model; this only reads the key and the focus.
 
 export function isEditable(target: EventTarget | null): boolean {
@@ -39,6 +40,17 @@ export function listenToShortcuts(state: () => ViewerState, intents: PanelIntent
   // Plain keys (F2, Suppr) in the bubble phase: a component that handled the
   // key first (tree F2, menu arrows) has the last word.
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      // A field leaves with its own Escape; the next one ends the tool.
+      const plain = !(event.ctrlKey || event.metaKey || event.altKey);
+      if (plain && !event.defaultPrevented && !isEditable(event.target)) {
+        if (escapeCommand(state()) === "turnToolOff") {
+          event.preventDefault();
+          intents.turnToolOff();
+        }
+      }
+      return;
+    }
     const found = match(event);
     if (event.defaultPrevented || found === null || found.primaryModifier || !found.run) {
       return;

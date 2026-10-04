@@ -95,10 +95,10 @@ describe("positioning of a body", () => {
     expect(view?.alignment).toBeNull();
   });
 
-  it("keeps today's availability: tools off unless an alignment can be stopped", () => {
-    expect(viewOf(body)?.tools.every((tool) => tool.disabled)).toBe(true);
+  it("offers the tools, which act on the body's assembly", () => {
+    expect(viewOf(body)?.tools.some((tool) => tool.disabled)).toBe(false);
     const aligning = { ...body, alignment: newAlignmentSession("press", "main") };
-    expect(viewOf(aligning)?.tools.map((tool) => tool.disabled)).toEqual([true, true, false]);
+    expect(viewOf(aligning)?.tools.map((tool) => tool.disabled)).toEqual([false, false, false]);
     expect(viewOf(aligning)?.alignment).not.toBeNull();
   });
 });

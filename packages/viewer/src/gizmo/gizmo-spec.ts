@@ -1,6 +1,6 @@
 import { showsViewport } from "../central-layout.ts";
-import { selectedNodeIdOf } from "../selection.ts";
-import { parseNodeId } from "../tree/node-ids.ts";
+import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
+import { assemblyNodeId, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { gizmoTargetOf, type PlacementGizmoSpec } from "./anchor-frame.ts";
 
@@ -26,7 +26,33 @@ export function gizmoSpecOf(state: ViewerState): PlacementGizmoSpec | null {
   return target === null ? null : { target, kind: gizmoMode, steps: state.gizmoSteps };
 }
 
-/** True when the gizmo can be switched on: one assembly is selected (menu and toolbar rule). */
+/**
+ * The assembly the positioning tools act on: the selected assembly, at any
+ * depth, or the assembly of the selected body (ADR 0039 point 6). Null for any
+ * other selection.
+ */
+export function toolAssemblyKeyOf(state: ViewerState): string | null {
+  const { openPantin } = state;
+  const selected = selectedNodeIdOf(state.selection);
+  const ref = selected === null ? null : parseNodeId(selected);
+  if (openPantin === null || ref === null || ref.pantinId !== openPantin.id) {
+    return null;
+  }
+  if (ref.kind === "assembly") {
+    return ref.key;
+  }
+  if (ref.kind !== "body") {
+    return null;
+  }
+  return openPantin.document.bodies.find((body) => body.id === ref.bodyId)?.assembly ?? null;
+}
+
+/** True when a tool can be switched on: an assembly or a body is selected, and the 3D view shown. */
 export function canUseGizmo(state: ViewerState): boolean {
-  return gizmoSpecOf({ ...state, gizmoMode: "move" }) !== null;
+  const key = toolAssemblyKeyOf(state);
+  if (key === null || state.openPantin === null) {
+    return false;
+  }
+  const selection = nodeSelection(assemblyNodeId(state.openPantin.id, key));
+  return gizmoSpecOf({ ...state, gizmoMode: "move", selection }) !== null;
 }

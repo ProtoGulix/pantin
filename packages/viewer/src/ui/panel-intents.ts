@@ -61,6 +61,7 @@ export interface PanelIntents {
 
   // The inspector on the right (ADR 0022, 0030): the device forms, faults and commands.
   toggleInspector(): void;
+  turnToolOff(): void;
   openDriveForm(driveId: string | null): void;
   cancelDriveForm(): void;
   editDriveName(name: string): void;

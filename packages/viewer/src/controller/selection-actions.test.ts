@@ -62,6 +62,21 @@ describe("selection from each source", () => {
     selectBodyFromViewport(store, null, false);
     expect(store.state.selection).toBeNull();
   });
+});
+
+describe("a click on nothing in the 3D view", () => {
+  it("keeps the selection while a tool is on", () => {
+    const store = storeWithInspector(true);
+    createPanelIntents(store).selectNode(assemblyNodeId("press", "a"));
+    store.update({ ...store.state, gizmoMode: "move" });
+    selectBodyFromViewport(store, null, false);
+    expect(selectedNodeIdOf(store.state.selection)).toBe(assemblyNodeId("press", "a"));
+    selectBodyFromViewport(store, "s1", false);
+    expect(selectedNodeIdOf(store.state.selection)).toBe(assemblyNodeId("press", "a"));
+    store.update({ ...store.state, gizmoMode: null });
+    selectBodyFromViewport(store, null, false);
+    expect(store.state.selection).toBeNull();
+  });
 
   it("a device from the diagram or an index opens a closed inspector", () => {
     const store = storeWithInspector(false);

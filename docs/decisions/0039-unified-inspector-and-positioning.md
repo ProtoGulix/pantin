@@ -141,7 +141,9 @@ multi-selection (`selection.ts`).
      its assembly when the gizmo is on, and is a pick while aligning
      (ADR 0035 point 3, unchanged);
    - in the diagram layout, where the 3D view is hidden, the tools are
-     off and their buttons disabled.
+     off and their buttons disabled;
+   - closing the inspector turns the tool off, since its controls live
+     there. Revised 2026-10-04: closing the inspector turns the tool off.
 
 4. **Alignment, inline.** The alignment block holds what the floating
    panel held, in the same order (ADR 0035 points 5 and 8): the kind,
@@ -353,8 +355,8 @@ Tests: `gizmo-actions.test.ts` and `alignment-actions.test.ts` (G/R/A
 from a body select the assembly and open the inspector; selecting a
 joint turns the tool off; another assembly restarts the picks);
 `selection-actions.test.ts` (empty click keeps the selection while a
-tool is on, clears it otherwise); `menu-model.test.ts`
-(`escapeCommand`, enable rules).
+tool is on, clears it otherwise); `menu-model.test.ts` (enable rules); `menu-context.test.ts`
+(`escapeCommand`).
 
 **P4. Edit feedback.**
 Files: `properties/property-rows.ts` and `ui/properties-grid.ts`
