@@ -91,6 +91,9 @@ def test_axis_lists_components_with_verbatim_names_and_paths(
     assert run.exit_code == 0, run.stderr
     assert run.output == {
         "sourceUnit": "mm",
+        "assemblyNodes": [
+            {"path": [0], "translation": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0]}
+        ],
         "components": [
             {
                 "file": "0.glb",
@@ -158,6 +161,7 @@ def test_source_unit_in_metres_is_reported_and_converted(
 def test_single_part_is_one_component(single_part_step: Path, tmp_path: Path) -> None:
     run = run_converter(single_part_step, tmp_path)
     assert run.exit_code == 0, run.stderr
+    assert run.output["assemblyNodes"] == []
     assert run.output["components"] == [
         {
             "file": "0.glb",
@@ -188,6 +192,19 @@ def test_nested_assembly_keeps_duplicates_and_full_placement(
     assert node_named(carriage, "carriage")["translation"] == pytest.approx([-0.4, 0.0, 0.02])
     second_foot = read_gltf_json(tmp_path / components[3]["file"])
     assert node_named(second_foot, "foot")["translation"] == pytest.approx([0.95, 0.0, 0.0])
+
+
+def test_nested_assembly_lists_roots_and_assemblies_with_locations(
+    nested_step: Path, tmp_path: Path
+) -> None:
+    run = run_converter(nested_step, tmp_path)
+    assert run.exit_code == 0, run.stderr
+    nodes = run.output["assemblyNodes"]
+    assert [node["path"] for node in nodes] == [[0], [0, 0]]
+    assert nodes[0]["translation"] == pytest.approx([0.0, 0.0, 0.0])
+    assert nodes[0]["rotation"] == pytest.approx([0.0, 0.0, 0.0, 1.0])
+    assert nodes[1]["translation"] == pytest.approx([0.0, 0.0, 0.3])
+    assert nodes[1]["rotation"] == pytest.approx([0.0, 0.0, 0.0, 1.0])
 
 
 @pytest.mark.parametrize(

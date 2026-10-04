@@ -27,21 +27,25 @@ afterEach(async () => {
 const faceFile = FaceFileSchema.parse(SAMPLE_FACE_FILE);
 
 // The first component has a face file, the second none.
-const twoComponents: StepConverter = async () =>
-  TWO_COMPONENTS.components.map((component, index) => ({
+const twoComponents: StepConverter = async () => ({
+  assemblyNodes: [],
+  components: TWO_COMPONENTS.components.map((component, index) => ({
     name: component.name,
     nodes: component.nodes,
     glbBytes: buildSampleGlb(),
     faceFile: index === 0 ? faceFile : undefined,
-  }));
+  })),
+});
 
-const oneComponent: StepConverter = async () =>
-  TWO_COMPONENTS.components.slice(0, 1).map((component) => ({
+const oneComponent: StepConverter = async () => ({
+  assemblyNodes: [],
+  components: TWO_COMPONENTS.components.slice(0, 1).map((component) => ({
     name: component.name,
     nodes: component.nodes,
     glbBytes: buildSampleGlb(),
     faceFile,
-  }));
+  })),
+});
 
 const STEP_BYTES = new TextEncoder().encode(MINIMAL_STEP_TEXT);
 
@@ -150,8 +154,9 @@ describe("assembly edits during an import (ADR 0019)", () => {
 });
 
 // A machine with a sub-assembly: M holds a plate and the sub-assembly Sub.
-const nestedMachine: StepConverter = async () =>
-  [
+const nestedMachine: StepConverter = async () => ({
+  assemblyNodes: [],
+  components: [
     {
       name: "plate",
       nodes: [
@@ -175,7 +180,8 @@ const nestedMachine: StepConverter = async () =>
         { name: "b", path: [0, 1, 1] },
       ],
     },
-  ].map((component) => ({ ...component, glbBytes: buildSampleGlb(), faceFile: undefined }));
+  ].map((component) => ({ ...component, glbBytes: buildSampleGlb(), faceFile: undefined })),
+});
 
 describe("importBodies nested assemblies (ADR 0040)", () => {
   it("answers the assemblies top level first, with parents and joints between them", async () => {

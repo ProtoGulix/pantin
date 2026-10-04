@@ -34,8 +34,8 @@ describe("planStepTree", () => {
       "file",
     );
     expect(plan.assemblies).toEqual([
-      { name: "M", parent: undefined, components: [0, 3] },
-      { name: "Sub", parent: 0, components: [1, 2] },
+      { name: "M", parent: undefined, components: [0, 3], path: [0] },
+      { name: "Sub", parent: 0, components: [1, 2], path: [0, 1] },
     ]);
     // Inside M: rod under the handle plate; Sub is joined from plate to a.
     expect(plan.links).toEqual([
@@ -70,9 +70,9 @@ describe("planStepTree", () => {
       "Machine",
     );
     expect(plan.assemblies).toEqual([
-      { name: "Machine", parent: undefined, components: [2] },
-      { name: "F", parent: 0, components: [0] },
-      { name: "G", parent: 0, components: [1] },
+      { name: "Machine", parent: undefined, components: [2], path: undefined },
+      { name: "F", parent: 0, components: [0], path: [0] },
+      { name: "G", parent: 0, components: [1], path: [1] },
     ]);
     expect(plan.links).toEqual([
       { parent: 2, child: 0 },
@@ -84,10 +84,10 @@ describe("planStepTree", () => {
 describe("planStepTree edge cases", () => {
   it("names a single part's assembly after the part, and components without a chain after the file", () => {
     expect(planStepTree([part("only@0")], "File").assemblies).toEqual([
-      { name: "only", parent: undefined, components: [0] },
+      { name: "only", parent: undefined, components: [0], path: [0] },
     ]);
     expect(planStepTree([{ nodes: [] }], "File").assemblies).toEqual([
-      { name: "File", parent: undefined, components: [0] },
+      { name: "File", parent: undefined, components: [0], path: undefined },
     ]);
     expect(planStepTree([{ nodes: [] }, { nodes: [] }], "File").links).toEqual([
       { parent: 0, child: 1 },

@@ -8,6 +8,7 @@ from OCP.TCollection import TCollection_AsciiString
 from OCP.TDataStd import TDataStd_Name
 from OCP.TDF import TDF_Label
 from OCP.TDocStd import TDocStd_Document
+from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS_Shape
 from OCP.XCAFDoc import XCAFDoc_DocumentTool, XCAFDoc_ShapeTool
 from OCP.XCAFPrs import XCAFPrs_DocumentExplorer
@@ -31,6 +32,8 @@ class LeafComponent:
     nodes: tuple[SourceNode, ...]
     # The glTF writer selects nodes by these identifiers, one per node above.
     explorer_ids: tuple[str, ...]
+    # The instance location of each node of `nodes`, relative to its parent node.
+    locations: tuple[TopLoc_Location, ...]
     root_label: TDF_Label
     # The component's shape, located where the assembly places it.
     shape: TopoDS_Shape
@@ -44,6 +47,7 @@ class LeafComponent:
 class _VisitedNode:
     source: SourceNode
     explorer_id: str
+    location: TopLoc_Location
 
 
 def find_leaf_components(document: TDocStd_Document) -> list[LeafComponent]:
@@ -66,6 +70,7 @@ def _leaves_under(
     node = _VisitedNode(
         source=SourceNode(name=_label_name(label), path=path),
         explorer_id=_explorer_id(label, parent_id),
+        location=XCAFDoc_ShapeTool.GetLocation_s(label),
     )
     chain = (*ancestors, node)
     definition = _definition_of(label)
@@ -78,6 +83,7 @@ def _leaves_under(
     yield LeafComponent(
         nodes=tuple(visited.source for visited in chain),
         explorer_ids=tuple(visited.explorer_id for visited in chain),
+        locations=tuple(visited.location for visited in chain),
         root_label=root_label,
         shape=XCAFDoc_ShapeTool.GetShape_s(label),
     )

@@ -9,6 +9,11 @@ import type {
 } from "@pantin/protocol";
 import { stepConverterUnavailable } from "../converter/step-converter.ts";
 import { newAssembly, newAssemblyTree } from "../domain/assemblies.ts";
+import {
+  applyImportFrames,
+  type ImportFrame,
+  planImportFrames,
+} from "../domain/assembly-frames.ts";
 import { fileNameStem } from "../domain/ids.ts";
 import {
   buildImportedBody,
@@ -109,6 +114,7 @@ function reserve(
   assemblies: Assembly[],
   planned: PlannedMesh[],
   links: readonly PlannedLink[] = [],
+  frames: readonly ImportFrame[] = [],
 ): Reservation {
   const bodies = planned.map(({ body }) => body);
   const withAssemblies = assemblies.reduce(addAssembly, openPantin.document);
@@ -119,8 +125,10 @@ function reserve(
       ? []
       : [{ parent: parentBody, child: childBody }];
   });
-  const { document, joints } = addFixedJoints(withBodies, bodyLinks);
-  openPantin.document = document;
+  const withJoints = addFixedJoints(withBodies, bodyLinks);
+  const placed = applyImportFrames(withJoints.document, assemblies, bodies, frames);
+  const { joints } = withJoints;
+  openPantin.document = placed.document;
   let resolveImport = (): void => undefined;
   const inFlight = new Promise<void>((resolve) => {
     resolveImport = resolve;
@@ -130,7 +138,13 @@ function reserve(
     openPantin.inFlightImports.delete(inFlight);
     resolveImport();
   };
-  return { openPantin, assemblies, planned, joints, settle };
+  return {
+    openPantin,
+    assemblies: placed.assemblies,
+    planned: planned.map((mesh, at) => ({ ...mesh, body: placed.bodies[at] ?? mesh.body })),
+    joints,
+    settle,
+  };
 }
 
 // The key of the assembly of each component, by component index.
@@ -161,12 +175,13 @@ async function planStepImport(
     throw stepConverterUnavailable();
   }
   await loadPantin(context, pantinId); // fail fast on an unknown Pantin
-  const meshes = await context.stepConverter(bytes);
+  const { components: meshes, assemblyNodes } = await context.stepConverter(bytes);
   const openPantin = await loadPantin(context, pantinId);
   const stems = await takenMeshStems(context, pantinId);
   const { document } = openPantin;
   const { assemblies: plan, links } = planStepTree(meshes, fileNameStem(query.fileName));
   const assemblies = newAssemblyTree(document, plan);
+  const frames = planImportFrames(plan, links, assemblyNodes);
   const planned = buildStepBodies(
     document,
     query,
@@ -178,7 +193,7 @@ async function planStepImport(
     bytes: component.glbBytes,
     faceFile: component.faceFile ?? null,
   }));
-  return reserve(openPantin, assemblies, planned, links);
+  return reserve(openPantin, assemblies, planned, links, frames);
 }
 
 async function planDirectImport(

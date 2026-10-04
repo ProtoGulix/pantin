@@ -1,4 +1,4 @@
-import { SourceNodeSchema } from "@pantin/protocol";
+import { PlacementSchema, SourceNodeSchema } from "@pantin/protocol";
 import { z } from "zod";
 import { formatIssues } from "../domain/validation.ts";
 
@@ -8,6 +8,13 @@ import { formatIssues } from "../domain/validation.ts";
 // A plain file name inside the output directory: no separator, no "..".
 const ComponentFileSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\.glb$/);
 const FaceFileNameSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\.faces\.json$/);
+
+// Location of an assembly node relative to its parent node, in the frame of
+// the GLB meshes (ADR 0040 point 4). The protocol's placement checks the unit
+// quaternion. Absent from older converters: no locations.
+const AssemblyNodeSchema = PlacementSchema.extend({
+  path: z.array(z.number().int().nonnegative()).min(1),
+});
 
 const ConverterSuccessSchema = z.object({
   sourceUnit: z.string().min(1),
@@ -22,6 +29,7 @@ const ConverterSuccessSchema = z.object({
       }),
     )
     .min(1),
+  assemblyNodes: z.array(AssemblyNodeSchema).optional(),
 });
 export type ConverterSuccess = z.infer<typeof ConverterSuccessSchema>;
 

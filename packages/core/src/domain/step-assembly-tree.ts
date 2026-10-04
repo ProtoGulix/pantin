@@ -12,6 +12,9 @@ export type PlannedAssembly = {
   name: string;
   parent: number | undefined;
   components: number[];
+  // Index path of the STEP node it comes from; undefined for the assembly
+  // named after the file, which has no node (ADR 0040 point 4).
+  path: number[] | undefined;
 };
 
 // A fixed joint to create, between two components.
@@ -19,10 +22,15 @@ export type PlannedLink = { parent: number; child: number };
 
 export type StepTreePlan = { assemblies: PlannedAssembly[]; links: PlannedLink[] };
 
-type TreeNode = { name: string; components: number[]; children: Map<string, TreeNode> };
+type TreeNode = {
+  name: string;
+  path: number[] | undefined;
+  components: number[];
+  children: Map<string, TreeNode>;
+};
 
-function emptyNode(name: string): TreeNode {
-  return { name, components: [], children: new Map() };
+function emptyNode(name: string, path: number[] | undefined): TreeNode {
+  return { name, path, components: [], children: new Map() };
 }
 
 function pathKey(node: SourceNode): string {
@@ -37,7 +45,7 @@ function nodeOfComponent(top: TreeNode, chain: readonly SourceNode[]): TreeNode 
   for (const node of chain.slice(0, -1)) {
     const key = pathKey(node);
     const known = current.children.get(key);
-    const next = known ?? emptyNode(node.name);
+    const next = known ?? emptyNode(node.name, [...node.path]);
     current.children.set(key, next);
     current = next;
   }
@@ -64,8 +72,11 @@ function hasSingleRoot(components: readonly ChainComponent[]): boolean {
 
 function buildTree(components: readonly ChainComponent[], fileName: string): TreeNode {
   const single = hasSingleRoot(components);
-  const rootName = components.find(({ nodes }) => nodes[0] !== undefined)?.nodes[0]?.name;
-  const top = emptyNode(single && rootName !== undefined ? rootName : fileName);
+  const root = components.find(({ nodes }) => nodes[0] !== undefined)?.nodes[0];
+  const top =
+    single && root !== undefined
+      ? emptyNode(root.name, [...root.path])
+      : emptyNode(fileName, undefined);
   components.forEach(({ nodes }, index) => {
     // The single root is the top itself: its chain starts below it.
     nodeOfComponent(top, single ? nodes.slice(1) : nodes).components.push(index);
@@ -77,7 +88,12 @@ function flatten(top: TreeNode, fallbackName: string): PlannedAssembly[] {
   const out: PlannedAssembly[] = [];
   const visit = (node: TreeNode, parent: number | undefined): void => {
     const position = out.length;
-    out.push({ name: toDisplayName(node.name, fallbackName), parent, components: node.components });
+    out.push({
+      name: toDisplayName(node.name, fallbackName),
+      parent,
+      components: node.components,
+      path: node.path,
+    });
     for (const child of node.children.values()) {
       visit(child, position);
     }

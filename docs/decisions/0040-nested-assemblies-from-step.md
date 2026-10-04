@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-04
+- Revised: 2026-10-04 (point 4: each assembly keeps its STEP frame)
 - Supersedes: ADR 0017 point 1 (one flat star per import), ADR 0019
   points 3 and 11 (one assembly per import, flat assemblies)
 - Amends: ADR 0037 point 1 (deletion with contents)
@@ -92,11 +93,30 @@ user's earlier files (cylinder, gripper) had a single level.
    Joints are still created through `addJointToDocument` (ADR 0017
    point 2).
 
-4. **Placement.** Every created assembly gets the identity placement.
-   The GLB files are already in the frame of the STEP root, so nothing
-   moves compared to the CAD. Using STEP instance locations as assembly
-   placements is not needed for this and goes to the backlog
-   (docs/backlog/nested-assemblies-extras.md).
+4. **Placement: each assembly keeps its CAD frame** (revised 2026-10-04).
+   The first version gave every assembly the identity placement, so every
+   frame was the frame of the STEP root. Found on the user's machine: the
+   cylinder `ID1S0400125E_0:1` is mounted rotated about 70°; a slider set
+   on its rod with the default axis [0, 0, 1] moved along the world Z, not
+   along the cylinder, because joint axes are expressed in the frame of
+   the parent body's assembly (ADR 0033 point 3). Now:
+   - the converter also gives the location of every assembly node and
+     every root relative to its parent node (translation in metres,
+     unit quaternion), read from the STEP instance;
+   - the world frame of a node is its location composed along its chain;
+     an assembly's `placement` is that frame relative to its anchor
+     (ADR 0033 point 2), computed after the joints of point 3;
+   - the GLB files stay in the frame of the STEP root, so each body gets
+     the inverse of its assembly's world frame as its `placement`
+     (ADR 0033 point 7). Nothing moves compared to the CAD;
+   - a joint's origin and axis are then in the frame of the sub-assembly
+     as its CAD file defines it: the cylinder's rod slides along its own
+     axis, and moving or turning the cylinder (fields, gizmo, alignment)
+     carries its joints;
+   - without locations (older converter output, GLB, STL) placements stay
+     the identity, as before.
+   No document schema change: `placement` exists on assemblies and
+   bodies since schema 10.
 
 5. **Keys and tags.** Each assembly key is derived from its name and made
    unique per Pantin, as today. Tags keep the form

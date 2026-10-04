@@ -25,6 +25,17 @@ describe("interpretConverterRun", () => {
     expect(interpretConverterRun(outcome({}), 1000)).toEqual({ ok: true, output: VALID_OUTPUT });
   });
 
+  it("accepts assembly node locations and refuses a non-unit rotation", () => {
+    const node = { path: [0], translation: [0, 0, 1], rotation: [0, 0, 0, 1] };
+    const withNodes = { ...VALID_OUTPUT, assemblyNodes: [node] };
+    expect(interpretConverterRun(outcome({ stdout: JSON.stringify(withNodes) }), 1000)).toEqual({
+      ok: true,
+      output: withNodes,
+    });
+    const skewed = { ...VALID_OUTPUT, assemblyNodes: [{ ...node, rotation: [0, 0, 0, 2] }] };
+    expect(interpretConverterRun(outcome({ stdout: JSON.stringify(skewed) }), 1000).ok).toBe(false);
+  });
+
   it.each<[string, Partial<ProcessOutcome>]>([
     ["exit 2 without error object", { exitCode: 2, stdout: "{}" }],
     ["killed by a signal", { exitCode: null, signal: "SIGSEGV" }],
