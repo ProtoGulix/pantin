@@ -20,6 +20,7 @@ const deletion: AssemblyDeletion = {
   drives: [{ id: "drive-id-1", name: "Distributeur" }],
   actuators: [{ id: "act-id-1", name: "Vérin" }],
   sensors: [{ id: "sen-id-1", name: "Capteur" }],
+  descendantAssemblies: [],
   reanchoredAssemblies: [{ key: "y", name: "Chariot" }],
   removedTags: ["pince.fixation.setpoint"],
   addedTags: ["chariot.tige.setpoint"],
@@ -35,6 +36,24 @@ describe("assemblyDeletionDetails", () => {
       "L'assemblage « Chariot » reste en place, n'est plus rattaché à « Pince ».",
     );
     expect(lines.join("\n")).not.toMatch(/-id-/);
+  });
+
+  it("lists the sub-assemblies on one line", () => {
+    const lines = assemblyDeletionDetails(
+      {
+        ...deletion,
+        descendantAssemblies: [
+          { key: "a", name: "A" },
+          { key: "b", name: "B" },
+        ],
+      },
+      t,
+    );
+    expect(lines[0]).toBe("Sous-ensembles (2) : A, B");
+    expect(lines.at(-1)).toBe(
+      "L'assemblage « Chariot » reste en place, n'est plus rattaché aux assemblages supprimés.",
+    );
+    expect(lines).toHaveLength(10);
   });
 
   it("leaves out empty groups", () => {

@@ -125,12 +125,22 @@ export function withAssemblyIsolationToggled(
   return { ...display, isolatedAssemblyKey: display.isolatedAssemblyKey === key ? null : key };
 }
 
-/** A deleted assembly leaves no trace: isolating it would hide every body. */
-export function withAssemblyRemoved(display: AssemblyDisplay, key: string): AssemblyDisplay {
-  const hiddenAssemblyKeys = new Set(display.hiddenAssemblyKeys);
-  hiddenAssemblyKeys.delete(key);
+/**
+ * Deleted assemblies (one, or a subtree) leave no trace: isolating one would
+ * hide every body.
+ */
+export function withAssemblyRemoved(
+  display: AssemblyDisplay,
+  keys: string | readonly string[],
+): AssemblyDisplay {
+  const removed = new Set(typeof keys === "string" ? [keys] : keys);
+  const hiddenAssemblyKeys = new Set(
+    [...display.hiddenAssemblyKeys].filter((key) => !removed.has(key)),
+  );
   const isolatedAssemblyKey =
-    display.isolatedAssemblyKey === key ? null : display.isolatedAssemblyKey;
+    display.isolatedAssemblyKey !== null && removed.has(display.isolatedAssemblyKey)
+      ? null
+      : display.isolatedAssemblyKey;
   return { hiddenAssemblyKeys, isolatedAssemblyKey };
 }
 

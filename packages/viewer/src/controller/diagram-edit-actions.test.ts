@@ -155,6 +155,7 @@ describe("the feed prompt", () => {
       drives: [],
       actuators: [],
       sensors: [],
+      descendantAssemblies: [],
       reanchoredAssemblies: [],
       removedTags: [],
       addedTags: [],

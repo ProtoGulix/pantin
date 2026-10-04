@@ -138,6 +138,8 @@
   "prompt.deleteAssembly.sensors": "Sensors ({count}): {names}",
   "prompt.deleteAssembly.removedTags": "Tags removed ({count}): {names}",
   "prompt.deleteAssembly.addedTags": "Tags added ({count}): {names}",
+  "prompt.deleteAssembly.subAssemblies": "Sub-assemblies ({count}): {names}",
+  "prompt.deleteAssembly.reanchoredMany": "Assembly \"{name}\" stays in place and is no longer attached to the deleted assemblies.",
   "prompt.deleteAssembly.reanchored": "Assembly \"{name}\" stays in place and is no longer attached to \"{deleted}\".",
   "message.assemblyContentsDeleted": "Assembly \"{name}\" deleted with its contents.",
   "message.assemblyContentsDeletedRetained": "Assembly \"{name}\" deleted with its contents. {count} mesh file(s) could not be deleted and will be at the next save.",

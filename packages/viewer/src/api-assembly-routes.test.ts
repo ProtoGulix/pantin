@@ -170,6 +170,7 @@ describe("PantinApiClient assembly deletion with contents (ADR 0037)", () => {
     drives: [],
     actuators: [],
     sensors: [],
+    descendantAssemblies: [],
     reanchoredAssemblies: [{ key: "pince", name: "Pince" }],
     removedTags: ["verin_pince.slide.setpoint"],
     addedTags: [],

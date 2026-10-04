@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PantinResponseSchema } from "./api.ts";
+import { PantinResponseSchema, RenameRequestSchema } from "./api.ts";
 import {
   ActuatorIdSchema,
   BodyIdSchema,
@@ -14,16 +14,22 @@ import { TagNameSchema } from "./tag.ts";
 
 // Assemblies and keys (ADR 0019), under API_PREFIX:
 //
-//   POST   /api/pantins/:pantinId/assemblies  RenameRequest -> 201 PantinResponse
-//          (a new empty assembly; its key comes from the name)
+//   POST   /api/pantins/:pantinId/assemblies  CreateAssemblyRequest
+//          -> 201 PantinResponse (a new empty assembly; its key comes from the
+//          name; an optional `parent` (ADR 0040) must exist, else 404)
+//   PUT    /api/pantins/:pantinId/assemblies/:assemblyKey/parent
+//          SetParentRequest -> PantinResponse (ADR 0040 point 7: moves the
+//          assembly in the structure tree only; 404 for an unknown assembly
+//          or parent, 409 when it would contain itself)
 //   PATCH  /api/pantins/:pantinId/assemblies/:assemblyKey  RenameRequest
 //          -> PantinResponse (the display name only: no tag changes)
 //   DELETE /api/pantins/:pantinId/assemblies/:assemblyKey  -> PantinResponse
-//          (an empty assembly only; 409 otherwise, the message says what it
-//          holds, joints included)
+//          (an empty assembly only, without sub-assemblies; 409 otherwise,
+//          the message says what it holds, joints included)
 //   DELETE /api/pantins/:pantinId/assemblies/:assemblyKey?contents=delete
 //          -> AssemblyDeletionResponse (ADR 0037: the assembly with its bodies,
-//          joints, drives, actuators and sensors; 409 when another assembly's
+//          joints, drives, actuators and sensors, and its sub-assemblies with
+//          theirs, ADR 0040 point 8; 409 when another assembly's
 //          item depends on one of them; 400 for any other `contents` value)
 //   GET    /api/pantins/:pantinId/assemblies/:assemblyKey/deletion
 //          -> AssemblyDeletion (ADR 0037: the dry run of the deletion above,
@@ -43,6 +49,15 @@ import { TagNameSchema } from "./tag.ts";
 
 export const RenameKeyRequestSchema = z.object({ key: KeySchema });
 export type RenameKeyRequest = z.infer<typeof RenameKeyRequestSchema>;
+
+export const CreateAssemblyRequestSchema = RenameRequestSchema.extend({
+  parent: KeySchema.optional(),
+});
+export type CreateAssemblyRequest = z.infer<typeof CreateAssemblyRequestSchema>;
+
+// `null` makes the assembly top level.
+export const SetParentRequestSchema = z.object({ parent: KeySchema.nullable() });
+export type SetParentRequest = z.infer<typeof SetParentRequestSchema>;
 
 export const RenameTagKeyRequestSchema = z.object({ tagKey: KeySchema });
 export type RenameTagKeyRequest = z.infer<typeof RenameTagKeyRequestSchema>;
@@ -100,6 +115,9 @@ export const AssemblyDeletionSchema = z.object({
   sensors: z.array(namedItemSchema(SensorIdSchema)),
   // Assemblies that stay on screen but are now anchored to the world.
   reanchoredAssemblies: z.array(z.object({ key: KeySchema, name: DisplayNameSchema })),
+  // Assemblies below the deleted one in the structure tree, deleted with it
+  // (ADR 0040 point 8), with their contents listed in the groups above.
+  descendantAssemblies: z.array(z.object({ key: KeySchema, name: DisplayNameSchema })),
   removedTags: z.array(TagNameSchema),
   addedTags: z.array(TagNameSchema),
 });

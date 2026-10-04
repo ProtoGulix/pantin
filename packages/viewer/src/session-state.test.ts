@@ -250,6 +250,7 @@ describe("deleting an assembly with its contents", () => {
     drives: [],
     actuators: [],
     sensors: [],
+    descendantAssemblies: [],
     reanchoredAssemblies: [],
     removedTags: [],
     addedTags: [],

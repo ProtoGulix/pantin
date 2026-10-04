@@ -138,6 +138,8 @@
   "prompt.deleteAssembly.sensors": "Capteurs ({count}) : {names}",
   "prompt.deleteAssembly.removedTags": "Tags supprimés ({count}) : {names}",
   "prompt.deleteAssembly.addedTags": "Tags ajoutés ({count}) : {names}",
+  "prompt.deleteAssembly.subAssemblies": "Sous-ensembles ({count}) : {names}",
+  "prompt.deleteAssembly.reanchoredMany": "L'assemblage « {name} » reste en place, n'est plus rattaché aux assemblages supprimés.",
   "prompt.deleteAssembly.reanchored": "L'assemblage « {name} » reste en place, n'est plus rattaché à « {deleted} ».",
   "message.assemblyContentsDeleted": "Assemblage « {name} » supprimé avec son contenu.",
   "message.assemblyContentsDeletedRetained": "Assemblage « {name} » supprimé avec son contenu. {count} fichier(s) de maillage n'ont pas pu être supprimés : ils le seront à la prochaine sauvegarde.",

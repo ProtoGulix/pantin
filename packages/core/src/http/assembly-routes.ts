@@ -1,10 +1,12 @@
 import {
   AlignRequestSchema,
   AssemblyDeletionQuerySchema,
+  CreateAssemblyRequestSchema,
   MoveBodyRequestSchema,
   RenameKeyRequestSchema,
   RenameRequestSchema,
   RenameTagKeyRequestSchema,
+  SetParentRequestSchema,
   SetPlacementRequestSchema,
 } from "@pantin/protocol";
 import { suggestedKey } from "../domain/ids.ts";
@@ -41,12 +43,12 @@ export const ASSEMBLY_ROUTES: readonly Route[] = [
     method: "POST",
     pattern: ["pantins", ":pantinId", "assemblies"],
     handle: async (context) => {
-      const { name } = parseWithSchema(
-        RenameRequestSchema,
+      const { name, parent } = parseWithSchema(
+        CreateAssemblyRequestSchema,
         await readJsonBody(context.request),
         "The new assembly",
       );
-      const pantin = await context.service.createAssembly(pantinIdOf(context), name);
+      const pantin = await context.service.createAssembly(pantinIdOf(context), name, parent);
       sendJson(context.response, 201, pantin);
     },
   },
@@ -108,6 +110,23 @@ export const ASSEMBLY_ROUTES: readonly Route[] = [
       );
       const pantinId = pantinIdOf(context);
       const answer = await context.service.renameAssemblyKey(pantinId, assemblyKeyOf(context), key);
+      sendJson(context.response, 200, answer);
+    },
+  },
+  {
+    method: "PUT",
+    pattern: [...ASSEMBLY, "parent"],
+    handle: async (context) => {
+      const { parent } = parseWithSchema(
+        SetParentRequestSchema,
+        await readJsonBody(context.request),
+        "The parent request",
+      );
+      const answer = await context.service.setAssemblyParent(
+        pantinIdOf(context),
+        assemblyKeyOf(context),
+        parent,
+      );
       sendJson(context.response, 200, answer);
     },
   },

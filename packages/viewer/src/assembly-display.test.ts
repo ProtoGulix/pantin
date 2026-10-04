@@ -142,6 +142,17 @@ describe("hiding and isolating assemblies", () => {
 });
 
 describe("withAssemblyRemoved", () => {
+  it("drops every key of a deleted subtree", () => {
+    const hidden = withAssemblyHiddenToggled(
+      withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "a", KEYS),
+      "b",
+      KEYS,
+    );
+    const removed = withAssemblyRemoved({ ...hidden, isolatedAssemblyKey: "b" }, ["a", "b"]);
+    expect(removed.hiddenAssemblyKeys.size).toBe(0);
+    expect(removed.isolatedAssemblyKey).toBeNull();
+  });
+
   it("forgets a deleted assembly, so that its isolation cannot hide every body", () => {
     const isolated = withAssemblyIsolationToggled(
       withAssemblyHiddenToggled(NO_ASSEMBLY_DISPLAY, "spare", KEYS),

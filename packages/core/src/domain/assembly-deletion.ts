@@ -7,13 +7,19 @@ import {
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { deriveAssemblyAnchors } from "./assembly-anchors.ts";
-import { type AssemblyContents, contentsOfAssembly, findAssembly } from "./assembly-contents.ts";
+import {
+  type AssemblyContents,
+  contentsOfAssemblies,
+  descendantAssemblies,
+  findAssembly,
+} from "./assembly-contents.ts";
 import { keepDisplayedPose } from "./keep-displayed-pose.ts";
 import { vanishedAndAppearedTags } from "./tags.ts";
 import { parseWithSchema } from "./validation.ts";
 
 // Deleting an assembly with its contents (ADR 0037), as a pure function: the
-// assembly's bodies, drives, actuators and sensors go, and every joint that
+// assembly and its sub-assemblies (ADR 0040 point 8) are taken as one; their
+// bodies, drives, actuators and sensors go, and every joint that
 // touches one of its bodies. Other assemblies keep everything they own, or the
 // deletion is refused.
 
@@ -29,13 +35,17 @@ const FIX_FEED = "Remove the feed from the actuator, or delete the actuator, fir
 const FIX_SENSOR = "Point the sensor at another joint, or delete it, first.";
 
 // Items of other assemblies that cannot stay as they are (ADR 0037 point 3).
-function blockingItems(document: PantinDocument, key: string, contents: AssemblyContents) {
+function blockingItems(
+  document: PantinDocument,
+  keys: ReadonlySet<string>,
+  contents: AssemblyContents,
+) {
   const assemblyName = (assemblyKey: string) =>
     document.assemblies.find((assembly) => assembly.key === assemblyKey)?.name ?? assemblyKey;
   const removedJoints = new Map(contents.joints.map((joint) => [joint.id, joint]));
   const removedDriveIds = new Set(contents.drives.map(({ id }) => id));
   const blocks: string[] = [];
-  for (const actuator of document.actuators.filter((item) => item.assembly !== key)) {
+  for (const actuator of document.actuators.filter((item) => !keys.has(item.assembly))) {
     const where = `Actuator "${actuator.name}" of assembly "${assemblyName(actuator.assembly)}"`;
     for (const jointId of actuator.joints) {
       const joint = removedJoints.get(jointId);
@@ -51,7 +61,7 @@ function blockingItems(document: PantinDocument, key: string, contents: Assembly
       blocks.push(`${where} is fed by drive "${driveName}", which would be deleted. ${FIX_FEED}`);
     }
   }
-  for (const sensor of document.sensors.filter((item) => item.assembly !== key)) {
+  for (const sensor of document.sensors.filter((item) => !keys.has(item.assembly))) {
     const joint = removedJoints.get(sensor.joint);
     if (joint !== undefined) {
       const where = `Sensor "${sensor.name}" of assembly "${assemblyName(sensor.assembly)}"`;
@@ -63,19 +73,19 @@ function blockingItems(document: PantinDocument, key: string, contents: Assembly
 
 function documentWithout(
   document: PantinDocument,
-  key: string,
+  keys: ReadonlySet<string>,
   contents: AssemblyContents,
 ): PantinDocument {
   const bodyIds = new Set(contents.bodies.map(({ id }) => id));
   const jointIds = new Set(contents.joints.map(({ id }) => id));
   return {
     ...document,
-    assemblies: document.assemblies.filter((assembly) => assembly.key !== key),
+    assemblies: document.assemblies.filter((assembly) => !keys.has(assembly.key)),
     bodies: document.bodies.filter((body) => !bodyIds.has(body.id)),
     joints: document.joints.filter((joint) => !jointIds.has(joint.id)),
-    drives: document.drives.filter((drive) => drive.assembly !== key),
-    actuators: document.actuators.filter((actuator) => actuator.assembly !== key),
-    sensors: document.sensors.filter((sensor) => sensor.assembly !== key),
+    drives: document.drives.filter((drive) => !keys.has(drive.assembly)),
+    actuators: document.actuators.filter((actuator) => !keys.has(actuator.assembly)),
+    sensors: document.sensors.filter((sensor) => !keys.has(sensor.assembly)),
   };
 }
 
@@ -84,20 +94,24 @@ const named = ({ id, name }: { id: string; name: string }) => ({ id, name });
 function describeDeletion(
   document: PantinDocument,
   assembly: Assembly,
+  descendants: readonly Assembly[],
   contents: AssemblyContents,
   tags: { removedTags: string[]; addedTags: string[] },
 ): AssemblyDeletion {
   const key = assembly.key;
-  const ownBodyIds = new Set(contents.bodies.map(({ id }) => id));
+  const keys = new Set([key, ...descendants.map((item) => item.key)]);
+  const assemblyOfBody = new Map(document.bodies.map((item) => [item.id, item.assembly]));
   const betweenAssemblies = (joint: Joint) =>
-    !(ownBodyIds.has(joint.parent) && ownBodyIds.has(joint.child));
-  // Anchored to the deleted assembly: now to the world (ADR 0037 point 2).
+    assemblyOfBody.get(joint.parent) !== assemblyOfBody.get(joint.child);
+  // Outside the deleted set, anchored into it: now to the world (ADR 0037 point 2).
   const anchors = deriveAssemblyAnchors(document);
-  const reanchored = document.assemblies.filter(
-    (candidate) => anchors.get(candidate.key)?.assembly === key,
-  );
+  const reanchored = document.assemblies.filter((candidate) => {
+    const anchor = anchors.get(candidate.key)?.assembly;
+    return !keys.has(candidate.key) && anchor !== undefined && keys.has(anchor);
+  });
   return {
     assembly: { key, name: assembly.name },
+    descendantAssemblies: descendants.map(({ key: subKey, name }) => ({ key: subKey, name })),
     bodies: contents.bodies.map(named),
     joints: contents.joints.map((joint) => ({
       ...named(joint),
@@ -120,15 +134,17 @@ export function deleteAssemblyWithContents(
   positions: ReadonlyMap<string, number>,
 ): AssemblyDeletionResult {
   const assembly = findAssembly(document, key);
-  const contents = contentsOfAssembly(document, key);
-  const blocks = blockingItems(document, key, contents);
+  const descendants = descendantAssemblies(document, key);
+  const keys = new Set([key, ...descendants.map((item) => item.key)]);
+  const contents = contentsOfAssemblies(document, keys);
+  const blocks = blockingItems(document, keys, contents);
   if (blocks.length > 0) {
     throw new ApiError(
       "conflict",
       `Assembly "${assembly.name}" cannot be deleted with its contents. ${blocks.join(" ")}`,
     );
   }
-  const stripped = documentWithout(document, key, contents);
+  const stripped = documentWithout(document, keys, contents);
   const after = parseWithSchema(
     PantinDocumentSchema,
     keepDisplayedPose(document, stripped, positions),
@@ -141,7 +157,7 @@ export function deleteAssemblyWithContents(
   const tags = vanishedAndAppearedTags(document, after);
   return {
     document: after,
-    deletion: describeDeletion(document, assembly, contents, tags),
+    deletion: describeDeletion(document, assembly, descendants, contents, tags),
     meshPaths,
   };
 }

@@ -29,18 +29,48 @@ export type AssemblyContents = {
   sensors: Sensor[];
 };
 
-export function contentsOfAssembly(document: PantinDocument, key: string): AssemblyContents {
-  const bodies = document.bodies.filter((body) => body.assembly === key);
+/** The sub-assemblies of an assembly at any depth (ADR 0040), in document order. */
+export function descendantAssemblies(document: PantinDocument, key: string): Assembly[] {
+  const inside = new Set([key]);
+  const found = new Set<string>();
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const assembly of document.assemblies) {
+      if (
+        !inside.has(assembly.key) &&
+        assembly.parent !== undefined &&
+        inside.has(assembly.parent)
+      ) {
+        inside.add(assembly.key);
+        found.add(assembly.key);
+        grew = true;
+      }
+    }
+  }
+  return document.assemblies.filter((assembly) => found.has(assembly.key));
+}
+
+/** What a set of assemblies holds, taken as one (ADR 0040 point 8). */
+export function contentsOfAssemblies(
+  document: PantinDocument,
+  keys: ReadonlySet<string>,
+): AssemblyContents {
+  const bodies = document.bodies.filter((body) => keys.has(body.assembly));
   const bodyIds = new Set(bodies.map(({ id }) => id));
   return {
     bodies,
     joints: document.joints.filter(
       (joint) => bodyIds.has(joint.parent) || bodyIds.has(joint.child),
     ),
-    drives: document.drives.filter((drive) => drive.assembly === key),
-    actuators: document.actuators.filter((actuator) => actuator.assembly === key),
-    sensors: document.sensors.filter((sensor) => sensor.assembly === key),
+    drives: document.drives.filter((drive) => keys.has(drive.assembly)),
+    actuators: document.actuators.filter((actuator) => keys.has(actuator.assembly)),
+    sensors: document.sensors.filter((sensor) => keys.has(sensor.assembly)),
   };
+}
+
+export function contentsOfAssembly(document: PantinDocument, key: string): AssemblyContents {
+  return contentsOfAssemblies(document, new Set([key]));
 }
 
 function count(items: readonly unknown[], singular: string, plural: string): string[] {

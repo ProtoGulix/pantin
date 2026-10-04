@@ -15,6 +15,7 @@ import {
   renameAssembly,
   renameAssemblyKey,
   renameTagKey,
+  setAssemblyParent,
   setAssemblyPlacement,
 } from "../domain/assembly-edits.ts";
 import { renamedTags } from "../domain/tags.ts";
@@ -74,8 +75,10 @@ async function placeAssembly(
 
 export function assemblyOperations(context: ServiceContext) {
   return {
-    createAssembly: (pantinId: PantinId, name: string) =>
-      editPantin(context, pantinId, (document) => createAssembly(document, name).document),
+    createAssembly: (pantinId: PantinId, name: string, parent?: string) =>
+      editPantin(context, pantinId, (document) => createAssembly(document, name, parent).document),
+    setAssemblyParent: (pantinId: PantinId, key: string, parent: string | null) =>
+      editPantin(context, pantinId, (document) => setAssemblyParent(document, key, parent)),
     renameAssembly: (pantinId: PantinId, key: string, name: string) =>
       editPantin(context, pantinId, (document) => renameAssembly(document, key, name)),
     deleteAssembly: (pantinId: PantinId, key: string) =>

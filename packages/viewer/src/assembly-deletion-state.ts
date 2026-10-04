@@ -23,6 +23,7 @@ function alignmentOutlives(state: ViewerState, deleted: AssemblyDeletion): boole
   const bodies = ids(deleted.bodies);
   return (
     session.assemblyKey !== deleted.assembly.key &&
+    !deleted.descendantAssemblies.some(({ key }) => key === session.assemblyKey) &&
     !session.picks.some((pick) => pick !== null && bodies.has(pick.highlight.bodyId))
   );
 }
@@ -30,7 +31,10 @@ function alignmentOutlives(state: ViewerState, deleted: AssemblyDeletion): boole
 // A form whose target went, or that was creating something in the assembly
 // or between its bodies, would only be refused by the core: close it.
 function withFormsClosed(state: ViewerState, deleted: AssemblyDeletion): ViewerState {
-  const { key } = deleted.assembly;
+  const keys = new Set([
+    deleted.assembly.key,
+    ...deleted.descendantAssemblies.map(({ key }) => key),
+  ]);
   const bodies = ids(deleted.bodies);
   const { jointForm, driveForm, actuatorForm, sensorForm } = state;
   const jointGone =
@@ -43,17 +47,17 @@ function withFormsClosed(state: ViewerState, deleted: AssemblyDeletion): ViewerS
     jointForm: jointGone ? null : jointForm,
     driveForm:
       driveForm !== null &&
-      (driveForm.assembly === key || ids(deleted.drives).has(driveForm.driveId ?? ""))
+      (keys.has(driveForm.assembly) || ids(deleted.drives).has(driveForm.driveId ?? ""))
         ? null
         : driveForm,
     actuatorForm:
       actuatorForm !== null &&
-      (actuatorForm.assembly === key || ids(deleted.actuators).has(actuatorForm.actuatorId ?? ""))
+      (keys.has(actuatorForm.assembly) || ids(deleted.actuators).has(actuatorForm.actuatorId ?? ""))
         ? null
         : actuatorForm,
     sensorForm:
       sensorForm !== null &&
-      (sensorForm.assembly === key || ids(deleted.sensors).has(sensorForm.sensorId ?? ""))
+      (keys.has(sensorForm.assembly) || ids(deleted.sensors).has(sensorForm.sensorId ?? ""))
         ? null
         : sensorForm,
   };
@@ -87,7 +91,10 @@ export function withAssemblyContentsDeleted(
         };
   return {
     ...withFormsClosed(withSelection(shown, nodeSelection(pantinNodeId(pantin.id))), deleted),
-    assemblyDisplay: withAssemblyRemoved(shown.assemblyDisplay, deleted.assembly.key),
+    assemblyDisplay: withAssemblyRemoved(shown.assemblyDisplay, [
+      deleted.assembly.key,
+      ...deleted.descendantAssemblies.map(({ key }) => key),
+    ]),
     alignment: alignmentOutlives(shown, deleted) ? shown.alignment : null,
     message,
   };
