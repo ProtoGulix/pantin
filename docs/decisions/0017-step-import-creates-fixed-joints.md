@@ -4,6 +4,7 @@
 - Date: 2026-09-29
 - Extends: ADR 0009 (STEP import), ADR 0011 (kinematic joints)
 - Corrected by: ADR 0018 (point 6)
+- Superseded in part by: ADR 0040 (point 1)
 
 ## Context
 

@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-10-03
 - Amends: ADR 0019 (point 10: deleting a non-empty assembly)
+- Amended by: ADR 0040 (point 8: descendant assemblies)
 - Depends on: ADR 0033 (anchors, edits keep the world pose), ADR 0028
   (actuators, feeds), ADR 0023 (sensors watch joints), ADR 0035 (face
   files are deleted with their mesh)
