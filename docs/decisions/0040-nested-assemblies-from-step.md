@@ -36,11 +36,14 @@ down to depth 4:
         michaud_chailly_B7-BAA-20:2 to :5    4 parts each
       ID1S0400125E_0:1                       3 parts (cylinder)
 
-Imported today, this machine becomes one assembly of 72 bodies, all fixed
+The converter keeps the 51 leaves that have faces (`_visible_components`).
+Every body already carries its full node chain with indices, so the core
+can rebuild the tree of assembly nodes without a converter change.
+Imported today, this machine becomes one assembly of 51 bodies, all fixed
 to `Chariot SCIE`. Splitting it by hand means creating assemblies, moving
 bodies one by one, and re-parenting joints first, since an assembly may
 have only one incoming joint between assemblies (ADR 0033 point 2). For
-the carriage that is 66 moves. NOT VERIFIED: the exact refusal on the
+the carriage that is 45 moves. NOT VERIFIED: the exact refusal on the
 second move; the anchor rule makes it expected.
 
 Facts checked in the repository on 2026-10-04:
@@ -68,7 +71,10 @@ user's earlier files (cylinder, gripper) had a single level.
 2. **Import follows the tree.** Every STEP node that is an assembly
    becomes a Pantin assembly, at every depth, named after the node's name
    as the converter reads it (instance name first). Every leaf becomes a
-   body in the assembly of its direct parent node. An import always
+   body in the assembly of its direct parent node. The core rebuilds the
+   tree from the node chains the converter already gives (`source.nodes`,
+   a node is identified by its index path), so an assembly node with no
+   kept leaf below it creates nothing. An import always
    yields exactly one top-level assembly:
    - a file with one root: that root;
    - a file with several roots: an assembly named after the file, with
@@ -162,7 +168,7 @@ user's earlier files (cylinder, gripper) had a single level.
 - Public changes approved by the user on 2026-10-04: the document schema
   (`parent`, version 11), the import response, `POST .../assemblies` and a
   new route.
-- To verify next: import `Translateur SCIE.step` end to end (72 bodies,
+- To verify next: import `Translateur SCIE.step` end to end (51 bodies,
   10 assemblies expected); one ZW3D file with sub-assemblies; time of an
   import of a few hundred bodies, since each joint creation validates the
   whole document (ADR 0017 consequences).
