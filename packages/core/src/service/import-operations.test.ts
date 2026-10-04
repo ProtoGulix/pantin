@@ -148,3 +148,63 @@ describe("assembly edits during an import (ADR 0019)", () => {
     expect((await service.getPantin("axis")).document.assemblies).toEqual([]);
   });
 });
+
+// A machine with a sub-assembly: M holds a plate and the sub-assembly Sub.
+const nestedMachine: StepConverter = async () =>
+  [
+    {
+      name: "plate",
+      nodes: [
+        { name: "M", path: [0] },
+        { name: "plate", path: [0, 0] },
+      ],
+    },
+    {
+      name: "a",
+      nodes: [
+        { name: "M", path: [0] },
+        { name: "Sub", path: [0, 1] },
+        { name: "a", path: [0, 1, 0] },
+      ],
+    },
+    {
+      name: "b",
+      nodes: [
+        { name: "M", path: [0] },
+        { name: "Sub", path: [0, 1] },
+        { name: "b", path: [0, 1, 1] },
+      ],
+    },
+  ].map((component) => ({ ...component, glbBytes: buildSampleGlb(), faceFile: undefined }));
+
+describe("importBodies nested assemblies (ADR 0040)", () => {
+  it("answers the assemblies top level first, with parents and joints between them", async () => {
+    const service = createPantinService(createPantinStore(pantinsDirectory), nestedMachine);
+    await service.createPantin("Axis");
+    const { assemblies, bodies, joints } = await service.importBodies(
+      "axis",
+      { fileName: "m.step" },
+      STEP_BYTES,
+    );
+    expect(assemblies.map(({ key, parent }) => [key, parent])).toEqual([
+      ["m", undefined],
+      ["sub", "m"],
+    ]);
+    expect(bodies.map((body) => body.assembly)).toEqual(["m", "sub", "sub"]);
+    expect(joints.map(({ parent, child }) => [parent, child])).toEqual([
+      ["plate", "a"],
+      ["a", "b"],
+    ]);
+    expect((await service.getPantin("axis")).document.assemblies).toEqual(assemblies);
+  });
+
+  it("removes every assembly of the tree, with joints and bodies, when a write fails", async () => {
+    const service = createPantinService(storeFailingOnSecondWrite(), nestedMachine);
+    await service.createPantin("Axis");
+    await expect(service.importBodies("axis", { fileName: "m.step" }, STEP_BYTES)).rejects.toThrow(
+      "disk full",
+    );
+    const { document } = await service.getPantin("axis");
+    expect([document.joints, document.bodies, document.assemblies]).toEqual([[], [], []]);
+  });
+});

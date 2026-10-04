@@ -83,6 +83,12 @@ describe("PantinApiClient requests", () => {
   });
 });
 
+const IMPORTED_ASSEMBLY = {
+  key: "press",
+  name: "press",
+  placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+};
+
 const STL_BODY = {
   id: "rail",
   name: "rail",
@@ -101,7 +107,9 @@ describe("PantinApiClient import", () => {
       mesh: `meshes/${id}.glb`,
     });
     const bodies = [component("rail"), component("carriage")];
-    const { fetchFunction, requests } = fakeFetch(jsonResponse({ bodies, joints: [] }, 201));
+    const { fetchFunction, requests } = fakeFetch(
+      jsonResponse({ assemblies: [IMPORTED_ASSEMBLY], bodies, joints: [] }, 201),
+    );
     const bytes = new ArrayBuffer(8);
     const imported = await createPantinApiClient(fetchFunction).importBodies(
       "press",
@@ -114,8 +122,9 @@ describe("PantinApiClient import", () => {
   });
 
   it.each([
-    ["without any body", { bodies: [], joints: [] }],
-    ["without its joints (ADR 0017)", { bodies: [STL_BODY] }],
+    ["without any body", { assemblies: [IMPORTED_ASSEMBLY], bodies: [], joints: [] }],
+    ["without its joints (ADR 0017)", { assemblies: [IMPORTED_ASSEMBLY], bodies: [STL_BODY] }],
+    ["without its assemblies (ADR 0040)", { bodies: [STL_BODY], joints: [] }],
   ])("rejects an import answer %s", async (_case, answer) => {
     const { fetchFunction } = fakeFetch(jsonResponse(answer, 201));
     const error = await captureError(

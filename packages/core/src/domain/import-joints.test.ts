@@ -6,7 +6,7 @@ import {
 } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { NO_POSITIONS } from "../test-support/no-positions.ts";
-import { addStarJoints } from "./import-joints.ts";
+import { addFixedJoints } from "./import-joints.ts";
 import { addJointToDocument } from "./joint-rules.ts";
 
 function body(id: string, name = id): Body {
@@ -43,16 +43,20 @@ const FIXED_REQUEST: CreateJointRequest = {
   axis: [0, 0, 1],
 };
 
-describe("addStarJoints", () => {
-  it("adds no joint for a single body", () => {
-    const rail = body("rail");
-    const document = documentWith([rail]);
-    expect(addStarJoints(document, [rail])).toEqual({ document, joints: [] });
+function star(bodies: Body[]): { parent: Body; child: Body }[] {
+  const [root, ...children] = bodies;
+  return root === undefined ? [] : children.map((child) => ({ parent: root, child }));
+}
+
+describe("addFixedJoints", () => {
+  it("adds no joint without a link", () => {
+    const document = documentWith([body("rail")]);
+    expect(addFixedJoints(document, [])).toEqual({ document, joints: [] });
   });
 
-  it("makes every other body a fixed child of the first one, named after the child", () => {
+  it("adds one fixed joint per link, here every other body a child of the first one, named after the child", () => {
     const bodies = [body("rail", "Rail"), body("carriage", "Carriage"), body("stop", "Stop")];
-    const { document, joints } = addStarJoints(documentWith(bodies), bodies);
+    const { document, joints } = addFixedJoints(documentWith(bodies), star(bodies));
     expect(joints).toEqual([
       {
         id: "carriage",
@@ -87,7 +91,7 @@ describe("addStarJoints", () => {
       link,
       NO_POSITIONS,
     ).document;
-    const { joints } = addStarJoints(withEarlierJoint, imported);
+    const { joints } = addFixedJoints(withEarlierJoint, star(imported));
     expect(joints.map((joint) => joint.id)).toEqual(["plate-2"]);
   });
 });

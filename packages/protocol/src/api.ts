@@ -6,7 +6,13 @@ import {
   JointSchema,
   Vector3Schema,
 } from "./joint.ts";
-import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from "./pantin.ts";
+import {
+  AssemblySchema,
+  BodySchema,
+  LengthUnitSchema,
+  PantinDocumentSchema,
+  UpAxisSchema,
+} from "./pantin.ts";
 
 // REST contract between the core and its clients (viewer, CLI, tests).
 // All routes live under API_PREFIX. Bodies are JSON unless stated otherwise.
@@ -22,7 +28,8 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //          pending mesh deletions are cancelled)
 //   POST   /api/pantins/:pantinId/bodies?<ImportBodyQuery>
 //          raw file bytes (application/octet-stream)  -> 201 ImportBodiesResponse
-//          (one body for GLB and STL, one body per assembly component for STEP;
+//          (one body for GLB and STL, one body per assembly component for STEP,
+//          in one assembly per assembly node of the file, ADR 0040;
 //          several components are also joined by fixed joints, ADR 0017)
 //   PATCH  /api/pantins/:pantinId/bodies/:bodyId  RenameRequest -> BodyResponse
 //   DELETE /api/pantins/:pantinId/bodies/:bodyId  -> PantinResponse
@@ -98,9 +105,11 @@ export type PantinResponse = z.infer<typeof PantinResponseSchema>;
 export const BodyResponseSchema = z.object({ body: BodySchema });
 export type BodyResponse = z.infer<typeof BodyResponseSchema>;
 
-// The joints link the bodies of a multi-component STEP import (ADR 0017);
-// empty for GLB, STL and a single-component STEP file.
+// The assemblies the import created, top level first (ADR 0040: a STEP file
+// gives its tree of assemblies, GLB and STL one). The joints link the bodies
+// (ADR 0017); empty for GLB, STL and a single-component STEP file.
 export const ImportBodiesResponseSchema = z.object({
+  assemblies: z.array(AssemblySchema).min(1),
   bodies: z.array(BodySchema).min(1),
   joints: z.array(JointSchema),
 });
