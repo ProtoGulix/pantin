@@ -8,6 +8,7 @@ import {
   rowFocusKey,
 } from "../properties/property-rows.ts";
 import { committingTextInput, element, selectInput } from "./dom.ts";
+import { focusField } from "./focus.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { followLink } from "./row-actions.ts";
@@ -98,11 +99,14 @@ function textEditor(
 }
 
 function focusNextField(from: HTMLElement, focusKey: string): void {
-  const next = [...(from.closest("table")?.querySelectorAll("input") ?? [])].find(
-    (candidate) => candidate.getAttribute("data-focus-key") === focusKey,
-  );
-  next?.focus();
-  next?.select();
+  // The region outlives the redraws of the grid it holds.
+  const region = from.closest<HTMLElement>(".inspector") ?? from.ownerDocument.body;
+  focusField(region, focusKey);
+  // Focusing the next field blurs this one, whose commit can redraw the panel
+  // at once and replace the field just focused: focus it again once redrawn.
+  if (!region.contains(from.ownerDocument.activeElement)) {
+    focusField(region, focusKey);
+  }
 }
 
 function valueCell(
