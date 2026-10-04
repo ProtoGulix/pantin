@@ -23,12 +23,22 @@ type ToolIcon =
   | "sensor"
   | "play"
   | "pause"
-  | "step";
+  | "step"
+  | "add-drive"
+  | "add-actuator"
+  | "add-sensor"
+  | "move"
+  | "rotate"
+  | "align"
+  | "edit"
+  | "delete";
 
 export type IconName = TreeIcon | ToolIcon;
 
 const CUBE = "M8 1.8 13.8 5v6L8 14.2 2.2 11V5Z M2.2 5 8 8.2 13.8 5 M8 8.2v6";
 const CORNERS = "M2 5.5V2h3.5 M10.5 2H14v3.5 M14 10.5V14h-3.5 M5.5 14H2v-3.5";
+// The small "+" in the top right corner of the icons that create a device.
+const ADD_BADGE = "M12.5 1.5v4 M10.5 3.5h4";
 const CIRCLE = "M14 8A6 6 0 1 1 2 8a6 6 0 0 1 12 0Z";
 
 const PATHS: Readonly<Record<IconName, string>> = {
@@ -64,6 +74,17 @@ const PATHS: Readonly<Record<IconName, string>> = {
   pause: "M5 3v10 M11 3v10",
   // A play triangle and the bar it stops at: one step.
   step: "M3 3 10 8 3 13Z M13 3v10",
+  // A valve block of three positions: a new drive.
+  "add-drive": `M1.5 7h10v6h-10Z M4.8 7v6 M8.2 7v6 ${ADD_BADGE}`,
+  // A cylinder and its rod: a new actuator.
+  "add-actuator": `M1.5 7.5h8v5h-8Z M6 7.5v5 M6 10h8.5 ${ADD_BADGE}`,
+  "add-sensor": `M1.5 8h4v4h-4Z M7.5 7.5a3 3 0 0 1 0 5 M9.8 6a5 5 0 0 1 0 8 ${ADD_BADGE}`,
+  move: "M8 1.5v13 M1.5 8h13 M6 3.5l2-2 2 2 M6 12.5l2 2 2-2 M3.5 6l-2 2 2 2 M12.5 6l2 2-2 2",
+  rotate: "M13 8a5 5 0 1 1-1.46-3.54 M11.6 1.6v2.9H8.7",
+  // Two blocks pushed against one line.
+  align: "M2 2v12 M4.5 3.5h8v3h-8Z M4.5 9.5h5v3h-5Z",
+  edit: "M10.5 2.5l3 3L6 13H3v-3Z M9 4l3 3",
+  delete: "M2.5 4h11 M6 4V2.5h4V4 M4 4l.7 9.5h6.6L12 4 M6.8 6.5v5 M9.2 6.5v5",
   eye: "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   "eye-off":
     "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M2.5 13.5l11-11",
