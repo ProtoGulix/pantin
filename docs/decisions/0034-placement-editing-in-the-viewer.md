@@ -1,6 +1,7 @@
 # 0034. Placement editing in the viewer: fields and gizmo
 
 - Status: accepted
+- Amended by: ADR 0042 (point 3: gizmo axes)
 - Date: 2026-10-02
 - Amended by: ADR 0039 (points 1, 3, 5, 6 and 7: where fields, toggles
   and steps live, scope of G and R, Escape)
