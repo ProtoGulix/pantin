@@ -8,7 +8,7 @@ import {
   withJointFormType,
 } from "../joints/joint-form.ts";
 import { JOINT_TYPES } from "../joints/joint-labels.ts";
-import { pantinResponse, railBody, stepBody, weldJoint } from "../test-fixtures.ts";
+import { pantinResponse, railBody, slideJoint, stepBody, weldJoint } from "../test-fixtures.ts";
 import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
 import { buildJointFormView } from "./joint-form-model.ts";
 
@@ -38,7 +38,7 @@ describe("buildJointFormView", () => {
   it("always has the origin in mm and the axis as a choice of direction", () => {
     const view = buildJointFormView(stateWith(JOINT_TYPES[0] ?? "fixed"), translate);
     expect([view?.origin.label, view?.origin.unit, view?.origin.inputs.length]).toEqual([
-      "Origin",
+      'Origin (frame of "main")',
       "mm",
       3,
     ]);
@@ -73,6 +73,39 @@ describe("buildJointFormView", () => {
   it("disables the button while a request runs", () => {
     const busy = { ...stateWith(JOINT_TYPES[0] ?? "fixed"), pendingRequestCount: 1 };
     expect(buildJointFormView(busy, translate)?.canSubmit).toBe(false);
+  });
+});
+
+describe("buildJointFormView, axis buttons and frame (ADR 0041, 0042)", () => {
+  it("names the parent body's assembly in the axis and origin labels", () => {
+    const view = buildJointFormView(stateWith("prismatic"), translate);
+    expect(view?.axis.label).toBe('Axis (frame of "main")');
+    expect(view?.origin.label).toBe('Origin (frame of "main")');
+  });
+
+  it("offers Reverse always, and the face pick on a stored joint that moves", () => {
+    expect(buildJointFormView(stateWith("prismatic"), translate)?.axis.fromFace).toBeNull();
+    const opened = withOpenPantin(initialViewerState("en"), pantinResponse(false, bodies));
+    const stored = { ...opened, jointForm: jointFormFor({ ...slideJoint, parent: "rail" }) };
+    const view = buildJointFormView(stored, translate);
+    expect(view?.axis.invertLabel).toBe("Reverse the axis");
+    expect(view?.axis.fromFace).toEqual({ label: "Take the axis from a face", waiting: false });
+    const fromFixed = {
+      ...opened,
+      jointForm: withJointFormType(jointFormFor(weldJoint), "prismatic"),
+    };
+    expect(buildJointFormView(fromFixed, translate)?.axis.fromFace).not.toBeNull();
+    const waiting = {
+      ...stored,
+      axisPick: {
+        pantinId: "press",
+        jointId: "slide",
+        nodeId: null,
+        waiting: true,
+        highlight: null,
+      },
+    };
+    expect(buildJointFormView(waiting, translate)?.axis.fromFace?.waiting).toBe(true);
   });
 });
 

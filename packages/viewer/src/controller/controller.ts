@@ -30,6 +30,7 @@ import {
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
+import { startAxisPick } from "./axis-pick-actions.ts";
 import { clockIntents } from "./clock-actions.ts";
 import { consoleIntents } from "./console-actions.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
@@ -178,6 +179,7 @@ function jointIntents(store: ViewerStore) {
     reverseJointAxis: () => reverseJointAxis(store),
     submitJointForm: () => void submitJointForm(store),
     cancelJointForm: () => cancelJointForm(store),
+    pickJointAxisOnFace: () => startAxisPick(store),
     moveJoint: (pantinId: string, jointId: string, position: number) =>
       moveJoint(store, pantinId, jointId, position),
   };

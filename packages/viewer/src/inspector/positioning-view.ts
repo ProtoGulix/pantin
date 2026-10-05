@@ -144,7 +144,7 @@ export function buildPositioningView(
     const collapsed = state.collapsedPropertyGroups.has(draft.id);
     return {
       title,
-      group: { ...draft, title, collapsed },
+      group: { ...draft, title: draft.title ?? title, collapsed },
       bodyLine: null,
       tools: toolsOf(state, t),
       step: stepOf(state, t),

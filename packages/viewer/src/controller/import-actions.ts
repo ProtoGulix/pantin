@@ -2,8 +2,8 @@ import type { Body } from "@pantin/protocol";
 import { LengthUnitSchema, UpAxisSchema } from "@pantin/protocol";
 import { pluralKey } from "../i18n/translate.ts";
 import { buildImportQuery, createPendingImport, pantinNameFromFile } from "../import-options.ts";
+import { withImportedBodies, withImportFailed, withImportStarted } from "../import-state.ts";
 import { errorMessage, infoMessage } from "../messages.ts";
-import { withImportedBodies, withImportFailed, withImportStarted } from "../viewer-state.ts";
 import { createPantin, editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 

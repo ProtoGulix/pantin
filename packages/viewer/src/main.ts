@@ -3,7 +3,7 @@ import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
 import { effectiveLayout, parseStoredLayout } from "./central-layout.ts";
 import type { ClockView } from "./clock/clock-model.ts";
 import type { ConsoleView } from "./console/console-view.ts";
-import { receiveAlignmentPick } from "./controller/alignment-actions.ts";
+import { receiveViewportPick } from "./controller/axis-pick-actions.ts";
 import { refreshConsole } from "./controller/console-actions.ts";
 import {
   createPanelIntents,
@@ -145,7 +145,7 @@ function createViewportOrInert(
         onPlacementDragged: (assemblyKey, placement) =>
           dragPlacement(store, assemblyKey, placement),
         onPlacementDragEnded: () => void finishPlacementDrag(store),
-        onAlignmentPick: (pick) => void receiveAlignmentPick(store, pick),
+        onAlignmentPick: (pick) => void receiveViewportPick(store, pick),
         onLoadError: (bodyName, reason) =>
           store.update({
             ...store.state,

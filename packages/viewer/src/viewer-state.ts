@@ -1,6 +1,5 @@
 import type {
   AssemblyDeletion,
-  Body,
   FaultsResponse,
   OrphanMeshList,
   PantinResponse,
@@ -17,6 +16,7 @@ import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
 import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
+import type { AxisPickState } from "./joints/axis-pick-state.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import {
   DEFAULT_INSPECTOR_PREFERENCES,
@@ -29,8 +29,8 @@ import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.
 import { NO_PREVIOUS_PLACEMENTS, type PreviousPlacements } from "./previous-placement.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
-import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { selectionExists, withRevealedNode } from "./tree/tree-state.ts";
+import { assemblyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
+import { selectionExists } from "./tree/tree-state.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
 // truth: this is only the last answer it gave, plus purely local UI state.
@@ -126,8 +126,9 @@ export interface ViewerState {
   gizmoSteps: SnapSteps;
   // Which axes the gizmo offers (ADR 0042 point 2), also kept in the browser.
   gizmoSpace: GizmoSpace;
-  // The alignment under way (ADR 0035), or null. Display state, never saved.
+  // The alignment (ADR 0035) or the axis pick (ADR 0041) under way, or null. Display state.
   alignment: AlignmentSession | null;
+  axisPick: AxisPickState | null;
   // Placement field feedback (ADR 0039 point 5): the last placement a drag sent
   // while it lasts, and typed text that is not a number. Display state.
   placementDraft: PlacementDraft | null;
@@ -152,6 +153,7 @@ const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 const NO_TOOL_STATE = {
   gizmoMode: null,
   alignment: null,
+  axisPick: null,
   placementDraft: null,
   placementInvalid: null,
 } as const;
@@ -233,6 +235,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     alignment: null,
+    axisPick: null,
     placementDraft: null,
     placementInvalid: null,
     previousPlacements: NO_PREVIOUS_PLACEMENTS,
@@ -266,30 +269,4 @@ export function withRequestStarted(state: ViewerState): ViewerState {
 
 export function withRequestFinished(state: ViewerState): ViewerState {
   return { ...state, pendingRequestCount: Math.max(0, state.pendingRequestCount - 1) };
-}
-
-export function withImportStarted(state: ViewerState): ViewerState {
-  return { ...state, importInProgress: true, message: null };
-}
-
-/** The import failed: the form stays open so the user can retry or cancel. */
-export function withImportFailed(state: ViewerState): ViewerState {
-  return { ...state, importInProgress: false };
-}
-
-/**
- * The core created one body (GLB, STL) or several (one per STEP assembly
- * component). The form closes and the first new body is selected and shown
- * in the tree, so the user sees at once what arrived.
- */
-export function withImportedBodies(
-  state: ViewerState,
-  importedBodies: readonly Body[],
-): ViewerState {
-  const closed: ViewerState = { ...state, importInProgress: false, pendingImport: null };
-  const firstBody = importedBodies[0];
-  const pantinId = state.openPantin?.id;
-  return firstBody === undefined || pantinId === undefined
-    ? closed
-    : withRevealedNode(closed, bodyNodeId(pantinId, firstBody.id));
 }

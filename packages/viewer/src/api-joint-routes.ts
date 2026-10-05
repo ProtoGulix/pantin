@@ -2,6 +2,10 @@ import {
   type CreateJointRequest,
   CreateJointRequestSchema,
   type Joint,
+  type JointAxisFromFaceRequest,
+  JointAxisFromFaceRequestSchema,
+  type JointAxisFromFaceResponse,
+  JointAxisFromFaceResponseSchema,
   JointListResponseSchema,
   JointResponseSchema,
   type PantinResponse,
@@ -24,6 +28,12 @@ export interface JointRoutes {
   // The whole Pantin comes back: the joint is gone and unsavedChanges is set.
   deleteJoint(pantinId: string, jointId: string): Promise<PantinResponse>;
   getPose(pantinId: string): Promise<PoseResponse>;
+  // The axis a picked face gives, nothing stored (ADR 0041); the form shows it.
+  jointAxisFromFace(
+    pantinId: string,
+    jointId: string,
+    request: JointAxisFromFaceRequest,
+  ): Promise<JointAxisFromFaceResponse>;
   // The core clamps the position to the joint limits and answers the new pose.
   setJointPosition(pantinId: string, jointId: string, position: number): Promise<PoseResponse>;
 }
@@ -55,6 +65,11 @@ export function jointRoutes(send: SendJson): JointRoutes {
       const request = validInputOrThrow(SetJointPositionRequestSchema, { position });
       const url = jointUrl(pantinId, jointId, "/position");
       return send(url, jsonRequest("PUT", request), PoseResponseSchema);
+    },
+    jointAxisFromFace: async (pantinId, jointId, request) => {
+      const validRequest = validInputOrThrow(JointAxisFromFaceRequestSchema, request);
+      const url = jointUrl(pantinId, jointId, "/axis-from-face");
+      return send(url, jsonRequest("POST", validRequest), JointAxisFromFaceResponseSchema);
     },
   };
 }

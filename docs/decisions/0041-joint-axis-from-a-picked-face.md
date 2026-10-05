@@ -43,7 +43,8 @@ Facts checked in the repository on 2026-10-05:
    - Plane: origin at the hit point; axis along the outward normal (a
      slider moving away from that face, a pivot turning about it).
    - Face of kind other, or a body without face file: refused with the
-     reason on the form's line, nothing changes.
+     reason on the panel's message line, nothing changes;
+     the pick keeps waiting for another face or Escape.
    Any body can be picked, not only the joint's own bodies: the axis of a
    bore in the frame can drive the rod.
 2. **Computed by the core.** New route

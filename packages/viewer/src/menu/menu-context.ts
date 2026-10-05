@@ -74,5 +74,7 @@ export function escapeCommand(state: ViewerState): EscapeCommand | null {
   if (state.contextMenu !== null) {
     return null;
   }
-  return state.gizmoMode !== null || state.alignment !== null ? "turnToolOff" : null;
+  return state.gizmoMode !== null || state.alignment !== null || state.axisPick !== null
+    ? "turnToolOff"
+    : null;
 }

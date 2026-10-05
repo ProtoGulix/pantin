@@ -19,12 +19,12 @@ export function toggleGizmo(store: ViewerStore, kind: DragKind): void {
     return;
   }
   // One tool at a time: the gizmo ends an alignment (ADR 0035).
-  store.update({ ...withToolTarget(state), gizmoMode: next, alignment: null });
+  store.update({ ...withToolTarget(state), gizmoMode: next, alignment: null, axisPick: null });
 }
 
 /** Escape with nothing else to close: no positioning tool stays on (ADR 0039 point 6). */
 export function turnToolOff(store: ViewerStore): void {
-  store.update({ ...store.state, gizmoMode: null, alignment: null });
+  store.update({ ...store.state, gizmoMode: null, alignment: null, axisPick: null });
 }
 
 /** "Local / Global" (ADR 0042 point 2): the other axes, remembered in the browser. */

@@ -131,6 +131,8 @@ export interface PanelIntents {
   reverseJointAxis(): void;
   submitJointForm(): void;
   cancelJointForm(): void;
+  // ADR 0041: wait for a click on a face, which fills the origin and the axis.
+  pickJointAxisOnFace(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;
 
   // The chain diagram (ADR 0029): the central layout, a band folded,

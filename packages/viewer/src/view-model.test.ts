@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_CLIENT_CONSOLE } from "./console/console-list.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
+import { withImportStarted } from "./import-state.ts";
 import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
@@ -10,7 +11,6 @@ import { buildPanelView as buildPanelViewWith } from "./view-model.ts";
 import {
   initialViewerState,
   type ViewerState,
-  withImportStarted,
   withOpenPantin,
   withRequestStarted,
 } from "./viewer-state.ts";

@@ -6,7 +6,7 @@ import type {
   PoseSnapshot,
   SimulationClockState,
 } from "@pantin/protocol";
-import { alignmentHighlightsOf, isAligning } from "../alignment/alignment-view.ts";
+import { isAligning } from "../alignment/alignment-view.ts";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
 import { assemblyFrameTargetOf } from "../assembly-frame.ts";
@@ -31,6 +31,7 @@ import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import { withPlacementFeedbackRules, withToolRules } from "../gizmo/tool-rules.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
+import { isPickingFaces, pickHighlightsOf, withAxisPickRules } from "../joints/axis-pick.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import type { InspectorPreferences } from "../layout-preferences.ts";
 import { describeFailure } from "../messages.ts";
@@ -136,7 +137,7 @@ export class ViewerStore {
 
   update(requested: ViewerState): void {
     // The tools follow the selection, the layout and the inspector (ADR 0039 point 3).
-    const next = withPlacementFeedbackRules(withToolRules(requested));
+    const next = withAxisPickRules(withPlacementFeedbackRules(withToolRules(requested)));
     // A restart on another assembly reads face files again, like a new alignment.
     if (requested.alignment !== null && next.alignment !== requested.alignment) {
       this.faceFiles.clear();
@@ -173,8 +174,8 @@ export class ViewerStore {
     viewport.showSensorMarkers(sensorMarkersOf(document));
     viewport.showAssemblyFrame(assemblyFrameTargetOf(next));
     viewport.showPlacementGizmo(gizmoSpecOf(next));
-    viewport.setAlignmentPicking(isAligning(next));
-    viewport.showFaceHighlights(alignmentHighlightsOf(next));
+    viewport.setAlignmentPicking(isPickingFaces(next));
+    viewport.showFaceHighlights(pickHighlightsOf(next));
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */

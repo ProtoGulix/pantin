@@ -26,7 +26,7 @@ const pressed = (state: ViewerState) =>
 describe("positioning of an assembly", () => {
   it("shows the anchor then X, Y, Z, RX, RY, RZ in a titled group", () => {
     const view = viewOf(assembly);
-    expect(view?.group?.title).toBe("Positionnement");
+    expect(view?.group?.title).toBe("Position dans le monde");
     expect(view?.group?.rows.map((row) => row.label)).toEqual([
       "Repère",
       "X (mm)",

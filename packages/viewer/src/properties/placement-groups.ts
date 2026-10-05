@@ -84,6 +84,11 @@ export function assemblyPlacementGroup(
   );
   return {
     id: "assemblyPlacement",
+    // The six fields are in the anchor's frame (ADR 0042 point 3).
+    title:
+      anchorName === null
+        ? t("placement.title.world")
+        : t("placement.title.anchor", { anchor: anchorName }),
     rows: [anchorRow(anchorName, t), ...rows],
     ...(feedback.invalid === null ? {} : { error: t("placement.invalidNote") }),
   };

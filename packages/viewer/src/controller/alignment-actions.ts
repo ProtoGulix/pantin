@@ -59,7 +59,13 @@ export function toggleAlignment(store: ViewerStore): void {
   // A body id comes back after a deletion and a new import: face files are
   // read again for each alignment rather than trusted across edits.
   store.faceFiles.clear();
-  store.update({ ...withToolTarget(state), gizmoMode: null, alignment, message: null });
+  store.update({
+    ...withToolTarget(state),
+    gizmoMode: null,
+    alignment,
+    axisPick: null,
+    message: null,
+  });
 }
 
 export function chooseAlignmentKind(store: ViewerStore, kind: string): void {
@@ -93,7 +99,7 @@ export function restartAlignment(store: ViewerStore): void {
 }
 
 // One request per mesh file: the face file never changes while its mesh exists.
-function faceFileOf(
+export function faceFileOf(
   store: ViewerStore,
   pantinId: string,
   meshPath: string,

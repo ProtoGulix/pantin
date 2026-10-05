@@ -117,7 +117,13 @@ export interface PropertyGroup {
   error?: string;
 }
 
-export type GroupDraft = { id: PropertyGroupId; rows: PropertyRow[]; error?: string };
+// `title` replaces the id's fixed title (the placement names its frame, ADR 0042).
+export type GroupDraft = {
+  id: PropertyGroupId;
+  rows: PropertyRow[];
+  error?: string;
+  title?: string;
+};
 
 export function row(
   id: string,

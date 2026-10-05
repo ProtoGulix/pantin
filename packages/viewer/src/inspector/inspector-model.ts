@@ -161,7 +161,7 @@ export function buildInspectorView(
   const slider = selectedJointSlider(state, pantin);
   const groups = content.groups.map((draft) => ({
     ...draft,
-    title: t(GROUP_TITLES[draft.id]),
+    title: draft.title ?? t(GROUP_TITLES[draft.id]),
     collapsed: state.collapsedPropertyGroups.has(draft.id),
   }));
   const { document } = pantin;
