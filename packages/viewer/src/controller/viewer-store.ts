@@ -9,6 +9,7 @@ import type {
 import { alignmentHighlightsOf, isAligning } from "../alignment/alignment-view.ts";
 import type { PantinApiClient } from "../api-client.ts";
 import { hiddenBodyIds } from "../assembly-display.ts";
+import { assemblyFrameTargetOf } from "../assembly-frame.ts";
 import { type CentralLayout, shouldRender } from "../central-layout.ts";
 import {
   buildClockView,
@@ -168,6 +169,7 @@ export class ViewerStore {
     );
     viewport.showJointPreview(jointPreviewOf(next));
     viewport.showSensorMarkers(sensorMarkersOf(document));
+    viewport.showAssemblyFrame(assemblyFrameTargetOf(next));
     viewport.showPlacementGizmo(gizmoSpecOf(next));
     viewport.setAlignmentPicking(isAligning(next));
     viewport.showFaceHighlights(alignmentHighlightsOf(next));

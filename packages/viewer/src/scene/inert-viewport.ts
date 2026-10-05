@@ -18,6 +18,7 @@ export function createInertViewport(): Viewport {
     showSensorMarkers: ignore,
     showTagStates: ignore,
     setRendering: ignore,
+    showAssemblyFrame: ignore,
     showPlacementGizmo: ignore,
     releasePlacementGizmo: ignore,
     setNavigation: ignore,

@@ -6,6 +6,7 @@ import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
 import type { FaceHighlight } from "../alignment/alignment-session.ts";
 import type { ViewportPick } from "../alignment/pick-resolution.ts";
+import type { AssemblyFrameTarget } from "../assembly-frame.ts";
 import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
@@ -64,6 +65,8 @@ export interface Viewport {
    * first frame after a restart shows the latest ones.
    */
   setRendering(active: boolean): void;
+  /** The trihedron of an assembly's frame (ADR 0042 point 1); null removes it. */
+  showAssemblyFrame(target: AssemblyFrameTarget | null): void;
   /** The gizmo of the selected assembly, or null to remove it (ADR 0034 point 3). */
   showPlacementGizmo(spec: PlacementGizmoSpec | null): void;
   /** After a drag: the Pantin was read again, the gizmo follows the assembly again. */
@@ -208,6 +211,7 @@ function applyPosesEachFrame(context: ViewportContext): void {
     context.highlights.followPose(bodyId, pose.translation, pose.rotation);
     context.sensorMarkers.followPose(bodyId, pose.translation, pose.rotation);
     context.placementGizmo.followPose(bodyId, pose.translation, pose.rotation);
+    context.assemblyTrihedron.followPose(bodyId, pose.translation, pose.rotation);
   };
   context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
 }
@@ -222,6 +226,7 @@ function forgetPoses(context: ViewportContext): void {
   context.highlights.forgetPoses();
   context.sensorMarkers.forgetPoses();
   context.placementGizmo.forgetPoses();
+  context.assemblyTrihedron.forgetPoses();
 }
 
 function navigationOf(context: ViewportContext, canvas: HTMLCanvasElement) {
@@ -264,6 +269,7 @@ export function createViewport(
     showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
     showTagStates: (values) => context.sensorMarkers.setStates(values),
     setRendering,
+    showAssemblyFrame: (target) => context.assemblyTrihedron.show(target),
     showPlacementGizmo: (spec) => context.placementGizmo.show(spec),
     releasePlacementGizmo: () => context.placementGizmo.release(),
     setNavigation: (settings) => navigation.apply(settings),

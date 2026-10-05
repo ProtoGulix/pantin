@@ -2,6 +2,7 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { PoseInterpolator } from "../pose-interpolation.ts";
+import { type AssemblyTrihedron, createAssemblyTrihedron } from "./assembly-trihedron.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import type { LoadedBody } from "./body-loader.ts";
 import { createCamera } from "./camera-framing.ts";
@@ -30,6 +31,7 @@ export interface ViewportContext {
   highlights: BodyHighlights;
   sensorMarkers: SensorMarkers;
   placementGizmo: PlacementGizmo;
+  assemblyTrihedron: AssemblyTrihedron;
   hiddenBodyIds: ReadonlySet<string>;
   // While aligning (ADR 0035), a click is a pick, not a selection.
   alignmentPicking: boolean;
@@ -57,6 +59,7 @@ export function createContext(
     highlights: createBodyHighlights(scene, loadedBodies, latestPose),
     sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
     placementGizmo: createPlacementGizmo(scene, placementCallbacks),
+    assemblyTrihedron: createAssemblyTrihedron(scene),
     hiddenBodyIds: new Set(),
     alignmentPicking: false,
     faceHighlights: createFaceHighlights(scene, loadedBodies),
