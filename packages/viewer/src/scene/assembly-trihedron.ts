@@ -71,11 +71,16 @@ function buildAxis(scene: Scene, root: TransformNode, axis: (typeof AXES)[number
   shaft.rotationQuaternion = turn;
   shaft.position = direction.scale(0.5);
   shaft.material = material;
+  // A billboard ignores its parent's rotation when placing itself, so the
+  // label hangs at the origin of a plain node at the tip, which does turn.
+  const tip = new TransformNode(`trihedron-tip-${axis.label}`, scene);
+  tip.parent = root;
+  tip.position = direction.scale(1.2);
   const label = labelPlane(scene, axis.label, axis.color);
-  label.position = direction.scale(1.2);
+  label.parent = tip;
+  shaft.parent = root;
   const parts = [shaft, label];
   for (const part of parts) {
-    part.parent = root;
     part.isPickable = false;
     part.renderingGroupId = OVERLAY_GROUP;
   }
