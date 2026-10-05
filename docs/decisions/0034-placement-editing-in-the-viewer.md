@@ -1,10 +1,10 @@
 # 0034. Placement editing in the viewer: fields and gizmo
 
 - Status: accepted
-- Amended by: ADR 0042 (point 3: gizmo axes)
 - Date: 2026-10-02
 - Amended by: ADR 0039 (points 1, 3, 5, 6 and 7: where fields, toggles
-  and steps live, scope of G and R, Escape)
+  and steps live, scope of G and R, Escape), ADR 0042 (point 3: gizmo
+  axes)
 - Depends on: ADR 0033 (assembly placement)
 - Extends: ADR 0016 (millimetres and degrees in the viewer), ADR 0019
   (point 13: selection in 3D), ADR 0030 (contextual inspector)

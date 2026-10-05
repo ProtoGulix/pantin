@@ -2,6 +2,7 @@ import {
   ALIGNMENT_KINDS,
   type AlignRequest,
   type AlignResponse,
+  type Body,
   type FaceFile,
   FaceFileSchema,
   type PantinDocument,
@@ -46,6 +47,17 @@ function parseJson(text: string): unknown {
   }
 }
 
+// A face file damaged on disk counts as none: the pick then says so.
+export async function readBodyFaceFile(
+  context: ServiceContext,
+  pantinId: PantinId,
+  body: Body,
+): Promise<FaceFile | undefined> {
+  const text = await context.store.readFaceFile(pantinId, body.mesh);
+  const parsed = FaceFileSchema.safeParse(text === undefined ? undefined : parseJson(text));
+  return parsed.success ? parsed.data : undefined;
+}
+
 async function readFaceFiles(
   context: ServiceContext,
   pantinId: PantinId,
@@ -58,11 +70,9 @@ async function readFaceFiles(
     if (pick.kind !== "face" || body === undefined || faceFiles.has(body.id)) {
       continue;
     }
-    const text = await context.store.readFaceFile(pantinId, body.mesh);
-    // A face file damaged on disk counts as none: the pick then says so.
-    const parsed = FaceFileSchema.safeParse(text === undefined ? undefined : parseJson(text));
-    if (parsed.success) {
-      faceFiles.set(body.id, parsed.data);
+    const faceFile = await readBodyFaceFile(context, pantinId, body);
+    if (faceFile !== undefined) {
+      faceFiles.set(body.id, faceFile);
     }
   }
   return faceFiles;

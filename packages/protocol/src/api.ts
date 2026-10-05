@@ -43,6 +43,10 @@ import {
 //          (replaces every field but the id, the type included, ADR 0018;
 //          a joint that becomes fixed loses its position and setpoint)
 //   DELETE /api/pantins/:pantinId/joints/:jointId     -> PantinResponse
+//   POST   /api/pantins/:pantinId/joints/:jointId/axis-from-face
+//          JointAxisFromFaceRequest -> JointAxisFromFaceResponse
+//          (ADR 0041: origin and axis of a picked face in the frame of the
+//          joint's parent assembly; stores nothing, contract in joint-axis-api.ts)
 //   GET    /api/pantins/:pantinId/pose                -> PoseResponse
 //   PUT    /api/pantins/:pantinId/joints/:jointId/position
 //          SetJointPositionRequest                    -> PoseResponse

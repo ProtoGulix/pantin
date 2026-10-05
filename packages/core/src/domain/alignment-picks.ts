@@ -95,11 +95,11 @@ export function checkPickSides(
   return keyBody;
 }
 
-function projectOnPlane(point: Vector3, planePoint: Vector3, normal: Vector3): Vector3 {
+export function projectOnPlane(point: Vector3, planePoint: Vector3, normal: Vector3): Vector3 {
   return subtract(point, scale(normal, dot(subtract(point, planePoint), normal)));
 }
 
-function projectOnAxis(point: Vector3, axisPoint: Vector3, direction: Vector3): Vector3 {
+export function projectOnAxis(point: Vector3, axisPoint: Vector3, direction: Vector3): Vector3 {
   return add(axisPoint, scale(direction, dot(subtract(point, axisPoint), direction)));
 }
 
