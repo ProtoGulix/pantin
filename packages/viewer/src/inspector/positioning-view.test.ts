@@ -39,21 +39,12 @@ describe("positioning of an assembly", () => {
     expect(view?.bodyLine).toBeNull();
   });
 
-  it("offers the three tools, enabled, none pressed", () => {
-    expect(viewOf(assembly)?.tools).toEqual([
-      { command: "gizmoMove", label: "Déplacer (G)", pressed: false, disabled: false },
-      { command: "gizmoRotate", label: "Tourner (R)", pressed: false, disabled: false },
-      { command: "align", label: "Aligner (A)", pressed: false, disabled: false },
-    ]);
-    expect(viewOf(assembly)?.step).toBeNull();
-  });
-
   it("presses the tool that is on and shows the step of that gizmo only", () => {
     const moving: ViewerState = { ...assembly, gizmoMode: "move" };
-    expect(pressed(moving)).toEqual(["gizmoMove"]);
+    expect(pressed(moving)).toEqual(["gizmoMove", "gizmoSpace"]);
     expect(viewOf(moving)?.step).toMatchObject({ field: "translationMillimetres" });
     const rotating: ViewerState = { ...assembly, gizmoMode: "rotate" };
-    expect(pressed(rotating)).toEqual(["gizmoRotate"]);
+    expect(pressed(rotating)).toEqual(["gizmoRotate", "gizmoSpace"]);
     expect(viewOf(rotating)?.step).toMatchObject({
       field: "rotationDegrees",
       value: String(assembly.gizmoSteps.rotationDegrees),
@@ -62,7 +53,7 @@ describe("positioning of an assembly", () => {
 
   it("presses Aligner while an alignment is under way", () => {
     const aligning = { ...assembly, alignment: newAlignmentSession("press", "main") };
-    expect(pressed(aligning)).toEqual(["align"]);
+    expect(pressed(aligning)).toEqual(["gizmoSpace", "align"]);
   });
 
   it("holds the alignment block only while an alignment is under way", () => {
@@ -127,6 +118,31 @@ describe("edit feedback of the placement fields", () => {
   });
 });
 
+describe("the gizmo axes toggle", () => {
+  it("offers the tools, enabled, none pressed but the Local axes", () => {
+    expect(viewOf(assembly)?.tools).toEqual([
+      { command: "gizmoMove", label: "Déplacer (G)", pressed: false, disabled: false },
+      { command: "gizmoRotate", label: "Tourner (R)", pressed: false, disabled: false },
+      {
+        command: "gizmoSpace",
+        label: "Repère local de l'assemblage (L)",
+        pressed: true,
+        disabled: false,
+      },
+      { command: "align", label: "Aligner (A)", pressed: false, disabled: false },
+    ]);
+    expect(viewOf(assembly)?.step).toBeNull();
+  });
+
+  it("names the anchor's axes and releases the toggle in Global", () => {
+    const global = viewOf({ ...assembly, gizmoSpace: "global" })?.tools;
+    expect(global?.find((tool) => tool.command === "gizmoSpace")).toMatchObject({
+      label: "Repère du support (L)",
+      pressed: false,
+    });
+  });
+});
+
 describe("positioning of a body", () => {
   const body = select(open, bodyNodeId("press", railBody.id));
 
@@ -134,7 +150,12 @@ describe("positioning of a body", () => {
     const view = viewOf(body);
     expect(view?.group).toBeNull();
     expect(view?.bodyLine).toBe("Se place avec l'assemblage « main »");
-    expect(view?.tools.map((tool) => tool.command)).toEqual(["gizmoMove", "gizmoRotate", "align"]);
+    expect(view?.tools.map((tool) => tool.command)).toEqual([
+      "gizmoMove",
+      "gizmoRotate",
+      "gizmoSpace",
+      "align",
+    ]);
     expect(view?.step).toBeNull();
     expect(view?.alignment).toBeNull();
   });
@@ -142,7 +163,12 @@ describe("positioning of a body", () => {
   it("offers the tools, which act on the body's assembly", () => {
     expect(viewOf(body)?.tools.some((tool) => tool.disabled)).toBe(false);
     const aligning = { ...body, alignment: newAlignmentSession("press", "main") };
-    expect(viewOf(aligning)?.tools.map((tool) => tool.disabled)).toEqual([false, false, false]);
+    expect(viewOf(aligning)?.tools.map((tool) => tool.disabled)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
     expect(viewOf(aligning)?.alignment).not.toBeNull();
   });
 });

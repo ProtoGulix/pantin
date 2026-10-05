@@ -13,11 +13,16 @@ import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts"
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
+import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
 import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
-import { DEFAULT_INSPECTOR_PREFERENCES, type InspectorPreferences } from "./layout-preferences.ts";
+import {
+  DEFAULT_INSPECTOR_PREFERENCES,
+  type InspectorPreferences,
+  preferencesState,
+} from "./layout-preferences.ts";
 import type { PanelMessage } from "./messages.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
 import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.ts";
@@ -119,6 +124,8 @@ export interface ViewerState {
   // setting of the viewer kept in the browser. Display state, never saved.
   gizmoMode: DragKind | null;
   gizmoSteps: SnapSteps;
+  // Which axes the gizmo offers (ADR 0042 point 2), also kept in the browser.
+  gizmoSpace: GizmoSpace;
   // The alignment under way (ADR 0035), or null. Display state, never saved.
   alignment: AlignmentSession | null;
   // Placement field feedback (ADR 0039 point 5): the last placement a drag sent
@@ -163,7 +170,7 @@ export function initialViewerState(
     expandedNodeIds: new Set(),
     selection: null,
     renamingNodeId: null,
-    collapsedPropertyGroups: inspector.collapsedGroups,
+    ...preferencesState(inspector),
     customAxisJointIds: new Set(),
     creatingPantin: false,
     contextMenu: null,
@@ -183,7 +190,6 @@ export function initialViewerState(
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
-    inspectorOpen: inspector.inspectorOpen,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,

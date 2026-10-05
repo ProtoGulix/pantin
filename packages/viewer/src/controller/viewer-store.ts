@@ -25,6 +25,7 @@ import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
+import type { GizmoSpace } from "../gizmo/gizmo-space.ts";
 import { gizmoSpecOf } from "../gizmo/gizmo-spec.ts";
 import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
@@ -81,6 +82,7 @@ export interface StorePorts {
   storeLanguage(language: Language): void;
   storeCentralLayout(layout: CentralLayout): void;
   storeGizmoSteps(steps: SnapSteps): void;
+  storeGizmoSpace(space: GizmoSpace): void;
   storeNavigation(settings: NavigationSettings): void;
   storeInspectorOpen(open: boolean): void;
   storeCollapsedGroups(groups: ReadonlySet<string>): void;

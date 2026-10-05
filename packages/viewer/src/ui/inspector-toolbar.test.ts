@@ -41,6 +41,7 @@ const positioning: PositioningView = {
   tools: [
     { command: "gizmoMove", label: "move", pressed: true, disabled: false },
     { command: "gizmoRotate", label: "rotate", pressed: false, disabled: false },
+    { command: "gizmoSpace", label: "space", pressed: true, disabled: false },
     { command: "align", label: "align", pressed: false, disabled: false },
   ],
   step: { field: "translationMillimetres", label: "step", value: "10" },
@@ -81,6 +82,7 @@ describe("the inspector tool bar", () => {
       "|",
       "move",
       "rotate",
+      "space",
       "align",
       "step",
       "restore",
@@ -102,7 +104,7 @@ describe("the inspector tool bar", () => {
     const pressed = render({ positioning })
       .filter((item) => item.attributes.get("aria-pressed") === "true")
       .map((item) => item.attributes.get("aria-label"));
-    expect(pressed).toEqual(["move"]);
+    expect(pressed).toEqual(["move", "space"]);
   });
 
   it("says in the tooltip why an actuator or a sensor cannot be created", () => {

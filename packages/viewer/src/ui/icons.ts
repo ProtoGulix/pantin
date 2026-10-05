@@ -29,6 +29,7 @@ type ToolIcon =
   | "add-sensor"
   | "move"
   | "rotate"
+  | "gizmo-space"
   | "align"
   | "restore-placement"
   | "edit"
@@ -86,6 +87,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   "restore-placement": "M2.5 8a5.5 5.5 0 1 1 1.6 3.9 M2.5 3.5V8H7",
   // Two blocks pushed against one line.
   align: "M2 2v12 M4.5 3.5h8v3h-8Z M4.5 9.5h5v3h-5Z",
+  // A small trihedron: the axes the gizmo uses.
+  "gizmo-space": "M3 13 8 8 M8 8V2.5 M8 8h5.5 M2 8.5l2-.5 M2.5 12l-.5-2",
   edit: "M10.5 2.5l3 3L6 13H3v-3Z M9 4l3 3",
   delete: "M2.5 4h11 M6 4V2.5h4V4 M4 4l.7 9.5h6.6L12 4 M6.8 6.5v5 M9.2 6.5v5",
   eye: "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",

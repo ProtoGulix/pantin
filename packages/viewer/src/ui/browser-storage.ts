@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   splitRatio: "pantin.viewer.splitRatio",
   consoleHeight: "pantin.viewer.consoleHeight",
   gizmoSteps: "pantin.viewer.gizmoSteps",
+  gizmoSpace: "pantin.viewer.gizmoSpace",
   navigation: "pantin.viewer.navigation",
   inspectorWidth: "pantin.viewer.inspectorWidth",
   inspectorOpen: "pantin.viewer.inspectorOpen",

@@ -10,7 +10,8 @@ import { toggleAlignment } from "./alignment-actions.ts";
 import { createPanelIntents } from "./controller.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import { toggleInspector } from "./drive-actions.ts";
-import { setGizmoStep, toggleGizmo, turnToolOff } from "./gizmo-actions.ts";
+import { setGizmoStep, toggleGizmo, toggleGizmoSpace, turnToolOff } from "./gizmo-actions.ts";
+import { runMenuCommand } from "./menu-commands.ts";
 
 const pantin: PantinResponse = {
   id: "press",
@@ -112,5 +113,27 @@ describe("gizmo steps", () => {
     setGizmoStep(store, "translationMillimetres", "0");
     expect(store.state.gizmoSteps).toEqual(DEFAULT_SNAP_STEPS);
     expect(stored).not.toHaveBeenCalled();
+  });
+});
+
+describe("gizmo space", () => {
+  it("flips between Local and Global and stores the new value", () => {
+    const stored = vi.fn();
+    const store = testStore({}, {}, undefined, { storeGizmoSpace: stored });
+    expect(store.state.gizmoSpace).toBe("local");
+    toggleGizmoSpace(store);
+    expect(store.state.gizmoSpace).toBe("global");
+    expect(stored).toHaveBeenLastCalledWith("global");
+    toggleGizmoSpace(store);
+    expect(store.state.gizmoSpace).toBe("local");
+    expect(stored).toHaveBeenLastCalledWith("local");
+  });
+
+  it("is run by the gizmoSpace menu command", () => {
+    const stored = vi.fn();
+    const store = testStore({}, {}, undefined, { storeGizmoSpace: stored });
+    runMenuCommand(store, "gizmoSpace", () => undefined);
+    expect(store.state.gizmoSpace).toBe("global");
+    expect(stored).toHaveBeenCalledWith("global");
   });
 });

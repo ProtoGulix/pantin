@@ -261,6 +261,7 @@ describe("shortcut listing", () => {
       { keys: "Suppr", action: "Supprimer" },
       { keys: "G", action: "Déplacer" },
       { keys: "R", action: "Tourner" },
+      { keys: "L", action: "Repère local de l'assemblage" },
       { keys: "A", action: "Aligner…" },
       { keys: "F", action: "Tout cadrer" },
       { keys: "Ctrl+1", action: "Face" },

@@ -1,6 +1,7 @@
 import { isAligning } from "../alignment/alignment-view.ts";
 import { type CentralLayout, showsViewport } from "../central-layout.ts";
 import type { DeviceKind } from "../device-selection.ts";
+import type { GizmoSpace } from "../gizmo/gizmo-space.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language } from "../i18n/translate.ts";
@@ -23,6 +24,7 @@ export interface MenuContext {
   centralLayout: CentralLayout;
   // The placement gizmo (ADR 0034): on, and whether one assembly is selected to use it on.
   gizmoMode: DragKind | null;
+  gizmoSpace: GizmoSpace;
   gizmoAvailable: boolean;
   // An alignment is under way (ADR 0035).
   aligning: boolean;
@@ -52,6 +54,7 @@ export function menuContext(state: ViewerState): MenuContext {
     consoleOpen: state.console.open,
     centralLayout: state.centralLayout,
     gizmoMode: state.gizmoMode,
+    gizmoSpace: state.gizmoSpace,
     gizmoAvailable: canUseGizmo(state),
     aligning: isAligning(state),
     navigation: state.navigation,

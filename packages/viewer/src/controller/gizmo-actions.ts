@@ -27,6 +27,13 @@ export function turnToolOff(store: ViewerStore): void {
   store.update({ ...store.state, gizmoMode: null, alignment: null });
 }
 
+/** "Local / Global" (ADR 0042 point 2): the other axes, remembered in the browser. */
+export function toggleGizmoSpace(store: ViewerStore): void {
+  const space = store.state.gizmoSpace === "local" ? "global" : "local";
+  store.ports.storeGizmoSpace(space);
+  store.update({ ...store.state, gizmoSpace: space });
+}
+
 /** A typed step; text that is not a positive number leaves the step as it was. */
 export function setGizmoStep(store: ViewerStore, field: keyof SnapSteps, text: string): void {
   const steps = withTypedStep(store.state.gizmoSteps, field, text);

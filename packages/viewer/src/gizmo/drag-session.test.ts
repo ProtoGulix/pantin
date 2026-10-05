@@ -18,7 +18,7 @@ const anchor: RigidTransform = { translation: [1, 0, 0], rotation: quarterTurnZ 
 const start: RigidTransform = { translation: [0.1, 0.2, 0], rotation: [0, 0, 0, 1] };
 
 describe("a drag session", () => {
-  const origin = gizmoNodeFrame(anchor, start);
+  const origin = gizmoNodeFrame(anchor, start, "global");
 
   const along = (axis: 0 | 1 | 2, metres: number): RigidTransform => {
     const translation: [number, number, number] = [...origin.translation];
@@ -27,7 +27,7 @@ describe("a drag session", () => {
   };
 
   it("rounds the dragged distance in the anchor frame, on its axis only", () => {
-    const session = startDragSession("move", anchor, start, DEFAULT_SNAP_STEPS);
+    const session = startDragSession("move", anchor, start, DEFAULT_SNAP_STEPS, "global");
     // 12.34 mm along the anchor's X axis = along the world's Y axis.
     const placement = session.placementOf(along(1, 0.01234), true);
     expect(placement.translation[0]).toBeCloseTo(0.112, 12);
@@ -38,8 +38,8 @@ describe("a drag session", () => {
   it("keeps an off-grid value on an axis the drag did not touch", () => {
     const offGrid: RigidTransform = { translation: [0.1, 0.0003, 0], rotation: [0, 0, 0, 1] };
     const identity: RigidTransform = { translation: [0, 0, 0], rotation: [0, 0, 0, 1] };
-    const session = startDragSession("move", identity, offGrid, DEFAULT_SNAP_STEPS);
-    const node = gizmoNodeFrame(identity, offGrid);
+    const session = startDragSession("move", identity, offGrid, DEFAULT_SNAP_STEPS, "global");
+    const node = gizmoNodeFrame(identity, offGrid, "global");
     const placement = session.placementOf(
       {
         translation: [node.translation[0] + 0.0204, node.translation[1] + 2e-7, 0],
@@ -52,12 +52,12 @@ describe("a drag session", () => {
   });
 
   it("does not round while Ctrl is held", () => {
-    const session = startDragSession("move", anchor, start, DEFAULT_SNAP_STEPS);
+    const session = startDragSession("move", anchor, start, DEFAULT_SNAP_STEPS, "global");
     expect(session.placementOf(along(1, 0.01234), false).translation[0]).toBeCloseTo(0.11234, 12);
   });
 
   it("keeps the start position exactly while turning", () => {
-    const session = startDragSession("rotate", anchor, start, DEFAULT_SNAP_STEPS);
+    const session = startDragSession("rotate", anchor, start, DEFAULT_SNAP_STEPS, "global");
     const placement = session.placementOf(
       {
         translation: [origin.translation[0] + 1e-9, origin.translation[1], origin.translation[2]],
@@ -71,7 +71,7 @@ describe("a drag session", () => {
   });
 
   it("keeps the placement of the start for Escape, whatever was dragged", () => {
-    const session = startDragSession("move", anchor, start, DEFAULT_SNAP_STEPS);
+    const session = startDragSession("move", anchor, start, DEFAULT_SNAP_STEPS, "global");
     session.placementOf(along(0, 5), true);
     expect(session.startPlacement).toBe(start);
   });
@@ -81,10 +81,10 @@ describe("a drag session", () => {
 describe("a ring drag from a rotated start", () => {
   const identity: RigidTransform = { translation: [0, 0, 0], rotation: [0, 0, 0, 1] };
   const turnedY: RigidTransform = { translation: [0, 0, 0], rotation: aboutAxis(1, 30) };
-  const node = gizmoNodeFrame(identity, turnedY);
+  const node = gizmoNodeFrame(identity, turnedY, "global");
 
   it.each([15, 45])("sends exactly Rx(%i) . R0, not re-rounded angles", (degrees) => {
-    const session = startDragSession("rotate", identity, turnedY, DEFAULT_SNAP_STEPS);
+    const session = startDragSession("rotate", identity, turnedY, DEFAULT_SNAP_STEPS, "global");
     // The gizmo's float noise on the angle and on another component.
     const noisy = multiplyQuaternions(node.rotation, aboutAxis(0, degrees + 0.02));
     const placement = session.placementOf({ translation: node.translation, rotation: noisy }, true);
@@ -96,8 +96,8 @@ describe("a ring drag from a rotated start", () => {
 
   it("keeps an off-grid RZ of 7 degrees through an X ring drag", () => {
     const offGrid: RigidTransform = { translation: [0, 0, 0], rotation: aboutAxis(2, 7) };
-    const session = startDragSession("rotate", identity, offGrid, DEFAULT_SNAP_STEPS);
-    const start = gizmoNodeFrame(identity, offGrid);
+    const session = startDragSession("rotate", identity, offGrid, DEFAULT_SNAP_STEPS, "global");
+    const start = gizmoNodeFrame(identity, offGrid, "global");
     const placement = session.placementOf(
       {
         translation: start.translation,

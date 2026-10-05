@@ -14,6 +14,7 @@ import { refreshTagValues } from "./controller/drive-commands.ts";
 import { dragPlacement, finishPlacementDrag } from "./controller/placement-actions.ts";
 import { type StorePorts, ViewerStore } from "./controller/viewer-store.ts";
 import type { DiagramModel } from "./diagram/diagram-view-model.ts";
+import { parseStoredGizmoSpace } from "./gizmo/gizmo-space.ts";
 import { parseStoredSteps, serializeSteps } from "./gizmo/gizmo-steps.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { parseStoredGroups, parseStoredOpen, serializeGroups } from "./layout-preferences.ts";
@@ -209,6 +210,7 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
     storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
     storeGizmoSteps: (steps) => writeStoredText(STORAGE_KEYS.gizmoSteps, serializeSteps(steps)),
+    storeGizmoSpace: (space) => writeStoredText(STORAGE_KEYS.gizmoSpace, space),
     storeNavigation: (settings) =>
       writeStoredText(STORAGE_KEYS.navigation, serializeNavigation(settings)),
     storeInspectorOpen: (open) => writeStoredText(STORAGE_KEYS.inspectorOpen, String(open)),
@@ -227,6 +229,7 @@ function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
     parseStoredSteps(readStoredText(STORAGE_KEYS.gizmoSteps)),
     parseStoredNavigation(readStoredText(STORAGE_KEYS.navigation)),
     {
+      gizmoSpace: parseStoredGizmoSpace(readStoredText(STORAGE_KEYS.gizmoSpace)),
       inspectorOpen: parseStoredOpen(readStoredText(STORAGE_KEYS.inspectorOpen)),
       collapsedGroups: parseStoredGroups(readStoredText(STORAGE_KEYS.collapsedGroups)),
     },

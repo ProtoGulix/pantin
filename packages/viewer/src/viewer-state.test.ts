@@ -113,10 +113,12 @@ describe("multi-body import", () => {
 describe("initialViewerState inspector preferences", () => {
   it("starts from the stored open state and folded groups", () => {
     const state = initialViewerState("fr", undefined, undefined, undefined, {
+      gizmoSpace: "global",
       inspectorOpen: false,
       collapsedGroups: new Set(["placement"]),
     });
     expect(state.inspectorOpen).toBe(false);
+    expect(state.gizmoSpace).toBe("global");
     expect(state.collapsedPropertyGroups.has("placement")).toBe(true);
   });
 

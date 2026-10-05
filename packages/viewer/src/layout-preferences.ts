@@ -1,12 +1,17 @@
+import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
+import { DEFAULT_GIZMO_SPACE } from "./gizmo/gizmo-space.ts";
+
 // Remembered layout choices of the inspector (ADR 0039 point 8). Pure: stored
 // text in, safe values out, so a corrupt value never breaks the start-up.
 
 export interface InspectorPreferences {
+  gizmoSpace: GizmoSpace;
   inspectorOpen: boolean;
   collapsedGroups: ReadonlySet<string>;
 }
 
 export const DEFAULT_INSPECTOR_PREFERENCES: InspectorPreferences = {
+  gizmoSpace: DEFAULT_GIZMO_SPACE,
   inspectorOpen: true,
   collapsedGroups: new Set(),
 };
@@ -35,4 +40,13 @@ export function parseStoredGroups(text: string | null): ReadonlySet<string> {
 
 export function serializeGroups(groups: ReadonlySet<string>): string {
   return JSON.stringify([...groups]);
+}
+
+// What the stored preferences of the inspector and the gizmo give the state.
+export function preferencesState(inspector: InspectorPreferences) {
+  return {
+    collapsedPropertyGroups: inspector.collapsedGroups,
+    inspectorOpen: inspector.inspectorOpen,
+    gizmoSpace: inspector.gizmoSpace,
+  };
 }

@@ -23,7 +23,9 @@ export function gizmoSpecOf(state: ViewerState): PlacementGizmoSpec | null {
     return null;
   }
   const target = gizmoTargetOf(openPantin.document, ref.key);
-  return target === null ? null : { target, kind: gizmoMode, steps: state.gizmoSteps };
+  return target === null
+    ? null
+    : { target, kind: gizmoMode, space: state.gizmoSpace, steps: state.gizmoSteps };
 }
 
 /**

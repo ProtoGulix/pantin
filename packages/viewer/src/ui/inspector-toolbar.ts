@@ -16,6 +16,7 @@ type PositioningCommand = PositioningView["tools"][number]["command"];
 const POSITIONING_ICONS: Readonly<Record<PositioningCommand, IconName>> = {
   gizmoMove: "move",
   gizmoRotate: "rotate",
+  gizmoSpace: "gizmo-space",
   align: "align",
 };
 

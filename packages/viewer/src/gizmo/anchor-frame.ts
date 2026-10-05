@@ -1,13 +1,15 @@
 import type { PantinDocument } from "@pantin/protocol";
 import { anchorLinkOf } from "../assembly-anchor.ts";
-import { multiplyQuaternions } from "../frames.ts";
+import { multiplyQuaternions, type QuaternionTuple } from "../frames.ts";
 import {
   composeTransforms,
+  conjugate,
   IDENTITY_TRANSFORM,
   invertTransform,
   normalizedRotation,
   type RigidTransform,
 } from "../rigid-transform.ts";
+import type { GizmoSpace } from "./gizmo-space.ts";
 import type { DragKind, SnapSteps } from "./placement-snapping.ts";
 
 // Frame arithmetic of the placement gizmo (ADR 0034 point 4), in the core
@@ -36,6 +38,7 @@ export interface GizmoTarget {
 export interface PlacementGizmoSpec {
   target: GizmoTarget;
   kind: DragKind;
+  space: GizmoSpace;
   steps: SnapSteps;
 }
 
@@ -79,14 +82,29 @@ export function anchorFrameOf(target: GizmoTarget, poseOf: PoseLookup): RigidTra
 }
 
 /**
- * Where the gizmo's node starts: at the assembly's displayed frame origin,
- * turned like the ANCHOR, so that the gizmo's axes are the anchor's axes
- * (ADR 0034 point 3). A drag moves or turns this node.
+ * The rotation of the gizmo's axes seen from the anchor frame at the start of a
+ * drag: the placement's own rotation in Local space (the assembly's axes), none
+ * in Global space (the anchor's axes).
  */
-export function gizmoNodeFrame(anchor: RigidTransform, placement: RigidTransform): RigidTransform {
+export function gizmoAxesRotation(placement: RigidTransform, space: GizmoSpace): QuaternionTuple {
+  return space === "local" ? placement.rotation : IDENTITY_TRANSFORM.rotation;
+}
+
+/**
+ * Where the gizmo's node starts: at the assembly's displayed frame origin,
+ * turned like the assembly (Local, the L1 trihedron) or like the ANCHOR
+ * (Global, ADR 0034 point 3), so that the gizmo's own axes are those. A drag
+ * moves or turns this node.
+ */
+export function gizmoNodeFrame(
+  anchor: RigidTransform,
+  placement: RigidTransform,
+  space: GizmoSpace,
+): RigidTransform {
+  const frame = composeTransforms(anchor, placement);
   return {
-    translation: composeTransforms(anchor, placement).translation,
-    rotation: anchor.rotation,
+    translation: frame.translation,
+    rotation: space === "local" ? frame.rotation : anchor.rotation,
   };
 }
 
@@ -94,20 +112,23 @@ export function gizmoNodeFrame(anchor: RigidTransform, placement: RigidTransform
  * The placement a dragged node stands for, in the anchor frame, from the
  * frame F the drag started in and the placement p0 the assembly had then.
  *
- * The node started as (origin of F . p0, rotation of F). It rotates about its
- * own axes, which are the anchor's at the start, so its rotation is
- * R_F . delta with delta a rotation in the anchor frame; the assembly then
- * turns by delta about the anchor's axes: R_p = delta . R_p0. The position is
- * the node's, seen from the anchor: F^-1 (node).
+ * The node started as (origin of F . p0, rotation of F . A) with A the axes
+ * rotation of gizmoAxesRotation. It rotates about its own axes, so seen from
+ * the anchor its rotation is A . delta, delta a rotation in the gizmo's axes;
+ * the assembly turns with the node: R_p = (A . delta . A^-1) . R_p0. The
+ * position is the node's, seen from the anchor: F^-1 (node).
  */
 export function placementOfGizmoNode(
   anchor: RigidTransform,
   start: RigidTransform,
   node: RigidTransform,
+  space: GizmoSpace,
 ): RigidTransform {
   const seen = composeTransforms(invertTransform(anchor), node);
+  const axes = gizmoAxesRotation(start, space);
+  const turned = multiplyQuaternions(seen.rotation, conjugate(axes));
   return {
     translation: seen.translation,
-    rotation: normalizedRotation(multiplyQuaternions(seen.rotation, start.rotation)),
+    rotation: normalizedRotation(multiplyQuaternions(turned, start.rotation)),
   };
 }

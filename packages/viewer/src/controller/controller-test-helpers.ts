@@ -39,6 +39,7 @@ export function testStore(
       showClock: () => undefined,
       storeCentralLayout,
       storeGizmoSteps: () => undefined,
+      storeGizmoSpace: () => undefined,
       storeNavigation: () => undefined,
       storeInspectorOpen: () => undefined,
       storeCollapsedGroups: () => undefined,

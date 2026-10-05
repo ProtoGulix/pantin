@@ -95,6 +95,15 @@ const MENUS: readonly MenuDefinition[] = [
       gizmoItem("gizmoMove", "menubar.edit.gizmoMove", "g", "shortcut.gizmoMove", "move"),
       gizmoItem("gizmoRotate", "menubar.edit.gizmoRotate", "r", "shortcut.gizmoRotate", "rotate"),
       {
+        // ADR 0042 point 2: checked on the assembly's own axes (Local).
+        ...item("gizmoSpace", "menubar.edit.gizmoSpace", (context) => context.gizmoAvailable, {
+          key: "l",
+          primaryModifier: false,
+          labelKey: "shortcut.gizmoSpace",
+        }),
+        checked: (context) => context.gizmoSpace === "local",
+      },
+      {
         // ADR 0035: on the selected assembly, like the gizmo; checked while aligning.
         ...item(
           "align",

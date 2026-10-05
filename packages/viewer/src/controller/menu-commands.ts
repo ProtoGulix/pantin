@@ -7,7 +7,7 @@ import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
-import { toggleGizmo } from "./gizmo-actions.ts";
+import { toggleGizmo, toggleGizmoSpace } from "./gizmo-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import {
   setArrowStep,
@@ -101,6 +101,20 @@ function runViewCommand(
   }
 }
 
+// The positioning tools (ADR 0034, 0035, 0042): the inspector's buttons and keys.
+function runPositioningCommand(
+  store: ViewerStore,
+  command: "gizmoMove" | "gizmoRotate" | "gizmoSpace" | "align",
+): void {
+  if (command === "align") {
+    toggleAlignment(store);
+  } else if (command === "gizmoSpace") {
+    toggleGizmoSpace(store);
+  } else {
+    toggleGizmo(store, command === "gizmoMove" ? "move" : "rotate");
+  }
+}
+
 export function runMenuCommand(
   store: ViewerStore,
   command: MenuCommand,
@@ -130,13 +144,10 @@ export function runMenuCommand(
       void requestOrphanCleanup(store);
       return;
     case "gizmoMove":
-      toggleGizmo(store, "move");
-      return;
     case "gizmoRotate":
-      toggleGizmo(store, "rotate");
-      return;
+    case "gizmoSpace":
     case "align":
-      toggleAlignment(store);
+      runPositioningCommand(store, command);
       return;
     case "newJoint":
       openJointForm(store);

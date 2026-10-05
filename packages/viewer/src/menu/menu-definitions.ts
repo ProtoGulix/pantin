@@ -27,6 +27,7 @@ export type MenuCommand =
   | `navigation:${NavigationPresetId}`
   | "gizmoMove"
   | "gizmoRotate"
+  | "gizmoSpace"
   | "align"
   | "toggleInspector"
   | "toggleConsole"

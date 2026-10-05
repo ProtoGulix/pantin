@@ -17,6 +17,7 @@ describe("the gizmo of a state", () => {
     expect(spec?.target.assemblyKey).toBe("main");
     expect(spec?.kind).toBe("move");
     expect(spec?.steps).toBe(on.gizmoSteps);
+    expect(spec?.space).toBe("local");
   });
 
   it("is absent while the gizmo is off", () => {

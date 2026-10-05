@@ -29,6 +29,7 @@ const SHORTCUT_KEYS = [
   "Suppr",
   "G",
   "R",
+  "L",
   "A",
   "F",
   "Ctrl+1",

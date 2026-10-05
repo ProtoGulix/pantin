@@ -18,7 +18,10 @@ import type { ViewerState } from "../viewer-state.ts";
 // step of the gizmo that is on; for a body, the assembly it is placed with and
 // the same tools. Nothing for any other selection.
 
-type PositioningCommand = Extract<MenuCommand, "gizmoMove" | "gizmoRotate" | "align">;
+type PositioningCommand = Extract<
+  MenuCommand,
+  "gizmoMove" | "gizmoRotate" | "gizmoSpace" | "align"
+>;
 
 interface PositioningToolView {
   command: PositioningCommand;
@@ -69,6 +72,13 @@ function toolsOf(state: ViewerState, t: Translate): PositioningToolView[] {
   return [
     tool("gizmoMove", "positioning.move", state.gizmoMode === "move", gizmoDisabled),
     tool("gizmoRotate", "positioning.rotate", state.gizmoMode === "rotate", gizmoDisabled),
+    // Pressed on the assembly's own axes; the tooltip names the axes in use.
+    tool(
+      "gizmoSpace",
+      state.gizmoSpace === "local" ? "positioning.spaceLocal" : "positioning.spaceGlobal",
+      state.gizmoSpace === "local",
+      gizmoDisabled,
+    ),
     tool("align", "positioning.align", aligning, gizmoDisabled && !aligning),
   ];
 }
