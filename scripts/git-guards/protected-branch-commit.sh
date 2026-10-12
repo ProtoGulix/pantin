@@ -1,6 +1,12 @@
 #!/usr/bin/env sh
 # Protected branches (ADR 0044): no commit on master; on develop only to finish
 # an integration of a reviewed work branch (PANTIN_INTEGRATION=1).
+# lefthook skips pre-commit jobs when nothing is staged (an empty commit), so
+# commit-msg runs this script too, with --allow-merge: commit-msg also runs
+# for merges, and a conflict-free merge must pass (ADR 0044 point 8).
+if [ "${1:-}" = "--allow-merge" ] && [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
+  exit 0
+fi
 branch=$(git symbolic-ref --short -q HEAD || echo "")
 case "$branch" in
   master)

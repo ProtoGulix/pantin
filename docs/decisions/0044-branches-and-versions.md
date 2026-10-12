@@ -58,6 +58,12 @@ The model of Tunnel's ADR 0008, with Pantin's names:
    - the commit message check lets git's own `Merge` and `Revert` headers
      through, as Tunnel's hook does.
 
+   lefthook skips pre-commit jobs when nothing is staged, so commit-msg
+   runs the branch guard too, letting a merge in progress through; an empty
+   commit on `develop` or `master` is then refused as well. A conflicted
+   merge resolved entirely to the current branch's side leaves nothing
+   staged, so it passes like a conflict-free merge.
+
    `git cherry-pick` and `git revert` run neither pre-commit nor commit-msg
    (checked with git 2.47.3), so the hooks do not catch them: do them on
    `develop` only as part of an integration. Tunnel's ADR 0008 says the

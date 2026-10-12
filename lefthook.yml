@@ -14,7 +14,10 @@ pre-push:
       use_stdin: true
 
 commit-msg:
+  piped: true
   jobs:
+    - name: protected-branches
+      run: scripts/git-guards/protected-branch-commit.sh --allow-merge
     - name: conventional-commits
       # Header must follow Conventional Commits: type(optional scope)!: description
       # Merge and revert messages written by git pass, as in Tunnel (ADR 0044).
