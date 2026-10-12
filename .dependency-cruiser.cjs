@@ -128,6 +128,14 @@ module.exports = {
       to: { path: "evaluat", reachable: true },
     },
     {
+      name: "rapier-only-in-rapier-world",
+      comment:
+        "Rapier is imported by core/src/physics/rapier-world.ts alone, so the engine stays behind one boundary (ADR 0043 point 9).",
+      severity: "error",
+      from: { pathNot: "^packages/core/src/physics/rapier-world\\.ts$" },
+      to: { path: "@dimforge/rapier3d" },
+    },
+    {
       name: "no-circular",
       comment: "Circular imports hide the real dependency direction.",
       severity: "error",
@@ -151,7 +159,9 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    exclude: { path: "(^|/)dist/" },
+    // Build output is left out, except Rapier whose entry sits in its own dist/
+    // and must stay visible to the rapier-only-in-rapier-world rule.
+    exclude: { path: "^(?!.*@dimforge).*(^|/)dist/" },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.base.json" },
     combinedDependencies: true,

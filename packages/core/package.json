@@ -12,6 +12,7 @@
     "start": "node src/main.ts"
   },
   "dependencies": {
+    "@dimforge/rapier3d-deterministic-compat": "0.21.0",
     "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
     "@pantin/protocol": "workspace:*",
