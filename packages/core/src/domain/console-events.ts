@@ -121,3 +121,22 @@ export function allClearedEvents(state: FaultAndDiagnosticState): ConsoleEvent[]
     ...driveIds.sort().flatMap((id) => driveClearedEvents(state, id)),
   ];
 }
+
+// ADR 0043 point 5: a spawn the planning skipped, with the reason it gives.
+export function spawnSkippedEvent(
+  emitter: string,
+  reason: "emitter_blocked" | "product_limit",
+): ConsoleEvent {
+  return { code: reason, level: "warning", source: { kind: "pantin" }, params: { emitter } };
+}
+
+// ADR 0043 point 11: reported only when products were cleared, so that editing
+// a belt on an empty line stays silent.
+export function physicsRebuiltEvent(products: number): ConsoleEvent {
+  return {
+    code: "physics_rebuilt",
+    level: "info",
+    source: { kind: "pantin" },
+    params: { products },
+  };
+}

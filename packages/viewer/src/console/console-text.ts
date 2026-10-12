@@ -46,6 +46,11 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
     case "clock_resumed":
     case "face_file_missing":
       return { text: t(`console.code.${entry.code}`), detail: null };
+    case "emitter_blocked":
+    case "product_limit":
+      return { text: t(`console.code.${entry.code}`, entry.params), detail: null };
+    case "physics_rebuilt":
+      return { text: t("console.code.physics_rebuilt", entry.params), detail: null };
   }
 }
 

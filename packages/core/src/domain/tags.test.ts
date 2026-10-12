@@ -2,6 +2,7 @@ import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
 import { emitter, photoelectricCell } from "../test-support/conveyor-fixtures.ts";
+import { emptyPhysicsState } from "./physics-state.ts";
 import { applyQueuedSetpoints } from "./simulation-step.ts";
 import { commandTagOf, describeTags } from "./tags.ts";
 
@@ -75,6 +76,7 @@ const noRuntime = {
   driveCommands: new Map(),
   driveFeedback: new Map(),
   sensorOutputs: new Map(),
+  physicsState: emptyPhysicsState(),
 };
 
 function apiErrorOf(action: () => unknown): ApiError {

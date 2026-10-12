@@ -4,12 +4,22 @@ import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
 import { allClearedEvents, migratedEvent } from "../domain/console-events.ts";
+import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
 import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
+import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts";
+import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { recordConsoleEvents } from "./console-record.ts";
+import {
+  buildPhysicsRuntime,
+  type PhysicsRuntime,
+  type PhysicsSettings,
+  resetPhysics,
+  syncPhysicsTo,
+} from "./physics-runtime.ts";
 
 // In-memory Pantins of one service instance: documents are edited here and
 // written to disk only on save.
@@ -50,6 +60,10 @@ export type OpenPantin = {
   // Joint sensors (ADR 0025): each one's tag values and state of the last
   // step, never saved.
   sensorOutputs: Map<string, SensorOutput>;
+  // Products, belts and guides (ADR 0043 point 11), never saved: the world
+  // with its empty snapshot, and the state around it.
+  physics: PhysicsRuntime;
+  physicsState: PhysicsState;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
   // The simulation clock (ADR 0032), never saved: reset leaves it as it is.
@@ -62,8 +76,13 @@ export function meshPathsOf(document: PantinDocument): Set<string> {
   return new Set(document.bodies.map((body) => body.mesh));
 }
 
-// `document` is what pantin.json on disk contains.
-export function newOpenPantin(document: PantinDocument, consoleId: string): OpenPantin {
+// `document` is what pantin.json on disk contains. A Pantin always gets a
+// world, even with no belt or guide: its emitters then drop onto nothing.
+export function newOpenPantin(
+  document: PantinDocument,
+  consoleId: string,
+  createWorld: PhysicsWorldFactory = createInertPhysicsWorld,
+): OpenPantin {
   return {
     document,
     savedText: serializePantinDocument(document),
@@ -84,13 +103,19 @@ export function newOpenPantin(document: PantinDocument, consoleId: string): Open
     unresponsiveDriveIds: new Set(),
     jammedJointIds: new Set(),
     sensorOutputs: new Map(),
+    physics: buildPhysicsRuntime(createWorld, document),
+    physicsState: emptyPhysicsState(),
     stepCount: 0,
     clock: newClockRuntime(),
     console: emptyConsole(consoleId),
   };
 }
 
-/** Back to the reference configuration: no motion, no command, no fault. */
+/**
+ * Back to the reference configuration: no motion, no command, no fault, no
+ * product. The clock and the step count stay (ADR 0032 point 1). It does not
+ * reload the document.
+ */
 export function resetRuntimeState(context: ServiceContext, openPantin: OpenPantin): void {
   recordConsoleEvents(context, openPantin, allClearedEvents(openPantin));
   openPantin.jointPositions.clear();
@@ -105,6 +130,7 @@ export function resetRuntimeState(context: ServiceContext, openPantin: OpenPanti
   openPantin.unresponsiveDriveIds.clear();
   openPantin.jammedJointIds.clear();
   openPantin.sensorOutputs.clear();
+  resetPhysics(context.physics, openPantin);
 }
 // Promises, not values: two requests loading the same Pantin at once share
 // one load, hence one OpenPantin object that both edit.
@@ -115,6 +141,8 @@ export type ServiceContext = {
   loadedPantins: Map<PantinId, OpenPantin>;
   // Undefined when the core was started without --step-converter-python.
   stepConverter: StepConverter | undefined;
+  // The physics engine behind its port, and the product cap (ADR 0043 points 5 and 9).
+  physics: PhysicsSettings;
   // Wall clock of the console entries, injected so tests can fix it.
   wallClock: () => Date;
   // Makes the id of a console (random in the real core, fixed in tests).
@@ -170,7 +198,7 @@ async function readPantinFromDisk(
 ): Promise<OpenPantin> {
   // Compared in canonical form, so a hand formatted file is not "unsaved".
   const { document, migratedFrom } = await readSavedReading(context, pantinId);
-  const openPantin = newOpenPantin(document, context.newConsoleId());
+  const openPantin = newOpenPantin(document, context.newConsoleId(), context.physics.createWorld);
   if (migratedFrom !== null) {
     recordConsoleEvents(context, openPantin, [migratedEvent(migratedFrom)]);
   }
@@ -183,6 +211,9 @@ export async function updateDocument(
   edit: (document: PantinDocument) => PantinDocument,
 ): Promise<PantinResponse> {
   const openPantin = await loadPantin(context, pantinId);
-  openPantin.document = edit(openPantin.document);
+  const edited = edit(openPantin.document);
+  // Before storing: if the world cannot be rebuilt, the edit is not applied.
+  syncPhysicsTo(context, openPantin, edited);
+  openPantin.document = edited;
   return toResponse(pantinId, openPantin);
 }

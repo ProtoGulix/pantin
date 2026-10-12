@@ -53,6 +53,13 @@ describe("planSpawns", () => {
     expect(room.skipped).toEqual([{ emitterId: "e2", reason: "product_limit" }]);
   });
 
+  it("takes the cap as a parameter, defaulting to PRODUCT_LIMIT", () => {
+    const plan = planSpawns([queued("e1"), queued("e2", 3)], [box(10)], 1, 1);
+    expect(plan.requests).toEqual([]);
+    expect(plan.skipped.map(({ reason }) => reason)).toEqual(["product_limit", "product_limit"]);
+    expect(planSpawns([queued("e1")], [box(10)], 1).requests).toHaveLength(1);
+  });
+
   it("builds the box from the frame: bottom face on the origin, axes along the frame", () => {
     const turned: QueuedSpawn = {
       ...queued("e1", 1),

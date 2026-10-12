@@ -103,3 +103,49 @@ export function conveyorDocument(extra: Partial<PantinDocument> = {}): PantinDoc
   );
   return { ...base, ...extra };
 }
+
+const AT_BELT_START: Placement = { translation: [-0.35, 0, 0], rotation: [0, 0, 0, 1] };
+const AT_BELT_END: Placement = { translation: [0.4, 0, 0], rotation: [0, 0, 0, 1] };
+
+/**
+ * contactor, then an `ac_motor` of 10 rad/s on the drum (radius 0.05 m: a belt
+ * surface at 0.5 m/s), a 1 m belt centred on the origin and a small box
+ * emitter at its start. Tags: "main.contactor.run", "main.source.spawn".
+ */
+export function conveyorLine(extra: Partial<PantinDocument> = {}): PantinDocument {
+  return conveyorDocument({
+    drives: [
+      {
+        id: "contactor",
+        tagKey: "contactor",
+        name: "Contactor",
+        assembly: "main",
+        type: "contactor",
+      },
+    ],
+    actuators: [
+      {
+        id: "motor",
+        name: "Motor",
+        assembly: "main",
+        type: "ac_motor",
+        nominalSpeed: 10,
+        feed: { drive: "contactor", ports: { in: "out" } },
+        joints: ["drum"],
+      },
+    ],
+    belts: [belt()],
+    emitters: [
+      emitter({
+        placement: AT_BELT_START,
+        box: { size: [0.1, 0.1, 0.1], mass: 1, material: "cardboard" },
+      }),
+    ],
+    ...extra,
+  });
+}
+
+/** An absorber on the last 0.1 m of the belt of `conveyorLine`. */
+export function endAbsorber(): Absorber {
+  return absorber({ placement: AT_BELT_END, size: [0.1, 0.4, 0.3] });
+}

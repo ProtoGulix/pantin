@@ -9,7 +9,12 @@ import {
   type NetworkConfig,
   resolveNetworkConfig,
 } from "../domain/network-config.ts";
-import { createPantinService, type PantinService } from "../service/pantin-service.ts";
+import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
+import {
+  createPantinService,
+  type PantinService,
+  type ServiceOptions,
+} from "../service/pantin-service.ts";
 import {
   createRealSimulationTimer,
   type SimulationTimer,
@@ -32,6 +37,8 @@ export type PantinServerOptions = {
   // Python interpreter of the STEP converter's environment (ADR 0009); without
   // it, STEP imports answer conversion_unavailable.
   stepConverterPython?: string;
+  // The physics engine (ADR 0043 point 9); main.ts loads Rapier and passes it.
+  physicsWorldFactory?: PhysicsWorldFactory;
   stepConverterLimits?: Partial<ProcessLimits>;
   // Clock of the fixed-step loop (ADR 0012); the real one by default.
   simulationTimer?: SimulationTimer;
@@ -104,6 +111,19 @@ function poseSourceOf(service: PantinService): PoseSource {
   };
 }
 
+function serviceOptionsOf(options: PantinServerOptions): ServiceOptions {
+  return {
+    // Without it the service falls back to an inert world: for tests that run
+    // without Rapier only; main.ts always passes the real one.
+    ...(options.physicsWorldFactory === undefined
+      ? {}
+      : { physicsWorldFactory: options.physicsWorldFactory }),
+    ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
+    ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
+    reportStepError: options.reportError,
+  };
+}
+
 export async function startPantinServer(
   options: PantinServerOptions,
 ): Promise<RunningPantinServer> {
@@ -115,11 +135,7 @@ export async function startPantinServer(
   const service = createPantinService(
     createPantinStore(options.pantinsDirectory),
     createConfiguredStepConverter(options),
-    {
-      ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
-      ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
-      reportStepError: options.reportError,
-    },
+    serviceOptionsOf(options),
   );
   const poseStreams = createPoseStreamRegistry({
     source: poseSourceOf(service),
@@ -151,6 +167,7 @@ export async function startPantinServer(
     new Promise<void>((resolveClose, rejectClose) => {
       loop.stop();
       poseStreams.closeAll();
+      service.close();
       server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
       server.closeAllConnections();
     });

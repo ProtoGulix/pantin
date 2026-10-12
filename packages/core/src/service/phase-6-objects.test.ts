@@ -8,8 +8,8 @@ import { belt, emitter, photoelectricCell } from "../test-support/conveyor-fixtu
 import { buildAsciiStl } from "../test-support/mesh-fixtures.ts";
 import { importBodies } from "./import-operations.ts";
 import { deleteBody } from "./mesh-lifecycle.ts";
-import { loadPantin, type ServiceContext } from "./open-pantins.ts";
-import { createPantinService } from "./pantin-service.ts";
+import { loadPantin } from "./open-pantins.ts";
+import { createPantinService, createServiceContext } from "./pantin-service.ts";
 import { listTags, writeTag } from "./simulation.ts";
 
 // Phase 6 objects through the service (ADR 0043): no route creates them yet,
@@ -28,15 +28,10 @@ afterEach(async () => {
 async function axisWithRail() {
   const store = createPantinStore(pantinsDirectory);
   await createPantinService(store, undefined).createPantin("Axis");
-  const context: ServiceContext = {
-    store,
-    openPantins: new Map(),
-    loadedPantins: new Map(),
-    stepConverter: undefined,
+  const context = createServiceContext(store, undefined, {
     wallClock: () => new Date(0),
     newConsoleId: () => "console",
-    reportStepError: () => undefined,
-  };
+  });
   const { bodies } = await importBodies(
     context,
     "axis",
@@ -76,7 +71,7 @@ describe("deleting a body used as a frame", () => {
 });
 
 describe("the tags of emitters and presence sensors", () => {
-  it("are listed, and writing spawn is accepted but changes nothing yet", async () => {
+  it("are listed, and spawn reads back the value written", async () => {
     const { context, rail } = await axisWithRail();
     const openPantin = await loadPantin(context, "axis");
     openPantin.document = {
@@ -91,7 +86,7 @@ describe("the tags of emitters and presence sensors", () => {
     const written = await writeTag(context, "axis", spawn, 1);
     expect(written).toEqual({ name: spawn, type: "bit", direction: "command", value: 1 });
     const after = (await listTags(context, "axis")).tags;
-    expect(after.map(({ value }) => value)).toEqual([0, 0]);
+    expect(after.map(({ value }) => value)).toEqual([1, 0]);
     await expect(writeTag(context, "axis", spawn, 2)).rejects.toMatchObject({
       code: "invalid_request",
     });

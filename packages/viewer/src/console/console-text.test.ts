@@ -56,6 +56,24 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "body", id: "rail" },
     params: {},
   }),
+  emitter_blocked: entryOf(11, {
+    code: "emitter_blocked",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { emitter: "source" },
+  }),
+  product_limit: entryOf(12, {
+    code: "product_limit",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { emitter: "source" },
+  }),
+  physics_rebuilt: entryOf(13, {
+    code: "physics_rebuilt",
+    level: "info",
+    source: { kind: "pantin" },
+    params: { products: 3 },
+  }),
 };
 
 const expected = {
@@ -72,6 +90,9 @@ const expected = {
     clock_resumed: "Simulation reprise.",
     face_file_missing:
       "Pas de fichier de faces : sur ce corps, l'alignement ne pourra viser que le plan d'un triangle, aucun axe.",
+    emitter_blocked: "Émetteur source : aucun produit créé, l'emplacement est occupé.",
+    product_limit: "Émetteur source : aucun produit créé, la limite de produits est atteinte.",
+    physics_rebuilt: "Convoyeurs ou guides modifiés : les 3 produit(s) ont été retirés.",
   },
   en: {
     forced_tag_written:
@@ -86,6 +107,9 @@ const expected = {
     clock_resumed: "Simulation resumed.",
     face_file_missing:
       "No face file: on this body, alignment can only pick the plane of a triangle, no axis.",
+    emitter_blocked: "Emitter source: no product created, the spot is occupied.",
+    product_limit: "Emitter source: no product created, the limit of products is reached.",
+    physics_rebuilt: "Belts or guides changed: the 3 product(s) were removed.",
   },
 } as const;
 

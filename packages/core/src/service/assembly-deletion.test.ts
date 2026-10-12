@@ -17,7 +17,7 @@ import { importBodies } from "./import-operations.ts";
 import { createJoint, getPose } from "./joint-operations.ts";
 import { discardPantin, savePantin } from "./mesh-lifecycle.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
-import { createPantinService } from "./pantin-service.ts";
+import { createPantinService, createServiceContext } from "./pantin-service.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { startSimulationLoop } from "./simulation-loop.ts";
 
@@ -46,15 +46,10 @@ const AXIS: CreateJointRequest = {
 };
 
 function contextOver(store: PantinStore): ServiceContext {
-  return {
-    store,
-    openPantins: new Map(),
-    loadedPantins: new Map(),
-    stepConverter: undefined,
+  return createServiceContext(store, undefined, {
     wallClock: () => new Date(0),
     newConsoleId: () => "console",
-    reportStepError: () => undefined,
-  };
+  });
 }
 
 async function importStl(context: ServiceContext, fileName: string): Promise<Body> {

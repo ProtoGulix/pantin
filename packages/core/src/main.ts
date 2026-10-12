@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { StartupRefusedError, startPantinServer } from "./http/server.ts";
+import { createPhysicsWorldFactory, loadRapier } from "./physics/rapier-world.ts";
 
 const DEFAULT_PORT = 4800;
 const USAGE = [
@@ -71,11 +72,14 @@ async function main(): Promise<void> {
   const viewerDirectory = await resolveViewerDirectory(values["viewer-dir"]);
   const stepConverterPython = values["step-converter-python"];
   await mkdir(pantinsDirectory, { recursive: true });
+  // Once at start-up (about 73 ms): the WASM module is shared by every Pantin's world.
+  const physicsWorldFactory = createPhysicsWorldFactory(await loadRapier());
   const running = await startPantinServer({
     pantinsDirectory,
     port,
     ...(values.listen === undefined ? {} : { listen: values.listen }),
     allow: values.allow ?? [],
+    physicsWorldFactory,
     ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
     ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
     reportError,

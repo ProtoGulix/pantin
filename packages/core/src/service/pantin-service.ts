@@ -8,11 +8,14 @@ import type {
 import { PantinIdSchema } from "@pantin/protocol";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { makeUniqueId, slugifyDisplayName } from "../domain/ids.ts";
+import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
 import {
   createPantinDocument,
   renamePantinDocument,
   serializePantinDocument,
 } from "../domain/pantin-document.ts";
+import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
+import { PRODUCT_LIMIT } from "../domain/spawn-planning.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
@@ -39,11 +42,13 @@ import {
   newOpenPantin,
   type OpenPantin,
   readSavedDocument,
+  resetRuntimeState,
   type ServiceContext,
   toResponse,
   updateDocument,
 } from "./open-pantins.ts";
 import { orphanMeshOperations } from "./orphan-mesh-cleanup.ts";
+import { disposePhysics } from "./physics-runtime.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { listTags, runSimulationSteps, writeTag } from "./simulation.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
@@ -106,10 +111,33 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
   await context.store.createPantinFolder(pantinId);
   const document = createPantinDocument(name);
   await context.store.writeDocumentAtomically(pantinId, serializePantinDocument(document));
-  const openPantin = newOpenPantin(document, context.newConsoleId());
+  const openPantin = newOpenPantin(document, context.newConsoleId(), context.physics.createWorld);
   context.openPantins.set(pantinId, Promise.resolve(openPantin));
   context.loadedPantins.set(pantinId, openPantin);
   return toResponse(pantinId, openPantin);
+}
+
+// Frees the physics worlds (WASM memory) of every loaded Pantin and forgets
+// them: the service is not used afterwards.
+function closePantins(context: ServiceContext): void {
+  for (const openPantin of context.loadedPantins.values()) {
+    disposePhysics(openPantin);
+  }
+  context.loadedPantins.clear();
+  context.openPantins.clear();
+}
+
+// Runtime reset without reloading the document, so unsaved edits stay (ADR 0043
+// point 12). The clock and the step count are untouched (ADR 0032 point 1).
+async function resetRuntime(context: ServiceContext, pantinId: PantinId): Promise<void> {
+  resetRuntimeState(context, await loadPantin(context, pantinId));
+}
+
+function lifecycleOperations(context: ServiceContext) {
+  return {
+    resetRuntime: (pantinId: PantinId) => resetRuntime(context, pantinId),
+    close: () => closePantins(context),
+  };
 }
 
 // Sync, for the simulation tick: only Pantins already loaded.
@@ -131,12 +159,16 @@ function simulationPeeks(context: ServiceContext) {
 // The clock and the step error report are the boundaries: the real ones by
 // default, tests pass their own.
 export type ServiceOptions = {
+  // Without it the core has no physics engine and cannot create products.
+  physicsWorldFactory?: PhysicsWorldFactory;
+  // The product cap of ADR 0043 point 5; tests lower it.
+  productLimit?: number;
   wallClock?: () => Date;
   newConsoleId?: () => string;
   reportStepError?: (error: unknown) => void;
 };
 
-function createServiceContext(
+export function createServiceContext(
   store: PantinStore,
   stepConverter: StepConverter | undefined,
   options: ServiceOptions,
@@ -146,6 +178,10 @@ function createServiceContext(
     openPantins: new Map(),
     loadedPantins: new Map(),
     stepConverter,
+    physics: {
+      createWorld: options.physicsWorldFactory ?? createInertPhysicsWorld,
+      productLimit: options.productLimit ?? PRODUCT_LIMIT,
+    },
     wallClock: options.wallClock ?? (() => new Date()),
     newConsoleId: options.newConsoleId ?? (() => crypto.randomUUID()),
     reportStepError: options.reportStepError ?? (() => undefined),
@@ -166,6 +202,7 @@ export function createPantinService(
       updateDocument(context, pantinId, (document) => renamePantinDocument(document, name)),
     savePantin: (pantinId: PantinId) => savePantin(context, pantinId),
     discardPantin: (pantinId: PantinId) => discardPantin(context, pantinId),
+    ...lifecycleOperations(context),
     deleteBody: (pantinId: PantinId, bodyId: string) => deleteBody(context, pantinId, bodyId),
     importBodies: (pantinId: PantinId, query: ImportBodyQuery, bytes: Uint8Array) =>
       importBodies(context, pantinId, query, bytes),

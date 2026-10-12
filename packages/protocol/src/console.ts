@@ -4,6 +4,7 @@ import {
   ActuatorIdSchema,
   BodyIdSchema,
   DriveIdSchema,
+  EmitterIdSchema,
   JointIdSchema,
   SensorIdSchema,
 } from "./ids.ts";
@@ -78,6 +79,10 @@ const ParamsSchemas = {
   // STEP body, so alignment only offers the fallback pick on it. The reason
   // goes to the core log.
   face_file_missing: z.object({}),
+  // ADR 0043 points 5 and 11: an emitter's spawn that did not happen (the
+  // emitter id), and the products a physics rebuild removed (their count).
+  spawn_skipped: z.object({ emitter: EmitterIdSchema }),
+  physics_rebuilt: z.object({ products: z.number().int().positive() }),
 };
 
 const eventShapes = {
@@ -141,6 +146,24 @@ const eventShapes = {
     source: BodySourceSchema,
     params: ParamsSchemas.face_file_missing,
   }),
+  emitterBlocked: z.object({
+    code: z.literal("emitter_blocked"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.spawn_skipped,
+  }),
+  productLimit: z.object({
+    code: z.literal("product_limit"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.spawn_skipped,
+  }),
+  physicsRebuilt: z.object({
+    code: z.literal("physics_rebuilt"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.physics_rebuilt,
+  }),
 };
 
 // One event: what the core reports, before it gets a sequence and times.
@@ -156,6 +179,9 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.clockPaused,
   eventShapes.clockResumed,
   eventShapes.faceFileMissing,
+  eventShapes.emitterBlocked,
+  eventShapes.productLimit,
+  eventShapes.physicsRebuilt,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
 export type ConsoleCode = ConsoleEvent["code"];
@@ -184,6 +210,9 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.clockPaused.extend(entryFields),
   eventShapes.clockResumed.extend(entryFields),
   eventShapes.faceFileMissing.extend(entryFields),
+  eventShapes.emitterBlocked.extend(entryFields),
+  eventShapes.productLimit.extend(entryFields),
+  eventShapes.physicsRebuilt.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
 

@@ -1,6 +1,7 @@
 import type { ConsoleEvent, PantinId, Tag, TagListResponse } from "@pantin/protocol";
 import { diagnosticEvents, stepErrorEvent } from "../domain/console-events.ts";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
+import { writeSpawnValue } from "../domain/physics-state.ts";
 import { stepSensors } from "../domain/sensor-step.ts";
 import { recordTick } from "../domain/simulation-clock.ts";
 import { stepSimulation } from "../domain/simulation-step.ts";
@@ -8,6 +9,7 @@ import { commandTagOf, describeTags } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
 import { recordConsoleEvents } from "./console-record.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
+import { stepPhysics, syncPhysics } from "./physics-runtime.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
 
 // Tags and simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025, ADR 0028).
@@ -43,7 +45,10 @@ export async function writeTag(
     throw new ApiError("invalid_request", `Tag "${tagName}" is a bit: write 0 or 1.`);
   }
   const { owner } = entry;
-  if (owner.kind === "joint") {
+  if (owner.kind === "emitter") {
+    // Latched now, served by the next step (ADR 0043 point 5).
+    openPantin.physicsState = writeSpawnValue(openPantin.physicsState, owner.emitter.id, value);
+  } else if (owner.kind === "joint") {
     openPantin.setpoints.set(owner.joint.id, value);
     openPantin.queuedSetpoints.set(owner.joint.id, value);
   } else if (owner.kind === "drive") {
@@ -51,15 +56,17 @@ export async function writeTag(
     const commands = openPantin.driveCommands.get(owner.drive.id) ?? {};
     openPantin.driveCommands.set(owner.drive.id, { ...commands, [entry.member]: value });
   }
-  // An emitter's spawn write is accepted and has no effect yet: it is latched
-  // in P1c (ADR 0043 point 5).
   return { name: tagName, type: entry.type, direction: "command", value };
 }
 
 // A step is atomic: everything it computes is read before anything is
 // stored, so a throw leaves the Pantin as it was (ADR 0031 point 3). Returns
 // the console events of the step, for the caller to record once it applied.
-function runStep(openPantin: OpenPantin): ConsoleEvent[] {
+// Order (ADR 0043 point 10): drives, actuators, joint sensors, then the physics
+// (frames, belts, spawns, world step, removals; presence sensors in P2). The
+// one exception to atomicity is the world itself: it is stepped before the
+// results are stored, and goes back to its empty snapshot if the step throws.
+function runStep(context: ServiceContext, openPantin: OpenPantin): ConsoleEvent[] {
   const stepped = stepSimulation(openPantin.document, openPantin, STEP_SECONDS);
   const sensorOutputs = stepSensors(
     openPantin.document,
@@ -71,6 +78,12 @@ function runStep(openPantin: OpenPantin): ConsoleEvent[] {
     openPantin.driveDiagnostics,
     stepped.driveDiagnostics,
   );
+  const physics = stepPhysics(
+    context.physics,
+    openPantin,
+    stepped.jointPositions,
+    stepped.jointVelocities,
+  );
   openPantin.jointPositions = stepped.jointPositions;
   openPantin.jointVelocities = stepped.jointVelocities;
   openPantin.driveStates = stepped.driveStates;
@@ -78,10 +91,11 @@ function runStep(openPantin: OpenPantin): ConsoleEvent[] {
   openPantin.driveFeedback = stepped.driveFeedback;
   openPantin.driveDiagnostics = stepped.driveDiagnostics;
   openPantin.sensorOutputs = sensorOutputs;
+  openPantin.physicsState = physics.state;
   // Joint setpoints are consumed by the first step (ADR 0012 point 3).
   openPantin.queuedSetpoints.clear();
   openPantin.stepCount += 1;
-  return events;
+  return [...events, ...physics.events];
 }
 
 // A failing step is skipped and put in the console; the rest of this tick is
@@ -92,7 +106,9 @@ export function runSteps(context: ServiceContext, openPantin: OpenPantin, steps:
   for (let step = 0; step < steps; step += 1) {
     let events: ConsoleEvent[];
     try {
-      events = runStep(openPantin);
+      // Before the step, so that its rebuild is reported even if the step fails.
+      syncPhysics(context, openPantin);
+      events = runStep(context, openPantin);
     } catch (error) {
       if (recordConsoleEvents(context, openPantin, [stepErrorEvent(error)])) {
         context.reportStepError(error);

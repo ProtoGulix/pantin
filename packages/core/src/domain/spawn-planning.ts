@@ -49,6 +49,8 @@ export function planSpawns(
   queued: readonly QueuedSpawn[],
   products: readonly OrientedBox[],
   nextProductNumber: number,
+  // A parameter so that a test needs no 500 boxes.
+  productLimit = PRODUCT_LIMIT,
 ): SpawnPlan {
   const ordered = [...queued].sort((a, b) =>
     a.emitterId < b.emitterId ? -1 : a.emitterId > b.emitterId ? 1 : 0,
@@ -57,7 +59,7 @@ export function planSpawns(
   const plan: SpawnPlan = { requests: [], skipped: [], nextProductNumber };
   for (const spawn of ordered) {
     const box = spawnedBox(spawn);
-    if (occupied.length >= PRODUCT_LIMIT) {
+    if (occupied.length >= productLimit) {
       plan.skipped.push({ emitterId: spawn.emitterId, reason: "product_limit" });
     } else if (occupied.some((other) => boxesOverlap(box, other))) {
       plan.skipped.push({ emitterId: spawn.emitterId, reason: "emitter_blocked" });
