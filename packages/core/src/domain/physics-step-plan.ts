@@ -13,6 +13,7 @@ import type {
   StepInput,
   StepOutput,
 } from "./physics-world.ts";
+import { type PresenceRays, presenceRays } from "./presence-step.ts";
 import { type AbsorberVolume, productsToRemove } from "./product-absorption.ts";
 import { planSpawns, type QueuedSpawn } from "./spawn-planning.ts";
 
@@ -24,6 +25,8 @@ import { planSpawns, type QueuedSpawn } from "./spawn-planning.ts";
 export type PhysicsStepPlan = {
   input: StepInput;
   absorbers: readonly AbsorberVolume[];
+  // Worked out from the new joint poses, cast after the removals.
+  presence: PresenceRays;
   // The products this step creates, in spawn order, with their emitter's box.
   spawned: readonly Omit<ProductRecord, "pose">[];
   nextProductNumber: number;
@@ -122,6 +125,7 @@ export function planPhysicsStep(
       // A queued spawn only exists for an emitter of the document (queuedSpawnsOf).
       material: materialOf.get(request.emitterId) ?? "cardboard",
     })),
+    presence: presenceRays(document, resolve),
     nextProductNumber: spawnPlan.nextProductNumber,
     events: spawnPlan.skipped.map(({ emitterId, reason }) => spawnSkippedEvent(emitterId, reason)),
   };

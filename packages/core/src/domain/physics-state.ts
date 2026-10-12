@@ -26,8 +26,10 @@ export type PhysicsState = {
   spawnValues: ReadonlyMap<string, number>;
   // Emitter ids of the spawns latched by a write and not served yet, in write order.
   queuedSpawns: readonly string[];
-  // Each presence sensor's tag values of the last step (all 0 until ADR 0043 P2).
+  // Each presence sensor's tag values of the last step.
   presenceOutputs: ReadonlyMap<string, Readonly<Record<string, number>>>;
+  // Each presence sensor's evaluation state, kept with the outputs (ADR 0025).
+  presenceStates: ReadonlyMap<string, Readonly<Record<string, number>>>;
 };
 
 export function emptyPhysicsState(): PhysicsState {
@@ -37,6 +39,7 @@ export function emptyPhysicsState(): PhysicsState {
     spawnValues: new Map(),
     queuedSpawns: [],
     presenceOutputs: new Map(),
+    presenceStates: new Map(),
   };
 }
 

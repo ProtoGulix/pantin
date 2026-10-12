@@ -1,6 +1,7 @@
 import { encoder } from "./encoder/evaluate.ts";
-import type { SensorInput, SensorOutput } from "./evaluation-common.ts";
-import type { SensorFields } from "./schemas.ts";
+import type { PresenceSensorInput, SensorInput, SensorOutput } from "./evaluation-common.ts";
+import { photoelectric } from "./photoelectric/evaluate.ts";
+import type { PresenceSensorFields, SensorFields } from "./schemas.ts";
 import { evaluateSwitch } from "./switch-evaluation.ts";
 import { switchOf } from "./zones.ts";
 
@@ -21,4 +22,11 @@ export function evaluateSensor(input: SensorInput<SensorFields>): SensorOutput {
     return encoder.evaluate({ ...input, fields });
   }
   throw new Error(`Sensor type "${fields.type}" has neither zones nor an evaluation.`);
+}
+
+/** A presence sensor's tag values and new state, from its raw signal (ADR 0043 point 8). */
+export function evaluatePresenceSensor(
+  input: PresenceSensorInput<PresenceSensorFields>,
+): SensorOutput {
+  return photoelectric.evaluate(input);
 }

@@ -15,6 +15,7 @@ import type {
   PhysicsWorld,
   PhysicsWorldFactory,
 } from "../domain/physics-world.ts";
+import { evaluatePresence } from "../domain/presence-step.ts";
 import { recordConsoleEvents } from "./console-record.ts";
 
 // The physics world of an open Pantin and its lifecycle (ADR 0043 points 9 to
@@ -158,10 +159,13 @@ export function stepPhysics(
     const output = world.step(plan.input);
     const removed = removalsOf(plan, output);
     world.remove(removed);
-    // P2 (ADR 0043 point 10): ray casts of the presence sensors and their
-    // evaluation go here, on the poses the world answered, after the removals.
+    // After the removals: a box absorbed in this step is not seen (ADR 0043
+    // point 10). No sensor, no cast.
+    const { rays } = plan.presence;
+    const hits = rays.length === 0 ? [] : world.castRays(rays);
+    const finished = finishPhysicsStep(host.physicsState, plan, output.products, removed);
     return {
-      state: finishPhysicsStep(host.physicsState, plan, output.products, removed),
+      state: evaluatePresence(finished, plan.presence, hits),
       events: plan.events,
     };
   } catch (error) {

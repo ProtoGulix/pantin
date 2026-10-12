@@ -63,7 +63,7 @@ export async function writeTag(
 // stored, so a throw leaves the Pantin as it was (ADR 0031 point 3). Returns
 // the console events of the step, for the caller to record once it applied.
 // Order (ADR 0043 point 10): drives, actuators, joint sensors, then the physics
-// (frames, belts, spawns, world step, removals; presence sensors in P2). The
+// (frames, belts, spawns, world step, removals; ray casts and presence sensors). The
 // one exception to atomicity is the world itself: it is stepped before the
 // results are stored, and goes back to its empty snapshot if the step throws.
 function runStep(context: ServiceContext, openPantin: OpenPantin): ConsoleEvent[] {
