@@ -1,12 +1,17 @@
 import { z } from "zod";
 import { PantinResponseSchema, RenameRequestSchema } from "./api.ts";
 import {
+  AbsorberIdSchema,
   ActuatorIdSchema,
+  BeltIdSchema,
   BodyIdSchema,
   DisplayNameSchema,
   DriveIdSchema,
+  EmitterIdSchema,
+  GuideIdSchema,
   JointIdSchema,
   KeySchema,
+  PresenceSensorIdSchema,
   SensorIdSchema,
 } from "./ids.ts";
 import { PlacementSchema } from "./placement.ts";
@@ -28,7 +33,8 @@ import { TagNameSchema } from "./tag.ts";
 //          the message says what it holds, joints included)
 //   DELETE /api/pantins/:pantinId/assemblies/:assemblyKey?contents=delete
 //          -> AssemblyDeletionResponse (ADR 0037: the assembly with its bodies,
-//          joints, drives, actuators and sensors, and its sub-assemblies with
+//          joints, drives, actuators, sensors, belts, guides, emitters, absorbers
+//          and presence sensors, and its sub-assemblies with
 //          theirs, ADR 0040 point 8; 409 when another assembly's
 //          item depends on one of them; 400 for any other `contents` value)
 //   GET    /api/pantins/:pantinId/assemblies/:assemblyKey/deletion
@@ -113,6 +119,11 @@ export const AssemblyDeletionSchema = z.object({
   drives: z.array(namedItemSchema(DriveIdSchema)),
   actuators: z.array(namedItemSchema(ActuatorIdSchema)),
   sensors: z.array(namedItemSchema(SensorIdSchema)),
+  belts: z.array(namedItemSchema(BeltIdSchema)),
+  guides: z.array(namedItemSchema(GuideIdSchema)),
+  emitters: z.array(namedItemSchema(EmitterIdSchema)),
+  absorbers: z.array(namedItemSchema(AbsorberIdSchema)),
+  presenceSensors: z.array(namedItemSchema(PresenceSensorIdSchema)),
   // Assemblies that stay on screen but are now anchored to the world.
   reanchoredAssemblies: z.array(z.object({ key: KeySchema, name: DisplayNameSchema })),
   // Assemblies below the deleted one in the structure tree, deleted with it

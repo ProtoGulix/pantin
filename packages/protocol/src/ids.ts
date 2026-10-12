@@ -27,6 +27,16 @@ export const ActuatorIdSchema = safeIdSchema();
 export type ActuatorId = z.infer<typeof ActuatorIdSchema>;
 export const SensorIdSchema = safeIdSchema();
 export type SensorId = z.infer<typeof SensorIdSchema>;
+export const BeltIdSchema = safeIdSchema();
+export type BeltId = z.infer<typeof BeltIdSchema>;
+export const GuideIdSchema = safeIdSchema();
+export type GuideId = z.infer<typeof GuideIdSchema>;
+export const EmitterIdSchema = safeIdSchema();
+export type EmitterId = z.infer<typeof EmitterIdSchema>;
+export const AbsorberIdSchema = safeIdSchema();
+export type AbsorberId = z.infer<typeof AbsorberIdSchema>;
+export const PresenceSensorIdSchema = safeIdSchema();
+export type PresenceSensorId = z.infer<typeof PresenceSensorIdSchema>;
 
 // Keys name the segments of a tag (ADR 0019): like ids, plus "_" so that a
 // tag reads like a PLC variable, "verin_pince.tige.position". Never a dot:

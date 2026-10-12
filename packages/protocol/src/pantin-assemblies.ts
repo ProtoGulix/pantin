@@ -3,9 +3,10 @@ import type { z } from "zod";
 // Document rules of assemblies (ADR 0019): unique keys, every body in a known
 // assembly, and tag prefixes `<assembly>.<tagKey>` unique among joints (in
 // their child's assembly), drives (in their own, ADR 0022) and sensors (in
-// their own, ADR 0023), since a prefix must name one tag owner only. Also the
-// anchor rules of ADR 0033: an assembly has at most one incoming joint between
-// assemblies and anchors form a forest. The core derives the anchors again
+// their own, ADR 0023), emitters and presence sensors (in their own, ADR 0043),
+// since a prefix must name one tag owner only. Also the anchor rules of
+// ADR 0033: an assembly has at most one incoming joint between assemblies and
+// anchors form a forest. The core derives the anchors again
 // for pose computation (core/domain/assembly-anchors.ts); this module only
 // refuses documents where that derivation would be ambiguous. Last, the
 // structure tree of ADR 0040: a parent must exist and parents form no loop.
@@ -16,6 +17,8 @@ type DocumentShape = {
   joints: readonly { id: string; parent: string; child: string; tagKey: string }[];
   drives: readonly { id: string; assembly: string; tagKey: string }[];
   sensors: readonly { id: string; assembly: string; tagKey: string }[];
+  emitters: readonly { id: string; assembly: string; tagKey: string }[];
+  presenceSensors: readonly { id: string; assembly: string; tagKey: string }[];
 };
 
 export function assemblyIssues(document: DocumentShape, context: z.RefinementCtx): void {
@@ -122,6 +125,8 @@ function tagKeyIssues(document: DocumentShape, context: z.RefinementCtx): void {
   const owners = [
     { list: "drives", label: "drive", items: document.drives },
     { list: "sensors", label: "sensor", items: document.sensors },
+    { list: "emitters", label: "emitter", items: document.emitters },
+    { list: "presenceSensors", label: "presence sensor", items: document.presenceSensors },
   ] as const;
   for (const { list, label, items } of owners) {
     for (const [index, owner] of items.entries()) {

@@ -23,6 +23,8 @@ const pose: PoseResponse = {
   ],
 };
 
+const NO_PHASE_6 = { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };
+
 describe("PantinApiClient joints", () => {
   it("lists the validated joints of a Pantin", async () => {
     const { fetchFunction, requests } = fakeFetch(jsonResponse({ joints: [slide] }));
@@ -63,6 +65,7 @@ describe("PantinApiClient joints", () => {
         drives: [],
         actuators: [],
         sensors: [],
+        ...NO_PHASE_6,
       },
     };
     const { fetchFunction, requests } = fakeFetch(jsonResponse(pantin));

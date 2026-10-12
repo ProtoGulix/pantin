@@ -19,8 +19,8 @@ import { parseWithSchema } from "./validation.ts";
 
 // Deleting an assembly with its contents (ADR 0037), as a pure function: the
 // assembly and its sub-assemblies (ADR 0040 point 8) are taken as one; their
-// bodies, drives, actuators and sensors go, and every joint that
-// touches one of its bodies. Other assemblies keep everything they own, or the
+// bodies, drives, actuators, sensors and phase 6 objects go, and every
+// joint that touches one of its bodies. Other assemblies keep everything they own, or the
 // deletion is refused.
 
 export type AssemblyDeletionResult = {
@@ -32,6 +32,8 @@ export type AssemblyDeletionResult = {
 
 const FIX_ACTUATOR = "Remove the joint from the actuator, or delete the actuator, first.";
 const FIX_FEED = "Remove the feed from the actuator, or delete the actuator, first.";
+const FIX_FRAME = "Detach it from the body, or delete it, first.";
+const FIX_DRUM = "Point the belt at another continuous joint, or delete it, first.";
 const FIX_SENSOR = "Point the sensor at another joint, or delete it, first.";
 
 // Items of other assemblies that cannot stay as they are (ADR 0037 point 3).
@@ -68,6 +70,42 @@ function blockingItems(
       blocks.push(`${where} watches joint "${joint.name}", which would be deleted. ${FIX_SENSOR}`);
     }
   }
+  return [...blocks, ...blockingPhase6Objects(document, keys, contents)];
+}
+
+// Belts, guides, emitters, absorbers and presence sensors of other assemblies
+// that follow a removed body, or whose belt turns on a removed drum joint.
+function blockingPhase6Objects(
+  document: PantinDocument,
+  keys: ReadonlySet<string>,
+  contents: AssemblyContents,
+): string[] {
+  const removedBodyIds = new Set(contents.bodies.map(({ id }) => id));
+  const removedJointIds = new Set(contents.joints.map(({ id }) => id));
+  const others = [
+    ["Belt", document.belts],
+    ["Guide", document.guides],
+    ["Emitter", document.emitters],
+    ["Absorber", document.absorbers],
+    ["Presence sensor", document.presenceSensors],
+  ] as const;
+  const blocks: string[] = [];
+  for (const [label, items] of others) {
+    for (const item of items.filter(({ assembly }) => !keys.has(assembly))) {
+      if (item.body !== undefined && removedBodyIds.has(item.body)) {
+        blocks.push(
+          `${label} "${item.name}" follows body "${item.body}", which would be deleted. ${FIX_FRAME}`,
+        );
+      }
+    }
+  }
+  for (const belt of document.belts.filter(({ assembly }) => !keys.has(assembly))) {
+    if (removedJointIds.has(belt.drumJoint)) {
+      blocks.push(
+        `Belt "${belt.name}" turns on joint "${belt.drumJoint}", which would be deleted. ${FIX_DRUM}`,
+      );
+    }
+  }
   return blocks;
 }
 
@@ -86,6 +124,11 @@ function documentWithout(
     drives: document.drives.filter((drive) => !keys.has(drive.assembly)),
     actuators: document.actuators.filter((actuator) => !keys.has(actuator.assembly)),
     sensors: document.sensors.filter((sensor) => !keys.has(sensor.assembly)),
+    belts: document.belts.filter((belt) => !keys.has(belt.assembly)),
+    guides: document.guides.filter((guide) => !keys.has(guide.assembly)),
+    emitters: document.emitters.filter((emitter) => !keys.has(emitter.assembly)),
+    absorbers: document.absorbers.filter((absorber) => !keys.has(absorber.assembly)),
+    presenceSensors: document.presenceSensors.filter((sensor) => !keys.has(sensor.assembly)),
   };
 }
 
@@ -120,6 +163,11 @@ function describeDeletion(
     drives: contents.drives.map(named),
     actuators: contents.actuators.map(named),
     sensors: contents.sensors.map(named),
+    belts: contents.belts.map(named),
+    guides: contents.guides.map(named),
+    emitters: contents.emitters.map(named),
+    absorbers: contents.absorbers.map(named),
+    presenceSensors: contents.presenceSensors.map(named),
     reanchoredAssemblies: reanchored.map(({ key: anchoredKey, name }) => ({
       key: anchoredKey,
       name,

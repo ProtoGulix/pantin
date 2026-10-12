@@ -37,6 +37,11 @@ function importDocument(components: ChainComponent[], locations: AssemblyLocatio
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   });
   const plan = planStepTree(components, "file");
   const assemblies = newAssemblyTree(empty, plan.assemblies);

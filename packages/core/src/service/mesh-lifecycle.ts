@@ -1,4 +1,5 @@
 import type { PantinId, PantinResponse } from "@pantin/protocol";
+import { refuseBodyUsedAsFrame } from "../domain/conveyor-rules.ts";
 import { findBody, removeBodies, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import {
@@ -174,6 +175,7 @@ export async function deleteBody(
       `Body "${bodyId}" is used by joint "${joint.id}". Delete the joint first.`,
     );
   }
+  refuseBodyUsedAsFrame(openPantin.document, bodyId, "be deleted");
   openPantin.document = removeBodies(openPantin.document, new Set([bodyId]));
   await releaseMesh(context, pantinId, openPantin, body.mesh);
   return toResponse(pantinId, openPantin);

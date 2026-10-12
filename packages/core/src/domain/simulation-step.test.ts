@@ -101,6 +101,11 @@ function press(changes: Partial<PantinDocument> = {}): PantinDocument {
     drives: [drive("valve", "valve_5_3_closed"), servoDrive],
     actuators: [cylinder("cyl-l", "valve", ["left"]), cylinder("cyl-r", "valve", ["right"])],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
     ...changes,
   };
 }

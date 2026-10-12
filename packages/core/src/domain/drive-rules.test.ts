@@ -57,6 +57,11 @@ const PRESS: PantinDocument = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function valve(name = "Tige", assembly = "pince"): CreateDriveRequest {

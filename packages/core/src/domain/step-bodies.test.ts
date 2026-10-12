@@ -18,6 +18,11 @@ describe("newAssembly", () => {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 
   it("sets the parent when given", () => {

@@ -41,6 +41,8 @@ const INPUTS: Readonly<Record<SensorParameter["kind"], SensorInputView["input"]>
   percent: "text",
   choice: "select",
   flag: "checkbox",
+  length: "text",
+  duration: "text",
 };
 
 export interface SensorFormView {
@@ -78,6 +80,10 @@ function inputLabels(
       return [withUnit(label, "%")];
     case "coordinate":
       return [withUnit(label, base)];
+    case "length":
+      return [withUnit(label, "mm")];
+    case "duration":
+      return [withUnit(label, "ms")];
     case "pulsesPerUnit":
       return [withUnit(label, base === null ? null : `${t("sensors.pulses")}/${base}`)];
     case "coordinateRange":

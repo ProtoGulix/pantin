@@ -19,6 +19,11 @@ function documentOf(assemblies: unknown[]) {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

@@ -17,14 +17,18 @@ export interface SensorTag {
 // - pulsesPerUnit: pulses per mm or per degree;
 // - percent: a number of percent;
 // - choice: one of `options`, labelled in labels.ts;
-// - flag: yes or no.
+// - flag: yes or no;
+// - length: a distance in metres, shown in mm (presence sensors, ADR 0043);
+// - duration: a time in seconds, shown in ms (presence sensors, ADR 0043).
 export type SensorParameterKind =
   | "coordinateRange"
   | "coordinate"
   | "pulsesPerUnit"
   | "percent"
   | "choice"
-  | "flag";
+  | "flag"
+  | "length"
+  | "duration";
 
 export interface SensorParameter {
   field: string;

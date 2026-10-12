@@ -67,6 +67,11 @@ const PRESS: PantinDocument = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 describe("renameAssemblyKey", () => {

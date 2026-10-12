@@ -1,6 +1,7 @@
 import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
+import { emitter, photoelectricCell } from "../test-support/conveyor-fixtures.ts";
 import { applyQueuedSetpoints } from "./simulation-step.ts";
 import { commandTagOf, describeTags } from "./tags.ts";
 
@@ -61,6 +62,11 @@ const document: PantinDocument = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 const noRuntime = {
@@ -122,6 +128,30 @@ describe("commandTagOf a joint", () => {
     "frame.stroke.setpoint",
   ])("does not know %s", (name) => {
     expect(apiErrorOf(() => commandTagOf(document, name)).code).toBe("not_found");
+  });
+});
+
+describe("tags of emitters and presence sensors (ADR 0043)", () => {
+  const withObjects: PantinDocument = {
+    ...document,
+    emitters: [emitter({ assembly: "axis_800" })],
+    presenceSensors: [photoelectricCell({ assembly: "axis_800" })],
+  };
+
+  it("lists spawn then state after the joints, as a command bit and a feedback bit", () => {
+    expect(describeTags(withObjects, noRuntime).slice(2)).toEqual([
+      { name: "axis_800.source.spawn", type: "bit", direction: "command", value: 0 },
+      { name: "axis_800.cell.state", type: "bit", direction: "feedback", value: 0 },
+    ]);
+  });
+
+  it("finds the emitter of a spawn tag and refuses to write a presence state", () => {
+    expect(commandTagOf(withObjects, "axis_800.source.spawn").owner).toMatchObject({
+      kind: "emitter",
+    });
+    expect(apiErrorOf(() => commandTagOf(withObjects, "axis_800.cell.state")).code).toBe(
+      "invalid_request",
+    );
   });
 });
 

@@ -57,6 +57,21 @@ function migrateV10ToV11(document: JsonObject): JsonObject {
   return { ...document, schema_version: 11 };
 }
 
+// Version 12 adds belts, guides, emitters, absorbers and presence sensors
+// (ADR 0043 point 14): existing documents have none, so their motion and tags
+// are unchanged.
+function migrateV11ToV12(document: JsonObject): JsonObject {
+  return {
+    ...document,
+    schema_version: 12,
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
+  };
+}
+
 // Key: the version a step starts from.
 const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject> = new Map([
   [1, migrateV1ToV2],
@@ -69,6 +84,7 @@ const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject>
   [8, migrateV8ToV9],
   [9, migrateV9ToV10],
   [10, migrateV10ToV11],
+  [11, migrateV11ToV12],
 ]);
 
 // Brings a parsed pantin.json to the current version; validation comes after.

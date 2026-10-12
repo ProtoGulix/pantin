@@ -62,6 +62,11 @@ const PRESS: PantinDocument = {
     },
   ],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 const runtime = {

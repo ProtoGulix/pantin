@@ -2,8 +2,11 @@ import {
   type Actuator,
   DRIVE_TAGS,
   type Drive,
+  type Emitter,
   type Joint,
   type PantinDocument,
+  PRESENCE_SENSOR_TAGS,
+  type PresenceSensor,
   type RenamedTag,
   SENSOR_TAGS,
   type Sensor,
@@ -22,13 +25,17 @@ import { jointStroke } from "./sensor-step.ts";
 // A movable joint has a "position" feedback, and a "setpoint" command while
 // no actuator moves it (ADR 0012, ADR 0028 point 9); a drive and a sensor have
 // the tags their type declares (ADR 0022 point 3, ADR 0023 point 3). An
-// actuator has none.
+// actuator has none. An emitter has a "spawn" command and a presence sensor
+// the "state" its type declares (ADR 0043 points 5 and 7), both listed after
+// the joint sensors; neither has a runtime yet, so they read 0.
 
 type TagOwner =
   | { kind: "joint"; joint: Joint }
   | { kind: "drive"; drive: Drive }
   // The watched joint travels with the sensor: its values come from its position.
-  | { kind: "sensor"; sensor: Sensor; joint: Joint };
+  | { kind: "sensor"; sensor: Sensor; joint: Joint }
+  | { kind: "emitter"; emitter: Emitter }
+  | { kind: "presenceSensor"; presenceSensor: PresenceSensor };
 
 export interface TagEntry {
   owner: TagOwner;
@@ -110,7 +117,31 @@ function sensorEntries(document: PantinDocument, sensor: Sensor): TagEntry[] {
   }));
 }
 
-/** Every tag, joints first, then drives, then sensors, in document order. */
+// The spawn bit is latched when written (ADR 0043 point 5, wired with the spawns).
+function emitterEntries(emitter: Emitter): TagEntry[] {
+  return [
+    {
+      owner: { kind: "emitter", emitter },
+      member: "spawn",
+      name: tagName(emitter.assembly, emitter.tagKey, "spawn"),
+      type: "bit",
+      direction: "command",
+    },
+  ];
+}
+
+function presenceSensorEntries(presenceSensor: PresenceSensor): TagEntry[] {
+  const owner: TagOwner = { kind: "presenceSensor", presenceSensor };
+  return PRESENCE_SENSOR_TAGS[presenceSensor.type].map((tag) => ({
+    owner,
+    member: tag.member,
+    name: tagName(presenceSensor.assembly, presenceSensor.tagKey, tag.member),
+    type: tag.type,
+    direction: tag.direction,
+  }));
+}
+
+/** Every tag: joints, drives, joint sensors, emitters, then presence sensors, in document order. */
 function tagEntries(document: PantinDocument): TagEntry[] {
   const moved = movedJointIds(document);
   return [
@@ -119,6 +150,8 @@ function tagEntries(document: PantinDocument): TagEntry[] {
       .flatMap((joint) => jointEntries(document, joint, moved.has(joint.id))),
     ...document.drives.flatMap(driveEntries),
     ...document.sensors.flatMap((sensor) => sensorEntries(document, sensor)),
+    ...document.emitters.flatMap(emitterEntries),
+    ...document.presenceSensors.flatMap(presenceSensorEntries),
   ];
 }
 
@@ -142,6 +175,9 @@ function currentValue(entry: TagEntry, runtime: TagRuntime): number {
         state: null,
       });
     return output.values[member] ?? 0;
+  }
+  if (owner.kind === "emitter" || owner.kind === "presenceSensor") {
+    return 0;
   }
   const values = entry.direction === "command" ? runtime.driveCommands : runtime.driveFeedback;
   return values.get(owner.drive.id)?.[member] ?? 0;
@@ -220,6 +256,10 @@ function ownerId(owner: TagOwner): string {
       return `drive:${owner.drive.id}`;
     case "sensor":
       return `sensor:${owner.sensor.id}`;
+    case "emitter":
+      return `emitter:${owner.emitter.id}`;
+    case "presenceSensor":
+      return `presenceSensor:${owner.presenceSensor.id}`;
   }
 }
 

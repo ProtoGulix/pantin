@@ -126,6 +126,11 @@ function build(components: ChainComponent[]) {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   });
   const plan = planStepTree(components, "M");
   const assemblies = newAssemblyTree(empty, plan.assemblies);

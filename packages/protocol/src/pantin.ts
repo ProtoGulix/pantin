@@ -5,6 +5,14 @@ import { BodyIdSchema, DisplayNameSchema, KeySchema } from "./ids.ts";
 import { JointSchema } from "./joint.ts";
 import { actuatorIssues } from "./pantin-actuators.ts";
 import { assemblyIssues } from "./pantin-assemblies.ts";
+import {
+  AbsorberSchema,
+  BeltSchema,
+  conveyorIssues,
+  EmitterSchema,
+  GuideSchema,
+  PresenceSensorSchema,
+} from "./pantin-conveyors.ts";
 import { driveIssues } from "./pantin-drives.ts";
 import { sensorIssues } from "./pantin-sensors.ts";
 import { PlacementSchema } from "./placement.ts";
@@ -19,8 +27,9 @@ import { SensorSchema } from "./sensor.ts";
 // version 8 switch sides deduced from the stroke (ADR 0026), version 9
 // actuators apart from drives, which no longer list joints (ADR 0028), version
 // 10 a placement per assembly (ADR 0033), version 11 an optional parent per
-// assembly (ADR 0040). The core migrates older documents on read.
-export const PANTIN_SCHEMA_VERSION = 11;
+// assembly (ADR 0040), version 12 belts, guides, emitters, absorbers and
+// presence sensors (ADR 0043). The core migrates older documents on read.
+export const PANTIN_SCHEMA_VERSION = 12;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";
@@ -117,6 +126,11 @@ export const PantinDocumentSchema = z
     drives: z.array(DriveSchema),
     actuators: z.array(ActuatorSchema),
     sensors: z.array(SensorSchema),
+    belts: z.array(BeltSchema),
+    guides: z.array(GuideSchema),
+    emitters: z.array(EmitterSchema),
+    absorbers: z.array(AbsorberSchema),
+    presenceSensors: z.array(PresenceSensorSchema),
   })
   .superRefine((document, context) => {
     jointTreeIssues(document, context);
@@ -124,6 +138,7 @@ export const PantinDocumentSchema = z
     driveIssues(document, context);
     actuatorIssues(document, context);
     sensorIssues(document, context);
+    conveyorIssues(document, context);
   });
 export type PantinDocument = z.infer<typeof PantinDocumentSchema>;
 

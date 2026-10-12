@@ -8,6 +8,7 @@ import {
   describeContents,
   findAssembly,
 } from "./assembly-contents.ts";
+import { refuseBodyUsedAsFrame } from "./conveyor-rules.ts";
 import { reframeMovedBody } from "./move-body-frames.ts";
 import { toPlacement, unitTransform } from "./rigid-transform.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
@@ -91,6 +92,20 @@ export function renameAssemblyKey(
       assembly: rekey(actuator.assembly),
     })),
     sensors: document.sensors.map((sensor) => ({ ...sensor, assembly: rekey(sensor.assembly) })),
+    belts: document.belts.map((belt) => ({ ...belt, assembly: rekey(belt.assembly) })),
+    guides: document.guides.map((guide) => ({ ...guide, assembly: rekey(guide.assembly) })),
+    emitters: document.emitters.map((emitter) => ({
+      ...emitter,
+      assembly: rekey(emitter.assembly),
+    })),
+    absorbers: document.absorbers.map((absorber) => ({
+      ...absorber,
+      assembly: rekey(absorber.assembly),
+    })),
+    presenceSensors: document.presenceSensors.map((presenceSensor) => ({
+      ...presenceSensor,
+      assembly: rekey(presenceSensor.assembly),
+    })),
   };
 }
 
@@ -151,8 +166,13 @@ export function moveBody(
   assembly: string,
 ): PantinDocument {
   findAssembly(document, assembly);
-  if (!document.bodies.some((body) => body.id === bodyId)) {
+  const movedBody = document.bodies.find((body) => body.id === bodyId);
+  if (movedBody === undefined) {
     throw new ApiError("not_found", `This Pantin has no body "${bodyId}".`);
+  }
+  // Objects follow a body of their own assembly only (ADR 0043 point 2).
+  if (movedBody.assembly !== assembly) {
+    refuseBodyUsedAsFrame(document, bodyId, `move to assembly "${assembly}"`);
   }
   const parentJoint = document.joints.find((joint) => joint.child === bodyId);
   const owner =

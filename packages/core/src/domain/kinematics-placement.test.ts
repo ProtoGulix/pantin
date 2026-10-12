@@ -60,6 +60,11 @@ function documentOf(assemblies: Assembly[], bodies: Body[], joints: Joint[]): Pa
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

@@ -209,6 +209,8 @@ describe("joints in the document lifecycle", () => {
   });
 });
 
+const NO_PHASE_6 = { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };
+
 describe("schema version 1 on disk", () => {
   it("opens a version 1 pantin.json and saves it in the current version", async () => {
     const folder = join(workspace.pantinsDirectory, "legacy");
@@ -239,6 +241,7 @@ describe("schema version 1 on disk", () => {
       drives: [],
       actuators: [],
       sensors: [],
+      ...NO_PHASE_6,
     });
   });
 

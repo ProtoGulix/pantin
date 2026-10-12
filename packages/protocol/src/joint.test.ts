@@ -36,6 +36,11 @@ function documentWith(joints: unknown[], bodyIds = ["rail", "carriage", "tool"])
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

@@ -23,6 +23,11 @@ const pantin = {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   },
 };
 
@@ -170,6 +175,11 @@ describe("PantinApiClient assembly deletion with contents (ADR 0037)", () => {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
     descendantAssemblies: [],
     reanchoredAssemblies: [{ key: "pince", name: "Pince" }],
     removedTags: ["verin_pince.slide.setpoint"],

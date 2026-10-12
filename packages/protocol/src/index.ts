@@ -13,6 +13,7 @@ export * from "./joint.ts";
 export * from "./joint-axis-api.ts";
 export * from "./orphan-mesh-api.ts";
 export * from "./pantin.ts";
+export * from "./pantin-conveyors.ts";
 export * from "./placement.ts";
 export * from "./sensor.ts";
 export * from "./sensor-api.ts";

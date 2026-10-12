@@ -31,6 +31,11 @@ function documentWith(bodies: Body[]): PantinDocument {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

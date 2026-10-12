@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 11
+      "const": 12
     },
     "name": {
       "type": "string",
@@ -1464,6 +1464,514 @@
           }
         ]
       }
+    },
+    "belts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "assembly": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+          },
+          "body": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "translation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rotation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            },
+            "required": ["translation", "rotation"],
+            "additionalProperties": false
+          },
+          "length": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "drumJoint": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "drumRadius": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "assembly",
+          "placement",
+          "length",
+          "width",
+          "drumJoint",
+          "drumRadius"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "guides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "assembly": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+          },
+          "body": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "translation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rotation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            },
+            "required": ["translation", "rotation"],
+            "additionalProperties": false
+          },
+          "size": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            ],
+            "items": false,
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": ["id", "name", "assembly", "placement", "size"],
+        "additionalProperties": false
+      }
+    },
+    "emitters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "tagKey": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "assembly": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+          },
+          "body": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "translation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rotation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            },
+            "required": ["translation", "rotation"],
+            "additionalProperties": false
+          },
+          "box": {
+            "type": "object",
+            "properties": {
+              "size": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "mass": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "material": {
+                "type": "string",
+                "enum": [
+                  "cardboard",
+                  "plastic",
+                  "wood",
+                  "steel",
+                  "stainless_steel",
+                  "aluminium",
+                  "brass",
+                  "copper"
+                ]
+              }
+            },
+            "required": ["size", "mass", "material"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "tagKey", "name", "assembly", "placement", "box"],
+        "additionalProperties": false
+      }
+    },
+    "absorbers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "assembly": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+          },
+          "body": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+          },
+          "placement": {
+            "type": "object",
+            "properties": {
+              "translation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rotation": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            },
+            "required": ["translation", "rotation"],
+            "additionalProperties": false
+          },
+          "size": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            ],
+            "items": false,
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": ["id", "name", "assembly", "placement", "size"],
+        "additionalProperties": false
+      }
+    },
+    "presenceSensors": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "tagKey": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "assembly": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
+              },
+              "body": {
+                "type": "string",
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+              },
+              "placement": {
+                "type": "object",
+                "properties": {
+                  "translation": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "rotation": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "items": false,
+                    "minItems": 4,
+                    "maxItems": 4
+                  }
+                },
+                "required": ["translation", "rotation"],
+                "additionalProperties": false
+              },
+              "type": {
+                "type": "string",
+                "const": "photoelectric"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["diffuse", "through_beam"]
+              },
+              "range": {
+                "type": "number"
+              },
+              "normallyClosed": {
+                "type": "boolean"
+              },
+              "onDelay": {
+                "type": "number"
+              },
+              "offDelay": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "tagKey",
+              "name",
+              "assembly",
+              "placement",
+              "type",
+              "mode",
+              "range",
+              "normallyClosed",
+              "onDelay",
+              "offDelay"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
     }
   },
   "required": [
@@ -1474,7 +1982,12 @@
     "joints",
     "drives",
     "actuators",
-    "sensors"
+    "sensors",
+    "belts",
+    "guides",
+    "emitters",
+    "absorbers",
+    "presenceSensors"
   ],
   "additionalProperties": false,
   "title": "Pantin document (pantin.json)",

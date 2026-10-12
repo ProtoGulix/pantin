@@ -47,10 +47,12 @@ export async function writeTag(
     openPantin.setpoints.set(owner.joint.id, value);
     openPantin.queuedSetpoints.set(owner.joint.id, value);
   } else if (owner.kind === "drive") {
-    // A sensor has feedback tags only, which commandTagOf refuses.
+    // Sensors have feedback tags only, which commandTagOf refuses.
     const commands = openPantin.driveCommands.get(owner.drive.id) ?? {};
     openPantin.driveCommands.set(owner.drive.id, { ...commands, [entry.member]: value });
   }
+  // An emitter's spawn write is accepted and has no effect yet: it is latched
+  // in P1c (ADR 0043 point 5).
   return { name: tagName, type: entry.type, direction: "command", value };
 }
 

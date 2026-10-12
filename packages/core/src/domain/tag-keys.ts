@@ -3,13 +3,16 @@ import { ApiError } from "../errors.ts";
 import { makeUniqueId } from "./ids.ts";
 
 // Who uses each tag key of an assembly: joints through their child body's
-// assembly (ADR 0019), drives and sensors through their own (ADR 0022, 0023).
+// assembly (ADR 0019), drives, sensors, emitters and presence sensors through their own
+// (ADR 0022, 0023, 0043).
 // A key names one owner only, since "<assembly>.<tagKey>" prefixes its tags.
 
 export interface TagKeyOwnerException {
   jointId?: string;
   driveId?: string;
   sensorId?: string;
+  emitterId?: string;
+  presenceSensorId?: string;
 }
 
 /** Tag key to its owner, e.g. `joint "tige"`, in `assembly`, but the excepted owner. */
@@ -33,6 +36,16 @@ export function tagKeyOwners(
   for (const sensor of document.sensors) {
     if (sensor.id !== except.sensorId && sensor.assembly === assembly) {
       owners.set(sensor.tagKey, `sensor "${sensor.id}"`);
+    }
+  }
+  for (const emitter of document.emitters) {
+    if (emitter.id !== except.emitterId && emitter.assembly === assembly) {
+      owners.set(emitter.tagKey, `emitter "${emitter.id}"`);
+    }
+  }
+  for (const presenceSensor of document.presenceSensors) {
+    if (presenceSensor.id !== except.presenceSensorId && presenceSensor.assembly === assembly) {
+      owners.set(presenceSensor.tagKey, `presence sensor "${presenceSensor.id}"`);
     }
   }
   return owners;

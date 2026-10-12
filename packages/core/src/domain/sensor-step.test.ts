@@ -56,6 +56,11 @@ const DOCUMENT: PantinDocument = {
       normallyClosed: false,
     },
   ],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 describe("stepSensors", () => {

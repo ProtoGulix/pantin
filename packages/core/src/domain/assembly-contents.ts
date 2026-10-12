@@ -1,10 +1,15 @@
 import type {
+  Absorber,
   Actuator,
   Assembly,
+  Belt,
   Body,
   Drive,
+  Emitter,
+  Guide,
   Joint,
   PantinDocument,
+  PresenceSensor,
   Sensor,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
@@ -27,6 +32,12 @@ export type AssemblyContents = {
   drives: Drive[];
   actuators: Actuator[];
   sensors: Sensor[];
+  // Phase 6 objects are in their own assembly, wherever the body they follow is (ADR 0043).
+  belts: Belt[];
+  guides: Guide[];
+  emitters: Emitter[];
+  absorbers: Absorber[];
+  presenceSensors: PresenceSensor[];
 };
 
 /** The sub-assemblies of an assembly at any depth (ADR 0040), in document order. */
@@ -66,6 +77,11 @@ export function contentsOfAssemblies(
     drives: document.drives.filter((drive) => keys.has(drive.assembly)),
     actuators: document.actuators.filter((actuator) => keys.has(actuator.assembly)),
     sensors: document.sensors.filter((sensor) => keys.has(sensor.assembly)),
+    belts: document.belts.filter((belt) => keys.has(belt.assembly)),
+    guides: document.guides.filter((guide) => keys.has(guide.assembly)),
+    emitters: document.emitters.filter((emitter) => keys.has(emitter.assembly)),
+    absorbers: document.absorbers.filter((absorber) => keys.has(absorber.assembly)),
+    presenceSensors: document.presenceSensors.filter((sensor) => keys.has(sensor.assembly)),
   };
 }
 
@@ -88,5 +104,10 @@ export function describeContents(contents: AssemblyContents): string {
     ...count(contents.drives, "drive", "drives"),
     ...count(contents.actuators, "actuator", "actuators"),
     ...count(contents.sensors, "sensor", "sensors"),
+    ...count(contents.belts, "belt", "belts"),
+    ...count(contents.guides, "guide", "guides"),
+    ...count(contents.emitters, "emitter", "emitters"),
+    ...count(contents.absorbers, "absorber", "absorbers"),
+    ...count(contents.presenceSensors, "presence sensor", "presence sensors"),
   ].join(", ");
 }
