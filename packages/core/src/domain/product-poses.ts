@@ -11,7 +11,7 @@ import type { ProductRecord } from "./physics-state.ts";
 // decimal (0.3, not 0.30000000000000004).
 const POSE_STEPS_PER_UNIT = 1e6;
 
-const quantised = (value: number): number =>
+export const quantised = (value: number): number =>
   Math.round(value * POSE_STEPS_PER_UNIT) / POSE_STEPS_PER_UNIT;
 
 // Products as the pose response lists them (ADR 0043 point 12): in spawn

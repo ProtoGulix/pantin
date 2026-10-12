@@ -198,12 +198,25 @@ export const ProductPoseSchema = z.object({
 });
 export type ProductPose = z.infer<typeof ProductPoseSchema>;
 
+// The world pose of a phase 6 object (ADR 0043 point 12), resolved by the core
+// with the frame rule its physics uses: a client only draws it there.
+// The object's own frame: origin and axes as the document places them.
+export const ObjectPoseSchema = z.object({
+  kind: z.enum(["belt", "guide", "emitter", "absorber", "presenceSensor"]),
+  id: z.string().min(1),
+  translation: Vector3Schema,
+  rotation: QuaternionSchema,
+});
+export type ObjectPose = z.infer<typeof ObjectPoseSchema>;
+
 // Every body of the Pantin is listed; a body without a parent joint has the
 // identity displacement. Products are listed in spawn order.
 export const PoseResponseSchema = z.object({
   jointPositions: z.array(JointPositionSchema),
   bodies: z.array(BodyPoseSchema),
   products: z.array(ProductPoseSchema),
+  // Belts, guides, emitters, absorbers and presence sensors, in that order.
+  objects: z.array(ObjectPoseSchema),
 });
 export type PoseResponse = z.infer<typeof PoseResponseSchema>;
 

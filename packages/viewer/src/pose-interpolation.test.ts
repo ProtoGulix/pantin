@@ -16,6 +16,7 @@ function snapshot(
       rotation: q ?? IDENTITY,
     })),
     products: [],
+    objects: [],
   };
 }
 

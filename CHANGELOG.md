@@ -18,6 +18,13 @@ All notable changes to Pantin. The format follows
   which clears products, commands and faults but keeps unsaved edits, the
   clock and the step count; and `products` in the pose response and the pose
   stream, so that a product moving on a stopped machine is sent.
+- `objects` in the pose response and the pose stream: the world pose of every
+  belt, guide, emitter, absorber and presence sensor, resolved by the core with
+  the frame rule of its physics step, so the viewer draws them where the
+  colliders and rays are.
+- Viewer, phase 6 drawing (ADR 0043 point 13): products as boxes coloured by
+  material, belts with a travel arrow, outlined guides, emitters and absorbers,
+  and presence sensor beams lit by their `state` tag.
 - Joint axis from a picked face (ADR 0041) and the assembly frame trihedron
   with a local or global gizmo (ADR 0042).
 - One inspector for properties and positioning (ADR 0039) and nested

@@ -14,6 +14,7 @@ function snapshot(stepCount: number, position: number): PoseSnapshot {
     jointPositions: [{ jointId: "stroke", position }],
     bodies: [{ bodyId: "carriage", translation: [position, 0, 0], rotation: [0, 0, 0, 1] }],
     products: [],
+    objects: [],
   };
 }
 

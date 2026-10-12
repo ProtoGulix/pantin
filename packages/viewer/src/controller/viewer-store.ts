@@ -21,6 +21,7 @@ import {
 } from "../clock/clock-model.ts";
 import { type ClientConsole, EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "../console/console-view.ts";
+import { conveyorDrawingOf } from "../conveyors/conveyor-drawing.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
@@ -172,6 +173,7 @@ export class ViewerStore {
     );
     viewport.showJointPreview(jointPreviewOf(next));
     viewport.showSensorMarkers(sensorMarkersOf(document));
+    viewport.showConveyorObjects(conveyorDrawingOf(document));
     viewport.showAssemblyFrame(assemblyFrameTargetOf(next));
     viewport.showPlacementGizmo(gizmoSpecOf(next));
     viewport.setAlignmentPicking(isPickingFaces(next));

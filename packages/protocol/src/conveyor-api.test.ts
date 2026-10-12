@@ -59,7 +59,7 @@ describe("create requests", () => {
 
 describe("PoseResponseSchema", () => {
   it("requires the products, in the fields a client draws", () => {
-    const pose = { jointPositions: [], bodies: [] };
+    const pose = { jointPositions: [], bodies: [], objects: [] };
     expect(PoseResponseSchema.safeParse(pose).success).toBe(false);
     const product = {
       productId: "p1",
@@ -72,6 +72,16 @@ describe("PoseResponseSchema", () => {
     expect(PoseResponseSchema.parse({ ...pose, products: [product] }).products).toEqual([product]);
     expect(
       PoseResponseSchema.safeParse({ ...pose, products: [{ ...product, material: "x" }] }).success,
+    ).toBe(false);
+  });
+
+  it("requires the world poses of the objects", () => {
+    const object = { kind: "belt", id: "feed", translation: [0, 0, 0], rotation: [0, 0, 0, 1] };
+    const pose = { jointPositions: [], bodies: [], products: [] };
+    expect(PoseResponseSchema.safeParse(pose).success).toBe(false);
+    expect(PoseResponseSchema.safeParse({ ...pose, objects: [object] }).success).toBe(true);
+    expect(
+      PoseResponseSchema.safeParse({ ...pose, objects: [{ ...object, kind: "robot" }] }).success,
     ).toBe(false);
   });
 });

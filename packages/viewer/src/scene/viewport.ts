@@ -7,11 +7,12 @@ import type { Body, PoseSnapshot } from "@pantin/protocol";
 import type { FaceHighlight } from "../alignment/alignment-session.ts";
 import type { ViewportPick } from "../alignment/pick-resolution.ts";
 import type { AssemblyFrameTarget } from "../assembly-frame.ts";
+import type { DrawingItem } from "../conveyors/conveyor-drawing.ts";
+import { objectsAsPoseSnapshot, productsAsPoseSnapshot } from "../conveyors/pose-feed.ts";
 import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { CameraAngles } from "../navigation/standard-views.ts";
-import type { InterpolatedPose } from "../pose-interpolation.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
 import { viewportPickOf } from "./alignment-pick.ts";
@@ -21,6 +22,7 @@ import { createCameraNavigation } from "./camera-navigation.ts";
 import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, planSceneSync } from "./scene-plan.ts";
 import { createContext, type ViewportContext } from "./viewport-context.ts";
+import { applyPosesEachFrame, forgetPoses } from "./viewport-poses.ts";
 
 // The Babylon canvas: shows the bodies it is given and reports clicks. It
 // knows nothing about the API or the panel; the controller wires them.
@@ -57,7 +59,9 @@ export interface Viewport {
   showJointPreview(preview: JointPreview | null): void;
   /** Draws every sensor along its joint (ADR 0024). */
   showSensorMarkers(markers: readonly SensorMarker[]): void;
-  /** Tag values from the core: switch markers light up on 1. */
+  /** Belts, guides, emitters, absorbers and presence sensor beams (ADR 0043 point 13). */
+  showConveyorObjects(items: readonly DrawingItem[]): void;
+  /** Tag values from the core: switch markers and beams light up on 1. */
   showTagStates(values: ReadonlyMap<string, number>): void;
   /**
    * False stops the render loop while the chain diagram covers the view (ADR
@@ -202,33 +206,6 @@ function showBodies(
   });
 }
 
-// The displacement is set on the node just before drawing, so the frame shows
-// the pose of this instant. The visitor is built once; each body still costs
-// a few small tuples per frame.
-function applyPosesEachFrame(context: ViewportContext): void {
-  const visit = (bodyId: string, pose: InterpolatedPose): void => {
-    context.loadedBodies.get(bodyId)?.setDisplacement(pose.translation, pose.rotation);
-    context.highlights.followPose(bodyId, pose.translation, pose.rotation);
-    context.sensorMarkers.followPose(bodyId, pose.translation, pose.rotation);
-    context.placementGizmo.followPose(bodyId, pose.translation, pose.rotation);
-    context.assemblyTrihedron.followPose(bodyId, pose.translation, pose.rotation);
-  };
-  context.scene.onBeforeRenderObservable.add(() => context.poses.sample(performance.now(), visit));
-}
-
-// Poses are forgotten only when the open Pantin changes or closes, and body
-// keys include the Pantin id, so showBodies removes those bodies. They are NOT
-// reset to the identity displacement: with placements (ADR 0033) their resting
-// place is W . B, which the viewer does not compute. Overlays hide until poses
-// arrive instead.
-function forgetPoses(context: ViewportContext): void {
-  context.poses.reset();
-  context.highlights.forgetPoses();
-  context.sensorMarkers.forgetPoses();
-  context.placementGizmo.forgetPoses();
-  context.assemblyTrihedron.forgetPoses();
-}
-
 function navigationOf(context: ViewportContext, canvas: HTMLCanvasElement) {
   return createCameraNavigation({
     scene: context.scene,
@@ -257,7 +234,13 @@ export function createViewport(
   return {
     showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
     frameBodies: (bodyIds) => frameBodies(context, bodyIds),
-    pushPoses: (snapshot) => context.poses.push(snapshot, performance.now()),
+    pushPoses: (snapshot) => {
+      const now = performance.now();
+      context.poses.push(snapshot, now);
+      context.productPoses.push(productsAsPoseSnapshot(snapshot), now);
+      context.objectPoses.push(objectsAsPoseSnapshot(snapshot), now);
+      context.productMeshes.sync(snapshot.products);
+    },
     clearPoses: () => forgetPoses(context),
     setSelectedBodies: (bodyIds) => context.highlights.setSelectedBodies(bodyIds),
     setHiddenBodies: (bodyIds) => {
@@ -267,7 +250,11 @@ export function createViewport(
     },
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
     showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
-    showTagStates: (values) => context.sensorMarkers.setStates(values),
+    showConveyorObjects: (items) => context.conveyors.show(items),
+    showTagStates: (values) => {
+      context.sensorMarkers.setStates(values);
+      context.conveyors.setStates(values);
+    },
     setRendering,
     showAssemblyFrame: (target) => context.assemblyTrihedron.show(target),
     showPlacementGizmo: (spec) => context.placementGizmo.show(spec),

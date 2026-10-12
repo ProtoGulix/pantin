@@ -52,6 +52,7 @@ const VALID = JSON.stringify({
   jointPositions: [],
   bodies: [{ bodyId: "a", translation: [0, 0, 1], rotation: [0, 0, 0, 1] }],
   products: [],
+  objects: [],
 });
 
 const CLOCK = JSON.stringify({
