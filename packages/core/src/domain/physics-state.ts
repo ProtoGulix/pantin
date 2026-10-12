@@ -71,3 +71,26 @@ export function writeSpawnValue(
     queuedSpawns: value === 1 ? [...state.queuedSpawns, emitterId] : state.queuedSpawns,
   };
 }
+
+// A presence sensor that changed or went starts afresh, as joint sensors do
+// (ADR 0025): a new type or delays must not inherit the old evaluation state.
+export function forgetPresenceSensor(state: PhysicsState, sensorId: string): PhysicsState {
+  const presenceOutputs = new Map(state.presenceOutputs);
+  const presenceStates = new Map(state.presenceStates);
+  presenceOutputs.delete(sensorId);
+  presenceStates.delete(sensorId);
+  return { ...state, presenceOutputs, presenceStates };
+}
+
+// A deleted emitter drops its last spawn value and queued spawns, so that an
+// emitter created later under the same id can spawn on its first write of 1.
+// Its products stay: they carry their own size (ADR 0043 point 12).
+export function forgetEmitter(state: PhysicsState, emitterId: string): PhysicsState {
+  const spawnValues = new Map(state.spawnValues);
+  spawnValues.delete(emitterId);
+  return {
+    ...state,
+    spawnValues,
+    queuedSpawns: state.queuedSpawns.filter((queued) => queued !== emitterId),
+  };
+}

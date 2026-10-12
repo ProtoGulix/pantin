@@ -19,7 +19,7 @@ import { PlacementSchema } from "./placement.ts";
 // follows, and a placement relative to that frame (the assembly's without a
 // body). Lengths are in metres, mass in kilograms.
 
-const frameFields = {
+export const frameFields = {
   assembly: KeySchema,
   body: BodyIdSchema.optional(),
   placement: PlacementSchema,

@@ -21,6 +21,7 @@ const pose: PoseResponse = {
     { bodyId: "rail", translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
     { bodyId: "carriage", translation: [0.05, 0, 0], rotation: [0, 0, 0, 1] },
   ],
+  products: [],
 };
 
 const NO_PHASE_6 = { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };

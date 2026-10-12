@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { BodyIdSchema, DisplayNameSchema, JointIdSchema, PantinIdSchema } from "./ids.ts";
+import {
+  BodyIdSchema,
+  DisplayNameSchema,
+  EmitterIdSchema,
+  JointIdSchema,
+  PantinIdSchema,
+} from "./ids.ts";
 import {
   type CreateJointRequest,
   CreateJointRequestSchema,
@@ -13,6 +19,7 @@ import {
   PantinDocumentSchema,
   UpAxisSchema,
 } from "./pantin.ts";
+import { ProductMaterialSchema } from "./pantin-conveyors.ts";
 
 // REST contract between the core and its clients (viewer, CLI, tests).
 // All routes live under API_PREFIX. Bodies are JSON unless stated otherwise.
@@ -22,6 +29,7 @@ import {
 //   GET    /api/pantins/:pantinId                     -> PantinResponse
 //   PATCH  /api/pantins/:pantinId    RenameRequest    -> PantinResponse
 //   POST   /api/pantins/:pantinId/save                -> PantinResponse
+//   POST   /api/pantins/:pantinId/reset               -> PantinResponse (conveyor-api.ts)
 //   POST   /api/pantins/:pantinId/discard             -> PantinResponse
 //          (throws away unsaved edits: the document is reloaded from
 //          pantin.json, meshes imported since the last save are deleted and
@@ -177,11 +185,25 @@ export type BodyPose = z.infer<typeof BodyPoseSchema>;
 export const JointPositionSchema = z.object({ jointId: JointIdSchema, position: z.number() });
 export type JointPosition = z.infer<typeof JointPositionSchema>;
 
+// A product in the world (ADR 0043 point 12): the pose of its box centre in
+// the Pantin frame. It carries its size, so that editing or deleting its
+// emitter leaves it drawable. Ids are runtime ones, "p1", "p2"...
+export const ProductPoseSchema = z.object({
+  productId: z.string().min(1),
+  emitterId: EmitterIdSchema,
+  size: Vector3Schema,
+  material: ProductMaterialSchema,
+  translation: Vector3Schema,
+  rotation: QuaternionSchema,
+});
+export type ProductPose = z.infer<typeof ProductPoseSchema>;
+
 // Every body of the Pantin is listed; a body without a parent joint has the
-// identity displacement.
+// identity displacement. Products are listed in spawn order.
 export const PoseResponseSchema = z.object({
   jointPositions: z.array(JointPositionSchema),
   bodies: z.array(BodyPoseSchema),
+  products: z.array(ProductPoseSchema),
 });
 export type PoseResponse = z.infer<typeof PoseResponseSchema>;
 

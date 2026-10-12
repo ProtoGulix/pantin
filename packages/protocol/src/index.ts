@@ -5,6 +5,7 @@ export * from "./api.ts";
 export * from "./assembly-api.ts";
 export * from "./clock.ts";
 export * from "./console.ts";
+export * from "./conveyor-api.ts";
 export * from "./drive.ts";
 export * from "./drive-api.ts";
 export * from "./face-file.ts";

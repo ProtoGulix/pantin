@@ -13,6 +13,7 @@ import {
 } from "../domain/joint-rules.ts";
 import { clampJointPosition, haveSameCoordinateUnit } from "../domain/joint-types/registry.ts";
 import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
+import { toProductPoses } from "../domain/product-poses.ts";
 import { ApiError } from "../errors.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
@@ -35,6 +36,7 @@ function toPoseResponse(openPantin: OpenPantin): PoseResponse {
       position: currentJointPosition(joint, jointPositions),
     })),
     bodies: computePoses(document, jointPositions),
+    products: toProductPoses(openPantin.physicsState.products),
   };
 }
 

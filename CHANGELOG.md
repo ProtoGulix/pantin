@@ -12,6 +12,12 @@ All notable changes to Pantin. The format follows
   emitters, absorbers and presence sensors; the Rapier physics engine in the
   core; products carried by belts driven through the drive, motor and drum
   chain; photoelectric presence sensors; the automated phase 6 exit test.
+- Phase 6 HTTP API (ADR 0043 point 12): create, replace and delete routes for
+  `belts`, `guides`, `emitters`, `absorbers` and `presence-sensors`, with
+  conflicts that name the bodies and drum joints in use; `POST .../reset`,
+  which clears products, commands and faults but keeps unsaved edits, the
+  clock and the step count; and `products` in the pose response and the pose
+  stream, so that a product moving on a stopped machine is sent.
 - Joint axis from a picked face (ADR 0041) and the assembly frame trihedron
   with a local or global gizmo (ADR 0042).
 - One inspector for properties and positioning (ADR 0039) and nested

@@ -13,6 +13,7 @@ function snapshot(stepCount: number, position: number): PoseSnapshot {
     stepCount,
     jointPositions: [{ jointId: "stroke", position }],
     bodies: [{ bodyId: "carriage", translation: [position, 0, 0], rotation: [0, 0, 0, 1] }],
+    products: [],
   };
 }
 
@@ -42,6 +43,31 @@ describe("hasMoved", () => {
     const rotated = { ...snapshot(0, 0.1), jointPositions: snapshot(0, 0.1).jointPositions };
     rotated.bodies = [{ bodyId: "carriage", translation: [0.1, 0, 0], rotation: [1, 0, 0, 0] }];
     expect(hasMoved(snapshot(0, 0.1), rotated)).toBe(true);
+  });
+});
+
+describe("hasMoved with products", () => {
+  const product = (height: number): PoseSnapshot["products"][number] => ({
+    productId: "p1",
+    emitterId: "source",
+    size: [0.1, 0.1, 0.1],
+    material: "cardboard",
+    translation: [0, 0, height],
+    rotation: [0, 0, 0, 1],
+  });
+  const withProducts = (...products: PoseSnapshot["products"]) => ({
+    ...snapshot(0, 0.1),
+    products,
+  });
+
+  it("sees a product that appears, moves or goes while no joint moves", () => {
+    expect(hasMoved(withProducts(), withProducts(product(0.05)))).toBe(true);
+    expect(hasMoved(withProducts(product(0.05)), withProducts(product(0.04)))).toBe(true);
+    expect(hasMoved(withProducts(product(0.05)), withProducts())).toBe(true);
+  });
+
+  it("sees nothing in a product that stays where it is", () => {
+    expect(hasMoved(withProducts(product(0.05)), withProducts(product(0.05)))).toBe(false);
   });
 });
 

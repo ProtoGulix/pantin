@@ -27,7 +27,7 @@ function clockOf(overrides: Partial<SimulationClockState> = {}): SimulationClock
 }
 
 function snapshotAt(stepCount: number): PoseSnapshot {
-  return { stepCount, jointPositions: [], bodies: [] };
+  return { stepCount, jointPositions: [], bodies: [], products: [] };
 }
 
 interface Calls {

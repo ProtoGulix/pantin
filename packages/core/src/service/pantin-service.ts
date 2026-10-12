@@ -23,6 +23,7 @@ import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
 import { clockOperations, toClockState } from "./clock-operations.ts";
 import { readConsole } from "./console-operations.ts";
+import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { faceOperations } from "./face-operations.ts";
 import { importBodies } from "./import-operations.ts";
@@ -129,8 +130,10 @@ function closePantins(context: ServiceContext): void {
 
 // Runtime reset without reloading the document, so unsaved edits stay (ADR 0043
 // point 12). The clock and the step count are untouched (ADR 0032 point 1).
-async function resetRuntime(context: ServiceContext, pantinId: PantinId): Promise<void> {
-  resetRuntimeState(context, await loadPantin(context, pantinId));
+async function resetRuntime(context: ServiceContext, pantinId: PantinId): Promise<PantinResponse> {
+  const openPantin = await loadPantin(context, pantinId);
+  resetRuntimeState(context, openPantin);
+  return toResponse(pantinId, openPantin);
 }
 
 function lifecycleOperations(context: ServiceContext) {
@@ -153,6 +156,17 @@ function simulationPeeks(context: ServiceContext) {
       const openPantin = context.loadedPantins.get(pantinId);
       return openPantin === undefined ? undefined : toPoseSnapshot(openPantin);
     },
+  };
+}
+
+// Assemblies and everything a document holds besides bodies and joints.
+function documentObjectOperations(context: ServiceContext) {
+  return {
+    ...assemblyOperations(context),
+    ...driveOperations(context),
+    ...actuatorOperations(context),
+    ...sensorOperations(context),
+    ...conveyorOperations(context),
   };
 }
 
@@ -228,10 +242,7 @@ export function createPantinService(
     ...faceOperations(context),
     runSimulationSteps: (tick: SimulationTick) => runSimulationSteps(context, tick),
     ...clockOperations(context),
-    ...assemblyOperations(context),
-    ...driveOperations(context),
-    ...actuatorOperations(context),
-    ...sensorOperations(context),
+    ...documentObjectOperations(context),
     ...orphanMeshOperations(context),
   };
 }
