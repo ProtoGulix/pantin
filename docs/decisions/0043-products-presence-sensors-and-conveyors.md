@@ -212,7 +212,13 @@ Facts checked in the repository on 2026-10-12:
     a belt or a guide, or a body or joint edit that changes their frame
     definition, rebuilds the world and takes a new snapshot. That clears
     the products, with console event `physics_rebuilt`. Moving frames
-    during a run is handled every step, not by a rebuild.
+    during a run is handled every step, not by a rebuild. "Changes their
+    frame definition" means changes the pose of a belt or guide at the
+    reference configuration (no joint written, ADR 0012): the world and its
+    snapshot are built there, so a fresh open, a rebuild and a reset start
+    from the same snapshot. An origin or axis edit of a joint that leaves
+    that pose alone, made while the joint has moved, keeps the products;
+    the belt takes its new pose at the next step (clarified in P1c).
 12. **Protocol and API** (ADR 0015, ADR 0028 point 10 style):
     - Create, edit (whole replacement, as for joints) and delete routes:
       `.../belts`, `.../guides`, `.../emitters`, `.../absorbers`,
