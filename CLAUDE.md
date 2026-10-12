@@ -232,6 +232,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 6. Ne modifie jamais un schéma publié sans incrémenter schema_version et fournir la migration.
 7. Vérifie les versions actuelles des bibliothèques (Babylon.js, Rapier, asyncua, pymodbus, outils de qualité) dans leur documentation avant de les figer.
 8. Demande l'accord de l'utilisateur avant : d'ajouter ou changer une dépendance, une licence ou un schéma public, de lancer une extraction sémantique Graphify, d'ouvrir le réseau au delà de localhost, ou de contredire un ADR existant.
+9. Branches (ADR 0044) : master ne reçoit que des versions, develop l'intégration. Chaque tranche se fait sur une branche feat/, fix/, docs/... (ADR 0044 point 3) créée depuis develop, puis arrive dans develop en squash après pnpm check vert, avis favorable du reviewer et CHANGELOG à jour. Ne pousse rien sur GitHub sans la demande de l'utilisateur.
 
 ## graphify
 
