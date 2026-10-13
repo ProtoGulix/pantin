@@ -20,6 +20,7 @@ import { type ActuatorRoutes, actuatorRoutes } from "./api-actuator-routes.ts";
 import { type AssemblyRoutes, assemblyRoutes } from "./api-assembly-routes.ts";
 import { type ClockRoutes, clockRoutes } from "./api-clock-routes.ts";
 import { type ConsoleRoutes, consoleRoutes } from "./api-console-routes.ts";
+import { type ConveyorRoutes, conveyorRoutes } from "./api-conveyor-routes.ts";
 import { type DriveRoutes, driveRoutes } from "./api-drive-routes.ts";
 import { type JointRoutes, jointRoutes } from "./api-joint-routes.ts";
 import { type OrphanMeshRoutes, orphanMeshRoutes } from "./api-orphan-mesh-routes.ts";
@@ -45,6 +46,7 @@ export interface PantinApiClient
     DriveRoutes,
     ActuatorRoutes,
     SensorRoutes,
+    ConveyorRoutes,
     ConsoleRoutes,
     ClockRoutes,
     OrphanMeshRoutes {
@@ -187,6 +189,7 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...driveRoutes(send),
     ...actuatorRoutes(send),
     ...sensorRoutes(send),
+    ...conveyorRoutes(send),
     ...consoleRoutes(send),
     ...clockRoutes(send),
     ...orphanMeshRoutes(send),

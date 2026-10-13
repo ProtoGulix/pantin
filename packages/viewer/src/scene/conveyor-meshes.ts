@@ -3,6 +3,7 @@ import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial.js";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial.js";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color.js";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector.js";
+import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder.js";
 import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder.js";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
@@ -17,8 +18,9 @@ import type { InterpolatedPose } from "../pose-interpolation.ts";
 // Belts, guides, emitters, absorbers and the beams of presence sensors (ADR 0043
 // point 13). Thin on purpose: what to draw comes from conveyors/, here are only
 // the Babylon calls. Every object hangs from a node that takes its frame's
-// world pose from its anchor body's pose, fed each frame by followPose. None of
-// the meshes is pickable: bodies keep every click (selection is a later slice).
+// world pose from its anchor body's pose, fed each frame by followPose. A click
+// picks them with the bodies, nearest first (viewport.ts); keyOfMesh says which
+// object a picked mesh belongs to.
 
 export interface ConveyorMeshes {
   show(items: readonly DrawingItem[]): void;
@@ -28,13 +30,22 @@ export interface ConveyorMeshes {
   place(key: string, pose: InterpolatedPose): void;
   /** Poses were forgotten: objects hide until they have a pose again. */
   forgetPoses(): void;
+  /** The object ("kind:id") a mesh belongs to, or null for any other mesh. */
+  keyOfMesh(mesh: AbstractMesh): string | null;
+  /** Outlines the object of the selection (key "kind:id"); null removes the outline. */
+  select(key: string | null): void;
 }
 
 interface Drawn {
   item: DrawingItem;
   node: TransformNode;
   beams: Mesh[];
+  meshes: Mesh[];
 }
+
+const SELECTION_OUTLINE_COLOR = "#ffd54a";
+// Scene units (metres): visible on a belt, still thin on a 1 cm beam.
+const SELECTION_OUTLINE_WIDTH = 0.008;
 
 function volumeMaterial(scene: Scene, style: keyof typeof VOLUME_LOOKS) {
   const look = VOLUME_LOOKS[style];
@@ -153,13 +164,15 @@ function drawItem(scene: Scene, item: DrawingItem, material: Materials): Drawn {
   node.rotationQuaternion = Quaternion.Identity();
   node.setEnabled(false);
   const beams: Mesh[] = [];
+  const meshes: Mesh[] = [];
   for (const part of item.parts) {
     for (const mesh of buildPart(scene, part, material, beams)) {
       mesh.parent = node;
-      mesh.isPickable = false;
+      mesh.isPickable = true;
+      meshes.push(mesh);
     }
   }
-  return { item, node, beams };
+  return { item, node, beams, meshes };
 }
 
 function place(drawn: Drawn, pose: InterpolatedPose): void {
@@ -169,6 +182,41 @@ function place(drawn: Drawn, pose: InterpolatedPose): void {
   drawn.node.setEnabled(true);
 }
 
+function indexEntry(
+  entry: Drawn,
+  byKey: Map<string, Drawn>,
+  keyByMesh: Map<AbstractMesh, string>,
+): void {
+  byKey.set(entry.item.key, entry);
+  for (const mesh of entry.meshes) {
+    keyByMesh.set(mesh, entry.item.key);
+  }
+}
+
+function paintBeams(
+  drawn: readonly Drawn[],
+  values: ReadonlyMap<string, number>,
+  material: Materials,
+): void {
+  for (const entry of drawn) {
+    const on = isBeamOn(entry.item.stateTag, values);
+    for (const beam of entry.beams) {
+      beam.material = on ? material.beamOn : material.beamOff;
+    }
+  }
+}
+
+function paintSelection(drawn: readonly Drawn[], selectedKey: string | null): void {
+  for (const entry of drawn) {
+    const selected = entry.item.key === selectedKey;
+    for (const mesh of entry.meshes) {
+      mesh.renderOutline = selected;
+      mesh.outlineColor = Color3.FromHexString(SELECTION_OUTLINE_COLOR);
+      mesh.outlineWidth = SELECTION_OUTLINE_WIDTH;
+    }
+  }
+}
+
 export function createConveyorMeshes(
   scene: Scene,
   latestPose: (key: string) => InterpolatedPose | undefined,
@@ -176,45 +224,38 @@ export function createConveyorMeshes(
   const material = createMaterials(scene);
   let drawn: Drawn[] = [];
   const byKey = new Map<string, Drawn>();
+  const keyByMesh = new Map<AbstractMesh, string>();
   let shownKey: string | null = null;
+  let selectedKey: string | null = null;
   let values: ReadonlyMap<string, number> = new Map();
-
-  const paintBeams = () => {
-    for (const entry of drawn) {
-      const on = isBeamOn(entry.item.stateTag, values);
-      for (const beam of entry.beams) {
-        beam.material = on ? material.beamOn : material.beamOff;
-      }
-    }
-  };
-  const clear = () => {
+  const show = (items: readonly DrawingItem[]) => {
     for (const entry of drawn) {
       entry.node.dispose(false, false);
     }
-    drawn = [];
     byKey.clear();
+    keyByMesh.clear();
+    drawn = items.map((item) => drawItem(scene, item, material));
+    for (const entry of drawn) {
+      indexEntry(entry, byKey, keyByMesh);
+      const known = latestPose(entry.item.key);
+      if (known !== undefined) {
+        place(entry, known);
+      }
+    }
+    paintBeams(drawn, values, material);
+    paintSelection(drawn, selectedKey);
   };
   return {
     show: (items) => {
       const key = JSON.stringify(items);
-      if (key === shownKey) {
-        return;
+      if (key !== shownKey) {
+        shownKey = key;
+        show(items);
       }
-      shownKey = key;
-      clear();
-      drawn = items.map((item) => drawItem(scene, item, material));
-      for (const entry of drawn) {
-        byKey.set(entry.item.key, entry);
-        const known = latestPose(entry.item.key);
-        if (known !== undefined) {
-          place(entry, known);
-        }
-      }
-      paintBeams();
     },
     setStates: (next) => {
       values = next;
-      paintBeams();
+      paintBeams(drawn, values, material);
     },
     place: (key, pose) => {
       const entry = byKey.get(key);
@@ -226,6 +267,11 @@ export function createConveyorMeshes(
       for (const entry of drawn) {
         entry.node.setEnabled(false);
       }
+    },
+    keyOfMesh: (mesh) => keyByMesh.get(mesh) ?? null,
+    select: (key) => {
+      selectedKey = key;
+      paintSelection(drawn, selectedKey);
     },
   };
 }

@@ -4,12 +4,16 @@ import {
   buildActuatorRequest,
   withActuatorFormValue,
 } from "../actuators/actuator-form.ts";
+import { conveyorFormOf, withConveyorFormField } from "../conveyors/conveyor-form.ts";
+import { isConveyorKind } from "../conveyors/conveyor-kinds.ts";
+import { buildConveyorRequest } from "../conveyors/conveyor-request.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import { buildDriveRequest, driveFormFor, withDriveFormValue } from "../drives/drive-form.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import { errorMessage, infoMessage } from "../messages.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { buildSensorRequest, sensorFormFor, withSensorFormValue } from "../sensors/sensor-form.ts";
+import { saveConveyor } from "./conveyor-calls.ts";
 import { editPantin } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -99,11 +103,53 @@ function prepareSensorEdit(
     : { ok: false, invalid: "message.sensorInvalid", message: built.message };
 }
 
-const UPDATED: Readonly<Record<DeviceRef["kind"], MessageKey>> = {
-  drive: "message.driveUpdated",
-  actuator: "message.actuatorUpdated",
-  sensor: "message.sensorUpdated",
-};
+function prepareConveyorEdit(
+  store: ViewerStore,
+  document: PantinDocument,
+  edit: FieldEdit,
+  value: string,
+): Prepared | null {
+  const { kind, id } = edit.device;
+  const form = isConveyorKind(kind) ? conveyorFormOf(document, kind, id) : null;
+  if (form === null) {
+    return null;
+  }
+  const built = buildConveyorRequest(withConveyorFormField(form, edit.fieldId, value));
+  return built.ok
+    ? { ok: true, send: (pantinId) => saveConveyor(store, pantinId, built.request, id) }
+    : { ok: false, invalid: "message.conveyorInvalid", message: built.message };
+}
+
+function updatedKey(kind: DeviceRef["kind"]): MessageKey {
+  switch (kind) {
+    case "drive":
+      return "message.driveUpdated";
+    case "actuator":
+      return "message.actuatorUpdated";
+    case "sensor":
+      return "message.sensorUpdated";
+    default:
+      return `message.${kind}.updated`;
+  }
+}
+
+function prepareDeviceEdit(
+  store: ViewerStore,
+  document: PantinDocument,
+  edit: FieldEdit,
+  value: string,
+): Prepared | null {
+  switch (edit.device.kind) {
+    case "drive":
+      return prepareDriveEdit(store, document, edit, value);
+    case "actuator":
+      return prepareActuatorEdit(store, document, edit, value);
+    case "sensor":
+      return prepareSensorEdit(store, document, edit, value);
+    default:
+      return prepareConveyorEdit(store, document, edit, value);
+  }
+}
 
 export async function commitDeviceEdit(
   store: ViewerStore,
@@ -114,12 +160,7 @@ export async function commitDeviceEdit(
   if (open === null) {
     return;
   }
-  const prepare = {
-    drive: prepareDriveEdit,
-    actuator: prepareActuatorEdit,
-    sensor: prepareSensorEdit,
-  }[edit.device.kind];
-  const prepared = prepare(store, open.document, edit, value);
+  const prepared = prepareDeviceEdit(store, open.document, edit, value);
   if (prepared === null) {
     return;
   }
@@ -127,11 +168,8 @@ export async function commitDeviceEdit(
     store.update({ ...store.state, message: errorMessage(prepared.invalid, {}, prepared.message) });
     return;
   }
-  const saved = await editPantin(store, open.id, prepared.send);
-  if (saved !== undefined) {
-    store.update({
-      ...store.state,
-      message: infoMessage(UPDATED[edit.device.kind], { name: saved.name }),
-    });
-  }
+  await editPantin(store, open.id, prepared.send, (state, saved) => ({
+    ...state,
+    message: infoMessage(updatedKey(edit.device.kind), { name: saved.name }),
+  }));
 }

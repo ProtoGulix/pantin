@@ -1,10 +1,12 @@
 import { parseStoredLayout } from "../central-layout.ts";
+import { isConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { deleteActuator } from "./actuator-actions.ts";
 import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
+import { deleteConveyor, resetSimulation } from "./conveyor-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
 import { toggleGizmo, toggleGizmoSpace } from "./gizmo-actions.ts";
@@ -39,6 +41,8 @@ function deleteSelection(store: ViewerStore): void {
   const device = selectedDeviceOf(store.state.selection);
   if (device === null) {
     withSelection(store, (nodeId) => requestDelete(store, nodeId));
+  } else if (isConveyorKind(device.kind)) {
+    void deleteConveyor(store, device.kind, device.id);
   } else if (device.kind === "drive") {
     void deleteDrive(store, device.id);
   } else if (device.kind === "actuator") {
@@ -154,6 +158,9 @@ export function runMenuCommand(
       return;
     case "rename":
       renameSelection(store);
+      return;
+    case "resetSimulation":
+      void resetSimulation(store);
       return;
     case "delete":
       deleteSelection(store);

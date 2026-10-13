@@ -1,4 +1,6 @@
+import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { Translate } from "../i18n/translate.ts";
+import type { ConveyorToolView } from "../inspector/conveyor-tools.ts";
 import type { InspectorView } from "../inspector/inspector-model.ts";
 import type { PositioningView } from "../inspector/positioning-view.ts";
 import { element, iconButton } from "./dom.ts";
@@ -24,6 +26,28 @@ function separator(): HTMLElement {
   return element("span", { className: "toolbar__separator", attributes: { role: "separator" } });
 }
 
+const CONVEYOR_ICONS: Readonly<Record<ConveyorKind, IconName>> = {
+  belt: "add-belt",
+  guide: "add-guide",
+  emitter: "add-emitter",
+  absorber: "add-absorber",
+  presenceSensor: "add-presence-sensor",
+};
+
+// Off with its reason in the tooltip, as the actuator and sensor buttons are.
+function conveyorButton(tool: ConveyorToolView, t: Translate, intents: PanelIntents) {
+  const created = iconButton(
+    CONVEYOR_ICONS[tool.kind],
+    tool.label,
+    () => intents.openConveyorForm(tool.kind, null),
+    tool.disabledReason !== null,
+  );
+  if (tool.disabledReason !== null) {
+    created.title = t("inspector.disabledTool", { name: tool.label, reason: tool.disabledReason });
+  }
+  return created;
+}
+
 function createGroup(view: InspectorView, t: Translate, intents: PanelIntents): HTMLElement[] {
   const newActuator = iconButton("add-actuator", t("actuators.new"), () =>
     intents.openActuatorForm(null),
@@ -41,6 +65,7 @@ function createGroup(view: InspectorView, t: Translate, intents: PanelIntents): 
     iconButton("add-drive", t("drives.new"), () => intents.openDriveForm(null)),
     newActuator,
     newSensor,
+    ...view.conveyorTools.map((tool) => conveyorButton(tool, t, intents)),
   ];
 }
 

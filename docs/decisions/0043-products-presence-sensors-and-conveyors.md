@@ -247,7 +247,8 @@ Facts checked in the repository on 2026-10-12:
       guides, emitters, absorbers and presence sensors: frame,
       placement in mm and degrees, sizes, the drum chosen among the
       continuous joints. An emitter gets a "Créer un produit" button
-      that writes 1 then 0 to `spawn`. The "Remise à zéro" command calls
+      that writes 0, 1, then 0 to `spawn` (the leading 0 recovers
+      from a failed closing write). The "Remise à zéro" command calls
       the reset route.
     - French and English labels.
     - The viewer computes nothing and imports neither Rapier nor the

@@ -42,6 +42,8 @@ describe("the device buttons", () => {
     openDriveForm: vi.fn(),
     openActuatorForm: vi.fn(),
     openSensorForm: vi.fn(),
+    openConveyorForm: vi.fn(),
+    deleteConveyor: vi.fn(),
     deleteDrive: vi.fn(),
     deleteActuator: vi.fn(),
     deleteSensor: vi.fn(),
@@ -56,5 +58,14 @@ describe("the device buttons", () => {
     expect(intents.deleteSensor).toHaveBeenCalledWith("e1");
     expect(intents.deleteActuator).not.toHaveBeenCalled();
     expect(intents.openDriveForm).not.toHaveBeenCalled();
+  });
+
+  it("send a belt or a cell to the form and the delete call of the phase 6 objects", () => {
+    editDevice({ kind: "belt", id: "b1" }, intents);
+    deleteDevice({ kind: "presenceSensor", id: "c1" }, intents);
+    expect(intents.openConveyorForm).toHaveBeenCalledWith("belt", "b1");
+    expect(intents.deleteConveyor).toHaveBeenCalledWith("presenceSensor", "c1");
+    expect(intents.openSensorForm).not.toHaveBeenCalledWith("b1");
+    expect(intents.deleteSensor).not.toHaveBeenCalledWith("c1");
   });
 });

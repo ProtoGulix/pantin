@@ -159,3 +159,14 @@ describe("clock warning", () => {
     expect(viewOf(clockAfterPose(behind, 99)).warning).not.toBeNull();
   });
 });
+
+describe("the reset button", () => {
+  it("waits for the first clock state, then works running or paused, in both languages", () => {
+    expect(viewOf(INITIAL_CLOCK_MODEL).canReset).toBe(false);
+    const running = viewOf(clockAfterClockState(INITIAL_CLOCK_MODEL, stateOf({ running: true })));
+    const paused = viewOf(clockAfterClockState(INITIAL_CLOCK_MODEL, stateOf({ running: false })));
+    expect([running.canReset, paused.canReset]).toEqual([true, true]);
+    expect(running.resetLabel).toBe("Reset");
+    expect(viewOf(INITIAL_CLOCK_MODEL, "fr").resetLabel).toBe("Remise à zéro");
+  });
+});

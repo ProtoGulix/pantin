@@ -233,15 +233,16 @@ describe("hints of an index without devices", () => {
   const index = selecting(pantinNodeId("press"));
 
   it("says what each family without device is for, in a compact line", () => {
-    expect(index.hints).toEqual([]);
+    expect(index.hints).toEqual([t("conveyors.empty")]);
     const onlyB = withNode(opened, assemblyNodeId("press", "b"));
-    expect(inspectorOf(onlyB).hints).toEqual([t("actuators.empty"), t("sensors.empty")]);
+    const hintKeys = ["actuators.empty", "sensors.empty", "conveyors.empty"] as const;
+    expect(inspectorOf(onlyB).hints).toEqual(hintKeys.map((key) => t(key)));
     const empty = withOpenPantin(initialViewerState("fr"), {
       ...pantin,
       document: { ...document, drives: [], actuators: [], sensors: [] },
     });
     const view = inspectorOf(empty);
-    expect(view.hints).toEqual([t("drives.empty"), t("actuators.empty"), t("sensors.empty")]);
+    expect(view.hints).toEqual((["drives.empty", ...hintKeys] as const).map((key) => t(key)));
     expect(view.note).toBeNull();
   });
 

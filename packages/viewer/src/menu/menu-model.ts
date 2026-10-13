@@ -67,6 +67,7 @@ const MENUS: readonly MenuDefinition[] = [
         "menubar.edit.newJoint",
         (context) => context.editing && context.hasBodies && !context.busy,
       ),
+      item("resetSimulation", "menubar.edit.reset", (context) => context.editing && !context.busy),
       "separator",
       item(
         "rename",

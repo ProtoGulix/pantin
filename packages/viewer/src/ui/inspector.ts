@@ -2,8 +2,9 @@ import type { DriveRuntime } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
 import type { InspectorView } from "../inspector/inspector-model.ts";
 import type { LiveSource } from "../properties/property-rows.ts";
+import { renderConveyorForm } from "./conveyor-form.ts";
 import { renderActuatorForm, renderDriveForm, renderSensorForm } from "./device-forms.ts";
-import { element, iconButton } from "./dom.ts";
+import { button, element, iconButton } from "./dom.ts";
 import { captureFocus, focusField, restoreFocus } from "./focus.ts";
 import { showInspectorLive } from "./inspector-live.ts";
 import { renderPositioning } from "./inspector-positioning.ts";
@@ -22,12 +23,21 @@ import { renderPropertiesGrid } from "./properties-grid.ts";
 // between the two redrawn parts and is never rebuilt, so that a redraw cannot
 // interrupt a drag (joint-slider.ts).
 
+function renderSpawnButton(spawn: NonNullable<InspectorView["spawn"]>, intents: PanelIntents) {
+  const created = button(spawn.label, "button button--primary", () =>
+    intents.spawnProduct(spawn.emitterId),
+  );
+  created.title = spawn.hint;
+  return created;
+}
+
 function formsOf(view: InspectorView, t: Translate, intents: PanelIntents) {
   return [
     view.jointForm === null ? null : renderJointForm(view.jointForm, t, intents),
     view.driveForm === null ? null : renderDriveForm(view.driveForm, t, intents),
     view.actuatorForm === null ? null : renderActuatorForm(view.actuatorForm, t, intents),
     view.sensorForm === null ? null : renderSensorForm(view.sensorForm, t, intents),
+    view.conveyorForm === null ? null : renderConveyorForm(view.conveyorForm, t, intents),
   ];
 }
 
@@ -69,6 +79,7 @@ export class Inspector {
         view.subject === null
           ? null
           : element("h3", { className: "inspector__subject", text: view.subject }),
+        view.spawn === null ? null : renderSpawnButton(view.spawn, intents),
         view.positioning === null ? null : renderPositioning(view.positioning, t, intents),
       ].filter((part) => part !== null),
     );

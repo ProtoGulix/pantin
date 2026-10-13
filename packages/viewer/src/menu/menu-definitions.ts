@@ -16,6 +16,7 @@ export type MenuCommand =
   | "cleanOrphans"
   | "close"
   | "newJoint"
+  | "resetSimulation"
   | "rename"
   | "delete"
   | "frameAll"

@@ -1,6 +1,7 @@
 import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
 import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
+import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import type { Vector3Tuple } from "../frames.ts";
@@ -111,6 +112,23 @@ export interface PanelIntents {
   changeSensorAssembly(assembly: string): void;
   submitSensorForm(): void;
   deleteSensor(sensorId: string): void;
+
+  // The belts, guides, emitters, absorbers and presence sensors of the same
+  // panel (ADR 0043 point 13); inputs by key ("x", "length", "range"), "name"
+  // is the name, a flag is "true" or "false".
+  openConveyorForm(kind: ConveyorKind, id: string | null): void;
+  cancelConveyorForm(): void;
+  editConveyorField(fieldId: string, text: string): void;
+  changeConveyorType(type: string): void;
+  changeConveyorAssembly(assembly: string): void;
+  // An empty body id follows the assembly's own frame.
+  changeConveyorBody(bodyId: string): void;
+  submitConveyorForm(): void;
+  deleteConveyor(kind: ConveyorKind, id: string): void;
+  // "Créer un produit": writes 1 then 0 to the emitter's spawn tag.
+  spawnProduct(emitterId: string): void;
+  // "Remise à zéro": products, commands and faults go; the edits and the clock stay.
+  resetSimulation(): void;
 
   // A new empty assembly in the Pantin of this tree node (ADR 0019).
   createAssembly(nodeId: string): void;

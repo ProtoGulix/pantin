@@ -276,3 +276,18 @@ describe("shortcut listing", () => {
     ]);
   });
 });
+
+describe("the simulation reset (ADR 0043 point 12)", () => {
+  it("is in the Edit menu, off with no Pantin open and on while one is", () => {
+    expect(enabledCommands(listing)).not.toContain("resetSimulation");
+    expect(enabledCommands(editing(false))).toContain("resetSimulation");
+    const edit = buildMenuBar(editing(false), translate).find((menu) => menu.id === "edit");
+    const labels = edit?.entries.flatMap((entry) => (entry.type === "item" ? [entry.label] : []));
+    expect(labels).toContain("Remise à zéro de la simulation");
+  });
+
+  it("waits for a request in flight to finish", () => {
+    const busy = { ...editing(false), pendingRequestCount: 1 };
+    expect(enabledCommands(busy)).not.toContain("resetSimulation");
+  });
+});

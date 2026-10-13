@@ -8,7 +8,7 @@ import type { FaceHighlight } from "../alignment/alignment-session.ts";
 import type { ViewportPick } from "../alignment/pick-resolution.ts";
 import type { AssemblyFrameTarget } from "../assembly-frame.ts";
 import type { DrawingItem } from "../conveyors/conveyor-drawing.ts";
-import { objectsAsPoseSnapshot, productsAsPoseSnapshot } from "../conveyors/pose-feed.ts";
+import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { PlacementGizmoSpec } from "../gizmo/anchor-frame.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
@@ -19,10 +19,11 @@ import { viewportPickOf } from "./alignment-pick.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
+import { clickTargetOf } from "./click-target.ts";
 import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, planSceneSync } from "./scene-plan.ts";
 import { createContext, type ViewportContext } from "./viewport-context.ts";
-import { applyPosesEachFrame, forgetPoses } from "./viewport-poses.ts";
+import { applyPosesEachFrame, forgetPoses, pushSnapshot } from "./viewport-poses.ts";
 
 // The Babylon canvas: shows the bodies it is given and reports clicks. It
 // knows nothing about the API or the panel; the controller wires them.
@@ -34,6 +35,8 @@ export interface ViewportCallbacks {
   // pick of the same body (ADR 0040 point 9: a click selects the top-level
   // assembly, each double click goes one level down, down to the body).
   onBodyPicked(bodyId: string | null, doubleClick: boolean): void;
+  // A click on a belt, guide, emitter, absorber or presence sensor with no body in front of it.
+  onConveyorPicked(kind: ConveyorKind, id: string): void;
   // Raw reason in English; the caller translates the message around it.
   onLoadError(bodyName: string, reason: string): void;
   // The placement gizmo (ADR 0034): the placement the drag asks for, in the
@@ -61,6 +64,8 @@ export interface Viewport {
   showSensorMarkers(markers: readonly SensorMarker[]): void;
   /** Belts, guides, emitters, absorbers and presence sensor beams (ADR 0043 point 13). */
   showConveyorObjects(items: readonly DrawingItem[]): void;
+  /** Outlines the selected belt, guide, emitter, absorber or presence sensor (key "kind:id"). */
+  setSelectedConveyor(key: string | null): void;
   /** Tag values from the core: switch markers and beams light up on 1. */
   showTagStates(values: ReadonlyMap<string, number>): void;
   /**
@@ -143,6 +148,16 @@ function pickBody(context: ViewportContext, x: number, y: number) {
   return scene.pick(x, y, (mesh) => bodyIdByMesh.has(mesh) && mesh.isEnabled());
 }
 
+// One pass over bodies and phase 6 objects: the nearest hit wins.
+function pickScene(context: ViewportContext, x: number, y: number) {
+  const { scene, bodyIdByMesh, conveyors } = context;
+  return scene.pick(
+    x,
+    y,
+    (mesh) => mesh.isEnabled() && (bodyIdByMesh.has(mesh) || conveyors.keyOfMesh(mesh) !== null),
+  );
+}
+
 function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): void {
   context.scene.onPointerObservable.add((pointerInfo) => {
     // A tap is a click without drag, so orbiting the camera never selects.
@@ -150,18 +165,27 @@ function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): 
     if (type !== PointerEventTypes.POINTERTAP && type !== PointerEventTypes.POINTERDOUBLETAP) {
       return;
     }
-    const { scene, bodyIdByMesh } = context;
-    const pick = pickBody(context, scene.pointerX, scene.pointerY);
+    const { scene, bodyIdByMesh, conveyors } = context;
     if (context.alignmentPicking) {
       // A double click is a tap then a double tap: one pick, not two.
       if (type === PointerEventTypes.POINTERTAP) {
+        const pick = pickBody(context, scene.pointerX, scene.pointerY);
         callbacks.onAlignmentPick(viewportPickOf(context, pick));
       }
       return;
     }
-    const pickedMesh = pick.hit ? pick.pickedMesh : null;
-    const bodyId = pickedMesh === null ? null : (bodyIdByMesh.get(pickedMesh) ?? null);
-    callbacks.onBodyPicked(bodyId, type === PointerEventTypes.POINTERDOUBLETAP);
+    const pick = pickScene(context, scene.pointerX, scene.pointerY);
+    const target = clickTargetOf(
+      pick.hit ? pick.pickedMesh : null,
+      bodyIdByMesh,
+      conveyors.keyOfMesh,
+    );
+    if (target.kind === "conveyor") {
+      callbacks.onConveyorPicked(target.conveyor.kind, target.conveyor.id);
+    } else {
+      const bodyId = target.kind === "body" ? target.bodyId : null;
+      callbacks.onBodyPicked(bodyId, type === PointerEventTypes.POINTERDOUBLETAP);
+    }
   });
 }
 
@@ -234,13 +258,7 @@ export function createViewport(
   return {
     showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
     frameBodies: (bodyIds) => frameBodies(context, bodyIds),
-    pushPoses: (snapshot) => {
-      const now = performance.now();
-      context.poses.push(snapshot, now);
-      context.productPoses.push(productsAsPoseSnapshot(snapshot), now);
-      context.objectPoses.push(objectsAsPoseSnapshot(snapshot), now);
-      context.productMeshes.sync(snapshot.products);
-    },
+    pushPoses: (snapshot) => pushSnapshot(context, snapshot),
     clearPoses: () => forgetPoses(context),
     setSelectedBodies: (bodyIds) => context.highlights.setSelectedBodies(bodyIds),
     setHiddenBodies: (bodyIds) => {
@@ -251,6 +269,7 @@ export function createViewport(
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
     showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
     showConveyorObjects: (items) => context.conveyors.show(items),
+    setSelectedConveyor: (key) => context.conveyors.select(key),
     showTagStates: (values) => {
       context.sensorMarkers.setStates(values);
       context.conveyors.setStates(values);

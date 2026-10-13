@@ -78,7 +78,8 @@ export async function refreshTagValues(store: ViewerStore): Promise<void> {
   const shown =
     store.state.inspectorOpen ||
     showsDiagram(store.state.centralLayout) ||
-    (open?.document.sensors.length ?? 0) > 0;
+    (open?.document.sensors.length ?? 0) > 0 ||
+    (open?.document.presenceSensors.length ?? 0) > 0;
   if (open === null || !shown || store.readingTags) {
     return;
   }

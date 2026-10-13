@@ -37,6 +37,7 @@ export class TransportBar {
   private readonly toggle = transportButton("pause", () => this.intents?.toggleClockRunning());
   private readonly stepOne = transportButton("step", () => this.intents?.stepClock(1));
   private readonly stepTen = transportButton("step", () => this.intents?.stepClock(10));
+  private readonly reset = transportButton("reset", () => this.intents?.resetSimulation());
   private readonly time = element("span", { className: "transport__time" });
   private readonly steps = element("span", { className: "transport__steps" });
   private readonly warning = element("span", {
@@ -54,6 +55,7 @@ export class TransportBar {
       this.toggle.button,
       this.stepOne.button,
       this.stepTen.button,
+      this.reset.button,
       this.time,
       this.steps,
       this.warning,
@@ -88,6 +90,9 @@ export class TransportBar {
     setLabel(stepOne.button, view.stepOneLabel, view.stepOneHint);
     setText(stepTen.label, view.stepTenLabel);
     setLabel(stepTen.button, view.stepTenLabel, view.stepTenHint);
+    setText(this.reset.label, view.resetLabel);
+    setLabel(this.reset.button, view.resetLabel, view.resetHint);
+    this.reset.button.disabled = !view.canReset;
     stepOne.button.disabled = !view.canStep;
     stepTen.button.disabled = !view.canStep;
   }

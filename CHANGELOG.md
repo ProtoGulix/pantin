@@ -25,6 +25,13 @@ All notable changes to Pantin. The format follows
 - Viewer, phase 6 drawing (ADR 0043 point 13): products as boxes coloured by
   material, belts with a travel arrow, outlined guides, emitters and absorbers,
   and presence sensor beams lit by their `state` tag.
+- Viewer, phase 6 editing (ADR 0043 point 13): create, edit and delete belts,
+  guides, emitters, absorbers and photoelectric presence sensors from the
+  inspector (placement in mm and degrees, sizes in mm, mass in kg, delays in
+  ms, body picker limited to the assembly); a click in the 3D view selects
+  them, nearest hit first; an emitter's "Créer un produit" button pulses its
+  `spawn` tag; "Remise à zéro" in the transport bar and the Edit menu calls the
+  reset route. French and English labels.
 - Joint axis from a picked face (ADR 0041) and the assembly frame trihedron
   with a local or global gizmo (ADR 0042).
 - One inspector for properties and positioning (ADR 0039) and nested

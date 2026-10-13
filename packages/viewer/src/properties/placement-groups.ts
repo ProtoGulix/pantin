@@ -19,7 +19,7 @@ import {
 // the frame of the anchor, in millimetres and degrees; the angles convention
 // lives in placement-units.ts.
 
-function fieldLabel(field: PlacementField, t: Translate): string {
+export function placementFieldLabel(field: PlacementField, t: Translate): string {
   const unit = displayUnitLabel(field.startsWith("r") ? "degree" : "mm", t);
   return `${t(`placement.field.${field}`)} (${unit})`;
 }
@@ -40,7 +40,7 @@ function valueRows(
     const next = PLACEMENT_FIELDS[index + 1];
     const rowOfField = row(
       placementRowId(field),
-      fieldLabel(field, t),
+      placementFieldLabel(field, t),
       formatDisplayNumber(values[field]),
       editor,
     );

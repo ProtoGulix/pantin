@@ -54,7 +54,13 @@ function render(view: Partial<InspectorView>): FakeNode[] {
     createElement: (tag: string) => new FakeNode(tag),
     createElementNS: (_namespace: string, tag: string) => new FakeNode(tag),
   });
-  const base = { device: null, positioning: null, canCreateActuator: true, canCreateSensor: true };
+  const base = {
+    device: null,
+    positioning: null,
+    canCreateActuator: true,
+    canCreateSensor: true,
+    conveyorTools: [],
+  };
   // Only the fields the tool bar reads; the rest of the view is not used.
   const full = { ...base, ...view } as InspectorView;
   // The fake document returns FakeNode trees in place of DOM elements.
@@ -112,5 +118,24 @@ describe("the inspector tool bar", () => {
     expect(actuator?.disabled).toBe(true);
     expect(sensor?.disabled).toBe(true);
     expect(actuator?.title).toBe("inspector.disabledTool(actuators.new, actuators.noMovableJoint)");
+  });
+});
+
+describe("the create buttons of the phase 6 objects", () => {
+  it("adds one create button per phase 6 object, off with its reason when it cannot work", () => {
+    const conveyorTools = [
+      {
+        kind: "belt" as const,
+        label: "conveyors.new.belt",
+        disabledReason: "conveyors.noDrumJoint",
+      },
+      { kind: "guide" as const, label: "conveyors.new.guide", disabledReason: null },
+    ];
+    const items = render({ conveyorTools });
+    expect(labelsOf(items).slice(3)).toEqual(["conveyors.new.belt", "conveyors.new.guide"]);
+    const [belt, guide] = items.slice(3);
+    expect(belt?.disabled).toBe(true);
+    expect(belt?.title).toBe("inspector.disabledTool(conveyors.new.belt, conveyors.noDrumJoint)");
+    expect(guide?.disabled).toBe(false);
   });
 });

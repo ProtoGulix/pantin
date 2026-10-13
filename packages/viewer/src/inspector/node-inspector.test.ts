@@ -80,7 +80,7 @@ describe("inspector of an assembly", () => {
   it("shows its properties and the hints of the families it has no device of", () => {
     expect(ids(view.groups)).toEqual(["general"]);
     expect(view.subject).toBe(document.assemblies[1]?.name);
-    expect(view.hints).toHaveLength(3);
+    expect(view.hints).toHaveLength(4);
   });
 
   it("edits its key, which prefixes the tags", () => {

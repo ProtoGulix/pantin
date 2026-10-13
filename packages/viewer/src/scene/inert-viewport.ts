@@ -17,6 +17,7 @@ export function createInertViewport(): Viewport {
     showJointPreview: ignore,
     showSensorMarkers: ignore,
     showConveyorObjects: ignore,
+    setSelectedConveyor: ignore,
     showTagStates: ignore,
     setRendering: ignore,
     showAssemblyFrame: ignore,

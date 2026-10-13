@@ -1,4 +1,5 @@
 import { pickedNodeId } from "../assembly-display.ts";
+import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import { isToolOn } from "../gizmo/tool-rules.ts";
 import { isLanguage } from "../i18n/translate.ts";
@@ -33,6 +34,7 @@ import {
 import { startAxisPick } from "./axis-pick-actions.ts";
 import { clockIntents } from "./clock-actions.ts";
 import { consoleIntents } from "./console-actions.ts";
+import { conveyorIntents } from "./conveyor-intents.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
 import { setGizmoStep, turnToolOff } from "./gizmo-actions.ts";
@@ -202,6 +204,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...driveIntents(store),
     ...actuatorIntents(store),
     ...sensorIntents(store),
+    ...conveyorIntents(store),
     ...consoleIntents(store),
     ...clockIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
@@ -256,6 +259,18 @@ export function selectBodyFromViewport(
       ),
     ),
   );
+}
+
+/**
+ * A click on a belt, guide, emitter, absorber or presence sensor that no body
+ * hides selects it and shows it in the inspector (ADR 0043 point 13).
+ */
+export function selectConveyorFromViewport(
+  store: ViewerStore,
+  kind: ConveyorKind,
+  id: string,
+): void {
+  selectDevice(store, { kind, id });
 }
 
 export function startViewer(store: ViewerStore): void {

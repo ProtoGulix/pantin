@@ -1,7 +1,8 @@
 import { ACTUATOR_LABELS } from "@pantin/actuator-types/labels";
 import { DRIVE_LABELS } from "@pantin/drive-types/labels";
-import { DRIVE_TAGS, SENSOR_TAGS, tagName } from "@pantin/protocol";
-import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
+import { DRIVE_TAGS, PRESENCE_SENSOR_TAGS, SENSOR_TAGS, tagName } from "@pantin/protocol";
+import { PRESENCE_SENSOR_LABELS, SENSOR_LABELS } from "@pantin/sensor-types/labels";
+import { CONVEYOR_KINDS, type ConveyorKind, conveyorsOf } from "../conveyors/conveyor-kinds.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import { deviceLinkRow, type GroupDraft } from "../properties/property-rows.ts";
 import type { InspectorContext } from "./inspector-context.ts";
@@ -10,6 +11,35 @@ import type { InspectorContext } from "./inspector-context.ts";
 // 2): one line per drive, actuator and sensor, with its name, its type and its
 // state; a line selects its device. The lit commands and the sensor state are
 // live cells: the page fills them after every tag read.
+
+// One line per belt, guide, emitter, absorber and presence sensor (ADR 0043
+// point 13); a presence sensor's line shows its state.
+function conveyorRows(context: InspectorContext, inScope: (item: { assembly: string }) => boolean) {
+  const { pantin, language, t } = context;
+  const rowsOf = (kind: ConveyorKind) =>
+    conveyorsOf(pantin.document, kind)
+      .filter(inScope)
+      .map((item) => {
+        const type =
+          "type" in item
+            ? PRESENCE_SENSOR_LABELS[item.type][language].name
+            : t(`objects.kind.${kind}`);
+        const link = deviceLinkRow(`${kind}:${item.id}`, item.name, type, { kind, id: item.id });
+        const state = "type" in item ? PRESENCE_SENSOR_TAGS[item.type][0] : undefined;
+        return state === undefined || !("type" in item)
+          ? link
+          : {
+              ...link,
+              live: {
+                kind: "tag",
+                tag: tagName(item.assembly, item.tagKey, state.member),
+                unit: null,
+                format: state.type === "bit" ? "bit" : "number",
+              } as const,
+            };
+      });
+  return CONVEYOR_KINDS.flatMap(rowsOf);
+}
 
 /**
  * The groups of the index; `assemblyKey` limits it to one assembly, null
@@ -63,6 +93,7 @@ export function scopeIndexGroups(
     { id: "driveIndex", rows: drives },
     { id: "actuatorIndex", rows: actuators },
     { id: "sensorIndex", rows: sensors },
+    { id: "objectIndex", rows: conveyorRows(context, inScope) },
   ];
   return groups.filter((group) => group.rows.length > 0);
 }
@@ -71,6 +102,7 @@ const FAMILY_HINTS: readonly [GroupDraft["id"], MessageKey][] = [
   ["driveIndex", "drives.empty"],
   ["actuatorIndex", "actuators.empty"],
   ["sensorIndex", "sensors.empty"],
+  ["objectIndex", "conveyors.empty"],
 ];
 
 /** What a newcomer should read for each family the index has no line for. */

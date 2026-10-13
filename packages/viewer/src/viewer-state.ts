@@ -10,6 +10,7 @@ import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
+import type { ConveyorFormState } from "./conveyors/conveyor-form.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
@@ -108,6 +109,8 @@ export interface ViewerState {
   actuatorForm: ActuatorFormState | null;
   // The sensor form of the same panel (ADR 0023).
   sensorForm: SensorFormState | null;
+  // The form of a belt, guide, emitter, absorber or presence sensor (ADR 0043 point 13).
+  conveyorForm: ConveyorFormState | null;
   faults: FaultsResponse;
   // What the central area shows (ADR 0030 point 7): a setting of the viewer,
   // kept in the browser and not reset by opening a Pantin. Then the diagram
@@ -195,6 +198,7 @@ export function initialViewerState(
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,
+    conveyorForm: null,
     faults: NO_FAULTS,
     centralLayout,
     collapsedDiagramBands: new Set(),
@@ -242,6 +246,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,
+    conveyorForm: null,
     faults: NO_FAULTS,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,

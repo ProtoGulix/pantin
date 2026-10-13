@@ -21,4 +21,7 @@ export const GROUP_TITLES: Readonly<Record<PropertyGroupId, MessageKey>> = {
   driveIndex: "drives.section",
   actuatorIndex: "actuators.title",
   sensorIndex: "sensors.title",
+  objectIndex: "conveyors.group.index",
+  conveyorFrame: "conveyors.group.frame",
+  conveyorPlacement: "conveyors.group.placement",
 };

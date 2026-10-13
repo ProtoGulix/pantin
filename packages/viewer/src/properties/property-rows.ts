@@ -29,7 +29,11 @@ export type PropertyGroupId =
   | "links"
   | "driveIndex"
   | "actuatorIndex"
-  | "sensorIndex";
+  | "sensorIndex"
+  // Belts, guides, emitters, absorbers and presence sensors (ADR 0043 point 13).
+  | "objectIndex"
+  | "conveyorFrame"
+  | "conveyorPlacement";
 
 export type EditTarget =
   // A Pantin or a body, named by its tree node.

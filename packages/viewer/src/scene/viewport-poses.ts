@@ -1,3 +1,5 @@
+import type { PoseSnapshot } from "@pantin/protocol";
+import { objectsAsPoseSnapshot, productsAsPoseSnapshot } from "../conveyors/pose-feed.ts";
 import type { InterpolatedPose } from "../pose-interpolation.ts";
 import type { ViewportContext } from "./viewport-context.ts";
 
@@ -39,4 +41,13 @@ export function forgetPoses(context: ViewportContext): void {
   context.productPoses.reset();
   context.objectPoses.reset();
   context.productMeshes.clear();
+}
+
+/** Feeds one snapshot of the pose stream to the interpolators and the product boxes. */
+export function pushSnapshot(context: ViewportContext, snapshot: PoseSnapshot): void {
+  const now = performance.now();
+  context.poses.push(snapshot, now);
+  context.productPoses.push(productsAsPoseSnapshot(snapshot), now);
+  context.objectPoses.push(objectsAsPoseSnapshot(snapshot), now);
+  context.productMeshes.sync(snapshot.products);
 }

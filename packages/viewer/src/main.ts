@@ -8,6 +8,7 @@ import { refreshConsole } from "./controller/console-actions.ts";
 import {
   createPanelIntents,
   selectBodyFromViewport,
+  selectConveyorFromViewport,
   startViewer,
 } from "./controller/controller.ts";
 import { refreshTagValues } from "./controller/drive-commands.ts";
@@ -142,6 +143,7 @@ function createViewportOrInert(
       (pantinId, body) => api.fetchMeshBytes(pantinId, body.mesh),
       {
         onBodyPicked: (bodyId, doubleClick) => selectBodyFromViewport(store, bodyId, doubleClick),
+        onConveyorPicked: (kind, id) => selectConveyorFromViewport(store, kind, id),
         onPlacementDragged: (assemblyKey, placement) =>
           dragPlacement(store, assemblyKey, placement),
         onPlacementDragEnded: () => void finishPlacementDrag(store),
