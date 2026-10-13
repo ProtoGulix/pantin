@@ -151,7 +151,10 @@ Facts checked in the repository on 2026-10-13:
    - At most 16 bus connections per core, counted apart from the 16 SSE
      streams of ADR 0015, and one `plc` connection per Pantin.
    - Schema in `protocol/src/tag-bus.ts`: unions discriminated on `type`,
-     `TAG_BUS_VERSION = 1`, exported to the JSON Schema with the rest.
+     `TAG_BUS_VERSION = 1`. The shared fixtures (point 2) are the
+     contract the Python bridge is held to; the schemas carry cross-field
+     rules that a JSON Schema export would drop, so an export waits for a
+     consumer (backlog `viewer-on-tag-bus.md`; amended in P1 review).
 
    Client to core:
 

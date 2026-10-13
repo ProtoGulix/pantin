@@ -10,7 +10,7 @@ import { importBodies } from "./import-operations.ts";
 import { deleteBody } from "./mesh-lifecycle.ts";
 import { loadPantin } from "./open-pantins.ts";
 import { createPantinService, createServiceContext } from "./pantin-service.ts";
-import { listTags, writeTag } from "./simulation.ts";
+import { listTags, writeTag } from "./tag-operations.ts";
 
 // Phase 6 objects through the service (ADR 0043): no route creates them yet,
 // so they are put in the open document directly.
@@ -83,14 +83,17 @@ describe("the tags of emitters and presence sensors", () => {
     const state = `${rail.assembly}.cell.state`;
     expect((await listTags(context, "axis")).tags.map(({ name }) => name)).toEqual([spawn, state]);
 
-    const written = await writeTag(context, "axis", spawn, 1);
-    expect(written).toEqual({ name: spawn, type: "bit", direction: "command", value: 1 });
+    const written = await writeTag(context, "axis", spawn, 1, "client");
+    expect(written).toEqual({
+      tag: { name: spawn, type: "bit", direction: "command", value: 1, forced: true },
+      ignored: null,
+    });
     const after = (await listTags(context, "axis")).tags;
     expect(after.map(({ value }) => value)).toEqual([1, 0]);
-    await expect(writeTag(context, "axis", spawn, 2)).rejects.toMatchObject({
+    await expect(writeTag(context, "axis", spawn, 2, "client")).rejects.toMatchObject({
       code: "invalid_request",
     });
-    await expect(writeTag(context, "axis", state, 1)).rejects.toMatchObject({
+    await expect(writeTag(context, "axis", state, 1, "client")).rejects.toMatchObject({
       code: "invalid_request",
     });
   });

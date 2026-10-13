@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { belt, conveyorLine, emitter } from "../test-support/conveyor-fixtures.ts";
 import { type Bench, benchesClosedAfterEach } from "../test-support/physics-bench.ts";
 import { resetRuntimeState } from "./open-pantins.ts";
-import { listTags } from "./simulation.ts";
+import { listTags } from "./tag-operations.ts";
 
 // The spawn latch, the console events, reset, rebuild and the world lifecycle
 // of an open Pantin (ADR 0043 points 5, 10 and 11).

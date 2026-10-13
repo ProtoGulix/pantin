@@ -2,8 +2,10 @@ import { spawn } from "node:child_process";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo, Socket } from "node:net";
 import { MAX_IMPORT_BYTES } from "@pantin/protocol";
+import { type BusEndpoint, createBusEndpoint } from "../bus/bus-endpoint.ts";
 import type { ProcessLimits } from "../converter/process-runner.ts";
 import { createStepConverter, type StepConverter } from "../converter/step-converter.ts";
+import { type IoMappingSource, NO_IO_MAPPING } from "../domain/io-mapping.ts";
 import {
   isSourceAccepted,
   type NetworkConfig,
@@ -17,11 +19,16 @@ import {
 } from "../service/pantin-service.ts";
 import {
   createRealSimulationTimer,
+  type SimulationTick,
   type SimulationTimer,
   startSimulationLoop,
 } from "../service/simulation-loop.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
-import { createPoseStreamRegistry, type PoseSource } from "./pose-stream-registry.ts";
+import {
+  createPoseStreamRegistry,
+  type PoseSource,
+  type PoseStreamRegistry,
+} from "./pose-stream-registry.ts";
 import { createRequestHandler } from "./request-handler.ts";
 
 export type PantinServerOptions = {
@@ -48,6 +55,12 @@ export type PantinServerOptions = {
   newConsoleId?: () => string;
   // Clock of the pose streams' keep-alive comments (ADR 0015); the real one by default.
   streamTimer?: SimulationTimer;
+  // Clock of the tag bus: pings, pongs and the hello deadline (ADR 0045 point 4);
+  // the real one by default.
+  busTimer?: SimulationTimer;
+  // The Pantins' I/O mappings (ADR 0045 point 7). Without one, no Pantin has a
+  // mapping and a `plc` role is refused on the bus (4003); slice P2 provides it.
+  ioMappingSource?: IoMappingSource;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;
   // Receives the source address of every connection closed by the filter.
@@ -124,6 +137,39 @@ function serviceOptionsOf(options: PantinServerOptions): ServiceOptions {
   };
 }
 
+function busEndpointOf(
+  options: PantinServerOptions,
+  network: NetworkConfig,
+  service: PantinService,
+) {
+  return createBusEndpoint({
+    service,
+    network,
+    mappingSource: options.ioMappingSource ?? NO_IO_MAPPING,
+    timer: options.busTimer ?? createRealSimulationTimer(),
+    reportError: options.reportError,
+  });
+}
+
+// One scheduler tick: the steps, then what the streams and the bus tell their clients of them.
+function runTick(
+  tick: SimulationTick,
+  parts: { service: PantinService; poseStreams: PoseStreamRegistry; bus: BusEndpoint },
+): void {
+  parts.service.runSimulationSteps(tick);
+  parts.poseStreams.notifyTick();
+  parts.bus.notifyTick();
+}
+
+// `stopWork` releases what runs inside the server before its connections are cut.
+function closeServer(server: Server, stopWork: () => void): Promise<void> {
+  return new Promise<void>((resolveClose, rejectClose) => {
+    stopWork();
+    server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
+    server.closeAllConnections();
+  });
+}
+
 export async function startPantinServer(
   options: PantinServerOptions,
 ): Promise<RunningPantinServer> {
@@ -151,25 +197,23 @@ export async function startPantinServer(
       reportError: options.reportError,
     }),
   );
+  const bus = busEndpointOf(options, network, service);
+  server.on("upgrade", (request, socket, head) => bus.handleUpgrade(request, socket, head));
   installSourceFilter(server, options, network);
   await listen(server, options.port, network.listenAddress);
   const loop = startSimulationLoop(
     options.simulationTimer ?? createRealSimulationTimer(),
-    (tick) => {
-      service.runSimulationSteps(tick);
-      poseStreams.notifyTick();
-    },
+    (tick) => runTick(tick, { service, poseStreams, bus }),
     options.reportError,
   );
   // listen() on a TCP host and port always yields an AddressInfo, never a string.
   const address = server.address() as AddressInfo;
   const close = () =>
-    new Promise<void>((resolveClose, rejectClose) => {
+    closeServer(server, () => {
       loop.stop();
       poseStreams.closeAll();
+      bus.closeAll();
       service.close();
-      server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
-      server.closeAllConnections();
     });
   return { server, address, network, close };
 }

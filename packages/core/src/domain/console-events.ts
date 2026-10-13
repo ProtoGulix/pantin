@@ -61,13 +61,68 @@ export function migratedEvent(from: number): ConsoleEvent {
   };
 }
 
-export function clockEvent(running: boolean): ConsoleEvent {
+// ADR 0045 point 12: a pause while a bridge is connected is a warning, since
+// the PLC sees a machine that stopped answering.
+export function clockEvent(running: boolean, bridgeConnected: boolean): ConsoleEvent {
+  if (!running && bridgeConnected) {
+    return pausedWithBridgeEvent();
+  }
   return {
     code: running ? "clock_resumed" : "clock_paused",
     level: "info",
     source: { kind: "pantin" },
     params: {},
   };
+}
+
+export function pausedWithBridgeEvent(): ConsoleEvent {
+  return {
+    code: "clock_paused_with_bridge",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: {},
+  };
+}
+
+// ADR 0031 point 6: the PLC wrote a forced tag; its write was ignored.
+export function forcedTagWrittenEvent(
+  tag: string,
+  forcedValue: number,
+  writtenValue: number,
+): ConsoleEvent {
+  return {
+    code: "forced_tag_written",
+    level: "error",
+    source: { kind: "pantin" },
+    params: { tag, forcedValue, writtenValue },
+  };
+}
+
+export type ConnectionLossReason = "closed" | "timeout";
+
+// ADR 0045 point 11.
+export function plcModuleEvent(
+  module: string,
+  status: { connected: true } | { connected: false; reason: ConnectionLossReason },
+): ConsoleEvent {
+  const source = { kind: "pantin" } as const;
+  return status.connected
+    ? { code: "plc_connected", level: "info", source, params: { module } }
+    : {
+        code: "plc_disconnected",
+        level: "warning",
+        source,
+        params: { module, reason: status.reason },
+      };
+}
+
+export function bridgeEvent(
+  status: { connected: true } | { connected: false; reason: ConnectionLossReason },
+): ConsoleEvent {
+  const source = { kind: "pantin" } as const;
+  return status.connected
+    ? { code: "bridge_connected", level: "info", source, params: {} }
+    : { code: "bridge_disconnected", level: "warning", source, params: { reason: status.reason } };
 }
 
 const MAX_STEP_ERROR_DETAIL = 300;

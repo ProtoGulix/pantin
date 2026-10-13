@@ -41,6 +41,40 @@ All notable changes to Pantin. The format follows
   ADR 0042 trihedron frame), in the physics step and in the pose response: a
   belt or guide on a conveyor module carried by a lift rides with it (ADR 0043
   point 1).
+- Phase 7, slice P1 (ADR 0045, ADR 0046): the tag bus, a WebSocket at
+  `GET /api/pantins/:pantinId/bus` served by the core with `ws` 8.22.0
+  (`@types/ws` 8.18.2 for development). Messages `hello`, `subscribe`,
+  `write`, `release`, `plc_status` and `welcome`, `snapshot`, `tags`, `ack`,
+  `error`, `console`, `clock`, `io_changed` are Zod schemas in
+  `@pantin/protocol` (`tag-bus.ts`, version 1) with shared fixtures in
+  `packages/protocol/fixtures` for the Python bridge. The upgrade checks the
+  Host (421), the Origin (403; absent is accepted) and refuses the
+  `X-Pantin-Exposure` header (403); at most 16 bus connections, one `plc` per
+  Pantin, the `plc` role from loopback or the core's listen address only
+  (close codes 4000 to 4005), a ping every second and an end to a connection
+  with no pong for 3 s. The `plc` role needs an I/O mapping, which slice P2
+  provides: until then the core refuses it with 4003.
+- Write sources and forced tags (ADR 0031 point 6, ADR 0045 point 5): a client
+  write, over REST or the bus, forces its tag; a PLC write to a forced tag is
+  ignored, acknowledged as ignored and logged as `forced_tag_written`; releasing
+  a tag (`DELETE .../tags/:tag/force`, `DELETE .../forces`, bus `release`)
+  applies the PLC's last value; reset and discard clear the forces. `forced`
+  is part of every tag.
+- Watchdog on the core's side (ADR 0045 point 11): a lost PLC module, or a lost
+  bridge, resets the bit commands mapped on it to 0, with the console codes
+  `plc_connected`, `plc_disconnected`, `bridge_connected` and
+  `bridge_disconnected`; pausing with a bridge connected writes
+  `clock_paused_with_bridge`. French and English wording in the viewer.
+- `deploy/dev-exposure`: the nginx site answers 403 for the tag bus and marks
+  every proxied request with `X-Pantin-Exposure: cloudflare` (ADR 0046 point 7).
+  The site must be installed again by hand.
+
+### Changed
+
+- A bit tag accepts only 0 or 1 and an integer tag only whole numbers, over REST
+  and the bus (ADR 0045 point 5, ends the ADR 0012 point 2 tolerance).
+- Every REST tag write now forces its tag, the emitter button of the viewer
+  included, until it is released.
 
 ### Fixed
 

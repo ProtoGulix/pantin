@@ -24,6 +24,8 @@ import {
   replaceConveyorItem,
 } from "../domain/conveyor-edits.ts";
 import { forgetEmitter, forgetPresenceSensor, type PhysicsState } from "../domain/physics-state.ts";
+import { forgetTagStates } from "../domain/tag-states.ts";
+import { tagStateOwnerPrefix } from "../domain/tags.ts";
 import { loadSettledPantin } from "./mesh-lifecycle.ts";
 import { type OpenPantin, type ServiceContext, updateDocument } from "./open-pantins.ts";
 
@@ -36,6 +38,8 @@ import { type OpenPantin, type ServiceContext, updateDocument } from "./open-pan
 type Forgetting = {
   afterChange?: (state: PhysicsState, id: string) => PhysicsState;
   afterDelete?: (state: PhysicsState, id: string) => PhysicsState;
+  // The kind owns command tags, whose forced state goes with a deleted item.
+  tagOwner?: "emitter";
 };
 
 // Runs on the OpenPantin that took the edit, right after updateDocument
@@ -88,6 +92,9 @@ function operationsOf<
         deleteConveyorItem(kind, document, id),
       );
       forget(openPantin, id, forgetting.afterDelete);
+      if (forgetting.tagOwner !== undefined) {
+        forgetTagStates(openPantin.tagStates, tagStateOwnerPrefix(forgetting.tagOwner, id));
+      }
       return response;
     },
   };
@@ -99,6 +106,7 @@ export function conveyorOperations(context: ServiceContext) {
   const absorbers = operationsOf<Absorber, CreateAbsorberRequest>(context, ABSORBERS);
   const emitters = operationsOf<Emitter, CreateEmitterRequest>(context, EMITTERS, {
     afterDelete: forgetEmitter,
+    tagOwner: "emitter",
   });
   const presenceSensors = operationsOf<PresenceSensor, CreatePresenceSensorRequest>(
     context,

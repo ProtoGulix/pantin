@@ -121,6 +121,7 @@ function commandStore() {
     type: "bit" as const,
     direction: "command" as const,
     value,
+    forced: false,
   }));
   const setDriveFault = vi.fn(async () => ({ jammedJoints: [], unresponsiveDrives: ["v1"] }));
   const setJointFault = vi.fn(async () => ({ jammedJoints: ["j1"], unresponsiveDrives: [] }));
@@ -131,7 +132,13 @@ function commandStore() {
     listTags: async () => ({
       stepCount: 0,
       tags: [
-        { name: "a.v1.coil_14", type: "bit" as const, direction: "command" as const, value: 0 },
+        {
+          name: "a.v1.coil_14",
+          type: "bit" as const,
+          direction: "command" as const,
+          value: 0,
+          forced: false,
+        },
       ],
       drives: [],
     }),

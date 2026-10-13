@@ -46,6 +46,7 @@ export function startTestServer(
     reportRejectedSource: () => undefined,
     simulationTimer: createManualTimer().timer,
     streamTimer: createManualTimer().timer,
+    busTimer: createManualTimer().timer,
     ...overrides,
   });
 }

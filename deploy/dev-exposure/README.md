@@ -25,6 +25,12 @@ sudo ln -s /etc/nginx/sites-available/pantin-dev /etc/nginx/sites-enabled/pantin
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
+The site also answers 403 for the tag bus (`/api/pantins/<id>/bus`, ADR 0046
+point 7) and marks every proxied request with `X-Pantin-Exposure: cloudflare`,
+which the core refuses on a bus upgrade. To update an installed site, copy the
+file again over `/etc/nginx/sites-available/pantin-dev` and run the last line
+of the block above.
+
 ## 3. Public hostname of the tunnel (dashboard)
 
 Zero Trust → Networks → Tunnels → the machine's tunnel → Public Hostname →
@@ -49,6 +55,20 @@ by email, then the viewer opens.
   ```sh
   curl -i -H 'Host: pantin-dev.frezille.fr' -H 'X-Forwarded-Proto: https' http://<machine address>/api/pantins
   ```
+
+- The tag bus must not be reachable through the exposure. Run this on the
+  machine (it goes through nginx, with the exposure's Host name):
+
+  ```sh
+  curl -i -H 'Host: pantin-dev.frezille.fr' -H 'X-Forwarded-Proto: https' \
+    -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+    http://127.0.0.1/api/pantins/<any id>/bus
+  ```
+
+  It must answer `403 Forbidden`, never `101 Switching Protocols`. Repeat it
+  with `/bus/` at the end of the path: same answer. Nothing else the
+  exposure serves uses WebSockets (the viewer uses SSE), so the site forwards
+  no `Upgrade` header.
 
 ## Remove the exposure
 

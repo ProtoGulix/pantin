@@ -5,7 +5,7 @@ import { conveyorLine, photoelectricCell } from "../test-support/conveyor-fixtur
 import { benchesClosedAfterEach } from "../test-support/physics-bench.ts";
 import { testPhysicsWorldFactory } from "../test-support/physics-factory.ts";
 import { resetRuntimeState } from "./open-pantins.ts";
-import { listTags } from "./simulation.ts";
+import { listTags } from "./tag-operations.ts";
 
 // Presence sensors in the step (ADR 0043 points 8, 10 and 11): rays cast once
 // per step, outputs stored with the step, cleared by reset.

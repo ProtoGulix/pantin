@@ -1,4 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
   isHostAccepted,
   isSourceAccepted,
@@ -119,5 +121,29 @@ describe("isHostAccepted", () => {
 
   it("accepts [::1] on an IPv6 loopback listener", () => {
     expect(isHostAccepted(configFor("::1"), "[::1]:4800", 4800)).toBe(true);
+  });
+});
+
+// Shared with the Python bridge (ADR 0046 point 2): its pytest reads the same file.
+const AcceptanceFixtureSchema = z.object({
+  sourceAcceptance: z.array(
+    z.object({
+      allow: z.array(z.string()),
+      source: z.string(),
+      accepted: z.boolean(),
+      note: z.string(),
+    }),
+  ),
+});
+const ACCEPTANCE_CASES = AcceptanceFixtureSchema.parse(
+  JSON.parse(
+    readFileSync(new URL("../../../protocol/fixtures/address-cases.json", import.meta.url), "utf8"),
+  ) as unknown,
+).sourceAcceptance;
+
+describe("isSourceAccepted on the shared fixtures", () => {
+  it.each(ACCEPTANCE_CASES.map((entry) => [entry.note, entry] as const))("%s", (_note, entry) => {
+    const config = configFor("127.0.0.1", entry.allow);
+    expect(isSourceAccepted(config, entry.source)).toBe(entry.accepted);
   });
 });

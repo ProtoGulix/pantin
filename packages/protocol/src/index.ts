@@ -19,3 +19,4 @@ export * from "./placement.ts";
 export * from "./sensor.ts";
 export * from "./sensor-api.ts";
 export * from "./tag.ts";
+export * from "./tag-bus.ts";

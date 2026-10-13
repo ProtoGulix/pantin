@@ -15,7 +15,8 @@ import {
   renameDriveTagKey,
   updateDriveInDocument,
 } from "../domain/drive-rules.ts";
-import { renamedTags } from "../domain/tags.ts";
+import { forgetTagStates } from "../domain/tag-states.ts";
+import { renamedTags, tagStateOwnerPrefix } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
 import { recordConsoleEvents } from "./console-record.ts";
 import { loadSettledPantin } from "./mesh-lifecycle.ts";
@@ -37,6 +38,7 @@ export function forgetDriveRuntimeState(
   openPantin.driveFeedback.delete(driveId);
   openPantin.driveDiagnostics.delete(driveId);
   openPantin.unresponsiveDriveIds.delete(driveId);
+  forgetTagStates(openPantin.tagStates, tagStateOwnerPrefix("drive", driveId));
 }
 
 function driveOf(document: PantinDocument, driveId: string): Drive | undefined {

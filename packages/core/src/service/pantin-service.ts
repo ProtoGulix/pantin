@@ -16,11 +16,13 @@ import {
 } from "../domain/pantin-document.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { PRODUCT_LIMIT } from "../domain/spawn-planning.ts";
+import type { WriteSource } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { busOperations } from "./bus-operations.ts";
 import { clockOperations, toClockState } from "./clock-operations.ts";
 import { readConsole } from "./console-operations.ts";
 import { conveyorOperations } from "./conveyor-operations.ts";
@@ -51,8 +53,9 @@ import {
 import { orphanMeshOperations } from "./orphan-mesh-cleanup.ts";
 import { disposePhysics } from "./physics-runtime.ts";
 import { sensorOperations } from "./sensor-operations.ts";
-import { listTags, runSimulationSteps, writeTag } from "./simulation.ts";
+import { runSimulationSteps } from "./simulation.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
+import { listTags, releaseAllTags, releaseTag, writeTag } from "./tag-operations.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
 // only on save. One service per server instance, no shared state.
@@ -236,8 +239,11 @@ export function createPantinService(
     setJointPosition: (pantinId: PantinId, jointId: string, position: number) =>
       setJointPosition(context, pantinId, jointId, position),
     listTags: (pantinId: PantinId) => listTags(context, pantinId),
-    writeTag: (pantinId: PantinId, tagName: string, value: number) =>
-      writeTag(context, pantinId, tagName, value),
+    writeTag: (pantinId: PantinId, tagName: string, value: number, source: WriteSource) =>
+      writeTag(context, pantinId, tagName, value, source),
+    releaseTag: (pantinId: PantinId, tagName: string) => releaseTag(context, pantinId, tagName),
+    releaseAllTags: (pantinId: PantinId) => releaseAllTags(context, pantinId),
+    ...busOperations(context),
     readConsole: (pantinId: PantinId, after: number) => readConsole(context, pantinId, after),
     ...faceOperations(context),
     runSimulationSteps: (tick: SimulationTick) => runSimulationSteps(context, tick),

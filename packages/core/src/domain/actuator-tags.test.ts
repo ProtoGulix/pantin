@@ -77,6 +77,7 @@ const runtime = {
   driveFeedback: new Map(),
   sensorOutputs: new Map(),
   physicsState: emptyPhysicsState(),
+  tagStates: new Map(),
 };
 
 describe("tags with drives and actuators", () => {

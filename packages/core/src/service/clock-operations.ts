@@ -35,7 +35,7 @@ async function setClockRunning(
   if (openPantin.clock.running !== running) {
     openPantin.clock.running = running;
     openPantin.clock.window = EMPTY_RATIO_WINDOW;
-    recordConsoleEvents(context, openPantin, [clockEvent(running)]);
+    recordConsoleEvents(context, openPantin, [clockEvent(running, openPantin.bridgeConnected)]);
   }
   return toClockState(openPantin);
 }

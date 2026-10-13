@@ -44,7 +44,13 @@ describe("PantinApiClient drives", () => {
   });
 
   it("writes a tag with PUT, its name encoded in the URL", async () => {
-    const tag = { name: "main.valve.coil_14", type: "bit", direction: "command", value: 1 };
+    const tag = {
+      name: "main.valve.coil_14",
+      type: "bit",
+      direction: "command",
+      value: 1,
+      forced: true,
+    };
     const { fetchFunction, requests } = fakeFetch(jsonResponse({ tag }));
     expect(
       await createPantinApiClient(fetchFunction).writeTag("press", "main.valve.coil_14", 1),

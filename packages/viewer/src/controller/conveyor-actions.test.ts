@@ -175,7 +175,7 @@ describe("Créer un produit", () => {
     const writes: [string, number][] = [];
     const writeTag = vi.fn(async (_id: string, name: string, value: number) => {
       writes.push([name, value]);
-      return { name, type: "bit" as const, direction: "command" as const, value };
+      return { name, type: "bit" as const, direction: "command" as const, value, forced: false };
     });
     const store = openStore({ writeTag });
     await spawnProduct(store, cartonSource.id);
@@ -210,7 +210,7 @@ describe("Créer un produit after a failed closing write", () => {
         throw new PantinApiError("api", "Connection lost.", "internal_error", 500);
       }
       writes.push(value);
-      return { name, type: "bit" as const, direction: "command" as const, value };
+      return { name, type: "bit" as const, direction: "command" as const, value, forced: false };
     });
     const store = openStore({ writeTag });
     await spawnProduct(store, cartonSource.id);

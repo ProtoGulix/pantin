@@ -17,6 +17,7 @@ import {
   type TagOwner,
   tagEntries,
 } from "./tag-entries.ts";
+import type { TagState } from "./tag-states.ts";
 
 // Every tag of a Pantin, named "<assembly>.<tagKey>.<member>" (ADR 0019).
 // A movable joint has a "position" feedback, and a "setpoint" command while
@@ -37,9 +38,12 @@ export type TagRuntime = {
   sensorOutputs: ReadonlyMap<string, SensorOutput>;
   // The emitters' last spawn values and the presence sensors' outputs (ADR 0043 point 11).
   physicsState: PhysicsState;
+  // Whether each command tag is forced, by `tagStateKey` (ADR 0045 point 5).
+  tagStates: ReadonlyMap<string, TagState>;
 };
 
-function currentValue(entry: TagEntry, runtime: TagRuntime): number {
+/** The value a tag holds now: a command's last written value, a feedback's last stepped one. */
+export function tagValueOf(entry: TagEntry, runtime: TagRuntime): number {
   const { owner, member } = entry;
   if (owner.kind === "joint") {
     return member === "setpoint"
@@ -70,13 +74,18 @@ function currentValue(entry: TagEntry, runtime: TagRuntime): number {
   return values.get(owner.drive.id)?.[member] ?? 0;
 }
 
-export function describeTags(document: PantinDocument, runtime: TagRuntime): Tag[] {
-  return tagEntries(document).map((entry) => ({
+export function describeTag(entry: TagEntry, runtime: TagRuntime): Tag {
+  return {
     name: entry.name,
     type: entry.type,
     direction: entry.direction,
-    value: currentValue(entry, runtime),
-  }));
+    value: tagValueOf(entry, runtime),
+    forced: runtime.tagStates.get(tagStateKey(entry))?.forced ?? false,
+  };
+}
+
+export function describeTags(document: PantinDocument, runtime: TagRuntime): Tag[] {
+  return tagEntries(document).map((entry) => describeTag(entry, runtime));
 }
 
 // A wrong member of a real owner ("main.verin.speed") gets that owner's tag
@@ -150,7 +159,21 @@ function ownerId(owner: TagOwner): string {
   }
 }
 
-const tagKeyOf = (entry: TagEntry) => `${ownerId(entry.owner)}/${entry.member}`;
+/** The start of the state keys of every tag one element owns. */
+export const tagStateOwnerPrefix = (kind: TagOwner["kind"], id: string) => `${kind}:${id}/`;
+
+// Identifies a tag across renames: its owner and member, never its name.
+export const tagStateKey = (entry: TagEntry) => `${ownerId(entry.owner)}/${entry.member}`;
+
+/**
+ * Changes when a tag appears, disappears, is renamed or changes type or
+ * direction: what the bus tells clients with `io_changed` (ADR 0045 point 7).
+ */
+export function tagListSignature(document: PantinDocument): string {
+  return tagEntries(document)
+    .map((entry) => `${entry.name}:${entry.type}:${entry.direction}`)
+    .join("\n");
+}
 
 /**
  * Every tag whose name differs between two versions of a document, paired by
@@ -158,9 +181,9 @@ const tagKeyOf = (entry: TagEntry) => `${ownerId(entry.owner)}/${entry.member}`;
  * fixed, or driven) is not a rename, so it is not listed.
  */
 export function renamedTags(before: PantinDocument, after: PantinDocument): RenamedTag[] {
-  const oldNames = new Map(tagEntries(before).map((entry) => [tagKeyOf(entry), entry.name]));
+  const oldNames = new Map(tagEntries(before).map((entry) => [tagStateKey(entry), entry.name]));
   return tagEntries(after).flatMap((entry) => {
-    const from = oldNames.get(tagKeyOf(entry));
+    const from = oldNames.get(tagStateKey(entry));
     return from === undefined || from === entry.name ? [] : [{ from, to: entry.name }];
   });
 }
@@ -175,12 +198,14 @@ export function vanishedAndAppearedTags(
 ): { removedTags: string[]; addedTags: string[] } {
   const beforeEntries = tagEntries(before);
   const afterEntries = tagEntries(after);
-  const keysBefore = new Set(beforeEntries.map(tagKeyOf));
-  const keysAfter = new Set(afterEntries.map(tagKeyOf));
+  const keysBefore = new Set(beforeEntries.map(tagStateKey));
+  const keysAfter = new Set(afterEntries.map(tagStateKey));
   return {
     removedTags: beforeEntries
-      .filter((entry) => !keysAfter.has(tagKeyOf(entry)))
+      .filter((entry) => !keysAfter.has(tagStateKey(entry)))
       .map((e) => e.name),
-    addedTags: afterEntries.filter((entry) => !keysBefore.has(tagKeyOf(entry))).map((e) => e.name),
+    addedTags: afterEntries
+      .filter((entry) => !keysBefore.has(tagStateKey(entry)))
+      .map((e) => e.name),
   };
 }

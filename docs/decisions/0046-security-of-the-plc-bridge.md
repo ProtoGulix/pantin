@@ -96,7 +96,8 @@ Facts checked on 2026-10-13:
    - Modbus is never proxied by nginx, `cloudflared` or any TCP tunnel.
    - The tag bus is not reachable through the ADR 0014 exposure. The nginx
      site in `deploy/dev-exposure/` answers 403 for
-     `^/api/pantins/[^/]+/bus$`. It also sets
+     `^/api/pantins/[^/]+/bus/*$` (the core ignores empty path segments,
+     so `/bus/` reaches the bus too), and forwards no `Upgrade` header. It also sets
      `X-Pantin-Exposure: cloudflare` on every proxied request, replacing
      any incoming value. The core refuses a bus upgrade that carries this
      header, so a later nginx edit that drops the location rule still

@@ -85,8 +85,20 @@ describe("end-of-stroke switches over REST (phase 5 exit)", () => {
     const response = await sendRaw(axis.server, "GET", "/api/pantins/axis/tags");
     const tags = TagListResponseSchema.parse(response.json).tags;
     expect(tags.filter((tag) => tag.name.endsWith(".state"))).toEqual([
-      { name: "carriage.extended.state", type: "bit", direction: "feedback", value: 0 },
-      { name: "carriage.retracted.state", type: "bit", direction: "feedback", value: 1 },
+      {
+        name: "carriage.extended.state",
+        type: "bit",
+        direction: "feedback",
+        value: 0,
+        forced: false,
+      },
+      {
+        name: "carriage.retracted.state",
+        type: "bit",
+        direction: "feedback",
+        value: 1,
+        forced: false,
+      },
     ]);
     const refused = await axis.writeTag("carriage.extended.state", 1);
     expect(refused.status).toBe(400);
@@ -154,6 +166,7 @@ describe("encoder over REST", () => {
       type: "integer",
       direction: "feedback",
       value: 1000,
+      forced: false,
     });
   });
 });

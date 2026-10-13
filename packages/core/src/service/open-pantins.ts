@@ -10,6 +10,7 @@ import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
+import type { TagStates } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { recordConsoleEvents } from "./console-record.ts";
@@ -64,6 +65,15 @@ export type OpenPantin = {
   // with its empty snapshot, and the state around it.
   physics: PhysicsRuntime;
   physicsState: PhysicsState;
+  // Forced tags and the PLC's last values (ADR 0045 point 5), by tag state
+  // key, never saved; pruned of deleted elements for `tagStatesDocument`.
+  tagStates: TagStates;
+  tagStatesDocument: PantinDocument;
+  // How many times the runtime was reset or discarded: bus clients that see
+  // it change get a new snapshot (ADR 0045 point 5).
+  resetCount: number;
+  // A PLC bridge is connected on the tag bus (ADR 0045 point 12), set by the bus.
+  bridgeConnected: boolean;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
   // The simulation clock (ADR 0032), never saved: reset leaves it as it is.
@@ -105,6 +115,10 @@ export function newOpenPantin(
     sensorOutputs: new Map(),
     physics: buildPhysicsRuntime(createWorld, document),
     physicsState: emptyPhysicsState(),
+    tagStates: new Map(),
+    tagStatesDocument: document,
+    resetCount: 0,
+    bridgeConnected: false,
     stepCount: 0,
     clock: newClockRuntime(),
     console: emptyConsole(consoleId),
@@ -130,6 +144,8 @@ export function resetRuntimeState(context: ServiceContext, openPantin: OpenPanti
   openPantin.unresponsiveDriveIds.clear();
   openPantin.jammedJointIds.clear();
   openPantin.sensorOutputs.clear();
+  openPantin.tagStates.clear();
+  openPantin.resetCount += 1;
   resetPhysics(context.physics, openPantin);
 }
 // Promises, not values: two requests loading the same Pantin at once share

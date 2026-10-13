@@ -112,7 +112,7 @@ describe("service.resetRuntime", () => {
       });
       await service.renamePantin("line", "Renamed");
       await service.setClockRunning("line", false);
-      await service.writeTag("line", SPAWN, 1);
+      await service.writeTag("line", SPAWN, 1, "client");
       await service.stepClock("line", 30);
       await service.resetRuntime("line");
       expect((await service.getPantin("line")).unsavedChanges).toBe(true);
@@ -121,7 +121,7 @@ describe("service.resetRuntime", () => {
         0,
       );
       // The old product is gone, so the emitter is not blocked by it.
-      await service.writeTag("line", SPAWN, 1);
+      await service.writeTag("line", SPAWN, 1, "client");
       await service.stepClock("line", 1);
       const codes = (await service.readConsole("line", 0)).entries.map(({ code }) => code);
       expect(codes).not.toContain("emitter_blocked");

@@ -4,7 +4,8 @@ import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { newOpenPantin } from "../service/open-pantins.ts";
 import { createServiceContext } from "../service/pantin-service.ts";
 import { disposePhysics } from "../service/physics-runtime.ts";
-import { runSteps, writeTag } from "../service/simulation.ts";
+import { runSteps } from "../service/simulation.ts";
+import { writeTag } from "../service/tag-operations.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
 import { testPhysicsWorldFactory } from "./physics-factory.ts";
 
@@ -32,7 +33,7 @@ function openBench(document: PantinDocument, options: BenchOptions = {}) {
   return {
     context,
     openPantin,
-    write: (tag: string, value: number) => writeTag(context, PANTIN_ID, tag, value),
+    write: (tag: string, value: number) => writeTag(context, PANTIN_ID, tag, value, "client"),
     step: (steps: number) => runSteps(context, openPantin, steps),
     products: () => openPantin.physicsState.products,
     close: () => disposePhysics(openPantin),

@@ -77,6 +77,7 @@ const noRuntime = {
   driveFeedback: new Map(),
   sensorOutputs: new Map(),
   physicsState: emptyPhysicsState(),
+  tagStates: new Map(),
 };
 
 function apiErrorOf(action: () => unknown): ApiError {
@@ -94,8 +95,20 @@ function apiErrorOf(action: () => unknown): ApiError {
 describe("describeTags of joints", () => {
   it("gives a setpoint and a position to each movable joint, none to a fixed one", () => {
     expect(describeTags(document, noRuntime)).toEqual([
-      { name: "axis_800.stroke.setpoint", type: "float", direction: "command", value: 0 },
-      { name: "axis_800.stroke.position", type: "float", direction: "feedback", value: 0 },
+      {
+        name: "axis_800.stroke.setpoint",
+        type: "float",
+        direction: "command",
+        value: 0,
+        forced: false,
+      },
+      {
+        name: "axis_800.stroke.position",
+        type: "float",
+        direction: "feedback",
+        value: 0,
+        forced: false,
+      },
     ]);
   });
 
@@ -142,8 +155,8 @@ describe("tags of emitters and presence sensors (ADR 0043)", () => {
 
   it("lists spawn then state after the joints, as a command bit and a feedback bit", () => {
     expect(describeTags(withObjects, noRuntime).slice(2)).toEqual([
-      { name: "axis_800.source.spawn", type: "bit", direction: "command", value: 0 },
-      { name: "axis_800.cell.state", type: "bit", direction: "feedback", value: 0 },
+      { name: "axis_800.source.spawn", type: "bit", direction: "command", value: 0, forced: false },
+      { name: "axis_800.cell.state", type: "bit", direction: "feedback", value: 0, forced: false },
     ]);
   });
 

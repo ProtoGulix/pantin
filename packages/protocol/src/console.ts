@@ -6,6 +6,7 @@ import {
   DriveIdSchema,
   EmitterIdSchema,
   JointIdSchema,
+  KeySchema,
   SensorIdSchema,
 } from "./ids.ts";
 import { TagNameSchema } from "./tag.ts";
@@ -83,6 +84,13 @@ const ParamsSchemas = {
   // emitter id), and the products a physics rebuild removed (their count).
   spawn_skipped: z.object({ emitter: EmitterIdSchema }),
   physics_rebuilt: z.object({ products: z.number().int().positive() }),
+  // ADR 0045 point 11: a PLC module (its key in io-modules.json) lost or found
+  // its connection, and why: its last connection closed, or no request came
+  // within its watchdog time. The bridge process itself: same reasons, the
+  // bus connection closed or missed its pongs.
+  plc_module: z.object({ module: KeySchema }),
+  plc_module_lost: z.object({ module: KeySchema, reason: z.enum(["closed", "timeout"]) }),
+  bridge_lost: z.object({ reason: z.enum(["closed", "timeout"]) }),
 };
 
 const eventShapes = {
@@ -164,6 +172,38 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.physics_rebuilt,
   }),
+  plcConnected: z.object({
+    code: z.literal("plc_connected"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.plc_module,
+  }),
+  plcDisconnected: z.object({
+    code: z.literal("plc_disconnected"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.plc_module_lost,
+  }),
+  bridgeConnected: z.object({
+    code: z.literal("bridge_connected"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.clock,
+  }),
+  bridgeDisconnected: z.object({
+    code: z.literal("bridge_disconnected"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.bridge_lost,
+  }),
+  // ADR 0045 point 12: paused while a bridge is connected, which the PLC sees
+  // as a frozen machine.
+  clockPausedWithBridge: z.object({
+    code: z.literal("clock_paused_with_bridge"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.clock,
+  }),
 };
 
 // One event: what the core reports, before it gets a sequence and times.
@@ -182,6 +222,11 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.emitterBlocked,
   eventShapes.productLimit,
   eventShapes.physicsRebuilt,
+  eventShapes.plcConnected,
+  eventShapes.plcDisconnected,
+  eventShapes.bridgeConnected,
+  eventShapes.bridgeDisconnected,
+  eventShapes.clockPausedWithBridge,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
 export type ConsoleCode = ConsoleEvent["code"];
@@ -213,6 +258,11 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.emitterBlocked.extend(entryFields),
   eventShapes.productLimit.extend(entryFields),
   eventShapes.physicsRebuilt.extend(entryFields),
+  eventShapes.plcConnected.extend(entryFields),
+  eventShapes.plcDisconnected.extend(entryFields),
+  eventShapes.bridgeConnected.extend(entryFields),
+  eventShapes.bridgeDisconnected.extend(entryFields),
+  eventShapes.clockPausedWithBridge.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
 
