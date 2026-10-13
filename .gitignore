@@ -11,7 +11,7 @@ coverage/
 # Graphify: local knowledge graph, rebuilt after each commit by lefthook
 graphify-out/
 
-# Python (bridge sidecar, if retained)
+# Python (bridge, step converter)
 __pycache__/
 .venv/
 .ruff_cache/

@@ -1,0 +1,2182 @@
+{
+  "description": "Responses of GET /api/pantins/:pantinId/io (IoMappingResponse, ADR 0045 point 7), shared by the core's Zod schema and the Python bridge's decoder. Each `message` is a decoded JSON answer. Every decoder must accept every `valid` entry and refuse every `invalid` one. The pairing of a zone with an io type is checked by the core's validation, not by the schema, so no entry here depends on it.",
+  "version": 1,
+  "valid": [
+    {
+      "name": "a valid mapping with two modules and every zone",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "io files missing",
+      "message": {
+        "status": "missing",
+        "mappingId": null,
+        "modules": [],
+        "rows": [],
+        "problems": [],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping with a problem on a line",
+      "message": {
+        "status": "invalid",
+        "mappingId": "abc",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          }
+        ],
+        "rows": [],
+        "problems": [
+          {
+            "file": "io.csv",
+            "line": 3,
+            "column": 1,
+            "code": "unknown_tag",
+            "message": "No tag \"x.y.z\"."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping with a problem that has no line",
+      "message": {
+        "status": "invalid",
+        "mappingId": "abc",
+        "modules": [],
+        "rows": [],
+        "problems": [
+          {
+            "file": "io-modules.json",
+            "line": null,
+            "column": null,
+            "code": "modules_invalid",
+            "message": "Bad port."
+          }
+        ],
+        "unmappedTags": []
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "not an object",
+      "message": []
+    },
+    {
+      "name": "unknown status",
+      "message": {
+        "status": "ok",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "no status",
+      "message": {
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "mappingId as a number",
+      "message": {
+        "status": "valid",
+        "mappingId": 7,
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "modules as an object",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": {},
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "rows missing",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "unmappedTags with a bad tag name",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["Bad Name"]
+      }
+    },
+    {
+      "name": "module port as text",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": "1502",
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "module port below 1024",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 80,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "module with an unknown word order",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "middle",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "module unit id 0",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 0,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "module watchdog below 100 ms",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 50
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "module with an unknown field",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "extra": 1
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "module key with capitals",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "M1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "row with an unknown zone",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "register",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "row with an unknown io type",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "INT",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "row with a fractional address",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1.5,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "row with line 0",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 0,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "row without a tag",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": null,
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "problem with an unknown code",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [
+          {
+            "file": "io.csv",
+            "line": 1,
+            "column": 1,
+            "code": "oops",
+            "message": "x"
+          }
+        ],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "problem with line 0",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [
+          {
+            "file": "io.csv",
+            "line": 0,
+            "column": 1,
+            "code": "bad_header",
+            "message": "x"
+          }
+        ],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "problem about another file",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250
+          }
+        ],
+        "rows": [
+          {
+            "line": 2,
+            "tag": "press.valve.extend",
+            "variable": "press_valve_extend",
+            "module": "m1",
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "extend coil",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 3,
+            "tag": "press.valve.retract",
+            "variable": "press_valve_retract",
+            "module": "m1",
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "command"
+          },
+          {
+            "line": 4,
+            "tag": "press.ext.state",
+            "variable": "press_ext_state",
+            "module": "m1",
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL",
+            "comment": "",
+            "type": "bit",
+            "direction": "feedback"
+          },
+          {
+            "line": 5,
+            "tag": "axis.stroke.setpoint",
+            "variable": "axis_stroke_setpoint",
+            "module": "m1",
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "command"
+          },
+          {
+            "line": 6,
+            "tag": "axis.stroke.position",
+            "variable": "axis_stroke_position",
+            "module": "m1",
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL",
+            "comment": "",
+            "type": "float",
+            "direction": "feedback"
+          },
+          {
+            "line": 7,
+            "tag": "axis.encoder.count",
+            "variable": "axis_encoder_count",
+            "module": "m2",
+            "zone": "input_register",
+            "address": 4,
+            "ioType": "DINT",
+            "comment": "",
+            "type": "integer",
+            "direction": "feedback"
+          }
+        ],
+        "problems": [
+          {
+            "file": "other.csv",
+            "line": 1,
+            "column": 1,
+            "code": "bad_header",
+            "message": "x"
+          }
+        ],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    }
+  ]
+}

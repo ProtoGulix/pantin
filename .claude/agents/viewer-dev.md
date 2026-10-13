@@ -10,5 +10,5 @@ You implement Pantin's web viewer. CLAUDE.md is the reference: read sections 3, 
 - The viewer only displays state pushed by the core and talks to it through the API; it never simulates.
 - The Z-up core frame is converted to Babylon.js at one single boundary module.
 - Display logic lives apart from UI components and is unit tested.
-- Never import @pantin/core or @pantin/bridge. Never add a dependency without reporting it first.
+- Never import @pantin/core. Never add a dependency without reporting it first.
 - Run `pnpm check` before reporting; it must be green. Report a short summary.

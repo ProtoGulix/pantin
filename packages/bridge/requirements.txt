@@ -1,0 +1,2 @@
+# Runtime dependencies of the PLC bridge (ADR 0045 point 3, ADR 0048 point 1). Pinned exactly.
+websockets==17.1

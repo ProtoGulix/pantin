@@ -37,6 +37,22 @@ All notable changes to Pantin. The format follows
   without touching existing lines; `pantin gvl <folder>` prints the CODESYS
   global variable list of a valid mapping; `pantin validate` reports io
   problems when the files exist.
+- PLC bridge, Python package (ADR 0045 slice P3, ADR 0046): `packages/bridge`
+  becomes `pantin-bridge` (websockets 17.1 only at run time, run with `python
+  -m pantin_bridge --core <url> --pantin <id> [--listen <ip>] [--allow <ip or
+  cidr>]...`), checked by `pnpm check` with the step converter's ruff, strict
+  mypy and pytest; the TypeScript stub and the `@pantin/bridge` name are
+  gone. One hand-written Modbus TCP slave per module (ADR 0048: asyncio, no
+  Modbus library; function codes 1 to 6, 15, 16 and 23; exceptions 1, 2, 3 and
+  11), on 127.0.0.1 by default; a private address needs `--allow`, and a
+  public, wildcard, link-local or hostname address is refused. Sources are
+  filtered at accept before any read, at most 4 connections per module, and a
+  connection silent for three watchdogs (5 s at least) is closed. REAL and DINT
+  registers follow the module word order, the watchdog tells the core when a
+  module is lost, and a snapshot gives the core the PLC's last values back. New shared fixtures
+  `io-mapping-responses.json`. pymodbus 3.15.0 is a test client only; the slave
+  is checked by table-driven tests, raw-socket tests, a `hypothesis` fuzz test
+  and a test that no module imports a Modbus library.
 - Phase 6, in progress (ADR 0043): schema version 12 with belts, guides,
   emitters, absorbers and presence sensors; the Rapier physics engine in the
   core; products carried by belts driven through the drive, motor and drum

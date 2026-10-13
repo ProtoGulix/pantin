@@ -1,0 +1,58 @@
+# The bridge is not published: it runs from its own virtual environment
+# (setup.sh), so there is no [build-system] and no build backend dependency.
+[project]
+name = "pantin-bridge"
+version = "0.1.0"
+description = "Bridges a Pantin core to a PLC: Modbus TCP slaves fed by the tag bus (ADR 0045)."
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = ["websockets==17.1"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "F",    # pyflakes
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "I",    # import sorting
+    "N",    # pep8 naming
+    "UP",   # pyupgrade
+    "ANN",  # type annotations everywhere
+    "B",    # bugbear
+    "A",    # shadowed builtins
+    "C4",   # comprehensions
+    "SIM",  # simplifications
+    "RET",  # return statements
+    "PTH",  # pathlib over os.path
+    "PL",   # pylint
+    "RUF",  # ruff specific
+    "S",    # security (bandit)
+    "BLE",  # blind except
+    "T20",  # stray print calls
+    "PT",   # pytest style
+    "ERA",  # commented-out code
+]
+ignore = [
+    # Magic numbers are fine in tests and in small constants that are named anyway.
+    "PLR2004",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use plain asserts, and open local sockets and the loopback addresses on purpose.
+"tests/**" = ["S101", "S104"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["--strict-markers", "--strict-config"]
+# A warning is a bug waiting (an un-awaited coroutine, a deprecation): make it fail.
+filterwarnings = ["error"]

@@ -197,8 +197,6 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
 
-  packages/bridge: {}
-
   packages/cli:
     dependencies:
       '@pantin/core':

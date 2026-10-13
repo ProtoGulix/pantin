@@ -1,10 +1,11 @@
-// Enforces the package boundaries of CLAUDE.md section 4: core, viewer and bridge
-// only talk through the tag bus and the API, never through imports.
-const isolatedPackages = ["core", "viewer", "bridge"];
+// Enforces the package boundaries of CLAUDE.md section 4: core and viewer only talk through
+// the tag bus and the API, never through imports. The bridge is Python (ADR 0045): it has
+// no TypeScript to cruise, and its only link to the protocol is the shared fixtures.
+const isolatedPackages = ["core", "viewer"];
 
 const isolationRules = isolatedPackages.map((packageName) => ({
   name: `${packageName}-is-isolated`,
-  comment: `${packageName} must not import core, viewer or bridge: use the tag bus or the API.`,
+  comment: `${packageName} must not import core or viewer: use the tag bus or the API.`,
   severity: "error",
   from: { path: `^packages/${packageName}/` },
   to: {
