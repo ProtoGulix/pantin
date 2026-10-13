@@ -43,7 +43,7 @@ Monorepo :
     packages/sensor-types un dossier par type de capteur : schéma, évaluation, libellés (ADR 0023)
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
-    packages/bridge      pont vers les automates (Python, pymodbus, processus séparé, ADR 0007, 0045)
+    packages/bridge      pont vers les automates (Python, esclave Modbus TCP écrit à la main, processus séparé, ADR 0007, 0045, 0048)
     packages/cli         validateur, générateur de variables CODESYS
     packages/step-converter  conversion STEP vers GLB (Python, OpenCascade, processus séparé, ADR 0009)
     parts/               pièces incluses (dossiers autonomes)
@@ -59,7 +59,7 @@ Stack proposée (à confirmer en phase 0) :
 
 1. Coeur : TypeScript sous Node. Physique : Rapier en WASM, @dimforge/rapier3d-deterministic-compat 0.21.0 épinglé, jamais la build SIMD, pour garder la reproductibilité bit à bit utile aux tests et à la remise à zéro (ADR 0005). Utilisé uniquement pour produits, collisions et capteurs de présence. La cinématique des machines n'est PAS de la physique, elle est calculée directement.
 2. Viewer : Babylon.js (Apache 2.0, PBR, inspecteur, WebGPU et WebGL2). Le viewer n'a pas besoin de Havok puisqu'il ne simule rien. La licence d'usage de Havok n'est de toute façon pas vérifiée.
-3. Pont PLC : un sidecar Python (pymodbus pour Modbus TCP ; asyncua pour OPC UA plus tard), qui parle au coeur via le tag bus en WebSocket. Il ne peut pas importer Zod : il reste fidèle au protocole par des fixtures partagées dans packages/protocol/fixtures (ADR 0045). Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python avec pymodbus, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE.
+3. Pont PLC : un sidecar Python (Modbus TCP écrit à la main, ADR 0048 ; asyncua pour OPC UA plus tard), qui parle au coeur via le tag bus en WebSocket. Il ne peut pas importer Zod : il reste fidèle au protocole par des fixtures partagées dans packages/protocol/fixtures (ADR 0045). Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE. L'esclave Modbus TCP est écrit à la main sur asyncio, sans bibliothèque Modbus à l'exécution ; pymodbus ne sert que de client de référence dans les tests (spike 0009, ADR 0048).
 4. Distribution : docker compose pour le mode serveur, même code lancé en local pour les amateurs.
 
 ## 5. Modèle de données
