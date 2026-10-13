@@ -17,7 +17,7 @@ import {
   toBabylonMatrixArray,
   type Vector3Tuple,
 } from "../frames.ts";
-import { type MeshFileFormat, meshFormatFromPath } from "../mesh-format.ts";
+import { type MeshFileFormat, meshFormatFromPath, meshLoaderOptions } from "../mesh-format.ts";
 
 export interface LoadedBody {
   // Parent of everything the loader produced; carries the frame conversion.
@@ -73,9 +73,11 @@ export async function loadBody(scene: Scene, body: Body, bytes: ArrayBuffer): Pr
   if (format === null) {
     throw new Error(`mesh file "${body.mesh}" is neither .glb nor .stl.`);
   }
-  const container = await LoadAssetContainerAsync(new Uint8Array(bytes), scene, {
-    pluginExtension: `.${format}`,
-    name: body.mesh,
+  const { pluginExtension, fileName } = meshLoaderOptions(body.mesh, format);
+  // A File, not raw bytes: Babylon's STL plugin has no loadFile, so it rejects
+  // an ArrayBufferView ("Plugin does not support loading ArrayBufferView").
+  const container = await LoadAssetContainerAsync(new File([bytes], fileName), scene, {
+    pluginExtension,
   });
   const node = new TransformNode(`body:${body.id}`, scene);
   const referenceRotation = applyFrameConversion(node, body, format);

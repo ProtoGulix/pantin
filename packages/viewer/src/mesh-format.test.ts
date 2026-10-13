@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { meshFormatFromPath } from "./mesh-format.ts";
+import { meshFormatFromPath, meshLoaderOptions } from "./mesh-format.ts";
 
 describe("meshFormatFromPath", () => {
   it("picks the loader from the mesh file extension, case insensitive", () => {
@@ -17,4 +17,17 @@ describe("meshFormatFromPath", () => {
       expect(meshFormatFromPath(path)).toBeNull();
     },
   );
+});
+
+describe("meshLoaderOptions", () => {
+  it("names the plugin by extension and the in-memory file after the mesh", () => {
+    expect(meshLoaderOptions("meshes/carriage.STL", "stl")).toEqual({
+      pluginExtension: ".stl",
+      fileName: "carriage.STL",
+    });
+    expect(meshLoaderOptions("rail.glb", "glb")).toEqual({
+      pluginExtension: ".glb",
+      fileName: "rail.glb",
+    });
+  });
 });

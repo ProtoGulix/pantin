@@ -44,5 +44,10 @@ All notable changes to Pantin. The format follows
 
 ### Fixed
 
+- Viewer: STL bodies (binary and ASCII) now display. The mesh bytes were given
+  to Babylon 9.28 as a raw buffer, which its STL plugin rejects ("Plugin does
+  not support loading ArrayBufferView"); they are now given as a `File`. A body
+  whose mesh fails to load reports the error once instead of being retried at
+  every redraw.
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.

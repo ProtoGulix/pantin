@@ -19,6 +19,16 @@ export function bodyRenderKey(pantinId: string, body: Body): string {
   return [pantinId, body.id, body.mesh, format, unit, upAxis].join("|");
 }
 
+// A load result (mesh or failure) only counts while its key is still the wanted
+// one; otherwise the unit, the mesh or the Pantin changed while it ran.
+export function isCurrentLoad(
+  wantedKeys: ReadonlyMap<string, string>,
+  bodyId: string,
+  key: string,
+): boolean {
+  return wantedKeys.get(bodyId) === key;
+}
+
 export function planSceneSync(
   loadedKeysByBodyId: ReadonlyMap<string, string>,
   pantinId: string | null,

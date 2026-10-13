@@ -16,3 +16,18 @@ export function meshFormatFromPath(meshPath: string): MeshFileFormat | null {
   }
   return EXTENSION_TO_MESH_FORMAT[fileName.slice(dotIndex + 1).toLowerCase()] ?? null;
 }
+
+export interface MeshLoaderOptions {
+  // Babylon picks the plugin from this, since the bytes carry no file name.
+  pluginExtension: `.${MeshFileFormat}`;
+  // Name of the in-memory file handed to the loader (shown in its errors).
+  fileName: string;
+}
+
+// Babylon cannot load an STL from a bare ArrayBufferView (its STL plugin has
+// no loadFile), but it reads a File through the generic path. The File is
+// named after the mesh path so that the extension stays visible in errors.
+export function meshLoaderOptions(meshPath: string, format: MeshFileFormat): MeshLoaderOptions {
+  const fileName = meshPath.split("/").pop() ?? meshPath;
+  return { pluginExtension: `.${format}`, fileName };
+}

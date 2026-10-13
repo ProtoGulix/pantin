@@ -21,7 +21,7 @@ import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
 import { clickTargetOf } from "./click-target.ts";
 import { createRenderSwitch } from "./render-switch.ts";
-import { bodyRenderKey, planSceneSync } from "./scene-plan.ts";
+import { bodyRenderKey, isCurrentLoad, planSceneSync } from "./scene-plan.ts";
 import { createContext, type ViewportContext } from "./viewport-context.ts";
 import { applyPosesEachFrame, forgetPoses, pushSnapshot } from "./viewport-poses.ts";
 
@@ -135,7 +135,7 @@ async function loadAndShow(
   const key = bodyRenderKey(pantinId, body);
   const loaded = await loadBody(context.scene, body, await loadBytes(pantinId, body));
   // The Pantin or the body may have changed while the file was downloading.
-  if (context.wantedKeys.get(body.id) !== key) {
+  if (!isCurrentLoad(context.wantedKeys, body.id, key)) {
     loaded.dispose();
     return;
   }
@@ -219,7 +219,13 @@ function showBodies(
   const loads = plan.bodiesToLoad.map((body) => {
     context.wantedKeys.set(body.id, bodyRenderKey(pantinId, body));
     return loadAndShow(context, pantinId, body, loadBytes).catch((error: unknown) => {
-      context.wantedKeys.delete(body.id);
+      // The key stays in wantedKeys: the plan then treats the body as settled
+      // and does not retry at every redraw. A change of key (unit, mesh,
+      // another Pantin) or removing the body clears it. A stale failure, for a
+      // key replaced meanwhile, is dropped.
+      if (!isCurrentLoad(context.wantedKeys, body.id, bodyRenderKey(pantinId, body))) {
+        return;
+      }
       callbacks.onLoadError(body.name, error instanceof Error ? error.message : String(error));
     });
   });
