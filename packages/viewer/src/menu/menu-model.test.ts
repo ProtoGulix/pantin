@@ -152,9 +152,10 @@ describe("menu bar model layouts", () => {
       ["layout:3d", false],
       ["layout:diagram", true],
       ["layout:both", false],
+      ["layout:io", false],
     ]);
     expect(enabledCommands(editing(false))).toEqual(
-      expect.arrayContaining(["layout:3d", "layout:diagram", "layout:both"]),
+      expect.arrayContaining(["layout:3d", "layout:diagram", "layout:both", "layout:io"]),
     );
     expect(enabledCommands(listing)).not.toContain("layout:both");
   });

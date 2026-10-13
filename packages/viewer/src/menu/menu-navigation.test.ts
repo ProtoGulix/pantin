@@ -22,37 +22,42 @@ function press(key: string, overrides: Partial<KeyPress> = {}): KeyPress {
   };
 }
 
+const VIEW_MENU_ENTRIES = [
+  ["Tout cadrer", null],
+  ["Cadrer la sélection", null],
+  ["Face", null],
+  ["Arrière", null],
+  ["Gauche", null],
+  ["Droite", null],
+  ["Dessus", null],
+  ["Dessous", null],
+  ["Isométrique", null],
+  ["Inspecteur", true],
+  ["Console", false],
+  ["Changer la vue centrale", null],
+  ["3D seule", false],
+  ["Schéma des chaînes seul", false],
+  ["3D + Schéma", true],
+  ["E/S seules", false],
+  ["Perspective", false],
+  ["Souris : SolidWorks", true],
+  ["Souris : ZW3D", false],
+  ["Inverser le sens de la molette", false],
+  ["Pas des flèches : 5°", false],
+  ["Pas des flèches : 15°", true],
+  ["Pas des flèches : 45°", false],
+  ["Langue : FR", true],
+  ["Langue : EN", false],
+];
+
 describe("menu bar model navigation", () => {
   it("checks the current language", () => {
     const view = buildMenuBar(listing, translate)[2]?.entries.filter(
       (entry) => entry.type === "item",
     );
-    expect(view?.map((entry) => entry.type === "item" && [entry.label, entry.checked])).toEqual([
-      ["Tout cadrer", null],
-      ["Cadrer la sélection", null],
-      ["Face", null],
-      ["Arrière", null],
-      ["Gauche", null],
-      ["Droite", null],
-      ["Dessus", null],
-      ["Dessous", null],
-      ["Isométrique", null],
-      ["Inspecteur", true],
-      ["Console", false],
-      ["Changer la vue centrale", null],
-      ["3D seule", false],
-      ["Schéma des chaînes seul", false],
-      ["3D + Schéma", true],
-      ["Perspective", false],
-      ["Souris : SolidWorks", true],
-      ["Souris : ZW3D", false],
-      ["Inverser le sens de la molette", false],
-      ["Pas des flèches : 5°", false],
-      ["Pas des flèches : 15°", true],
-      ["Pas des flèches : 45°", false],
-      ["Langue : FR", true],
-      ["Langue : EN", false],
-    ]);
+    expect(view?.map((entry) => entry.type === "item" && [entry.label, entry.checked])).toEqual(
+      VIEW_MENU_ENTRIES,
+    );
   });
 
   it("binds F to Tout cadrer while a Pantin with bodies is open", () => {

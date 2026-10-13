@@ -1,4 +1,4 @@
-import { type CentralLayout, nextLayout } from "../central-layout.ts";
+import { type CentralLayout, nextLayout, showsIo } from "../central-layout.ts";
 import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
@@ -11,6 +11,7 @@ import {
   removeDiagramLink,
   showDiagramHint,
 } from "./diagram-edit-actions.ts";
+import { enterIoLayout } from "./io-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The chain diagram (ADR 0029): the layout of the central area, folding a
@@ -20,6 +21,9 @@ export function setCentralLayout(store: ViewerStore, layout: CentralLayout): voi
   if (store.state.centralLayout !== layout) {
     store.ports.storeCentralLayout(layout);
     store.update({ ...store.state, centralLayout: layout, contextMenu: null });
+    if (showsIo(layout)) {
+      enterIoLayout(store);
+    }
   }
 }
 

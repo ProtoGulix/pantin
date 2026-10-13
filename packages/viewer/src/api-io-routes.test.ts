@@ -1,0 +1,109 @@
+import { describe, expect, it } from "vitest";
+import { createPantinApiClient } from "./api-client.ts";
+import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
+
+// I/O mapping routes (ADR 0049 point 4).
+
+const mapping = {
+  status: "valid",
+  mappingId: "abc",
+  modules: [
+    {
+      key: "m1",
+      port: 1502,
+      unitId: 1,
+      wordOrder: "low_word_first",
+      watchdogMilliseconds: 1000,
+      channels: [
+        {
+          tag: "main.valve.extend",
+          variable: "valve_extend",
+          zone: "coil",
+          address: 0,
+          ioType: "BOOL",
+          comment: "",
+          tagType: "bit",
+          direction: "command",
+          owner: { kind: "drive", id: "valve" },
+        },
+      ],
+    },
+  ],
+  problems: [],
+  unmappedTags: [],
+};
+
+async function sent(call: (client: ReturnType<typeof createPantinApiClient>) => Promise<unknown>) {
+  const { fetchFunction, requests } = fakeFetch(jsonResponse(mapping));
+  const result = await call(createPantinApiClient(fetchFunction));
+  return {
+    result,
+    method: requests[0]?.init?.method,
+    url: requests[0]?.url,
+    body: requests[0]?.init?.body,
+  };
+}
+
+describe("PantinApiClient I/O mapping", () => {
+  it("reads the mapping with GET", async () => {
+    const { result, method, url } = await sent((client) => client.getIoMapping("press"));
+    expect([result, method, url]).toEqual([mapping, "GET", "/api/pantins/press/io"]);
+  });
+
+  it("adds a module with POST", async () => {
+    const { method, url, body } = await sent((client) =>
+      client.createIoModule("press", { port: 1503 }),
+    );
+    expect([method, url, body]).toEqual([
+      "POST",
+      "/api/pantins/press/io/modules",
+      JSON.stringify({ port: 1503 }),
+    ]);
+  });
+
+  it("edits and removes a module by key", async () => {
+    const edit = await sent((client) => client.updateIoModule("press", "m1", { key: "plc" }));
+    const removal = await sent((client) => client.deleteIoModule("press", "m1"));
+    expect([edit.method, edit.url]).toEqual(["PATCH", "/api/pantins/press/io/modules/m1"]);
+    expect([removal.method, removal.url]).toEqual(["DELETE", "/api/pantins/press/io/modules/m1"]);
+  });
+
+  it("maps tags into a module with POST", async () => {
+    const { method, url, body } = await sent((client) =>
+      client.createIoChannels("press", "m1", { tags: ["main.valve.extend"] }),
+    );
+    expect([method, url, body]).toEqual([
+      "POST",
+      "/api/pantins/press/io/modules/m1/channels",
+      JSON.stringify({ tags: ["main.valve.extend"] }),
+    ]);
+  });
+});
+
+describe("PantinApiClient I/O channels", () => {
+  it("edits and unmaps a channel by tag", async () => {
+    const edit = await sent((client) =>
+      client.updateIoChannel("press", "main.valve.extend", { tag: "main.valve.extend" }),
+    );
+    const removal = await sent((client) => client.deleteIoChannel("press", "main.valve.extend"));
+    expect([edit.method, edit.url]).toEqual([
+      "PATCH",
+      "/api/pantins/press/io/channels/main.valve.extend",
+    ]);
+    expect(removal.method).toBe("DELETE");
+  });
+
+  it("refuses an invalid body before sending anything", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(mapping));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).createIoChannels("press", "m1", { tags: [] }),
+    );
+    expect([error.kind, requests.length]).toEqual(["invalid_input", 0]);
+  });
+
+  it("refuses an answer that does not match the protocol", async () => {
+    const { fetchFunction } = fakeFetch(jsonResponse({ status: "valid" }));
+    const error = await captureError(createPantinApiClient(fetchFunction).getIoMapping("press"));
+    expect(error.kind).toBe("invalid_response");
+  });
+});

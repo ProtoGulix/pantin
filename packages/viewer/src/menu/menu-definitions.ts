@@ -87,6 +87,7 @@ const LAYOUT_LABEL_KEYS: Readonly<Record<CentralLayout, MessageKey>> = {
   "3d": "menubar.view.layout3d",
   diagram: "menubar.view.layoutDiagram",
   both: "menubar.view.layoutBoth",
+  io: "menubar.view.layoutIo",
 };
 
 // Explicit entries next to the F4 cycle, checked on the layout in use (ADR 0030).

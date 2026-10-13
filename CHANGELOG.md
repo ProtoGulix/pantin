@@ -8,6 +8,17 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer, the I/O view (ADR 0049 slice P5): a fourth central layout, "E/S" /
+  "I/O", chosen from the toolbar and the View menu (left out of the F4 cycle).
+  It lists the modules (key, port, channels, problems, Add), edits the
+  selected module's settings and its channels in place (variable, address,
+  comment, Reassign, delete), maps the unmapped tags by assembly one by one
+  or all at once, marks each problem on its cell and lists it at the top
+  (a click focuses the cell), and offers "Créer le mapping" when io.json is
+  missing. An unreadable file or legacy io.csv files show their problems and
+  allow no edit. Every edit shows the route's answer and re-reads the Pantin,
+  so Save and Discard follow. The viewer computes nothing: zone, type,
+  address and variable are the core's.
 - PLC bridge, the CLI on io.json (ADR 0049 slice P3): `pantin io migrate
   <folder>` converts io.csv and io-modules.json into io.json (the `type` column
   becomes `ioType`), refuses CSV syntax problems, a missing or invalid

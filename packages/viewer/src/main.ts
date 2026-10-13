@@ -29,6 +29,7 @@ import { CentralArea } from "./ui/central-area.ts";
 import { ConsolePanel } from "./ui/console-panel.ts";
 import { DiagramView } from "./ui/diagram-view.ts";
 import { Inspector } from "./ui/inspector.ts";
+import { IoPanel } from "./ui/io-panel.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
 import type { PanelIntents } from "./ui/panel-intents.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
@@ -85,6 +86,14 @@ function createDiagramView(): DiagramView {
   );
 }
 
+// Same place as the diagram: over the canvas, under the welcome dialog.
+function createIoPanel(): IoPanel {
+  return new IoPanel(
+    requireElement(".viewport", HTMLElement),
+    requireElement("#welcome", HTMLElement),
+  );
+}
+
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
 function createScreen(): Screen {
   const panel = requireElement("#side-panel", HTMLElement);
@@ -95,6 +104,7 @@ function createScreen(): Screen {
     mode === "edit" ? sidePanel.focusTree() : canvas.focus(),
   );
   const diagram = createDiagramView();
+  const ioPanel = createIoPanel();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
   const consolePanel = createConsolePanel(panel);
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
@@ -114,6 +124,7 @@ function createScreen(): Screen {
         effectiveLayout(view.toolbar.centralLayout, view.toolbar.mode === "edit"),
         view.translate,
       );
+      ioPanel.render(view.io, view.translate, view.language, intents);
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
       viewCube.render(view, intents);

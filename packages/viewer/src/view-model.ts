@@ -1,9 +1,10 @@
-import { type CentralLayout, showsViewport } from "./central-layout.ts";
+import { type CentralLayout, showsIo, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
 import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
+import { buildIoView, type IoView } from "./io/io-view-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
 import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
@@ -66,6 +67,8 @@ export interface PanelView {
   inspector: InspectorView;
   // The Pantin console and its counter (ADR 0031); null with no Pantin open.
   console: ConsoleView | null;
+  // The I/O view (ADR 0049 point 11); null unless it is the central layout.
+  io: IoView | null;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -114,6 +117,15 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
+function buildIo(state: ViewerState): IoView | null {
+  const document = state.openPantin?.document;
+  if (document === undefined || !showsIo(state.centralLayout)) {
+    return null;
+  }
+  const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
+  return buildIoView(state.io, names, state.pendingRequestCount > 0);
+}
+
 export function buildPanelView(
   state: ViewerState,
   consoleList: ClientConsole,
@@ -149,5 +161,6 @@ export function buildPanelView(
       state.language,
       translate,
     ),
+    io: buildIo(state),
   };
 }

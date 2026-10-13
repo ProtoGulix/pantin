@@ -43,6 +43,7 @@ import {
   withRequestFinished,
   withRequestStarted,
 } from "../viewer-state.ts";
+import { reloadIoAfterDocumentChange } from "./io-load.ts";
 import { showViewportState } from "./viewport-sync.ts";
 
 // Holds the only mutable state of the viewer and pushes every change to the
@@ -133,6 +134,7 @@ export class ViewerStore {
   }
 
   update(requested: ViewerState): void {
+    const previous = this.state;
     // The tools follow the selection, the layout and the inspector (ADR 0039 point 3).
     const next = withAxisPickRules(withPlacementFeedbackRules(withToolRules(requested)));
     // A restart on another assembly reads face files again, like a new alignment.
@@ -158,6 +160,9 @@ export class ViewerStore {
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());
     showViewportState(viewport, next, this.chainLinksOf);
+    // Last, after every draw: the read it starts re-enters update(), and a
+    // draw after that would show this pass's stale state over the newer one.
+    reloadIoAfterDocumentChange(this, previous, next);
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */

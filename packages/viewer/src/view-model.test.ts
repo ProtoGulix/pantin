@@ -185,6 +185,7 @@ describe("message line and language", () => {
       "contextMenu",
       "importForm",
       "inspector",
+      "io",
       "language",
       "menus",
       "message",

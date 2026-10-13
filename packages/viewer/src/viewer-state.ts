@@ -17,6 +17,7 @@ import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
 import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
+import { type IoState, NO_IO_STATE } from "./io/io-state.ts";
 import type { AxisPickState } from "./joints/axis-pick-state.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import {
@@ -112,6 +113,8 @@ export interface ViewerState {
   // The form of a belt, guide, emitter, absorber or presence sensor (ADR 0043 point 13).
   conveyorForm: ConveyorFormState | null;
   faults: FaultsResponse;
+  // The I/O view (ADR 0049 point 11): the last mapping the core answered.
+  io: IoState;
   // What the central area shows (ADR 0030 point 7): a setting of the viewer,
   // kept in the browser and not reset by opening a Pantin. Then the diagram
   // bands the user folded: display state only, never saved.
@@ -151,6 +154,9 @@ export interface InspectorFocusRequest {
 
 // Faults are runtime state of the core, cleared when a Pantin opens.
 const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
+
+// Runtime faults and the I/O mapping belong to the open Pantin: cleared with it.
+const NO_DEVICE_DATA = { faults: NO_FAULTS, io: NO_IO_STATE } as const;
 
 // No positioning tool on, no alignment, nothing kept in the placement fields.
 const NO_TOOL_STATE = {
@@ -199,7 +205,7 @@ export function initialViewerState(
     actuatorForm: null,
     sensorForm: null,
     conveyorForm: null,
-    faults: NO_FAULTS,
+    ...NO_DEVICE_DATA,
     centralLayout,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
@@ -247,7 +253,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     actuatorForm: null,
     sensorForm: null,
     conveyorForm: null,
-    faults: NO_FAULTS,
+    ...NO_DEVICE_DATA,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
   };
