@@ -60,7 +60,7 @@ export type PantinServerOptions = {
   // the real one by default.
   busTimer?: SimulationTimer;
   // Replaces the Pantins' I/O mappings (ADR 0045 point 7), which the core reads
-  // from io.csv and io-modules.json by default; tests of the bus give fakes.
+  // from the open io.json by default; tests of the bus give fakes.
   ioMappingSource?: IoMappingSource;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;

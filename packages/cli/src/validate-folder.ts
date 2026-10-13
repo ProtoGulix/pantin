@@ -4,15 +4,12 @@ import {
   ApiError,
   assertRealPathInside,
   type DocumentReading,
-  evaluateLegacyIoMapping,
-  ioTagsOf,
   isErrorWithCode,
-  readLegacyIoModules,
   readPantinDocument,
   resolveInside,
 } from "@pantin/core";
 import { type Body, PANTIN_DOCUMENT_FILE_NAME, type PantinDocument } from "@pantin/protocol";
-import { describeIoProblem, readIoFiles } from "./io-folder.ts";
+import { CANONICAL_ORDER_NOTE, describeIoProblem, readFolderIo } from "./io-folder.ts";
 
 // Checks a Pantin folder without a running core (ADR 0021): its pantin.json
 // through the core's reader (migration, then every document rule), then the
@@ -98,34 +95,23 @@ export async function readFolderDocument(folder: string): Promise<FolderDocument
   return { document: reading.document, notes };
 }
 
-// io.csv and io-modules.json, when the folder has them (ADR 0045 point 7).
+// io.json, when the folder has it (ADR 0049 point 9). Problems print as
+// "io.json: modules[0].channels[3].address: message".
 async function ioReport(folder: string, document: PantinDocument): Promise<FolderReport> {
-  const files = await readIoFiles(folder);
-  const answer = evaluateLegacyIoMapping(files, ioTagsOf(document));
+  const { answer, canonical } = await readFolderIo(folder, document);
   if (answer.status === "missing") {
-    return { problems: [], notes: loneModulesNotes(files.modules) };
+    return { problems: [], notes: [] };
   }
-  const unmapped = answer.unmappedTags;
-  const notes =
-    unmapped.length === 0
+  const unmapped = answer.unmappedTags.map((tag) => tag.name);
+  const notes = [
+    ...(unmapped.length === 0
       ? []
       : [
-          `${unmapped.length} tag(s) not mapped in io.csv: ${unmapped.slice(0, 5).join(", ")}${unmapped.length > 5 ? ", ..." : ""}.`,
-        ];
-  return { problems: answer.problems.map(describeIoProblem), notes };
-}
-
-// An io-modules.json with no io.csv maps nothing, but is not ignored in silence.
-function loneModulesNotes(bytes: Uint8Array | undefined): string[] {
-  if (bytes === undefined) {
-    return [];
-  }
-  // The core's messages for io-modules.json already name the file.
-  const problems = readLegacyIoModules(bytes).problems.map((problem) => problem.message);
-  return [
-    "io-modules.json exists but there is no io.csv: nothing is mapped.",
-    ...problems.map((problem) => `note: ${problem}`),
+          `${unmapped.length} tag(s) not mapped in io.json: ${unmapped.slice(0, 5).join(", ")}${unmapped.length > 5 ? ", ..." : ""}.`,
+        ]),
+    ...(canonical || answer.problems.length === 0 ? [] : [CANONICAL_ORDER_NOTE]),
   ];
+  return { problems: answer.problems.map(describeIoProblem), notes };
 }
 
 export async function validatePantinFolder(folder: string): Promise<FolderReport> {

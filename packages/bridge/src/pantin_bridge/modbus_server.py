@@ -227,7 +227,7 @@ class ModbusSlave:
             raise ConfigurationError(
                 f"Module {self._module.key} cannot listen on "
                 f"{self._listen_host}:{self._module.port}: the port is taken, or this user may "
-                "not bind it. Change the port in io-modules.json."
+                "not bind it. Change the module's port in io.json."
             ) from error
 
     async def stop(self) -> None:

@@ -1,7 +1,7 @@
 # pantin-bridge
 
 Bridges a Pantin core to a PLC: one Modbus TCP slave per module of the Pantin's
-`io-modules.json`, fed by the core's tag bus (ADR 0045, ADR 0046). Not
+`io.json`, fed by the core's tag bus (ADR 0045, ADR 0046). Not
 published; it runs from this checkout.
 
     ./setup.sh                      # creates .venv with the pinned requirements

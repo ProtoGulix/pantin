@@ -1,5 +1,7 @@
+import type { CommandResult } from "./command-result.ts";
 import { generateGvl } from "./gvl.ts";
 import { ioInit } from "./io-init-command.ts";
+import { ioMigrate } from "./io-migrate.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
 import { validatePantinFolder } from "./validate-folder.ts";
 
@@ -11,8 +13,9 @@ const USAGE = [
   "  validate <folder>   check a Pantin folder: pantin.json and its mesh files",
   "  schema [io]         print the JSON Schema of pantin.json, or of io.json with io",
   "  io init <folder> [--update]",
-  "                      write io.csv and io-modules.json, or append the unmapped tags",
-  "  gvl <folder>        print the CODESYS global variable list of io.csv",
+  "                      write io.json, or with --update map the unmapped tags into m1",
+  "  io migrate <folder> convert a legacy io.csv and io-modules.json into io.json",
+  "  gvl <folder>        print the CODESYS global variable list of io.json",
 ].join("\n");
 
 export interface Output {
@@ -42,14 +45,7 @@ async function validate(folder: string, { stdout, stderr }: Streams): Promise<nu
   return problems.length === 0 ? 0 : 1;
 }
 
-async function runIoInit(args: readonly string[], { stdout, stderr }: Streams): Promise<number> {
-  const folders = args.filter((arg) => arg !== "--update");
-  const [folder] = folders;
-  if (folder === undefined || folders.length > 1 || args.length - folders.length > 1) {
-    writeLine(stderr, USAGE);
-    return 2;
-  }
-  const result = await ioInit(folder, args.includes("--update"));
+function report(result: CommandResult, { stdout, stderr }: Streams): number {
   for (const message of result.messages) {
     writeLine(stdout, message);
   }
@@ -57,6 +53,16 @@ async function runIoInit(args: readonly string[], { stdout, stderr }: Streams): 
     writeLine(stderr, `error: ${error}`);
   }
   return result.exitCode;
+}
+
+async function runIoInit(args: readonly string[], streams: Streams): Promise<number> {
+  const folders = args.filter((arg) => arg !== "--update");
+  const [folder] = folders;
+  if (folder === undefined || folders.length > 1 || args.length - folders.length > 1) {
+    writeLine(streams.stderr, USAGE);
+    return 2;
+  }
+  return report(await ioInit(folder, args.includes("--update")), streams);
 }
 
 async function runGvl(folder: string, { stdout, stderr }: Streams): Promise<number> {
@@ -79,6 +85,9 @@ export async function runCommand(args: readonly string[], streams: Streams): Pro
   }
   if (command === "io" && argument === "init") {
     return runIoInit(extra, streams);
+  }
+  if (command === "io" && argument === "migrate" && extra.length === 1 && extra[0] !== undefined) {
+    return report(await ioMigrate(extra[0]), streams);
   }
   if (command === "schema" && argument === undefined) {
     streams.stdout.write(pantinJsonSchemaText());

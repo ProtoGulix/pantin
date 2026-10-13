@@ -2,6 +2,7 @@ import { cp, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runCommand } from "./cli.ts";
 
 // A copy of examples/axis with a 5/3 valve added, for the io commands' tests:
 // its tags are axis.stroke.setpoint and position (float), then
@@ -30,4 +31,15 @@ export async function copyAxisWithValve(workspace: string): Promise<string> {
 
 export function tmpWorkspace(): Promise<string> {
   return mkdtemp(join(tmpdir(), "pantin-io-"));
+}
+
+/** Runs the pantin command with captured streams. */
+export async function runCli(args: string[]) {
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+  const code = await runCommand(args, {
+    stdout: { write: (text) => stdout.push(text) },
+    stderr: { write: (text) => stderr.push(text) },
+  });
+  return { code, stdout: stdout.join(""), stderr: stderr.join("") };
 }

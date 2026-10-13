@@ -107,7 +107,7 @@ Exemple de manifeste de pièce (à valider contre le schéma en phase 1) :
       ]
     }
 
-Liste d'E/S : un fichier io.csv par Pantin (séparateur ;), avec io-modules.json pour les réglages de chaque module (ADR 0045). Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS. Jamais de tag défini à la main à deux endroits.
+Liste d'E/S : un fichier io.json par Pantin, qui porte les modules et leurs voies (ADR 0045, 0049). Il est édité depuis le viewer, enregistré et annulé avec le Pantin, jamais à la main. Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus, et suit leurs renommages. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS, pantin io migrate convertit l'ancien couple io.csv et io-modules.json. Jamais de tag défini à la main à deux endroits.
 
 ## 6. Économie de tokens (obligatoire)
 
@@ -218,7 +218,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 4. Drives : discret, position, vitesse, défauts injectables. Sortie : un vérin double effet se comporte comme décrit, y compris sans rappel ressort.
 5. Capteurs de liaison. Sortie : fins de course qui basculent aux bonnes positions.
 6. Produits et capteurs de présence, convoyeur. Sortie : un carton traverse un convoyeur, un capteur le détecte, de façon reproductible.
-7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis le CSV (OPC UA repoussé, ADR 0045). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel qui pilote une scène reste à démontrer (en attente : pas de VM CODESYS au 2026-10-13).
+7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA repoussé, ADR 0045, 0049). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel qui pilote une scène reste à démontrer (en attente : pas de VM CODESYS au 2026-10-13).
 8. UI d'édition : bibliothèque de pièces, éditeur de scène, éditeur de pièce (import, choix des noeuds, type de liaison, limites, aperçu par curseurs, écriture du manifeste), mapping I/O, inspecteur avec forçage de tags. Sortie : on crée une machine complète sans éditer de fichier à la main.
 9. Communauté et multi instance : index de packs dans un dépôt git, CI qui exécute un test de scénario par pièce, documentation, plusieurs instances dans un même coeur. Sortie : une pièce tierce s'installe sans modifier le coeur.
 

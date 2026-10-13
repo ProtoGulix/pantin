@@ -2,7 +2,7 @@ import type { IoType, IoZone, TagDirection, TagType } from "@pantin/protocol";
 
 // What ADR 0045 point 8 fixes about a mapped tag: each valid (tag type,
 // direction) pair has exactly one zone and one PLC type. Shared by the
-// validation of io.json and by the frozen CSV one (legacy-csv/).
+// validation of io.json and by the allocation functions.
 
 export const BIT_ZONES: readonly IoZone[] = ["coil", "discrete_input"];
 export const ZONES_BY_DIRECTION: Record<TagDirection, readonly IoZone[]> = {

@@ -84,7 +84,7 @@ const ParamsSchemas = {
   // emitter id), and the products a physics rebuild removed (their count).
   spawn_skipped: z.object({ emitter: EmitterIdSchema }),
   physics_rebuilt: z.object({ products: z.number().int().positive() }),
-  // ADR 0045 point 11: a PLC module (its key in io-modules.json) lost or found
+  // ADR 0045 point 11: a PLC module (its key in io.json) lost or found
   // its connection, and why: its last connection closed, or no request came
   // within its watchdog time. The bridge process itself: same reasons, the
   // bus connection closed or missed its pongs.

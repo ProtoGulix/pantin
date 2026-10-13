@@ -8,6 +8,20 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- PLC bridge, the CLI on io.json (ADR 0049 slice P3): `pantin io migrate
+  <folder>` converts io.csv and io-modules.json into io.json (the `type` column
+  becomes `ioType`), refuses CSV syntax problems, a missing or invalid
+  io-modules.json, an unknown module and a tag mapped twice with
+  `io.csv:line:column` messages, never overwrites an io.json, and deletes the
+  two files only after writing it; the P2 parser moved from core to the CLI,
+  frozen. `pantin io init` writes io.json (module `m1`, port 1502) through the
+  core's allocation functions, `--update` maps the unmapped tags and rewrites
+  the canonical file. `pantin gvl` reads io.json with the same output format
+  (modules in file order, channels in canonical order). `pantin validate`
+  prints `io.json: modules[0].channels[3].address: message`, and says when
+  the channel numbers follow the canonical order rather than the file's.
+  `pantin gvl` lists channels in canonical order, so a GVL made from an
+  unsorted io.csv may come out reordered after migrate.
 - PLC bridge, I/O mapping edit routes (ADR 0049 slice P2, the write path):
   `POST /api/pantins/:pantinId/io/modules`, `PATCH` and `DELETE .../io/modules/
   :moduleKey`, `POST .../io/modules/:moduleKey/channels` (`{ "tags": [..] }`)

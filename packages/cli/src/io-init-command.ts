@@ -1,145 +1,81 @@
-import { appendFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  decodeIoList,
-  IO_LIST_FILE_NAME,
-  IO_LIST_HEADER,
-  IO_MODULES_FILE_NAME,
-  type IoListRow,
   ioTagsOf,
-  ioWidthOf,
-  type LegacyIoModulesFile,
-  parseIoList,
-  readLegacyIoModules,
+  listLegacyIoFiles,
+  serializeIoDocument,
+  writeTextAtomically,
 } from "@pantin/core";
-import { IO_FILE_MAX_BYTES, type IoZone } from "@pantin/protocol";
-import { readIoFiles } from "./io-folder.ts";
-import { INIT_MODULE_KEY, INIT_MODULES_FILE, initRows, type NextAddresses } from "./io-init.ts";
+import { IO_JSON_FILE_NAME, type IoDocument } from "@pantin/protocol";
+import { type CommandResult, done, refused } from "./command-result.ts";
+import { describeIoProblem, readFolderIoReading } from "./io-folder.ts";
+import { freshIoDocument, INIT_MODULE_KEY, mapTagsIntoFirstModule } from "./io-init.ts";
 import { readFolderDocument } from "./validate-folder.ts";
 
-// `pantin io init <folder> [--update]` (ADR 0045 point 9). Without --update it
-// refuses to touch existing files. With it, io.csv only ever grows: the rows
-// of unmapped tags are appended and the existing bytes are never rewritten.
+// `pantin io init <folder> [--update]` (ADR 0049 point 9). Without --update it
+// refuses to touch an existing io.json. With it, the unmapped tags are mapped
+// into module m1 and the file is rewritten in canonical form.
 
-export type InitResult = { exitCode: number; messages: string[]; errors: string[] };
+type Start = { refusal: string[] } | { existing: IoDocument | null; canonical: boolean };
 
-const REFUSED = (errors: string[]): InitResult => ({ exitCode: 1, messages: [], errors });
-
-function modulesText(file: LegacyIoModulesFile): string {
-  return `${JSON.stringify(file, null, 2)}\n`;
-}
-
-// The first free address per zone of module m1, past every row already there.
-function usedAddresses(rows: readonly IoListRow[]): NextAddresses {
-  const used = new Map<IoZone, number>();
-  for (const row of rows.filter((candidate) => candidate.module === INIT_MODULE_KEY)) {
-    used.set(row.zone, Math.max(used.get(row.zone) ?? 0, row.address + ioWidthOf(row.ioType)));
+// What is on disk decides whether init may go on at all.
+async function startOf(folder: string, update: boolean): Promise<Start> {
+  const legacyFiles = await listLegacyIoFiles(folder);
+  if (legacyFiles.length > 0) {
+    return {
+      refusal: [
+        `${legacyFiles.join(" and ")} exist in ${folder}: run "pantin io migrate ${folder}" to convert them to ${IO_JSON_FILE_NAME}.`,
+      ],
+    };
   }
-  return used;
-}
-
-function modulesProblem(bytes: Uint8Array): string | null {
-  const reading = readLegacyIoModules(bytes);
-  if (reading.modules === null) {
-    const first = reading.problems[0]?.message ?? "it is invalid";
-    return `${IO_MODULES_FILE_NAME} cannot be used (${first}): fix it first.`;
+  const { reading, canonical } = await readFolderIoReading(folder);
+  if (reading.kind !== "missing" && !update) {
+    return {
+      refusal: [
+        `${IO_JSON_FILE_NAME} already exists in ${folder}: it belongs to you. Use --update to map the unmapped tags.`,
+      ],
+    };
   }
-  return reading.modules.modules.some((module) => module.key === INIT_MODULE_KEY)
-    ? null
-    : `${IO_MODULES_FILE_NAME} has no module "${INIT_MODULE_KEY}", where new rows go: add it first.`;
-}
-
-async function createFiles(folder: string, rows: string[], withModules: boolean): Promise<void> {
-  if (withModules) {
-    await writeFile(join(folder, IO_MODULES_FILE_NAME), modulesText(INIT_MODULES_FILE), {
-      flag: "wx",
-    });
+  if (reading.kind === "unreadable") {
+    return {
+      refusal: [
+        `${IO_JSON_FILE_NAME} cannot be used, so tags cannot be added safely:`,
+        ...reading.problems.map(describeIoProblem),
+      ],
+    };
   }
-  const text = [IO_LIST_HEADER, ...rows].map((line) => `${line}\n`).join("");
-  await writeFile(join(folder, IO_LIST_FILE_NAME), text, { flag: "wx" });
+  return { existing: reading.kind === "document" ? reading.document : null, canonical };
 }
 
-async function appendRows(folder: string, existing: string, rows: string[]): Promise<void> {
-  const eol = existing.includes("\r\n") ? "\r\n" : "\n";
-  const lead = existing === "" || existing.endsWith("\n") ? "" : eol;
-  await appendFile(join(folder, IO_LIST_FILE_NAME), lead + rows.map((row) => row + eol).join(""));
-}
-
-export async function ioInit(folder: string, update: boolean): Promise<InitResult> {
+export async function ioInit(folder: string, update: boolean): Promise<CommandResult> {
   const read = await readFolderDocument(folder);
   if ("problems" in read) {
-    return REFUSED(read.problems);
+    return refused(read.problems);
   }
-  const tags = ioTagsOf(read.document);
-  const files = await readIoFiles(folder);
-  if (!update && (files.csv !== undefined || files.modules !== undefined)) {
-    return REFUSED([
-      `${IO_LIST_FILE_NAME} or ${IO_MODULES_FILE_NAME} already exists in ${folder}: they belong to you. Use --update to append rows for unmapped tags.`,
-    ]);
+  const start = await startOf(folder, update);
+  if ("refusal" in start) {
+    return refused(start.refusal);
   }
-  if (files.modules !== undefined) {
-    const problem = modulesProblem(files.modules);
-    if (problem !== null) {
-      return REFUSED([problem]);
-    }
+  const { existing, canonical } = start;
+  const mapped = new Set(existing?.modules.flatMap((module) => module.channels.map((c) => c.tag)));
+  const unmapped = ioTagsOf(read.document).filter((tag) => !mapped.has(tag.name));
+  const updated = mapTagsIntoFirstModule(existing ?? freshIoDocument(), unmapped);
+  if (typeof updated === "string") {
+    return refused([updated]);
   }
-  if (files.csv === undefined) {
-    await createFiles(folder, initRows(tags), files.modules === undefined);
-    return {
-      exitCode: 0,
-      messages: [`Wrote ${IO_LIST_FILE_NAME} (${tags.length} rows).`],
-      errors: [],
-    };
+  if (existing === null) {
+    await writeFile(join(folder, IO_JSON_FILE_NAME), serializeIoDocument(updated), { flag: "wx" });
+    return done(
+      `Wrote ${IO_JSON_FILE_NAME} (${unmapped.length} channels in "${INIT_MODULE_KEY}").`,
+    );
   }
-  return updateExisting(folder, files.csv, files.modules === undefined, tags);
-}
-
-type ExistingList = { text: string; rows: IoListRow[] } | { error: string };
-
-function readExistingList(csv: Uint8Array): ExistingList {
-  // The file was read up to the limit + 1: a longer one is cut, and rows
-  // appended to what was parsed would duplicate or glue onto its real end.
-  if (csv.byteLength > IO_FILE_MAX_BYTES) {
-    return {
-      error: `${IO_LIST_FILE_NAME} is too large to update (over ${IO_FILE_MAX_BYTES} bytes).`,
-    };
+  if (unmapped.length === 0 && canonical) {
+    return done("Nothing to add: every tag is mapped.");
   }
-  const decoded = decodeIoList(csv);
-  if ("problem" in decoded) {
-    return { error: `${IO_LIST_FILE_NAME}: ${decoded.problem.message}` };
-  }
-  const parsed = parseIoList(decoded.text);
-  if (parsed.problems.length > 0) {
-    return {
-      error: `${IO_LIST_FILE_NAME} has syntax problems, so rows cannot be appended safely (run "pantin validate").`,
-    };
-  }
-  return { text: decoded.text, rows: parsed.rows };
-}
-
-async function updateExisting(
-  folder: string,
-  csv: Uint8Array,
-  createModules: boolean,
-  tags: ReturnType<typeof ioTagsOf>,
-): Promise<InitResult> {
-  const existing = readExistingList(csv);
-  if ("error" in existing) {
-    return REFUSED([existing.error]);
-  }
-  const mapped = new Set(existing.rows.map((row) => row.tag));
-  const unmapped = tags.filter((tag) => !mapped.has(tag.name));
-  if (createModules) {
-    await writeFile(join(folder, IO_MODULES_FILE_NAME), modulesText(INIT_MODULES_FILE), {
-      flag: "wx",
-    });
-  }
-  if (unmapped.length > 0) {
-    await appendRows(folder, existing.text, initRows(unmapped, usedAddresses(existing.rows)));
-  }
-  const message =
+  await writeTextAtomically(folder, IO_JSON_FILE_NAME, serializeIoDocument(updated));
+  return done(
     unmapped.length === 0
-      ? "Nothing to add: every tag is mapped."
-      : `Appended ${unmapped.length} row(s) to ${IO_LIST_FILE_NAME}.`;
-  return { exitCode: 0, messages: [message], errors: [] };
+      ? `Rewrote ${IO_JSON_FILE_NAME} in canonical form; every tag was already mapped.`
+      : `Mapped ${unmapped.length} tag(s) into "${INIT_MODULE_KEY}" in ${IO_JSON_FILE_NAME}.`,
+  );
 }

@@ -1,7 +1,7 @@
 # The Pantin document
 
 A Pantin is a folder: `pantin.json` plus a `meshes/` directory (and, once the
-PLC is wired, `io.csv` and `io-modules.json`). `pantin.json` is the whole
+PLC is wired, `io.json`). `pantin.json` is the whole
 machine: what is in it, how it moves and what the PLC can read and write. The
 schema is Zod in `packages/protocol/src/pantin.ts`, which is the source of
 truth; the current version is `PANTIN_SCHEMA_VERSION` (12 at the time of
@@ -117,7 +117,7 @@ use nobody types them: the core derives them.
 | presence sensor | its own | those of its type, `state` |
 
 Actuators, belts, guides and absorbers have no tag. The core lists every tag
-in `core/src/domain/tag-entries.ts`. The PLC mapping (`io.csv`) never
+in `core/src/domain/tag-entries.ts`. The PLC mapping (`io.json`) never
 defines a tag; it only links existing tags to variables (section 7).
 
 **Units.** The document is SI: metres, radians, seconds, kilograms. The UI
@@ -215,14 +215,41 @@ every rule of section 5), checks that every body's mesh exists inside the
 folder, prints one line per problem and exits 1 if there is any. It writes
 nothing: a migrated file is reported, not saved (ADR 0021 point 3).
 
-## 7. Where io.csv fits
+## 7. Where io.json fits
 
-`io.csv` is not part of `pantin.json`. It sits beside it and maps tag names to
-CODESYS variables and Modbus addresses; `io-modules.json` holds the settings
-of each Modbus module (ADR 0045 point 6). The document defines the tags, and
-`io.csv` only points at them, so a tag is never defined in two places.
-`pantin io init` fills it from the document. Renaming a key does not rewrite
-`io.csv`: the old row becomes an unknown tag and the new tag is unmapped.
+`io.json` is not part of `pantin.json`. It sits beside it and maps tag names to
+CODESYS variables and Modbus addresses, and holds the settings of each Modbus
+module (ADR 0049). The document defines the tags, and `io.json` only points at
+them, so a tag is never defined in two places. Its schema is
+`IoDocumentSchema` in `packages/protocol/src/io-document.ts`, with its JSON
+Schema printed by `pantin schema io`.
+
+    { "schema_version": 1,
+      "modules": [ { "key": "m1", "port": 1502, "unitId": 1,
+        "wordOrder": "low_word_first", "watchdogMilliseconds": 1000,
+        "channels": [ { "tag": "pince.valve.coil_a", "variable": "pince_valve_coil_a",
+          "zone": "coil", "address": 0, "ioType": "BOOL", "comment": "" } ] } ] }
+
+Nobody edits it by hand: the viewer (editor: ADR 0049 slice P5, not yet there) creates and edits modules and channels,
+proposes addresses and shows the problems, and the core writes the file in
+canonical form on save (channels sorted by zone, address, tag). A rename of a
+tag carries over to its channel; the variable never changes.
+
+From the command line:
+
+- `pantin io init <folder>` writes a first `io.json` with every tag in module
+  `m1`; `--update` maps the tags not yet mapped.
+- `pantin gvl <folder>` prints the CODESYS global variable list of a valid
+  mapping.
+- `pantin validate <folder>` prints the mapping's problems as
+  `io.json: modules[0].channels[3].address: message`. Channel numbers count the
+  channels in canonical order, which is the file's order unless the file was
+  edited by hand (validate then says so).
+- `pantin io migrate <folder>` converts the older `io.csv` and `io-modules.json`
+  into `io.json`, once, and deletes them. The core refuses a folder that still
+  has them. The command places `io.json` with a hard link, so it needs a
+  filesystem that has them (ext4, NTFS): on FAT, exFAT or some network shares,
+  copy the folder to a local disk first.
 
 ## 8. A minimal example
 
@@ -327,5 +354,5 @@ run in the core).
 - [ADR 0023](../decisions/0023-joint-sensors-and-sensor-type-folders.md): joint sensors.
 - [ADR 0033](../decisions/0033-assembly-placement.md), [0040](../decisions/0040-nested-assemblies-from-step.md): assembly placement and nesting.
 - [ADR 0043](../decisions/0043-products-presence-sensors-and-conveyors.md): phase 6 objects and their frames.
-- [ADR 0045](../decisions/0045-plc-bridge-tag-bus-io-mapping-and-modbus-slave.md): `io.csv`.
+- [ADR 0045](../decisions/0045-plc-bridge-tag-bus-io-mapping-and-modbus-slave.md), [0049](../decisions/0049-one-io-json-edited-from-the-viewer.md): the PLC bridge and `io.json`.
 - [ADR 0047](../decisions/0047-the-tree-shows-the-whole-document.md): the tree shows every element under its assembly.
