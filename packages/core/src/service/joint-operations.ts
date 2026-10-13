@@ -12,7 +12,7 @@ import {
   updateJointInDocument,
 } from "../domain/joint-rules.ts";
 import { clampJointPosition, haveSameCoordinateUnit } from "../domain/joint-types/registry.ts";
-import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
+import { computeDisplacements, computePoses, currentJointPosition } from "../domain/kinematics.ts";
 import { toObjectPoses } from "../domain/object-poses.ts";
 import { toProductPoses } from "../domain/product-poses.ts";
 import { ApiError } from "../errors.ts";
@@ -31,14 +31,15 @@ function findJoint(pantinId: PantinId, openPantin: OpenPantin, jointId: string):
 
 function toPoseResponse(openPantin: OpenPantin): PoseResponse {
   const { document, jointPositions } = openPantin;
-  const bodies = computePoses(document, jointPositions);
+  const displacements = computeDisplacements(document, jointPositions);
+  const bodies = computePoses(document, jointPositions, displacements);
   return {
     jointPositions: document.joints.map((joint) => ({
       jointId: joint.id,
       position: currentJointPosition(joint, jointPositions),
     })),
     bodies,
-    objects: toObjectPoses(document, bodies),
+    objects: toObjectPoses(document, bodies, displacements),
     products: toProductPoses(openPantin.physicsState.products),
   };
 }

@@ -85,9 +85,14 @@ Facts checked in the repository on 2026-10-12:
    assembly) and `placement` (`PlacementSchema`, required). With `body`,
    the placement is relative to that body's frame as currently posed, so
    the object follows the body. Without it, the placement is relative to
-   the assembly frame. The core works out world poses each step with the
-   existing kinematics. One convention, so that a frame taken from a
-   picked face (ADR 0035, Z = outward normal) puts an object on the face:
+   the assembly frame as currently posed: the static frame of ADR 0033
+   composed with the motion of the joints that anchor the assembly, the
+   frame the ADR 0042 trihedron shows. An object on a conveyor module
+   carried by a lift therefore rides with it (user's choice, 2026-10-13;
+   P1c had used the static frame). The core works out world poses each
+   step with the existing kinematics. One convention, so that a frame
+   taken from a picked face (ADR 0035, Z = outward normal) puts an object
+   on the face:
    Z points up out of the supporting face, and the origin is the centre of
    the object's bottom face (the top surface for a belt).
 2. **Document, five new top-level arrays**, each with ids unique within

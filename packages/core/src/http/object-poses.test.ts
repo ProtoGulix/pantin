@@ -11,8 +11,8 @@ import { openSse, type SseClient } from "../test-support/sse-client.ts";
 
 // The world pose of every phase 6 object in the pose response and stream
 // (ADR 0043 point 12), with the frame rule of the physics step: an object on a
-// body rides with it; an object on an assembly stays at the assembly's static
-// world frame, even when a joint that anchors the assembly has moved.
+// body rides with it; an object on an assembly rides with the assembly's frame
+// as posed, that is moved by the joints that anchor the assembly.
 
 const SHIFT = { translation: [0.1, 0.2, 0.3], rotation: [0, 0, 0, 1] };
 let line: ConveyorServer;
@@ -63,7 +63,7 @@ describe("objects in the pose response", () => {
     expect(belt?.rotation).toEqual([0, 0, 0, 1]);
   });
 
-  it("makes an object on a body ride with it, and leaves an assembly-framed one static", async () => {
+  it("makes an object on a body ride with it, and leaves one on an unanchored assembly static", async () => {
     await moveDrum(Math.PI / 2);
     const { objects, bodies } = await line.pose();
     const roller = bodies.find((body) => body.bodyId === "roller");
@@ -79,7 +79,7 @@ describe("objects in the pose response", () => {
 });
 
 describe("objects on an assembly anchored by a moved joint", () => {
-  it("stay at the static world frame, as the physics step places them", async () => {
+  it("ride with the assembly frame, as the physics step places them", async () => {
     line = await startConveyorServer();
     await line.send("POST", `${LINE}/guides`, {
       name: "Guide",
@@ -87,10 +87,12 @@ describe("objects on an assembly anchored by a moved joint", () => {
       placement: SHIFT,
       size: [0.5, 0.02, 0.1],
     });
-    const before = (await line.pose()).objects[0];
-    await moveDrum(1);
-    const after = (await line.pose()).objects[0];
-    expect(after).toEqual(before);
+    expect((await line.pose()).objects[0]?.translation).toEqual([0.1, 0.2, 0.3]);
+    await moveDrum(Math.PI / 2);
+    const guide = (await line.pose()).objects[0];
+    // The placement turned 90 degrees about Y with the drum's assembly frame.
+    expect(guide?.translation).toEqual([0.3, 0.2, -0.1]);
+    expect(guide?.rotation[1]).toBeCloseTo(Math.SQRT1_2, 6);
   });
 });
 

@@ -1,7 +1,8 @@
 import type { BodyPose, ObjectPose, PantinDocument } from "@pantin/protocol";
-import { computeWorldPlacements } from "./assembly-anchors.ts";
 import { bodyPoseTransforms, type Framed, framedWorldPose } from "./framed-world-pose.ts";
+import { computePosedAssemblyFrames } from "./posed-assembly-frames.ts";
 import { quantised } from "./product-poses.ts";
+import type { RigidTransform } from "./rigid-transform.ts";
 
 // World poses of the phase 6 objects as the pose response lists them (ADR 0043
 // point 12), resolved by the same frame rule the physics step uses
@@ -24,17 +25,22 @@ function listedObjects(document: PantinDocument): Listed[] {
   ];
 }
 
-// `bodies` are the poses already computed for the same joint positions, so the
-// kinematics runs once per response.
-export function toObjectPoses(document: PantinDocument, bodies: readonly BodyPose[]): ObjectPose[] {
+// `bodies` and `displacements` are already computed for the same joint
+// positions, so the kinematics runs once per response; the assembly frames are
+// derived once here, and only when there is an object to place.
+export function toObjectPoses(
+  document: PantinDocument,
+  bodies: readonly BodyPose[],
+  displacements: ReadonlyMap<string, RigidTransform>,
+): ObjectPose[] {
   const objects = listedObjects(document);
   if (objects.length === 0) {
     return [];
   }
-  const assemblyWorlds = computeWorldPlacements(document);
+  const assemblyFrames = computePosedAssemblyFrames(document, displacements);
   const bodyPoses = bodyPoseTransforms(bodies);
   return objects.map(({ kind, id, frame }) => {
-    const { translation, rotation } = framedWorldPose(frame, assemblyWorlds, bodyPoses);
+    const { translation, rotation } = framedWorldPose(frame, assemblyFrames, bodyPoses);
     const [x, y, z] = translation;
     const [qx, qy, qz, qw] = rotation;
     return {

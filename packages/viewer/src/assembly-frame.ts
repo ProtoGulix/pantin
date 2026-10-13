@@ -38,9 +38,10 @@ export function displayedAssemblyFrame(
 }
 
 /**
- * The root body of an assembly: the first, in document order, with no incoming
- * joint or one from a body of another assembly. Bodies that move under an
- * internal joint are skipped, so the frame is not carried by them. Null when
+ * The root body of an assembly: the child of the joint that anchors it to
+ * another assembly when there is one, since its pose . B^-1 is exactly the
+ * posed frame the core places phase 6 objects in (ADR 0043 point 1); otherwise
+ * the first body, in document order, not moved by an internal joint. Null when
  * the assembly has no body (no frame to read).
  */
 export function frameTargetOfAssembly(
@@ -54,9 +55,19 @@ export function frameTargetOfAssembly(
       .filter((joint) => assemblyOf.get(joint.parent) === assemblyKey)
       .map((joint) => joint.child),
   );
-  const body = document.bodies.find(
-    (candidate) => candidate.assembly === assemblyKey && !moved.has(candidate.id),
-  );
+  const anchorChild = document.joints.find((joint) => {
+    const parentAssembly = assemblyOf.get(joint.parent);
+    return (
+      assemblyOf.get(joint.child) === assemblyKey &&
+      parentAssembly !== undefined &&
+      parentAssembly !== assemblyKey
+    );
+  })?.child;
+  const body =
+    document.bodies.find((candidate) => candidate.id === anchorChild) ??
+    document.bodies.find(
+      (candidate) => candidate.assembly === assemblyKey && !moved.has(candidate.id),
+    );
   return body === undefined
     ? null
     : { assemblyKey, bodyId: body.id, bodyPlacement: body.placement };

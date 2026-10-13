@@ -36,6 +36,11 @@ All notable changes to Pantin. The format follows
   with a local or global gizmo (ADR 0042).
 - One inspector for properties and positioning (ADR 0039) and nested
   assemblies following the STEP tree (ADR 0040).
+- A phase 6 object without `body` is placed in the frame of its assembly as
+  posed, the static frame moved by the joints that anchor the assembly (the
+  ADR 0042 trihedron frame), in the physics step and in the pose response: a
+  belt or guide on a conveyor module carried by a lift rides with it (ADR 0043
+  point 1).
 
 ### Fixed
 

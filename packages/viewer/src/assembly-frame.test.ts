@@ -152,6 +152,15 @@ describe("frameTargetOfAssembly", () => {
     );
   });
 
+  it("prefers the anchor child over a jointless body listed before it", () => {
+    // "free" has no joint and stays at W; "rail" rides the joint from "lone".
+    const inOrder = [{ ...stepBody("free", "N_9"), assembly: "main" }, ...bodies];
+    const between = { ...hingeJoint, parent: "lone", child: "rail" };
+    expect(frameTargetOfAssembly({ bodies: inOrder, joints: [between] }, "main")?.bodyId).toBe(
+      "rail",
+    );
+  });
+
   it("keeps a body whose incoming joint comes from another assembly", () => {
     const between = { ...hingeJoint, parent: "lone", child: "rail" };
     expect(frameTargetOfAssembly({ bodies, joints: [between] }, "main")?.bodyId).toBe("rail");

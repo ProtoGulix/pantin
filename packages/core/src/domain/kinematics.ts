@@ -81,12 +81,14 @@ export function computeDisplacements(
   return displacements;
 }
 
+// `displacements` can be passed when the caller already has them, so that one
+// step or response runs the joint chain once.
 export function computePoses(
   document: PantinDocument,
   positions: ReadonlyMap<string, number>,
+  displacements: ReadonlyMap<string, RigidTransform> = computeDisplacements(document, positions),
 ): BodyPose[] {
   const worlds = computeWorldPlacements(document);
-  const displacements = computeDisplacements(document, positions);
   return document.bodies.map((body) => {
     const world = worlds.get(body.assembly) ?? IDENTITY_TRANSFORM;
     const reference = composeUnlessIdentity(

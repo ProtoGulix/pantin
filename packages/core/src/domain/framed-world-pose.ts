@@ -9,8 +9,9 @@ import {
 
 // World pose of a phase 6 object (ADR 0043 point 1). With `body`, the placement
 // is relative to that body's frame as currently posed, so the object follows the
-// body; without it, relative to the assembly's world frame. The poses come from
-// the existing kinematics: `computeWorldPlacements` for the assembly frames and
+// body; without it, relative to the assembly's frame as currently posed, the
+// static frame moved by the joints that anchor it. The poses come from the
+// existing kinematics: `computePosedAssemblyFrames` for the assembly frames and
 // `computePoses` (through `bodyPoseTransforms`) for the bodies. Both are worked
 // out once per step by the caller.
 
@@ -32,12 +33,12 @@ export function bodyPoseTransforms(poses: readonly BodyPose[]): Map<string, Rigi
 // does; the document rules (conveyorIssues) already refuse such references.
 export function framedWorldPose(
   frame: Framed,
-  assemblyWorlds: ReadonlyMap<string, RigidTransform>,
+  assemblyFrames: ReadonlyMap<string, RigidTransform>,
   bodyPoses: ReadonlyMap<string, RigidTransform>,
 ): RigidTransform {
   const base =
     (frame.body === undefined ? undefined : bodyPoses.get(frame.body)) ??
-    assemblyWorlds.get(frame.assembly) ??
+    assemblyFrames.get(frame.assembly) ??
     IDENTITY_TRANSFORM;
   const placement = unitTransform(frame.placement);
   // Skipping a composition with an identity keeps poses bit for bit (kinematics.ts).

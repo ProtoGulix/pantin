@@ -1,7 +1,7 @@
 import type { PantinDocument, Placement } from "@pantin/protocol";
-import { computeWorldPlacements } from "./assembly-anchors.ts";
 import { bodyPoseTransforms, framedWorldPose } from "./framed-world-pose.ts";
-import { computePoses } from "./kinematics.ts";
+import { computeDisplacements, computePoses } from "./kinematics.ts";
+import { computePosedAssemblyFrames } from "./posed-assembly-frames.ts";
 import type { RigidTransform } from "./rigid-transform.ts";
 
 // World poses of the phase 6 objects at given joint positions (ADR 0043 point 1).
@@ -22,19 +22,22 @@ export function frameResolver(
 ): FrameResolver {
   let poses: { assemblies: Map<string, RigidTransform>; bodies: Map<string, RigidTransform> };
   return (object) => {
-    poses ??= {
-      assemblies: computeWorldPlacements(document),
-      bodies: bodyPoseTransforms(computePoses(document, jointPositions)),
-    };
+    if (poses === undefined) {
+      const displacements = computeDisplacements(document, jointPositions);
+      poses = {
+        assemblies: computePosedAssemblyFrames(document, displacements),
+        bodies: bodyPoseTransforms(computePoses(document, jointPositions, displacements)),
+      };
+    }
     return framedWorldPose(object, poses.assemblies, poses.bodies);
   };
 }
 
 // What the world is built from (ADR 0043 point 11): the belts' and guides' ids,
-// sizes and world poses at the reference configuration (no joint moved). Any
-// edit of an object, its frame, or a placement or joint origin or axis that
-// changes where it sits changes the key; joint motion during a run does not,
-// the poses being read at every step.
+// sizes and world poses at the reference configuration (no joint written, each
+// joint at its clamped reference position). Any edit of an object, its frame,
+// or a placement or joint origin or axis that changes where it sits changes the
+// key; joint motion during a run does not, the poses being read at every step.
 export function physicsDefinitionKey(document: PantinDocument): string {
   if (document.belts.length === 0 && document.guides.length === 0) {
     return "[]";
