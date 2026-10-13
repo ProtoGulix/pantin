@@ -5,13 +5,14 @@ import { MAX_IMPORT_BYTES } from "@pantin/protocol";
 import { type BusEndpoint, createBusEndpoint } from "../bus/bus-endpoint.ts";
 import type { ProcessLimits } from "../converter/process-runner.ts";
 import { createStepConverter, type StepConverter } from "../converter/step-converter.ts";
-import { type IoMappingSource, NO_IO_MAPPING } from "../domain/io-mapping.ts";
+import type { IoMappingSource } from "../domain/io-mapping.ts";
 import {
   isSourceAccepted,
   type NetworkConfig,
   resolveNetworkConfig,
 } from "../domain/network-config.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
+import { serviceMappingSource } from "../service/io-operations.ts";
 import {
   createPantinService,
   type PantinService,
@@ -58,8 +59,8 @@ export type PantinServerOptions = {
   // Clock of the tag bus: pings, pongs and the hello deadline (ADR 0045 point 4);
   // the real one by default.
   busTimer?: SimulationTimer;
-  // The Pantins' I/O mappings (ADR 0045 point 7). Without one, no Pantin has a
-  // mapping and a `plc` role is refused on the bus (4003); slice P2 provides it.
+  // Replaces the Pantins' I/O mappings (ADR 0045 point 7), which the core reads
+  // from io.csv and io-modules.json by default; tests of the bus give fakes.
   ioMappingSource?: IoMappingSource;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;
@@ -145,7 +146,7 @@ function busEndpointOf(
   return createBusEndpoint({
     service,
     network,
-    mappingSource: options.ioMappingSource ?? NO_IO_MAPPING,
+    mappingSource: options.ioMappingSource ?? serviceMappingSource(service),
     timer: options.busTimer ?? createRealSimulationTimer(),
     reportError: options.reportError,
   });

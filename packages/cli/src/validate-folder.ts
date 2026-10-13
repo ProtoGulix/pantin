@@ -4,11 +4,15 @@ import {
   ApiError,
   assertRealPathInside,
   type DocumentReading,
+  evaluateIoMapping,
+  ioTagsOf,
   isErrorWithCode,
+  readIoModules,
   readPantinDocument,
   resolveInside,
 } from "@pantin/core";
 import { type Body, PANTIN_DOCUMENT_FILE_NAME, type PantinDocument } from "@pantin/protocol";
+import { describeIoProblem, readIoFiles } from "./io-folder.ts";
 
 // Checks a Pantin folder without a running core (ADR 0021): its pantin.json
 // through the core's reader (migration, then every document rule), then the
@@ -68,25 +72,70 @@ function readingOf(text: string, location: string): DocumentReading | ApiError {
   }
 }
 
-export async function validatePantinFolder(folder: string): Promise<FolderReport> {
+export type FolderDocument = { document: PantinDocument; notes: string[] } | { problems: string[] };
+
+/** The folder's pantin.json through the core's reader, or why it cannot be used. */
+export async function readFolderDocument(folder: string): Promise<FolderDocument> {
   const location = join(folder, PANTIN_DOCUMENT_FILE_NAME);
   const text = await readDocumentText(location);
   if (text instanceof ApiError) {
-    return { problems: [text.message], notes: [] };
+    return { problems: [text.message] };
   }
   const reading = readingOf(text, location);
   if (reading instanceof ApiError) {
-    return { problems: [reading.message], notes: [] };
+    return { problems: [reading.message] };
   }
   if (reading.kind === "invalidJson") {
-    return { problems: [`${location} is not valid JSON (${reading.reason}).`], notes: [] };
+    return { problems: [`${location} is not valid JSON (${reading.reason}).`] };
   }
   if (reading.kind === "invalid") {
-    return { problems: reading.problems, notes: [] };
+    return { problems: reading.problems };
   }
   const notes =
     reading.migratedFrom === null
       ? []
       : [`Schema version ${reading.migratedFrom} on disk: the core migrates it on open.`];
-  return { problems: await meshProblems(folder, reading.document), notes };
+  return { document: reading.document, notes };
+}
+
+// io.csv and io-modules.json, when the folder has them (ADR 0045 point 7).
+async function ioReport(folder: string, document: PantinDocument): Promise<FolderReport> {
+  const files = await readIoFiles(folder);
+  const answer = evaluateIoMapping(files, ioTagsOf(document));
+  if (answer.status === "missing") {
+    return { problems: [], notes: loneModulesNotes(files.modules) };
+  }
+  const unmapped = answer.unmappedTags;
+  const notes =
+    unmapped.length === 0
+      ? []
+      : [
+          `${unmapped.length} tag(s) not mapped in io.csv: ${unmapped.slice(0, 5).join(", ")}${unmapped.length > 5 ? ", ..." : ""}.`,
+        ];
+  return { problems: answer.problems.map(describeIoProblem), notes };
+}
+
+// An io-modules.json with no io.csv maps nothing, but is not ignored in silence.
+function loneModulesNotes(bytes: Uint8Array | undefined): string[] {
+  if (bytes === undefined) {
+    return [];
+  }
+  // The core's messages for io-modules.json already name the file.
+  const problems = readIoModules(bytes).problems.map((problem) => problem.message);
+  return [
+    "io-modules.json exists but there is no io.csv: nothing is mapped.",
+    ...problems.map((problem) => `note: ${problem}`),
+  ];
+}
+
+export async function validatePantinFolder(folder: string): Promise<FolderReport> {
+  const read = await readFolderDocument(folder);
+  if ("problems" in read) {
+    return { problems: read.problems, notes: [] };
+  }
+  const io = await ioReport(folder, read.document);
+  return {
+    problems: [...(await meshProblems(folder, read.document)), ...io.problems],
+    notes: [...read.notes, ...io.notes],
+  };
 }

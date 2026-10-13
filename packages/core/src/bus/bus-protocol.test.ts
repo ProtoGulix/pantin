@@ -142,7 +142,7 @@ describe("close 4002: a second plc", () => {
 });
 
 describe("close 4003: the mapping", () => {
-  it("refuses a plc when the Pantin has no valid io mapping (the seam until slice P2)", async () => {
+  it("refuses a plc when the Pantin has no valid io mapping (no io.csv in its folder)", async () => {
     await startAxis(false);
     const plc = await connect();
     plc.send(HELLO_PLC);

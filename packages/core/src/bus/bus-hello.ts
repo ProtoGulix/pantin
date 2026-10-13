@@ -28,7 +28,7 @@ async function acceptPlc(context: BusContext, mappingId: string | undefined): Pr
   const mapping = await deps.mappingSource.read(init.pantinId);
   // ADR 0045 points 7 and 10: the watchdog needs the mapping, and a bridge
   // runs on the mapping it read; with none, or another one, there is nothing
-  // for a plc to do. Slice P2 provides the real source.
+  // for a plc to do.
   if (mapping === null) {
     context.fail(CLOSE.mappingMismatch, "This Pantin has no valid io mapping.");
     return false;

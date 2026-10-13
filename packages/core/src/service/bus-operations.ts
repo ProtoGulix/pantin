@@ -10,6 +10,7 @@ import {
 import { describeTags } from "../domain/tags.ts";
 import { toClockState } from "./clock-operations.ts";
 import { recordConsoleEvents } from "./console-record.ts";
+import { readIo } from "./io-operations.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
 import { syncTagStates, zeroBitCommands } from "./tag-operations.ts";
 
@@ -80,6 +81,8 @@ async function plcModuleStatus(
 
 export function busOperations(context: ServiceContext) {
   return {
+    // The mapping the bridge reads at start-up and the core reads at hello.
+    readIo: (pantinId: PantinId) => readIo(context, pantinId),
     peekFeedSource: (pantinId: PantinId) => peekFeedSource(context, pantinId),
     bridgeConnected: (pantinId: PantinId) => bridgeConnected(context, pantinId),
     bridgeDisconnected: (

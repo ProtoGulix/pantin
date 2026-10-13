@@ -217,8 +217,10 @@ Facts checked in the repository on 2026-10-13:
    - `TagSchema` gains `forced: boolean`.
    - A bit tag accepts only 0 or 1 and an integer tag only integers, on
      REST and on the bus. This ends the ADR 0012 point 2 tolerance.
-6. **`io.csv`**, in the Pantin folder: semicolon-separated, UTF-8, LF or
-   CRLF. The first line must be exactly
+6. **`io.csv`**, in the Pantin folder: semicolon-separated, UTF-8 without
+   a byte order mark (a BOM is refused with its own problem, since nothing
+   is trimmed and Excel's "CSV UTF-8" adds one; bytes that are not UTF-8
+   are refused too), LF or CRLF, at most 1 MiB. The first line must be exactly
    `tag;variable;module;zone;address;type;comment`, and that header is the
    version of the format.
 
@@ -242,7 +244,15 @@ Facts checked in the repository on 2026-10-13:
      `unitId`, `wordOrder`, `watchdogMilliseconds`}].
      - Defaults: `unitId` 1, `wordOrder` `low_word_first`,
        `watchdogMilliseconds` 1000.
-     - Ports are 1024 to 65535 and unique.
+     - Ports are 1024 to 65535 and unique; keys unique; unknown fields
+       refused.
+     - `unitId` is 1 to 247 (Modbus serial slave addresses: 0 is
+       broadcast, 248 to 255 reserved; NOT VERIFIED, recalled; CODESYS may
+       send another value, spike 4b).
+     - `watchdogMilliseconds` is an integer from 100 to 3 600 000: below
+       100 ms a normal 20 to 50 ms poll could trip it on one late request.
+     - At most 1 MiB. A missing `io-modules.json` beside an `io.csv` makes
+       the mapping `invalid` (problem `modules_missing`).
    - Listen address and allow list are machine settings and stay on the
      bridge command line (ADR 0046), as for the core.
    - The CSV maps tags, it never defines them. Tags come from the document
@@ -271,10 +281,14 @@ Facts checked in the repository on 2026-10-13:
    - `GET /api/pantins/:pantinId/io` reads both files from disk on each
      call. It answers `IoMappingResponse`:
      - `status`: `valid`, `invalid` or `missing`;
-     - `mappingId`: SHA-256 of the two files' bytes;
+     - `mappingId`: SHA-256 over each file's byte length followed by its
+       bytes (a missing file hashed as absent), so a byte moved from one
+       file to the other changes it; null when `missing`;
      - `modules`;
      - `rows`, with each tag's type and direction;
-     - `problems`: {`line`, `column`, `code`, `message`};
+     - `problems`: {`file`, `line`, `column`, `code`, `message`}, with
+       `line` and `column` 1-based, and null for `io-modules.json`
+       problems (amended in P2 review);
      - `unmappedTags`.
    - `pantin validate` reports the same problems when the files exist.
    - The core sends `io_changed` when the tag list changes (an element

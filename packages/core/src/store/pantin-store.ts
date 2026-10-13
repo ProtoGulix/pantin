@@ -4,6 +4,8 @@ import { lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "no
 import { join, resolve } from "node:path";
 import {
   faceFilePathOf,
+  IO_FILE_MAX_BYTES,
+  type IoFileName,
   MAX_FACE_FILE_BYTES,
   type MeshFolderFileName,
   type OrphanMeshFile,
@@ -12,6 +14,7 @@ import {
   type PantinId,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
+import { readFileUpTo } from "./bounded-read.ts";
 import { deleteMeshFolderFile, listMeshFolderFiles } from "./mesh-folder-files.ts";
 import { assertRealPathInside, isErrorWithCode, resolveInside } from "./safe-paths.ts";
 
@@ -50,6 +53,10 @@ export type PantinStore = {
     fileName: MeshFolderFileName,
     mayDelete: () => boolean,
   ): Promise<"deleted" | "missing" | "not_a_file" | "kept">;
+  // The bytes of io.csv or io-modules.json (ADR 0045 point 7), read from disk
+  // on each call: at most IO_FILE_MAX_BYTES + 1 of them, so that a larger file
+  // is recognisable. undefined when the file does not exist.
+  readIoFile(pantinId: PantinId, fileName: IoFileName): Promise<Uint8Array | undefined>;
   describeDocumentLocation(pantinId: PantinId): string;
 };
 
@@ -95,6 +102,25 @@ async function readDocumentText(paths: Paths, pantinId: PantinId): Promise<strin
     }
     throw error;
   }
+}
+
+async function readIoFile(
+  paths: Paths,
+  pantinId: PantinId,
+  fileName: IoFileName,
+): Promise<Uint8Array | undefined> {
+  const path = pathInPantin(paths, pantinId, fileName);
+  try {
+    // Inside this Pantin's folder, not just the pantins directory: a link to a
+    // sibling Pantin's file is refused.
+    await assertRealPathInside(pantinFolder(paths, pantinId), path);
+  } catch (error) {
+    if (isErrorWithCode(error, "ENOENT")) {
+      return undefined;
+    }
+    throw error;
+  }
+  return readFileUpTo(path, IO_FILE_MAX_BYTES);
 }
 
 async function readDocumentModifiedAt(paths: Paths, pantinId: PantinId): Promise<Date | undefined> {
@@ -249,6 +275,7 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
         fileName,
         mayDelete,
       ),
+    readIoFile: (pantinId, fileName) => readIoFile(paths, pantinId, fileName),
     // Relative to the pantins directory: error messages never reveal absolute paths.
     describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
   };

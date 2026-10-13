@@ -1,5 +1,6 @@
+import type { IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { type IoMapping, NO_IO_MAPPING, watchdogTags } from "./io-mapping.ts";
+import { type IoMapping, mappingOf, watchdogTags } from "./io-mapping.ts";
 
 const MAPPING: IoMapping = {
   mappingId: "abc",
@@ -26,8 +27,38 @@ describe("watchdogTags", () => {
   });
 });
 
-describe("NO_IO_MAPPING", () => {
-  it("has no mapping for any Pantin", async () => {
-    expect(await NO_IO_MAPPING.read("axis")).toBeNull();
+describe("mappingOf", () => {
+  const answer: IoMappingResponse = {
+    status: "valid",
+    mappingId: "abc",
+    modules: [],
+    rows: [
+      {
+        line: 2,
+        tag: "a.v.coil_1",
+        variable: "v",
+        module: "m1",
+        zone: "coil",
+        address: 0,
+        ioType: "BOOL",
+        comment: "",
+        type: "bit",
+        direction: "command",
+      },
+    ],
+    problems: [],
+    unmappedTags: [],
+  };
+
+  it("keeps the tag, module, type and direction of a valid answer", () => {
+    expect(mappingOf(answer)).toEqual({
+      mappingId: "abc",
+      rows: [{ tag: "a.v.coil_1", module: "m1", type: "bit", direction: "command" }],
+    });
+  });
+
+  it("is no mapping for an invalid or missing answer", () => {
+    expect(mappingOf({ ...answer, status: "invalid" })).toBeNull();
+    expect(mappingOf({ ...answer, status: "missing", mappingId: null })).toBeNull();
   });
 });

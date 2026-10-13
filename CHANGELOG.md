@@ -8,6 +8,22 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- PLC bridge, I/O mapping (ADR 0045 slice P2): `io-modules.json` (module key,
+  port, unit id 1 to 247, word order, watchdog 100 ms to 1 h) and a strict
+  hand-written parser and validation for `io.csv` (syntax, unknown or twice
+  mapped tags, zone and type against the tag, overlaps, address range,
+  CODESYS variable names; unmapped tags are a warning). `GET
+  /api/pantins/:pantinId/io` reads both files on each call and answers the
+  status (`valid`, `invalid`, `missing`), the `mappingId`, the rows and the
+  problems with line and column. The tag bus now serves real mappings: a `plc`
+  hello is accepted with the current id and refused (4003) otherwise, and the
+  watchdog resets the bit commands of the mapped module. A UTF-8 byte order
+  mark in `io.csv` is refused with its own problem.
+- Command line: `pantin io init <folder> [--update]` writes `io.csv` and
+  `io-modules.json` (module `m1`, port 1502), or appends rows for unmapped tags
+  without touching existing lines; `pantin gvl <folder>` prints the CODESYS
+  global variable list of a valid mapping; `pantin validate` reports io
+  problems when the files exist.
 - Phase 6, in progress (ADR 0043): schema version 12 with belts, guides,
   emitters, absorbers and presence sensors; the Rapier physics engine in the
   core; products carried by belts driven through the drive, motor and drum

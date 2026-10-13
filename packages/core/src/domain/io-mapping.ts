@@ -1,9 +1,8 @@
-import type { PantinId, TagDirection, TagType } from "@pantin/protocol";
+import type { IoMappingResponse, PantinId, TagDirection, TagType } from "@pantin/protocol";
 
 // The seam between the tag bus and the I/O mapping (ADR 0045 points 6, 7, 10
-// and 11). Phase 7 slice P1 builds the bus; slice P2 reads io.csv and
-// io-modules.json and implements `IoMappingSource` over them. Until then the
-// core runs with `NO_IO_MAPPING`, which has no mapping for any Pantin.
+// and 11). `IoMappingSource` is implemented over io.csv and io-modules.json
+// by the service (slice P2); tests give the bus a fake one.
 
 export type IoMappingRow = {
   tag: string;
@@ -25,8 +24,6 @@ export type IoMappingSource = {
   read(pantinId: PantinId): Promise<IoMapping | null>;
 };
 
-export const NO_IO_MAPPING: IoMappingSource = { read: async () => null };
-
 /**
  * The bit command tags the watchdog resets (ADR 0045 point 11), of one module
  * or, with no module, of all of them. Float and integer commands keep their
@@ -37,4 +34,17 @@ export function watchdogTags(mapping: IoMapping, module?: string): string[] {
     .filter((row) => row.type === "bit" && row.direction === "command")
     .filter((row) => module === undefined || row.module === module)
     .map((row) => row.tag);
+}
+
+/** The mapping the bus works with: only a valid answer of GET .../io is one. */
+export function mappingOf(answer: IoMappingResponse): IoMapping | null {
+  if (answer.status !== "valid" || answer.mappingId === null) {
+    return null;
+  }
+  const rows = answer.rows.flatMap((row) =>
+    row.type === null || row.direction === null
+      ? []
+      : [{ tag: row.tag, module: row.module, type: row.type, direction: row.direction }],
+  );
+  return { mappingId: answer.mappingId, rows };
 }
