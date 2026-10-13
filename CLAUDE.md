@@ -43,7 +43,7 @@ Monorepo :
     packages/sensor-types un dossier par type de capteur : schéma, évaluation, libellés (ADR 0023)
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
-    packages/bridge      pont vers les automates (protocoles industriels)
+    packages/bridge      pont vers les automates (Python, pymodbus, processus séparé, ADR 0007, 0045)
     packages/cli         validateur, générateur de variables CODESYS
     packages/step-converter  conversion STEP vers GLB (Python, OpenCascade, processus séparé, ADR 0009)
     parts/               pièces incluses (dossiers autonomes)
@@ -51,15 +51,15 @@ Monorepo :
     docs/decisions       une note courte par décision d'architecture (ADR)
     docs/spikes          rapports de vérification (phase 0)
 
-Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/bridge, @pantin/cli) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
+Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/cli ; le pont est un paquet Python non publié, pantin-bridge, ADR 0045) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
 
-Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer, bridge et cli. core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types et sensor-types (sans logique), jamais leurs comportements ni leurs évaluations (ADR 0022, 0023, 0028). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028).
+Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer et cli ; le pont, en Python, lui reste fidèle par les fixtures de packages/protocol/fixtures (ADR 0045). core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types et sensor-types (sans logique), jamais leurs comportements ni leurs évaluations (ADR 0022, 0023, 0028). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028).
 
 Stack proposée (à confirmer en phase 0) :
 
 1. Coeur : TypeScript sous Node. Physique : Rapier en WASM, @dimforge/rapier3d-deterministic-compat 0.21.0 épinglé, jamais la build SIMD, pour garder la reproductibilité bit à bit utile aux tests et à la remise à zéro (ADR 0005). Utilisé uniquement pour produits, collisions et capteurs de présence. La cinématique des machines n'est PAS de la physique, elle est calculée directement.
 2. Viewer : Babylon.js (Apache 2.0, PBR, inspecteur, WebGPU et WebGL2). Le viewer n'a pas besoin de Havok puisqu'il ne simule rien. La licence d'usage de Havok n'est de toute façon pas vérifiée.
-3. Pont PLC : par défaut un sidecar Python (asyncua pour OPC UA, pymodbus pour Modbus TCP), qui parle au coeur via le tag bus en WebSocket. Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python avec pymodbus, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE.
+3. Pont PLC : un sidecar Python (pymodbus pour Modbus TCP ; asyncua pour OPC UA plus tard), qui parle au coeur via le tag bus en WebSocket. Il ne peut pas importer Zod : il reste fidèle au protocole par des fixtures partagées dans packages/protocol/fixtures (ADR 0045). Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python avec pymodbus, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE.
 4. Distribution : docker compose pour le mode serveur, même code lancé en local pour les amateurs.
 
 ## 5. Modèle de données
@@ -107,7 +107,7 @@ Exemple de manifeste de pièce (à valider contre le schéma en phase 1) :
       ]
     }
 
-Liste d'E/S : un fichier CSV maître. Il génère à la fois les variables globales CODESYS et le mapping du simulateur. Jamais de tag défini à la main à deux endroits.
+Liste d'E/S : un fichier io.csv par Pantin (séparateur ;), avec io-modules.json pour les réglages de chaque module (ADR 0045). Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS. Jamais de tag défini à la main à deux endroits.
 
 ## 6. Économie de tokens (obligatoire)
 
@@ -160,7 +160,7 @@ Viewer : mêmes règles. La logique d'affichage est séparée des composants d'U
 
 ## 9. Tag bus (protocole coeur, viewer et pont)
 
-WebSocket JSON, versionné. Messages minimaux : abonnement à des tags, écriture d'un tag, forçage et libération d'un tag, snapshot d'état des corps (transformations) pour le viewer, événements (défaut injecté, changement de scène). La spécification complète va dans packages/protocol et docs, avant toute implémentation.
+WebSocket JSON, versionné. Messages minimaux : abonnement à des tags, écriture d'un tag, forçage et libération d'un tag, snapshot d'état des corps (transformations) pour le viewer, événements (défaut injecté, changement de scène). Spécification : ADR 0045 point 4 et packages/protocol/src/tag-bus.ts. En phase 7 le pont l'utilise, le viewer reste en REST et SSE (ADR 0015) : le snapshot des corps et les événements de défaut et de scène arriveront sur le bus avec le viewer (backlog viewer-on-tag-bus). Sa sécurité est dans l'ADR 0046.
 
 ## 10. Import CAO et communications automate
 
@@ -218,7 +218,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 4. Drives : discret, position, vitesse, défauts injectables. Sortie : un vérin double effet se comporte comme décrit, y compris sans rappel ressort.
 5. Capteurs de liaison. Sortie : fins de course qui basculent aux bonnes positions.
 6. Produits et capteurs de présence, convoyeur. Sortie : un carton traverse un convoyeur, un capteur le détecte, de façon reproductible.
-7. Pont PLC : Modbus TCP puis OPC UA, générateur de variables CODESYS depuis le CSV. Sortie : un programme CODESYS réel pilote une scène en boucle fermée.
+7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis le CSV (OPC UA repoussé, ADR 0045). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel qui pilote une scène reste à démontrer (en attente : pas de VM CODESYS au 2026-10-13).
 8. UI d'édition : bibliothèque de pièces, éditeur de scène, éditeur de pièce (import, choix des noeuds, type de liaison, limites, aperçu par curseurs, écriture du manifeste), mapping I/O, inspecteur avec forçage de tags. Sortie : on crée une machine complète sans éditer de fichier à la main.
 9. Communauté et multi instance : index de packs dans un dépôt git, CI qui exécute un test de scénario par pièce, documentation, plusieurs instances dans un même coeur. Sortie : une pièce tierce s'installe sans modifier le coeur.
 

@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-28
 - Refines: CLAUDE.md section 3.6, ADR 0003 point 3
+- Answered for the PLC bridge by: ADR 0046
 
 ## Context
 

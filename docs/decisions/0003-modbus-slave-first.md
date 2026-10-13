@@ -2,6 +2,8 @@
 
 - Status: accepted (per-module addressing details pending spike 4)
 - Date: 2026-09-28
+- Extended by: ADR 0045
+- Amended by: ADR 0045 (points 2 and 3)
 
 ## Context
 

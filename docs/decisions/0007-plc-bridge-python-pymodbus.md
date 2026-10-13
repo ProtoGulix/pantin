@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-28
 - Source: spike 0003 (docs/spikes/0003-plc-bridge-and-modbus-slave.md)
+- Extended by: ADR 0045
 
 ## Context
 
