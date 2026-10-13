@@ -3,6 +3,7 @@ import { refuseBodyUsedAsFrame } from "../domain/conveyor-rules.ts";
 import { ioTextOf } from "../domain/io-document-text.ts";
 import { findBody, removeBodies, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
+import { alignIo } from "./io-alignment.ts";
 import {
   loadPantin,
   meshPathsOf,
@@ -89,6 +90,8 @@ async function writeIoIfChanged(
   pantinId: PantinId,
   openPantin: OpenPantin,
 ): Promise<void> {
+  // The renames made since the last read are written with the document.
+  alignIo(openPantin);
   const text = ioTextOf(openPantin.io);
   if (text !== null && text !== openPantin.savedIoText) {
     await context.store.writeIoAtomically(pantinId, text);
@@ -151,6 +154,7 @@ async function reloadDocument(
   openPantin.document = saved;
   openPantin.savedText = serializePantinDocument(saved);
   openPantin.io = io;
+  openPantin.ioAlignedDocument = saved;
   openPantin.savedIoText = ioTextOf(io);
   openPantin.savedMeshPaths = savedMeshPaths;
   openPantin.pendingMeshDeletions.clear();

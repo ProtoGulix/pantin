@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 // IEC 61131-3 as commonly summarised, nobody read the standard or the CODESYS
 // documentation for them.
 
-const VARIABLE_MAX_LENGTH = 64;
+export const VARIABLE_MAX_LENGTH = 64;
 const CUT_LENGTH = 56;
 const HASH_CHARACTERS = 7;
 

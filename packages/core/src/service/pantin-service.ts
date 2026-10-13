@@ -29,6 +29,7 @@ import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { faceOperations } from "./face-operations.ts";
 import { importBodies } from "./import-operations.ts";
+import { ioEditOperations } from "./io-operations.ts";
 import {
   createJoint,
   deleteJoint,
@@ -162,7 +163,8 @@ function simulationPeeks(context: ServiceContext) {
   };
 }
 
-// Assemblies and everything a document holds besides bodies and joints.
+// Assemblies and everything a document holds besides bodies and joints, and
+// the I/O mapping that names its tags.
 function documentObjectOperations(context: ServiceContext) {
   return {
     ...assemblyOperations(context),
@@ -170,6 +172,7 @@ function documentObjectOperations(context: ServiceContext) {
     ...actuatorOperations(context),
     ...sensorOperations(context),
     ...conveyorOperations(context),
+    ...ioEditOperations(context),
   };
 }
 

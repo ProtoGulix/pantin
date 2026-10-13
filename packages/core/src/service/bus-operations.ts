@@ -11,6 +11,7 @@ import { mappingIdOf } from "../domain/io-document-text.ts";
 import { describeTags } from "../domain/tags.ts";
 import { toClockState } from "./clock-operations.ts";
 import { recordConsoleEvents } from "./console-record.ts";
+import { alignIo } from "./io-alignment.ts";
 import { readIo } from "./io-operations.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
 import { syncTagStates, zeroBitCommands } from "./tag-operations.ts";
@@ -24,6 +25,8 @@ function peekFeedSource(context: ServiceContext, pantinId: PantinId): FeedSource
   if (openPantin === undefined) {
     return undefined;
   }
+  // A rename made since the last read changes the mappingId the tick reports.
+  alignIo(openPantin);
   return {
     stepCount: openPantin.stepCount,
     document: openPantin.document,

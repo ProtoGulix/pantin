@@ -21,6 +21,7 @@ import type { TagStates } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { recordConsoleEvents } from "./console-record.ts";
+import { alignIo } from "./io-alignment.ts";
 import {
   buildPhysicsRuntime,
   type PhysicsRuntime,
@@ -42,6 +43,9 @@ export type OpenPantin = {
   io: IoReading;
   // Canonical text of io.json on disk; null when it is missing or unreadable.
   savedIoText: string | null;
+  // The document the mapping was last aligned with, to carry renames over
+  // (ADR 0049 point 10): see alignIo.
+  ioAlignedDocument: PantinDocument;
   // Meshes referenced by pantin.json on disk, and by the one being written.
   savedMeshPaths: Set<string>;
   writingMeshPaths: Set<string>;
@@ -112,6 +116,7 @@ export function newOpenPantin(
     savedText: serializePantinDocument(document),
     io,
     savedIoText: ioTextOf(io),
+    ioAlignedDocument: document,
     savedMeshPaths: meshPathsOf(document),
     writingMeshPaths: new Set(),
     pendingMeshDeletions: new Set(),
@@ -194,6 +199,9 @@ export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinRe
 
 // Either file differs from its saved text (ADR 0049 point 3).
 function hasUnsavedChanges(openPantin: OpenPantin): boolean {
+  // Safe in a check: alignIo is idempotent and changes the mapping's text only
+  // after a real rename, which the next read would carry anyway.
+  alignIo(openPantin);
   return (
     serializePantinDocument(openPantin.document) !== openPantin.savedText ||
     ioTextOf(openPantin.io) !== openPantin.savedIoText

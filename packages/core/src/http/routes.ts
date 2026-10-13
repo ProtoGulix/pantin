@@ -13,6 +13,7 @@ import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
 import { CLOCK_ROUTES } from "./clock-routes.ts";
 import { CONVEYOR_ROUTES } from "./conveyor-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
+import { IO_ROUTES } from "./io-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
 import { ORPHAN_MESH_ROUTES } from "./orphan-mesh-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
@@ -174,6 +175,7 @@ export const ROUTES: readonly Route[] = [
   ...CLOCK_ROUTES,
   ...ORPHAN_MESH_ROUTES,
   ...TAG_ROUTES,
+  ...IO_ROUTES,
 ];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {

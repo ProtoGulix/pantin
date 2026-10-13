@@ -1,21 +1,112 @@
-import type { IoMappingResponse, PantinId } from "@pantin/protocol";
+import type {
+  CreateIoChannelsRequest,
+  CreateIoModuleRequest,
+  IoDocument,
+  IoMappingResponse,
+  PantinId,
+  UpdateIoChannelRequest,
+  UpdateIoModuleRequest,
+} from "@pantin/protocol";
+import { addChannels, removeChannel, updateChannel } from "../domain/io-channel-edits.ts";
+import { canonicalIoDocument } from "../domain/io-document-text.ts";
 import { evaluateIoMapping, ioTagsOf } from "../domain/io-evaluation.ts";
 import { type IoMappingSource, mappingOf } from "../domain/io-mapping.ts";
+import { addModule, removeModule, updateModule } from "../domain/io-module-edits.ts";
+import type { IoTag } from "../domain/io-validation.ts";
 import { ApiError } from "../errors.ts";
-import { loadPantin, type ServiceContext } from "./open-pantins.ts";
+import { alignIo } from "./io-alignment.ts";
+import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
-// GET /api/pantins/:pantinId/io (ADR 0049 points 3 and 8): the open mapping,
-// checked against the open document, unsaved edits of both included. Only the
-// legacy files are looked up on disk, on each call: they are what the user
-// must act on, and nothing else reads them.
+// The I/O mapping of an open Pantin (ADR 0049 points 3, 4 and 8): read and
+// edited in memory like the document, checked against the open document's tags,
+// unsaved edits included. Only the legacy files are looked up on disk, on each
+// call: they are what the user must act on, and nothing else reads them.
+
+async function answerOf(
+  context: ServiceContext,
+  pantinId: PantinId,
+  openPantin: OpenPantin,
+): Promise<IoMappingResponse> {
+  const legacyFiles = await context.store.listLegacyIoFiles(pantinId);
+  return evaluateIoMapping(openPantin.io, legacyFiles, ioTagsOf(openPantin.document));
+}
 
 export async function readIo(
   context: ServiceContext,
   pantinId: PantinId,
 ): Promise<IoMappingResponse> {
   const openPantin = await loadPantin(context, pantinId);
-  const legacyFiles = await context.store.listLegacyIoFiles(pantinId);
-  return evaluateIoMapping(openPantin.io, legacyFiles, ioTagsOf(openPantin.document));
+  alignIo(openPantin);
+  return answerOf(context, pantinId, openPantin);
+}
+
+// An edit never merges with a source it cannot trust (ADR 0049 points 6 and 8).
+async function refuseUneditable(
+  context: ServiceContext,
+  pantinId: PantinId,
+  openPantin: OpenPantin,
+): Promise<void> {
+  if ((await context.store.listLegacyIoFiles(pantinId)).length > 0) {
+    throw new ApiError(
+      "conflict",
+      'io.csv or io-modules.json still exist beside io.json: run "pnpm pantin io migrate <folder>" or delete them, then discard. See GET /api/pantins/<id>/io.',
+    );
+  }
+  if (openPantin.io.kind === "unreadable") {
+    throw new ApiError(
+      "conflict",
+      "io.json cannot be read, so it cannot be edited: fix or delete the file, then discard. See GET /api/pantins/<id>/io.",
+    );
+  }
+}
+
+function requireMapping(openPantin: OpenPantin): IoDocument {
+  if (openPantin.io.kind !== "document") {
+    throw new ApiError(
+      "not_found",
+      "This Pantin has no I/O mapping yet: add a module with POST /api/pantins/<id>/io/modules.",
+    );
+  }
+  return openPantin.io.document;
+}
+
+/** Runs one edit on the open mapping; the edit is all or nothing. */
+async function editIo(
+  context: ServiceContext,
+  pantinId: PantinId,
+  edit: (openPantin: OpenPantin, tags: IoTag[]) => IoDocument,
+): Promise<IoMappingResponse> {
+  const openPantin = await loadPantin(context, pantinId);
+  await refuseUneditable(context, pantinId, openPantin);
+  // No await from here to the assignment: nobody edits in between.
+  alignIo(openPantin);
+  const edited = edit(openPantin, ioTagsOf(openPantin.document));
+  // Canonical, so that the answer lists the channels in the order of the file.
+  openPantin.io = { kind: "document", document: canonicalIoDocument(edited) };
+  return answerOf(context, pantinId, openPantin);
+}
+
+export function ioEditOperations(context: ServiceContext) {
+  return {
+    createIoModule: (pantinId: PantinId, request: CreateIoModuleRequest) =>
+      editIo(context, pantinId, (open) =>
+        addModule(open.io.kind === "document" ? open.io.document : null, request),
+      ),
+    updateIoModule: (pantinId: PantinId, moduleKey: string, request: UpdateIoModuleRequest) =>
+      editIo(context, pantinId, (open) => updateModule(requireMapping(open), moduleKey, request)),
+    deleteIoModule: (pantinId: PantinId, moduleKey: string) =>
+      editIo(context, pantinId, (open) => removeModule(requireMapping(open), moduleKey)),
+    createIoChannels: (pantinId: PantinId, moduleKey: string, request: CreateIoChannelsRequest) =>
+      editIo(context, pantinId, (open, tags) =>
+        addChannels(requireMapping(open), moduleKey, request.tags, tags),
+      ),
+    updateIoChannel: (pantinId: PantinId, tagName: string, request: UpdateIoChannelRequest) =>
+      editIo(context, pantinId, (open, tags) =>
+        updateChannel(requireMapping(open), tagName, request, tags),
+      ),
+    deleteIoChannel: (pantinId: PantinId, tagName: string) =>
+      editIo(context, pantinId, (open) => removeChannel(requireMapping(open), tagName)),
+  };
 }
 
 /** The bus's mapping source over the same code as the route: valid, or null. */

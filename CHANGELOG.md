@@ -8,6 +8,20 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- PLC bridge, I/O mapping edit routes (ADR 0049 slice P2, the write path):
+  `POST /api/pantins/:pantinId/io/modules`, `PATCH` and `DELETE .../io/modules/
+  :moduleKey`, `POST .../io/modules/:moduleKey/channels` (`{ "tags": [..] }`)
+  and `PATCH` and `DELETE .../io/channels/:tag`, each answering the whole
+  `IoMappingResponse` (404, 400 and 409 as the ADR lists them, 409 too while
+  io.json is unreadable or legacy files exist). The core derives the module
+  key, the port (from 1502), the zone and `ioType`, the address (lowest fit,
+  registers on even addresses) and the variable (`_2`, `_3` on a collision);
+  these pure functions in `core/src/domain/io-allocation.ts` are shared with
+  the CLI in the next slice. Edits stay in memory until save. Renames carry
+  over: each read of the mapping (route, bus, save) applies the document's
+  renames to the channels' `tag`, keeps `variable`, leaves a deleted tag's
+  channel as `unknown_tag` and does not carry a rename onto a stale channel's
+  tag; discard resets it.
 - PLC bridge, one io.json (ADR 0049 slice P1, the read path): `io.json`
   beside pantin.json holds the modules and their channels (tag, variable,
   zone, address, `ioType`, comment), checked by the new public schema

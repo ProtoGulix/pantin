@@ -40,22 +40,26 @@ export const MODBUS_UNIT_ID_RANGE = { min: 1, max: 247 } as const;
 // trip the watchdog on one late request; an hour is the generous end.
 export const WATCHDOG_MILLISECONDS_RANGE = { min: 100, max: 3_600_000 } as const;
 
+// The fields of a module's settings without their defaults, shared with the
+// edit requests (io-requests.ts), where an absent field means "unchanged".
+export const IoPortSchema = z.number().int().min(1024).max(65535);
+export const IoUnitIdSchema = z
+  .number()
+  .int()
+  .min(MODBUS_UNIT_ID_RANGE.min)
+  .max(MODBUS_UNIT_ID_RANGE.max);
+export const IoWatchdogSchema = z
+  .number()
+  .int()
+  .min(WATCHDOG_MILLISECONDS_RANGE.min)
+  .max(WATCHDOG_MILLISECONDS_RANGE.max);
+
 export const IoModuleSettingsSchema = z.strictObject({
   key: KeySchema,
-  port: z.number().int().min(1024).max(65535),
-  unitId: z
-    .number()
-    .int()
-    .min(MODBUS_UNIT_ID_RANGE.min)
-    .max(MODBUS_UNIT_ID_RANGE.max)
-    .default(MODBUS_UNIT_ID_RANGE.min),
+  port: IoPortSchema,
+  unitId: IoUnitIdSchema.default(MODBUS_UNIT_ID_RANGE.min),
   wordOrder: WordOrderSchema.default("low_word_first"),
-  watchdogMilliseconds: z
-    .number()
-    .int()
-    .min(WATCHDOG_MILLISECONDS_RANGE.min)
-    .max(WATCHDOG_MILLISECONDS_RANGE.max)
-    .default(1000),
+  watchdogMilliseconds: IoWatchdogSchema.default(1000),
 });
 export type IoModuleSettings = z.infer<typeof IoModuleSettingsSchema>;
 
