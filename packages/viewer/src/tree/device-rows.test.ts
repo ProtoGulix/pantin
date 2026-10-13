@@ -75,6 +75,11 @@ describe("the selected row", () => {
       nodeId: deviceRowId("press", "guide", "side"),
     });
   });
+
+  it("opens its context menu with the menu key, as any other row", () => {
+    const rows = flattenTree(tree, view(expanded, { kind: "belt", id: "feed" }));
+    expect(commandForKey(rows, belt, "ContextMenu")).toEqual({ type: "contextMenu", nodeId: belt });
+  });
 });
 
 describe("revealing a device", () => {

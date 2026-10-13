@@ -169,3 +169,19 @@
   background: var(--accent-soft);
   box-shadow: none;
 }
+
+/* The on or off mark of a sensor, at the end of its row: a filled disc when on,
+   a ring when off. */
+.tree-row__state {
+  display: inline-flex;
+  padding: 0 4px;
+  color: var(--text-faint);
+}
+
+.tree-row__state--on {
+  color: var(--success);
+}
+
+.tree-row__state--on path {
+  fill: currentColor;
+}

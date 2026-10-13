@@ -17,6 +17,7 @@ export interface TreeRow {
   wiring: TreeNode["wiring"];
   stateLabel: string | null;
   kindLabel: string | null;
+  stateMark: TreeNode["stateMark"];
   depth: number;
   parentId: string | null;
   expandable: boolean;
@@ -81,6 +82,7 @@ export function flattenTree(
         wiring: node.wiring,
         stateLabel: node.stateLabel,
         kindLabel: node.kindLabel,
+        stateMark: node.stateMark,
         depth,
         parentId,
         expandable: isExpandable(node),

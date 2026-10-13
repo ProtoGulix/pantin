@@ -35,6 +35,8 @@ function runAction(
     intents.toggleAssemblyIsolated(nodeId);
   } else if (action === "delete") {
     intents.requestDelete(nodeId);
+  } else if (action === "editDevice" || action === "deleteDevice") {
+    intents.runDeviceAction(nodeId, action === "editDevice" ? "edit" : "delete");
   } else {
     // The file picker must open inside this click: browsers require a user gesture.
     intents.closeContextMenu();

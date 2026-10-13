@@ -232,6 +232,8 @@
   "menu.isolateAssembly": "Isolate in the 3D view",
   "menu.showAllAssemblies": "Show every assembly",
   "tree.hidden": "hidden",
+  "tree.state.on": "On",
+  "tree.state.off": "Off",
   "inspector.title": "Inspector",
   "inspector.toolsLabel": "Inspector tools",
   "inspector.disabledTool": "{name}: {reason}",

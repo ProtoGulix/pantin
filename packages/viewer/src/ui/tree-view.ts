@@ -13,6 +13,7 @@ import {
   rowClassName,
   rowElementId,
   sensorMark,
+  stateMark,
   stateText,
   visibilityEye,
 } from "./tree-row-parts.ts";
@@ -104,6 +105,7 @@ function rowElement(
     actuatorBolt(row, translate),
     sensorMark(row, translate),
     visibilityEye(row, translate),
+    stateMark(row),
   ]);
 }
 

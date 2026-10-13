@@ -8,9 +8,7 @@ import type {
 } from "@pantin/protocol";
 import { isAligning } from "../alignment/alignment-view.ts";
 import type { PantinApiClient } from "../api-client.ts";
-import { hiddenBodyIds } from "../assembly-display.ts";
-import { assemblyFrameTargetOf } from "../assembly-frame.ts";
-import { type CentralLayout, shouldRender } from "../central-layout.ts";
+import type { CentralLayout } from "../central-layout.ts";
 import {
   buildClockView,
   type ClockModel,
@@ -21,26 +19,22 @@ import {
 } from "../clock/clock-model.ts";
 import { type ClientConsole, EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "../console/console-view.ts";
-import { conveyorDrawingOf } from "../conveyors/conveyor-drawing.ts";
-import { selectedConveyorKey } from "../conveyors/conveyor-selection.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
-import { highlightedBodyIds } from "../diagram/diagram-selection.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
 import type { GizmoSpace } from "../gizmo/gizmo-space.ts";
-import { gizmoSpecOf } from "../gizmo/gizmo-spec.ts";
 import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import { withPlacementFeedbackRules, withToolRules } from "../gizmo/tool-rules.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
-import { isPickingFaces, pickHighlightsOf, withAxisPickRules } from "../joints/axis-pick.ts";
+import { withAxisPickRules } from "../joints/axis-pick.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import type { InspectorPreferences } from "../layout-preferences.ts";
 import { describeFailure } from "../messages.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
-import { sensorMarkersOf } from "../sensors/sensor-markers.ts";
+import { stateMarksKey } from "../tree/device-state.ts";
 import { buildPanelView, type PanelView } from "../view-model.ts";
 import {
   initialViewerState,
@@ -49,6 +43,7 @@ import {
   withRequestFinished,
   withRequestStarted,
 } from "../viewer-state.ts";
+import { showViewportState } from "./viewport-sync.ts";
 
 // Holds the only mutable state of the viewer and pushes every change to the
 // panel and the viewport. Actions (pantin-actions.ts, import-actions.ts, ...)
@@ -150,36 +145,19 @@ export class ViewerStore {
       this.consolePantinId = next.openPantin?.id ?? null;
       this.consoleList = EMPTY_CLIENT_CONSOLE;
     }
-    this.renderPanel();
-    this.ports.showJointPositions(this.jointPositions);
-    this.ports.showInspectorLive(this.tagValues, this.driveRuntime);
     const viewport = this.ports.viewport();
     viewport.showBodies(next.openPantin?.id ?? null, next.openPantin?.document.bodies ?? []);
     this.followPoses(next.openPantin?.id ?? null, viewport);
+    // After followPoses: the tree's marks must not show another Pantin's tag values.
+    this.renderPanel();
+    this.ports.showJointPositions(this.jointPositions);
+    this.ports.showInspectorLive(this.tagValues, this.driveRuntime);
     // After followPoses: a Pantin just opened has no tag values yet.
     this.ports.renderDiagram(this.buildDiagramModel(next));
     this.ports.showDiagramLive(this.tagValues, this.driveRuntime);
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());
-    const document = next.openPantin?.document;
-    viewport.setNavigation(next.navigation);
-    viewport.setRendering(shouldRender(next.centralLayout, next.openPantin !== null));
-    viewport.setSelectedBodies(
-      document === undefined || next.openPantin === null
-        ? new Set()
-        : highlightedBodyIds(document, this.chainLinksOf(document), next.selection),
-    );
-    viewport.setHiddenBodies(
-      document === undefined ? new Set() : hiddenBodyIds(document, next.assemblyDisplay),
-    );
-    viewport.showJointPreview(jointPreviewOf(next));
-    viewport.showSensorMarkers(sensorMarkersOf(document));
-    viewport.showConveyorObjects(conveyorDrawingOf(document));
-    viewport.setSelectedConveyor(selectedConveyorKey(next.selection));
-    viewport.showAssemblyFrame(assemblyFrameTargetOf(next));
-    viewport.showPlacementGizmo(gizmoSpecOf(next));
-    viewport.setAlignmentPicking(isPickingFaces(next));
-    viewport.showFaceHighlights(pickHighlightsOf(next));
+    showViewportState(viewport, next, this.chainLinksOf);
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */
@@ -220,7 +198,12 @@ export class ViewerStore {
 
   private renderPanel(): void {
     this.ports.renderPanel(
-      buildPanelView(this.state, this.consoleList, this.clockModel.state?.running === true),
+      buildPanelView(
+        this.state,
+        this.consoleList,
+        this.clockModel.state?.running === true,
+        this.tagValues,
+      ),
     );
   }
 
@@ -271,8 +254,16 @@ export class ViewerStore {
    * inspector, the 3D markers and the diagram without a redraw, the diagram once.
    */
   showTagRead(values: ReadonlyMap<string, number>, runtime: ReadonlyMap<string, DriveRuntime>) {
+    const document = this.state.openPantin?.document;
+    const marksChanged =
+      document !== undefined &&
+      stateMarksKey(document, this.tagValues) !== stateMarksKey(document, values);
     this.tagValues = values;
     this.driveRuntime = runtime;
+    // The tree's marks are part of the panel: redrawn when one flips, not at every poll.
+    if (marksChanged) {
+      this.renderPanel();
+    }
     this.ports.showInspectorLive(values, runtime);
     this.ports.viewport().showTagStates(values);
     this.ports.showDiagramLive(values, runtime);

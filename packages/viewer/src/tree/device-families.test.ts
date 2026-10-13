@@ -70,3 +70,16 @@ describe("the device registry (ADR 0047 point 6)", () => {
     expect(assemblyOfDevice(document, "guide", "gone")).toBeUndefined();
   });
 });
+
+describe("the state capability of the registry (ADR 0047 point 6)", () => {
+  it("declares the state capability for the sensors with a bit tag, and for no other kind", () => {
+    const withState = DEVICE_KINDS.filter(
+      (kind) => deviceEntry(kind).stateTags(document).length > 0,
+    );
+    expect(withState).toEqual(["sensor", "presenceSensor"]);
+    const [sensor] = deviceEntry("sensor").items(context, "main");
+    expect(sensor?.stateTag).toMatch(/^main\.end\./);
+    const [belt] = deviceEntry("belt").items(context, "main");
+    expect(belt?.stateTag).toBeNull();
+  });
+});

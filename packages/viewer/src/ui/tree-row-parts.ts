@@ -61,6 +61,20 @@ export function sensorMark(row: TreeRow, translate: Translate): HTMLElement | nu
   );
 }
 
+// The on or off mark of a sensor, at the end of its row. Silent too: the state text says it.
+export function stateMark(row: TreeRow): HTMLElement | null {
+  return row.stateMark === null
+    ? null
+    : element(
+        "span",
+        {
+          className: `tree-row__state tree-row__state--${row.stateMark}`,
+          attributes: { "aria-hidden": "true" },
+        },
+        [icon("state-mark")],
+      );
+}
+
 /** What the row's icons say, for screen readers only (the row's tooltip shows it). */
 export function stateText(row: TreeRow): HTMLElement | null {
   return row.stateLabel === null

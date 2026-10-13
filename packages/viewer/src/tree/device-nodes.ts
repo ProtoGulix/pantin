@@ -6,6 +6,7 @@ import {
   deviceEntry,
   familyDevices,
 } from "./device-families.ts";
+import { NO_TAG_VALUES, STATE_MARK_LABELS, stateMarkOf, type TagValues } from "./device-state.ts";
 import { deviceRowId, familyNodeId } from "./node-ids.ts";
 import type { TreeNode } from "./tree-node.ts";
 
@@ -17,6 +18,7 @@ function familyFolder(
   family: DeviceFamily,
   language: Language,
   translate: Translate,
+  tagValues: TagValues,
 ): TreeNode | null {
   const devices = familyDevices({ document: pantin.document, language }, family, assemblyKey);
   if (devices.length === 0) {
@@ -34,8 +36,10 @@ function familyFolder(
     wiring: null,
     stateLabel: null,
     kindLabel: null,
-    children: devices.map(
-      (device): TreeNode => ({
+    stateMark: null,
+    children: devices.map((device): TreeNode => {
+      const mark = stateMarkOf(device.stateTag, tagValues);
+      return {
         id: deviceRowId(pantin.id, device.kind, device.id),
         kind: "device",
         icon: deviceEntry(device.kind).icon,
@@ -46,11 +50,12 @@ function familyFolder(
         renamable: false,
         visibility: null,
         wiring: null,
-        stateLabel: null,
+        stateLabel: mark === null ? null : translate(STATE_MARK_LABELS[mark]),
         kindLabel: translate(deviceEntry(device.kind).labelKey),
+        stateMark: mark,
         children: [],
-      }),
-    ),
+      };
+    }),
   };
 }
 
@@ -60,9 +65,10 @@ export function familyFolders(
   assemblyKey: string,
   language: Language,
   translate: Translate,
+  tagValues: TagValues = NO_TAG_VALUES,
 ): TreeNode[] {
   return DEVICE_FAMILIES.flatMap((family) => {
-    const folder = familyFolder(pantin, assemblyKey, family, language, translate);
+    const folder = familyFolder(pantin, assemblyKey, family, language, translate, tagValues);
     return folder === null ? [] : [folder];
   });
 }

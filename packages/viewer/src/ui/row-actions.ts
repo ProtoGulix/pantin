@@ -23,7 +23,7 @@ export function applyToggle(action: ToggleAction, on: boolean, intents: ToggleIn
   }
 }
 
-type DeviceIntents = Pick<
+export type DeviceIntents = Pick<
   PanelIntents,
   | "openDriveForm"
   | "openActuatorForm"

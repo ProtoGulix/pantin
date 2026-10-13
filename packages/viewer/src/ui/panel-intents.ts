@@ -52,6 +52,8 @@ export interface PanelIntents {
   cancelPropertyEdit(target: EditTarget): void;
   requestDelete(nodeId: string): void;
   openContextMenu(nodeId: string, x: number, y: number): void;
+  // The choice of the context menu of a device row: the toolbar's edit or delete.
+  runDeviceAction(nodeId: string, action: "edit" | "delete"): void;
   closeContextMenu(): void;
   resolvePrompt(action: PromptAction): void;
 

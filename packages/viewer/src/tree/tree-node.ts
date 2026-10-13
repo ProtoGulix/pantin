@@ -40,7 +40,10 @@ export interface TreeNode {
   // and as a tooltip; null when there is nothing to say.
   stateLabel: string | null;
   // What kind of element a device row is ("Drive"), for screen readers: the icon says it
-  // to the eye. Apart from stateLabel, which slice P2 needs for the on or off mark.
+  // to the eye. Apart from stateLabel, which also gives a sensor's on or off mark in words.
   kindLabel: string | null;
+  // A sensor row's on or off mark, from the tag values polled; null when it has none or the
+  // value is not known yet. Its words are in stateLabel.
+  stateMark: "on" | "off" | null;
   children: readonly TreeNode[];
 }

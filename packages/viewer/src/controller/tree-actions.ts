@@ -9,6 +9,7 @@ import {
 } from "../selection.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { withExpanded, withSelection } from "../tree/tree-state.ts";
+import { type DeviceIntents, deleteDevice, editDevice } from "../ui/row-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Tree interactions in the edit view: expansion, activation, rename, framing.
@@ -33,14 +34,35 @@ export function selectRow(store: ViewerStore, nodeId: string): void {
   }
 }
 
-/** Opens the menu of a row; a device row only selects its device until its menu exists (ADR 0047 slice P2). */
+/** Opens the menu of a row, and selects what the row stands for. */
 export function openContextMenu(store: ViewerStore, nodeId: string, x: number, y: number): void {
   const selection = selectionOfRow(nodeId);
-  const hasMenu = selection?.kind === "node";
   store.update({
     ...withSelection(store.state, selection),
-    contextMenu: hasMenu ? { nodeId, x, y } : null,
+    contextMenu: selection === null ? null : { nodeId, x, y },
   });
+}
+
+/**
+ * A choice in the menu of a device row runs the inspector toolbar's action
+ * (ui/row-actions.ts), so there is one logic for both. Edit opens the
+ * inspector, where the form is shown; delete asks for no confirmation here,
+ * as in the toolbar.
+ */
+export function runDeviceAction(
+  store: ViewerStore,
+  intents: DeviceIntents,
+  nodeId: string,
+  action: "edit" | "delete",
+): void {
+  const ref = parseNodeId(nodeId);
+  if (ref?.kind !== "device") {
+    return;
+  }
+  const device = { kind: ref.deviceKind, id: ref.id };
+  const opened = action === "edit" ? { inspectorOpen: true } : {};
+  store.update({ ...withSelection(store.state, device), ...opened, contextMenu: null });
+  (action === "edit" ? editDevice : deleteDevice)(device, intents);
 }
 
 /**

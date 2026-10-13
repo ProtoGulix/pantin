@@ -12,6 +12,7 @@ import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
 import { buildWelcomeView, type WelcomeView } from "./panel/welcome-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "./selection.ts";
 import { type ViewMode, viewModeOf } from "./session-state.ts";
+import { NO_TAG_VALUES, type TagValues } from "./tree/device-state.ts";
 import { buildTree } from "./tree/tree-model.ts";
 import { flattenTree, type TreeRow } from "./tree/tree-rows.ts";
 import type { ViewerState } from "./viewer-state.ts";
@@ -117,6 +118,7 @@ export function buildPanelView(
   state: ViewerState,
   consoleList: ClientConsole,
   clockRunning: boolean,
+  tagValues: TagValues = NO_TAG_VALUES,
 ): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
@@ -127,7 +129,11 @@ export function buildPanelView(
     menus: buildMenuBar(state, translate),
     toolbar: buildToolbarView(state),
     welcome: buildWelcomeView(state, translate),
-    treeRows: flattenTree(buildTree(state, translate), state, relatedJointsOf(state)),
+    treeRows: flattenTree(
+      buildTree({ ...state, tagValues }, translate),
+      state,
+      relatedJointsOf(state),
+    ),
     importForm: buildImportFormView(state, translate),
     contextMenu: buildContextMenuView(state, translate),
     prompt: buildPromptView(state, translate),

@@ -15,6 +15,12 @@ All notable changes to Pantin. The format follows
   tree row; Enter or a double-click opens the inspector. A device selected in
   the diagram or the 3D view unfolds its row. Registry in
   `viewer/src/tree/device-families.ts`. Partly supersedes ADR 0030 point 1.
+- Viewer, state marks and context menu for device rows (ADR 0047 slice P2): a
+  joint sensor or presence sensor with a bit state tag ends its row with a
+  filled disc (on) or a ring (off), read from the tag values already polled
+  and spoken as "Activé" or "Désactivé"; no mark until the value is known.
+  A right click, or the menu key, opens the actions of the inspector toolbar
+  (edit, delete). The registry gets an optional `state` per kind.
 - PLC bridge, I/O mapping (ADR 0045 slice P2): `io-modules.json` (module key,
   port, unit id 1 to 247, word order, watchdog 100 ms to 1 h) and a strict
   hand-written parser and validation for `io.csv` (syntax, unknown or twice

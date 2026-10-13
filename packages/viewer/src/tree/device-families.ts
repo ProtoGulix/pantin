@@ -1,6 +1,6 @@
 import { ACTUATOR_LABELS } from "@pantin/actuator-types/labels";
 import { DRIVE_LABELS } from "@pantin/drive-types/labels";
-import type { PantinDocument } from "@pantin/protocol";
+import { type PantinDocument, PRESENCE_SENSOR_TAGS, SENSOR_TAGS, tagName } from "@pantin/protocol";
 import { PRESENCE_SENSOR_LABELS, SENSOR_LABELS } from "@pantin/sensor-types/labels";
 import { conveyorsOf } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceKind } from "../device-selection.ts";
@@ -39,6 +39,8 @@ export interface DeviceItem {
   id: string;
   name: string;
   detail: string | null;
+  // The bit tag that says whether the element is on, or null when it has none.
+  stateTag: string | null;
 }
 
 export interface DeviceEntry {
@@ -48,6 +50,8 @@ export interface DeviceEntry {
   read(document: PantinDocument): readonly DeviceElement[];
   // The elements of one assembly, in document order.
   items(context: DeviceContext, assemblyKey: string): DeviceItem[];
+  // Every state tag of the document, for the kinds that declare one.
+  stateTags(document: PantinDocument): string[];
 }
 
 interface EntrySpec<Item extends DeviceElement> {
@@ -55,6 +59,8 @@ interface EntrySpec<Item extends DeviceElement> {
   labelKey: MessageKey;
   read(document: PantinDocument): readonly Item[];
   detail(item: Item, context: DeviceContext): string | null;
+  // Optional capability (ADR 0047 point 6): the bit tag that says whether the element is on.
+  state?(item: Item): string | null;
 }
 
 // Closes over the item type, so that each kind's detail reads its own fields
@@ -68,8 +74,27 @@ function entry<Item extends DeviceElement>(spec: EntrySpec<Item>): DeviceEntry {
       spec
         .read(context.document)
         .filter((item) => item.assembly === assemblyKey)
-        .map((item) => ({ id: item.id, name: item.name, detail: spec.detail(item, context) })),
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          detail: spec.detail(item, context),
+          stateTag: spec.state?.(item) ?? null,
+        })),
+    stateTags: (document) =>
+      spec.state === undefined
+        ? []
+        : spec.read(document).flatMap((item) => spec.state?.(item) ?? []),
   };
+}
+
+// The bit member of a sensor type, if it has one: the tag the 3D beams and markers light
+// from (the encoder has only a count). Read from the type's own tag record, never a list of types.
+function bitStateTag(
+  tags: readonly { type: string; member: string }[],
+  sensor: { assembly: string; tagKey: string },
+): string | null {
+  const bit = tags.find((tag) => tag.type === "bit");
+  return bit === undefined ? null : tagName(sensor.assembly, sensor.tagKey, bit.member);
 }
 
 function millimetres(metres: number): string {
@@ -105,6 +130,7 @@ const ENTRIES: Readonly<Record<DeviceKind, DeviceEntry>> = {
     labelKey: "diagram.kind.sensor",
     read: (document) => document.sensors,
     detail: (sensor, { language }) => SENSOR_LABELS[sensor.type][language].name,
+    state: (sensor) => bitStateTag(SENSOR_TAGS[sensor.type], sensor),
   }),
   belt: entry({
     icon: "device-belt",
@@ -124,6 +150,7 @@ const ENTRIES: Readonly<Record<DeviceKind, DeviceEntry>> = {
     read: (document) => conveyorsOf(document, "presenceSensor"),
     detail: (sensor, context) =>
       onBody(PRESENCE_SENSOR_LABELS[sensor.type][context.language].name, sensor, context),
+    state: (sensor) => bitStateTag(PRESENCE_SENSOR_TAGS[sensor.type], sensor),
   }),
   emitter: entry({
     icon: "device-emitter",
@@ -186,6 +213,11 @@ export function assemblyOfDevice(
   id: string,
 ): string | undefined {
   return ENTRIES[kind].read(document).find((item) => item.id === id)?.assembly;
+}
+
+/** The state tags of every element of the document that declares one. */
+export function documentStateTags(document: PantinDocument): string[] {
+  return Object.values(ENTRIES).flatMap((entry) => entry.stateTags(document));
 }
 
 export function familyHasDevices(

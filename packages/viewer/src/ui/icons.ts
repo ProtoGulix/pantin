@@ -19,6 +19,7 @@ type ToolIcon =
   | "check"
   | "eye"
   | "eye-off"
+  | "state-mark"
   | "bolt"
   | "sensor"
   | "play"
@@ -126,6 +127,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   "gizmo-space": "M3 13 8 8 M8 8V2.5 M8 8h5.5 M2 8.5l2-.5 M2.5 12l-.5-2",
   edit: "M10.5 2.5l3 3L6 13H3v-3Z M9 4l3 3",
   delete: "M2.5 4h11 M6 4V2.5h4V4 M4 4l.7 9.5h6.6L12 4 M6.8 6.5v5 M9.2 6.5v5",
+  // A disc: the stylesheet fills it when the sensor is on, and leaves a ring when it is off.
+  "state-mark": "M12 8A4 4 0 1 1 4 8a4 4 0 0 1 8 0Z",
   eye: "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   "eye-off":
     "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M2.5 13.5l11-11",

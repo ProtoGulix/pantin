@@ -73,6 +73,7 @@ import {
   activateNode,
   frameNode,
   openContextMenu,
+  runDeviceAction,
   selectRow,
   setExpanded,
   startRename,
@@ -187,7 +188,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
       store.update({ ...store.state, language });
     }
   };
-  return {
+  const intents: PanelIntents = {
     ...listIntents(store),
     ...treeIntents(store),
     ...editIntents(store),
@@ -218,8 +219,11 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
       store.ports.storeCollapsedGroups(collapsedPropertyGroups);
     },
     dismissMessage: () => store.update({ ...store.state, message: null }),
+    // The device actions are the toolbar's, which take these same intents.
+    runDeviceAction: (nodeId, action) => runDeviceAction(store, intents, nodeId, action),
     changeLanguage,
   };
+  return intents;
 }
 
 /**

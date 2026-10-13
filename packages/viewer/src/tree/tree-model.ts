@@ -10,6 +10,7 @@ import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
 import { familyFolders } from "./device-nodes.ts";
+import { NO_TAG_VALUES, type TagValues } from "./device-state.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
@@ -30,6 +31,8 @@ export interface TreeSource {
   openPantin: PantinResponse | null;
   // Absent means every assembly is shown.
   assemblyDisplay?: AssemblyDisplay;
+  // The polled tag values, for the on or off marks of sensor rows; absent means none known.
+  tagValues?: TagValues;
 }
 
 function sourceNodeChildren(pantinId: string, body: Body, translate: Translate): TreeNode[] {
@@ -45,6 +48,7 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
     wiring: null,
     stateLabel: null,
     kindLabel: null,
+    stateMark: null,
     children: [],
   }));
 }
@@ -80,6 +84,7 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
     wiring: null,
     stateLabel: null,
     kindLabel: null,
+    stateMark: null,
     children: [
       ...bodyJointChildren(pantin, body, translate),
       ...sourceNodeChildren(pantin.id, body, translate),
@@ -111,6 +116,7 @@ function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): 
     wiring: { actuatorId: actuator?.id ?? null, sensorIds: sensors.map((sensor) => sensor.id) },
     stateLabel: states.length === 0 ? null : states.join(" · "),
     kindLabel: null,
+    stateMark: null,
     children: [],
   };
 }
@@ -131,6 +137,7 @@ function assemblyNode(
   display: AssemblyDisplay,
   translate: Translate,
   language: Language,
+  tagValues: TagValues,
 ): TreeNode {
   const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
   const hidden = isAssemblyHidden(display, assembly.key, pantin.document.assemblies);
@@ -150,15 +157,16 @@ function assemblyNode(
     wiring: null,
     stateLabel: hidden ? translate("tree.hidden") : null,
     kindLabel: null,
+    stateMark: null,
     // Sub-assemblies first (structure), then bodies and internal joints (ADR 0040),
     // then the folders of devices (ADR 0047 point 2).
     children: [
       ...childAssemblies(pantin.document.assemblies, assembly.key).map((child) =>
-        assemblyNode(pantin, child, display, translate, language),
+        assemblyNode(pantin, child, display, translate, language, tagValues),
       ),
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
       ...joints.map((joint) => jointNode(pantin, joint, translate)),
-      ...familyFolders(pantin, assembly.key, language, translate),
+      ...familyFolders(pantin, assembly.key, language, translate, tagValues),
     ],
   };
 }
@@ -177,6 +185,7 @@ function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): 
     wiring: null,
     stateLabel: null,
     kindLabel: null,
+    stateMark: null,
     children: joints.map((joint) => jointNode(pantin, joint, translate)),
   };
 }
@@ -186,6 +195,7 @@ function pantinNode(
   display: AssemblyDisplay,
   translate: Translate,
   language: Language,
+  tagValues: TagValues,
 ): TreeNode {
   const bodyCount = pantin.document.bodies.length;
   return {
@@ -200,9 +210,10 @@ function pantinNode(
     wiring: null,
     stateLabel: null,
     kindLabel: null,
+    stateMark: null,
     children: [
       ...childAssemblies(pantin.document.assemblies, undefined).map((assembly) =>
-        assemblyNode(pantin, assembly, display, translate, language),
+        assemblyNode(pantin, assembly, display, translate, language, tagValues),
       ),
       betweenAssembliesFolder(pantin, translate),
     ],
@@ -214,7 +225,15 @@ export function buildTree(source: TreeSource, translate: Translate): TreeNode[] 
   const display = source.assemblyDisplay ?? NO_ASSEMBLY_DISPLAY;
   return source.openPantin === null
     ? []
-    : [pantinNode(source.openPantin, display, translate, source.language)];
+    : [
+        pantinNode(
+          source.openPantin,
+          display,
+          translate,
+          source.language,
+          source.tagValues ?? NO_TAG_VALUES,
+        ),
+      ];
 }
 
 export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode | null {

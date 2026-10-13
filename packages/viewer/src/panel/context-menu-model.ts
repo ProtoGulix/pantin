@@ -20,7 +20,10 @@ export type ContextAction =
   | "addEndSwitches"
   | "toggleAssemblyHidden"
   | "toggleAssemblyIsolated"
-  | "delete";
+  | "delete"
+  // The actions of the inspector toolbar, on a device row (ADR 0047 point 5).
+  | "editDevice"
+  | "deleteDevice";
 
 export interface ContextMenuView {
   nodeId: string;
@@ -34,9 +37,14 @@ export interface ContextMenuView {
  * Entries depend on the node: only Pantins accept an import or a new
  * assembly, assemblies and the "between assemblies" folder a new joint, only
  * joints a type change, bodies, joints and assemblies a deletion. An
- * assembly can also be hidden or isolated in the 3D view.
+ * assembly can also be hidden or isolated in the 3D view. A device row offers
+ * what the inspector toolbar offers: edit and delete.
  */
 export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
+  if (ref.kind === "device") {
+    // Rename stays in the inspector, and a device has nothing to frame.
+    return ["editDevice", "deleteDevice"];
+  }
   const entries: ContextAction[] = renamable ? ["rename"] : [];
   entries.push("frame");
   if (ref.kind === "pantin") {
@@ -70,6 +78,8 @@ const CONTEXT_LABELS = {
   toggleAssemblyHidden: "menu.hideAssembly",
   toggleAssemblyIsolated: "menu.isolateAssembly",
   delete: "menu.delete",
+  editDevice: "drives.edit",
+  deleteDevice: "drives.delete",
 } as const;
 
 const JOINT_WIRING: readonly ContextAction[] = ["actuateJoint", "addJointSensor", "addEndSwitches"];

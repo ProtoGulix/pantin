@@ -232,6 +232,8 @@
   "menu.isolateAssembly": "Isoler dans la vue 3D",
   "menu.showAllAssemblies": "Afficher tous les assemblages",
   "tree.hidden": "masqué",
+  "tree.state.on": "Activé",
+  "tree.state.off": "Désactivé",
   "inspector.title": "Inspecteur",
   "inspector.toolsLabel": "Outils de l'inspecteur",
   "inspector.disabledTool": "{name} : {reason}",
