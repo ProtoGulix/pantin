@@ -6,7 +6,7 @@ import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { withSelection } from "./tree/tree-state.ts";
+import { withRevealedDevice } from "./tree/tree-state.ts";
 import { buildPanelView as buildPanelViewWith } from "./view-model.ts";
 import {
   initialViewerState,
@@ -268,14 +268,14 @@ describe("devices in the tree and the inspector", () => {
     actuators: [cylinderOf("verin1", "main", "verin1-dist", ["slide"])],
   });
   const onDevice = (language: "fr" | "en") =>
-    withSelection(
+    withRevealedDevice(
       withOpenPantin(initialViewerState(language), { ...pantinResponse(false), document }),
       { kind: "drive", id: "verin1-dist" },
     );
 
-  it("selects no row for a device, only related joints", () => {
+  it("selects the row of a device, unfolded, and marks its related joints", () => {
     const view = buildPanelView(onDevice("fr"));
-    expect(view.treeRows.some((row) => row.selected)).toBe(false);
+    expect(view.treeRows.filter((row) => row.selected).map((row) => row.kind)).toEqual(["device"]);
     const related = view.treeRows.filter((row) => row.related);
     expect(related.length).toBeGreaterThan(0);
     expect(related.every((row) => row.kind === "joint")).toBe(true);

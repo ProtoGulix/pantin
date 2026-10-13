@@ -1,4 +1,4 @@
-import type { TreeIcon } from "../tree/tree-model.ts";
+import type { TreeIcon } from "../tree/tree-node.ts";
 
 // Monochrome 16 x 16 line icons drawn with currentColor, so they follow the
 // text colour of their row or button (muted, selected, disabled).
@@ -47,6 +47,15 @@ const CUBE = "M8 1.8 13.8 5v6L8 14.2 2.2 11V5Z M2.2 5 8 8.2 13.8 5 M8 8.2v6";
 const CORNERS = "M2 5.5V2h3.5 M10.5 2H14v3.5 M14 10.5V14h-3.5 M5.5 14H2v-3.5";
 // The small "+" in the top right corner of the icons that create a device.
 const ADD_BADGE = "M12.5 1.5v4 M10.5 3.5h4";
+// The shapes of the devices, without the "+" badge of the buttons that create them.
+const DRIVE = "M1.5 7h10v6h-10Z M4.8 7v6 M8.2 7v6";
+const ACTUATOR = "M1.5 7.5h8v5h-8Z M6 7.5v5 M6 10h8.5";
+const SENSOR = "M1.5 8h4v4h-4Z M7.5 7.5a3 3 0 0 1 0 5 M9.8 6a5 5 0 0 1 0 8";
+const BELT = "M4 7.5h7a2.5 2.5 0 0 1 0 5H4a2.5 2.5 0 0 1 0-5Z M4 10h7";
+const GUIDE = "M1.5 12.5h13 M1.5 9.5h13 M1.5 9.5v3 M14.5 9.5v3 M4 7.5h4";
+const EMITTER = "M1.5 3.5h6v6h-6Z M4.5 11v3 M3 12.5l1.5 1.5 1.5-1.5";
+const ABSORBER = "M1.5 8.5h6v6h-6Z M4.5 2v5 M3 5.5 4.5 7 6 5.5";
+const PRESENCE_SENSOR = "M1.5 8h3v4h-3Z M4.5 10h5 M13 10a1.5 1.5 0 1 1-3 0a1.5 1.5 0 1 1 3 0Z";
 const CIRCLE = "M14 8A6 6 0 1 1 2 8a6 6 0 0 1 12 0Z";
 
 const PATHS: Readonly<Record<IconName, string>> = {
@@ -60,6 +69,14 @@ const PATHS: Readonly<Record<IconName, string>> = {
     "M3 4.5c0-1.1 2.2-2 5-2s5 .9 5 2v7c0 1.1-2.2 2-5 2s-5-.9-5-2Z M3 4.5c0 1.1 2.2 2 5 2s5-.9 5-2",
   joint: "M6 5a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M14 11a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M5.4 6.3 10.6 9.7",
 
+  "device-drive": DRIVE,
+  "device-actuator": ACTUATOR,
+  "device-sensor": SENSOR,
+  "device-belt": BELT,
+  "device-guide": GUIDE,
+  "device-emitter": EMITTER,
+  "device-absorber": ABSORBER,
+  "device-presence-sensor": PRESENCE_SENSOR,
   "source-node": "M2.5 8h3.5 M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   plus: "M8 3v10 M3 8h10",
   back: "M13 8H3.5 M7.5 4 3.5 8l4 4",
@@ -83,20 +100,20 @@ const PATHS: Readonly<Record<IconName, string>> = {
   // A play triangle and the bar it stops at: one step.
   step: "M3 3 10 8 3 13Z M13 3v10",
   // A valve block of three positions: a new drive.
-  "add-drive": `M1.5 7h10v6h-10Z M4.8 7v6 M8.2 7v6 ${ADD_BADGE}`,
+  "add-drive": `${DRIVE} ${ADD_BADGE}`,
   // A cylinder and its rod: a new actuator.
-  "add-actuator": `M1.5 7.5h8v5h-8Z M6 7.5v5 M6 10h8.5 ${ADD_BADGE}`,
-  "add-sensor": `M1.5 8h4v4h-4Z M7.5 7.5a3 3 0 0 1 0 5 M9.8 6a5 5 0 0 1 0 8 ${ADD_BADGE}`,
+  "add-actuator": `${ACTUATOR} ${ADD_BADGE}`,
+  "add-sensor": `${SENSOR} ${ADD_BADGE}`,
   // A belt: a slab with its two drums.
-  "add-belt": `M4 7.5h7a2.5 2.5 0 0 1 0 5H4a2.5 2.5 0 0 1 0-5Z M4 10h7 ${ADD_BADGE}`,
+  "add-belt": `${BELT} ${ADD_BADGE}`,
   // A rail along which products slide.
-  "add-guide": `M1.5 12.5h13 M1.5 9.5h13 M1.5 9.5v3 M14.5 9.5v3 M4 7.5h4 ${ADD_BADGE}`,
+  "add-guide": `${GUIDE} ${ADD_BADGE}`,
   // A box with an arrow leaving it: products come out.
-  "add-emitter": `M1.5 3.5h6v6h-6Z M4.5 11v3 M3 12.5l1.5 1.5 1.5-1.5 ${ADD_BADGE}`,
+  "add-emitter": `${EMITTER} ${ADD_BADGE}`,
   // A box with an arrow entering it: products go in.
-  "add-absorber": `M1.5 8.5h6v6h-6Z M4.5 2v5 M3 5.5 4.5 7 6 5.5 ${ADD_BADGE}`,
+  "add-absorber": `${ABSORBER} ${ADD_BADGE}`,
   // A beam between an emitter and a target.
-  "add-presence-sensor": `M1.5 8h3v4h-3Z M4.5 10h5 M13 10a1.5 1.5 0 1 1-3 0a1.5 1.5 0 1 1 3 0Z ${ADD_BADGE}`,
+  "add-presence-sensor": `${PRESENCE_SENSOR} ${ADD_BADGE}`,
   // A circular arrow: back to the start.
   reset: "M3 8a5 5 0 1 0 1.5-3.6 M3 2.5v3h3",
   move: "M8 1.5v13 M1.5 8h13 M6 3.5l2-2 2 2 M6 12.5l2 2 2-2 M3.5 6l-2 2 2 2 M12.5 6l2 2-2 2",

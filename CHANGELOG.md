@@ -8,6 +8,13 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer, tree rows for devices (ADR 0047 slice P1): under each assembly, one
+  folder per family (action chain, conveying, product flow) lists its drives,
+  actuators, sensors, belts, guides, presence sensors, emitters and absorbers
+  with their type or size. A click or an arrow key selects the device like any
+  tree row; Enter or a double-click opens the inspector. A device selected in
+  the diagram or the 3D view unfolds its row. Registry in
+  `viewer/src/tree/device-families.ts`. Partly supersedes ADR 0030 point 1.
 - PLC bridge, I/O mapping (ADR 0045 slice P2): `io-modules.json` (module key,
   port, unit id 1 to 247, word order, watchdog 100 ms to 1 h) and a strict
   hand-written parser and validation for `io.csv` (syntax, unknown or twice

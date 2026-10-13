@@ -68,6 +68,13 @@ export function stateText(row: TreeRow): HTMLElement | null {
     : element("span", { className: "visually-hidden", text: row.stateLabel });
 }
 
+/** The kind of a device row, for screen readers only. */
+export function kindText(row: TreeRow): HTMLElement | null {
+  return row.kindLabel === null
+    ? null
+    : element("span", { className: "visually-hidden", text: row.kindLabel });
+}
+
 // Not a focusable button: the tree is one tab stop, and the context menu
 // gives the keyboard the same choice. The icon is silent; the row's state
 // text tells screen readers that the assembly is hidden.

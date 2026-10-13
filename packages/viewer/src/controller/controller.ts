@@ -4,7 +4,7 @@ import type { DeviceRef } from "../device-selection.ts";
 import { isToolOn } from "../gizmo/tool-rules.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
-import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
+import { selectedNodeIdOf } from "../selection.ts";
 import {
   withListSelection,
   withWelcomeFilter,
@@ -69,7 +69,14 @@ import { restorePreviousPlacement } from "./placement-actions.ts";
 import { cancelPropertyEdit, commitPropertyEdit } from "./property-actions.ts";
 import { sensorIntents } from "./sensor-intents.ts";
 import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
-import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
+import {
+  activateNode,
+  frameNode,
+  openContextMenu,
+  selectRow,
+  setExpanded,
+  startRename,
+} from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Maps every intent to an action. Async actions report their own failures
@@ -99,17 +106,7 @@ function listIntents(store: ViewerStore) {
 
 function treeIntents(store: ViewerStore) {
   return {
-    selectNode: (nodeId: string) => {
-      // No redraw when nothing changes, so a double-click lands on the same row element.
-      const { selection, contextMenu, renamingNodeId } = store.state;
-      if (
-        selectedNodeIdOf(selection) !== nodeId ||
-        contextMenu !== null ||
-        renamingNodeId !== null
-      ) {
-        store.update({ ...withSelection(store.state, nodeSelection(nodeId)), contextMenu: null });
-      }
-    },
+    selectNode: (nodeId: string) => selectRow(store, nodeId),
     selectDevice: (device: DeviceRef) => selectDevice(store, device),
     revealNode: (nodeId: string) =>
       store.update({ ...withRevealedNode(store.state, nodeId), contextMenu: null }),
@@ -131,11 +128,7 @@ function treeIntents(store: ViewerStore) {
         void createAssembly(store, pantinId);
       }
     },
-    openContextMenu: (nodeId: string, x: number, y: number) =>
-      store.update({
-        ...withSelection(store.state, nodeSelection(nodeId)),
-        contextMenu: { nodeId, x, y },
-      }),
+    openContextMenu: (nodeId: string, x: number, y: number) => openContextMenu(store, nodeId, x, y),
     closeContextMenu: () => store.update({ ...store.state, contextMenu: null }),
   };
 }

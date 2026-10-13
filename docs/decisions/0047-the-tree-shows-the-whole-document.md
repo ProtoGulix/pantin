@@ -73,10 +73,14 @@ this ADR on 2026-10-13.
    polled today (ADR 0024, ADR 0029 point 8), with the state in words for
    screen readers, like the eye and the bolt.
 4. **Selection.** The selection model of ADR 0030 stays one value, a tree
-   node or a device. Clicking a device row selects that device, exactly as
-   a click in the diagram or the 3D view. When a device is selected, its
-   row is the selected row of the tree (this replaces "the tree has no
-   selected row" in ADR 0030 point 1). The related joints keep their mark.
+   node or a device. Clicking a device row selects that device, the same
+   selection as a click in the diagram or the 3D view. As for the other tree
+   rows (`activateNode` in `controller/tree-actions.ts`), a click or an
+   arrow key does not open the inspector column; Enter or a double click
+   does (clarified in P1). When a
+   device is selected, its row is the selected row of the tree (this
+   replaces "the tree has no selected row" in ADR 0030 point 1). The
+   related joints keep their mark.
    The row id is `device:<pantinId>:<kind>:<id>`, parsed by `node-ids.ts`.
    A device selected from the diagram or the 3D view unfolds its assembly
    and family folder, so that its row is visible.

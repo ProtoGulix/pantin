@@ -2,7 +2,7 @@ import { type CentralLayout, nextLayout } from "../central-layout.ts";
 import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
-import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
+import { withRevealedDevice, withRevealedNode } from "../tree/tree-state.ts";
 import {
   createDiagramElement,
   type DiagramElementKind,
@@ -41,8 +41,9 @@ export function selectDevice(store: ViewerStore, device: DeviceRef): void {
   if (open !== null && deviceExists(open.document, device)) {
     // The inspector is the only place a device is shown: selecting one from the
     // diagram or an index opens it. A tree node never does (ADR 0030 point 2).
+    // Its tree row is unfolded so that the selected row is visible (ADR 0047 point 4).
     store.update({
-      ...withSelection(store.state, device),
+      ...withRevealedDevice(store.state, device),
       inspectorOpen: true,
       contextMenu: null,
     });
@@ -51,7 +52,7 @@ export function selectDevice(store: ViewerStore, device: DeviceRef): void {
 
 /**
  * A drive, an actuator or a sensor node selects that device; a joint node
- * selects its tree row (ADR 0030 point 1).
+ * selects its tree row (ADR 0030 point 1, ADR 0047 point 4).
  */
 export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): void {
   const open = store.state.openPantin;

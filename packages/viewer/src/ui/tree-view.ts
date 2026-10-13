@@ -8,6 +8,7 @@ import { listenToDrags } from "./tree-drag.ts";
 import {
   actuatorBolt,
   chevron,
+  kindText,
   rowAttributes,
   rowClassName,
   rowElementId,
@@ -95,6 +96,7 @@ function rowElement(
     chevron(row),
     icon(row.icon, "icon tree-row__icon"),
     labelOrRenameInput(row, translate, intents, tree),
+    kindText(row),
     stateText(row),
     row.detail === null
       ? null

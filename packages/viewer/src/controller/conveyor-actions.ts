@@ -11,7 +11,7 @@ import {
 import { type ConveyorKind, findConveyor, SPAWN_MEMBER } from "../conveyors/conveyor-kinds.ts";
 import { buildConveyorRequest } from "../conveyors/conveyor-request.ts";
 import { errorMessage, infoMessage } from "../messages.ts";
-import { withSelection } from "../tree/tree-state.ts";
+import { withRevealedDevice } from "../tree/tree-state.ts";
 import { removeConveyor, saveConveyor } from "./conveyor-calls.ts";
 import { refreshFaults, refreshTagValues } from "./drive-commands.ts";
 import { editPantin } from "./pantin-actions.ts";
@@ -90,7 +90,7 @@ export async function submitConveyorForm(store: ViewerStore): Promise<void> {
     open.id,
     (pantinId) => saveConveyor(store, pantinId, built.request, form.id),
     (state, saved) => ({
-      ...withSelection(state, { kind: form.kind, id: saved.id }),
+      ...withRevealedDevice(state, { kind: form.kind, id: saved.id }),
       conveyorForm: null,
       message: infoMessage(
         created

@@ -1,10 +1,17 @@
 import type { PantinDocument } from "@pantin/protocol";
 import { assemblyChain } from "../assembly-tree.ts";
-import { deviceExists } from "../device-selection.ts";
+import { type DeviceRef, deviceExists } from "../device-selection.ts";
 import { nodeSelection, type Selection } from "../selection.ts";
+import {
+  assemblyOfDevice,
+  DEVICE_FAMILIES,
+  familyHasDevices,
+  familyOfKind,
+} from "./device-families.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
+  familyNodeId,
   folderNodeId,
   type NodeRef,
   pantinNodeId,
@@ -30,6 +37,21 @@ export function nodeExists(source: TreeSource, nodeId: string): boolean {
   }
   if (ref.kind === "assembly") {
     return source.openPantin.document.assemblies.some((assembly) => assembly.key === ref.key);
+  }
+  if (ref.kind === "family") {
+    // A folder disappears with its last element.
+    const family = DEVICE_FAMILIES.find((candidate) => candidate.key === ref.family);
+    return (
+      family !== undefined &&
+      familyHasDevices(
+        { document: source.openPantin.document, language: source.language },
+        family,
+        ref.assemblyKey,
+      )
+    );
+  }
+  if (ref.kind === "device") {
+    return deviceExists(source.openPantin.document, { kind: ref.deviceKind, id: ref.id });
   }
   if (ref.kind === "joint") {
     // Listed under a body only while it still holds that body.
@@ -85,6 +107,25 @@ function jointContainerPath(document: PantinDocument, pantinId: string, jointId:
     : [pantinNodeId(pantinId), container];
 }
 
+// The Pantin and every assembly down to the one with the key.
+function assemblyPathTo(document: PantinDocument, pantinId: string, key: string): string[] {
+  return [
+    pantinNodeId(pantinId),
+    ...enclosingAssemblyNodes(document, pantinId, key),
+    assemblyNodeId(pantinId, key),
+  ];
+}
+
+// The path to a device row, ending with the folder of its family (ADR 0047
+// point 4); just the Pantin when the document no longer has the device.
+function devicePath(document: PantinDocument, pantinId: string, device: DeviceRef): string[] {
+  const key = assemblyOfDevice(document, device.kind, device.id);
+  const family = familyOfKind(device.kind);
+  return key === undefined || family === undefined
+    ? [pantinNodeId(pantinId)]
+    : [...assemblyPathTo(document, pantinId, key), familyNodeId(pantinId, key, family)];
+}
+
 /** Nodes to expand so that the node becomes visible, root first. */
 function ancestorsOf(ref: NodeRef, document: PantinDocument): string[] {
   const pantin = pantinNodeId(ref.pantinId);
@@ -109,6 +150,10 @@ function ancestorsOf(ref: NodeRef, document: PantinDocument): string[] {
         : bodyPath(ref.underBodyId);
     case "sourceNode":
       return bodyPath(ref.bodyId);
+    case "family":
+      return assemblyPathTo(document, ref.pantinId, ref.assemblyKey);
+    case "device":
+      return devicePath(document, ref.pantinId, { kind: ref.deviceKind, id: ref.id });
   }
 }
 
@@ -193,4 +238,20 @@ export function withRevealedNode<State extends TreeViewState & TreeSource>(
   }
   const expandedNodeIds = new Set([...state.expandedNodeIds, ...ancestorsOf(ref, document)]);
   return { ...withSelection(state, nodeSelection(nodeId)), expandedNodeIds };
+}
+
+/** Selects a device and unfolds the path to its row, e.g. after a click in the diagram or the 3D view. */
+export function withRevealedDevice<State extends TreeViewState & TreeSource>(
+  state: State,
+  device: DeviceRef,
+): State {
+  const open = state.openPantin;
+  if (open === null) {
+    return state;
+  }
+  const expandedNodeIds = new Set([
+    ...state.expandedNodeIds,
+    ...devicePath(open.document, open.id, device),
+  ]);
+  return { ...withSelection(state, device), expandedNodeIds };
 }

@@ -1,15 +1,29 @@
 import type { PantinDocument } from "@pantin/protocol";
-import { type ConveyorKind, conveyorsOf, isConveyorKind } from "./conveyors/conveyor-kinds.ts";
+import {
+  CONVEYOR_KINDS,
+  type ConveyorKind,
+  conveyorsOf,
+  isConveyorKind,
+} from "./conveyors/conveyor-kinds.ts";
 import { actuatorNode, driveNode, sensorNode } from "./diagram/diagram-chains.ts";
 
 // The selection (selection.ts) is a tree node or one of these devices, never
-// both: the tree has no row for a drive, an actuator or a sensor (ADR 0030
-// point 1). The belts, guides, emitters, absorbers and presence sensors of
+// both. The tree has a row for each of them, and the selected device's row is
+// the tree's selected row (ADR 0047 point 4, which replaces ADR 0030 point 1).
+// The belts, guides, emitters, absorbers and presence sensors of
 // phase 6 are devices too (ADR 0043 point 13); they are in no chain, so the
 // diagram has no node for them. Pure functions over the document, shared by
 // the tree, the 3D view, the diagram and the inspector.
 
 export type DeviceKind = "drive" | "actuator" | "sensor" | ConveyorKind;
+
+// Every kind once, so that a registry keyed by kind can be checked against it.
+export const DEVICE_KINDS: readonly DeviceKind[] = [
+  "drive",
+  "actuator",
+  "sensor",
+  ...CONVEYOR_KINDS,
+];
 
 export interface DeviceRef {
   kind: DeviceKind;

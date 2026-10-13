@@ -201,6 +201,10 @@ export function nodeGroups(source: PropertySource, nodeId: string, t: Translate)
     }
     return jointGroups(joint, open, customAxis, t);
   }
+  if (ref.kind === "family" || ref.kind === "device") {
+    // A device is selected as a device, and a family folder has no property.
+    return [];
+  }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {
     return [];
