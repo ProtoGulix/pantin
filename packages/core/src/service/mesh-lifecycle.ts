@@ -1,11 +1,13 @@
 import type { PantinId, PantinResponse } from "@pantin/protocol";
 import { refuseBodyUsedAsFrame } from "../domain/conveyor-rules.ts";
+import { ioTextOf } from "../domain/io-document-text.ts";
 import { findBody, removeBodies, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import {
   loadPantin,
   meshPathsOf,
   type OpenPantin,
+  readIoReading,
   readSavedDocument,
   resetRuntimeState,
   type ServiceContext,
@@ -79,6 +81,21 @@ export async function loadSettledPantin(
   return openPantin;
 }
 
+// io.json first, only when its text changed (ADR 0049 point 3): a crash between
+// the two writes leaves a new io.json beside an old pantin.json, which
+// validation reports as unknown tags, and nothing is lost.
+async function writeIoIfChanged(
+  context: ServiceContext,
+  pantinId: PantinId,
+  openPantin: OpenPantin,
+): Promise<void> {
+  const text = ioTextOf(openPantin.io);
+  if (text !== null && text !== openPantin.savedIoText) {
+    await context.store.writeIoAtomically(pantinId, text);
+    openPantin.savedIoText = text;
+  }
+}
+
 async function writeDocument(
   context: ServiceContext,
   pantinId: PantinId,
@@ -89,6 +106,7 @@ async function writeDocument(
   const text = serializePantinDocument(document);
   openPantin.writingMeshPaths = meshPathsOf(document);
   try {
+    await writeIoIfChanged(context, pantinId, openPantin);
     await context.store.writeDocumentAtomically(pantinId, text);
     openPantin.savedText = text;
     openPantin.savedMeshPaths = openPantin.writingMeshPaths;
@@ -124,6 +142,7 @@ async function reloadDocument(
   openPantin: OpenPantin,
 ): Promise<void> {
   const saved = await readSavedDocument(context, pantinId);
+  const io = await readIoReading(context, pantinId);
   await waitForImports(openPantin);
   // From here to the reset, no await: no import can slip in between.
   const savedMeshPaths = meshPathsOf(saved);
@@ -131,6 +150,8 @@ async function reloadDocument(
   const unsavedMeshes = new Set(candidates.filter((meshPath) => !savedMeshPaths.has(meshPath)));
   openPantin.document = saved;
   openPantin.savedText = serializePantinDocument(saved);
+  openPantin.io = io;
+  openPantin.savedIoText = ioTextOf(io);
   openPantin.savedMeshPaths = savedMeshPaths;
   openPantin.pendingMeshDeletions.clear();
   resetRuntimeState(context, openPantin);

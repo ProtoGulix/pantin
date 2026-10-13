@@ -1,84 +1,72 @@
 import {
-  type IoType,
-  type IoZone,
+  type IoChannel,
+  type IoDocument,
+  type IoPath,
+  type IoProblem,
+  type IoTagOwner,
+  type IoUnmappedTag,
   MODBUS_MAX_ADDRESS,
   type TagDirection,
   type TagType,
 } from "@pantin/protocol";
 import { variableProblemOf } from "./io-identifiers.ts";
-import type { IoListProblem, IoListRow } from "./io-list.ts";
+import { BIT_ZONES, IO_TYPE_BY_TAG_TYPE, ioWidthOf, ZONES_BY_DIRECTION } from "./io-rules.ts";
 
-// The rules of ADR 0045 point 7, against the open document's tag list (unsaved
-// edits included): pure, from rows already parsed. Syntax problems come from
-// io-list.ts. Unmapped tags are a warning, not a problem.
+// The rules of ADR 0049 point 6 that the schema cannot hold, against the open
+// document's tag list (unsaved edits included): pure, from a mapping already
+// parsed. Unmapped tags are a warning, not a problem.
 
-export type IoTag = { name: string; type: TagType; direction: TagDirection };
-
-export type IoValidationInput = {
-  rows: readonly IoListRow[];
-  tags: readonly IoTag[];
-  // Module keys of io-modules.json; null when that file is unusable, in which
-  // case the module column cannot be checked.
-  moduleKeys: ReadonlySet<string> | null;
+export type IoTag = {
+  name: string;
+  type: TagType;
+  direction: TagDirection;
+  owner: IoTagOwner;
 };
 
-export type IoValidation = { problems: IoListProblem[]; unmappedTags: string[] };
+export type IoValidation = { problems: IoProblem[]; unmappedTags: IoUnmappedTag[] };
 
-const BIT_ZONES: readonly IoZone[] = ["coil", "discrete_input"];
-const ZONES_BY_DIRECTION: Record<TagDirection, readonly IoZone[]> = {
-  command: ["coil", "holding_register"],
-  feedback: ["discrete_input", "input_register"],
-};
-const IO_TYPE_BY_TAG_TYPE: Record<TagType, IoType> = {
-  bit: "BOOL",
-  float: "REAL",
-  integer: "DINT",
-};
+/** A channel with the place it has in the mapping, to name it in a problem. */
+type Placed = { channel: IoChannel; moduleIndex: number; channelIndex: number };
 
-/** Registers (or bits) a mapped value takes: REAL and DINT take two registers. */
-export function ioWidthOf(ioType: IoType): number {
-  return ioType === "BOOL" ? 1 : 2;
+function at(placed: Placed, field: keyof IoChannel): IoPath {
+  return ["modules", placed.moduleIndex, "channels", placed.channelIndex, field];
 }
 
-function found(
-  row: IoListRow,
-  column: keyof IoListRow["columns"],
-  code: IoListProblem["code"],
-  message: string,
-): IoListProblem {
-  return { line: row.line, column: row.columns[column], code, message };
+function problem(placed: Placed, field: keyof IoChannel, code: IoProblem["code"], message: string) {
+  return { path: at(placed, field), code, message } satisfies IoProblem;
 }
 
-function tagProblems(row: IoListRow, tag: IoTag | undefined): IoListProblem[] {
+function tagProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
+  const { channel } = placed;
   if (tag === undefined) {
     return [
-      found(
-        row,
+      problem(
+        placed,
         "tag",
         "unknown_tag",
-        `Tag "${row.tag}" does not exist in this Pantin. It may have been renamed: list the tags with GET /api/pantins/<id>/tags.`,
+        `Tag "${channel.tag}" does not exist in this Pantin. It may have been renamed or deleted: list the tags with GET /api/pantins/<id>/tags.`,
       ),
     ];
   }
-  const problems: IoListProblem[] = [];
-  if (!ZONES_BY_DIRECTION[tag.direction].includes(row.zone)) {
+  const problems: IoProblem[] = [];
+  if (!ZONES_BY_DIRECTION[tag.direction].includes(channel.zone)) {
     const wanted = ZONES_BY_DIRECTION[tag.direction].join(" or ");
     problems.push(
-      found(
-        row,
+      problem(
+        placed,
         "zone",
         "zone_direction_mismatch",
-        `Tag "${row.tag}" is a ${tag.direction}: its zone is ${wanted}, not ${row.zone}.`,
+        `Tag "${channel.tag}" is a ${tag.direction}: its zone is ${wanted}, not ${channel.zone}.`,
       ),
     );
   }
-  if (row.ioType !== IO_TYPE_BY_TAG_TYPE[tag.type]) {
+  if (channel.ioType !== IO_TYPE_BY_TAG_TYPE[tag.type]) {
     problems.push(
-      found(
-        row,
-        "type",
+      problem(
+        placed,
+        "ioType",
         "type_mismatch",
-        `Tag "${row.tag}" is a ${tag.type}: its type is ${IO_TYPE_BY_TAG_TYPE[tag.type]}, not ${row.ioType}.`,
+        `Tag "${channel.tag}" is a ${tag.type}: its type is ${IO_TYPE_BY_TAG_TYPE[tag.type]}, not ${channel.ioType}.`,
       ),
     );
   }
@@ -86,128 +74,153 @@ function tagProblems(row: IoListRow, tag: IoTag | undefined): IoListProblem[] {
 }
 
 // BOOL lives in a bit zone, REAL and DINT in a register zone, whatever the tag.
-function typeZoneProblem(row: IoListRow): IoListProblem[] {
-  const inBitZone = BIT_ZONES.includes(row.zone);
-  if ((row.ioType === "BOOL") === inBitZone) {
+function typeZoneProblems(placed: Placed): IoProblem[] {
+  const { channel } = placed;
+  if ((channel.ioType === "BOOL") === BIT_ZONES.includes(channel.zone)) {
     return [];
   }
   const wanted =
-    row.ioType === "BOOL" ? "a coil or a discrete input" : "a holding or an input register";
+    channel.ioType === "BOOL" ? "a coil or a discrete input" : "a holding or an input register";
   return [
-    found(
-      row,
+    problem(
+      placed,
       "zone",
       "type_zone_mismatch",
-      `A ${row.ioType} goes to ${wanted}, not to ${row.zone}.`,
+      `A ${channel.ioType} goes to ${wanted}, not to ${channel.zone}.`,
     ),
   ];
 }
 
-function rangeProblem(row: IoListRow): IoListProblem[] {
-  const last = row.address + ioWidthOf(row.ioType) - 1;
-  if (row.address >= 0 && last <= MODBUS_MAX_ADDRESS) {
+// The schema holds the start address in 0..65535; a REAL or DINT may still run past the end.
+function lastAddressOf(channel: IoChannel): number {
+  return channel.address + ioWidthOf(channel.ioType) - 1;
+}
+
+function rangeProblems(placed: Placed): IoProblem[] {
+  const { channel } = placed;
+  const last = lastAddressOf(channel);
+  if (last <= MODBUS_MAX_ADDRESS) {
     return [];
   }
   return [
-    found(
-      row,
+    problem(
+      placed,
       "address",
       "address_out_of_range",
-      `Address ${row.address} is out of 0..${MODBUS_MAX_ADDRESS} (a ${row.ioType} takes ${ioWidthOf(row.ioType)} ${row.ioType === "BOOL" ? "bit" : "registers"}, up to ${last}).`,
+      `Address ${channel.address} is out of 0..${MODBUS_MAX_ADDRESS} (a ${channel.ioType} takes ${ioWidthOf(channel.ioType)} registers, up to ${last}).`,
     ),
   ];
 }
 
-function rowProblems(row: IoListRow, input: IoValidationInput, tag: IoTag | undefined) {
-  const problems = [...tagProblems(row, tag), ...typeZoneProblem(row), ...rangeProblem(row)];
-  if (input.moduleKeys !== null && !input.moduleKeys.has(row.module)) {
-    problems.push(
-      found(row, "module", "unknown_module", `Module "${row.module}" is not in io-modules.json.`),
-    );
-  }
-  const variable = variableProblemOf(row.variable);
-  if (variable !== null) {
-    problems.push(found(row, "variable", "invalid_variable", variable));
-  }
-  return problems;
+function channelProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
+  const variable = variableProblemOf(placed.channel.variable);
+  return [
+    ...tagProblems(placed, tag),
+    ...typeZoneProblems(placed),
+    ...rangeProblems(placed),
+    ...(variable === null ? [] : [problem(placed, "variable", "invalid_variable", variable)]),
+  ];
 }
 
-// The second and later rows with the same key are the problem; the message
-// names the first.
-function duplicateProblems(
-  rows: readonly IoListRow[],
-  keyOf: (row: IoListRow) => string,
-  column: "tag" | "variable",
-  code: "duplicate_tag" | "duplicate_variable",
-  describe: (row: IoListRow, firstLine: number) => string,
-): IoListProblem[] {
-  const firstLines = new Map<string, number>();
-  const problems: IoListProblem[] = [];
-  for (const row of rows) {
-    const key = keyOf(row);
-    const first = firstLines.get(key);
+// The second and later channels with the same variable are the problem; the
+// message names the first. IEC 61131-3 names ignore case.
+function duplicateVariableProblems(placedChannels: readonly Placed[]): IoProblem[] {
+  const firstTags = new Map<string, string>();
+  const problems: IoProblem[] = [];
+  for (const placed of placedChannels) {
+    const key = placed.channel.variable.toLowerCase();
+    const first = firstTags.get(key);
     if (first === undefined) {
-      firstLines.set(key, row.line);
+      firstTags.set(key, placed.channel.tag);
     } else {
-      problems.push(found(row, column, code, describe(row, first)));
+      problems.push(
+        problem(
+          placed,
+          "variable",
+          "duplicate_variable",
+          `Variable "${placed.channel.variable}" is already used by tag "${first}" (names are compared without case).`,
+        ),
+      );
     }
   }
   return problems;
 }
 
-function overlapProblems(rows: readonly IoListRow[]): IoListProblem[] {
-  const groups = new Map<string, IoListRow[]>();
-  for (const row of rows.filter((candidate) => rangeProblem(candidate).length === 0)) {
-    const key = `${row.module}\u0000${row.zone}`;
-    groups.set(key, [...(groups.get(key) ?? []), row]);
+function overlapProblems(placedChannels: readonly Placed[]): IoProblem[] {
+  const groups = new Map<string, Placed[]>();
+  for (const placed of placedChannels.filter(
+    (candidate) => rangeProblems(candidate).length === 0,
+  )) {
+    const key = `${placed.moduleIndex}\u0000${placed.channel.zone}`;
+    groups.set(key, [...(groups.get(key) ?? []), placed]);
   }
-  const problems: IoListProblem[] = [];
-  for (const group of groups.values()) {
-    const sorted = [...group].sort((a, b) => a.address - b.address || a.line - b.line);
-    let reaching: IoListRow | undefined;
-    for (const row of sorted) {
-      const reach = reaching === undefined ? 0 : reaching.address + ioWidthOf(reaching.ioType);
-      if (reaching !== undefined && row.address < reach) {
-        problems.push(
-          found(
-            row,
-            "address",
-            "address_overlap",
-            `Address ${row.address} in module "${row.module}", zone ${row.zone}, overlaps line ${reaching.line} (${reaching.address}..${reach - 1}).`,
-          ),
-        );
-      }
-      if (reaching === undefined || row.address + ioWidthOf(row.ioType) > reach) {
-        reaching = row;
-      }
+  return [...groups.values()].flatMap(overlapsInGroup);
+}
+
+// Channels of one module and zone, by address then position: each one that
+// starts before the furthest reach so far overlaps the channel that reaches it.
+function overlapsInGroup(group: readonly Placed[]): IoProblem[] {
+  const sorted = group.toSorted(
+    (a, b) => a.channel.address - b.channel.address || a.channelIndex - b.channelIndex,
+  );
+  const problems: IoProblem[] = [];
+  let reaching: Placed | undefined;
+  for (const placed of sorted) {
+    const reach = reaching === undefined ? 0 : lastAddressOf(reaching.channel) + 1;
+    if (reaching !== undefined && placed.channel.address < reach) {
+      problems.push(
+        problem(
+          placed,
+          "address",
+          "address_overlap",
+          `Address ${placed.channel.address} in zone ${placed.channel.zone} overlaps tag "${reaching.channel.tag}" (${reaching.channel.address}..${reach - 1}).`,
+        ),
+      );
+    }
+    if (reaching === undefined || lastAddressOf(placed.channel) + 1 > reach) {
+      reaching = placed;
     }
   }
   return problems;
 }
 
-/** Checks the parsed rows against the document's tags; problems are sorted by position. */
-export function validateIoRows(input: IoValidationInput): IoValidation {
-  const tagsByName = new Map(input.tags.map((tag) => [tag.name, tag]));
+function comparePaths(first: IoPath, second: IoPath): number {
+  for (const [index, a] of first.entries()) {
+    const b = second[index];
+    if (b === undefined) {
+      return 1;
+    }
+    if (a !== b) {
+      return typeof a === "number" && typeof b === "number"
+        ? a - b
+        : String(a) < String(b)
+          ? -1
+          : 1;
+    }
+  }
+  return first.length - second.length;
+}
+
+function placedChannelsOf(document: IoDocument): Placed[] {
+  return document.modules.flatMap((module, moduleIndex) =>
+    module.channels.map((channel, channelIndex) => ({ channel, moduleIndex, channelIndex })),
+  );
+}
+
+/** Checks the channels against the document's tags; problems are sorted by path. */
+export function validateIoDocument(document: IoDocument, tags: readonly IoTag[]): IoValidation {
+  const tagsByName = new Map(tags.map((tag) => [tag.name, tag]));
+  const placedChannels = placedChannelsOf(document);
   const problems = [
-    ...input.rows.flatMap((row) => rowProblems(row, input, tagsByName.get(row.tag))),
-    ...duplicateProblems(
-      input.rows,
-      (row) => row.tag,
-      "tag",
-      "duplicate_tag",
-      (row, first) => `Tag "${row.tag}" is already mapped on line ${first}: a tag is mapped once.`,
+    ...placedChannels.flatMap((placed) =>
+      channelProblems(placed, tagsByName.get(placed.channel.tag)),
     ),
-    ...duplicateProblems(
-      input.rows,
-      (row) => row.variable.toLowerCase(),
-      "variable",
-      "duplicate_variable",
-      (row, first) =>
-        `Variable "${row.variable}" is already used on line ${first} (names are compared without case).`,
-    ),
-    ...overlapProblems(input.rows),
-  ].sort((a, b) => a.line - b.line || a.column - b.column);
-  const mapped = new Set(input.rows.map((row) => row.tag));
-  const unmappedTags = input.tags.map((tag) => tag.name).filter((name) => !mapped.has(name));
+    ...duplicateVariableProblems(placedChannels),
+    ...overlapProblems(placedChannels),
+  ].sort((a, b) => comparePaths(a.path, b.path));
+  const mapped = new Set(placedChannels.map(({ channel }) => channel.tag));
+  const unmappedTags = tags
+    .filter((tag) => !mapped.has(tag.name))
+    .map(({ name, type, direction, owner }) => ({ name, type, direction, owner }));
   return { problems, unmappedTags };
 }

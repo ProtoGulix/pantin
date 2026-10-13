@@ -1,26 +1,26 @@
 import type { IoMappingResponse, PantinId, TagDirection, TagType } from "@pantin/protocol";
 
 // The seam between the tag bus and the I/O mapping (ADR 0045 points 6, 7, 10
-// and 11). `IoMappingSource` is implemented over io.csv and io-modules.json
-// by the service (slice P2); tests give the bus a fake one.
+// and 11, ADR 0049 point 7). `IoMappingSource` is implemented over the open
+// mapping by the service; tests give the bus a fake one.
 
 export type IoMappingRow = {
   tag: string;
-  // A module key from io-modules.json.
+  // A module key of io.json.
   module: string;
   type: TagType;
   direction: TagDirection;
 };
 
 export type IoMapping = {
-  // SHA-256 of the two mapping files, as GET .../io answers it.
+  // SHA-256 of the canonical text of the open mapping, as GET .../io answers it.
   mappingId: string;
   rows: readonly IoMappingRow[];
 };
 
 export type IoMappingSource = {
-  // The valid mapping of the Pantin, read from disk now; null when there is
-  // none (files missing, or invalid).
+  // The valid open mapping of the Pantin; null when there is none (missing,
+  // unreadable or with problems).
   read(pantinId: PantinId): Promise<IoMapping | null>;
 };
 
@@ -41,10 +41,19 @@ export function mappingOf(answer: IoMappingResponse): IoMapping | null {
   if (answer.status !== "valid" || answer.mappingId === null) {
     return null;
   }
-  const rows = answer.rows.flatMap((row) =>
-    row.type === null || row.direction === null
-      ? []
-      : [{ tag: row.tag, module: row.module, type: row.type, direction: row.direction }],
+  const rows = answer.modules.flatMap((module) =>
+    module.channels.flatMap((channel) =>
+      channel.tagType === null || channel.direction === null
+        ? []
+        : [
+            {
+              tag: channel.tag,
+              module: module.key,
+              type: channel.tagType,
+              direction: channel.direction,
+            },
+          ],
+    ),
   );
   return { mappingId: answer.mappingId, rows };
 }

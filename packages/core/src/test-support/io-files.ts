@@ -1,55 +1,79 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import {
-  IO_LIST_FILE_NAME,
-  IO_LIST_HEADER,
-  IO_MODULES_FILE_NAME,
-  type Tag,
-} from "@pantin/protocol";
+import { IO_JSON_FILE_NAME, type IoDocument, type IoZone, type Tag } from "@pantin/protocol";
+import { serializeIoDocument } from "../domain/io-document-text.ts";
 import type { BusAxis } from "./bus-axis.ts";
+import { sendRaw } from "./test-server.ts";
 
 // The mapping files of the "axis" test Pantin, written straight to its folder.
+// The open Pantin keeps the mapping it read when it opened (ADR 0049 point 3):
+// `loadIo` writes io.json then discards, which is how an outside edit is seen.
 
-export const MODULES_JSON = JSON.stringify({
-  schema_version: 1,
-  modules: [
-    { key: "m1", port: 1502 },
-    { key: "m2", port: 1503 },
-  ],
-});
+export type ChannelSpec = { tag: Tag; module: string };
 
-export type RowSpec = { tag: Tag; module: string };
-
-/** One io.csv row for a tag, at the address given for its zone. */
-function csvRow({ tag, module }: RowSpec, address: number): string {
-  const bit = tag.type === "bit";
+function zoneOf(tag: Tag): IoZone {
   const command = tag.direction === "command";
-  const zone = bit
-    ? command
-      ? "coil"
-      : "discrete_input"
-    : command
-      ? "holding_register"
-      : "input_register";
-  const ioType = bit ? "BOOL" : tag.type === "float" ? "REAL" : "DINT";
-  return [tag.name, tag.name.replaceAll(".", "_"), module, zone, address, ioType, ""].join(";");
+  if (tag.type === "bit") {
+    return command ? "coil" : "discrete_input";
+  }
+  return command ? "holding_register" : "input_register";
 }
 
-/** A valid io.csv: every given tag, each in its own address range. */
-export function csvText(specs: readonly RowSpec[]): string {
-  const rows = specs.map((spec, index) => csvRow(spec, index * 2));
-  return `${[IO_LIST_HEADER, ...rows].join("\n")}\n`;
+/** A valid mapping of the given tags on modules m1 (port 1502) and m2 (1503). */
+export function ioDocumentOf(specs: readonly ChannelSpec[]): IoDocument {
+  const channelsOf = (module: string) =>
+    specs
+      .filter((spec) => spec.module === module)
+      .map(({ tag }, index) => ({
+        tag: tag.name,
+        variable: tag.name.replaceAll(".", "_"),
+        zone: zoneOf(tag),
+        // Two apart: a REAL or a DINT takes two registers.
+        address: index * 2,
+        ioType:
+          tag.type === "bit"
+            ? ("BOOL" as const)
+            : tag.type === "float"
+              ? ("REAL" as const)
+              : ("DINT" as const),
+        comment: "",
+      }));
+  const settings = { unitId: 1, wordOrder: "low_word_first", watchdogMilliseconds: 1000 } as const;
+  return {
+    schema_version: 1,
+    modules: [
+      { key: "m1", port: 1502, ...settings, channels: channelsOf("m1") },
+      { key: "m2", port: 1503, ...settings, channels: channelsOf("m2") },
+    ],
+  };
 }
 
-export async function writeIoFiles(
-  axis: BusAxis,
-  files: { csv?: string; modules?: string },
-): Promise<void> {
-  const folder = join(axis.workspace.pantinsDirectory, "axis");
-  if (files.csv !== undefined) {
-    await writeFile(join(folder, IO_LIST_FILE_NAME), files.csv);
+export function ioTextOf(specs: readonly ChannelSpec[]): string {
+  return serializeIoDocument(ioDocumentOf(specs));
+}
+
+function folderOf(axis: BusAxis): string {
+  return join(axis.workspace.pantinsDirectory, "axis");
+}
+
+export function writeIoJsonFile(axis: BusAxis, text: string): Promise<void> {
+  return writeFile(join(folderOf(axis), IO_JSON_FILE_NAME), text);
+}
+
+export function writeLegacyFile(axis: BusAxis, name: string, text: string): Promise<void> {
+  return writeFile(join(folderOf(axis), name), text);
+}
+
+/** Discards the open Pantin's edits: it re-reads both files from disk. */
+export async function discardAxis(axis: BusAxis): Promise<void> {
+  const response = await sendRaw(axis.server, "POST", "/api/pantins/axis/discard");
+  if (response.status !== 200) {
+    throw new Error(`Discard answered ${response.status}: ${response.body}`);
   }
-  if (files.modules !== undefined) {
-    await writeFile(join(folder, IO_MODULES_FILE_NAME), files.modules);
-  }
+}
+
+/** Writes io.json and has the open Pantin read it. */
+export async function loadIo(axis: BusAxis, text: string): Promise<void> {
+  await writeIoJsonFile(axis, text);
+  await discardAxis(axis);
 }

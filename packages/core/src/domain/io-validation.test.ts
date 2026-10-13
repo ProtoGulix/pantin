@@ -1,210 +1,176 @@
+import type { IoChannel, IoDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { variableProblemOf } from "./io-identifiers.ts";
-import type { IoListRow } from "./io-list.ts";
-import { type IoTag, validateIoRows } from "./io-validation.ts";
+import { type IoTag, validateIoDocument } from "./io-validation.ts";
 
-// The errors and warnings of ADR 0045 point 7.
+// The rules of ADR 0049 point 6, with paths into io.json.
 
+const OWNER = { kind: "drive", id: "valve" } as const;
 const TAGS: IoTag[] = [
-  { name: "a.valve.coil_14", type: "bit", direction: "command" },
-  { name: "a.sw.state", type: "bit", direction: "feedback" },
-  { name: "a.axis.setpoint", type: "float", direction: "command" },
-  { name: "a.axis.position", type: "float", direction: "feedback" },
-  { name: "a.enc.count", type: "integer", direction: "feedback" },
+  { name: "a.valve.coil_14", type: "bit", direction: "command", owner: OWNER },
+  { name: "a.sw.state", type: "bit", direction: "feedback", owner: OWNER },
+  { name: "a.axis.setpoint", type: "float", direction: "command", owner: OWNER },
+  { name: "a.axis.position", type: "float", direction: "feedback", owner: OWNER },
+  { name: "a.enc.count", type: "integer", direction: "feedback", owner: OWNER },
 ];
-const MODULES = new Set(["m1", "m2"]);
-const COLUMNS = { tag: 1, variable: 2, module: 3, zone: 4, address: 5, type: 6 };
 
-let nextLine = 2;
-function row(overrides: Partial<IoListRow> = {}): IoListRow {
-  const line = nextLine;
-  nextLine += 1;
+let counter = 0;
+function channel(overrides: Partial<IoChannel> = {}): IoChannel {
+  counter += 1;
   return {
-    line,
     tag: "a.valve.coil_14",
-    variable: `var_${line}`,
-    module: "m1",
+    variable: `var_${counter}`,
     zone: "coil",
     address: 0,
     ioType: "BOOL",
     comment: "",
-    columns: COLUMNS,
     ...overrides,
   };
 }
 
-function codesOf(rows: IoListRow[], moduleKeys: ReadonlySet<string> | null = MODULES): string[] {
-  return validateIoRows({ rows, tags: TAGS, moduleKeys }).problems.map((problem) => problem.code);
+const settings = { unitId: 1, wordOrder: "low_word_first", watchdogMilliseconds: 1000 } as const;
+
+function document(...modules: IoChannel[][]): IoDocument {
+  return {
+    schema_version: 1,
+    modules: modules.map((channels, index) => ({
+      key: `m${index + 1}`,
+      port: 1502 + index,
+      ...settings,
+      channels,
+    })),
+  };
 }
 
-describe("validateIoRows tags and modules", () => {
-  it("accepts a consistent mapping and lists the unmapped tags as a warning", () => {
-    const result = validateIoRows({
-      rows: [row(), row({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "REAL" })],
-      tags: TAGS,
-      moduleKeys: MODULES,
-    });
-    expect(result.problems).toEqual([]);
-    expect(result.unmappedTags).toEqual(["a.sw.state", "a.axis.position", "a.enc.count"]);
-  });
+function problemsOf(...modules: IoChannel[][]) {
+  return validateIoDocument(document(...modules), TAGS).problems;
+}
 
-  it("maps every tag kind to its zone and type", () => {
-    const rows = [
-      row(),
-      row({ tag: "a.sw.state", zone: "discrete_input" }),
-      row({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "REAL" }),
-      row({ tag: "a.axis.position", zone: "input_register", ioType: "REAL" }),
-      row({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address: 2 }),
+const codesOf = (...modules: IoChannel[][]) => problemsOf(...modules).map((p) => p.code);
+
+describe("validateIoDocument consistent tags", () => {
+  it("accepts one consistent channel per tag", () => {
+    const channels = [
+      channel(),
+      channel({ tag: "a.sw.state", zone: "discrete_input" }),
+      channel({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "REAL" }),
+      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL" }),
+      channel({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address: 2 }),
     ];
-    expect(codesOf(rows)).toEqual([]);
-  });
-
-  it("refuses an unknown tag, with its position", () => {
-    const result = validateIoRows({
-      rows: [row({ tag: "a.ghost.coil_1", columns: { ...COLUMNS, tag: 9 } })],
-      tags: TAGS,
-      moduleKeys: MODULES,
+    expect(validateIoDocument(document(channels), TAGS)).toEqual({
+      problems: [],
+      unmappedTags: [],
     });
-    expect(result.problems).toMatchObject([{ code: "unknown_tag", column: 9 }]);
-  });
-
-  it("refuses a tag mapped twice, on the second row, naming the first", () => {
-    const first = row();
-    const second = row({ address: 1 });
-    const { problems } = validateIoRows({ rows: [first, second], tags: TAGS, moduleKeys: MODULES });
-    expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatchObject({ code: "duplicate_tag", line: second.line });
-    expect(problems[0]?.message).toContain(`line ${first.line}`);
-  });
-
-  it("refuses an unknown module, and skips that check without a usable io-modules.json", () => {
-    const rows = [row({ module: "m9" })];
-    expect(codesOf(rows)).toEqual(["unknown_module"]);
-    expect(codesOf(rows, null)).toEqual([]);
   });
 });
 
-describe("validateIoRows zones, types and addresses", () => {
-  it("refuses a zone that does not match the direction", () => {
-    expect(codesOf([row({ tag: "a.valve.coil_14", zone: "discrete_input" })])).toEqual([
-      "zone_direction_mismatch",
+describe("validateIoDocument tags", () => {
+  it("reports an unknown tag at its tag path", () => {
+    expect(problemsOf([channel(), channel({ tag: "a.ghost.coil", address: 1 })])).toMatchObject([
+      { path: ["modules", 0, "channels", 1, "tag"], code: "unknown_tag" },
     ]);
-    expect(
-      codesOf([row({ tag: "a.axis.position", zone: "holding_register", ioType: "REAL" })]),
-    ).toEqual(["zone_direction_mismatch"]);
   });
 
-  it("refuses a type that does not match the tag type", () => {
-    expect(
-      codesOf([row({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "DINT" })]),
-    ).toEqual(["type_mismatch"]);
-    expect(codesOf([row({ tag: "a.enc.count", zone: "input_register", ioType: "REAL" })])).toEqual([
-      "type_mismatch",
+  it("reports a zone the direction does not allow, at the zone path", () => {
+    const wrong = channel({ tag: "a.sw.state", zone: "coil" });
+    expect(problemsOf([wrong])).toMatchObject([
+      { path: ["modules", 0, "channels", 0, "zone"], code: "zone_direction_mismatch" },
     ]);
-    expect(codesOf([row({ ioType: "REAL" })])).toContain("type_mismatch");
   });
 
-  it("refuses a type in the wrong kind of zone", () => {
-    expect(codesOf([row({ zone: "holding_register" })])).toContain("type_zone_mismatch");
-    expect(codesOf([row({ tag: "a.axis.setpoint", zone: "coil", ioType: "REAL" })])).toContain(
-      "type_zone_mismatch",
-    );
-  });
-
-  it("refuses an address out of 0..65535, a REAL needing two registers", () => {
-    expect(codesOf([row({ address: -1 })])).toEqual(["address_out_of_range"]);
-    expect(codesOf([row({ address: 65535 })])).toEqual([]);
-    expect(codesOf([row({ address: 65536 })])).toEqual(["address_out_of_range"]);
-    const real = (address: number) =>
-      row({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "REAL", address });
-    expect(codesOf([real(65534)])).toEqual([]);
-    expect(codesOf([real(65535)])).toEqual(["address_out_of_range"]);
-  });
-});
-
-describe("overlaps", () => {
-  it("takes two registers for a REAL or a DINT", () => {
-    const a = row({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "REAL", address: 4 });
-    const b = row({ tag: "a.valve.coil_14", zone: "holding_register", ioType: "DINT", address: 5 });
-    const { problems } = validateIoRows({ rows: [a, b], tags: TAGS, moduleKeys: MODULES });
-    expect(problems.filter((problem) => problem.code === "address_overlap")).toMatchObject([
-      { line: b.line },
+  it("reports an io type the tag type does not give, at the ioType path", () => {
+    const wrong = channel({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "DINT" });
+    expect(problemsOf([wrong])).toMatchObject([
+      { path: ["modules", 0, "channels", 0, "ioType"], code: "type_mismatch" },
     ]);
-    expect(problems[0]?.message).toContain(`line ${a.line}`);
   });
 
-  it("accepts neighbours, other zones and other modules at the same address", () => {
-    const base = { zone: "holding_register", ioType: "REAL" } as const;
-    const rows = [
-      row({ ...base, tag: "a.axis.setpoint", address: 0 }),
-      row({ ...base, tag: "a.valve.coil_14", ioType: "DINT", address: 2 }),
-      row({ ...base, tag: "a.sw.state", module: "m2", address: 0 }),
-      row({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address: 0 }),
+  it("reports a BOOL in a register zone and a REAL in a bit zone as type_zone_mismatch", () => {
+    const wrong = [
+      channel({ zone: "holding_register", address: 0 }),
+      channel({ tag: "a.axis.setpoint", zone: "coil", ioType: "REAL", address: 4 }),
     ];
-    expect(codesOf(rows).filter((code) => code === "address_overlap")).toEqual([]);
+    expect(codesOf(wrong)).toContain("type_zone_mismatch");
+    expect(problemsOf(wrong).filter((p) => p.code === "type_zone_mismatch")).toHaveLength(2);
   });
 
-  it("finds two bits at the same address, and reports a chain once per overlapping row", () => {
-    expect(
-      codesOf([row({ address: 3 }), row({ tag: "a.sw.state", zone: "coil", address: 3 })]).filter(
-        (code) => code === "address_overlap",
-      ),
-    ).toHaveLength(1);
-    const wide = row({
-      tag: "a.axis.setpoint",
-      zone: "holding_register",
-      ioType: "REAL",
-      address: 0,
+  it("lists as unmapped the tags no channel maps, with type, direction and owner", () => {
+    const { unmappedTags } = validateIoDocument(document([channel()]), TAGS);
+    expect(unmappedTags.map((tag) => tag.name)).toEqual([
+      "a.sw.state",
+      "a.axis.setpoint",
+      "a.axis.position",
+      "a.enc.count",
+    ]);
+    expect(unmappedTags[0]).toEqual({
+      name: "a.sw.state",
+      type: "bit",
+      direction: "feedback",
+      owner: OWNER,
     });
-    const inside = row({
-      tag: "a.valve.coil_14",
-      zone: "holding_register",
-      ioType: "REAL",
-      address: 1,
-    });
-    const after = row({ tag: "a.sw.state", zone: "holding_register", ioType: "REAL", address: 3 });
-    const codes = codesOf([wide, inside, after]).filter((code) => code === "address_overlap");
-    expect(codes).toHaveLength(1);
-  });
-
-  it("does not report an overlap for an address already out of range", () => {
-    expect(
-      codesOf([row({ address: -1 }), row({ tag: "a.sw.state", zone: "coil", address: -1 })]),
-    ).not.toContain("address_overlap");
   });
 });
 
-describe("variables", () => {
-  it("refuses an invalid variable, at its column", () => {
-    for (const variable of ["1abc", "a__b", "_a", "a_", "a-b", "a b", "", "é", "x".repeat(65)]) {
-      expect(codesOf([row({ variable })])).toEqual(["invalid_variable"]);
-    }
-    expect(codesOf([row({ variable: "x".repeat(64) })])).toEqual([]);
-    expect(codesOf([row({ variable: "t_1abc" })])).toEqual([]);
+describe("validateIoDocument addresses", () => {
+  it("reports a REAL whose second register runs past 65535, and only that", () => {
+    const at = (address: number) =>
+      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address });
+    expect(codesOf([at(65534)])).toEqual([]);
+    expect(problemsOf([at(65535)])).toMatchObject([
+      { path: ["modules", 0, "channels", 0, "address"], code: "address_out_of_range" },
+    ]);
   });
 
-  it("refuses an IEC keyword or type name whatever its case", () => {
-    for (const variable of ["VAR", "end_if", "Bool", "real", "Time_Of_Day"]) {
-      expect(variableProblemOf(variable)).toContain("keyword");
-    }
-    expect(variableProblemOf("variable_1")).toBeNull();
+  it("reports an overlap on the later channel, per module and zone", () => {
+    const position = (address: number) =>
+      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address });
+    const count = (address: number) =>
+      channel({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address });
+    expect(problemsOf([position(0), count(1)])).toMatchObject([
+      { path: ["modules", 0, "channels", 1, "address"], code: "address_overlap" },
+    ]);
+    expect(codesOf([position(0), count(2)])).toEqual([]);
+    // Another module has its own address space.
+    expect(codesOf([position(0)], [count(0)])).toEqual([]);
   });
 
-  it("refuses a duplicate variable without regard to case, on the later row", () => {
-    const first = row({ variable: "Coil" });
-    const second = row({ tag: "a.sw.state", zone: "discrete_input", variable: "COIL" });
-    const { problems } = validateIoRows({ rows: [first, second], tags: TAGS, moduleKeys: MODULES });
-    expect(problems).toMatchObject([{ code: "duplicate_variable", line: second.line }]);
+  it("does not count a channel past the end as overlapping", () => {
+    const channels = [
+      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address: 65535 }),
+      channel({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address: 65534 }),
+    ];
+    expect(codesOf(channels)).not.toContain("address_overlap");
   });
 });
 
-describe("problem order", () => {
-  it("sorts problems by line then column", () => {
-    const late = row({ tag: "a.ghost.x", variable: "1" });
-    const early = row({ module: "m9", columns: { ...COLUMNS, module: 1 } });
-    const { problems } = validateIoRows({ rows: [late, early], tags: TAGS, moduleKeys: MODULES });
-    expect(problems.map((problem) => problem.line)).toEqual(
-      [...problems.map((p) => p.line)].sort((a, b) => a - b),
+describe("validateIoDocument variables", () => {
+  it("reports an invalid variable at its path, with the identifier rule's message", () => {
+    const problems = problemsOf([channel({ variable: "BOOL" })]);
+    expect(problems).toMatchObject([
+      { path: ["modules", 0, "channels", 0, "variable"], code: "invalid_variable" },
+    ]);
+    expect(problems[0]?.message).toBe(variableProblemOf("BOOL"));
+  });
+
+  it("reports a duplicate variable ignoring case, on the later channel, across modules", () => {
+    const first = channel({ variable: "Valve" });
+    const second = channel({ tag: "a.sw.state", zone: "discrete_input", variable: "valve" });
+    const problems = problemsOf([first], [second]);
+    expect(problems).toMatchObject([
+      { path: ["modules", 1, "channels", 0, "variable"], code: "duplicate_variable" },
+    ]);
+    expect(problems[0]?.message).toContain('"a.valve.coil_14"');
+  });
+
+  it("sorts problems by path", () => {
+    const problems = problemsOf(
+      [channel({ variable: "BOOL" }), channel({ tag: "a.ghost.x", address: 1 })],
+      [channel({ variable: "INT", tag: "a.sw.state", zone: "discrete_input" })],
     );
+    expect(problems.map((p) => p.path.join("."))).toEqual([
+      "modules.0.channels.0.variable",
+      "modules.0.channels.1.tag",
+      "modules.1.channels.0.variable",
+    ]);
   });
 });

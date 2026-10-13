@@ -1,11 +1,8 @@
-import { randomUUID } from "node:crypto";
 import { createReadStream, type ReadStream } from "node:fs";
-import { lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
   faceFilePathOf,
-  IO_FILE_MAX_BYTES,
-  type IoFileName,
   MAX_FACE_FILE_BYTES,
   type MeshFolderFileName,
   type OrphanMeshFile,
@@ -14,7 +11,8 @@ import {
   type PantinId,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
-import { readFileUpTo } from "./bounded-read.ts";
+import { writeTextAtomically } from "./atomic-write.ts";
+import { listLegacyIoFiles, readIoJson, writeIoJson } from "./io-files.ts";
 import { deleteMeshFolderFile, listMeshFolderFiles } from "./mesh-folder-files.ts";
 import { assertRealPathInside, isErrorWithCode, resolveInside } from "./safe-paths.ts";
 
@@ -53,10 +51,14 @@ export type PantinStore = {
     fileName: MeshFolderFileName,
     mayDelete: () => boolean,
   ): Promise<"deleted" | "missing" | "not_a_file" | "kept">;
-  // The bytes of io.csv or io-modules.json (ADR 0045 point 7), read from disk
-  // on each call: at most IO_FILE_MAX_BYTES + 1 of them, so that a larger file
-  // is recognisable. undefined when the file does not exist.
-  readIoFile(pantinId: PantinId, fileName: IoFileName): Promise<Uint8Array | undefined>;
+  // The bytes of io.json (ADR 0049 point 3), read when the Pantin opens or is
+  // discarded: at most IO_FILE_MAX_BYTES + 1 of them, so that a larger file is
+  // recognisable. undefined when the file does not exist.
+  readIoFile(pantinId: PantinId): Promise<Uint8Array | undefined>;
+  // Same atomic write as pantin.json.
+  writeIoAtomically(pantinId: PantinId, text: string): Promise<void>;
+  // The legacy io.csv and io-modules.json that exist (ADR 0049 point 8).
+  listLegacyIoFiles(pantinId: PantinId): Promise<string[]>;
   describeDocumentLocation(pantinId: PantinId): string;
 };
 
@@ -104,25 +106,6 @@ async function readDocumentText(paths: Paths, pantinId: PantinId): Promise<strin
   }
 }
 
-async function readIoFile(
-  paths: Paths,
-  pantinId: PantinId,
-  fileName: IoFileName,
-): Promise<Uint8Array | undefined> {
-  const path = pathInPantin(paths, pantinId, fileName);
-  try {
-    // Inside this Pantin's folder, not just the pantins directory: a link to a
-    // sibling Pantin's file is refused.
-    await assertRealPathInside(pantinFolder(paths, pantinId), path);
-  } catch (error) {
-    if (isErrorWithCode(error, "ENOENT")) {
-      return undefined;
-    }
-    throw error;
-  }
-  return readFileUpTo(path, IO_FILE_MAX_BYTES);
-}
-
 async function readDocumentModifiedAt(paths: Paths, pantinId: PantinId): Promise<Date | undefined> {
   const path = pathInPantin(paths, pantinId, PANTIN_DOCUMENT_FILE_NAME);
   try {
@@ -137,22 +120,10 @@ async function readDocumentModifiedAt(paths: Paths, pantinId: PantinId): Promise
   }
 }
 
-// Writes a temporary file in the same folder (so the rename stays on one file
-// system), then renames it: readers never see a half written pantin.json.
 async function writeDocumentAtomically(paths: Paths, pantinId: PantinId, text: string) {
-  await assertRealPathInside(
-    paths.pantinsDirectory,
-    resolveInside(paths.pantinsDirectory, pantinId),
-  );
-  const temporaryName = `.${PANTIN_DOCUMENT_FILE_NAME}.${randomUUID()}.tmp`;
-  const temporaryPath = pathInPantin(paths, pantinId, temporaryName);
-  try {
-    await writeFile(temporaryPath, text, { encoding: "utf8", flag: "wx" });
-    await rename(temporaryPath, pathInPantin(paths, pantinId, PANTIN_DOCUMENT_FILE_NAME));
-  } catch (error) {
-    await rm(temporaryPath, { force: true });
-    throw error;
-  }
+  const folder = pantinFolder(paths, pantinId);
+  await assertRealPathInside(paths.pantinsDirectory, folder);
+  await writeTextAtomically(folder, PANTIN_DOCUMENT_FILE_NAME, text);
 }
 
 async function listMeshFileNames(paths: Paths, pantinId: PantinId): Promise<string[]> {
@@ -275,7 +246,10 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
         fileName,
         mayDelete,
       ),
-    readIoFile: (pantinId, fileName) => readIoFile(paths, pantinId, fileName),
+    readIoFile: (pantinId) => readIoJson(pantinFolder(paths, pantinId)),
+    writeIoAtomically: (pantinId, text) =>
+      writeIoJson(paths.pantinsDirectory, pantinFolder(paths, pantinId), text),
+    listLegacyIoFiles: (pantinId) => listLegacyIoFiles(pantinFolder(paths, pantinId)),
     // Relative to the pantins directory: error messages never reveal absolute paths.
     describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
   };

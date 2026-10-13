@@ -9,6 +9,7 @@ import {
   createTestWorkspace,
   importMesh,
   sendJsonRequest,
+  sendRaw,
   startTestServer,
   type TestWorkspace,
 } from "./test-server.ts";
@@ -59,6 +60,8 @@ export async function startBusAxis(
     assembly: "carriage",
     type: "valve_5_3_closed",
   });
+  // Saved, so that a discard (which re-reads io.json, ADR 0049 point 3) keeps the elements.
+  await sendRaw(server, "POST", "/api/pantins/axis/save");
   return {
     server,
     workspace,

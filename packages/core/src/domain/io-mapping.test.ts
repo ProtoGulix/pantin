@@ -31,26 +31,44 @@ describe("mappingOf", () => {
   const answer: IoMappingResponse = {
     status: "valid",
     mappingId: "abc",
-    modules: [],
-    rows: [
+    modules: [
       {
-        line: 2,
-        tag: "a.v.coil_1",
-        variable: "v",
-        module: "m1",
-        zone: "coil",
-        address: 0,
-        ioType: "BOOL",
-        comment: "",
-        type: "bit",
-        direction: "command",
+        key: "m1",
+        port: 1502,
+        unitId: 1,
+        wordOrder: "low_word_first",
+        watchdogMilliseconds: 1000,
+        channels: [
+          {
+            tag: "a.v.coil_1",
+            variable: "v",
+            zone: "coil",
+            address: 0,
+            ioType: "BOOL",
+            comment: "",
+            tagType: "bit",
+            direction: "command",
+            owner: { kind: "drive", id: "v" },
+          },
+          {
+            tag: "a.gone",
+            variable: "gone",
+            zone: "coil",
+            address: 1,
+            ioType: "BOOL",
+            comment: "",
+            tagType: null,
+            direction: null,
+            owner: null,
+          },
+        ],
       },
     ],
     problems: [],
     unmappedTags: [],
   };
 
-  it("keeps the tag, module, type and direction of a valid answer", () => {
+  it("keeps the tag, module, type and direction of a valid answer, and skips an unknown tag", () => {
     expect(mappingOf(answer)).toEqual({
       mappingId: "abc",
       rows: [{ tag: "a.v.coil_1", module: "m1", type: "bit", direction: "command" }],

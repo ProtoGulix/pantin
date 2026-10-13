@@ -1,6 +1,7 @@
 import { appendFile, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { IO_FILE_MAX_BYTES, IO_LIST_HEADER } from "@pantin/protocol";
+import { IO_LIST_HEADER } from "@pantin/core";
+import { IO_FILE_MAX_BYTES } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runCommand } from "./cli.ts";
 import { AXIS_TAGS, copyAxisWithValve, tmpWorkspace } from "./io-test-folder.ts";

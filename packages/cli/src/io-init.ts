@@ -1,5 +1,6 @@
+import type { LegacyIoModulesFile } from "@pantin/core";
 import { deriveVariable, ioWidthOf } from "@pantin/core";
-import type { IoModulesFile, IoType, IoZone, TagDirection, TagType } from "@pantin/protocol";
+import type { IoType, IoZone, TagDirection, TagType } from "@pantin/protocol";
 
 // What `pantin io init` writes (ADR 0045 point 9): pure functions from the tag
 // list to rows, and the defaults of the first module.
@@ -7,7 +8,7 @@ import type { IoModulesFile, IoType, IoZone, TagDirection, TagType } from "@pant
 export const INIT_MODULE_KEY = "m1";
 const INIT_MODULE_PORT = 1502;
 
-export const INIT_MODULES_FILE: IoModulesFile = {
+export const INIT_MODULES_FILE: LegacyIoModulesFile = {
   schema_version: 1,
   modules: [
     {

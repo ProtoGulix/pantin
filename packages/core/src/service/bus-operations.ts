@@ -7,6 +7,7 @@ import {
   pausedWithBridgeEvent,
   plcModuleEvent,
 } from "../domain/console-events.ts";
+import { mappingIdOf } from "../domain/io-document-text.ts";
 import { describeTags } from "../domain/tags.ts";
 import { toClockState } from "./clock-operations.ts";
 import { recordConsoleEvents } from "./console-record.ts";
@@ -26,6 +27,7 @@ function peekFeedSource(context: ServiceContext, pantinId: PantinId): FeedSource
   return {
     stepCount: openPantin.stepCount,
     document: openPantin.document,
+    mappingId: mappingIdOf(openPantin.io),
     resetCount: openPantin.resetCount,
     consoleId: openPantin.console.id,
     consoleLastSequence: openPantin.console.lastSequence,

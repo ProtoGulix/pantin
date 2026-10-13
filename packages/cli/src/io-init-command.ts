@@ -2,20 +2,17 @@ import { appendFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   decodeIoList,
-  type IoListRow,
-  ioTagsOf,
-  ioWidthOf,
-  parseIoList,
-  readIoModules,
-} from "@pantin/core";
-import {
-  IO_FILE_MAX_BYTES,
   IO_LIST_FILE_NAME,
   IO_LIST_HEADER,
   IO_MODULES_FILE_NAME,
-  type IoModulesFile,
-  type IoZone,
-} from "@pantin/protocol";
+  type IoListRow,
+  ioTagsOf,
+  ioWidthOf,
+  type LegacyIoModulesFile,
+  parseIoList,
+  readLegacyIoModules,
+} from "@pantin/core";
+import { IO_FILE_MAX_BYTES, type IoZone } from "@pantin/protocol";
 import { readIoFiles } from "./io-folder.ts";
 import { INIT_MODULE_KEY, INIT_MODULES_FILE, initRows, type NextAddresses } from "./io-init.ts";
 import { readFolderDocument } from "./validate-folder.ts";
@@ -28,7 +25,7 @@ export type InitResult = { exitCode: number; messages: string[]; errors: string[
 
 const REFUSED = (errors: string[]): InitResult => ({ exitCode: 1, messages: [], errors });
 
-function modulesText(file: IoModulesFile): string {
+function modulesText(file: LegacyIoModulesFile): string {
   return `${JSON.stringify(file, null, 2)}\n`;
 }
 
@@ -42,7 +39,7 @@ function usedAddresses(rows: readonly IoListRow[]): NextAddresses {
 }
 
 function modulesProblem(bytes: Uint8Array): string | null {
-  const reading = readIoModules(bytes);
+  const reading = readLegacyIoModules(bytes);
   if (reading.modules === null) {
     const first = reading.problems[0]?.message ?? "it is invalid";
     return `${IO_MODULES_FILE_NAME} cannot be used (${first}): fix it first.`;

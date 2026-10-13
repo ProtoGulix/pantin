@@ -1,28 +1,21 @@
-import {
-  IO_LIST_FILE_NAME,
-  IO_MODULES_FILE_NAME,
-  type IoMappingResponse,
-  type PantinId,
-} from "@pantin/protocol";
+import type { IoMappingResponse, PantinId } from "@pantin/protocol";
 import { evaluateIoMapping, ioTagsOf } from "../domain/io-evaluation.ts";
 import { type IoMappingSource, mappingOf } from "../domain/io-mapping.ts";
 import { ApiError } from "../errors.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
 
-// GET /api/pantins/:pantinId/io (ADR 0045 point 7): both files are read from
-// disk on each call and checked against the open document, unsaved edits
-// included.
+// GET /api/pantins/:pantinId/io (ADR 0049 points 3 and 8): the open mapping,
+// checked against the open document, unsaved edits of both included. Only the
+// legacy files are looked up on disk, on each call: they are what the user
+// must act on, and nothing else reads them.
 
 export async function readIo(
   context: ServiceContext,
   pantinId: PantinId,
 ): Promise<IoMappingResponse> {
   const openPantin = await loadPantin(context, pantinId);
-  const [csv, modules] = await Promise.all([
-    context.store.readIoFile(pantinId, IO_LIST_FILE_NAME),
-    context.store.readIoFile(pantinId, IO_MODULES_FILE_NAME),
-  ]);
-  return evaluateIoMapping({ csv, modules }, ioTagsOf(openPantin.document));
+  const legacyFiles = await context.store.listLegacyIoFiles(pantinId);
+  return evaluateIoMapping(openPantin.io, legacyFiles, ioTagsOf(openPantin.document));
 }
 
 /** The bus's mapping source over the same code as the route: valid, or null. */

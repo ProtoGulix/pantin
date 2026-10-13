@@ -1,6 +1,6 @@
 import { generateGvl } from "./gvl.ts";
 import { ioInit } from "./io-init-command.ts";
-import { pantinJsonSchemaText } from "./json-schema.ts";
+import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
 import { validatePantinFolder } from "./validate-folder.ts";
 
 // The pantin command's logic, with its output streams injected so that tests
@@ -9,7 +9,7 @@ import { validatePantinFolder } from "./validate-folder.ts";
 const USAGE = [
   "Usage: pnpm pantin <command>",
   "  validate <folder>   check a Pantin folder: pantin.json and its mesh files",
-  "  schema              print the JSON Schema of pantin.json",
+  "  schema [io]         print the JSON Schema of pantin.json, or of io.json with io",
   "  io init <folder> [--update]",
   "                      write io.csv and io-modules.json, or append the unmapped tags",
   "  gvl <folder>        print the CODESYS global variable list of io.csv",
@@ -82,6 +82,10 @@ export async function runCommand(args: readonly string[], streams: Streams): Pro
   }
   if (command === "schema" && argument === undefined) {
     streams.stdout.write(pantinJsonSchemaText());
+    return 0;
+  }
+  if (command === "schema" && argument === "io" && extra.length === 0) {
+    streams.stdout.write(ioJsonSchemaText());
     return 0;
   }
   writeLine(streams.stderr, USAGE);

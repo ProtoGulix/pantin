@@ -17,6 +17,8 @@ export type Subscription = "*" | ReadonlySet<string>;
 export type FeedSource = {
   stepCount: number;
   document: PantinDocument;
+  // The open mapping's id (ADR 0049 point 7); null when it is missing or unreadable.
+  mappingId: string | null;
   // Counts the runtime resets and discards (ADR 0012 point 7).
   resetCount: number;
   consoleId: string;
@@ -30,6 +32,7 @@ export type FeedSource = {
 export type FeedCursor = {
   resetCount: number;
   document: PantinDocument;
+  mappingId: string | null;
   tagListSignature: string;
   consoleId: string;
   consoleSequence: number;
@@ -46,6 +49,7 @@ export function initialFeedCursor(source: FeedSource, now: number): FeedCursor {
   return {
     resetCount: source.resetCount,
     document: source.document,
+    mappingId: source.mappingId,
     tagListSignature: tagListSignature(source.document),
     consoleId: source.consoleId,
     consoleSequence: source.consoleLastSequence,
@@ -126,7 +130,7 @@ function tagMessages(
 
 /**
  * The messages to send after a tick, and the cursor to keep: `io_changed`
- * when the tag list changed, then the snapshot (after a reset or discard) or
+ * when the tag list or the mapping changed, then the snapshot (after a reset or discard) or
  * the changed tags, then each console entry new or folded since, then the
  * clock.
  */
@@ -137,13 +141,21 @@ export function nextFeed(
 ): { cursor: FeedCursor; messages: TagBusServerMessage[] } {
   const messages: TagBusServerMessage[] = [];
   let next = cursor;
-  if (source.document !== cursor.document) {
-    const signature = tagListSignature(source.document);
-    if (signature !== cursor.tagListSignature) {
-      messages.push({ type: "io_changed" });
-    }
-    next = { ...next, document: source.document, tagListSignature: signature };
+  const signature =
+    source.document === cursor.document
+      ? cursor.tagListSignature
+      : tagListSignature(source.document);
+  // One message even when the tag list and the mapping both changed: the
+  // bridge exits on the first (ADR 0049 point 7).
+  if (signature !== cursor.tagListSignature || source.mappingId !== cursor.mappingId) {
+    messages.push({ type: "io_changed" });
   }
+  next = {
+    ...next,
+    document: source.document,
+    mappingId: source.mappingId,
+    tagListSignature: signature,
+  };
   const tags = tagMessages(next, source);
   next = { ...tags.cursor, resetCount: source.resetCount };
   messages.push(...tags.messages);

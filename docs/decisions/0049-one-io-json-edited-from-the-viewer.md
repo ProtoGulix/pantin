@@ -200,7 +200,10 @@ Facts checked in the repository on 2026-10-13 (`develop` unless stated):
      `duplicate_variable`.
    - Codes added: `invalid_json`, `schema_invalid` (one per Zod issue,
      which covers duplicate keys, ports and tags), `legacy_io_files`
-     (point 8).
+     (point 8), and `unreadable_file` for an io.json that cannot be read
+     (a directory, a symlink leading outside the folder, no permission),
+     so that a broken io.json never blocks opening or discarding the
+     Pantin (clarified in P1).
    - Codes removed: the 11 CSV and two-file codes of the Context,
      `modules_invalid` and `duplicate_tag`. `unknown_module` cannot happen
      any more, since channels are nested in their module.

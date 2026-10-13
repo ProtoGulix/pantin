@@ -4,10 +4,10 @@ import {
   ApiError,
   assertRealPathInside,
   type DocumentReading,
-  evaluateIoMapping,
+  evaluateLegacyIoMapping,
   ioTagsOf,
   isErrorWithCode,
-  readIoModules,
+  readLegacyIoModules,
   readPantinDocument,
   resolveInside,
 } from "@pantin/core";
@@ -101,7 +101,7 @@ export async function readFolderDocument(folder: string): Promise<FolderDocument
 // io.csv and io-modules.json, when the folder has them (ADR 0045 point 7).
 async function ioReport(folder: string, document: PantinDocument): Promise<FolderReport> {
   const files = await readIoFiles(folder);
-  const answer = evaluateIoMapping(files, ioTagsOf(document));
+  const answer = evaluateLegacyIoMapping(files, ioTagsOf(document));
   if (answer.status === "missing") {
     return { problems: [], notes: loneModulesNotes(files.modules) };
   }
@@ -121,7 +121,7 @@ function loneModulesNotes(bytes: Uint8Array | undefined): string[] {
     return [];
   }
   // The core's messages for io-modules.json already name the file.
-  const problems = readIoModules(bytes).problems.map((problem) => problem.message);
+  const problems = readLegacyIoModules(bytes).problems.map((problem) => problem.message);
   return [
     "io-modules.json exists but there is no io.csv: nothing is mapped.",
     ...problems.map((problem) => `note: ${problem}`),

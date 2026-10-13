@@ -58,8 +58,16 @@ class BackgroundWork:
             self.failed.set_exception(error)
 
 
+def _describe_path(path: tuple[str | int, ...]) -> str:
+    """A JSON path as modules[0].channels[3].address; io.json for the whole file."""
+    text = ""
+    for part in path:
+        text += f"[{part}]" if isinstance(part, int) else f".{part}" if text else part
+    return text or "io.json"
+
+
 def _describe_problem(problem: IoProblem) -> str:
-    where = problem.file if problem.line is None else f"{problem.file} line {problem.line}"
+    where = _describe_path(problem.path)
     return f"{where}: {problem.message}"
 
 
@@ -70,7 +78,11 @@ def require_valid_mapping(mapping: IoMapping) -> str:
     reasons = "; ".join(_describe_problem(problem) for problem in mapping.problems)
     raise MappingNotValidError(
         f"The io mapping is {mapping.status.value}"
-        + (f": {reasons}" if reasons else " (add io.csv and io-modules.json; `pantin io init`).")
+        + (
+            f": {reasons}"
+            if reasons
+            else " (map the tags in the viewer's I/O view, or run `pantin io init`)."
+        )
     )
 
 

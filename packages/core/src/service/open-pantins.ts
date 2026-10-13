@@ -5,6 +5,13 @@ import type { StepConverter } from "../converter/step-converter.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
 import { allClearedEvents, migratedEvent } from "../domain/console-events.ts";
 import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
+import {
+  type IoReading,
+  ioTextOf,
+  MISSING_IO,
+  readIoDocument,
+  unreadableFile,
+} from "../domain/io-document-text.ts";
 import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
 import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
@@ -29,6 +36,12 @@ export type OpenPantin = {
   document: PantinDocument;
   // Canonical text of pantin.json on disk, to detect unsaved changes.
   savedText: string;
+  // The I/O mapping, io.json beside pantin.json (ADR 0049 point 3): edited in
+  // memory like the document, written only by save. Replaced, never mutated:
+  // the bus tells a change by identity.
+  io: IoReading;
+  // Canonical text of io.json on disk; null when it is missing or unreadable.
+  savedIoText: string | null;
   // Meshes referenced by pantin.json on disk, and by the one being written.
   savedMeshPaths: Set<string>;
   writingMeshPaths: Set<string>;
@@ -92,10 +105,13 @@ export function newOpenPantin(
   document: PantinDocument,
   consoleId: string,
   createWorld: PhysicsWorldFactory = createInertPhysicsWorld,
+  io: IoReading = MISSING_IO,
 ): OpenPantin {
   return {
     document,
     savedText: serializePantinDocument(document),
+    io,
+    savedIoText: ioTextOf(io),
     savedMeshPaths: meshPathsOf(document),
     writingMeshPaths: new Set(),
     pendingMeshDeletions: new Set(),
@@ -169,8 +185,19 @@ export type ServiceContext = {
 };
 
 export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinResponse {
-  const unsavedChanges = serializePantinDocument(openPantin.document) !== openPantin.savedText;
-  return { id: pantinId, unsavedChanges, document: openPantin.document };
+  return {
+    id: pantinId,
+    unsavedChanges: hasUnsavedChanges(openPantin),
+    document: openPantin.document,
+  };
+}
+
+// Either file differs from its saved text (ADR 0049 point 3).
+function hasUnsavedChanges(openPantin: OpenPantin): boolean {
+  return (
+    serializePantinDocument(openPantin.document) !== openPantin.savedText ||
+    ioTextOf(openPantin.io) !== openPantin.savedIoText
+  );
 }
 
 export function loadPantin(context: ServiceContext, pantinId: PantinId): Promise<OpenPantin> {
@@ -208,13 +235,41 @@ async function readSavedReading(context: ServiceContext, pantinId: PantinId) {
   return readValidDocument(text, location);
 }
 
+// A broken io.json is a mapping problem, never a reason to refuse pantin.json.
+export async function readIoReading(
+  context: ServiceContext,
+  pantinId: PantinId,
+): Promise<IoReading> {
+  try {
+    return readIoDocument(await context.store.readIoFile(pantinId));
+  } catch (error) {
+    return unreadableFile(unreadableReason(error));
+  }
+}
+
+// The system error code (EISDIR, EACCES...) says what to fix; the path is left
+// out, as in every other message the API sends.
+function unreadableReason(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  const code = error instanceof Error && "code" in error ? String(error.code) : null;
+  return code === null ? "the file system refused" : `the file system refused (${code})`;
+}
+
 async function readPantinFromDisk(
   context: ServiceContext,
   pantinId: PantinId,
 ): Promise<OpenPantin> {
   // Compared in canonical form, so a hand formatted file is not "unsaved".
   const { document, migratedFrom } = await readSavedReading(context, pantinId);
-  const openPantin = newOpenPantin(document, context.newConsoleId(), context.physics.createWorld);
+  const io = await readIoReading(context, pantinId);
+  const openPantin = newOpenPantin(
+    document,
+    context.newConsoleId(),
+    context.physics.createWorld,
+    io,
+  );
   if (migratedFrom !== null) {
     recordConsoleEvents(context, openPantin, [migratedEvent(migratedFrom)]);
   }

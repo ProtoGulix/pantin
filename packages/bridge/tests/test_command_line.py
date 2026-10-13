@@ -77,7 +77,6 @@ def test_fetches_and_decodes_the_io_answer() -> None:
             "status": "missing",
             "mappingId": None,
             "modules": [],
-            "rows": [],
             "problems": [],
             "unmappedTags": [],
         }
@@ -117,7 +116,6 @@ def test_a_proxy_environment_is_ignored_for_the_io_call_and_the_bus(
         "status": "missing",
         "mappingId": None,
         "modules": [],
-        "rows": [],
         "problems": [],
         "unmappedTags": [],
     }

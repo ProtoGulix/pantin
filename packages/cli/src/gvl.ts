@@ -1,4 +1,4 @@
-import type { IoMappingResponse, IoRow } from "@pantin/protocol";
+import type { LegacyIoMappingResponse, LegacyIoRow } from "@pantin/core";
 import { describeIoProblem, readFolderIo } from "./io-folder.ts";
 import { readFolderDocument } from "./validate-folder.ts";
 
@@ -15,18 +15,18 @@ const HEADER = [
   "// controller with its field I/O disconnected.",
 ];
 
-function declaration(row: IoRow): string {
+function declaration(row: LegacyIoRow): string {
   return `  ${row.variable} : ${row.ioType}; // ${row.module} ${row.zone} ${row.address}, ${row.tag}`;
 }
 
 /** The text of the GVL for the rows of a valid mapping. */
-function renderGvl(rows: readonly IoRow[]): string {
+function renderGvl(rows: readonly LegacyIoRow[]): string {
   return [...HEADER, "VAR_GLOBAL", ...rows.map(declaration), "END_VAR", ""].join("\n");
 }
 
 export type GvlResult = { exitCode: number; stdout: string; errors: string[] };
 
-function refusal(answer: IoMappingResponse): string[] {
+function refusal(answer: LegacyIoMappingResponse): string[] {
   if (answer.status === "missing") {
     return ['No io.csv in this folder: run "pantin io init <folder>" first.'];
   }

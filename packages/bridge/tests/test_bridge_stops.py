@@ -77,7 +77,9 @@ def test_an_invalid_mapping_stops_the_bridge_before_the_bus_with_the_problems() 
     async def scenario() -> FakeCore:
         async with FakeCore(answer) as core:
             config = BridgeConfig(parse_core_endpoint(core.url, "demo"), HOST, ())
-            with pytest.raises(MappingNotValidError, match=r"io.csv line 3: No tag"):
+            with pytest.raises(
+                MappingNotValidError, match=r"modules\[0\]\.channels\[0\]\.tag: No tag"
+            ):
                 await run_bridge(config)
             return core
 

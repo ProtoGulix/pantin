@@ -42,6 +42,7 @@ function sourceOf(overrides: Partial<FeedSource> & { tagList?: Tag[] } = {}): Fe
   return {
     stepCount: 0,
     document: DOCUMENT,
+    mappingId: null,
     resetCount: 0,
     consoleId: "console-1",
     consoleLastSequence: 0,
@@ -188,5 +189,31 @@ describe("nextFeed io_changed", () => {
   it("is not sent for an edit that leaves the tag list as it was", () => {
     const renamed = { ...DOCUMENT, name: "Other" };
     expect(nextFeed(cursor, sourceOf({ document: renamed }), 0).messages).toEqual([]);
+  });
+});
+
+describe("nextFeed io_changed on a mapping change", () => {
+  it("is sent once when the mapping id changes, and again for each new id", () => {
+    const start = initialFeedCursor(sourceOf({ mappingId: "a" }), 0);
+    const first = nextFeed(start, sourceOf({ mappingId: "b" }), 0);
+    expect(first.messages).toEqual([{ type: "io_changed" }]);
+    expect(nextFeed(first.cursor, sourceOf({ mappingId: "b" }), 0).messages).toEqual([]);
+    expect(nextFeed(first.cursor, sourceOf({ mappingId: "c" }), 0).messages).toEqual([
+      { type: "io_changed" },
+    ]);
+  });
+
+  it("is sent when the mapping appears or goes (id null)", () => {
+    const start = initialFeedCursor(sourceOf(), 0);
+    const appeared = nextFeed(start, sourceOf({ mappingId: "a" }), 0);
+    expect(appeared.messages).toEqual([{ type: "io_changed" }]);
+    expect(nextFeed(appeared.cursor, sourceOf(), 0).messages).toEqual([{ type: "io_changed" }]);
+  });
+
+  it("is sent once when the tag list and the mapping change together", () => {
+    const after = { ...DOCUMENT, emitters: [emitter()] };
+    const start = initialFeedCursor(sourceOf({ mappingId: "a" }), 0);
+    const next = nextFeed(start, sourceOf({ document: after, mappingId: "b" }), 0);
+    expect(next.messages).toEqual([{ type: "io_changed" }]);
   });
 });

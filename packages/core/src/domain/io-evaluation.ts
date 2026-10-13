@@ -1,160 +1,112 @@
-import { createHash } from "node:crypto";
-import {
-  IO_FILE_MAX_BYTES,
-  IO_LIST_FILE_NAME,
-  IO_MODULES_FILE_NAME,
-  type IoMappingResponse,
-  type IoModule,
-  type IoModulesFile,
-  IoModulesFileSchema,
-  type IoProblem,
-  type IoRow,
-  type PantinDocument,
+import type {
+  IoDocument,
+  IoMappedChannel,
+  IoMappingResponse,
+  IoProblem,
+  PantinDocument,
 } from "@pantin/protocol";
-import { decodeIoList, type IoListProblem, parseIoList } from "./io-list.ts";
-import { type IoTag, validateIoRows } from "./io-validation.ts";
-import { tagEntries } from "./tag-entries.ts";
+import { type IoReading, mappingIdOf } from "./io-document-text.ts";
+import { type IoTag, validateIoDocument } from "./io-validation.ts";
+import { type TagOwner, tagEntries } from "./tag-entries.ts";
 
-// From the bytes of the two mapping files and the document's tags to the answer
-// of GET .../io (ADR 0045 point 7): pure, the files are read by the caller.
+// From the open mapping and the document's tags to the answer of GET .../io
+// (ADR 0049 points 5 to 8): pure, the legacy files are looked up by the caller.
 
-export type IoFiles = {
-  // undefined when the file does not exist.
-  csv: Uint8Array | undefined;
-  modules: Uint8Array | undefined;
-};
+/** Legacy files found beside io.json (io.csv, io-modules.json), by name. */
+export type LegacyIoFilesFound = readonly string[];
 
-type FileName = IoProblem["file"];
-
-/** SHA-256 of the two files' bytes, each preceded by its length so that they cannot blur. */
-function ioMappingIdOf(files: IoFiles): string {
-  const hash = createHash("sha256");
-  for (const bytes of [files.csv, files.modules]) {
-    hash.update(`${bytes === undefined ? "absent" : bytes.byteLength}:`);
-    if (bytes !== undefined) {
-      hash.update(bytes);
-    }
+function ownerOf(owner: TagOwner): IoTag["owner"] {
+  switch (owner.kind) {
+    case "joint":
+      return { kind: "joint", id: owner.joint.id };
+    case "drive":
+      return { kind: "drive", id: owner.drive.id };
+    case "sensor":
+      return { kind: "sensor", id: owner.sensor.id };
+    case "emitter":
+      return { kind: "emitter", id: owner.emitter.id };
+    case "presenceSensor":
+      return { kind: "presenceSensor", id: owner.presenceSensor.id };
   }
-  return hash.digest("hex");
-}
-
-function csvProblems(problems: readonly IoListProblem[]): IoProblem[] {
-  return problems.map((problem) => ({ file: IO_LIST_FILE_NAME, ...problem }));
-}
-
-function fileProblem(file: FileName, code: IoProblem["code"], message: string): IoProblem {
-  return { file, line: null, column: null, code, message };
-}
-
-function tooLarge(file: FileName): IoProblem {
-  return fileProblem(file, "file_too_large", `${file} is larger than ${IO_FILE_MAX_BYTES} bytes.`);
-}
-
-type ModulesReading = { modules: IoModulesFile | null; problems: IoProblem[] };
-
-/** Decodes and checks io-modules.json; the CLI reuses it. */
-export function readIoModules(bytes: Uint8Array | undefined): ModulesReading {
-  const invalid = (message: string): ModulesReading => ({
-    modules: null,
-    problems: [fileProblem(IO_MODULES_FILE_NAME, "modules_invalid", message)],
-  });
-  if (bytes === undefined) {
-    const message = `${IO_MODULES_FILE_NAME} is missing: run "pantin io init <folder> --update" or write it (module key, port).`;
-    return {
-      modules: null,
-      problems: [fileProblem(IO_MODULES_FILE_NAME, "modules_missing", message)],
-    };
-  }
-  if (bytes.byteLength > IO_FILE_MAX_BYTES) {
-    return { modules: null, problems: [tooLarge(IO_MODULES_FILE_NAME)] };
-  }
-  let json: unknown;
-  try {
-    // A UTF-8 byte order mark is skipped here (TextDecoder default) while
-    // io.csv refuses it: JSON.parse would fail on it and JSON editors add it
-    // often, whereas the CSV format trims nothing and its header is exact.
-    json = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    return invalid(`${IO_MODULES_FILE_NAME} is not valid JSON (${reason}).`);
-  }
-  const result = IoModulesFileSchema.safeParse(json);
-  if (result.success) {
-    return { modules: result.data, problems: [] };
-  }
-  return {
-    modules: null,
-    problems: result.error.issues.map((issue) =>
-      fileProblem(
-        IO_MODULES_FILE_NAME,
-        "modules_invalid",
-        `${issue.path.join(".") || "(file)"}: ${issue.message}`,
-      ),
-    ),
-  };
-}
-
-function rowsOf(parsed: ReturnType<typeof parseIoList>["rows"], tags: readonly IoTag[]): IoRow[] {
-  const byName = new Map(tags.map((tag) => [tag.name, tag]));
-  return parsed.map(({ columns: _columns, ...row }) => {
-    const tag = byName.get(row.tag);
-    return { ...row, type: tag?.type ?? null, direction: tag?.direction ?? null };
-  });
-}
-
-function response(
-  parts: Partial<IoMappingResponse> & Pick<IoMappingResponse, "status">,
-): IoMappingResponse {
-  return { mappingId: null, modules: [], rows: [], problems: [], unmappedTags: [], ...parts };
-}
-
-/** Reads and checks the mapping of one Pantin against its tags. */
-export function evaluateIoMapping(files: IoFiles, tags: readonly IoTag[]): IoMappingResponse {
-  const allTags = tags.map((tag) => tag.name);
-  if (files.csv === undefined) {
-    return response({ status: "missing", unmappedTags: allTags });
-  }
-  const mappingId = ioMappingIdOf(files);
-  const reading = readIoModules(files.modules);
-  if (files.csv.byteLength > IO_FILE_MAX_BYTES) {
-    return response({
-      status: "invalid",
-      mappingId,
-      problems: [tooLarge(IO_LIST_FILE_NAME), ...reading.problems],
-      unmappedTags: allTags,
-    });
-  }
-  const decoded = decodeIoList(files.csv);
-  if ("problem" in decoded) {
-    return response({
-      status: "invalid",
-      mappingId,
-      problems: [...csvProblems([decoded.problem]), ...reading.problems],
-      unmappedTags: allTags,
-    });
-  }
-  const parsed = parseIoList(decoded.text);
-  const moduleKeys =
-    reading.modules === null
-      ? null
-      : new Set(reading.modules.modules.map((module: IoModule) => module.key));
-  const validation = validateIoRows({ rows: parsed.rows, tags, moduleKeys });
-  const problems = [
-    ...csvProblems(parsed.problems),
-    ...csvProblems(validation.problems),
-    ...reading.problems,
-  ];
-  return response({
-    status: problems.length === 0 ? "valid" : "invalid",
-    mappingId,
-    modules: reading.modules?.modules ?? [],
-    rows: rowsOf(parsed.rows, tags),
-    problems,
-    unmappedTags: validation.unmappedTags,
-  });
 }
 
 /** The tags a mapping can refer to: those of the open document. */
 export function ioTagsOf(document: PantinDocument): IoTag[] {
-  return tagEntries(document).map(({ name, type, direction }) => ({ name, type, direction }));
+  return tagEntries(document).map((entry) => ({
+    name: entry.name,
+    type: entry.type,
+    direction: entry.direction,
+    owner: ownerOf(entry.owner),
+  }));
+}
+
+// ADR 0049 point 8: two sources of truth are never merged, so the user is told
+// which file to act on.
+function legacyProblem(found: LegacyIoFilesFound, hasIoJson: boolean): IoProblem {
+  const names = found.join(" and ");
+  const message = hasIoJson
+    ? `${names} still exist beside io.json, which replaces them: delete them.`
+    : `${names} exist but io.json does not: run "pnpm pantin io migrate <folder>" to convert them.`;
+  return { path: [], code: "legacy_io_files", message };
+}
+
+function annotated(document: IoDocument, tags: readonly IoTag[]): IoMappingResponse["modules"] {
+  const byName = new Map(tags.map((tag) => [tag.name, tag]));
+  return document.modules.map((module) => ({
+    ...module,
+    channels: module.channels.map((channel): IoMappedChannel => {
+      const tag = byName.get(channel.tag);
+      return {
+        ...channel,
+        tagType: tag?.type ?? null,
+        direction: tag?.direction ?? null,
+        owner: tag?.owner ?? null,
+      };
+    }),
+  }));
+}
+
+function unmappedAll(tags: readonly IoTag[]): IoMappingResponse["unmappedTags"] {
+  return tags.map(({ name, type, direction, owner }) => ({ name, type, direction, owner }));
+}
+
+function statusOf(problems: readonly IoProblem[]): IoMappingResponse["status"] {
+  return problems.length === 0 ? "valid" : "invalid";
+}
+
+/** Checks the open mapping against the tags of the open document. */
+export function evaluateIoMapping(
+  reading: IoReading,
+  legacyFiles: LegacyIoFilesFound,
+  tags: readonly IoTag[],
+): IoMappingResponse {
+  const legacy =
+    legacyFiles.length === 0 ? [] : [legacyProblem(legacyFiles, reading.kind !== "missing")];
+  if (reading.kind === "missing") {
+    return {
+      status: legacy.length === 0 ? "missing" : "invalid",
+      mappingId: null,
+      modules: [],
+      problems: legacy,
+      unmappedTags: unmappedAll(tags),
+    };
+  }
+  if (reading.kind === "unreadable") {
+    return {
+      status: "invalid",
+      mappingId: null,
+      modules: [],
+      problems: [...legacy, ...reading.problems],
+      unmappedTags: unmappedAll(tags),
+    };
+  }
+  const validation = validateIoDocument(reading.document, tags);
+  const problems = [...legacy, ...validation.problems];
+  return {
+    status: statusOf(problems),
+    mappingId: mappingIdOf(reading),
+    modules: annotated(reading.document, tags),
+    problems,
+    unmappedTags: validation.unmappedTags,
+  };
 }

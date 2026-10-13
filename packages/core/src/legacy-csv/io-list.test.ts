@@ -1,6 +1,6 @@
-import { IO_LIST_HEADER } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { decodeIoList, parseIoList } from "./io-list.ts";
+import { IO_LIST_HEADER } from "./legacy-types.ts";
 
 // The strict parser of io.csv (ADR 0045 point 6).
 

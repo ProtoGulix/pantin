@@ -1,11 +1,5 @@
-import {
-  IO_LIST_HEADER,
-  type IoProblemCode,
-  type IoType,
-  IoTypeSchema,
-  type IoZone,
-  IoZoneSchema,
-} from "@pantin/protocol";
+import { type IoType, IoTypeSchema, type IoZone, IoZoneSchema } from "@pantin/protocol";
+import { IO_LIST_HEADER, type LegacyIoProblemCode } from "./legacy-types.ts";
 
 // The strict parser of io.csv (ADR 0045 point 6): text in, rows or problems
 // out, no CSV library. The format has no quoting and no escapes, so a field
@@ -37,7 +31,7 @@ export type IoListRow = {
 export type IoListProblem = {
   line: number;
   column: number;
-  code: IoProblemCode;
+  code: LegacyIoProblemCode;
   message: string;
 };
 
@@ -78,7 +72,7 @@ function splitLines(text: string): Line[] {
   return lines.map((lineText, index) => ({ text: lineText, number: index + 1 }));
 }
 
-function problem(line: number, column: number, code: IoProblemCode, message: string) {
+function problem(line: number, column: number, code: LegacyIoProblemCode, message: string) {
   return { line, column, code, message };
 }
 

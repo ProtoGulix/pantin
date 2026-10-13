@@ -8,6 +8,21 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- PLC bridge, one io.json (ADR 0049 slice P1, the read path): `io.json`
+  beside pantin.json holds the modules and their channels (tag, variable,
+  zone, address, `ioType`, comment), checked by the new public schema
+  `IoDocumentSchema` (a tag in one channel at most, unknown fields refused),
+  with its JSON Schema `protocol/schema/io.schema.json` (`pantin schema io`,
+  tested for freshness). The open Pantin holds the mapping like the document:
+  `unsavedChanges` covers both files, save writes io.json (only when its
+  canonical text changed) then pantin.json, discard re-reads both. `GET
+  /api/pantins/:pantinId/io` answers the open mapping, nested by module, each
+  channel annotated with its tag, and problems with a JSON `path`; the
+  `mappingId` is the SHA-256 of the canonical text, `io_changed` is also sent
+  when it changes, and a leftover io.csv or io-modules.json makes the mapping
+  invalid (`legacy_io_files`). Breaking, with the bridge decoder and the
+  shared fixture updated; the write routes come next (P2). Until P3, the CLI
+  keeps reading the legacy CSV through `core/src/legacy-csv`.
 - Viewer, tree rows for devices (ADR 0047 slice P1): under each assembly, one
   folder per family (action chain, conveying, product flow) lists its drives,
   actuators, sensors, belts, guides, presence sensors, emitters and absorbers

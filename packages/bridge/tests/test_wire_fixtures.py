@@ -70,6 +70,7 @@ def test_decodes_the_fields_the_bridge_uses() -> None:
     assert [module.key for module in mapping.modules] == ["m1", "m2"]
     assert mapping.modules[1].word_order is WordOrder.HIGH_WORD_FIRST
     assert mapping.modules[1].unit_id == 7
+    assert len(mapping.rows) == 6
     encoder = mapping.rows_of("m2")[0]
     assert (encoder.zone, encoder.address, encoder.io_type) == (
         IoZone.INPUT_REGISTER,
@@ -78,9 +79,21 @@ def test_decodes_the_fields_the_bridge_uses() -> None:
     )
 
 
+def test_decodes_the_path_of_a_problem_and_nests_channels_under_their_module() -> None:
+    unreadable = decode_io_mapping(json.loads(io_cases("valid")[3].frame))
+
+    assert [problem.path for problem in unreadable.problems] == [(), ("modules", 0, "port")]
+    assert [problem.code for problem in unreadable.problems] == [
+        "legacy_io_files",
+        "schema_invalid",
+    ]
+    valid = decode_io_mapping(json.loads(io_cases("valid")[0].frame))
+    assert [row.tag for row in valid.rows_of("m2")] == ["axis.encoder.count"]
+
+
 def test_refuses_a_bool_in_a_register_zone() -> None:
     document = json.loads(io_cases("valid")[0].frame)
-    document["rows"][0]["zone"] = "holding_register"
+    document["modules"][0]["channels"][0]["zone"] = "holding_register"
 
     with pytest.raises(ProtocolError, match="cannot sit in"):
         decode_io_mapping(document)

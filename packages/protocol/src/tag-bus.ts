@@ -46,8 +46,9 @@ export type TagBusRole = z.infer<typeof TagBusRoleSchema>;
 // A correlation id chosen by the sender and echoed in the answer.
 const MessageIdSchema = z.string().min(1).max(64);
 
-// SHA-256 of the two mapping files in the core's answer to GET .../io (ADR 0045
-// point 7). Only its presence is checked here: the core compares it.
+// SHA-256 of the canonical text of the open mapping, in the core's answer to
+// GET .../io (ADR 0049 point 7). Only its presence is checked here: the core
+// compares it.
 const MappingIdSchema = z.string().min(1).max(128);
 
 // --- client to core ---------------------------------------------------------

@@ -15,19 +15,18 @@ HOST = "127.0.0.1"
 MAPPING_ID = "mapping-1"
 
 
-def row(tag: str, zone: str, address: int, io_type: str) -> dict[str, object]:
+def channel(tag: str, zone: str, address: int, io_type: str) -> dict[str, object]:
     direction = "command" if zone in ("coil", "holding_register") else "feedback"
     return {
-        "line": 2,
         "tag": tag,
         "variable": tag.replace(".", "_"),
-        "module": "m1",
         "zone": zone,
         "address": address,
         "ioType": io_type,
         "comment": "",
-        "type": "bit" if io_type == "BOOL" else "float",
+        "tagType": "bit" if io_type == "BOOL" else "float",
         "direction": direction,
+        "owner": {"kind": "drive", "id": "valve"},
     }
 
 
@@ -38,17 +37,17 @@ def io_answer(port: int, word_order: str = "low_word_first") -> dict[str, object
         "unitId": 1,
         "wordOrder": word_order,
         "watchdogMilliseconds": 200,
+        "channels": [
+            channel("press.valve.extend", "coil", 0, "BOOL"),
+            channel("press.ext.state", "discrete_input", 0, "BOOL"),
+            channel("axis.stroke.setpoint", "holding_register", 0, "REAL"),
+            channel("axis.stroke.position", "input_register", 0, "REAL"),
+        ],
     }
     return {
         "status": "valid",
         "mappingId": MAPPING_ID,
         "modules": [module],
-        "rows": [
-            row("press.valve.extend", "coil", 0, "BOOL"),
-            row("press.ext.state", "discrete_input", 0, "BOOL"),
-            row("axis.stroke.setpoint", "holding_register", 0, "REAL"),
-            row("axis.stroke.position", "input_register", 0, "REAL"),
-        ],
         "problems": [],
         "unmappedTags": [],
     }
