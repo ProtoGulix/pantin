@@ -1,3 +1,4 @@
+import type { IoTagOwner } from "@pantin/protocol";
 import { committingTextInput, element } from "./dom.ts";
 
 // aria-disabled and a guard, not `disabled`: the panel is redrawn when a request
@@ -72,4 +73,40 @@ export function settingField(
   const caption = element("label", { className: "io-field__label", text: label });
   caption.htmlFor = id;
   return element("div", { className: "io-field" }, [caption, input]);
+}
+
+/**
+ * A tag cell. A known tag is a button that selects its owner (click or Enter);
+ * an unknown tag has no owner and stays plain text. The cell keeps the id, so
+ * that a problem still lands on it.
+ */
+export function tagCell(
+  id: string,
+  tag: string,
+  owner: IoTagOwner | null,
+  title: string,
+  messages: readonly string[] | undefined,
+  onSelect: (owner: IoTagOwner) => void,
+): HTMLElement {
+  const cell = readOnlyCell(id, owner === null ? tag : "", messages);
+  if (owner !== null) {
+    cell.append(tagLink(tag, owner, title, onSelect));
+  }
+  return cell;
+}
+
+/** The tag as a link-like button to its owner. */
+export function tagLink(
+  tag: string,
+  owner: IoTagOwner,
+  title: string,
+  onSelect: (owner: IoTagOwner) => void,
+): HTMLButtonElement {
+  const created = element("button", {
+    className: "io-tag-link",
+    text: tag,
+    attributes: { type: "button", title, "data-focus-key": `io-owner-${tag}` },
+  });
+  created.addEventListener("click", () => onSelect(owner));
+  return created;
 }

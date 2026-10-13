@@ -20,6 +20,12 @@ function statusPage(view: IoView, translate: Translate, intents: PanelIntents): 
   if (view.mode === "loading") {
     return [element("p", { className: "io-view__note", text: translate("io.loading") })];
   }
+  if (view.mode === "failed") {
+    return [
+      element("p", { className: "io-view__note", text: translate("io.failed") }),
+      ioButton(translate("io.retry"), "io-button", view.busy, "io-retry", intents.retryIoMapping),
+    ];
+  }
   if (view.mode === "missing") {
     const create = ioButton(
       translate("io.missing.create"),
@@ -53,11 +59,17 @@ function editor(view: IoView, translate: Translate, intents: PanelIntents): HTML
 
 function content(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement[] {
   const problems = drawProblemList(view, translate, intents);
+  const stale = view.outOfDate
+    ? [
+        element("p", { className: "io-view__note", text: translate("io.outOfDate") }),
+        ioButton(translate("io.retry"), "io-button", view.busy, "io-retry", intents.retryIoMapping),
+      ]
+    : [];
   const body =
     view.mode === "editing"
       ? [editor(view, translate, intents)]
       : statusPage(view, translate, intents);
-  return [...(problems === null ? [] : [problems]), ...body];
+  return [...stale, ...(problems === null ? [] : [problems]), ...body];
 }
 
 export class IoPanel {

@@ -108,7 +108,7 @@ describe("the hook after any document change", () => {
     expect(reads).toBe(1);
   });
 
-  it("does not read while another layout is shown", async () => {
+  it("reads once when the inspector opens on an element with tags, not at each selection", async () => {
     let reads = 0;
     const store = await ioStore(
       {
@@ -119,7 +119,26 @@ describe("the hook after any document change", () => {
       },
       "3d",
     );
-    store.update({ ...store.state, openPantin: { ...pantin } });
+    expect(reads).toBe(0);
+    store.update({ ...store.state, inspectorOpen: true, selection: { kind: "drive", id: "d1" } });
+    await settle();
+    store.update({ ...store.state, selection: { kind: "sensor", id: "s1" } });
+    await settle();
+    expect(reads).toBe(1);
+  });
+
+  it("does not read while neither the I/O view nor an element with tags is shown", async () => {
+    let reads = 0;
+    const store = await ioStore(
+      {
+        getIoMapping: async () => {
+          reads += 1;
+          return answer("m1");
+        },
+      },
+      "3d",
+    );
+    store.update({ ...store.state, openPantin: { ...pantin }, inspectorOpen: true });
     await settle();
     expect(reads).toBe(0);
   });
@@ -201,5 +220,60 @@ describe("the hook and an I/O edit", () => {
     resolvePrompt(store, "confirmDelete");
     await settle();
     expect(counter.reads).toBe(1);
+  });
+});
+
+describe("one read at a time, and the freshest answer wins", () => {
+  it("skips the read when the mapping is current, whatever the selection", async () => {
+    const { counter, getIoMapping } = countReads();
+    const store = await ioStore({ getIoMapping });
+    counter.reads = 0;
+    store.update({ ...store.state, inspectorOpen: true });
+    store.update({ ...store.state, selection: { kind: "drive", id: "d1" } });
+    store.update({ ...store.state, selection: { kind: "sensor", id: "s1" } });
+    await settle();
+    expect(counter.reads).toBe(0);
+  });
+
+  it("drops a late read that a fresher edit answer has overtaken", async () => {
+    let release: (mapping: IoMappingResponse) => void = () => undefined;
+    const store = await ioStore({
+      getIoMapping: () => new Promise((resolve) => (release = resolve)),
+      createIoModule: async () => answer("edited"),
+    });
+    // A new document version while the I/O view is shown starts a read that stays pending.
+    store.update({ ...store.state, openPantin: { ...pantin } });
+    ioIntents(store).addIoModule();
+    await settle();
+    expect(store.state.io.mapping?.modules[0]?.key).toBe("edited");
+    release(answer("late"));
+    await settle();
+    expect(store.state.io.mapping?.modules[0]?.key).toBe("edited");
+  });
+});
+
+describe("a failed read", () => {
+  it("is not retried by the hook, and Retry or entering the view reads again", async () => {
+    let reads = 0;
+    let failing = true;
+    const store = await ioStore({
+      getIoMapping: async () => {
+        reads += 1;
+        if (failing) {
+          throw new Error("down");
+        }
+        return answer("m1");
+      },
+    });
+    expect(store.state.io.failedFor).toBe(store.state.openPantin);
+    store.update({ ...store.state, selection: { kind: "drive", id: "d1" } });
+    await settle();
+    expect(reads).toBe(1);
+    failing = false;
+    ioIntents(store).retryIoMapping();
+    await settle();
+    expect(reads).toBe(2);
+    expect(store.state.io.failedFor).toBeNull();
+    expect(store.state.io.mapping).not.toBeNull();
   });
 });

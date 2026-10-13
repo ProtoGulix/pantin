@@ -51,6 +51,8 @@ function openStore(calls: string[]) {
   });
   store.requestedPantinId = pantin.id;
   store.update(withOpenPantin(store.state, pantin));
+  // Opening a Pantin reads the mapping for the inspector; the tests count what they cause.
+  calls.length = 0;
   return store;
 }
 
@@ -103,12 +105,13 @@ describe("the I/O view selection and reloads", () => {
     expect(store.state.io.focus).toEqual({ cellId: "io-cell-1-port", serial: 2 });
   });
 
-  it("reads the mapping again after a document edit while the I/O layout is shown", async () => {
+  it("reads the mapping again after a document edit while it is shown", async () => {
     const calls: string[] = [];
     const store = openStore(calls);
     await editPantin(store, pantin.id, async () => "done");
     expect(calls).toEqual([]);
     store.update({ ...store.state, centralLayout: "io" });
+    calls.length = 0;
     await editPantin(store, pantin.id, async () => "done");
     expect(calls).toEqual(["get"]);
   });

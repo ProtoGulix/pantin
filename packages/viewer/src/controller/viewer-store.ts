@@ -106,6 +106,8 @@ export class ViewerStore {
   readonly faceFiles = new Map<string, Promise<FaceFile | null>>();
   // Same for the console (ADR 0031 point 4).
   readingConsole = false;
+  // The I/O mapping read in flight, shared by its callers (io-load.ts).
+  ioRead: { pantin: PantinResponse; done: Promise<void> } | null = null;
   // The lines of the open Pantin's console, outside ViewerState: see console-state.ts.
   consoleList: ClientConsole = EMPTY_CLIENT_CONSOLE;
   private consolePantinId: string | null = null;
@@ -134,7 +136,6 @@ export class ViewerStore {
   }
 
   update(requested: ViewerState): void {
-    const previous = this.state;
     // The tools follow the selection, the layout and the inspector (ADR 0039 point 3).
     const next = withAxisPickRules(withPlacementFeedbackRules(withToolRules(requested)));
     // A restart on another assembly reads face files again, like a new alignment.
@@ -162,7 +163,7 @@ export class ViewerStore {
     showViewportState(viewport, next, this.chainLinksOf);
     // Last, after every draw: the read it starts re-enters update(), and a
     // draw after that would show this pass's stale state over the newer one.
-    reloadIoAfterDocumentChange(this, previous, next);
+    reloadIoAfterDocumentChange(this, next);
   }
 
   /** The 3D preview alone, for form edits that do not redraw the panel. */

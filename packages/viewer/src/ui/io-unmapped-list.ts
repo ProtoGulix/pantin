@@ -1,8 +1,9 @@
 import type { IoUnmappedTag } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { unmappedEntryId } from "../io/io-element-tags.ts";
 import type { IoView } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
-import { ioButton } from "./io-cells.ts";
+import { ioButton, tagLink } from "./io-cells.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // The side list of unmapped tags, grouped by assembly (ADR 0049 point 11).
@@ -23,10 +24,25 @@ function tagEntry(
     () => target !== null && intents.mapIoTags(target, [tag.name]),
   );
   map.title = translate("io.unmapped.mapToTitle", { tag: tag.name, module: target ?? "" });
-  return element("li", { className: "io-unmapped__tag" }, [
-    element("span", { className: "io-unmapped__name", text: tag.name }),
-    map,
-  ]);
+  // The entry has the id a "Show in I/O" link lands on (io-element-tags.ts).
+  return element(
+    "li",
+    {
+      className: "io-unmapped__tag",
+      attributes: { id: unmappedEntryId(tag.name), tabindex: "-1" },
+    },
+    [
+      element("span", { className: "io-unmapped__name" }, [
+        tagLink(
+          tag.name,
+          tag.owner,
+          translate("io.tag.selectOwner", { tag: tag.name }),
+          intents.selectIoOwner,
+        ),
+      ]),
+      map,
+    ],
+  );
 }
 
 function mapAllButton(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {

@@ -146,3 +146,38 @@
   line-height: var(--row-height);
   background: var(--surface-2);
 }
+
+.inspector-io {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.inspector-io__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inspector-io__tag {
+  display: grid;
+  gap: 2px;
+}
+
+.inspector-io__name {
+  overflow-wrap: anywhere;
+  font-family: var(--font-source);
+}
+
+.inspector-io__status.is-unmapped {
+  color: var(--text-muted);
+}
+
+.inspector-io__actions {
+  display: flex;
+  gap: 6px;
+}

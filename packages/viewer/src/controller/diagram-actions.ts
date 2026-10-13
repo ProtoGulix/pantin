@@ -11,7 +11,6 @@ import {
   removeDiagramLink,
   showDiagramHint,
 } from "./diagram-edit-actions.ts";
-import { enterIoLayout } from "./io-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The chain diagram (ADR 0029): the layout of the central area, folding a
@@ -20,10 +19,10 @@ import type { ViewerStore } from "./viewer-store.ts";
 export function setCentralLayout(store: ViewerStore, layout: CentralLayout): void {
   if (store.state.centralLayout !== layout) {
     store.ports.storeCentralLayout(layout);
-    store.update({ ...store.state, centralLayout: layout, contextMenu: null });
-    if (showsIo(layout)) {
-      enterIoLayout(store);
-    }
+    // Showing the I/O view reads the mapping: the store's hook does it (io-load.ts).
+    // Entering it is a gesture: a failed read is tried again.
+    const io = showsIo(layout) ? { ...store.state.io, failedFor: null } : store.state.io;
+    store.update({ ...store.state, centralLayout: layout, contextMenu: null, io });
   }
 }
 

@@ -8,6 +8,17 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer, links between the I/O view and the tree (ADR 0049 slice P6):
+  clicking (or Enter on) a tag in the channel table or the unmapped list
+  selects its owner, a device row or the joint's node, with the tree
+  unfolded to it and the I/O view kept. The inspector of a device or joint
+  that owns tags gains an "E/S" / "I/O" section: each tag with module,
+  address and variable, or "non affecté" with "Affecter" (into the module
+  selected in the I/O view; disabled with a tooltip when there is none) and
+  "Ouvrir dans E/S". The context menu of a device row gets "Afficher dans
+  E/S". The mapping is read once, without disabling anything, when the I/O
+  view or such an inspector appears and after a document change while
+  shown, never at each selection; a late answer cannot overwrite a newer.
 - Viewer, the I/O view (ADR 0049 slice P5): a fourth central layout, "E/S" /
   "I/O", chosen from the toolbar and the View menu (left out of the F4 cycle).
   It lists the modules (key, port, channels, problems, Add), edits the

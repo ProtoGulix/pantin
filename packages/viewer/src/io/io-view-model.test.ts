@@ -1,5 +1,6 @@
 import type { IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { pantinResponse } from "../test-fixtures.ts";
 import { cellIdOf, cellOfPath } from "./io-problems.ts";
 import { NO_IO_STATE, withMapping } from "./io-state.ts";
 import { assemblyKeyOfTag } from "./io-unmapped.ts";
@@ -48,6 +49,8 @@ const mapping: IoMappingResponse = {
 
 const names = new Map([["a", "Alpha"]]);
 
+const PRESS = pantinResponse(false);
+
 describe("cellOfPath", () => {
   it("finds the cell of a channel field and of a module setting", () => {
     expect(cellOfPath(["modules", 0, "channels", 3, "address"])).toEqual({
@@ -80,7 +83,7 @@ describe("cellOfPath", () => {
 });
 
 describe("buildIoView", () => {
-  const state = withMapping(NO_IO_STATE, "press", mapping);
+  const state = withMapping(NO_IO_STATE, PRESS, mapping);
   const view = buildIoView(state, names);
 
   it("lists modules with channel and problem counts, the first selected", () => {
@@ -113,7 +116,7 @@ describe("buildIoView", () => {
   it("is loading, missing or unreadable by the answer", () => {
     const base = { ...mapping, problems: [], modules: [], unmappedTags: [] };
     const modeOf = (answer: IoMappingResponse) =>
-      buildIoView(withMapping(NO_IO_STATE, "press", answer), names).mode;
+      buildIoView(withMapping(NO_IO_STATE, PRESS, answer), names).mode;
     expect(buildIoView(NO_IO_STATE, names).mode).toBe("loading");
     expect(modeOf({ ...base, status: "missing", mappingId: null })).toBe("missing");
     expect(modeOf({ ...base, status: "invalid", mappingId: null })).toBe("unreadable");
@@ -128,7 +131,25 @@ describe("buildIoView", () => {
   it("keeps the selection through a refresh and falls back when the module is gone", () => {
     const second = { ...state, selectedModuleKey: "m2" };
     expect(buildIoView(second, names).selected?.module.key).toBe("m2");
-    const gone = withMapping(second, "press", { ...mapping, modules: mapping.modules.slice(0, 1) });
+    const gone = withMapping(second, PRESS, { ...mapping, modules: mapping.modules.slice(0, 1) });
     expect(buildIoView(gone, names).selected?.module.key).toBe("m1");
+  });
+});
+
+describe("a failed read", () => {
+  const failedFor = pantinResponse(false);
+
+  it("is an error state when nothing was read", () => {
+    const view = buildIoView({ ...NO_IO_STATE, failedFor }, new Map());
+    expect(view.mode).toBe("failed");
+    expect(view.outOfDate).toBe(false);
+  });
+
+  it("marks a mapping read before as possibly out of date", () => {
+    const read = withMapping(NO_IO_STATE, PRESS, mapping);
+    const view = buildIoView({ ...read, failedFor: { ...PRESS } }, new Map());
+    expect(view.mode).toBe("editing");
+    expect(view.outOfDate).toBe(true);
+    expect(buildIoView(read, new Map()).outOfDate).toBe(false);
   });
 });

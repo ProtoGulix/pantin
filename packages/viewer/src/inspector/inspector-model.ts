@@ -23,6 +23,7 @@ import {
 } from "./conveyor-tools.ts";
 import { driveGroups } from "./drive-inspector.ts";
 import { type InspectorContent, type InspectorContext, NOTHING } from "./inspector-context.ts";
+import { buildInspectorIoView, type InspectorIoView } from "./io-section.ts";
 import { nodeInspectorContent } from "./node-inspector.ts";
 import { buildPositioningView, type PositioningView } from "./positioning-view.ts";
 import { sensorGroups } from "./sensor-inspector.ts";
@@ -56,6 +57,8 @@ export interface InspectorView {
   // The "Positionnement" section (ADR 0039), above the groups; null when the
   // selection cannot be placed.
   positioning: PositioningView | null;
+  // The tags of the selected element and their mapping; null when it owns none.
+  io: InspectorIoView | null;
   groups: PropertyGroup[];
   // Said instead of an empty grid.
   note: string | null;
@@ -158,6 +161,7 @@ function emptyInspector(t: Translate): InspectorView {
     sensorForm: null,
     conveyorForm: null,
     positioning: null,
+    io: null,
     groups: [],
     note: null,
     hints: [],
@@ -201,6 +205,7 @@ export function buildInspectorView(
     sensorForm: buildSensorFormView(state, document, t),
     conveyorForm: buildConveyorFormView(state, document, t),
     positioning: buildPositioningView(state, t, clockRunning),
+    io: buildInspectorIoView(state, t),
     groups,
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),

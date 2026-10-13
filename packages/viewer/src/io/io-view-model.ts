@@ -24,9 +24,9 @@ const BLOCKING_CODES: ReadonlySet<IoProblemCode> = new Set([
   "legacy_io_files",
 ]);
 
-// loading: no answer yet; missing: no io.json, "Create the mapping";
+// loading: no answer yet; failed: the read failed and nothing is known; missing: no io.json, "Create the mapping";
 // unreadable: problems only, no edit; editing: modules and channels.
-type IoMode = "loading" | "missing" | "unreadable" | "editing";
+export type IoMode = "loading" | "failed" | "missing" | "unreadable" | "editing";
 
 export interface IoProblemItem {
   message: string;
@@ -68,6 +68,8 @@ export interface IoView {
   // cannot create two modules.
   busy: boolean;
   mode: IoMode;
+  // The last refresh failed: the table shown may be out of date.
+  outOfDate: boolean;
   problems: readonly IoProblemItem[];
   modules: readonly IoModuleItem[];
   selected: IoSelectedModule | null;
@@ -76,10 +78,10 @@ export interface IoView {
   targetModuleKey: string | null;
 }
 
-function modeOf(state: IoState): IoMode {
+export function ioModeOf(state: IoState): IoMode {
   const mapping = state.mapping;
   if (mapping === null) {
-    return "loading";
+    return state.failedFor === null ? "loading" : "failed";
   }
   if (mapping.status === "missing") {
     return "missing";
@@ -88,6 +90,11 @@ function modeOf(state: IoState): IoMode {
   return blocked || (mapping.status === "invalid" && mapping.modules.length === 0)
     ? "unreadable"
     : "editing";
+}
+
+/** A refresh failed after a mapping had been read: what is shown predates it. */
+function ioIsOutOfDate(state: IoState): boolean {
+  return state.mapping !== null && state.failedFor !== null && state.readFor !== state.failedFor;
 }
 
 function fieldProblems(
@@ -157,7 +164,8 @@ export function buildIoView(
     source: state,
     focus: state.focus,
     busy,
-    mode: modeOf(state),
+    mode: ioModeOf(state),
+    outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
     modules: (mapping?.modules ?? []).map((module, index) => ({
       key: module.key,
