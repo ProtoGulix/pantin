@@ -4,6 +4,7 @@
 - Date: 2026-10-13
 - Partly superseded by: ADR 0048 (points 3, 10 and 13 P3: a hand-written Modbus slave instead of pymodbus)
 - Partly superseded by: ADR 0049 (points 4, 6, 7, 9 and 10: one io.json edited from the viewer, renames carried, io_changed and mappingId on the open mapping)
+- Extended by: ADR 0050 (the core starts and stops the bridge; `--status-lines`)
 - Applies: ADR 0003 (slave first), ADR 0007 (Python bridge, pymodbus),
   ADR 0031 point 6 (forced tags), ADR 0032 (Context and point 13: a PLC in
   the loop only makes sense at 1x; point 11: the falling-behind warning)

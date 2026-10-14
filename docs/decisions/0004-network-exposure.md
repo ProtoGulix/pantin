@@ -4,6 +4,9 @@
 - Date: 2026-09-28
 - Refines: CLAUDE.md section 3.6, ADR 0003 point 3
 - Answered for the PLC bridge by: ADR 0046
+- Point 6 read by: ADR 0050 (it covers the core's own listen address; a
+  bridge opened to the LAN from the viewer persists nothing, so no rollback
+  timer; confirmed by the user on 2026-10-14)
 
 ## Context
 
