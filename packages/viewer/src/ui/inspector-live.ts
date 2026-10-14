@@ -32,7 +32,11 @@ function showDiagnostics(
   );
   if (update !== null) {
     target.setAttribute("data-shown", update.signature);
-    target.replaceChildren(...update.lines.map(warningLine));
+    target.replaceChildren(
+      ...(update.lines.length === 0
+        ? [element("span", { className: "property-grid__none", text: update.noneText })]
+        : update.lines.map(warningLine)),
+    );
   }
 }
 

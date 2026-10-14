@@ -155,7 +155,7 @@ export function buildPanelView(
     viewportHint: translate(
       mode === "list" ? "page.viewportEmpty" : `page.viewportHint.${state.navigation.preset}`,
     ),
-    inspector: buildInspectorView(state, translate, clockRunning),
+    inspector: buildInspectorView(state, translate, clockRunning, bridgeStatus),
     console: buildConsoleView(
       state.console,
       consoleList,

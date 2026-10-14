@@ -6,7 +6,6 @@ import { renderConveyorForm } from "./conveyor-form.ts";
 import { renderActuatorForm, renderDriveForm, renderSensorForm } from "./device-forms.ts";
 import { button, element, iconButton } from "./dom.ts";
 import { captureFocus, focusField, restoreFocus } from "./focus.ts";
-import { renderInspectorIo } from "./inspector-io.ts";
 import { showInspectorLive } from "./inspector-live.ts";
 import { renderPositioning } from "./inspector-positioning.ts";
 import { renderInspectorToolbar } from "./inspector-toolbar.ts";
@@ -86,11 +85,10 @@ export class Inspector {
     );
     this.lower.replaceChildren(
       ...[
-        view.note === null
-          ? renderPropertiesGrid(view.groups, t, intents)
+        view.note === null || view.io !== null
+          ? renderPropertiesGrid(view.groups, t, intents, view.io)
           : element("p", { className: "inspector__empty", text: view.note }),
         ...view.hints.map((hint) => element("p", { className: "inspector__empty", text: hint })),
-        view.io === null ? null : renderInspectorIo(view.io, intents),
       ].filter((part) => part !== null),
     );
     restoreFocus(this.root, focus);

@@ -10,6 +10,7 @@ export interface ElementTag {
   // Null when no channel maps the tag.
   channel: {
     moduleKey: string;
+    zone: string;
     address: number;
     variable: string;
     // The id of the tag cell in the I/O view, to scroll to.
@@ -33,6 +34,7 @@ export function tagsOfOwner(mapping: IoMappingResponse | null, owner: IoTagOwner
               name: channel.tag,
               channel: {
                 moduleKey: module.key,
+                zone: channel.zone,
                 address: channel.address,
                 variable: channel.variable,
                 cellId: cellIdOf({ moduleIndex, channelIndex, field: "tag" }),

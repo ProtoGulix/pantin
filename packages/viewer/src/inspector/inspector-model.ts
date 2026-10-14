@@ -1,4 +1,4 @@
-import type { PantinResponse } from "@pantin/protocol";
+import type { BridgeStatus, PantinResponse } from "@pantin/protocol";
 import { movableJoints } from "../actuators/actuator-joints.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Translate } from "../i18n/translate.ts";
@@ -144,6 +144,19 @@ function liveSourcesOf(groups: readonly PropertyGroup[]): Map<string, LiveSource
   return sources;
 }
 
+// The labels the element's own sections give its tags, reused by the I/O section.
+function tagLabelsOf(groups: readonly PropertyGroup[]): Map<string, string> {
+  const labels = new Map<string, string>();
+  for (const group of groups) {
+    for (const { label, live } of group.rows) {
+      if (live?.kind === "tag" && !labels.has(live.tag)) {
+        labels.set(live.tag, label);
+      }
+    }
+  }
+  return labels;
+}
+
 function emptyInspector(t: Translate): InspectorView {
   return {
     open: false,
@@ -174,6 +187,7 @@ export function buildInspectorView(
   state: ViewerState,
   t: Translate,
   clockRunning: boolean,
+  bridgeStatus: BridgeStatus | null = null,
 ): InspectorView {
   const pantin = state.openPantin;
   if (pantin === null || !state.inspectorOpen) {
@@ -205,7 +219,7 @@ export function buildInspectorView(
     sensorForm: buildSensorFormView(state, document, t),
     conveyorForm: buildConveyorFormView(state, document, t),
     positioning: buildPositioningView(state, t, clockRunning),
-    io: buildInspectorIoView(state, t),
+    io: buildInspectorIoView(state, t, bridgeStatus, tagLabelsOf(groups)),
     groups,
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),

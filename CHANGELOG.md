@@ -230,6 +230,10 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- The inspector's I/O part is a collapsible "I/O" section of the property
+  grid, like the others: one row per tag with its label, the module
+  connection dot, its module, zone and address, and a button to open it in
+  the I/O view. The drive's empty "Diagnostic" row reads "None".
 - The PLC bridge block moved to the bottom of the left side panel (ADR 0050
   amendment), as a connection card visible in every layout: a coloured state,
   Start or Stop and a "Config E/S" gear button in its header, the network

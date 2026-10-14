@@ -43,6 +43,7 @@ describe("tagsOfOwner", () => {
         name: "a.d1.extend",
         channel: {
           moduleKey: "m2",
+          zone: "coil",
           address: 7,
           variable: "GVL.a.d1.extend",
           cellId: "io-cell-1-0-tag",

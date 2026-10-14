@@ -1,3 +1,10 @@
+import type { BridgeStatus } from "@pantin/protocol";
+import {
+  MODULE_CONNECTION_KEYS,
+  moduleConnection,
+  moduleConnectionTone,
+  type StatusTone,
+} from "../bridge/module-connection.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { type ElementTag, tagsOfOwner } from "../io/io-element-tags.ts";
 import { ownerOfSelection } from "../io/io-owner.ts";
@@ -8,25 +15,35 @@ import type { ViewerState } from "../viewer-state.ts";
 // The "E/S" / "I/O" section of the inspector (ADR 0049 point 11): the tags the
 // selected device or joint owns, with their mapping as the core reported it.
 
+// The id of the section in the grid: the key its collapsed state is stored under.
+export const IO_SECTION_ID = "io";
+
 export interface InspectorIoTag {
   name: string;
-  // "m1, address 3, GVL.x" or "not mapped".
+  // The label the element's other sections give the tag, else its short name.
+  label: string;
+  // "m1 · coil 0", or "not mapped".
   status: string;
   mapped: boolean;
+  // The module's bridge status as a dot and its text; mapped tags only.
+  connection: { tone: StatusTone; text: string } | null;
+  // The row's tooltip: the full tag name, and the CODESYS variable when mapped.
+  title: string;
   // "Map", unmapped tags only: disabled with the reason as its tooltip.
   assign: { label: string; title: string; moduleKey: string | null } | null;
-  // "Open in I/O", mapped tags only.
+  // "Open in I/O", mapped tags only: the sentence naming tag and module is its aria-label.
   openTitle: string | null;
 }
 
 export interface InspectorIoView {
   title: string;
+  collapsed: boolean;
   // The label of "Open in I/O", the same on every row.
   openLabel: string;
   // A request is in flight: "Map" waits, as the I/O view's buttons do.
   busy: boolean;
   tags: readonly InspectorIoTag[];
-  // The mapping could not be read: one line and Retry in place of the tags.
+  // The mapping could not be read: one muted row and Retry in place of the tags.
   unavailable: { text: string; retryLabel: string } | null;
 }
 
@@ -40,17 +57,31 @@ function assignTarget(state: ViewerState, t: Translate): { module: string | null
   };
 }
 
-function tagView(
-  tag: ElementTag,
-  target: ReturnType<typeof assignTarget>,
-  t: Translate,
-): InspectorIoTag {
+interface TagContext {
+  target: ReturnType<typeof assignTarget>;
+  bridgeStatus: BridgeStatus | null;
+  labels: ReadonlyMap<string, string>;
+  t: Translate;
+}
+
+const shortName = (name: string): string => name.slice(name.lastIndexOf(".") + 1);
+
+function tagView(tag: ElementTag, context: TagContext): InspectorIoTag {
+  const { target, bridgeStatus, labels, t } = context;
+  const label = labels.get(tag.name) ?? shortName(tag.name);
   if (tag.channel !== null) {
-    const { moduleKey, address, variable } = tag.channel;
+    const { moduleKey, zone, address, variable } = tag.channel;
+    const connection = moduleConnection(bridgeStatus, moduleKey);
     return {
       name: tag.name,
-      status: t("io.section.mapped", { module: moduleKey, address, variable }),
+      label,
+      status: t("io.section.mapped", { module: moduleKey, zone, address }),
       mapped: true,
+      connection: {
+        tone: moduleConnectionTone(connection),
+        text: t(MODULE_CONNECTION_KEYS[connection]),
+      },
+      title: `${tag.name} · ${variable}`,
       assign: null,
       openTitle: t("io.section.openTitle", { tag: tag.name, module: moduleKey }),
     };
@@ -58,8 +89,11 @@ function tagView(
   const { module } = target;
   return {
     name: tag.name,
+    label,
     status: t("io.section.unmapped"),
     mapped: false,
+    connection: null,
+    title: tag.name,
     assign: {
       label: t("io.section.assign"),
       title:
@@ -71,12 +105,21 @@ function tagView(
 }
 
 /** Null when the selection owns no tag, or while the mapping is being read. */
-export function buildInspectorIoView(state: ViewerState, t: Translate): InspectorIoView | null {
+export function buildInspectorIoView(
+  state: ViewerState,
+  t: Translate,
+  bridgeStatus: BridgeStatus | null = null,
+  labels: ReadonlyMap<string, string> = new Map(),
+): InspectorIoView | null {
   const owner = ownerOfSelection(state.selection);
   if (owner === null) {
     return null;
   }
-  const base = { title: t("io.section.title"), openLabel: t("io.section.open") };
+  const base = {
+    title: t("io.section.title"),
+    collapsed: state.collapsedPropertyGroups.has(IO_SECTION_ID),
+    openLabel: t("io.section.open"),
+  };
   const busy = state.pendingRequestCount > 0;
   // A stale or foreign mapping would list tags the document no longer has.
   if (!isMappingCurrent(state)) {
@@ -93,6 +136,6 @@ export function buildInspectorIoView(state: ViewerState, t: Translate): Inspecto
   if (tags.length === 0) {
     return null;
   }
-  const target = assignTarget(state, t);
-  return { ...base, busy, unavailable: null, tags: tags.map((tag) => tagView(tag, target, t)) };
+  const context = { target: assignTarget(state, t), bridgeStatus, labels, t };
+  return { ...base, busy, unavailable: null, tags: tags.map((tag) => tagView(tag, context)) };
 }

@@ -1,4 +1,5 @@
 import type { Translate } from "../i18n/translate.ts";
+import type { InspectorIoView } from "../inspector/io-section.ts";
 import {
   type EditTarget,
   liveKey,
@@ -9,7 +10,8 @@ import {
 } from "../properties/property-rows.ts";
 import { committingTextInput, element, selectInput } from "./dom.ts";
 import { focusField } from "./focus.ts";
-import { icon } from "./icons.ts";
+import { groupHeader } from "./group-header.ts";
+import { renderInspectorIo } from "./inspector-io.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { followLink } from "./row-actions.ts";
 import { numberControl, toggleControl } from "./row-controls.ts";
@@ -188,21 +190,7 @@ function errorRow(group: PropertyGroup): HTMLElement | null {
 }
 
 function groupBody(group: PropertyGroup, translate: Translate, intents: PanelIntents): HTMLElement {
-  const toggle = element(
-    "button",
-    {
-      className: "property-grid__group-toggle",
-      attributes: { type: "button", "aria-expanded": String(!group.collapsed) },
-    },
-    [
-      icon("chevron", group.collapsed ? "icon" : "icon icon--rotated"),
-      element("span", { text: group.title }),
-    ],
-  );
-  toggle.addEventListener("click", () => intents.togglePropertyGroup(group.id));
-  const header = element("tr", { className: "property-grid__group" }, [
-    element("th", { attributes: { colspan: "2", scope: "colgroup" } }, [toggle]),
-  ]);
+  const header = groupHeader(group, intents);
   const rows = group.collapsed
     ? []
     : group.rows.map((row) => dataRow(group, row, translate, intents));
@@ -213,8 +201,9 @@ export function renderPropertiesGrid(
   groups: readonly PropertyGroup[],
   translate: Translate,
   intents: PanelIntents,
+  io: InspectorIoView | null = null,
 ): HTMLElement {
-  if (groups.length === 0) {
+  if (groups.length === 0 && io === null) {
     return element("p", { className: "pane-empty", text: translate("inspector.empty") });
   }
   const head = element("thead", {}, [
@@ -227,5 +216,6 @@ export function renderPropertiesGrid(
     element("caption", { className: "visually-hidden", text: translate("properties.label") }),
     head,
     ...groups.map((group) => groupBody(group, translate, intents)),
+    io === null ? null : renderInspectorIo(io, intents),
   ]);
 }

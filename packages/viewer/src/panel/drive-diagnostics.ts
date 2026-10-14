@@ -52,6 +52,8 @@ export function diagnosticLines(
 export interface DiagnosticUpdate {
   signature: string;
   lines: DiagnosticLine[];
+  // Said in place of the lines when there are none, so that the cell is never blank.
+  noneText: string;
 }
 
 /**
@@ -66,8 +68,11 @@ export function nextDiagnosticUpdate(
   t: Translate,
 ): DiagnosticUpdate | null {
   const lines = diagnosticLines(diagnostics, driveType, t);
-  const signature = lines.map((line) => `${line.id}:${line.text}`).join("|");
-  return signature === shownSignature ? null : { signature, lines };
+  const signature =
+    lines.length === 0 ? "none" : lines.map((line) => `${line.id}:${line.text}`).join("|");
+  return signature === shownSignature
+    ? null
+    : { signature, lines, noneText: t("inspector.diagnostics.none") };
 }
 
 /** The drives' latest runtime by drive id, as the store keeps it for the panel and the diagram. */
