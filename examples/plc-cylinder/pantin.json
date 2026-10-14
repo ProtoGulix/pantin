@@ -1,0 +1,164 @@
+{
+  "schema_version": 12,
+  "name": "plc-cylinder",
+  "assemblies": [
+    {
+      "key": "verin1",
+      "name": "Verin1",
+      "placement": {
+        "translation": [0, 0, 0],
+        "rotation": [0, 0, 0, 1]
+      }
+    }
+  ],
+  "bodies": [
+    {
+      "id": "id1s0400125e-0-1",
+      "name": "ID1S0400125E_0_1",
+      "assembly": "verin1",
+      "source": {
+        "fileName": "ID1S0400125E_0.stp",
+        "format": "step",
+        "unit": "m",
+        "upAxis": "z",
+        "nodes": [
+          {
+            "name": "ID1S0400125E_0",
+            "path": [0]
+          },
+          {
+            "name": "ID1S0400125E_0_1",
+            "path": [0, 0]
+          }
+        ]
+      },
+      "mesh": "meshes/id1s0400125e-0-1.glb"
+    },
+    {
+      "id": "id1s0400125e-0-2",
+      "name": "ID1S0400125E_0_2",
+      "assembly": "verin1",
+      "source": {
+        "fileName": "ID1S0400125E_0.stp",
+        "format": "step",
+        "unit": "m",
+        "upAxis": "z",
+        "nodes": [
+          {
+            "name": "ID1S0400125E_0",
+            "path": [0]
+          },
+          {
+            "name": "ID1S0400125E_0_2",
+            "path": [0, 1]
+          }
+        ]
+      },
+      "mesh": "meshes/id1s0400125e-0-2.glb"
+    },
+    {
+      "id": "id1s040cf-16040-3",
+      "name": "ID1S040CF-16040_3",
+      "assembly": "verin1",
+      "source": {
+        "fileName": "ID1S0400125E_0.stp",
+        "format": "step",
+        "unit": "m",
+        "upAxis": "z",
+        "nodes": [
+          {
+            "name": "ID1S0400125E_0",
+            "path": [0]
+          },
+          {
+            "name": "ID1S040CF-16040_3",
+            "path": [0, 2]
+          }
+        ]
+      },
+      "mesh": "meshes/id1s040cf-16040-3.glb"
+    }
+  ],
+  "joints": [
+    {
+      "id": "ecrou",
+      "tagKey": "ecrou",
+      "type": "fixed",
+      "name": "ecrou",
+      "parent": "id1s0400125e-0-2",
+      "child": "id1s040cf-16040-3",
+      "origin": [0, 0, 0],
+      "axis": [0, 0, 1]
+    },
+    {
+      "id": "verin",
+      "tagKey": "verin",
+      "type": "prismatic",
+      "name": "verin",
+      "parent": "id1s0400125e-0-1",
+      "child": "id1s0400125e-0-2",
+      "origin": [0, 0, 0],
+      "axis": [-1, 0, 0],
+      "limits": [0, 0.125]
+    }
+  ],
+  "drives": [
+    {
+      "id": "verin1",
+      "tagKey": "verin1",
+      "name": "verin1",
+      "assembly": "verin1",
+      "type": "valve_5_2_double"
+    }
+  ],
+  "actuators": [
+    {
+      "id": "verin1",
+      "name": "verin1",
+      "assembly": "verin1",
+      "feed": {
+        "drive": "verin1",
+        "ports": {
+          "cap": "port_4",
+          "rod": "port_2"
+        }
+      },
+      "joints": ["verin"],
+      "type": "double_acting_cylinder",
+      "extendSpeed": 0.05,
+      "retractSpeed": 0.055
+    }
+  ],
+  "sensors": [
+    {
+      "id": "verin-min",
+      "tagKey": "verin-min",
+      "name": "verin min",
+      "assembly": "verin1",
+      "joint": "verin",
+      "type": "inductive_switch",
+      "facePosition": 0,
+      "nominalDistance": 0.005,
+      "material": "steel",
+      "hysteresisPercent": 1,
+      "normallyClosed": false
+    },
+    {
+      "id": "verin-max",
+      "tagKey": "verin-max",
+      "name": "verin max",
+      "assembly": "verin1",
+      "joint": "verin",
+      "type": "cylinder_switch",
+      "position": 0.125,
+      "windowWidth": 0.002,
+      "hysteresis": 0.001,
+      "normallyClosed": false
+    }
+  ],
+  "belts": [],
+  "guides": [],
+  "emitters": [],
+  "absorbers": [],
+  "presenceSensors": []
+}

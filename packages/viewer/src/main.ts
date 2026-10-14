@@ -28,6 +28,7 @@ import { readStoredText, STORAGE_KEYS, writeStoredText } from "./ui/browser-stor
 import { CentralArea } from "./ui/central-area.ts";
 import { ConsolePanel } from "./ui/console-panel.ts";
 import { DiagramView } from "./ui/diagram-view.ts";
+import { saveTextAsDownload } from "./ui/file-download.ts";
 import { Inspector } from "./ui/inspector.ts";
 import { IoPanel } from "./ui/io-panel.ts";
 import { MenuBar } from "./ui/menu-bar.ts";
@@ -220,6 +221,7 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
       }
       return late.store;
     }),
+    saveTextFile: saveTextAsDownload,
     storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
     storeGizmoSteps: (steps) => writeStoredText(STORAGE_KEYS.gizmoSteps, serializeSteps(steps)),

@@ -57,6 +57,20 @@ function editor(view: IoView, translate: Translate, intents: PanelIntents): HTML
   ]);
 }
 
+// aria-disabled, not `disabled`, so that the tooltip shows and the focus stays.
+function gvlButton(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {
+  const { enabled, titleKey } = view.gvl;
+  const created = ioButton(
+    translate("io.gvl.export"),
+    "io-button",
+    !enabled,
+    "io-export-gvl",
+    intents.exportIoGvl,
+  );
+  created.title = translate(titleKey);
+  return element("div", { className: "io-view__toolbar" }, [created]);
+}
+
 function content(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement[] {
   const problems = drawProblemList(view, translate, intents);
   const stale = view.outOfDate
@@ -69,7 +83,12 @@ function content(view: IoView, translate: Translate, intents: PanelIntents): HTM
     view.mode === "editing"
       ? [editor(view, translate, intents)]
       : statusPage(view, translate, intents);
-  return [...stale, ...(problems === null ? [] : [problems]), ...body];
+  return [
+    gvlButton(view, translate, intents),
+    ...stale,
+    ...(problems === null ? [] : [problems]),
+    ...body,
+  ];
 }
 
 export class IoPanel {

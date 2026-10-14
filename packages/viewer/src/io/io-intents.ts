@@ -16,6 +16,8 @@ export interface IoIntents {
   // Derives zone and type of the channel again from its tag.
   reassignIoChannel(tag: string): void;
   unmapIoChannel(tag: string): void;
+  // Downloads the CODESYS GVL the core generates from the mapping.
+  exportIoGvl(): void;
   // The mapping could not be read: forget the failure and read it again.
   retryIoMapping(): void;
   // A tag was clicked: select its owner and unfold the tree to it, staying on

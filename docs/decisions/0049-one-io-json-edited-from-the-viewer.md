@@ -360,3 +360,25 @@ Facts checked in the repository on 2026-10-13 (`develop` unless stated):
 - No dependency is added.
 - NOT VERIFIED: whether CODESYS needs even register addresses for REAL and
   DINT (point 4); every item already NOT VERIFIED in ADR 0045 (P6).
+
+## Amendment: the GVL from the viewer (2026-10-14)
+
+The viewer gets a button that downloads the GVL, so the user does not need
+the command line to finish the P7 demonstration.
+
+1. The pure generator moves from `packages/cli/src/gvl.ts` to
+   `packages/core/src/domain/gvl.ts` (`renderGvl`), with the formatting of an
+   `IoProblem` (`describeIoProblem`). `pantin gvl` calls it, and its output is
+   byte for byte unchanged (`gvl-equivalence.test.ts`). The CLI already
+   depends on the core, and the boundary rules allow it.
+2. New route `GET /api/pantins/:pantinId/io/gvl`. For a valid mapping it
+   answers 200, `text/plain; charset=utf-8`, with
+   `Content-Disposition: attachment; filename="<pantinId>.gvl"`. For a missing
+   or invalid mapping it answers 409 `conflict` naming the problems, as the
+   command does, because a partial list would hide what must be fixed.
+3. The I/O view gains an "Exporter la GVL" / "Export GVL" button. It only
+   calls the route, and is enabled when the mapping it holds is valid.
+
+Rejected alternative: generating the GVL in the viewer from `GET .../io`. It
+would duplicate the generator and keep two formats to maintain, against
+CLAUDE.md 3.2 (no domain logic in the viewer).

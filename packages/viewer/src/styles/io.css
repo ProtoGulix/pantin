@@ -30,6 +30,17 @@
   color: var(--text-muted);
 }
 
+.io-view__toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.io-button.is-busy {
+  color: var(--text-faint);
+  cursor: default;
+}
+
 .io-view__note {
   margin: 4px 0;
   max-width: 60ch;

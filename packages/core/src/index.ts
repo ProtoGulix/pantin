@@ -1,6 +1,7 @@
 // Public entry point of @pantin/core. The document reader serves the
 // command line validator, which checks a folder without a server (ADR 0021).
 
+export { renderGvl } from "./domain/gvl.ts";
 export { allocateVariable, proposeAddress, zoneAndTypeOf } from "./domain/io-allocation.ts";
 export {
   type IoReading,
@@ -9,6 +10,7 @@ export {
   unreadableFile,
 } from "./domain/io-document-text.ts";
 export { evaluateIoMapping, ioTagsOf } from "./domain/io-evaluation.ts";
+export { describeIoProblem } from "./domain/io-problem-text.ts";
 export { type DocumentReading, readPantinDocument } from "./domain/pantin-document.ts";
 export { ApiError } from "./errors.ts";
 export {

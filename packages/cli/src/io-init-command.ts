@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  describeIoProblem,
   ioTagsOf,
   listLegacyIoFiles,
   serializeIoDocument,
@@ -8,7 +9,7 @@ import {
 } from "@pantin/core";
 import { IO_JSON_FILE_NAME, type IoDocument } from "@pantin/protocol";
 import { type CommandResult, done, refused } from "./command-result.ts";
-import { describeIoProblem, readFolderIoReading } from "./io-folder.ts";
+import { readFolderIoReading } from "./io-folder.ts";
 import { freshIoDocument, INIT_MODULE_KEY, mapTagsIntoFirstModule } from "./io-init.ts";
 import { readFolderDocument } from "./validate-folder.ts";
 

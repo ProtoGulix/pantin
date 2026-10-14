@@ -7,7 +7,7 @@ import {
   parseModuleEdit,
 } from "../io/io-edits.ts";
 import { withMapping } from "../io/io-state.ts";
-import { errorMessage } from "../messages.ts";
+import { describeFailure, errorMessage } from "../messages.ts";
 import { selectIoOwner, showDeviceInIo, showTagInIo } from "./io-link-actions.ts";
 import { loadIoMapping, retryIoMapping } from "./io-load.ts";
 import { refreshPantinList } from "./pantin-actions.ts";
@@ -46,6 +46,21 @@ async function editMapping(
     await loadIoMapping(store);
   }
   await refreshPantinList(store);
+}
+
+// Not `store.run`: a download changes nothing, so it must not disable the
+// menus. A refusal (409 for an invalid mapping) shows the core's problems.
+async function exportGvl(store: ViewerStore): Promise<void> {
+  const open = store.state.openPantin;
+  if (open === null) {
+    return;
+  }
+  try {
+    const file = await store.ports.api.fetchIoGvl(open.id);
+    store.ports.saveTextFile(file.fileName, file.text);
+  } catch (error) {
+    store.update({ ...store.state, message: describeFailure(error) });
+  }
 }
 
 function selectModule(store: ViewerStore, moduleKey: string): void {
@@ -134,6 +149,7 @@ export function ioIntents(store: ViewerStore) {
       void editMapping(store, (id) => api().updateIoChannel(id, tag, { tag })),
     unmapIoChannel: (tag: string) =>
       void editMapping(store, (id) => api().deleteIoChannel(id, tag)),
+    exportIoGvl: () => void exportGvl(store),
     retryIoMapping: () => void retryIoMapping(store),
     selectIoOwner: (owner: IoTagOwner) => selectIoOwner(store, owner),
     showTagInIo: (tag: string) => void showTagInIo(store, tag),

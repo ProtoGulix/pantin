@@ -107,3 +107,31 @@ describe("PantinApiClient I/O channels", () => {
     expect(error.kind).toBe("invalid_response");
   });
 });
+
+describe("PantinApiClient GVL download", () => {
+  it("reads the GVL as text with GET, named after the Pantin", async () => {
+    const { fetchFunction, requests } = fakeFetch(new Response("VAR_GLOBAL\nEND_VAR\n"));
+    const file = await createPantinApiClient(fetchFunction).fetchIoGvl("press");
+    expect([file, requests[0]?.url, requests[0]?.init?.method]).toEqual([
+      { fileName: "press.gvl", text: "VAR_GLOBAL\nEND_VAR\n" },
+      "/api/pantins/press/io/gvl",
+      "GET",
+    ]);
+  });
+
+  it("raises the core's 409 with its problems", async () => {
+    const { fetchFunction } = fakeFetch(
+      jsonResponse(
+        { error: { code: "conflict", message: "The mapping is invalid: overlap" } },
+        409,
+      ),
+    );
+    const error = await captureError(createPantinApiClient(fetchFunction).fetchIoGvl("press"));
+    expect([error.kind, error.code, error.status, error.message]).toEqual([
+      "api",
+      "conflict",
+      409,
+      "The mapping is invalid: overlap",
+    ]);
+  });
+});

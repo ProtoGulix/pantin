@@ -78,6 +78,8 @@ export interface StorePorts {
   // need the controller.
   viewport(): Viewport;
   poseStream: PoseStreamClient;
+  // Hands a generated text file to the browser as a download.
+  saveTextFile(fileName: string, text: string): void;
   storeLanguage(language: Language): void;
   storeCentralLayout(layout: CentralLayout): void;
   storeGizmoSteps(steps: SnapSteps): void;

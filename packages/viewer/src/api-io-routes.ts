@@ -10,12 +10,27 @@ import {
   type UpdateIoModuleRequest,
   UpdateIoModuleRequestSchema,
 } from "@pantin/protocol";
-import { jsonRequest, pantinUrl, type SendJson, validInputOrThrow } from "./api-transport.ts";
+import {
+  type FetchFunction,
+  failureFromResponse,
+  jsonRequest,
+  pantinUrl,
+  type SendJson,
+  sendRequest,
+  validInputOrThrow,
+} from "./api-transport.ts";
 
 // I/O mapping routes of the API client (ADR 0049 point 4). Every answer is the
 // whole mapping, so the viewer never patches its copy by hand.
 
+interface GvlFile {
+  fileName: string;
+  text: string;
+}
+
 export interface IoRoutes {
+  // The GVL is text, not JSON: only the error answers are validated.
+  fetchIoGvl(pantinId: string): Promise<GvlFile>;
   getIoMapping(pantinId: string): Promise<IoMappingResponse>;
   createIoModule(pantinId: string, request: CreateIoModuleRequest): Promise<IoMappingResponse>;
   updateIoModule(
@@ -45,9 +60,19 @@ function channelUrl(pantinId: string, tag: string): string {
   return pantinUrl(pantinId, `/io/channels/${encodeURIComponent(tag)}`);
 }
 
-export function ioRoutes(send: SendJson): IoRoutes {
+export function ioRoutes(send: SendJson, fetchFunction: FetchFunction): IoRoutes {
   const answer = IoMappingResponseSchema;
   return {
+    // The core names the file after the Pantin (Content-Disposition); so does this.
+    fetchIoGvl: async (pantinId) => {
+      const response = await sendRequest(fetchFunction, pantinUrl(pantinId, "/io/gvl"), {
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw await failureFromResponse(response);
+      }
+      return { fileName: `${pantinId}.gvl`, text: await response.text() };
+    },
     getIoMapping: (pantinId) => send(pantinUrl(pantinId, "/io"), jsonRequest("GET"), answer),
     createIoModule: async (pantinId, request) => {
       const valid = validInputOrThrow(CreateIoModuleRequestSchema, request);

@@ -1,4 +1,5 @@
 import type { IoMappedChannel, IoMappingModule, IoProblemCode } from "@pantin/protocol";
+import { type IoGvlExport, ioGvlExportOf } from "./io-gvl-export.ts";
 import {
   cellIdOf,
   cellOfPath,
@@ -68,6 +69,7 @@ export interface IoView {
   // cannot create two modules.
   busy: boolean;
   mode: IoMode;
+  gvl: IoGvlExport;
   // The last refresh failed: the table shown may be out of date.
   outOfDate: boolean;
   problems: readonly IoProblemItem[];
@@ -165,6 +167,7 @@ export function buildIoView(
     focus: state.focus,
     busy,
     mode: ioModeOf(state),
+    gvl: ioGvlExportOf(state),
     outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
     modules: (mapping?.modules ?? []).map((module, index) => ({

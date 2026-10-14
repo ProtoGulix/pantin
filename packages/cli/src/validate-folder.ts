@@ -4,12 +4,13 @@ import {
   ApiError,
   assertRealPathInside,
   type DocumentReading,
+  describeIoProblem,
   isErrorWithCode,
   readPantinDocument,
   resolveInside,
 } from "@pantin/core";
 import { type Body, PANTIN_DOCUMENT_FILE_NAME, type PantinDocument } from "@pantin/protocol";
-import { CANONICAL_ORDER_NOTE, describeIoProblem, readFolderIo } from "./io-folder.ts";
+import { CANONICAL_ORDER_NOTE, readFolderIo } from "./io-folder.ts";
 
 // Checks a Pantin folder without a running core (ADR 0021): its pantin.json
 // through the core's reader (migration, then every document rule), then the

@@ -8,6 +8,23 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Example `examples/plc-cylinder` (ADR 0045 slice P4, ADR 0049 slice P7): a
+  5/2 double solenoid valve, a double-acting cylinder and two limit switches
+  on three vendor meshes (STEP ID1S0400125E, redistribution confirmed by the
+  project owner), with an `io.json` of five channels on one Modbus module.
+  Its closed loop test, `packages/bridge/tests/test_closed_loop.py`, runs in
+  `pnpm check`: the real core, the real bridge, and a pymodbus client polling
+  every 20 ms through 5 extend and retract cycles, checking the order of the
+  switch edges.
+- Viewer, "Exporter la GVL" / "Export GVL" in the I/O view (ADR 0049
+  amendment): downloads the file of `GET .../io/gvl`, in view and edit modes.
+  Disabled with a tooltip while the mapping is unread, missing or invalid; a
+  refusal of the core shows its problems in the message line. The file
+  follows the mapping shown, unsaved edits included.
+- Core, `GET /api/pantins/:pantinId/io/gvl` (ADR 0049 amendment): the CODESYS
+  GVL of the open mapping as a text download, 409 when the mapping is missing
+  or invalid. The generator moved from the command line to the core, and
+  `pantin gvl` prints the same text as before.
 - Viewer, links between the I/O view and the tree (ADR 0049 slice P6):
   clicking (or Enter on) a tag in the channel table or the unmapped list
   selects its owner, a device row or the joint's node, with the tree

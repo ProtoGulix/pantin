@@ -8,13 +8,7 @@ import {
   serializeIoDocument,
   unreadableFile,
 } from "@pantin/core";
-import {
-  IO_JSON_FILE_NAME,
-  type IoMappingResponse,
-  type IoPath,
-  type IoProblem,
-  type PantinDocument,
-} from "@pantin/protocol";
+import { IO_JSON_FILE_NAME, type IoMappingResponse, type PantinDocument } from "@pantin/protocol";
 
 // The io.json mapping of a Pantin folder, read offline with the core's own
 // code (ADR 0049 point 9): the same checks as GET .../io, against the tags of
@@ -51,29 +45,6 @@ export async function readFolderIo(folder: string, document: PantinDocument): Pr
   const legacyFiles = await listLegacyIoFiles(folder);
   const answer = evaluateIoMapping(reading, legacyFiles, ioTagsOf(document));
   return { reading, answer, canonical };
-}
-
-/** `modules[0].channels[3].address`: a JSON path as a person reads it; "" for the whole file. */
-function formatIoPath(path: IoPath): string {
-  return path
-    .map((part, index) =>
-      typeof part === "number" ? `[${part}]` : index === 0 ? part : `.${part}`,
-    )
-    .join("");
-}
-
-/**
- * "io.json: modules[0].channels[3].address: message". Two orders exist: the
- * paths of a `schema_invalid` problem index the file as written, while the
- * paths of every other problem index the mapping in canonical order (zone,
- * address, tag), which is the order of a file the core wrote. Callers say so
- * when the file is not canonical (see CANONICAL_ORDER_NOTE).
- */
-export function describeIoProblem(problem: IoProblem): string {
-  const where = formatIoPath(problem.path);
-  return where === ""
-    ? `${IO_JSON_FILE_NAME}: ${problem.message}`
-    : `${IO_JSON_FILE_NAME}: ${where}: ${problem.message}`;
 }
 
 export const CANONICAL_ORDER_NOTE = `${IO_JSON_FILE_NAME} is not in canonical form: the channel numbers in its problems count the channels sorted by zone, address and tag, not in the order of the file. "pantin io init <folder> --update" rewrites the file in that order (and maps every unmapped tag into m1).`;

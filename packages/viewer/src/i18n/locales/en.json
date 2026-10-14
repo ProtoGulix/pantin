@@ -689,5 +689,10 @@
   "io.retry": "Retry",
   "io.outOfDate": "The mapping shown may be out of date: the last refresh failed.",
   "io.section.unavailable": "I/O unavailable",
+  "io.gvl.export": "Export GVL",
+  "io.gvl.title": "Downloads the CODESYS GVL of the mapping shown, unsaved edits included.",
+  "io.gvl.unknown": "The mapping is not read yet: the GVL is not available.",
+  "io.gvl.missing": "No mapping: create it first to export the GVL.",
+  "io.gvl.invalid": "The mapping has problems: fix them (list below) to export the GVL.",
   "message.io.integerExpected": "{field}: whole number expected."
 }

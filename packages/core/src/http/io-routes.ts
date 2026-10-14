@@ -1,12 +1,16 @@
 import {
   CreateIoChannelsRequestSchema,
   CreateIoModuleRequestSchema,
+  type IoMappingResponse,
   UpdateIoChannelRequestSchema,
   UpdateIoModuleRequestSchema,
 } from "@pantin/protocol";
+import { renderGvl } from "../domain/gvl.ts";
+import { describeIoProblem } from "../domain/io-problem-text.ts";
 import { type Parser, parseWithSchema } from "../domain/validation.ts";
+import { ApiError } from "../errors.ts";
 import { readJsonBody } from "./request-reading.ts";
-import { sendJson } from "./responses.ts";
+import { sendJson, sendTextDownload } from "./responses.ts";
 import {
   moduleKeyOf,
   pantinIdOf,
@@ -30,12 +34,34 @@ async function bodyOf<Output>(
   return parseWithSchema(schema, await readJsonBody(context.request), what);
 }
 
+// The GVL of a mapping that is not valid would hide the very problems the user
+// has to fix, so it is refused with them (ADR 0049 amendment).
+function refusalOf(answer: IoMappingResponse): ApiError {
+  if (answer.status === "missing") {
+    return new ApiError("conflict", "This Pantin has no io.json yet: create the mapping first.");
+  }
+  const problems = answer.problems.map(describeIoProblem).join("; ");
+  return new ApiError("conflict", `The mapping is invalid, so no GVL is generated: ${problems}`);
+}
+
 export const IO_ROUTES: readonly Route[] = [
   {
     method: "GET",
     pattern: IO,
     handle: async (context) =>
       sendJson(context.response, 200, await context.service.readIo(pantinIdOf(context))),
+  },
+  {
+    method: "GET",
+    pattern: [...IO, "gvl"],
+    handle: async (context) => {
+      const pantinId = pantinIdOf(context);
+      const answer = await context.service.readIo(pantinId);
+      if (answer.status !== "valid") {
+        throw refusalOf(answer);
+      }
+      sendTextDownload(context.response, renderGvl(answer.modules), `${pantinId}.gvl`);
+    },
   },
   {
     method: "POST",

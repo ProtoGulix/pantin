@@ -1,5 +1,6 @@
 import type { IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { PantinApiError } from "../api-transport.ts";
 import { pantinResponse } from "../test-fixtures.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -114,5 +115,44 @@ describe("the I/O view selection and reloads", () => {
     calls.length = 0;
     await editPantin(store, pantin.id, async () => "done");
     expect(calls).toEqual(["get"]);
+  });
+});
+
+describe("the GVL export", () => {
+  it("hands the file the core generated to the browser", async () => {
+    const saved: string[] = [];
+    const store = testStore(
+      { fetchIoGvl: async () => ({ fileName: "press.gvl", text: "VAR_GLOBAL" }) },
+      {},
+      undefined,
+      { saveTextFile: (name, text) => saved.push(`${name}:${text}`) },
+    );
+    store.update(withOpenPantin(store.state, pantin));
+    ioIntents(store).exportIoGvl();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saved).toEqual(["press.gvl:VAR_GLOBAL"]);
+    expect(store.state.message).toBeNull();
+  });
+
+  it("shows the core's refusal with its problems and saves nothing", async () => {
+    const saved: string[] = [];
+    const store = testStore(
+      {
+        fetchIoGvl: async () => {
+          throw new PantinApiError("api", "The mapping is invalid: overlap", "conflict", 409);
+        },
+      },
+      {},
+      undefined,
+      { saveTextFile: (name) => saved.push(name) },
+    );
+    store.update(withOpenPantin(store.state, pantin));
+    ioIntents(store).exportIoGvl();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saved).toEqual([]);
+    expect([store.state.message?.key, store.state.message?.detail]).toEqual([
+      "error.code.conflict",
+      "The mapping is invalid: overlap",
+    ]);
   });
 });

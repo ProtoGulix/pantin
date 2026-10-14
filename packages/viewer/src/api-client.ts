@@ -194,7 +194,7 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...conveyorRoutes(send),
     ...consoleRoutes(send),
     ...clockRoutes(send),
-    ...ioRoutes(send),
+    ...ioRoutes(send, fetchFunction),
     ...orphanMeshRoutes(send),
   };
 }
