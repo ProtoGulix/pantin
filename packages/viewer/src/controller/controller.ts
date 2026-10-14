@@ -32,6 +32,7 @@ import {
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
 import { startAxisPick } from "./axis-pick-actions.ts";
+import { bridgeIntents } from "./bridge-actions.ts";
 import { clockIntents } from "./clock-actions.ts";
 import { consoleIntents } from "./console-actions.ts";
 import { conveyorIntents } from "./conveyor-intents.ts";
@@ -69,7 +70,12 @@ import {
 import { restorePreviousPlacement } from "./placement-actions.ts";
 import { cancelPropertyEdit, commitPropertyEdit } from "./property-actions.ts";
 import { sensorIntents } from "./sensor-intents.ts";
-import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
+import {
+  requestClose,
+  requestDelete,
+  resolvePrompt,
+  setCloseStopsBridge,
+} from "./session-actions.ts";
 import {
   activateNode,
   frameNode,
@@ -152,6 +158,7 @@ function editIntents(store: ViewerStore) {
     },
     resolvePrompt: (action: Parameters<PanelIntents["resolvePrompt"]>[0]) =>
       resolvePrompt(store, action),
+    setCloseStopsBridge: (stops: boolean) => setCloseStopsBridge(store, stops),
   };
 }
 
@@ -202,6 +209,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...conveyorIntents(store),
     ...consoleIntents(store),
     ...clockIntents(store),
+    ...bridgeIntents(store),
     ...ioIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     turnToolOff: () => turnToolOff(store),

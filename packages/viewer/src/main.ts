@@ -1,9 +1,11 @@
 import type { DriveRuntime } from "@pantin/protocol";
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
+import type { BridgeView } from "./bridge/bridge-view.ts";
 import { effectiveLayout, parseStoredLayout } from "./central-layout.ts";
 import type { ClockView } from "./clock/clock-model.ts";
 import type { ConsoleView } from "./console/console-view.ts";
 import { receiveViewportPick } from "./controller/axis-pick-actions.ts";
+import { receiveBridge } from "./controller/bridge-actions.ts";
 import { refreshConsole } from "./controller/console-actions.ts";
 import {
   createPanelIntents,
@@ -67,6 +69,7 @@ interface Screen {
   ): void;
   showConsoleLive(view: ConsoleView | null): void;
   showClock(view: ClockView, intents: PanelIntents): void;
+  showBridge(view: BridgeView | null, intents: PanelIntents): void;
   showCameraOrientation(alpha: number, beta: number): void;
 }
 
@@ -95,6 +98,18 @@ function createIoPanel(): IoPanel {
   );
 }
 
+function writePageTexts(
+  view: PanelView,
+  panel: HTMLElement,
+  canvas: HTMLCanvasElement,
+  hint: HTMLElement,
+): void {
+  document.documentElement.lang = view.language;
+  panel.setAttribute("aria-label", view.translate("page.panelLabel"));
+  canvas.setAttribute("aria-label", view.translate("page.viewportLabel"));
+  hint.textContent = view.viewportHint;
+}
+
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
 function createScreen(): Screen {
   const panel = requireElement("#side-panel", HTMLElement);
@@ -115,10 +130,7 @@ function createScreen(): Screen {
   return {
     canvas,
     render: (view, intents) => {
-      document.documentElement.lang = view.language;
-      panel.setAttribute("aria-label", view.translate("page.panelLabel"));
-      canvas.setAttribute("aria-label", view.translate("page.viewportLabel"));
-      hint.textContent = view.viewportHint;
+      writePageTexts(view, panel, canvas, hint);
       menuBar.render(view.menus, view.translate, intents);
       sidePanel.render(view, intents);
       centralArea.render(
@@ -137,6 +149,7 @@ function createScreen(): Screen {
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),
+    showBridge: (view, intents) => ioPanel.showBridge(view, intents),
     showCameraOrientation: (alpha, beta) => viewCube.showOrientation(alpha, beta),
   };
 }
@@ -181,6 +194,7 @@ function createStreamClient(getStore: () => ViewerStore): PoseStreamClient {
   return createPoseStreamClient((url) => new EventSource(url), {
     onSnapshot: (snapshot) => getStore().receivePose(snapshot),
     onClock: (state) => getStore().receiveClock(state),
+    onBridge: (status) => receiveBridge(getStore(), status),
     onInvalid: (detail) => showMessage(errorMessage("message.poseInvalid", {}, detail)),
     onClosed: () => showMessage(errorMessage("message.poseClosed")),
   });
@@ -209,6 +223,7 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
     showDiagramLive: (tags, runtime) => screen.showDiagramLive(tags, runtime),
     showConsoleLive: (view) => screen.showConsoleLive(view),
     showClock: (view) => withIntents((intents) => screen.showClock(view, intents)),
+    showBridge: (view) => withIntents((intents) => screen.showBridge(view, intents)),
     viewport: () => {
       if (late.viewport === null) {
         throw new Error("The viewport is used before it was created.");

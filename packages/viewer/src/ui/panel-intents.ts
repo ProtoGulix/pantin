@@ -1,4 +1,5 @@
 import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
+import type { BridgeIntents } from "../bridge/bridge-intents.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
 import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
@@ -15,7 +16,7 @@ import type { WelcomeTab } from "../viewer-state.ts";
 // What the user asks for from the menu bar and the left panel. Components
 // only raise intents; the controller decides what to call and how the state
 // changes. Values from form fields arrive as raw strings, validated there.
-export interface PanelIntents extends IoIntents {
+export interface PanelIntents extends IoIntents, BridgeIntents {
   runMenuCommand(command: MenuCommand): void;
   // The view cube (ADR 0036 point 5): look from this core direction.
   showViewFromDirection(direction: Vector3Tuple): void;
@@ -57,6 +58,8 @@ export interface PanelIntents extends IoIntents {
   runDeviceAction(nodeId: string, action: "edit" | "delete"): void;
   closeContextMenu(): void;
   resolvePrompt(action: PromptAction): void;
+  // The box "Also stop the bridge" of the close prompt.
+  setCloseStopsBridge(stops: boolean): void;
 
   // targetPantinId: the Pantin chosen from its context menu, or null for the open one.
   chooseImportFile(file: File, targetPantinId: string | null): void;

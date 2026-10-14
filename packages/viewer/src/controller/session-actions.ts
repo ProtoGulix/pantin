@@ -1,8 +1,10 @@
+import { isBridgeActive } from "../bridge/bridge-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import {
   withBodyDeleted,
   withCloseCancelled,
   withCloseRequested,
+  withCloseStopsBridge,
   withDeleteCancelled,
   withDeleteRequested,
   withEditsDiscarded,
@@ -15,6 +17,7 @@ import {
   deleteAssembly,
   requestAssemblyDeletion,
 } from "./assembly-actions.ts";
+import { stopBridge } from "./bridge-actions.ts";
 import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { confirmOrphanCleanup } from "./orphan-cleanup-actions.ts";
@@ -34,7 +37,7 @@ function closeNow(store: ViewerStore): void {
 
 /** Fichier > Fermer / Ouvrir…, the back button: closes, or asks first if unsaved. */
 export function requestClose(store: ViewerStore): void {
-  const next = withCloseRequested(store.state);
+  const next = withCloseRequested(store.state, isBridgeActive(store.bridgeModel));
   if (next.openPantin === null && store.state.openPantin !== null) {
     closeNow(store);
     return;
@@ -58,11 +61,22 @@ async function confirmDelete(store: ViewerStore): Promise<void> {
   );
 }
 
+// The box "Also stop the bridge" of the close prompt: the stop is sent before
+// anything else, and a refusal leaves the prompt open with the error shown.
+async function stopBridgeIfAsked(store: ViewerStore): Promise<boolean> {
+  const { closeBridgeNotice, closeStopsBridge } = store.state;
+  return !(closeBridgeNotice && closeStopsBridge) || (await stopBridge(store));
+}
+
+export function setCloseStopsBridge(store: ViewerStore, stops: boolean): void {
+  store.update(withCloseStopsBridge(store.state, stops));
+}
+
 // "Ne pas enregistrer": the core must really drop the edits before the view
 // closes; on failure the prompt stays and the message line shows why.
 async function discardThenClose(store: ViewerStore): Promise<void> {
   const open = store.state.openPantin;
-  if (open === null) {
+  if (open === null || !(await stopBridgeIfAsked(store))) {
     return;
   }
   const discarded = await store.run(
@@ -76,7 +90,18 @@ async function discardThenClose(store: ViewerStore): Promise<void> {
   }
 }
 
+// The bridge is stopped first: if the core refuses, the prompt stays and the
+// message line says why, instead of leaving a bridge nobody can reach.
+async function stopBridgeThenClose(store: ViewerStore): Promise<void> {
+  if (await stopBridge(store)) {
+    closeNow(store);
+  }
+}
+
 async function saveThenClose(store: ViewerStore): Promise<void> {
+  if (!(await stopBridgeIfAsked(store))) {
+    return;
+  }
   store.update(withCloseCancelled(store.state));
   if (await savePantin(store)) {
     closeNow(store);
@@ -99,6 +124,12 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
       return;
     case "discardAndClose":
       void discardThenClose(store);
+      return;
+    case "stopBridgeAndClose":
+      void stopBridgeThenClose(store);
+      return;
+    case "closeKeepingBridge":
+      closeNow(store);
       return;
     case "cancelClose":
       store.update(withCloseCancelled(store.state));

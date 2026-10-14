@@ -89,6 +89,10 @@ export interface ViewerState {
   welcomeFilter: string;
   // Edit view: closing with unsaved changes waits for the user's choice.
   closePrompt: boolean;
+  // The close prompt also says that the PLC bridge keeps running (ADR 0050 point 7).
+  closeBridgeNotice: boolean;
+  // The box "Also stop the bridge" of that prompt, checked by default.
+  closeStopsBridge: boolean;
   // Edit view: a body waiting for the user to confirm its deletion.
   pendingDeleteBodyId: string | null;
   // Same for a joint.
@@ -158,6 +162,13 @@ const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 // Runtime faults and the I/O mapping belong to the open Pantin: cleared with it.
 const NO_DEVICE_DATA = { faults: NO_FAULTS, io: NO_IO_STATE } as const;
 
+// The close question is not asked (ADR 0050 point 7 for the bridge notice).
+export const NO_CLOSE_PROMPT = {
+  closePrompt: false,
+  closeBridgeNotice: false,
+  closeStopsBridge: false,
+} as const;
+
 // No positioning tool on, no alignment, nothing kept in the placement fields.
 const NO_TOOL_STATE = {
   gizmoMode: null,
@@ -193,7 +204,7 @@ export function initialViewerState(
     welcomeHidden: false,
     welcomeTab: "home",
     welcomeFilter: "",
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
@@ -236,7 +247,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     contextMenu: null,
     pendingImport: null,
     importInProgress: false,
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,

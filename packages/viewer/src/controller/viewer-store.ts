@@ -8,6 +8,8 @@ import type {
 } from "@pantin/protocol";
 import { isAligning } from "../alignment/alignment-view.ts";
 import type { PantinApiClient } from "../api-client.ts";
+import { type BridgeModel, INITIAL_BRIDGE_MODEL } from "../bridge/bridge-model.ts";
+import { type BridgeView, bridgeViewOf } from "../bridge/bridge-view.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import {
   buildClockView,
@@ -18,7 +20,7 @@ import {
   INITIAL_CLOCK_MODEL,
 } from "../clock/clock-model.ts";
 import { type ClientConsole, EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
-import { buildConsoleView, type ConsoleView } from "../console/console-view.ts";
+import type { ConsoleView } from "../console/console-view.ts";
 import { createChainLinksCache } from "../diagram/diagram-chains.ts";
 import { createDiagramModelBuilder, type DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { DraggedPlacement } from "../gizmo/dragged-placement.ts";
@@ -74,6 +76,8 @@ export interface StorePorts {
   // The transport bar (ADR 0032 point 10): its texts are written in place, so
   // a pose or a clock event never redraws the viewer.
   showClock(view: ClockView): void;
+  // The bridge bar of the I/O view (ADR 0050 point 8), written in place too.
+  showBridge(view: BridgeView | null): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.
   viewport(): Viewport;
@@ -119,6 +123,8 @@ export class ViewerStore {
   // The simulation clock of the followed Pantin, from the stream and from the
   // answers of the clock requests; outside ViewerState for the same reason.
   clockModel: ClockModel = INITIAL_CLOCK_MODEL;
+  // The PLC bridge and its network fields, outside ViewerState for the same reason.
+  bridgeModel: BridgeModel = INITIAL_BRIDGE_MODEL;
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
   // Who is linked to whom in the open document, built once per answer of the core.
@@ -162,6 +168,7 @@ export class ViewerStore {
     this.ports.showDiagramLive(this.tagValues, this.driveRuntime);
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());
+    this.ports.showBridge(bridgeViewOf(this.bridgeModel, next));
     showViewportState(viewport, next, this.chainLinksOf);
     // Last, after every draw: the read it starts re-enters update(), and a
     // draw after that would show this pass's stale state over the newer one.
@@ -186,6 +193,7 @@ export class ViewerStore {
     this.tagValues = new Map();
     this.driveRuntime = new Map();
     this.clockModel = INITIAL_CLOCK_MODEL;
+    this.bridgeModel = INITIAL_BRIDGE_MODEL;
     this.ports.poseStream.follow(pantinId);
   }
 
@@ -275,21 +283,6 @@ export class ViewerStore {
     this.ports.showInspectorLive(values, runtime);
     this.ports.viewport().showTagStates(values);
     this.ports.showDiagramLive(values, runtime);
-  }
-
-  /** New console lines reach the panel and the toolbar counter in place, without a redraw. */
-  showConsoleList(list: ClientConsole): void {
-    this.consoleList = list;
-    const { state } = this;
-    this.ports.showConsoleLive(
-      buildConsoleView(
-        state.console,
-        list,
-        state.openPantin,
-        state.language,
-        createTranslator(state.language),
-      ),
-    );
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

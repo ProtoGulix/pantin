@@ -1,4 +1,4 @@
-import type { OrphanMeshList } from "@pantin/protocol";
+import type { OrphanMeshList, PantinResponse } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { assemblyDeletionDetails } from "./assembly-deletion-details.ts";
@@ -10,6 +10,8 @@ import { orphanCleanupDetails, orphanCleanupPromptText } from "./orphan-cleanup-
 export type PromptAction =
   | "saveAndClose"
   | "discardAndClose"
+  | "stopBridgeAndClose"
+  | "closeKeepingBridge"
   | "cancelClose"
   | "confirmDelete"
   | "cancelDelete"
@@ -25,6 +27,8 @@ export interface PromptView {
   // Buttons wait while a request runs, so a choice is never sent twice.
   enabled: boolean;
   actions: { action: PromptAction; label: string; primary: boolean }[];
+  // A box under the question: "Also stop the bridge" when closing with unsaved changes.
+  checkbox?: { label: string; checked: boolean };
 }
 
 function deletePrompt(
@@ -60,21 +64,48 @@ function orphanCleanupPrompt(
   };
 }
 
+function closePromptView(state: ViewerState, open: PantinResponse, t: Translate): PromptView {
+  const enabled = state.pendingRequestCount === 0;
+  const cancel = {
+    action: "cancelClose",
+    label: t("prompt.close.cancel"),
+    primary: false,
+  } as const;
+  if (state.closeBridgeNotice && !open.unsavedChanges) {
+    return {
+      text: t("prompt.close.bridgeRunning"),
+      enabled,
+      actions: [
+        { action: "stopBridgeAndClose", label: t("prompt.close.stopBridge"), primary: true },
+        { action: "closeKeepingBridge", label: t("prompt.close.keepBridge"), primary: false },
+        cancel,
+      ],
+    };
+  }
+  const unsavedText = t("prompt.close.text", { name: open.document.name });
+  return {
+    text: state.closeBridgeNotice
+      ? `${unsavedText} ${t("prompt.close.bridgeRunning")}`
+      : unsavedText,
+    enabled,
+    ...(state.closeBridgeNotice
+      ? { checkbox: { label: t("prompt.close.alsoStopBridge"), checked: state.closeStopsBridge } }
+      : {}),
+    actions: [
+      { action: "saveAndClose", label: t("prompt.close.save"), primary: true },
+      { action: "discardAndClose", label: t("prompt.close.discard"), primary: false },
+      cancel,
+    ],
+  };
+}
+
 export function buildPromptView(state: ViewerState, t: Translate): PromptView | null {
   const open = state.openPantin;
   if (open === null) {
     return null;
   }
   if (state.closePrompt) {
-    return {
-      text: t("prompt.close.text", { name: open.document.name }),
-      enabled: state.pendingRequestCount === 0,
-      actions: [
-        { action: "saveAndClose", label: t("prompt.close.save"), primary: true },
-        { action: "discardAndClose", label: t("prompt.close.discard"), primary: false },
-        { action: "cancelClose", label: t("prompt.close.cancel"), primary: false },
-      ],
-    };
+    return closePromptView(state, open, t);
   }
   const replacement = state.pendingFeedReplacement;
   if (replacement !== null) {

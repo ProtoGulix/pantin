@@ -1,4 +1,7 @@
 import {
+  BRIDGE_STREAM_EVENT_NAME,
+  type BridgeStatus,
+  BridgeStatusSchema,
   CLOCK_STREAM_EVENT_NAME,
   POSE_STREAM_EVENT_NAME,
   type PoseSnapshot,
@@ -8,8 +11,8 @@ import {
 } from "@pantin/protocol";
 import { pantinUrl, type Schema } from "./api-transport.ts";
 
-// Client of GET /api/pantins/:id/pose/stream (ADR 0015), which carries two
-// events: `pose` and, since ADR 0032 point 9, `clock`. The browser's
+// Client of GET /api/pantins/:id/pose/stream (ADR 0015), which carries three
+// events: `pose`, `clock` (ADR 0032 point 9) and `bridge` (ADR 0050 point 5). The browser's
 // EventSource reconnects by itself after a network drop, so this module does
 // not: it only opens, validates and closes. EventSource is injected so tests
 // need no browser.
@@ -27,6 +30,7 @@ export type PoseEventSourceFactory = (url: string) => PoseEventSource;
 export interface PoseStreamCallbacks {
   onSnapshot(snapshot: PoseSnapshot): void;
   onClock(state: SimulationClockState): void;
+  onBridge(status: BridgeStatus): void;
   // An event that breaks the contract; detail is English, for the message line.
   onInvalid(detail: string): void;
   // The browser gave up (EventSource.CLOSED): it will not reconnect.
@@ -91,6 +95,7 @@ export function createPoseStreamClient(
     };
     listen("pose", POSE_STREAM_EVENT_NAME, PoseSnapshotSchema, callbacks.onSnapshot);
     listen("clock", CLOCK_STREAM_EVENT_NAME, SimulationClockStateSchema, callbacks.onClock);
+    listen("bridge", BRIDGE_STREAM_EVENT_NAME, BridgeStatusSchema, callbacks.onBridge);
     // EventSource retries by itself; CLOSED means it gave up, for instance
     // on a refused stream (all slots taken, ADR 0015). Forgetting the
     // followed id lets the next follow of the same Pantin try again.

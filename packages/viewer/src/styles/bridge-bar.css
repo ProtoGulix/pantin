@@ -1,0 +1,97 @@
+/* The bridge bar (ADR 0050 point 8), above the rest of the I/O view. */
+.io-view__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  min-height: 0;
+}
+
+.bridge-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.bridge-bar[hidden] {
+  display: none;
+}
+
+.bridge-bar__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.bridge-bar__choice {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.bridge-bar__allow {
+  min-width: 260px;
+}
+
+.bridge-bar__chip {
+  padding: 1px 8px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.bridge-bar__chip.is-ok {
+  color: var(--success);
+}
+
+.bridge-bar__chip.is-busy {
+  color: var(--accent);
+}
+
+.bridge-bar__chip.is-error {
+  color: var(--danger);
+}
+
+.bridge-bar__button[aria-disabled="true"] {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.bridge-bar__notice,
+.bridge-bar__hint,
+.bridge-bar__message {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.bridge-bar__error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.bridge-bar__failure {
+  padding: 4px 8px;
+  background: var(--danger-soft);
+  border-left: 3px solid var(--danger);
+}
+
+.bridge-bar__failure.is-warning {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+}
+
+.bridge-bar__log pre {
+  margin: 4px 0 0;
+  overflow: auto;
+  font-family: var(--font-source);
+  white-space: pre-wrap;
+}
+
+.bridge-bar__modules {
+  font-family: var(--font-source);
+}

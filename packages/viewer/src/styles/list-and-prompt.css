@@ -101,3 +101,10 @@
   gap: 6px;
   justify-content: flex-end;
 }
+
+.prompt-line__option {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}

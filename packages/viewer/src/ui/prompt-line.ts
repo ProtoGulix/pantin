@@ -6,6 +6,24 @@ import type { PanelIntents } from "./panel-intents.ts";
 // Inline confirmation above the message line (role=alertdialog), used
 // instead of window.confirm: unsaved changes on close, body deletion.
 
+function closeBridgeBox(
+  prompt: PromptView,
+  checkbox: { label: string; checked: boolean },
+  intents: PanelIntents,
+): HTMLElement {
+  // Ticking redraws the prompt: the focus key keeps a keyboard user on the box.
+  const input = element("input", {
+    attributes: { type: "checkbox", "data-focus-key": "prompt-close-stops-bridge" },
+  });
+  input.checked = checkbox.checked;
+  input.disabled = !prompt.enabled;
+  input.addEventListener("change", () => intents.setCloseStopsBridge(input.checked));
+  return element("label", { className: "prompt-line__option" }, [
+    input,
+    element("span", { text: checkbox.label }),
+  ]);
+}
+
 export function renderPromptLine(
   prompt: PromptView | null,
   intents: PanelIntents,
@@ -32,6 +50,8 @@ export function renderPromptLine(
             prompt.details.map((detail) => element("li", { text: detail })),
           ),
         ];
+  const box =
+    prompt.checkbox === undefined ? [] : [closeBridgeBox(prompt, prompt.checkbox, intents)];
   const line = element(
     "div",
     {
@@ -41,6 +61,7 @@ export function renderPromptLine(
     [
       element("div", { className: "prompt-line__question" }, [icon("info"), text]),
       ...details,
+      ...box,
       element("div", { className: "prompt-line__actions" }, buttons),
     ],
   );

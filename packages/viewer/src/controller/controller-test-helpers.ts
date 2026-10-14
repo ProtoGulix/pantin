@@ -49,6 +49,7 @@ export function testStore(
       storeLanguage: () => undefined,
       showConsoleLive: () => undefined,
       showClock: () => undefined,
+      showBridge: () => undefined,
       storeCentralLayout,
       storeGizmoSteps: () => undefined,
       storeGizmoSpace: () => undefined,

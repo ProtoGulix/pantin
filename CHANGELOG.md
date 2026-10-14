@@ -8,6 +8,18 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer, PLC bridge bar (ADR 0050 slice P3): the top of the I/O view, in view
+  and edit modes, shows the bridge state (Arrêté, Démarrage…, En marche,
+  Arrêt…, En échec), the network choice ("Local uniquement" or "Réseau privé"
+  with the core's listen choices and an allow list, both locked while it
+  runs), Start, Stop and Restart (which reuses the last network), a line per
+  module with whether the PLC is connected, a translated headline per failure
+  kind with the bridge's message and a folded log, and the reasons why it
+  cannot be started (core without `--bridge-python`, external bridge). It
+  follows the `bridge` event of the pose stream, validated with the protocol
+  schema; the core's 400 on the address or allow list is shown under the
+  fields. File > Close now asks when the bridge is starting or running, says
+  it keeps running, and offers "Arrêter le pont et fermer".
 - Core, supervised PLC bridge (ADR 0050 slice P2): `--bridge-python <python>`
   lets the core start and stop one bridge per Pantin, with `GET` and `PUT
   /api/pantins/:pantinId/bridge` (`{running: true, listen, allow}` or
