@@ -38,7 +38,11 @@ Validate the folder, and print the CODESYS variables:
     pnpm pantin validate examples/plc-cylinder
     pnpm pantin gvl examples/plc-cylinder
 
-Start the core on the examples folder, then the bridge (from
+From the viewer: copy this folder into the core's Pantins folder, run
+`pnpm serve` (it passes `--bridge-python`), open the Pantin, then Start in the
+bridge bar of the I/O view (ADR 0050).
+
+By hand: start the core on the examples folder, then the bridge (from
 `packages/bridge`, after `setup.sh`):
 
     node packages/core/src/main.ts --pantins-dir examples

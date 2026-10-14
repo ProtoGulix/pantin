@@ -230,6 +230,10 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Documentation, the PLC bridge started from the viewer (ADR 0050 slice P4):
+  the bridge README, the plc-cylinder example README and CLAUDE.md section 4
+  describe starting the bridge from the I/O view; the command line stays for
+  tests and debugging.
 - A bit tag accepts only 0 or 1 and an integer tag only whole numbers, over REST
   and the bus (ADR 0045 point 5, ends the ADR 0012 point 2 tolerance).
 - Every REST tag write now forces its tag, the emitter button of the viewer

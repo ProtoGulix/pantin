@@ -43,7 +43,7 @@ Monorepo :
     packages/sensor-types un dossier par type de capteur : schéma, évaluation, libellés (ADR 0023)
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
-    packages/bridge      pont vers les automates (Python, esclave Modbus TCP écrit à la main, processus séparé, ADR 0007, 0045, 0048)
+    packages/bridge      pont vers les automates (Python, esclave Modbus TCP écrit à la main, processus séparé lancé par le coeur à la demande, ADR 0007, 0045, 0048, 0050)
     packages/cli         validateur, générateur de variables CODESYS
     packages/step-converter  conversion STEP vers GLB (Python, OpenCascade, processus séparé, ADR 0009)
     parts/               pièces incluses (dossiers autonomes)
