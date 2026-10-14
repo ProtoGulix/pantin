@@ -24,6 +24,8 @@ import type { ViewerStore } from "./viewer-store.ts";
 function setBridgeModel(store: ViewerStore, next: BridgeModel): void {
   store.bridgeModel = next;
   store.ports.showBridge(bridgeViewOf(next, store.state));
+  // The I/O view's module list shows each module's connection.
+  store.renderPanel();
 }
 
 /** A bridge event of the stream, or the answer of a bridge request. */

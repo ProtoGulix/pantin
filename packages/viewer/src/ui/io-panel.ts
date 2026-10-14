@@ -97,6 +97,7 @@ export class IoPanel {
   private shown: IoState | null = null;
   private shownLanguage: Language | null = null;
   private shownBusy = false;
+  private shownConnections = "";
   private focusedSerial = 0;
 
   // Placed like the diagram: over the canvas, under the welcome overlay.
@@ -113,7 +114,9 @@ export class IoPanel {
       return;
     }
     this.host.setAttribute("aria-label", translate("io.label"));
+    const connections = view.modules.map((module) => module.connection).join();
     if (
+      connections !== this.shownConnections ||
       view.source !== this.shown ||
       language !== this.shownLanguage ||
       view.busy !== this.shownBusy
@@ -124,6 +127,7 @@ export class IoPanel {
       this.shown = view.source;
       this.shownLanguage = language;
       this.shownBusy = view.busy;
+      this.shownConnections = connections;
     }
     this.focusRequestedCell(view);
   }

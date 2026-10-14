@@ -392,8 +392,11 @@ at all times while a Pantin is open, whatever the central layout.
 - The bridge block of point 8 moves to the bottom of the left side panel,
   under the tree. It is the only one: the bar at the top of the `io` view is
   removed.
-- Compact by default: the state chip, the button, one line per module with
-  the PLC connection, and a "Configure I/O" button that opens the `io`
-  layout. The network fields fold under "Network". The failure block stays.
+- A connection card: a header with Start or Stop and a gear that opens the
+  `io` layout, a coloured state, the network as a chip that unfolds its
+  fields, and one line per io.json module with its connection (bridge
+  stopped, waiting for the PLC, PLC connected), shown even when the bridge
+  is stopped. The failure block stays. The I/O view's module list shows the
+  same dots. The viewer reads io.json whenever a Pantin is open.
 - The `io` choice leaves the top toolbar; the View menu keeps it.
 - Viewer only: the core already pushes the status in every layout.

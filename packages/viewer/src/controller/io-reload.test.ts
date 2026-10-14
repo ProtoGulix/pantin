@@ -1,45 +1,12 @@
 import type { AssemblyDeletion, IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
-import { withOpenPantin } from "../viewer-state.ts";
+import { railBody, slideJoint } from "../test-fixtures.ts";
 import { confirmDeleteAssembly } from "./assembly-actions.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import { ioIntents } from "./io-actions.ts";
+import { answer, ioStore, pantin, settle } from "./io-reload-test-helpers.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { resolvePrompt } from "./session-actions.ts";
-
-const module = (key: string) => ({
-  key,
-  port: 1502,
-  unitId: 1,
-  wordOrder: "low_word_first" as const,
-  watchdogMilliseconds: 1000,
-  channels: [],
-});
-const answer = (key: string): IoMappingResponse => ({
-  status: "valid",
-  mappingId: "id",
-  modules: [module(key)],
-  problems: [],
-  unmappedTags: [],
-});
-
-const pantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")], "press", [
-  slideJoint,
-]);
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-async function ioStore(api: Parameters<typeof testStore>[0], layout: "io" | "3d" = "io") {
-  const store = testStore({
-    getPantin: async () => ({ ...pantin }),
-    listPantins: async () => [],
-    ...api,
-  });
-  store.requestedPantinId = pantin.id;
-  store.update({ ...withOpenPantin(store.state, pantin), centralLayout: layout });
-  await settle();
-  return store;
-}
 
 describe("the I/O view after edits", () => {
   it("keeps a renamed module selected", async () => {
@@ -108,7 +75,7 @@ describe("the hook after any document change", () => {
     expect(reads).toBe(1);
   });
 
-  it("reads once when the inspector opens on an element with tags, not at each selection", async () => {
+  it("reads once when a Pantin opens, not at each selection or inspector opening", async () => {
     let reads = 0;
     const store = await ioStore(
       {
@@ -119,15 +86,17 @@ describe("the hook after any document change", () => {
       },
       "3d",
     );
-    expect(reads).toBe(0);
+    expect(reads).toBe(1);
     store.update({ ...store.state, inspectorOpen: true, selection: { kind: "drive", id: "d1" } });
     await settle();
     store.update({ ...store.state, selection: { kind: "sensor", id: "s1" } });
     await settle();
     expect(reads).toBe(1);
   });
+});
 
-  it("does not read while neither the I/O view nor an element with tags is shown", async () => {
+describe("the mapping read for the bridge block", () => {
+  it("reads the mapping of an open Pantin, in the 3D layout too", async () => {
     let reads = 0;
     const store = await ioStore(
       {
@@ -138,7 +107,18 @@ describe("the hook after any document change", () => {
       },
       "3d",
     );
-    store.update({ ...store.state, openPantin: { ...pantin }, inspectorOpen: true });
+    expect(reads).toBe(1);
+    expect(store.state.io.mapping?.modules[0]?.key).toBe("m1");
+  });
+
+  it("reads nothing while no Pantin is open", async () => {
+    let reads = 0;
+    testStore({
+      getIoMapping: async () => {
+        reads += 1;
+        return answer("m1");
+      },
+    });
     await settle();
     expect(reads).toBe(0);
   });
@@ -249,31 +229,5 @@ describe("one read at a time, and the freshest answer wins", () => {
     release(answer("late"));
     await settle();
     expect(store.state.io.mapping?.modules[0]?.key).toBe("edited");
-  });
-});
-
-describe("a failed read", () => {
-  it("is not retried by the hook, and Retry or entering the view reads again", async () => {
-    let reads = 0;
-    let failing = true;
-    const store = await ioStore({
-      getIoMapping: async () => {
-        reads += 1;
-        if (failing) {
-          throw new Error("down");
-        }
-        return answer("m1");
-      },
-    });
-    expect(store.state.io.failedFor).toBe(store.state.openPantin);
-    store.update({ ...store.state, selection: { kind: "drive", id: "d1" } });
-    await settle();
-    expect(reads).toBe(1);
-    failing = false;
-    ioIntents(store).retryIoMapping();
-    await settle();
-    expect(reads).toBe(2);
-    expect(store.state.io.failedFor).toBeNull();
-    expect(store.state.io.mapping).not.toBeNull();
   });
 });

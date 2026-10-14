@@ -1,4 +1,10 @@
-import type { IoMappedChannel, IoMappingModule, IoProblemCode } from "@pantin/protocol";
+import type {
+  BridgeStatus,
+  IoMappedChannel,
+  IoMappingModule,
+  IoProblemCode,
+} from "@pantin/protocol";
+import { type ModuleConnection, moduleConnection } from "../bridge/module-connection.ts";
 import { type IoGvlExport, ioGvlExportOf } from "./io-gvl-export.ts";
 import {
   cellIdOf,
@@ -42,6 +48,8 @@ export interface IoModuleItem {
   channelCount: number;
   problemCount: number;
   selected: boolean;
+  // From the bridge status: the list shows it as a dot.
+  connection: ModuleConnection;
 }
 
 export interface IoChannelRow {
@@ -158,6 +166,7 @@ export function buildIoView(
   state: IoState,
   assemblyNames: ReadonlyMap<string, string>,
   busy = false,
+  bridgeStatus: BridgeStatus | null = null,
 ): IoView {
   const mapping = state.mapping;
   const counts = problemCountByModule(mapping?.problems ?? []);
@@ -176,6 +185,7 @@ export function buildIoView(
       channelCount: module.channels.length,
       problemCount: counts.get(index) ?? 0,
       selected: module.key === key,
+      connection: moduleConnection(bridgeStatus, module.key),
     })),
     selected: selectedModuleOf(state),
     unmapped: groupUnmappedTags(mapping?.unmappedTags ?? [], assemblyNames),

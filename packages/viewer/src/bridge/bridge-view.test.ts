@@ -36,7 +36,7 @@ describe("the state chip and the button, for every state", () => {
   ];
   it.each(cases)("%s", (state, chip, kind, label, enabled, locked) => {
     const view = viewOf(bridgeStatusOf({ state }));
-    expect([view.chipText, view.button, view.networkLocked]).toEqual([
+    expect([view.stateText, view.button, view.networkLocked]).toEqual([
       chip,
       { kind, label, enabled },
       locked,
@@ -45,7 +45,7 @@ describe("the state chip and the button, for every state", () => {
 
   it("says the same in English", () => {
     const view = buildBridgeView(modelOf(FAILED_STATUS), en, "3d");
-    expect([view?.chipText, view?.button.label]).toEqual(["Failed", "Restart"]);
+    expect([view?.stateText, view?.button.label]).toEqual(["Failed", "Restart"]);
     expect(buildBridgeView(modelOf(RUNNING_STATUS), en, "3d")?.localLabel).toBe(
       "Local only (127.0.0.1)",
     );
@@ -85,21 +85,90 @@ describe("the network", () => {
   });
 });
 
+const MAPPING = [
+  { key: "m1", port: 1502 },
+  { key: "m2", port: 1503 },
+];
+
+function linesOf(model: BridgeModel, mapping = MAPPING, language: "fr" | "en" = "fr") {
+  const view = buildBridgeView(model, createTranslator(language), "3d", mapping);
+  return view?.moduleLines.map((line) => [
+    line.key,
+    line.address,
+    line.statusText,
+    line.connection,
+  ]);
+}
+
 describe("a running bridge", () => {
-  it("lists a line per module and says that an I/O edit stops it", () => {
-    const view = viewOf(RUNNING_STATUS);
-    expect(view.moduleLines).toEqual([
-      "m1 · 127.0.0.1:1502 · automate connecté",
-      "m2 · 127.0.0.1:1503 · aucun automate",
+  it("lists the modules the core reports, with their PLC connection", () => {
+    expect(linesOf(modelOf(RUNNING_STATUS))).toEqual([
+      ["m1", "127.0.0.1:1502", "automate connecté", "connected"],
+      ["m2", "127.0.0.1:1503", "en attente de l'automate", "waiting"],
     ]);
-    expect(view.runningHint).toBe("Toute modification des E/S arrête le pont.");
+    expect(linesOf(modelOf(RUNNING_STATUS), MAPPING, "en")?.map((line) => line[2])).toEqual([
+      "PLC connected",
+      "waiting for the PLC",
+    ]);
   });
 
-  it("has no module line nor hint in the other states", () => {
+  it("says that an I/O edit stops it", () => {
+    expect(viewOf(RUNNING_STATUS).runningHint).toBe("Toute modification des E/S arrête le pont.");
+  });
+
+  it("has no hint in the other states", () => {
     for (const state of ["stopped", "starting", "stopping", "failed"] as const) {
-      const view = viewOf({ ...RUNNING_STATUS, state });
-      expect([view.moduleLines, view.runningHint]).toEqual([[], null]);
+      expect(viewOf({ ...RUNNING_STATUS, state }).runningHint).toBeNull();
     }
+  });
+});
+
+describe("the module lines of a bridge that does not run", () => {
+  it("come from the mapping, at the local address, stopped", () => {
+    expect(linesOf(modelOf(bridgeStatusOf()))).toEqual([
+      ["m1", "127.0.0.1:1502", "pont arrêté", "stopped"],
+      ["m2", "127.0.0.1:1503", "pont arrêté", "stopped"],
+    ]);
+    expect(linesOf(modelOf(bridgeStatusOf()), MAPPING, "en")?.[0]?.[2]).toBe("bridge stopped");
+  });
+
+  it("show the chosen listen address in private network mode", () => {
+    const status = bridgeStatusOf({ listenChoices: ["127.0.0.1", "10.0.0.2", "192.168.56.1"] });
+    const model = modelOf(status);
+    const lan = { ...model, draft: { ...model.draft, mode: "lan" as const } };
+    expect(linesOf(lan)?.[0]?.[1]).toBe("10.0.0.2:1502");
+    const chosen = { ...lan, draft: { ...lan.draft, listen: "192.168.56.1" } };
+    expect(linesOf(chosen)?.[1]?.[1]).toBe("192.168.56.1:1503");
+  });
+
+  it("are stopped after a failure, and while starting", () => {
+    expect(linesOf(modelOf(FAILED_STATUS))?.map((line) => line[3])).toEqual(["stopped", "stopped"]);
+    expect(linesOf(modelOf(bridgeStatusOf({ state: "starting" })))?.[0]?.[3]).toBe("stopped");
+  });
+
+  it("say to configure the I/O when the mapping has no module", () => {
+    const view = buildBridgeView(modelOf(bridgeStatusOf()), fr, "3d", []);
+    expect([view?.moduleLines, view?.noModuleText]).toEqual([
+      [],
+      "Aucun module : configurez les E/S",
+    ]);
+    const english = buildBridgeView(modelOf(bridgeStatusOf()), en, "3d", []);
+    expect(english?.noModuleText).toBe("No module: configure the I/O");
+    expect(buildBridgeView(modelOf(RUNNING_STATUS), fr, "3d", [])?.noModuleText).toBeNull();
+  });
+
+  it("claim no missing module while the mapping is not loaded", () => {
+    const view = buildBridgeView(modelOf(bridgeStatusOf()), fr, "3d", null);
+    expect([view?.moduleLines, view?.noModuleText]).toEqual([[], null]);
+  });
+});
+
+describe("the state dot tone", () => {
+  it("is grey stopped, orange moving, green running, red failed", () => {
+    const tones = (["stopped", "starting", "running", "stopping", "failed"] as const).map(
+      (state) => viewOf(bridgeStatusOf({ state })).stateTone,
+    );
+    expect(tones).toEqual(["idle", "busy", "ok", "busy", "error"]);
   });
 });
 

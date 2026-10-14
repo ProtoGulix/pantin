@@ -7,7 +7,7 @@ import type { BridgeNetwork, BridgeStatus, SetBridgeRequest } from "@pantin/prot
 export type BridgeNetworkMode = "local" | "lan";
 
 // The first of `listenChoices`, fixed by the ADR; the "local" choice sends it.
-const LOCAL_LISTEN = "127.0.0.1";
+export const LOCAL_LISTEN = "127.0.0.1";
 
 export interface BridgeDraft {
   mode: BridgeNetworkMode;

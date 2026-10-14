@@ -2,13 +2,38 @@ import type { BridgeFailureKind, BridgeState, BridgeStatus } from "@pantin/proto
 import type { CentralLayout } from "../central-layout.ts";
 import { createTranslator, type MessageKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
-import { type BridgeModel, type BridgeNetworkMode, lanListenOf } from "./bridge-model.ts";
+import {
+  type BridgeModel,
+  type BridgeNetworkMode,
+  LOCAL_LISTEN,
+  lanListenOf,
+} from "./bridge-model.ts";
+import {
+  MODULE_CONNECTION_KEYS,
+  type ModuleConnection,
+  moduleConnection,
+  type StatusTone,
+} from "./module-connection.ts";
 
 // The bridge block of the side panel as plain data (ADR 0050 point 8): status in, texts out. No
 // network rule is computed here; the core validates and the viewer shows.
 
 type BridgeButtonKind = "start" | "stop" | "restart";
-type BridgeChipTone = "idle" | "busy" | "ok" | "error";
+
+// A module of the I/O mapping: the lines of the card exist before the bridge runs.
+export interface BridgeMappingModule {
+  key: string;
+  port: number;
+}
+
+export interface BridgeModuleLine {
+  key: string;
+  // "address:port" the PLC connects to.
+  address: string;
+  connection: ModuleConnection;
+  // Visible next to the dot, which is decoration.
+  statusText: string;
+}
 
 interface BridgeFailureView {
   headline: string;
@@ -23,8 +48,9 @@ interface BridgeFailureView {
 export interface BridgeView {
   label: string;
   state: BridgeState;
-  chipText: string;
-  chipTone: BridgeChipTone;
+  // The state as text and as the colour of its dot.
+  stateText: string;
+  stateTone: StatusTone;
   mode: BridgeNetworkMode;
   localLabel: string;
   lanLabel: string;
@@ -41,10 +67,12 @@ export interface BridgeView {
   button: { kind: BridgeButtonKind; label: string; enabled: boolean };
   // Why the button or the controls are disabled, or null.
   notice: string | null;
-  moduleLines: readonly string[];
+  moduleLines: readonly BridgeModuleLine[];
+  // Shown instead of the lines when the I/O list has no module.
+  noModuleText: string | null;
   // Switches the central layout to the I/O view, where the mapping is edited.
   configureIo: { label: string; active: boolean };
-  // Summary of the collapsible network part: it tells the mode even when closed.
+  // The chip that unfolds the network part: it tells the mode even when folded.
   networkTitle: string;
   // A refusal from the core must not stay hidden in a closed part.
   networkForcedOpen: boolean;
@@ -60,7 +88,7 @@ const STATE_KEYS: Record<BridgeState, MessageKey> = {
   failed: "bridge.state.failed",
 };
 
-const CHIP_TONES: Record<BridgeState, BridgeChipTone> = {
+const STATE_TONES: Record<BridgeState, StatusTone> = {
   stopped: "idle",
   starting: "busy",
   running: "ok",
@@ -108,17 +136,34 @@ function failureViewOf(status: BridgeStatus, t: Translate): BridgeFailureView | 
   };
 }
 
-function moduleLinesOf(status: BridgeStatus, t: Translate): string[] {
-  if (status.state !== "running") {
-    return [];
+function lineOf(
+  module: BridgeMappingModule,
+  address: string,
+  status: BridgeStatus,
+  t: Translate,
+): BridgeModuleLine {
+  const connection = moduleConnection(status, module.key);
+  return {
+    key: module.key,
+    address: `${address}:${module.port}`,
+    connection,
+    statusText: t(MODULE_CONNECTION_KEYS[connection]),
+  };
+}
+
+// Running: what the core reports. Otherwise: the mapping, at the address a start would listen on.
+function moduleLinesOf(
+  model: BridgeModel,
+  status: BridgeStatus,
+  mappingModules: readonly BridgeMappingModule[],
+  t: Translate,
+): BridgeModuleLine[] {
+  if (status.state === "running") {
+    const address = status.network?.listen ?? "";
+    return status.modules.map((module) => lineOf(module, address, status, t));
   }
-  return status.modules.map((module) =>
-    t(module.plcConnected ? "bridge.module.connected" : "bridge.module.waiting", {
-      key: module.key,
-      listen: status.network?.listen ?? "",
-      port: module.port,
-    }),
-  );
+  const address = model.draft.mode === "local" ? LOCAL_LISTEN : lanListenOf(model);
+  return mappingModules.map((module) => lineOf(module, address, status, t));
 }
 
 // Why the button is disabled; a stop is never blocked by either reason.
@@ -133,6 +178,8 @@ export function buildBridgeView(
   model: BridgeModel,
   t: Translate,
   layout: CentralLayout,
+  // Null while the mapping is not loaded (or could not be read): no module is claimed then.
+  mappingModules: readonly BridgeMappingModule[] | null = [],
 ): BridgeView | null {
   const { status, draft } = model;
   if (status === null) {
@@ -141,13 +188,14 @@ export function buildBridgeView(
   const unavailable = status.availability === "unavailable";
   const kind = buttonKindOf(status.state);
   const canStart = !unavailable && !status.externalBridgeConnected;
+  const moduleLines = moduleLinesOf(model, status, mappingModules ?? [], t);
   const settled = status.state === "stopped" || status.state === "failed";
   const enabled = !model.pending && (kind === "stop" ? status.state !== "stopping" : canStart);
   return {
     label: t("bridge.label"),
     state: status.state,
-    chipText: t(STATE_KEYS[status.state]),
-    chipTone: CHIP_TONES[status.state],
+    stateText: t(STATE_KEYS[status.state]),
+    stateTone: STATE_TONES[status.state],
     mode: draft.mode,
     localLabel: t("bridge.network.local"),
     lanLabel: t("bridge.network.lan"),
@@ -161,7 +209,9 @@ export function buildBridgeView(
     networkError: model.networkError,
     button: { kind, label: t(BUTTON_KEYS[kind]), enabled },
     notice: noticeOf(status, kind, t),
-    moduleLines: moduleLinesOf(status, t),
+    moduleLines,
+    noModuleText:
+      moduleLines.length === 0 && mappingModules !== null ? t("bridge.modules.none") : null,
     configureIo: { label: t("bridge.configureIo"), active: layout === "io" },
     networkTitle: t(draft.mode === "lan" ? "bridge.network.titleLan" : "bridge.network.titleLocal"),
     networkForcedOpen: model.networkError !== null,
@@ -183,5 +233,10 @@ export function bridgeRedrawKey(view: BridgeView): string {
 export function bridgeViewOf(model: BridgeModel, state: ViewerState): BridgeView | null {
   return state.openPantin === null
     ? null
-    : buildBridgeView(model, createTranslator(state.language), state.centralLayout);
+    : buildBridgeView(
+        model,
+        createTranslator(state.language),
+        state.centralLayout,
+        state.io.mapping?.modules ?? null,
+      );
 }

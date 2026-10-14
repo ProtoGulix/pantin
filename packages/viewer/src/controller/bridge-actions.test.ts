@@ -88,7 +88,7 @@ describe("the core's refusals", () => {
   it("writes the bar in place with the status of the stream", () => {
     const { store, views } = openStore(accept);
     receiveBridge(store, RUNNING_STATUS);
-    expect(views.at(-1)?.chipText).toBe("En marche");
+    expect(views.at(-1)?.stateText).toBe("En marche");
   });
 });
 

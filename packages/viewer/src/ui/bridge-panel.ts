@@ -1,7 +1,10 @@
-import { type BridgeView, bridgeRedrawKey } from "../bridge/bridge-view.ts";
-import { committingTextInput, element, selectInput } from "./dom.ts";
+import { type BridgeModuleLine, type BridgeView, bridgeRedrawKey } from "../bridge/bridge-view.ts";
+import { moduleConnectionTone } from "../bridge/module-connection.ts";
+import { committingTextInput, element, iconButton, selectInput } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
+import type { IconName } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { statusDot } from "./status-dot.ts";
 
 // The bridge block at the bottom of the left side panel (ADR 0050 point 8), so
 // that the PLC connection stays visible in every central layout. It is written
@@ -56,23 +59,33 @@ function lanFields(view: BridgeView, intents: PanelIntents): HTMLElement[] {
   return [listen, allow];
 }
 
+const ACTION_ICONS = { start: "play", stop: "stop", restart: "restart" } as const;
+
+// aria-disabled keeps the tooltip and the focus, like the other I/O buttons.
+function toolButton(
+  name: IconName,
+  label: string,
+  focusKey: string,
+  onClick: () => void,
+): HTMLButtonElement {
+  const created = iconButton(name, label, onClick);
+  created.classList.add("bridge-panel__tool");
+  created.setAttribute("data-focus-key", focusKey);
+  return created;
+}
+
 function actionButton(view: BridgeView, intents: PanelIntents): HTMLElement {
-  const created = element("button", {
-    className: "io-button bridge-panel__button",
-    text: view.button.label,
-    attributes: { type: "button", "data-focus-key": "bridge-action" },
-  });
-  // aria-disabled keeps the tooltip and the focus, like the other I/O buttons.
-  created.setAttribute("aria-disabled", String(!view.button.enabled));
-  created.addEventListener("click", () => {
-    if (view.button.enabled) {
-      if (view.button.kind === "stop") {
+  const { kind, label, enabled } = view.button;
+  const created = toolButton(ACTION_ICONS[kind], label, "bridge-action", () => {
+    if (enabled) {
+      if (kind === "stop") {
         intents.stopBridge();
       } else {
         intents.startBridge();
       }
     }
   });
+  created.setAttribute("aria-disabled", String(!enabled));
   if (view.notice !== null) {
     created.title = view.notice;
   }
@@ -80,17 +93,29 @@ function actionButton(view: BridgeView, intents: PanelIntents): HTMLElement {
 }
 
 function configureIoButton(view: BridgeView, intents: PanelIntents): HTMLElement {
-  const created = element("button", {
-    className: "io-button bridge-panel__configure",
-    text: view.configureIo.label,
-    attributes: {
-      type: "button",
-      ...(view.configureIo.active ? { "aria-current": "true" } : {}),
-      "data-focus-key": "bridge-configure-io",
-    },
-  });
-  created.addEventListener("click", () => intents.setCentralLayout("io"));
+  const created = toolButton("gear", view.configureIo.label, "bridge-configure-io", () =>
+    intents.setCentralLayout("io"),
+  );
+  if (view.configureIo.active) {
+    created.setAttribute("aria-current", "true");
+  }
   return created;
+}
+
+function moduleLine(line: BridgeModuleLine): HTMLElement {
+  return element("li", { className: "bridge-panel__module" }, [
+    statusDot(moduleConnectionTone(line.connection)),
+    element("span", { className: "bridge-panel__module-key", text: line.key }),
+    element("span", { className: "bridge-panel__module-address", text: line.address }),
+    element("span", { className: "bridge-panel__module-status", text: line.statusText }),
+  ]);
+}
+
+function modulesBlock(view: BridgeView): HTMLElement {
+  if (view.noModuleText !== null) {
+    return element("p", { className: "bridge-panel__hint", text: view.noModuleText });
+  }
+  return element("ul", { className: "bridge-panel__modules" }, view.moduleLines.map(moduleLine));
 }
 
 function failureBlock(view: BridgeView, onToggle: (open: boolean) => void, logOpen: boolean) {
@@ -121,6 +146,9 @@ function failureBlock(view: BridgeView, onToggle: (open: boolean) => void, logOp
 export class BridgePanel {
   readonly element = element("section", { className: "bridge-panel" });
   private shownKey: string | null = null;
+  // The latest view, not the one a handler was built with: a status may have
+  // arrived without a redraw since.
+  private latestView: BridgeView | null = null;
   private logOpen = false;
   private networkOpen = false;
 
@@ -130,6 +158,7 @@ export class BridgePanel {
 
   render(view: BridgeView | null, intents: PanelIntents): void {
     this.element.hidden = view === null;
+    this.latestView = view;
     if (view === null) {
       this.shownKey = null;
       return;
@@ -138,12 +167,16 @@ export class BridgePanel {
     const key = bridgeRedrawKey(view);
     if (key !== this.shownKey) {
       this.shownKey = key;
-      const snapshot = captureFocus(this.element);
-      this.element.replaceChildren(...this.content(view, intents));
-      this.element.setAttribute("aria-label", view.label);
-      restoreFocus(this.element, snapshot);
+      this.draw(view, intents);
     }
     this.syncAllowText(view.allowText);
+  }
+
+  private draw(view: BridgeView, intents: PanelIntents): void {
+    const snapshot = captureFocus(this.element);
+    this.element.replaceChildren(...this.content(view, intents));
+    this.element.setAttribute("aria-label", view.label);
+    restoreFocus(this.element, snapshot);
   }
 
   // A status can change the text (Restart shows the last network) without a
@@ -156,28 +189,20 @@ export class BridgePanel {
   }
 
   private content(view: BridgeView, intents: PanelIntents): HTMLElement[] {
-    const chip = element("span", {
-      className: `bridge-panel__chip is-${view.chipTone}`,
-      text: view.chipText,
-      attributes: { role: "status" },
-    });
-    const header = element("div", { className: "bridge-panel__row" }, [
-      element("strong", { className: "bridge-panel__label", text: view.label }),
-      chip,
-      actionButton(view, intents),
+    const header = element("div", { className: "bridge-panel__header" }, [
+      element("h2", { className: "bridge-panel__title", text: view.label }),
+      element("div", { className: "bridge-panel__tools" }, [
+        configureIoButton(view, intents),
+        actionButton(view, intents),
+      ]),
     ]);
-    const lines = view.moduleLines.map((line) => element("div", { text: line }));
     const rows: (HTMLElement | null)[] = [
       header,
+      this.stateRow(view, intents),
       view.notice === null
         ? null
         : element("p", { className: "bridge-panel__notice", text: view.notice }),
-      lines.length === 0 ? null : element("div", { className: "bridge-panel__modules" }, lines),
-      view.runningHint === null
-        ? null
-        : element("p", { className: "bridge-panel__hint", text: view.runningHint }),
-      configureIoButton(view, intents),
-      this.networkDetails(view, intents),
+      this.isNetworkOpen(view) ? this.networkFields(view, intents) : null,
       view.networkError === null
         ? null
         : element("p", {
@@ -185,30 +210,54 @@ export class BridgePanel {
             text: view.networkError,
             attributes: { role: "alert" },
           }),
+      modulesBlock(view),
+      view.runningHint === null
+        ? null
+        : element("p", { className: "bridge-panel__hint", text: view.runningHint }),
       failureBlock(view, (open) => (this.logOpen = open), this.logOpen),
     ];
     return rows.filter((row): row is HTMLElement => row !== null);
   }
 
-  private networkDetails(view: BridgeView, intents: PanelIntents): HTMLElement {
-    const details = element("details", { className: "bridge-panel__network" }, [
-      element("summary", {
-        text: view.networkTitle,
-        attributes: { "data-focus-key": "bridge-network-summary" },
-      }),
-      element("div", { className: "bridge-panel__fields" }, [
-        networkChoice(view, "local", view.localLabel, intents),
-        networkChoice(view, "lan", view.lanLabel, intents),
-        ...lanFields(view, intents),
-      ]),
-    ]);
-    details.open = this.networkOpen || view.networkForcedOpen;
-    // An opening forced by a refusal is not the user's choice: it is not kept.
-    details.addEventListener("toggle", () => {
-      if (!view.networkForcedOpen) {
-        this.networkOpen = details.open;
+  // An opening forced by a refusal is not the user's choice: it is not kept.
+  private isNetworkOpen(view: BridgeView): boolean {
+    return this.networkOpen || view.networkForcedOpen;
+  }
+
+  private stateRow(view: BridgeView, intents: PanelIntents): HTMLElement {
+    const chip = element("button", {
+      className: "bridge-panel__chip",
+      text: view.networkTitle,
+      attributes: {
+        type: "button",
+        "aria-expanded": String(this.isNetworkOpen(view)),
+        "data-focus-key": "bridge-network-chip",
+      },
+    });
+    chip.addEventListener("click", () => {
+      const latest = this.latestView ?? view;
+      if (!latest.networkForcedOpen) {
+        this.networkOpen = !this.networkOpen;
+        this.draw(latest, intents);
+        this.syncAllowText(latest.allowText);
       }
     });
-    return details;
+    return element("div", { className: "bridge-panel__state" }, [
+      statusDot(view.stateTone),
+      element("span", {
+        className: "bridge-panel__state-text",
+        text: view.stateText,
+        attributes: { role: "status" },
+      }),
+      chip,
+    ]);
+  }
+
+  private networkFields(view: BridgeView, intents: PanelIntents): HTMLElement {
+    return element("div", { className: "bridge-panel__fields" }, [
+      networkChoice(view, "local", view.localLabel, intents),
+      networkChoice(view, "lan", view.lanLabel, intents),
+      ...lanFields(view, intents),
+    ]);
   }
 }

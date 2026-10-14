@@ -1,18 +1,22 @@
+import { MODULE_CONNECTION_KEYS, moduleConnectionTone } from "../bridge/module-connection.ts";
 import type { Translate } from "../i18n/translate.ts";
 import type { IoModuleItem, IoView } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
 import { ioButton } from "./io-cells.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { statusDot } from "./status-dot.ts";
 
 // The module list on the left of the I/O view (ADR 0049 point 11).
 
 function moduleRow(item: IoModuleItem, translate: Translate, intents: PanelIntents): HTMLElement {
-  const label = translate("io.module.summary", {
+  const status = translate(MODULE_CONNECTION_KEYS[item.connection]);
+  const summary = translate("io.module.summary", {
     key: item.key,
     port: item.port,
     channels: item.channelCount,
     problems: item.problemCount,
   });
+  const label = `${summary}, ${status}`;
   const choose = element(
     "button",
     {
@@ -25,6 +29,9 @@ function moduleRow(item: IoModuleItem, translate: Translate, intents: PanelInten
       },
     },
     [
+      element("span", { className: "io-module__connection", attributes: { title: status } }, [
+        statusDot(moduleConnectionTone(item.connection)),
+      ]),
       element("span", { className: "io-module__key", text: item.key }),
       element("span", { className: "io-module__port", text: `:${item.port}` }),
       element("span", {

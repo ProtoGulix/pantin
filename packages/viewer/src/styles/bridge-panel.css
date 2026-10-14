@@ -15,11 +15,38 @@
   display: none;
 }
 
-.bridge-panel__row {
+.bridge-panel__header,
+.bridge-panel__state {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+}
+
+.bridge-panel__title {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.bridge-panel__tools {
+  display: flex;
+  gap: 2px;
+}
+
+.bridge-panel__tool[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* The shortcut of the current layout is a mark, not a disabled button. */
+.bridge-panel__tool[aria-current="true"] {
+  color: var(--accent);
+}
+
+.bridge-panel__state-text {
+  flex: 1;
 }
 
 .bridge-panel__choice {
@@ -38,33 +65,45 @@
   gap: 4px;
 }
 
-.bridge-panel__configure[aria-current="true"] {
-  color: var(--text-faint);
-  cursor: default;
-}
-
 .bridge-panel__chip {
   padding: 1px 8px;
   color: var(--text-muted);
+  background: none;
   border: 1px solid var(--border);
   border-radius: 10px;
+  cursor: pointer;
 }
 
-.bridge-panel__chip.is-ok {
-  color: var(--success);
+.bridge-panel__chip:hover,
+.bridge-panel__chip[aria-expanded="true"] {
+  color: var(--text);
 }
 
-.bridge-panel__chip.is-busy {
-  color: var(--accent);
+.bridge-panel__chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
-.bridge-panel__chip.is-error {
-  color: var(--danger);
+/* One dot colour per status: the text next to it says the same. */
+.status-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--text-faint);
+  border-radius: 50%;
 }
 
-.bridge-panel__button[aria-disabled="true"] {
-  color: var(--text-faint);
-  cursor: default;
+.status-dot.is-ok {
+  background: var(--success);
+}
+
+.status-dot.is-busy {
+  background: var(--accent);
+}
+
+.status-dot.is-error {
+  background: var(--danger);
 }
 
 .bridge-panel__notice,
@@ -99,5 +138,31 @@
 }
 
 .bridge-panel__modules {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
   font-family: var(--font-source);
+  list-style: none;
+}
+
+.bridge-panel__module {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  align-items: center;
+}
+
+.bridge-panel__module-key {
+  font-weight: 600;
+}
+
+.bridge-panel__module-address,
+.bridge-panel__module-status {
+  color: var(--text-muted);
+}
+
+.bridge-panel__hint {
+  font-size: 11px;
 }

@@ -1,5 +1,6 @@
 import type { IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { RUNNING_STATUS } from "../bridge/bridge-fixtures.ts";
 import { pantinResponse } from "../test-fixtures.ts";
 import { cellIdOf, cellOfPath } from "./io-problems.ts";
 import { NO_IO_STATE, withMapping } from "./io-state.ts";
@@ -82,14 +83,23 @@ describe("cellOfPath", () => {
   });
 });
 
+describe("buildIoView connections", () => {
+  it("gives each module the connection the bridge reports for it", () => {
+    const state = withMapping(NO_IO_STATE, PRESS, mapping);
+    const running = buildIoView(state, names, false, RUNNING_STATUS);
+    expect(running.modules.map((module) => module.connection)).toEqual(["connected", "waiting"]);
+  });
+});
+
 describe("buildIoView", () => {
   const state = withMapping(NO_IO_STATE, PRESS, mapping);
   const view = buildIoView(state, names);
 
   it("lists modules with channel and problem counts, the first selected", () => {
+    const stopped = { connection: "stopped", problemCount: 1 } as const;
     expect(view.modules).toEqual([
-      { key: "m1", port: 1502, channelCount: 2, problemCount: 1, selected: true },
-      { key: "m2", port: 1503, channelCount: 1, problemCount: 1, selected: false },
+      { ...stopped, key: "m1", port: 1502, channelCount: 2, selected: true },
+      { ...stopped, key: "m2", port: 1503, channelCount: 1, selected: false },
     ]);
   });
 

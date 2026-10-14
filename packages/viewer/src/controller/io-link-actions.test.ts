@@ -139,8 +139,9 @@ describe("showing an element in the I/O view", () => {
     const store = quietStore(reads);
     createPanelIntents(store).showDeviceInIo(deviceRowId("press", "drive", "v1"));
     await settle();
-    store.update({ ...store.state, centralLayout: "3d", openPantin: { ...pantin } });
+    // The document change itself starts the read; "Show in I/O" shares it.
     reads.count = 0;
+    store.update({ ...store.state, centralLayout: "3d", openPantin: { ...pantin } });
     createPanelIntents(store).showDeviceInIo(deviceRowId("press", "drive", "v2"));
     await settle();
     expect(reads.count).toBe(1);
@@ -156,9 +157,9 @@ describe('the mapping behind "Show in I/O"', () => {
     await settle();
     const other = { ...pantin, id: "other" };
     store.requestedPantinId = other.id;
+    reads.count = 0;
     store.update({ ...withOpenPantin(store.state, other), centralLayout: "3d" });
     expect(store.state.io.mapping).toBeNull();
-    reads.count = 0;
     createPanelIntents(store).showDeviceInIo(deviceRowId("other", "drive", "v1"));
     await settle();
     expect(reads.count).toBe(1);

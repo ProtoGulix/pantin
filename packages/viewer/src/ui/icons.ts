@@ -24,6 +24,9 @@ type ToolIcon =
   | "sensor"
   | "play"
   | "pause"
+  | "stop"
+  | "restart"
+  | "gear"
   | "step"
   | "add-drive"
   | "add-actuator"
@@ -98,6 +101,11 @@ const PATHS: Readonly<Record<IconName, string>> = {
   sensor: "M2 6h4v4H2Z M8.5 5.5a3.5 3.5 0 0 1 0 5 M10.8 3.5a6.3 6.3 0 0 1 0 9",
   play: "M4.5 2.8 13 8l-8.5 5.2Z",
   pause: "M5 3v10 M11 3v10",
+  stop: "M4 4h8v8H4Z",
+  // An open circle with an arrow head: start again after a failure.
+  restart: "M13 8a5 5 0 1 1-5-5 M8 .8 10.4 3 8 5.2",
+  // A toothed wheel and its hub: configure.
+  gear: "M8 1.8v1.7 M8 12.5v1.7 M1.8 8h1.7 M12.5 8h1.7 M3.6 3.6l1.2 1.2 M11.2 11.2l1.2 1.2 M12.4 3.6l-1.2 1.2 M4.8 11.2l-1.2 1.2 M10.5 8a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0Z",
   // A play triangle and the bar it stops at: one step.
   step: "M3 3 10 8 3 13Z M13 3v10",
   // A valve block of three positions: a new drive.

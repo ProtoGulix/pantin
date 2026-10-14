@@ -231,9 +231,12 @@ All notable changes to Pantin. The format follows
 ### Changed
 
 - The PLC bridge block moved to the bottom of the left side panel (ADR 0050
-  amendment): the connection state, each module with its PLC, Start or Stop,
-  and a "Configure I/O" button stay visible in every layout. The bar at the
-  top of the I/O view and the I/O choice of the top toolbar are removed.
+  amendment), as a connection card visible in every layout: a coloured state,
+  Start or Stop and a gear to configure the I/O in its header, the network
+  as a chip that unfolds its fields, and every module of io.json with its
+  PLC connection, the bridge stopped included. The I/O view's module list
+  shows the same dots. The bar at the top of the I/O view and the I/O choice
+  of the top toolbar are removed.
 - Documentation, the PLC bridge started from the viewer (ADR 0050 slice P4):
   the bridge README, the plc-cylinder example README and CLAUDE.md section 4
   describe starting the bridge from the I/O view; the command line stays for

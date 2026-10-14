@@ -21,6 +21,9 @@ function openStore(
   return store;
 }
 
+// Opening a Pantin reads its I/O mapping in the background (io-load.ts): let it land.
+const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 describe("refreshConsole", () => {
   it("reads nothing while no Pantin is open", async () => {
     let reads = 0;
@@ -97,6 +100,7 @@ describe("refreshConsole in flight", () => {
     const failing = openStore(async () => {
       throw new Error("core away");
     });
+    await settle();
     const before = failing.state;
     await refreshConsole(failing);
     expect(failing.state).toBe(before);
@@ -185,6 +189,7 @@ describe("console lines in place", () => {
       },
       showConsoleLive: (view) => pushed.push(view?.lines[0]?.repeat),
     });
+    await settle();
     const before = [redraws, store.state];
     await refreshConsole(store);
     await refreshConsole(store);

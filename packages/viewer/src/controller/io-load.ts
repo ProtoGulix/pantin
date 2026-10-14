@@ -1,6 +1,5 @@
 import type { PantinResponse } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
-import { ownerOfSelection } from "../io/io-owner.ts";
 import { isMappingCurrent, withMapping } from "../io/io-state.ts";
 import { describeFailure } from "../messages.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -67,14 +66,11 @@ export function ensureIoMapping(store: IoLoadStore): Promise<void> {
   return isMappingCurrent(store.state) ? Promise.resolve() : loadIoMapping(store);
 }
 
-// Whether something on screen reads the mapping: the I/O view, or an inspector
-// open on an element that owns tags (its "I/O" section, ADR 0049 point 11).
+// Whether something on screen reads the mapping: the bridge block lists its
+// modules while any Pantin is open, and the I/O view and the inspector's "I/O"
+// section (ADR 0049 point 11) read it too. One read serves them all.
 function mappingIsShown(state: ViewerState): boolean {
-  return (
-    state.openPantin !== null &&
-    (state.centralLayout === "io" ||
-      (state.inspectorOpen && ownerOfSelection(state.selection) !== null))
-  );
+  return state.openPantin !== null;
 }
 
 // The one hook after any state change (ADR 0049 point 11), called by

@@ -1,3 +1,4 @@
+import type { BridgeStatus } from "@pantin/protocol";
 import { type CentralLayout, showsIo, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
@@ -117,13 +118,13 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
-function buildIo(state: ViewerState): IoView | null {
+function buildIo(state: ViewerState, bridgeStatus: BridgeStatus | null): IoView | null {
   const document = state.openPantin?.document;
   if (document === undefined || !showsIo(state.centralLayout)) {
     return null;
   }
   const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
-  return buildIoView(state.io, names, state.pendingRequestCount > 0);
+  return buildIoView(state.io, names, state.pendingRequestCount > 0, bridgeStatus);
 }
 
 export function buildPanelView(
@@ -131,6 +132,7 @@ export function buildPanelView(
   consoleList: ClientConsole,
   clockRunning: boolean,
   tagValues: TagValues = NO_TAG_VALUES,
+  bridgeStatus: BridgeStatus | null = null,
 ): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
@@ -161,6 +163,6 @@ export function buildPanelView(
       state.language,
       translate,
     ),
-    io: buildIo(state),
+    io: buildIo(state, bridgeStatus),
   };
 }

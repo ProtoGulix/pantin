@@ -212,13 +212,15 @@ export class ViewerStore {
     this.setClockModel(clockAfterClockState(this.clockModel, state));
   }
 
-  private renderPanel(): void {
+  /** Draws the panel again from the state and the live models. */
+  renderPanel(): void {
     this.ports.renderPanel(
       buildPanelView(
         this.state,
         this.consoleList,
         this.clockModel.state?.running === true,
         this.tagValues,
+        this.bridgeModel.status,
       ),
     );
   }

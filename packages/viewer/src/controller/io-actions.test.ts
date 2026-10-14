@@ -58,15 +58,15 @@ function openStore(calls: string[]) {
 }
 
 describe("the I/O view actions", () => {
-  it("reads the mapping when the I/O layout is chosen", async () => {
+  it("has read the mapping once a Pantin is open, and does not read again for the I/O layout", async () => {
     const calls: string[] = [];
     const store = openStore(calls);
-    setCentralLayout(store, "io");
-    await Promise.resolve();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(calls).toEqual(["get"]);
     expect(store.state.io.mapping).toEqual(mapping);
     expect(store.state.io.selectedModuleKey).toBe("m1");
+    setCentralLayout(store, "io");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(calls).toEqual([]);
   });
 
   it("shows the route answer and the Pantin's unsaved changes after an edit", async () => {
@@ -106,12 +106,10 @@ describe("the I/O view selection and reloads", () => {
     expect(store.state.io.focus).toEqual({ cellId: "io-cell-1-port", serial: 2 });
   });
 
-  it("reads the mapping again after a document edit while it is shown", async () => {
+  it("reads the mapping again after a document edit, whatever the layout", async () => {
     const calls: string[] = [];
     const store = openStore(calls);
-    await editPantin(store, pantin.id, async () => "done");
-    expect(calls).toEqual([]);
-    store.update({ ...store.state, centralLayout: "io" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
     calls.length = 0;
     await editPantin(store, pantin.id, async () => "done");
     expect(calls).toEqual(["get"]);
