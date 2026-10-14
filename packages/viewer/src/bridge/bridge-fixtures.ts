@@ -1,6 +1,6 @@
 import type { BridgeStatus } from "@pantin/protocol";
 
-// Statuses for the tests of the bridge bar.
+// Statuses for the tests of the bridge block.
 
 export function bridgeStatusOf(overrides: Partial<BridgeStatus> = {}): BridgeStatus {
   return {

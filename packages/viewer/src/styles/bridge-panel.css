@@ -1,97 +1,103 @@
-/* The bridge bar (ADR 0050 point 8), above the rest of the I/O view. */
-.io-view__content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 8px;
-  min-height: 0;
-}
-
-.bridge-bar {
+/* The bridge block (ADR 0050 point 8), stacked at the bottom of the side panel. */
+.bridge-panel {
+  flex-shrink: 0;
+  max-height: 50%;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 6px 8px;
   background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-top: 1px solid var(--border);
 }
 
-.bridge-bar[hidden] {
+.bridge-panel[hidden] {
   display: none;
 }
 
-.bridge-bar__row {
+.bridge-panel__row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
 }
 
-.bridge-bar__choice {
+.bridge-panel__choice {
   display: flex;
   gap: 4px;
   align-items: center;
 }
 
-.bridge-bar__allow {
-  min-width: 260px;
+.bridge-panel__allow {
+  width: 100%;
 }
 
-.bridge-bar__chip {
+.bridge-panel__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bridge-panel__configure[aria-current="true"] {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.bridge-panel__chip {
   padding: 1px 8px;
   color: var(--text-muted);
   border: 1px solid var(--border);
   border-radius: 10px;
 }
 
-.bridge-bar__chip.is-ok {
+.bridge-panel__chip.is-ok {
   color: var(--success);
 }
 
-.bridge-bar__chip.is-busy {
+.bridge-panel__chip.is-busy {
   color: var(--accent);
 }
 
-.bridge-bar__chip.is-error {
+.bridge-panel__chip.is-error {
   color: var(--danger);
 }
 
-.bridge-bar__button[aria-disabled="true"] {
+.bridge-panel__button[aria-disabled="true"] {
   color: var(--text-faint);
   cursor: default;
 }
 
-.bridge-bar__notice,
-.bridge-bar__hint,
-.bridge-bar__message {
+.bridge-panel__notice,
+.bridge-panel__hint,
+.bridge-panel__message {
   margin: 0;
   color: var(--text-muted);
 }
 
-.bridge-bar__error {
+.bridge-panel__error {
   margin: 0;
   color: var(--danger);
 }
 
-.bridge-bar__failure {
+.bridge-panel__failure {
   padding: 4px 8px;
   background: var(--danger-soft);
   border-left: 3px solid var(--danger);
 }
 
-.bridge-bar__failure.is-warning {
+.bridge-panel__failure.is-warning {
   background: var(--accent-soft);
   border-left-color: var(--accent);
 }
 
-.bridge-bar__log pre {
+.bridge-panel__log pre {
+  max-height: 10em;
   margin: 4px 0 0;
   overflow: auto;
   font-family: var(--font-source);
   white-space: pre-wrap;
 }
 
-.bridge-bar__modules {
+.bridge-panel__modules {
   font-family: var(--font-source);
 }

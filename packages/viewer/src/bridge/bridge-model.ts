@@ -1,6 +1,6 @@
 import type { BridgeNetwork, BridgeStatus, SetBridgeRequest } from "@pantin/protocol";
 
-// What the bridge bar knows (ADR 0050 point 8): the status the core pushed and
+// What the bridge block knows (ADR 0050 point 8): the status the core pushed and
 // what the user typed. The viewer decides nothing about the network: the core
 // validates listen and allow, and its refusal is shown as it comes.
 
@@ -60,7 +60,7 @@ export function bridgeAfterStatus(model: BridgeModel, status: BridgeStatus): Bri
 
 export function bridgeWithDraft(model: BridgeModel, draft: BridgeDraft): BridgeModel {
   // The core's refusal stays until the next request or state change: clearing it
-  // here would redraw the bar when a field commits on mousedown, and lose the click.
+  // here would redraw the block when a field commits on mousedown, and lose the click.
   return { ...model, draft };
 }
 

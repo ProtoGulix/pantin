@@ -268,3 +268,11 @@
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+
+.io-view__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  min-height: 0;
+}

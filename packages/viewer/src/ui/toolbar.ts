@@ -46,7 +46,6 @@ function viewSwitch(view: PanelView, intents: PanelIntents): HTMLElement {
       choice("3d", translate("toolbar.view3d"), translate("menubar.view.layout3d")),
       choice("diagram", translate("toolbar.viewDiagram"), translate("menubar.view.layoutDiagram")),
       choice("both", translate("toolbar.viewBoth"), translate("menubar.view.layoutBoth")),
-      choice("io", translate("toolbar.viewIo"), translate("menubar.view.layoutIo")),
     ],
   );
 }

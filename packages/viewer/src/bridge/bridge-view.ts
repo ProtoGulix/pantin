@@ -1,9 +1,10 @@
 import type { BridgeFailureKind, BridgeState, BridgeStatus } from "@pantin/protocol";
+import type { CentralLayout } from "../central-layout.ts";
 import { createTranslator, type MessageKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type BridgeModel, type BridgeNetworkMode, lanListenOf } from "./bridge-model.ts";
 
-// The bridge bar as plain data (ADR 0050 point 8): status in, texts out. No
+// The bridge block of the side panel as plain data (ADR 0050 point 8): status in, texts out. No
 // network rule is computed here; the core validates and the viewer shows.
 
 type BridgeButtonKind = "start" | "stop" | "restart";
@@ -41,6 +42,12 @@ export interface BridgeView {
   // Why the button or the controls are disabled, or null.
   notice: string | null;
   moduleLines: readonly string[];
+  // Switches the central layout to the I/O view, where the mapping is edited.
+  configureIo: { label: string; active: boolean };
+  // Summary of the collapsible network part: it tells the mode even when closed.
+  networkTitle: string;
+  // A refusal from the core must not stay hidden in a closed part.
+  networkForcedOpen: boolean;
   runningHint: string | null;
   failure: BridgeFailureView | null;
 }
@@ -122,7 +129,11 @@ function noticeOf(status: BridgeStatus, kind: BridgeButtonKind, t: Translate): s
   return status.externalBridgeConnected && kind !== "stop" ? t("bridge.external") : null;
 }
 
-export function buildBridgeView(model: BridgeModel, t: Translate): BridgeView | null {
+export function buildBridgeView(
+  model: BridgeModel,
+  t: Translate,
+  layout: CentralLayout,
+): BridgeView | null {
   const { status, draft } = model;
   if (status === null) {
     return null;
@@ -151,13 +162,16 @@ export function buildBridgeView(model: BridgeModel, t: Translate): BridgeView | 
     button: { kind, label: t(BUTTON_KEYS[kind]), enabled },
     notice: noticeOf(status, kind, t),
     moduleLines: moduleLinesOf(status, t),
+    configureIo: { label: t("bridge.configureIo"), active: layout === "io" },
+    networkTitle: t(draft.mode === "lan" ? "bridge.network.titleLan" : "bridge.network.titleLocal"),
+    networkForcedOpen: model.networkError !== null,
     runningHint: status.state === "running" ? t("bridge.running.hint") : null,
     failure: failureViewOf(status, t),
   };
 }
 
 /**
- * What decides a redraw of the bar. The typed allow text lives in its input, so
+ * What decides a redraw of the block. The typed allow text lives in its input, so
  * committing it must not redraw: a redraw between mousedown and mouseup would
  * replace the button being clicked.
  */
@@ -165,9 +179,9 @@ export function bridgeRedrawKey(view: BridgeView): string {
   return JSON.stringify({ ...view, allowText: "" });
 }
 
-/** The bar of the open Pantin; none while no Pantin is open. */
+/** The block of the open Pantin; none while no Pantin is open. */
 export function bridgeViewOf(model: BridgeModel, state: ViewerState): BridgeView | null {
   return state.openPantin === null
     ? null
-    : buildBridgeView(model, createTranslator(state.language));
+    : buildBridgeView(model, createTranslator(state.language), state.centralLayout);
 }

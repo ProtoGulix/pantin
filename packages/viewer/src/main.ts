@@ -149,7 +149,7 @@ function createScreen(): Screen {
     showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),
-    showBridge: (view, intents) => ioPanel.showBridge(view, intents),
+    showBridge: (view, intents) => sidePanel.showBridge(view, intents),
     showCameraOrientation: (alpha, beta) => viewCube.showOrientation(alpha, beta),
   };
 }

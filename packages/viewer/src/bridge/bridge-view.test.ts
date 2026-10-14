@@ -13,16 +13,16 @@ function modelOf(status: Parameters<typeof bridgeAfterStatus>[1], pending = fals
 }
 
 function viewOf(status: Parameters<typeof bridgeAfterStatus>[1], pending = false) {
-  const view = buildBridgeView(modelOf(status, pending), fr);
+  const view = buildBridgeView(modelOf(status, pending), fr, "3d");
   if (view === null) {
     throw new Error("Expected a view.");
   }
   return view;
 }
 
-describe("the bar before any status", () => {
+describe("the bridge block before any status", () => {
   it("is not shown", () => {
-    expect(buildBridgeView(INITIAL_BRIDGE_MODEL, fr)).toBeNull();
+    expect(buildBridgeView(INITIAL_BRIDGE_MODEL, fr, "3d")).toBeNull();
   });
 });
 
@@ -44,9 +44,11 @@ describe("the state chip and the button, for every state", () => {
   });
 
   it("says the same in English", () => {
-    const view = buildBridgeView(modelOf(FAILED_STATUS), en);
+    const view = buildBridgeView(modelOf(FAILED_STATUS), en, "3d");
     expect([view?.chipText, view?.button.label]).toEqual(["Failed", "Restart"]);
-    expect(buildBridgeView(modelOf(RUNNING_STATUS), en)?.localLabel).toBe("Local only (127.0.0.1)");
+    expect(buildBridgeView(modelOf(RUNNING_STATUS), en, "3d")?.localLabel).toBe(
+      "Local only (127.0.0.1)",
+    );
   });
 
   it("waits while a request is in flight", () => {
@@ -79,7 +81,7 @@ describe("the network", () => {
 
   it("shows the core's refusal under the fields", () => {
     const model = { ...modelOf(bridgeStatusOf()), networkError: "listen address is public" };
-    expect(buildBridgeView(model, fr)?.networkError).toBe("listen address is public");
+    expect(buildBridgeView(model, fr, "3d")?.networkError).toBe("listen address is public");
   });
 });
 
@@ -87,8 +89,8 @@ describe("a running bridge", () => {
   it("lists a line per module and says that an I/O edit stops it", () => {
     const view = viewOf(RUNNING_STATUS);
     expect(view.moduleLines).toEqual([
-      "m1 → 127.0.0.1:1502 · automate connecté",
-      "m2 → 127.0.0.1:1503 · en attente de l'automate",
+      "m1 · 127.0.0.1:1502 · automate connecté",
+      "m2 · 127.0.0.1:1503 · aucun automate",
     ]);
     expect(view.runningHint).toBe("Toute modification des E/S arrête le pont.");
   });
@@ -117,7 +119,7 @@ describe("a failed bridge", () => {
       const headlines = BRIDGE_FAILURE_KINDS.map((kind) => {
         const failure = { kind, message: "m", exitCode: null, signal: null };
         const model = modelOf({ ...FAILED_STATUS, failure });
-        return buildBridgeView(model, createTranslator(language))?.failure?.headline;
+        return buildBridgeView(model, createTranslator(language), "3d")?.failure?.headline;
       });
       expect(
         headlines.every((headline) => headline !== undefined && !headline.startsWith("bridge.")),
@@ -161,6 +163,34 @@ describe("a bridge that cannot be started", () => {
   });
 });
 
+describe("the I/O shortcut", () => {
+  it("is active only in the I/O layout", () => {
+    const model = modelOf(RUNNING_STATUS);
+    expect(buildBridgeView(model, fr, "io")?.configureIo).toEqual({
+      label: "Configurer les E/S",
+      active: true,
+    });
+    expect(buildBridgeView(model, en, "both")?.configureIo).toEqual({
+      label: "Configure I/O",
+      active: false,
+    });
+  });
+});
+
+describe("the network summary", () => {
+  it("tells the mode and opens by itself on a refusal", () => {
+    const model = modelOf(bridgeStatusOf());
+    const local = buildBridgeView(model, fr, "3d");
+    expect([local?.networkTitle, local?.networkForcedOpen]).toEqual(["Réseau : local", false]);
+    const lan = { ...model, draft: { ...model.draft, mode: "lan" as const }, networkError: "bad" };
+    const refused = buildBridgeView(lan, en, "3d");
+    expect([refused?.networkTitle, refused?.networkForcedOpen]).toEqual([
+      "Network: private network",
+      true,
+    ]);
+  });
+});
+
 describe("the redraw key", () => {
   it("ignores a committed allow text, so that the Start button under the mouse is kept", () => {
     const refused = { ...modelOf(FAILED_STATUS), networkError: "bad entry" };
@@ -168,8 +198,8 @@ describe("the redraw key", () => {
       ...refused,
       draft: { ...refused.draft, allowText: "10.0.0.9" },
     };
-    const before = buildBridgeView(refused, fr);
-    const after = buildBridgeView(typed, fr);
+    const before = buildBridgeView(refused, fr, "3d");
+    const after = buildBridgeView(typed, fr, "3d");
     expect(before && after && bridgeRedrawKey(after)).toBe(before && bridgeRedrawKey(before));
     expect(after?.networkError).toBe("bad entry");
   });

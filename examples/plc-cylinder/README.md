@@ -40,7 +40,7 @@ Validate the folder, and print the CODESYS variables:
 
 From the viewer: copy this folder into the core's Pantins folder, run
 `pnpm serve` (it passes `--bridge-python`), open the Pantin, then Start in the
-bridge bar of the I/O view (ADR 0050).
+bridge block at the bottom of the left panel (ADR 0050).
 
 By hand: start the core on the examples folder, then the bridge (from
 `packages/bridge`, after `setup.sh`):

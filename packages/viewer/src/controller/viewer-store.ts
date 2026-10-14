@@ -76,7 +76,7 @@ export interface StorePorts {
   // The transport bar (ADR 0032 point 10): its texts are written in place, so
   // a pose or a clock event never redraws the viewer.
   showClock(view: ClockView): void;
-  // The bridge bar of the I/O view (ADR 0050 point 8), written in place too.
+  // The bridge block of the side panel (ADR 0050 point 8), written in place too.
   showBridge(view: BridgeView | null): void;
   // A getter because the viewport is created after the store: its callbacks
   // need the controller.

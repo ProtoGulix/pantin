@@ -1,8 +1,6 @@
-import type { BridgeView } from "../bridge/bridge-view.ts";
 import type { Language, Translate } from "../i18n/translate.ts";
 import type { IoState } from "../io/io-state.ts";
 import type { IoView } from "../io/io-view-model.ts";
-import { BridgeBar } from "./bridge-bar.ts";
 import { element } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import { ioButton } from "./io-cells.ts";
@@ -95,8 +93,6 @@ function pageContent(view: IoView, translate: Translate, intents: PanelIntents):
 
 export class IoPanel {
   private readonly host = element("section", { className: "io-view" });
-  // The bar is written in place; the rest is redrawn from the mapping.
-  private readonly bridgeBar = new BridgeBar();
   private readonly content = element("div", { className: "io-view__content" });
   private shown: IoState | null = null;
   private shownLanguage: Language | null = null;
@@ -106,12 +102,8 @@ export class IoPanel {
   // Placed like the diagram: over the canvas, under the welcome overlay.
   constructor(viewport: HTMLElement, before: HTMLElement) {
     this.host.hidden = true;
-    this.host.append(this.bridgeBar.element, this.content);
+    this.host.append(this.content);
     viewport.insertBefore(this.host, before);
-  }
-
-  showBridge(view: BridgeView | null, intents: PanelIntents): void {
-    this.bridgeBar.render(view, intents);
   }
 
   render(view: IoView | null, translate: Translate, language: Language, intents: PanelIntents) {

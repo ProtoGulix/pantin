@@ -8,7 +8,7 @@ import { accept, flush, openStore } from "./bridge-test-helpers.ts";
 import { requestClose, resolvePrompt } from "./session-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
-// The bridge bar's intents and the close choice (ADR 0050 points 7 and 8).
+// The bridge block's intents and the close choice (ADR 0050 points 7 and 8).
 
 function intentsOf(store: ViewerStore) {
   return bridgeIntents(store);

@@ -259,10 +259,12 @@ NOT VERIFIED:
      bridge exits on its own (`bus_closed`). Its ports are then released.
    - **Port conflicts**: see point 4. A bind failure reaches the UI as the
      bridge's own message: "Change the module's port in io.json".
-8. **Viewer: a bridge bar at the top of the `io` view** (ADR 0049 point 11).
-   It is shown in view and edit modes, because starting the bridge is a
-   runtime action like the clock, not a document edit. It is a pure view
-   model (status in, view state out), with labels in French and English.
+8. **Viewer: a bridge block** (ADR 0049 point 11). Amended on 2026-10-14:
+   it sits at the bottom of the left side panel, in every layout, not at the
+   top of the `io` view (see "Amendment" below). It is shown in view and
+   edit modes, because starting the bridge is a runtime action like the
+   clock, not a document edit. It is a pure view model (status in, view
+   state out), with labels in French and English.
    - **State chip**: Stopped, Starting…, Running, Stopping…, Failed.
    - **Network**:
      - a choice between "Local only (127.0.0.1)" and "Private network";
@@ -362,7 +364,7 @@ NOT VERIFIED:
 
 ## Consequences
 
-- The user starts, stops and restarts the bridge from the I/O view. The
+- The user starts, stops and restarts the bridge from the left side panel. The
   terminal command stays for tests and debugging.
 - The core now runs a long-lived child process per Pantin. A supervisor bug
   could leave an orphan. This is bounded because the bridge exits when its
@@ -381,3 +383,17 @@ NOT VERIFIED:
 - NOT VERIFIED: `-I` with the `.pth` file (P1), the bridge's source address in
   `lan` mode (ADR 0046 point 6), Windows signals, and every CODESYS
   measurement still pending (spike 4b).
+
+## Amendment (2026-10-14): the bridge block in the side panel
+
+Asked by the user after trying P3: the PLC connection state must be visible
+at all times while a Pantin is open, whatever the central layout.
+
+- The bridge block of point 8 moves to the bottom of the left side panel,
+  under the tree. It is the only one: the bar at the top of the `io` view is
+  removed.
+- Compact by default: the state chip, the button, one line per module with
+  the PLC connection, and a "Configure I/O" button that opens the `io`
+  layout. The network fields fold under "Network". The failure block stays.
+- The `io` choice leaves the top toolbar; the View menu keeps it.
+- Viewer only: the core already pushes the status in every layout.

@@ -1,5 +1,7 @@
+import type { BridgeView } from "../bridge/bridge-view.ts";
 import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
 import type { PanelView } from "../view-model.ts";
+import { BridgePanel } from "./bridge-panel.ts";
 import { renderContextMenu } from "./context-menu.ts";
 import { element } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
@@ -11,7 +13,7 @@ import { renderPromptLine } from "./prompt-line.ts";
 import { renderToolbar, type ToolbarCallbacks } from "./toolbar.ts";
 import { createTreeView, type TreeView } from "./tree-view.ts";
 
-// The left panel: quick-access bar, the import form, the tree, a confirmation
+// The left panel: quick-access bar, the import form, the tree, the PLC bridge, a confirmation
 // line and the message line. What is selected is shown in the inspector
 // (ADR 0030). The panel exists only while a Pantin is open: with none, the
 // welcome dialog replaces it (ADR 0027). The skeleton is built once (so the
@@ -23,6 +25,8 @@ export class SidePanel {
   private readonly toolbarHost = element("div", { className: "panel-header" });
   private readonly formHost = element("div", { className: "form-host" });
   private readonly treeView: TreeView = createTreeView();
+  // Written in place by showBridge: a status arrives without a panel render.
+  private readonly bridgePanel = new BridgePanel();
   private readonly promptHost = element("div", { className: "prompt-host" });
   private readonly messageHost = element("div", { className: "message-host" });
   private readonly menuHost = element("div", { className: "menu-host" });
@@ -53,6 +57,7 @@ export class SidePanel {
       this.toolbarHost,
       this.formHost,
       treePane,
+      this.bridgePanel.element,
       this.promptHost,
       this.messageHost,
       this.menuHost,
@@ -79,6 +84,10 @@ export class SidePanel {
     this.fileInput.setAttribute("aria-label", translate("import.fileInputLabel"));
     this.layout.translateLabels(translate);
     restoreFocus(this.panel, focus);
+  }
+
+  showBridge(view: BridgeView | null, intents: PanelIntents): void {
+    this.bridgePanel.render(view, intents);
   }
 
   focusTree(): void {

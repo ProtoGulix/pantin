@@ -9,8 +9,8 @@ published; it runs from this checkout.
 
 Usually the core starts it (ADR 0050): run the core with
 `--bridge-python packages/bridge/.venv/bin/python` (`pnpm serve` passes it),
-then use the bridge bar at the top of the viewer's I/O view to start, stop or
-restart it, locally or on the private network with an allow list. The command
+then use the bridge block at the bottom of the viewer's left panel to start,
+stop or restart it, locally or on the private network with an allow list. The command
 above stays for tests and debugging; the core refuses to start a second bridge
 while one started by hand is connected.
 

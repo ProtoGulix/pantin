@@ -19,8 +19,9 @@ export function captureFocus(root: HTMLElement): FocusSnapshot | null {
     const { value, selectionStart, selectionEnd } = active;
     return { key, value, selectionStart, selectionEnd };
   }
-  // A button, a checkbox or a list keeps no text of its own.
+  // A button, a checkbox, a list or a summary keeps no text of its own.
   return active instanceof HTMLButtonElement ||
+    active?.tagName === "SUMMARY" ||
     active instanceof HTMLInputElement ||
     active instanceof HTMLSelectElement
     ? { key, value: "", selectionStart: null, selectionEnd: null }
@@ -28,7 +29,7 @@ export function captureFocus(root: HTMLElement): FocusSnapshot | null {
 }
 
 export function restoreFocus(root: HTMLElement, snapshot: FocusSnapshot | null): void {
-  const target = [...root.querySelectorAll("input, button, select")].find(
+  const target = [...root.querySelectorAll("input, button, select, summary")].find(
     (candidate) => candidate.getAttribute("data-focus-key") === snapshot?.key,
   );
   if (snapshot === null || target === undefined || document.activeElement === target) {
