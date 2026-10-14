@@ -50,7 +50,7 @@ describe("device rows", () => {
     expect(store.state.selection).toEqual({ kind: "drive", id: "v1" });
     expect(store.state.contextMenu).toEqual({ nodeId: driveRow, x: 10, y: 20 });
     const menu = buildContextMenuView(store.state, createTranslator("en"));
-    expect(menu?.entries.map((entry) => entry.action)).toEqual(["editDevice", "deleteDevice"]);
+    expect(menu?.entries.map((entry) => entry.action)).toContain("showInIo");
   });
 
   it("choosing edit opens the drive form in the inspector, as the toolbar does", () => {

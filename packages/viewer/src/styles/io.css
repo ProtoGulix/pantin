@@ -239,3 +239,21 @@
   font-family: var(--font-source);
   text-overflow: ellipsis;
 }
+
+/* A tag that selects its owner: reads as text, behaves as a link. */
+.io-tag-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-family: var(--font-source);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.io-tag-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

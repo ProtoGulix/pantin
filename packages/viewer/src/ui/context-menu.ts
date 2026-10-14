@@ -37,6 +37,8 @@ function runAction(
     intents.requestDelete(nodeId);
   } else if (action === "editDevice" || action === "deleteDevice") {
     intents.runDeviceAction(nodeId, action === "editDevice" ? "edit" : "delete");
+  } else if (action === "showInIo") {
+    intents.showDeviceInIo(nodeId);
   } else {
     // The file picker must open inside this click: browsers require a user gesture.
     intents.closeContextMenu();

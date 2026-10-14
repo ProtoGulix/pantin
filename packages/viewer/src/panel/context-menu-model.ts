@@ -1,6 +1,7 @@
 import { actuatorOfJoint, movableJoints } from "../actuators/actuator-joints.ts";
 import type { AssemblyDisplay } from "../assembly-display.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
+import { ownerOfDevice } from "../io/io-owner.ts";
 import { endSwitchRequests } from "../sensors/joint-sensors.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
@@ -23,7 +24,9 @@ export type ContextAction =
   | "delete"
   // The actions of the inspector toolbar, on a device row (ADR 0047 point 5).
   | "editDevice"
-  | "deleteDevice";
+  | "deleteDevice"
+  // The I/O view on the device's tags (ADR 0049 point 11).
+  | "showInIo";
 
 export interface ContextMenuView {
   nodeId: string;
@@ -43,7 +46,7 @@ export interface ContextMenuView {
 export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
   if (ref.kind === "device") {
     // Rename stays in the inspector, and a device has nothing to frame.
-    return ["editDevice", "deleteDevice"];
+    return ["editDevice", "showInIo", "deleteDevice"];
   }
   const entries: ContextAction[] = renamable ? ["rename"] : [];
   entries.push("frame");
@@ -80,6 +83,7 @@ const CONTEXT_LABELS = {
   delete: "menu.delete",
   editDevice: "drives.edit",
   deleteDevice: "drives.delete",
+  showInIo: "menu.showInIo",
 } as const;
 
 const JOINT_WIRING: readonly ContextAction[] = ["actuateJoint", "addJointSensor", "addEndSwitches"];
@@ -87,6 +91,10 @@ const JOINT_WIRING: readonly ContextAction[] = ["actuateJoint", "addJointSensor"
 // A fixed joint gets no actuator nor sensor entry (ADR 0028, ADR 0023), and a
 // joint without limits (continuous) no end-of-stroke switches.
 function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boolean {
+  if (action === "showInIo") {
+    // Only an element that can own tags has something to show there.
+    return ref.kind === "device" && ownerOfDevice({ kind: ref.deviceKind, id: ref.id }) !== null;
+  }
   if (!JOINT_WIRING.includes(action) || ref.kind !== "joint") {
     return true;
   }

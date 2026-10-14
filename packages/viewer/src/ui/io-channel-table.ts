@@ -2,7 +2,7 @@ import type { Translate } from "../i18n/translate.ts";
 import { cellIdOf } from "../io/io-problems.ts";
 import type { IoChannelRow, IoSelectedModule } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
-import { inputCell, ioButton, readOnlyCell } from "./io-cells.ts";
+import { inputCell, ioButton, readOnlyCell, tagCell } from "./io-cells.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // The channel table of the selected module (ADR 0049 point 11). Variable,
@@ -46,7 +46,14 @@ function channelRow(
       (text) => intents.editIoChannel(channel.tag, field, text),
     );
   return element("tr", { className: "io-row" }, [
-    readOnlyCell(id("tag"), channel.tag, problems.get("tag")),
+    tagCell(
+      id("tag"),
+      channel.tag,
+      channel.owner,
+      translate("io.tag.selectOwner", { tag: channel.tag }),
+      problems.get("tag"),
+      intents.selectIoOwner,
+    ),
     edit("variable", channel.variable),
     readOnlyCell(id("zone"), channel.zone, problems.get("zone")),
     edit("address", String(channel.address)),

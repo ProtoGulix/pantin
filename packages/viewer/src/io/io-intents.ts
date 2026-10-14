@@ -1,3 +1,5 @@
+import type { IoTagOwner } from "@pantin/protocol";
+
 // What the I/O view asks of the controller (ADR 0049 point 11). Field texts
 // arrive raw, as typed; the controller parses them (io-edits.ts).
 export interface IoIntents {
@@ -14,4 +16,13 @@ export interface IoIntents {
   // Derives zone and type of the channel again from its tag.
   reassignIoChannel(tag: string): void;
   unmapIoChannel(tag: string): void;
+  // The mapping could not be read: forget the failure and read it again.
+  retryIoMapping(): void;
+  // A tag was clicked: select its owner and unfold the tree to it, staying on
+  // the I/O view (ADR 0049 point 11).
+  selectIoOwner(owner: IoTagOwner): void;
+  // From the inspector or a device row: show a tag, or the element's first
+  // one, in the I/O view.
+  showTagInIo(tag: string): void;
+  showDeviceInIo(nodeId: string): void;
 }

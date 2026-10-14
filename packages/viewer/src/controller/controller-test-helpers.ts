@@ -1,3 +1,4 @@
+import type { IoMappingResponse } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import type { Viewport } from "../scene/viewport.ts";
@@ -16,6 +17,14 @@ function silent<Port extends object>(overrides: Partial<Port> = {}): Port {
   ) as Port;
 }
 
+const NO_MAPPING: IoMappingResponse = {
+  status: "missing",
+  mappingId: null,
+  modules: [],
+  problems: [],
+  unmappedTags: [],
+};
+
 export function testStore(
   api: Partial<PantinApiClient>,
   viewport: Partial<Viewport> = {},
@@ -25,7 +34,9 @@ export function testStore(
   return new ViewerStore(
     {
       // Only the calls a test makes: the others would fail loudly as undefined.
-      api: api as PantinApiClient,
+      // The mapping is read whenever a Pantin is opened or changed (io-load.ts), so
+      // a test that does not care about it gets an answer for no io.json.
+      api: { getIoMapping: async () => NO_MAPPING, ...api } as PantinApiClient,
       renderPanel: () => undefined,
       showJointPositions: () => undefined,
       showInspectorLive: () => undefined,

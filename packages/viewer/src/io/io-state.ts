@@ -1,4 +1,4 @@
-import type { IoMappingResponse } from "@pantin/protocol";
+import type { IoMappingResponse, PantinResponse } from "@pantin/protocol";
 
 // The state of the I/O view (ADR 0049 point 11): the core's last mapping
 // answer and what the user selected. Display state apart from the mapping,
@@ -15,6 +15,14 @@ export interface IoState {
   // The Pantin the mapping belongs to: an answer for another one is dropped.
   pantinId: string | null;
   mapping: IoMappingResponse | null;
+  // The open Pantin object the mapping was read against: a document change
+  // gives a new one, which makes the mapping stale until it is read again.
+  readFor: PantinResponse | null;
+  // The open Pantin object for which the last read failed: shown as an error
+  // with Retry. Only a user gesture clears it, so the automatic hook never loops.
+  failedFor: PantinResponse | null;
+  // Counts the answers applied, so that a late read never overwrites a fresher one.
+  version: number;
   selectedModuleKey: string | null;
   focus: IoFocusRequest | null;
 }
@@ -22,6 +30,9 @@ export interface IoState {
 export const NO_IO_STATE: IoState = {
   pantinId: null,
   mapping: null,
+  readFor: null,
+  failedFor: null,
+  version: 0,
   selectedModuleKey: null,
   focus: null,
 };
@@ -33,14 +44,29 @@ export function effectiveModuleKey(state: IoState): string | null {
   return (chosen ?? modules[0])?.key ?? null;
 }
 
-/** A fresh mapping answer; the selection follows a renamed or removed module. */
-export function withMapping(state: IoState, pantinId: string, mapping: IoMappingResponse): IoState {
-  const sameModule = state.pantinId === pantinId ? state.selectedModuleKey : null;
+/** The mapping was read for the Pantin as it is now: no document change since. */
+export function isMappingCurrent(state: {
+  openPantin: PantinResponse | null;
+  io: IoState;
+}): boolean {
+  return state.io.mapping !== null && state.io.readFor === state.openPantin;
+}
+
+/** A fresh mapping answer for the Pantin as it was then; the selection follows a renamed or removed module. */
+export function withMapping(
+  state: IoState,
+  pantin: PantinResponse,
+  mapping: IoMappingResponse,
+): IoState {
+  const sameModule = state.pantinId === pantin.id ? state.selectedModuleKey : null;
   const stillThere = mapping.modules.some((module) => module.key === sameModule);
   return {
     ...state,
-    pantinId,
+    pantinId: pantin.id,
     mapping,
+    readFor: pantin,
+    failedFor: null,
+    version: state.version + 1,
     selectedModuleKey: stillThere ? sameModule : (mapping.modules[0]?.key ?? null),
   };
 }

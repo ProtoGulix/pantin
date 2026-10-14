@@ -1,4 +1,4 @@
-import type { IoMappingResponse } from "@pantin/protocol";
+import type { IoMappingResponse, IoTagOwner } from "@pantin/protocol";
 import { createTranslator, type MessageKey } from "../i18n/translate.ts";
 import {
   type IoEditParse,
@@ -8,7 +8,8 @@ import {
 } from "../io/io-edits.ts";
 import { withMapping } from "../io/io-state.ts";
 import { errorMessage } from "../messages.ts";
-import { loadIoMapping } from "./io-load.ts";
+import { selectIoOwner, showDeviceInIo, showTagInIo } from "./io-link-actions.ts";
+import { loadIoMapping, retryIoMapping } from "./io-load.ts";
 import { refreshPantinList } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -37,7 +38,7 @@ async function editMapping(
         return shown;
       }
       const io = selectKey === undefined ? shown.io : { ...shown.io, selectedModuleKey: selectKey };
-      return { ...shown, io: withMapping(io, open.id, mapping) };
+      return { ...shown, io: withMapping(io, pantin, mapping) };
     },
   );
   if (done === undefined) {
@@ -45,11 +46,6 @@ async function editMapping(
     await loadIoMapping(store);
   }
   await refreshPantinList(store);
-}
-
-/** Entering the view reads the mapping; leaving it keeps the last one for the way back. */
-export function enterIoLayout(store: ViewerStore): void {
-  void loadIoMapping(store);
 }
 
 function selectModule(store: ViewerStore, moduleKey: string): void {
@@ -138,5 +134,9 @@ export function ioIntents(store: ViewerStore) {
       void editMapping(store, (id) => api().updateIoChannel(id, tag, { tag })),
     unmapIoChannel: (tag: string) =>
       void editMapping(store, (id) => api().deleteIoChannel(id, tag)),
+    retryIoMapping: () => void retryIoMapping(store),
+    selectIoOwner: (owner: IoTagOwner) => selectIoOwner(store, owner),
+    showTagInIo: (tag: string) => void showTagInIo(store, tag),
+    showDeviceInIo: (nodeId: string) => void showDeviceInIo(store, nodeId),
   };
 }
