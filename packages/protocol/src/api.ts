@@ -137,6 +137,8 @@ export const ApiErrorCodeSchema = z.enum([
   "conversion_unavailable",
   // The STEP converter ran but could not convert this file (invalid, empty, too slow).
   "conversion_failed",
+  // The PLC bridge is not configured on this core (no --bridge-python, ADR 0050).
+  "bridge_unavailable",
   "internal_error",
 ]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;

@@ -10,6 +10,7 @@ import {
   SensorIdSchema,
   TagNameSchema,
 } from "@pantin/protocol";
+import type { BridgeSupervisor } from "../bridge/bridge-supervisor.ts";
 import { parseWithSchema } from "../domain/validation.ts";
 import type { PantinService } from "../service/pantin-service.ts";
 import type { PoseStreamRegistry } from "./pose-stream-registry.ts";
@@ -21,6 +22,7 @@ import type { PoseStreamRegistry } from "./pose-stream-registry.ts";
 export type RouteContext = {
   service: PantinService;
   poseStreams: PoseStreamRegistry;
+  bridge: BridgeSupervisor;
   maxImportBytes: number;
   request: IncomingMessage;
   response: ServerResponse;

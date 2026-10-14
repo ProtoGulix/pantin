@@ -1,5 +1,6 @@
 import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
 import {
+  type BridgeFailureKind,
   type ConsoleEvent,
   type ConsoleSource,
   PANTIN_SCHEMA_VERSION,
@@ -193,5 +194,21 @@ export function physicsRebuiltEvent(products: number): ConsoleEvent {
     level: "info",
     source: { kind: "pantin" },
     params: { products },
+  };
+}
+
+const MAX_BRIDGE_FAILURE_MESSAGE = 300;
+
+// ADR 0050 point 3: the console keeps the history of failures; the bridge
+// status holds only the last one.
+export function bridgeFailedEvent(failure: {
+  kind: BridgeFailureKind;
+  message: string;
+}): ConsoleEvent {
+  return {
+    code: "bridge_failed",
+    level: "error",
+    source: { kind: "pantin" },
+    params: { kind: failure.kind, message: failure.message.slice(0, MAX_BRIDGE_FAILURE_MESSAGE) },
   };
 }

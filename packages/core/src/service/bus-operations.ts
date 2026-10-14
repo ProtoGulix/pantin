@@ -48,6 +48,7 @@ function peekFeedSource(context: ServiceContext, pantinId: PantinId): FeedSource
 async function bridgeConnected(context: ServiceContext, pantinId: PantinId): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
   openPantin.bridgeConnected = true;
+  context.onBridgeActivity(pantinId);
   const events: ConsoleEvent[] = [bridgeEvent({ connected: true })];
   if (!openPantin.clock.running) {
     events.push(pausedWithBridgeEvent());
@@ -65,8 +66,10 @@ async function bridgeDisconnected(
 ): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
   openPantin.bridgeConnected = false;
+  openPantin.plcConnectedModules.clear();
   zeroBitCommands(openPantin, tagsToZero);
   recordConsoleEvents(context, openPantin, [bridgeEvent({ connected: false, reason })]);
+  context.onBridgeActivity(pantinId);
 }
 
 // One module of the PLC connected or lost its connection (`plc_status`).
@@ -78,10 +81,14 @@ async function plcModuleStatus(
   tagsToZero: readonly string[],
 ): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
-  if (!status.connected) {
+  if (status.connected) {
+    openPantin.plcConnectedModules.add(module);
+  } else {
+    openPantin.plcConnectedModules.delete(module);
     zeroBitCommands(openPantin, tagsToZero);
   }
   recordConsoleEvents(context, openPantin, [plcModuleEvent(module, status)]);
+  context.onBridgeActivity(pantinId);
 }
 
 export function busOperations(context: ServiceContext) {

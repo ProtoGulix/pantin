@@ -104,6 +104,12 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "pantin" },
     params: {},
   }),
+  bridge_failed: entryOf(19, {
+    code: "bridge_failed",
+    level: "error",
+    source: { kind: "pantin" },
+    params: { kind: "mapping_changed", message: "The I/O mapping changed." },
+  }),
 };
 
 const expected = {
@@ -131,6 +137,7 @@ const expected = {
       "Pont automate déconnecté (connexion fermée) : les commandes booléennes mappées sont remises à 0.",
     clock_paused_with_bridge:
       "Simulation en pause alors qu'un pont automate est connecté : l'automate voit une machine figée.",
+    bridge_failed: "Le pont automate s'est arrêté sur une erreur (détail ci-dessous).",
   },
   en: {
     forced_tag_written:
@@ -156,6 +163,7 @@ const expected = {
       "PLC bridge disconnected (connection closed): the mapped bit commands are reset to 0.",
     clock_paused_with_bridge:
       "Simulation paused while a PLC bridge is connected: the PLC sees a frozen machine.",
+    bridge_failed: "The PLC bridge stopped on an error (detail below).",
   },
 } as const;
 

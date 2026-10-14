@@ -1,5 +1,7 @@
 import { request as httpRequest, type IncomingMessage } from "node:http";
 import {
+  type BridgeStatus,
+  BridgeStatusSchema,
   type PoseSnapshot,
   PoseSnapshotSchema,
   type SimulationClockState,
@@ -12,6 +14,8 @@ export type SseClient = {
   headers: IncomingMessage["headers"];
   snapshots: PoseSnapshot[];
   clocks: SimulationClockState[];
+  // The `bridge` events (ADR 0050); not in `eventNames`, which keeps the order of pose and clock.
+  bridges: BridgeStatus[];
   // Event names in arrival order, to check what was sent after what.
   eventNames: string[];
   comments: string[];
@@ -22,7 +26,7 @@ export type SseClient = {
 };
 
 function parseBlock(
-  client: Pick<SseClient, "snapshots" | "clocks" | "eventNames" | "comments">,
+  client: Pick<SseClient, "snapshots" | "clocks" | "bridges" | "eventNames" | "comments">,
   block: string,
 ): void {
   if (block.startsWith(":")) {
@@ -36,6 +40,9 @@ function parseBlock(
   if (block.startsWith("event: pose\n") && data !== undefined) {
     client.snapshots.push(PoseSnapshotSchema.parse(JSON.parse(data)));
     client.eventNames.push("pose");
+  }
+  if (block.startsWith("event: bridge\n") && data !== undefined) {
+    client.bridges.push(BridgeStatusSchema.parse(JSON.parse(data)));
   }
   if (block.startsWith("event: clock\n") && data !== undefined) {
     client.clocks.push(SimulationClockStateSchema.parse(JSON.parse(data)));
@@ -79,6 +86,7 @@ function readEvents(incoming: IncomingMessage, close: () => void): SseClient {
     headers: incoming.headers,
     snapshots: [],
     clocks: [],
+    bridges: [],
     eventNames: [],
     comments: [],
     waitUntil: until,

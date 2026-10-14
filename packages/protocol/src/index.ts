@@ -3,6 +3,7 @@ export * from "./actuator-api.ts";
 export * from "./alignment.ts";
 export * from "./api.ts";
 export * from "./assembly-api.ts";
+export * from "./bridge.ts";
 export * from "./clock.ts";
 export * from "./console.ts";
 export * from "./conveyor-api.ts";

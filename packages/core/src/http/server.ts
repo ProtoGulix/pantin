@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo, Socket } from "node:net";
-import { MAX_IMPORT_BYTES } from "@pantin/protocol";
+import { MAX_IMPORT_BYTES, type PantinId } from "@pantin/protocol";
+import { type BridgeSupervisor, createBridgeSupervisor } from "../bridge/bridge-supervisor.ts";
+import { listHostAddresses } from "../bridge/host-addresses.ts";
 import { type BusEndpoint, createBusEndpoint } from "../bus/bus-endpoint.ts";
-import type { ProcessLimits } from "../converter/process-runner.ts";
+import type { ProcessLimits, ProcessSpawner } from "../converter/process-runner.ts";
 import { createStepConverter, type StepConverter } from "../converter/step-converter.ts";
 import type { IoMappingSource } from "../domain/io-mapping.ts";
 import {
@@ -48,6 +50,18 @@ export type PantinServerOptions = {
   // The physics engine (ADR 0043 point 9); main.ts loads Rapier and passes it.
   physicsWorldFactory?: PhysicsWorldFactory;
   stepConverterLimits?: Partial<ProcessLimits>;
+  // Python interpreter of the PLC bridge's environment (ADR 0050 point 1);
+  // without it the bridge routes answer bridge_unavailable.
+  bridgePython?: string;
+  // Starts the bridge child; Node's `spawn` by default, a fake in tests.
+  bridgeSpawn?: ProcessSpawner;
+  // Delays of the bridge supervisor (ADR 0050 point 3); 15 s and 3 s by default.
+  bridgeStartTimeoutMs?: number;
+  bridgeKillGraceMs?: number;
+  // The host's interface addresses; `os.networkInterfaces()` by default.
+  hostAddresses?: () => readonly string[];
+  // Receives each line the bridge writes, to copy it to the core's stderr.
+  reportBridgeLine?: (pantinId: string, line: string) => void;
   // Clock of the fixed-step loop (ADR 0012); the real one by default.
   simulationTimer?: SimulationTimer;
   // Wall clock of the console entries (ADR 0031); the real one by default.
@@ -116,8 +130,9 @@ function listen(server: Server, port: number, address: string): Promise<void> {
   });
 }
 
-function poseSourceOf(service: PantinService): PoseSource {
+function poseSourceOf(service: PantinService, bridge: BridgeSupervisor): PoseSource {
   return {
+    bridge: bridge.status,
     stepCount: service.peekStepCount,
     snapshot: service.peekPoseSnapshot,
     clock: service.peekClock,
@@ -125,7 +140,10 @@ function poseSourceOf(service: PantinService): PoseSource {
   };
 }
 
-function serviceOptionsOf(options: PantinServerOptions): ServiceOptions {
+function serviceOptionsOf(
+  options: PantinServerOptions,
+  onBridgeActivity: (pantinId: PantinId) => void,
+): ServiceOptions {
   return {
     // Without it the service falls back to an inert world: for tests that run
     // without Rapier only; main.ts always passes the real one.
@@ -135,7 +153,30 @@ function serviceOptionsOf(options: PantinServerOptions): ServiceOptions {
     ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
     ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
     reportStepError: options.reportError,
+    onBridgeActivity,
   };
+}
+
+function bridgeSupervisorOf(
+  options: PantinServerOptions,
+  parts: { service: PantinService; server: Server; onChange: (pantinId: PantinId) => void },
+): BridgeSupervisor {
+  return createBridgeSupervisor({
+    pythonPath: options.bridgePython,
+    spawn: options.bridgeSpawn ?? spawn,
+    service: parts.service,
+    // listen() on a TCP host and port always yields an AddressInfo, never a string.
+    coreAddress: () => {
+      const address = parts.server.address() as AddressInfo;
+      return { host: address.address, port: address.port };
+    },
+    hostAddresses: options.hostAddresses ?? listHostAddresses,
+    mirrorLogLine: options.reportBridgeLine ?? (() => undefined),
+    onChange: parts.onChange,
+    reportError: options.reportError,
+    startTimeoutMs: options.bridgeStartTimeoutMs ?? 15_000,
+    killGraceMs: options.bridgeKillGraceMs ?? 3000,
+  });
 }
 
 function busEndpointOf(
@@ -171,6 +212,47 @@ function closeServer(server: Server, stopWork: () => void): Promise<void> {
   });
 }
 
+type ServerParts = {
+  server: Server;
+  service: PantinService;
+  poseStreams: PoseStreamRegistry;
+  bridge: BridgeSupervisor;
+};
+
+// The service, the bridge supervisor and the pose streams need one another
+// (a PLC module connecting changes the bridge status, which goes to the
+// streams): each is given a closure on the others, called only later.
+function createParts(options: PantinServerOptions, network: NetworkConfig): ServerParts {
+  const server = createServer();
+  const service = createPantinService(
+    createPantinStore(options.pantinsDirectory),
+    createConfiguredStepConverter(options),
+    serviceOptionsOf(options, (pantinId) => bridge.refresh(pantinId)),
+  );
+  const bridge = bridgeSupervisorOf(options, {
+    service,
+    server,
+    onChange: (pantinId) => poseStreams.notifyBridgeChange(pantinId),
+  });
+  const poseStreams = createPoseStreamRegistry({
+    source: poseSourceOf(service, bridge),
+    timer: options.streamTimer ?? createRealSimulationTimer(),
+  });
+  server.on(
+    "request",
+    createRequestHandler({
+      service,
+      poseStreams,
+      bridge,
+      network,
+      maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
+      viewerDirectory: options.viewerDirectory,
+      reportError: options.reportError,
+    }),
+  );
+  return { server, service, poseStreams, bridge };
+}
+
 export async function startPantinServer(
   options: PantinServerOptions,
 ): Promise<RunningPantinServer> {
@@ -179,25 +261,7 @@ export async function startPantinServer(
     throw new StartupRefusedError(result.message);
   }
   const network = result.config;
-  const service = createPantinService(
-    createPantinStore(options.pantinsDirectory),
-    createConfiguredStepConverter(options),
-    serviceOptionsOf(options),
-  );
-  const poseStreams = createPoseStreamRegistry({
-    source: poseSourceOf(service),
-    timer: options.streamTimer ?? createRealSimulationTimer(),
-  });
-  const server = createServer(
-    createRequestHandler({
-      service,
-      poseStreams,
-      network,
-      maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
-      viewerDirectory: options.viewerDirectory,
-      reportError: options.reportError,
-    }),
-  );
+  const { server, service, poseStreams, bridge } = createParts(options, network);
   const bus = busEndpointOf(options, network, service);
   server.on("upgrade", (request, socket, head) => bus.handleUpgrade(request, socket, head));
   installSourceFilter(server, options, network);
@@ -209,12 +273,16 @@ export async function startPantinServer(
   );
   // listen() on a TCP host and port always yields an AddressInfo, never a string.
   const address = server.address() as AddressInfo;
-  const close = () =>
-    closeServer(server, () => {
+  // The bridges go first: their SIGTERM makes them close their bus connection
+  // cleanly, while the core still answers (ADR 0050 point 7).
+  const close = async () => {
+    await bridge.close();
+    await closeServer(server, () => {
       loop.stop();
       poseStreams.closeAll();
       bus.closeAll();
       service.close();
     });
+  };
   return { server, address, network, close };
 }

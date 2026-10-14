@@ -2,7 +2,7 @@ import { mkdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { StartupRefusedError, startPantinServer } from "./http/server.ts";
+import { type RunningPantinServer, StartupRefusedError, startPantinServer } from "./http/server.ts";
 import { createPhysicsWorldFactory, loadRapier } from "./physics/rapier-world.ts";
 
 const DEFAULT_PORT = 4800;
@@ -10,6 +10,7 @@ const USAGE = [
   "Usage: node packages/core/src/main.ts [--pantins-dir <path>] [--port <0-65535>]",
   "  [--listen <127.0.0.1 or one private address>] [--allow <ip or cidr>]... [--viewer-dir <path>]",
   "  [--step-converter-python <python of the step-converter venv>]",
+  "  [--bridge-python <python of the bridge venv>]",
 ].join("\n");
 
 function parsePort(text: string | undefined): number {
@@ -46,6 +47,30 @@ async function resolveViewerDirectory(text: string | undefined): Promise<string 
   return directory;
 }
 
+// The bridge's Python must exist at start-up: a typo would otherwise show only
+// when the user clicks Start (ADR 0050 point 1).
+async function requireBridgePython(text: string | undefined): Promise<string | undefined> {
+  if (text === undefined) {
+    return undefined;
+  }
+  const path = resolve(text);
+  const isFile = await stat(path).then(
+    (stats) => stats.isFile(),
+    (error: unknown) => {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+        return false;
+      }
+      throw error;
+    },
+  );
+  if (!isFile) {
+    throw new StartupRefusedError(
+      `--bridge-python "${path}" is not a file. Create the bridge environment first: pnpm setup:python.`,
+    );
+  }
+  return path;
+}
+
 function writeLine(stream: NodeJS.WriteStream, line: string): void {
   stream.write(`${line}\n`);
 }
@@ -53,6 +78,56 @@ function writeLine(stream: NodeJS.WriteStream, line: string): void {
 function reportError(error: unknown): void {
   const detail = error instanceof Error ? (error.stack ?? error.message) : String(error);
   writeLine(process.stderr, detail);
+}
+
+// Ctrl-C and SIGTERM close the core, which stops its bridges (ADR 0050 point 7);
+// without this the bridge children would outlive a killed core by their own timeout.
+function closeOnSignals(close: () => Promise<void>): void {
+  let closing = false;
+  const closeOnce = (): void => {
+    if (closing) {
+      process.exit(1); // A second signal forces out a close() that is stuck.
+    }
+    closing = true;
+    close().then(
+      () => process.exit(0),
+      (error: unknown) => {
+        reportError(error);
+        process.exit(1);
+      },
+    );
+  };
+  process.on("SIGINT", closeOnce);
+  process.on("SIGTERM", closeOnce);
+}
+
+type StartupSummary = {
+  pantinsDirectory: string;
+  stepConverterPython: string | undefined;
+  bridgePython: string | undefined;
+  viewerDirectory: string | undefined;
+};
+
+function printStartup(running: RunningPantinServer, summary: StartupSummary): void {
+  const { address, network } = running;
+  const host = address.family === "IPv6" ? `[${address.address}]` : address.address;
+  writeLine(process.stdout, `Pantin core (${network.mode} mode) on http://${host}:${address.port}`);
+  writeLine(process.stdout, `Pantins in ${summary.pantinsDirectory}`);
+  writeLine(
+    process.stdout,
+    summary.stepConverterPython === undefined
+      ? "STEP import disabled (no --step-converter-python)"
+      : `STEP converter: ${summary.stepConverterPython}`,
+  );
+  writeLine(
+    process.stdout,
+    summary.bridgePython === undefined
+      ? "PLC bridge disabled (no --bridge-python)"
+      : `PLC bridge: ${summary.bridgePython}`,
+  );
+  if (summary.viewerDirectory !== undefined) {
+    writeLine(process.stdout, `Viewer served from ${summary.viewerDirectory}`);
+  }
 }
 
 async function main(): Promise<void> {
@@ -64,6 +139,7 @@ async function main(): Promise<void> {
       allow: { type: "string", multiple: true },
       "viewer-dir": { type: "string" },
       "step-converter-python": { type: "string" },
+      "bridge-python": { type: "string" },
     },
     strict: true,
   });
@@ -71,6 +147,7 @@ async function main(): Promise<void> {
   const port = parsePort(values.port);
   const viewerDirectory = await resolveViewerDirectory(values["viewer-dir"]);
   const stepConverterPython = values["step-converter-python"];
+  const bridgePython = await requireBridgePython(values["bridge-python"]);
   await mkdir(pantinsDirectory, { recursive: true });
   // Once at start-up (about 73 ms): the WASM module is shared by every Pantin's world.
   const physicsWorldFactory = createPhysicsWorldFactory(await loadRapier());
@@ -82,23 +159,14 @@ async function main(): Promise<void> {
     physicsWorldFactory,
     ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
     ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
+    ...(bridgePython === undefined ? {} : { bridgePython }),
+    reportBridgeLine: (pantinId, line) => writeLine(process.stderr, `[bridge ${pantinId}] ${line}`),
     reportError,
     reportRejectedSource: (source) =>
       writeLine(process.stderr, `Rejected connection from ${source}`),
   });
-  const { address, network } = running;
-  const host = address.family === "IPv6" ? `[${address.address}]` : address.address;
-  writeLine(process.stdout, `Pantin core (${network.mode} mode) on http://${host}:${address.port}`);
-  writeLine(process.stdout, `Pantins in ${pantinsDirectory}`);
-  writeLine(
-    process.stdout,
-    stepConverterPython === undefined
-      ? "STEP import disabled (no --step-converter-python)"
-      : `STEP converter: ${stepConverterPython}`,
-  );
-  if (viewerDirectory !== undefined) {
-    writeLine(process.stdout, `Viewer served from ${viewerDirectory}`);
-  }
+  printStartup(running, { pantinsDirectory, stepConverterPython, bridgePython, viewerDirectory });
+  closeOnSignals(running.close);
 }
 
 function isArgumentParsingError(error: unknown): error is TypeError {

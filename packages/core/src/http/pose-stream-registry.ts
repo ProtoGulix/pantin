@@ -1,4 +1,6 @@
 import {
+  BRIDGE_STREAM_EVENT_NAME,
+  type BridgeStatus,
   CLOCK_STREAM_EVENT_NAME,
   type PantinId,
   POSE_STREAM_EVENT_NAME,
@@ -36,11 +38,14 @@ export type PoseSource = {
   clock(pantinId: PantinId): SimulationClockState | undefined;
   // Cheap: read after every tick, where `clock` builds a whole state.
   isRunning(pantinId: PantinId): boolean | undefined;
+  // The PLC bridge's status (ADR 0050 point 5).
+  bridge(pantinId: PantinId): BridgeStatus;
 };
 
 type PoseStream = {
   send(snapshot: PoseSnapshot): void;
   sendClock(): void;
+  sendBridge(): void;
   close(): void;
 };
 
@@ -53,6 +58,8 @@ export type PoseStreamRegistry = {
   // point 9): sends its clock state, and its poses when `withPose` (a step
   // request moves them while no tick sends anything).
   notifyClockChange(pantinId: PantinId, change: { withPose: boolean }): void;
+  // Sends the bridge status of a Pantin to its streams (ADR 0050 point 5).
+  notifyBridgeChange(pantinId: PantinId): void;
   openCount(): number;
   closeAll(): void;
 };
@@ -73,7 +80,10 @@ function sendTo(state: StreamState, snapshot: PoseSnapshot, now: number): void {
   }
 }
 
-function encodeEvent(name: string, data: PoseSnapshot | SimulationClockState): string {
+function encodeEvent(
+  name: string,
+  data: PoseSnapshot | SimulationClockState | BridgeStatus,
+): string {
   return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
@@ -82,6 +92,10 @@ function sendClockTo(source: PoseSource, state: StreamState): void {
   if (clock !== undefined) {
     state.sink.write(encodeEvent(CLOCK_STREAM_EVENT_NAME, clock));
   }
+}
+
+function sendBridgeTo(source: PoseSource, state: StreamState): void {
+  state.sink.write(encodeEvent(BRIDGE_STREAM_EVENT_NAME, source.bridge(state.pantinId)));
 }
 
 function sendCurrentPose(source: PoseSource, state: StreamState, now: number): void {
@@ -186,6 +200,7 @@ export function createPoseStreamRegistry(options: {
       return {
         send: (snapshot) => sendTo(state, snapshot, timer.now()),
         sendClock: () => sendClockTo(source, state),
+        sendBridge: () => sendBridgeTo(source, state),
         close: () => release(state),
       };
     },
@@ -203,6 +218,13 @@ export function createPoseStreamRegistry(options: {
           if (withPose) {
             sendCurrentPose(source, state, now);
           }
+        }
+      }
+    },
+    notifyBridgeChange: (pantinId) => {
+      for (const state of [...streams]) {
+        if (state.pantinId === pantinId) {
+          sendBridgeTo(source, state);
         }
       }
     },

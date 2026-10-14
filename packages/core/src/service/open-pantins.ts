@@ -91,6 +91,8 @@ export type OpenPantin = {
   resetCount: number;
   // A PLC bridge is connected on the tag bus (ADR 0045 point 12), set by the bus.
   bridgeConnected: boolean;
+  // Modules the PLC is connected to, from `plc_status` (ADR 0050 point 5).
+  plcConnectedModules: Set<string>;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
   // The simulation clock (ADR 0032), never saved: reset leaves it as it is.
@@ -140,6 +142,7 @@ export function newOpenPantin(
     tagStatesDocument: document,
     resetCount: 0,
     bridgeConnected: false,
+    plcConnectedModules: new Set(),
     stepCount: 0,
     clock: newClockRuntime(),
     console: emptyConsole(consoleId),
@@ -187,6 +190,8 @@ export type ServiceContext = {
   // Receives a step error the console shows for the first time, for the
   // server log: repeats fold in the console and are not reported again.
   reportStepError: (error: unknown) => void;
+  // The bridge or a PLC module connected or left (ADR 0050 point 5).
+  onBridgeActivity: (pantinId: PantinId) => void;
 };
 
 export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinResponse {

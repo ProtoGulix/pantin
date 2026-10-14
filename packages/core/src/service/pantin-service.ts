@@ -22,6 +22,7 @@ import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
 import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
+import { bridgeOperations } from "./bridge-operations.ts";
 import { busOperations } from "./bus-operations.ts";
 import { clockOperations, toClockState } from "./clock-operations.ts";
 import { readConsole } from "./console-operations.ts";
@@ -173,6 +174,7 @@ function documentObjectOperations(context: ServiceContext) {
     ...sensorOperations(context),
     ...conveyorOperations(context),
     ...ioEditOperations(context),
+    ...bridgeOperations(context),
   };
 }
 
@@ -186,6 +188,7 @@ export type ServiceOptions = {
   wallClock?: () => Date;
   newConsoleId?: () => string;
   reportStepError?: (error: unknown) => void;
+  onBridgeActivity?: (pantinId: PantinId) => void;
 };
 
 export function createServiceContext(
@@ -205,6 +208,7 @@ export function createServiceContext(
     wallClock: options.wallClock ?? (() => new Date()),
     newConsoleId: options.newConsoleId ?? (() => crypto.randomUUID()),
     reportStepError: options.reportStepError ?? (() => undefined),
+    onBridgeActivity: options.onBridgeActivity ?? (() => undefined),
   };
 }
 

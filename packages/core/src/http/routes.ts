@@ -10,6 +10,7 @@ import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
 import { ACTUATOR_ROUTES } from "./actuator-routes.ts";
 import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
+import { BRIDGE_ROUTES } from "./bridge-routes.ts";
 import { CLOCK_ROUTES } from "./clock-routes.ts";
 import { CONVEYOR_ROUTES } from "./conveyor-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
@@ -176,6 +177,7 @@ export const ROUTES: readonly Route[] = [
   ...ORPHAN_MESH_ROUTES,
   ...TAG_ROUTES,
   ...IO_ROUTES,
+  ...BRIDGE_ROUTES,
 ];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {

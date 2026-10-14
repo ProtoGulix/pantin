@@ -8,6 +8,19 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Core, supervised PLC bridge (ADR 0050 slice P2): `--bridge-python <python>`
+  lets the core start and stop one bridge per Pantin, with `GET` and `PUT
+  /api/pantins/:pantinId/bridge` (`{running: true, listen, allow}` or
+  `{running: false}`; 403 under `X-Pantin-Exposure: cloudflare`, API error
+  `bridge_unavailable` without the flag). A pure state machine and pure
+  pre-spawn checks (listen address, allow list, mapping, slot, ports, cap of
+  4) sit behind a process adapter that reads the bridge's status lines with a
+  Zod schema, starts it with a fixed argument array and `shell: false`, and
+  stops it with SIGTERM then SIGKILL after 3 s. The status reaches the viewer
+  as a `bridge` event of the pose stream, with `plcConnected` per module; a
+  failure is logged in the console as `bridge_failed`. `main.ts` closes the
+  core, hence its bridges, on SIGINT and SIGTERM, and `pnpm serve` passes the
+  bridge venv. Tests read `PANTIN_BRIDGE_PYTHON`.
 - Bridge, `--status-lines` and SIGTERM (ADR 0050 slice P1): with the flag the
   bridge writes a `ready` JSON line on stdout once every Modbus slave is
   bound, and an `exiting` line with a `kind` before a non-zero exit;

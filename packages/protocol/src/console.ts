@@ -1,5 +1,6 @@
 import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
+import { BridgeFailureKindSchema } from "./bridge.ts";
 import {
   ActuatorIdSchema,
   BodyIdSchema,
@@ -91,6 +92,9 @@ const ParamsSchemas = {
   plc_module: z.object({ module: KeySchema }),
   plc_module_lost: z.object({ module: KeySchema, reason: z.enum(["closed", "timeout"]) }),
   bridge_lost: z.object({ reason: z.enum(["closed", "timeout"]) }),
+  // ADR 0050 point 3: the supervised bridge failed; `message` is the bridge's
+  // own English text, cut to keep entries small.
+  bridge_failed: z.object({ kind: BridgeFailureKindSchema, message: z.string().max(300) }),
 };
 
 const eventShapes = {
@@ -196,6 +200,12 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.bridge_lost,
   }),
+  bridgeFailed: z.object({
+    code: z.literal("bridge_failed"),
+    level: z.literal("error"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.bridge_failed,
+  }),
   // ADR 0045 point 12: paused while a bridge is connected, which the PLC sees
   // as a frozen machine.
   clockPausedWithBridge: z.object({
@@ -226,6 +236,7 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.plcDisconnected,
   eventShapes.bridgeConnected,
   eventShapes.bridgeDisconnected,
+  eventShapes.bridgeFailed,
   eventShapes.clockPausedWithBridge,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
@@ -262,6 +273,7 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.plcDisconnected.extend(entryFields),
   eventShapes.bridgeConnected.extend(entryFields),
   eventShapes.bridgeDisconnected.extend(entryFields),
+  eventShapes.bridgeFailed.extend(entryFields),
   eventShapes.clockPausedWithBridge.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
