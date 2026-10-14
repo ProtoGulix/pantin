@@ -236,10 +236,12 @@ describe("the I/O shortcut", () => {
   it("is active only in the I/O layout", () => {
     const model = modelOf(RUNNING_STATUS);
     expect(buildBridgeView(model, fr, "io")?.configureIo).toEqual({
+      text: "Config E/S",
       label: "Configurer les E/S",
       active: true,
     });
     expect(buildBridgeView(model, en, "both")?.configureIo).toEqual({
+      text: "I/O config",
       label: "Configure I/O",
       active: false,
     });

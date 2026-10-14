@@ -96,6 +96,10 @@ function configureIoButton(view: BridgeView, intents: PanelIntents): HTMLElement
   const created = toolButton("gear", view.configureIo.label, "bridge-configure-io", () =>
     intents.setCentralLayout("io"),
   );
+  // The visible text names the button; the longer label stays as the tooltip.
+  created.removeAttribute("aria-label");
+  created.classList.add("bridge-panel__tool--text");
+  created.append(element("span", { text: view.configureIo.text }));
   if (view.configureIo.active) {
     created.setAttribute("aria-current", "true");
   }

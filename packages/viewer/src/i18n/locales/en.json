@@ -707,6 +707,7 @@
   "bridge.network.listen": "Listen address",
   "bridge.network.allow": "Allowed PLCs (IPs or CIDRs, comma separated)",
   "bridge.configureIo": "Configure I/O",
+  "bridge.configureIoShort": "I/O config",
   "bridge.network.titleLocal": "Network: local",
   "bridge.network.titleLan": "Network: private network",
   "bridge.action.start": "Start",

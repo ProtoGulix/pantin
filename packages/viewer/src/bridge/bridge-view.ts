@@ -71,7 +71,7 @@ export interface BridgeView {
   // Shown instead of the lines when the I/O list has no module.
   noModuleText: string | null;
   // Switches the central layout to the I/O view, where the mapping is edited.
-  configureIo: { label: string; active: boolean };
+  configureIo: { text: string; label: string; active: boolean };
   // The chip that unfolds the network part: it tells the mode even when folded.
   networkTitle: string;
   // A refusal from the core must not stay hidden in a closed part.
@@ -212,7 +212,11 @@ export function buildBridgeView(
     moduleLines,
     noModuleText:
       moduleLines.length === 0 && mappingModules !== null ? t("bridge.modules.none") : null,
-    configureIo: { label: t("bridge.configureIo"), active: layout === "io" },
+    configureIo: {
+      text: t("bridge.configureIoShort"),
+      label: t("bridge.configureIo"),
+      active: layout === "io",
+    },
     networkTitle: t(draft.mode === "lan" ? "bridge.network.titleLan" : "bridge.network.titleLocal"),
     networkForcedOpen: model.networkError !== null,
     runningHint: status.state === "running" ? t("bridge.running.hint") : null,

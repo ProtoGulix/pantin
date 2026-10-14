@@ -40,6 +40,12 @@
   cursor: default;
 }
 
+.bridge-panel__tool--text {
+  width: auto;
+  gap: 4px;
+  padding: 0 6px;
+}
+
 /* The shortcut of the current layout is a mark, not a disabled button. */
 .bridge-panel__tool[aria-current="true"] {
   color: var(--accent);

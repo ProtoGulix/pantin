@@ -232,7 +232,7 @@ All notable changes to Pantin. The format follows
 
 - The PLC bridge block moved to the bottom of the left side panel (ADR 0050
   amendment), as a connection card visible in every layout: a coloured state,
-  Start or Stop and a gear to configure the I/O in its header, the network
+  Start or Stop and a "Config E/S" gear button in its header, the network
   as a chip that unfolds its fields, and every module of io.json with its
   PLC connection, the bridge stopped included. The I/O view's module list
   shows the same dots. The bar at the top of the I/O view and the I/O choice

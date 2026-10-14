@@ -707,6 +707,7 @@
   "bridge.network.listen": "Adresse d'écoute",
   "bridge.network.allow": "Automates autorisés (IP ou CIDR, séparés par des virgules)",
   "bridge.configureIo": "Configurer les E/S",
+  "bridge.configureIoShort": "Config E/S",
   "bridge.network.titleLocal": "Réseau : local",
   "bridge.network.titleLan": "Réseau : réseau privé",
   "bridge.action.start": "Démarrer",
