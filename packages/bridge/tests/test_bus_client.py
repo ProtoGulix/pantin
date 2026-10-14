@@ -17,7 +17,7 @@ from pantin_bridge.bus_messages import (
     Snapshot,
     TagsChanged,
 )
-from pantin_bridge.errors import CoreUnavailableError, ProtocolError, RestartRequiredError
+from pantin_bridge.errors import BusClosedError, CoreUnavailableError, ProtocolError
 from support import eventually
 
 MAPPING_ID = "abc123"
@@ -121,7 +121,7 @@ def test_a_refused_hello_says_why_and_asks_for_a_restart(code: int, fragment: st
         async with FakeCore({}, hello_close_code=code) as core:
             await BusClient.open(_url(core), MAPPING_ID)
 
-    with pytest.raises(RestartRequiredError, match=fragment):
+    with pytest.raises(BusClosedError, match=fragment):
         asyncio.run(scenario())
 
 
@@ -133,7 +133,7 @@ def test_the_end_of_the_bus_is_an_error_asking_for_a_restart() -> None:
             async for _message in client.messages():
                 pass
 
-    with pytest.raises(RestartRequiredError, match="Restart the bridge"):
+    with pytest.raises(BusClosedError, match="Restart the bridge"):
         asyncio.run(scenario())
 
 
@@ -145,7 +145,7 @@ def test_a_clean_close_by_the_core_is_also_an_error() -> None:
             async for _message in client.messages():
                 pass
 
-    with pytest.raises(RestartRequiredError):
+    with pytest.raises(BusClosedError):
         asyncio.run(scenario())
 
 
@@ -215,4 +215,4 @@ def test_a_full_outbox_fails_the_client_instead_of_raising_in_a_modbus_callback(
             await client.close()
             return client.failed.exception()
 
-    assert isinstance(asyncio.run(scenario()), RestartRequiredError)
+    assert isinstance(asyncio.run(scenario()), BusClosedError)

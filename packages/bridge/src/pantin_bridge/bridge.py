@@ -18,7 +18,7 @@ from pantin_bridge.bus_messages import (
     TagsChanged,
 )
 from pantin_bridge.core_endpoint import CoreEndpoint, fetch_io_mapping
-from pantin_bridge.errors import MappingNotValidError, RestartRequiredError
+from pantin_bridge.errors import BridgeError, MappingChangedError, MappingNotValidError
 from pantin_bridge.io_mapping import IoMapping, IoModule, IoProblem, IoRow, IoStatus, zone_sizes
 from pantin_bridge.modbus_gate import SlaveListener
 from pantin_bridge.modbus_server import ModbusSlave
@@ -104,7 +104,7 @@ class Bridge:
                 for module in self._modules:
                     await module.apply_feedback(message.tags)
             case IoChanged():
-                raise RestartRequiredError(
+                raise MappingChangedError(
                     "The Pantin's tags changed, so the io mapping may no longer match: "
                     "restart the bridge."
                 )
@@ -141,7 +141,7 @@ class Bridge:
         for task in tasks:
             if not task.cancelled() and (error := task.exception()) is not None:
                 raise error
-        raise RestartRequiredError("The bridge stopped without an error: restart it.")
+        raise BridgeError("The bridge stopped without an error: restart it.")
 
 
 def _slave_factory(
@@ -155,8 +155,17 @@ def _slave_factory(
     return make
 
 
-async def run_bridge(config: BridgeConfig) -> None:
-    """Start-up order of ADR 0045 point 10; returns never, raises a BridgeError to stop."""
+def _ignore_ready(modules: Sequence[IoModule]) -> None:
+    """Default for callers that need no ready notification."""
+
+
+async def run_bridge(
+    config: BridgeConfig, on_ready: Callable[[Sequence[IoModule]], None] = _ignore_ready
+) -> None:
+    """Start-up order of ADR 0045 point 10; returns never, raises a BridgeError to stop.
+
+    `on_ready` is called once every slave is bound (ADR 0050 point 2).
+    """
     # urllib blocks; this runs once, before anything else needs the loop.
     mapping = await asyncio.to_thread(fetch_io_mapping, config.endpoint)
     mapping_id = require_valid_mapping(mapping)
@@ -177,6 +186,7 @@ async def run_bridge(config: BridgeConfig) -> None:
         for module in modules:
             await module.start()
         _log.info("Bridge ready: %d module(s) on %s.", len(modules), config.listen_host)
+        on_ready(mapping.modules)
         await Bridge(bus, modules).serve(background)
     finally:
         for module in modules:

@@ -8,6 +8,13 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Bridge, `--status-lines` and SIGTERM (ADR 0050 slice P1): with the flag the
+  bridge writes a `ready` JSON line on stdout once every Modbus slave is
+  bound, and an `exiting` line with a `kind` before a non-zero exit;
+  SIGTERM (the only signal the core sends) now stops the slaves, closes the
+  bus and exits 0; SIGINT still exits 130 with no line. `RestartRequiredError`
+  is split into `MappingChangedError` and `BusClosedError`. The lines are held
+  by the new shared fixture `packages/protocol/fixtures/bridge-status-lines.json`.
 - Example `examples/plc-cylinder` (ADR 0045 slice P4, ADR 0049 slice P7): a
   5/2 double solenoid valve, a double-acting cylinder and two limit switches
   on three vendor meshes (STEP ID1S0400125E, redistribution confirmed by the

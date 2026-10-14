@@ -12,7 +12,12 @@ from fake_core import FakeCore
 from fixture_files import io_cases
 from pantin_bridge.bridge import BridgeConfig, require_valid_mapping, run_bridge
 from pantin_bridge.core_endpoint import parse_core_endpoint
-from pantin_bridge.errors import CoreUnavailableError, MappingNotValidError, RestartRequiredError
+from pantin_bridge.errors import (
+    BusClosedError,
+    CoreUnavailableError,
+    MappingChangedError,
+    MappingNotValidError,
+)
 from pantin_bridge.io_mapping import decode_io_mapping
 from plc_scene import HOST, connect_plc, io_answer, with_bridge
 from support import free_port
@@ -31,7 +36,7 @@ def test_io_changed_stops_the_bridge_with_a_restart_message() -> None:
 
             await with_bridge(core, port, play)
 
-    with pytest.raises(RestartRequiredError, match="restart the bridge"):
+    with pytest.raises(MappingChangedError, match="restart the bridge"):
         asyncio.run(scenario())
 
 
@@ -48,7 +53,7 @@ def test_the_bus_closing_stops_the_bridge() -> None:
 
             await with_bridge(core, port, play)
 
-    with pytest.raises(RestartRequiredError, match="Restart the bridge"):
+    with pytest.raises(BusClosedError, match="Restart the bridge"):
         asyncio.run(scenario())
 
 

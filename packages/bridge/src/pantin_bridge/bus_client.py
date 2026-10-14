@@ -13,7 +13,7 @@ from websockets.exceptions import ConnectionClosed, InvalidHandshake, InvalidURI
 
 from pantin_bridge import bus_messages
 from pantin_bridge.bus_messages import CloseCode, ServerMessage, Welcome
-from pantin_bridge.errors import CoreUnavailableError, ProtocolError, RestartRequiredError
+from pantin_bridge.errors import BusClosedError, CoreUnavailableError, ProtocolError
 
 _log = logging.getLogger(__name__)
 
@@ -33,12 +33,12 @@ _CLOSE_MEANINGS: Final = {
 }
 
 
-def _closed_error(error: ConnectionClosed) -> RestartRequiredError:
+def _closed_error(error: ConnectionClosed) -> BusClosedError:
     close = error.rcvd
     if close is None:
-        return RestartRequiredError("The tag bus connection was lost. Restart the bridge.")
+        return BusClosedError("The tag bus connection was lost. Restart the bridge.")
     meaning = _CLOSE_MEANINGS.get(close.code, "the core closed the bus")
-    return RestartRequiredError(
+    return BusClosedError(
         f"The tag bus was closed ({close.code}: {meaning}; {close.reason or 'no reason'}). "
         "Restart the bridge."
     )
@@ -105,7 +105,7 @@ class BusClient:
         except asyncio.QueueFull:
             if not self.failed.done():
                 self.failed.set_exception(
-                    RestartRequiredError(
+                    BusClosedError(
                         "The core stopped reading the tag bus: too many writes are waiting. "
                         "Restart the bridge."
                     )
@@ -132,7 +132,7 @@ class BusClient:
                 yield bus_messages.decode_server_message(self._as_text(raw))
         except ConnectionClosed as error:
             raise _closed_error(error) from error
-        raise RestartRequiredError("The tag bus was closed by the core. Restart the bridge.")
+        raise BusClosedError("The tag bus was closed by the core. Restart the bridge.")
 
     async def close(self) -> None:
         await self._connection.close()

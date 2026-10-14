@@ -52,3 +52,7 @@ def io_cases(outcome: str) -> list[FixtureCase]:
 
 def message_of(case: FixtureCase) -> dict[str, object]:
     return _as_dict(json.loads(case.frame))
+
+
+def status_line_cases(outcome: str) -> list[FixtureCase]:
+    return cases(load_json("bridge-status-lines.json"), outcome)

@@ -21,5 +21,9 @@ class MappingNotValidError(BridgeError):
     """The Pantin has no valid I/O mapping: there is nothing to bridge."""
 
 
-class RestartRequiredError(BridgeError):
-    """The bridge ran on a mapping or a bus that is gone: stop and start it again."""
+class MappingChangedError(BridgeError):
+    """The Pantin's tags changed (io_changed): the mapping the bridge serves may be stale."""
+
+
+class BusClosedError(BridgeError):
+    """The tag bus is gone or unusable: the bridge cannot go on and must be started again."""

@@ -36,6 +36,7 @@ class FakeCore:
         self._connection: ServerConnection | None = None
         self._server: Server | None = None
         self.port = 0
+        self.bus_closed = asyncio.Event()
 
     async def __aenter__(self) -> FakeCore:
         self._server = await serve(
@@ -74,11 +75,14 @@ class FakeCore:
         await connection.send(
             json.dumps({"type": "welcome", "version": 1, "consoleId": "c-1", "clock": CLOCK})
         )
-        async for raw in connection:
-            message = json.loads(raw)
-            self.received.append(message)
-            if message["type"] == "subscribe":
-                await self.send(self._tags_message("snapshot", list(self.tags)))
+        try:
+            async for raw in connection:
+                message = json.loads(raw)
+                self.received.append(message)
+                if message["type"] == "subscribe":
+                    await self.send(self._tags_message("snapshot", list(self.tags)))
+        finally:
+            self.bus_closed.set()
 
     def _tags_message(self, kind: str, names: list[str]) -> dict[str, object]:
         items = [

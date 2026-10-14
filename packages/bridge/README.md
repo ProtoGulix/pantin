@@ -20,6 +20,21 @@ published; it runs from this checkout.
 - A connection from a source outside the private ranges and the allow list is
   closed at accept, before any read. At most 4 connections per module. A
   malformed frame header (protocol id, length) closes the connection.
+- `--status-lines` (ADR 0050) makes a supervising process able to follow the
+  bridge: JSON lines on stdout, each flushed and at most 4 KiB, everything
+  else stays on stderr. `{"event":"ready","listen":...,"modules":[{"key":...,"port":...}]}`
+  comes once every slave is bound. `{"event":"exiting","kind":...,"message":...}`
+  comes just before a non-zero exit; `kind` is `configuration`,
+  `core_unavailable`, `mapping_not_valid`, `mapping_changed`, `bus_closed`,
+  `protocol` or `unexpected`. The lines are held by
+  `packages/protocol/fixtures/bridge-status-lines.json`. Without the flag
+  nothing is written to stdout.
+- SIGTERM stops the slaves, closes the bus and exits 0, with no `exiting` line.
+  It works with or without the flag, and it is the only signal the core sends.
+  SIGINT (Ctrl-C in a terminal) exits 130 with no `exiting` line. Where the
+  event loop has no signal handlers (Windows), SIGTERM is not handled and the
+  bridge still runs. `python -I -m pantin_bridge` imports from
+  the venv, as the core will start it.
 - The bridge does not reconnect: when the bus closes or the mapping changes it
   exits non-zero and must be started again.
 - Modbus has no authentication. A PLC under test must never drive live outputs
