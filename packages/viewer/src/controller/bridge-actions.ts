@@ -5,7 +5,8 @@ import {
   BRIDGE_STOP_REQUEST,
   type BridgeDraft,
   type BridgeModel,
-  bridgeAfterStatus,
+  bridgeAfterAnswer,
+  bridgeAfterStreamStatus,
   bridgeStartRequest,
   bridgeWithDraft,
   bridgeWithNetworkError,
@@ -28,9 +29,9 @@ function setBridgeModel(store: ViewerStore, next: BridgeModel): void {
   store.renderPanel();
 }
 
-/** A bridge event of the stream, or the answer of a bridge request. */
+/** A bridge event of the stream. */
 export function receiveBridge(store: ViewerStore, status: BridgeStatus): void {
-  setBridgeModel(store, bridgeAfterStatus(store.bridgeModel, status));
+  setBridgeModel(store, bridgeAfterStreamStatus(store.bridgeModel, status));
 }
 
 // 400 is the core refusing the address or the allow list: its message belongs
@@ -58,7 +59,7 @@ async function sendBridgeRequest(store: ViewerStore, request: SetBridgeRequest):
   try {
     const status: BridgeStatus = await store.ports.api.setBridge(open.id, request);
     if (stillOpen()) {
-      receiveBridge(store, status);
+      setBridgeModel(store, bridgeAfterAnswer(store.bridgeModel, status));
     }
     return true;
   } catch (error) {

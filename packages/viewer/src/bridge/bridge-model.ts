@@ -25,6 +25,9 @@ export interface BridgeModel {
   readonly networkError: string | null;
   // A start or stop request is in flight.
   readonly pending: boolean;
+  // The stream sent a status while the request was in flight: it is newer than
+  // the request's answer, which then must not replace it.
+  readonly streamedWhilePending: boolean;
 }
 
 export const INITIAL_BRIDGE_MODEL: BridgeModel = {
@@ -32,6 +35,7 @@ export const INITIAL_BRIDGE_MODEL: BridgeModel = {
   draft: { mode: "local", listen: "", allowText: "" },
   networkError: null,
   pending: false,
+  streamedWhilePending: false,
 };
 
 function isLoopback(address: string): boolean {
@@ -65,7 +69,22 @@ export function bridgeWithDraft(model: BridgeModel, draft: BridgeDraft): BridgeM
 }
 
 export function bridgeWithPending(model: BridgeModel, pending: boolean): BridgeModel {
-  return { ...model, pending };
+  return { ...model, pending, streamedWhilePending: false };
+}
+
+/** A status of the stream: always the latest, and it outdates a request's answer. */
+export function bridgeAfterStreamStatus(model: BridgeModel, status: BridgeStatus): BridgeModel {
+  return { ...bridgeAfterStatus(model, status), streamedWhilePending: model.pending };
+}
+
+/**
+ * The answer of a start or stop request. The core writes the request's
+ * transition on the stream before answering, and every later change after, so
+ * a stream status received meanwhile is at least as new as the answer: a stop
+ * answered "stopping" after the stream said "stopped" would stick otherwise.
+ */
+export function bridgeAfterAnswer(model: BridgeModel, status: BridgeStatus): BridgeModel {
+  return model.streamedWhilePending ? model : bridgeAfterStatus(model, status);
 }
 
 export function bridgeWithNetworkError(

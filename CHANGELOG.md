@@ -252,6 +252,9 @@ All notable changes to Pantin. The format follows
 
 ### Fixed
 
+- Viewer: the bridge card no longer sticks on "Stopping…" after a stop (nor
+  goes back to "Starting…" after "Running"): a request's answer, older than a
+  status the stream already gave, no longer replaces it.
 - Viewer: STL bodies (binary and ASCII) now display. The mesh bytes were given
   to Babylon 9.28 as a raw buffer, which its STL plugin rejects ("Plugin does
   not support loading ArrayBufferView"); they are now given as a `File`. A body

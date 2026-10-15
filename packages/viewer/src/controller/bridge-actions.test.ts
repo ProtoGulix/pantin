@@ -63,6 +63,72 @@ describe("the bar's intents send the exact PUT bodies", () => {
   });
 });
 
+describe("a stream status received while a request is in flight", () => {
+  it("is not replaced by the request's older answer", async () => {
+    // The core publishes "stopped" on the stream, then answers the PUT "stopping".
+    const { store } = openStore(() => {
+      receiveBridge(store, bridgeStatusOf({ state: "stopped" }));
+      return bridgeStatusOf({ state: "stopping" });
+    });
+    receiveBridge(store, RUNNING_STATUS);
+    intentsOf(store).stopBridge();
+    await flush();
+    expect(store.bridgeModel.status?.state).toBe("stopped");
+    expect(store.bridgeModel.pending).toBe(false);
+  });
+
+  it("keeps a running bridge when the start is answered late", async () => {
+    const { store } = openStore(() => {
+      receiveBridge(store, RUNNING_STATUS);
+      return bridgeStatusOf({ state: "starting" });
+    });
+    receiveBridge(store, bridgeStatusOf());
+    intentsOf(store).startBridge();
+    await flush();
+    expect(store.bridgeModel.status?.state).toBe("running");
+  });
+});
+
+describe("the stream status received during a request, continued", () => {
+  it("forgets the stream status at the next request", async () => {
+    // The stop races with the stream; the start that follows does not.
+    const { store } = openStore((request) => {
+      if (request.running) {
+        return bridgeStatusOf({ state: "starting" });
+      }
+      receiveBridge(store, bridgeStatusOf({ state: "stopped" }));
+      return bridgeStatusOf({ state: "stopping" });
+    });
+    receiveBridge(store, RUNNING_STATUS);
+    intentsOf(store).stopBridge();
+    await flush();
+    intentsOf(store).startBridge();
+    await flush();
+    expect(store.bridgeModel.status?.state).toBe("starting");
+  });
+
+  it("shows a refusal even when the stream spoke meanwhile", async () => {
+    const refusal = new PantinApiError("api", "slot taken", "conflict", 409);
+    const { store } = openStore(() => {
+      receiveBridge(store, bridgeStatusOf());
+      return refusal;
+    });
+    receiveBridge(store, bridgeStatusOf());
+    intentsOf(store).startBridge();
+    await flush();
+    expect(store.state.message?.level).toBe("error");
+    expect(store.bridgeModel.pending).toBe(false);
+  });
+
+  it("lets the answer through when the stream said nothing meanwhile", async () => {
+    const { store } = openStore(() => bridgeStatusOf({ state: "stopping" }));
+    receiveBridge(store, RUNNING_STATUS);
+    intentsOf(store).stopBridge();
+    await flush();
+    expect(store.bridgeModel.status?.state).toBe("stopping");
+  });
+});
+
 describe("the core's refusals", () => {
   it("shows a 400 under the fields, not in the message line", async () => {
     const refusal = new PantinApiError("api", "listen must be private", "invalid_request", 400);
