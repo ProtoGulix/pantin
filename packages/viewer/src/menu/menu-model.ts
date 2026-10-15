@@ -68,6 +68,12 @@ const MENUS: readonly MenuDefinition[] = [
         (context) => context.editing && context.hasBodies && !context.busy,
       ),
       item("resetSimulation", "menubar.edit.reset", (context) => context.editing && !context.busy),
+      // Always allowed while editing: releasing a tag that is not forced changes nothing.
+      item(
+        "releaseAllTags",
+        "menubar.edit.releaseAll",
+        (context) => context.editing && !context.busy,
+      ),
       "separator",
       item(
         "rename",

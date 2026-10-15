@@ -30,17 +30,17 @@ function openStore() {
 describe("showTagRead", () => {
   it("redraws the panel when a mark flips, and not when every mark stays", () => {
     const { store, panels } = openStore();
-    store.showTagRead(new Map([[switchTag, 1]]), new Map());
+    store.showTagRead(new Map([[switchTag, 1]]), new Map(), new Set());
     expect(panels()).toBe(1);
-    store.showTagRead(new Map([[switchTag, 0.9]]), new Map());
+    store.showTagRead(new Map([[switchTag, 0.9]]), new Map(), new Set());
     expect(panels()).toBe(1);
-    store.showTagRead(new Map([[switchTag, 0]]), new Map());
+    store.showTagRead(new Map([[switchTag, 0]]), new Map(), new Set());
     expect(panels()).toBe(2);
   });
 
   it("does not show the marks of the previous Pantin after a switch", () => {
     const { store, lastPanel } = openStore();
-    store.showTagRead(new Map([[switchTag, 1]]), new Map());
+    store.showTagRead(new Map([[switchTag, 1]]), new Map(), new Set());
     // Same document, so the same tag names: only the reset can clear the mark.
     const other = { ...pantin, id: "other" };
     store.requestedPantinId = other.id;

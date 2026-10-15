@@ -42,6 +42,8 @@ type ToolIcon =
   | "gizmo-space"
   | "align"
   | "restore-placement"
+  | "lock"
+  | "unlock"
   | "edit"
   | "delete";
 
@@ -133,6 +135,9 @@ const PATHS: Readonly<Record<IconName, string>> = {
   align: "M2 2v12 M4.5 3.5h8v3h-8Z M4.5 9.5h5v3h-5Z",
   // A small trihedron: the axes the gizmo uses.
   "gizmo-space": "M3 13 8 8 M8 8V2.5 M8 8h5.5 M2 8.5l2-.5 M2.5 12l-.5-2",
+  // A closed padlock: this tag is forced. An open one: release it.
+  lock: "M3.5 7.5h9v6h-9Z M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5",
+  unlock: "M3.5 7.5h9v6h-9Z M5.5 7.5V5a2.5 2.5 0 0 1 4.8-1",
   edit: "M10.5 2.5l3 3L6 13H3v-3Z M9 4l3 3",
   delete: "M2.5 4h11 M6 4V2.5h4V4 M4 4l.7 9.5h6.6L12 4 M6.8 6.5v5 M9.2 6.5v5",
   // A disc: the stylesheet fills it when the sensor is on, and leaves a ring when it is off.

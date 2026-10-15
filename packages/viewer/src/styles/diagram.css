@@ -214,3 +214,20 @@
   text-anchor: middle;
   fill: var(--text);
 }
+
+/* An "F" beside the socket of a forced command; colour is never the only cue. */
+.diagram-forced {
+  display: none;
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--accent);
+}
+
+.diagram-port.is-forced .diagram-forced {
+  display: inline;
+}
+
+.diagram-port.is-forced .diagram-socket {
+  stroke: var(--accent);
+}

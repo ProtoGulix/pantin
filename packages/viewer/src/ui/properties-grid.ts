@@ -10,6 +10,7 @@ import {
 } from "../properties/property-rows.ts";
 import { committingTextInput, element, selectInput } from "./dom.ts";
 import { focusField } from "./focus.ts";
+import { forcedMark } from "./forced-mark.ts";
 import { groupHeader } from "./group-header.ts";
 import { renderInspectorIo } from "./inspector-io.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -150,6 +151,20 @@ function valueCell(
   });
 }
 
+function valueCellWithMark(
+  row: PropertyRow,
+  liveId: string | null,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLElement {
+  const cell = valueCell(row, liveId, translate, intents);
+  const mark = forcedMark(row, translate, intents);
+  if (mark !== null) {
+    cell.append(mark);
+  }
+  return cell;
+}
+
 function dataRow(
   group: PropertyGroup,
   row: PropertyRow,
@@ -166,7 +181,7 @@ function dataRow(
       text: row.label,
       attributes: { scope: "row" },
     }),
-    valueCell(row, liveId, translate, intents),
+    valueCellWithMark(row, liveId, translate, intents),
   ]);
   const { link } = row;
   if (link !== null) {

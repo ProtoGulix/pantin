@@ -77,6 +77,8 @@ export interface BridgeView {
   // A refusal from the core must not stay hidden in a closed part.
   networkForcedOpen: boolean;
   runningHint: string | null;
+  // The PLC's writes are ignored on forced tags: said while the bridge runs.
+  forcedWarning: { text: string; releaseLabel: string; releaseHint: string } | null;
   failure: BridgeFailureView | null;
 }
 
@@ -174,12 +176,21 @@ function noticeOf(status: BridgeStatus, kind: BridgeButtonKind, t: Translate): s
   return status.externalBridgeConnected && kind !== "stop" ? t("bridge.external") : null;
 }
 
+function forcedWarningOf(forcedCount: number, t: Translate): BridgeView["forcedWarning"] {
+  return {
+    text: t("bridge.forced", { count: forcedCount }),
+    releaseLabel: t("forced.releaseAll", { count: forcedCount }),
+    releaseHint: t("forced.releaseAllHint"),
+  };
+}
+
 export function buildBridgeView(
   model: BridgeModel,
   t: Translate,
   layout: CentralLayout,
   // Null while the mapping is not loaded (or could not be read): no module is claimed then.
   mappingModules: readonly BridgeMappingModule[] | null = [],
+  forcedCount = 0,
 ): BridgeView | null {
   const { status, draft } = model;
   if (status === null) {
@@ -220,6 +231,8 @@ export function buildBridgeView(
     networkTitle: t(draft.mode === "lan" ? "bridge.network.titleLan" : "bridge.network.titleLocal"),
     networkForcedOpen: model.networkError !== null,
     runningHint: status.state === "running" ? t("bridge.running.hint") : null,
+    forcedWarning:
+      status.state === "running" && forcedCount > 0 ? forcedWarningOf(forcedCount, t) : null,
     failure: failureViewOf(status, t),
   };
 }
@@ -234,7 +247,11 @@ export function bridgeRedrawKey(view: BridgeView): string {
 }
 
 /** The block of the open Pantin; none while no Pantin is open. */
-export function bridgeViewOf(model: BridgeModel, state: ViewerState): BridgeView | null {
+export function bridgeViewOf(
+  model: BridgeModel,
+  state: ViewerState,
+  forcedCount = 0,
+): BridgeView | null {
   return state.openPantin === null
     ? null
     : buildBridgeView(
@@ -242,5 +259,6 @@ export function bridgeViewOf(model: BridgeModel, state: ViewerState): BridgeView
         createTranslator(state.language),
         state.centralLayout,
         state.io.mapping?.modules ?? null,
+        forcedCount,
       );
 }

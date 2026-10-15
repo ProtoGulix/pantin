@@ -230,6 +230,13 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Forced tags are visible in the viewer and can be released (ADR 0045
+  point 5): a "forced" badge with a Release button in the inspector, an "F"
+  mark on the diagram's socket (Release from its keyboard menu), "Release all
+  (n)" in the transport bar and the Edit menu, and a warning on the bridge
+  card while the bridge runs. Every command click forces its tag, and the
+  PLC's writes to a forced tag are ignored. The emitter's "Create a product"
+  now releases its spawn tag after the pulse.
 - The inspector's I/O part is a collapsible "I/O" section of the property
   grid, like the others: one row per tag with its label, the module
   connection dot, its module, zone and address, and a button to open it in

@@ -9,6 +9,7 @@ import { toggleConsole } from "./console-actions.ts";
 import { deleteConveyor, resetSimulation } from "./conveyor-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
+import { releaseAllTags } from "./drive-commands.ts";
 import { toggleGizmo, toggleGizmoSpace } from "./gizmo-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import {
@@ -119,6 +120,23 @@ function runPositioningCommand(
   }
 }
 
+function runSelectionCommand(store: ViewerStore, command: "rename" | "delete"): void {
+  if (command === "rename") {
+    renameSelection(store);
+  } else {
+    deleteSelection(store);
+  }
+}
+
+// With nothing open, "Ouvrir…" is the list of the welcome dialog.
+function openFromMenu(store: ViewerStore): void {
+  if (store.state.openPantin === null) {
+    store.update(withWelcomeShown(store.state, "all"));
+  } else {
+    requestClose(store);
+  }
+}
+
 export function runMenuCommand(
   store: ViewerStore,
   command: MenuCommand,
@@ -129,12 +147,7 @@ export function runMenuCommand(
       store.update(withWelcomeShown(store.state));
       return;
     case "open":
-      // With nothing open, "Ouvrir…" is the list of the welcome dialog.
-      if (store.state.openPantin === null) {
-        store.update(withWelcomeShown(store.state, "all"));
-      } else {
-        requestClose(store);
-      }
+      openFromMenu(store);
       return;
     case "close":
       requestClose(store);
@@ -156,14 +169,15 @@ export function runMenuCommand(
     case "newJoint":
       openJointForm(store);
       return;
-    case "rename":
-      renameSelection(store);
-      return;
     case "resetSimulation":
       void resetSimulation(store);
       return;
+    case "releaseAllTags":
+      void releaseAllTags(store);
+      return;
+    case "rename":
     case "delete":
-      deleteSelection(store);
+      runSelectionCommand(store, command);
       return;
     default:
       runViewCommand(store, command, changeLanguage);

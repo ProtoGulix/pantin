@@ -13,6 +13,7 @@ import { svgElement } from "./svg-dom.ts";
 const PADDING = 8;
 const SOCKET_RADIUS = 4;
 const BADGE_HEIGHT = 13;
+const FORCED_MARK_OFFSET = 9;
 const BADGE_CHARACTER_LIMIT = 16;
 // Baseline of a warning under the box, in the gap before the next row.
 const WARNING_RISE = 10;
@@ -39,6 +40,8 @@ interface DrawnPort {
   baseLabel: string;
   // What a press does to a command tag; null for a port and a read only tag.
   forcing: "toggle" | "edit" | null;
+  // The command tag the socket stands for, whose forced state it shows; null for the others.
+  tagName: string | null;
 }
 
 function text(className: string, x: number, y: number, content: string): SVGElement {
@@ -121,11 +124,38 @@ function drawSocket(node: DiagramNode, socket: Socket, t: Translate): DrawnPort 
   const baseLabel = socketLabel(socket, t, node);
   if (socket.role === "feedback") {
     const attributes = { class: "diagram-port", "aria-hidden": "true" };
-    return { group: svgElement("g", attributes, [dot, ...label]), baseLabel, forcing };
+    return {
+      group: svgElement("g", attributes, [dot, ...label]),
+      baseLabel,
+      forcing,
+      tagName: null,
+    };
   }
   const attributes = focusAttributes(node, socket, baseLabel, forcing);
-  const group = svgElement("g", attributes, [hitArea(node, socket), dot, ...label]);
-  return { group, baseLabel, forcing };
+  const mark = forcedMark(socket, t);
+  const group = svgElement("g", attributes, [hitArea(node, socket), dot, ...label, ...mark]);
+  return {
+    group,
+    baseLabel,
+    forcing,
+    tagName: mark.length === 0 ? null : (socket.tagName ?? null),
+  };
+}
+
+// An "F" beside a command socket, shown while its tag is forced (ADR 0045 point 5):
+// hidden by the stylesheet until the group is marked "is-forced", with a tooltip
+// that names the tag; the port's description says it in words.
+function forcedMark(socket: Socket, t: Translate): SVGElement[] {
+  if (socket.role !== "command" || socket.tagName === undefined) {
+    return [];
+  }
+  const outward = socket.side === "left" ? -FORCED_MARK_OFFSET : FORCED_MARK_OFFSET;
+  return [
+    svgElement("text", { class: "diagram-forced", x: socket.x + outward, y: socket.y + 3.5 }, [
+      svgElement("title", {}, [t("diagram.forcedTitle", { tag: socket.tagName })]),
+      "F",
+    ]),
+  ];
 }
 
 function badgeParts(node: DiagramNode, t: Translate): SVGElement[] {

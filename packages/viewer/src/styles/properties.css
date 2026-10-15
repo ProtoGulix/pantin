@@ -168,3 +168,26 @@
   font-style: italic;
   color: var(--accent);
 }
+
+/* A tag forced from the viewer (ADR 0045 point 5): the word says it, the colour only helps. */
+.forced-mark {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.forced-mark[hidden] {
+  display: none;
+}
+
+.forced-mark__badge {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  padding: 0 5px;
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+}

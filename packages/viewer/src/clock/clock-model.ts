@@ -54,6 +54,8 @@ export interface ClockView {
   canReset: boolean;
   resetLabel: string;
   resetHint: string;
+  // "Relâcher tout (n)": shown only while n > 0 tags are forced.
+  releaseAll: { label: string; hint: string } | null;
   timeLabel: string;
   timeText: string;
   stepLabel: string;
@@ -91,6 +93,7 @@ export function buildClockView(
   visible: boolean,
   language: Language,
   t: Translate,
+  forcedCount = 0,
 ): ClockView {
   const { state } = model;
   const running = state?.running ?? false;
@@ -111,6 +114,13 @@ export function buildClockView(
     canReset: state !== null,
     resetLabel: t("clock.reset"),
     resetHint: t("clock.resetHint"),
+    releaseAll:
+      forcedCount > 0
+        ? {
+            label: t("forced.releaseAll", { count: forcedCount }),
+            hint: t("forced.releaseAllHint"),
+          }
+        : null,
     timeLabel: t("clock.timeLabel"),
     timeText:
       state === null

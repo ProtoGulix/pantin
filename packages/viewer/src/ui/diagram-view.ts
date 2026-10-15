@@ -15,7 +15,13 @@ import { listenToSocketClicks, submitForcedValue } from "./diagram-forcing.ts";
 import { unhandledKeyInDiagram } from "./diagram-key-policy.ts";
 import { listenToDiagramKeys } from "./diagram-keys.ts";
 import { LinkMenu } from "./diagram-link-menu.ts";
-import { applyChanges, applyForcedValues, applyLitText, applyLive } from "./diagram-live-apply.ts";
+import {
+  applyChanges,
+  applyForcedMarks,
+  applyForcedValues,
+  applyLitText,
+  applyLive,
+} from "./diagram-live-apply.ts";
 import { RovingFocus } from "./diagram-roving.ts";
 import { ValueInput } from "./diagram-value-input.ts";
 import { element } from "./dom.ts";
@@ -49,6 +55,7 @@ export class DiagramView {
   private live: LiveState = NO_LIVE_STATE;
   private litStates: ReadonlyMap<string, LitState> = new Map();
   private tags: ReadonlyMap<string, number> = new Map();
+  private forced: ReadonlySet<string> = new Set();
 
   // The diagram goes under `before` (the welcome overlay); central-area.ts
   // places it over the canvas, or under it.
@@ -93,7 +100,11 @@ export class DiagramView {
   }
 
   /** Tag values and port states from the core: lights sockets and edges, names diagnostics. */
-  showLive(tags: ReadonlyMap<string, number>, runtime: ReadonlyMap<string, DriveRuntime>): void {
+  showLive(
+    tags: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+    forcedTags: ReadonlySet<string>,
+  ): void {
     const { model, drawn } = this;
     if (model === null || drawn === null || this.host.hidden) {
       return;
@@ -102,9 +113,16 @@ export class DiagramView {
     const nextStates = socketLitStates(model.diagram, next);
     applyLive(drawn, model.translate, this.live, next);
     applyLitText(drawn, model.translate, this.litStates, nextStates);
-    const forced = { diagram: model.diagram, document: model.document, t: model.translate };
-    applyForcedValues(drawn, forced, this.tags, tags);
+    const context = {
+      diagram: model.diagram,
+      document: model.document,
+      t: model.translate,
+      forced: forcedTags,
+    };
+    applyForcedValues(drawn, context, this.tags, tags);
+    applyForcedMarks(drawn, model.translate, this.forced, forcedTags);
     this.tags = tags;
+    this.forced = forcedTags;
     this.live = next;
     this.litStates = nextStates;
   }
@@ -122,6 +140,7 @@ export class DiagramView {
     this.live = NO_LIVE_STATE;
     this.litStates = new Map();
     this.tags = new Map();
+    this.forced = new Set();
     this.emptyText.textContent = model.translate("diagram.empty");
     const help = element("p", {
       className: "visually-hidden",
@@ -152,6 +171,7 @@ export class DiagramView {
     listenToSocketClicks(drawn.svg, { ...context, openValueInput });
     listenToDiagramKeys(drawn.svg, {
       ...context,
+      forcedTags: () => this.forced,
       focusKey: (key) => this.roving.focus(key),
       openValueInput,
       selectedEdgeId: () => this.edgeSelection.id,

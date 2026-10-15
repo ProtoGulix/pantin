@@ -86,6 +86,9 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   toggleBitTag(tagName: string): void;
   // Typed in mm or degrees (per second).
   writeFloatTag(tagName: string, text: string): void;
+  // A write from the viewer forces its tag; these give it back to the PLC.
+  releaseTag(tagName: string): void;
+  releaseAllTags(): void;
 
   // The actuators of the same panel (ADR 0028): the feed is a drive and its
   // output port for each input port of the type.

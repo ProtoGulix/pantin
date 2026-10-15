@@ -40,3 +40,7 @@
   align-items: center;
   color: var(--accent);
 }
+
+.transport__button[hidden] {
+  display: none;
+}

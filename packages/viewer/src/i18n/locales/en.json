@@ -735,5 +735,17 @@
   "prompt.close.bridgeRunning": "The PLC bridge keeps running when the Pantin is closed.",
   "prompt.close.stopBridge": "Stop the bridge and close",
   "prompt.close.alsoStopBridge": "Also stop the bridge",
-  "prompt.close.keepBridge": "Close without stopping the bridge"
+  "prompt.close.keepBridge": "Close without stopping the bridge",
+  "forced.badge": "forced",
+  "forced.badgeHint": "Forced from the viewer: the PLC cannot write this tag until it is released",
+  "forced.release": "Release",
+  "forced.releaseTitle": "Release tag {tag}",
+  "forced.releaseTag": "Release {tag}",
+  "forced.releaseAll": "Release all ({count})",
+  "forced.releaseAllHint": "Tags forced from the viewer ignore the PLC's writes; releasing them gives the PLC control back",
+  "menubar.edit.releaseAll": "Release all forced tags",
+  "diagram.forcedTitle": "Forced: {tag}",
+  "diagram.menu.release": "Release",
+  "diagram.menu.releaseTitle": "Forced tag",
+  "bridge.forced": "{count} forced tag(s): the PLC cannot write them"
 }

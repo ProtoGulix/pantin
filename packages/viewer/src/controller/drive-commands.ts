@@ -3,6 +3,7 @@ import { forcedTagUnit } from "../drives/drive-tags.ts";
 import { parseNumber } from "../joints/joint-form.ts";
 import { runtimeByDriveId } from "../panel/drive-diagnostics.ts";
 import { coordinateFromDisplay } from "../units.ts";
+import { forcedTagNames } from "./tag-read.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Commanding drives from the panel as a PLC would, and showing what the core
@@ -47,7 +48,31 @@ async function writeTag(store: ViewerStore, name: string, value: number): Promis
       () => store.ports.api.writeTag(open.id, name, value),
       (current) => current,
     );
-    await refreshTagValues(store);
+    await refreshTagValues(store, true);
+  }
+}
+
+/** Gives a forced tag back to the PLC (ADR 0045 point 5). */
+export async function releaseTag(store: ViewerStore, name: string): Promise<void> {
+  const open = store.state.openPantin;
+  if (open !== null) {
+    await store.run(
+      () => store.ports.api.releaseTag(open.id, name),
+      (current) => current,
+    );
+    await refreshTagValues(store, true);
+  }
+}
+
+/** Gives every forced tag of the open Pantin back to the PLC. */
+export async function releaseAllTags(store: ViewerStore): Promise<void> {
+  const open = store.state.openPantin;
+  if (open !== null) {
+    await store.run(
+      () => store.ports.api.releaseAllTags(open.id),
+      (current) => current,
+    );
+    await refreshTagValues(store, true);
   }
 }
 
@@ -73,9 +98,13 @@ export async function writeFloatTag(store: ViewerStore, name: string, text: stri
  * nothing on screen: the next one retries, and a core that went away is
  * already reported by the pose stream (message.poseClosed).
  */
-export async function refreshTagValues(store: ViewerStore): Promise<void> {
+export async function refreshTagValues(store: ViewerStore, always = false): Promise<void> {
   const open = store.state.openPantin;
+  // `always`: right after a write or a release, so that the forced count is up to date.
+  // A forced tag keeps the read going, so that a release made elsewhere is seen.
   const shown =
+    always ||
+    store.forcedTags.size > 0 ||
     store.state.inspectorOpen ||
     showsDiagram(store.state.centralLayout) ||
     (open?.document.sensors.length ?? 0) > 0 ||
@@ -91,6 +120,7 @@ export async function refreshTagValues(store: ViewerStore): Promise<void> {
     store.showTagRead(
       new Map(answer.tags.map((tag) => [tag.name, tag.value])),
       runtimeByDriveId(answer.drives),
+      forcedTagNames(answer.tags),
     );
   }
 }

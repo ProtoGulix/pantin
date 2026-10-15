@@ -17,6 +17,7 @@ export type MenuCommand =
   | "close"
   | "newJoint"
   | "resetSimulation"
+  | "releaseAllTags"
   | "rename"
   | "delete"
   | "frameAll"

@@ -125,6 +125,9 @@ export async function deleteConveyor(
  * Writes 0, 1, then 0 to the emitter's spawn tag, as a PLC pulse would (ADR 0043
  * point 5). The leading 0 makes the next click spawn even when the closing 0 of
  * the last one failed and left the tag at 1; writing 0 over 0 does nothing.
+ * The tag is released afterwards, so the PLC can command the emitter again. It
+ * then takes the last value the PLC wrote: a PLC holding the spawn tag at 1
+ * gets a second product. A force the user had set on this tag is dropped too.
  */
 export async function spawnProduct(store: ViewerStore, emitterId: string): Promise<void> {
   const open = store.state.openPantin;
@@ -135,9 +138,14 @@ export async function spawnProduct(store: ViewerStore, emitterId: string): Promi
   const tag = tagName(emitter.assembly, emitter.tagKey, SPAWN_MEMBER);
   await store.run(
     async () => {
-      await store.ports.api.writeTag(open.id, tag, 0);
-      await store.ports.api.writeTag(open.id, tag, 1);
-      await store.ports.api.writeTag(open.id, tag, 0);
+      try {
+        await store.ports.api.writeTag(open.id, tag, 0);
+        await store.ports.api.writeTag(open.id, tag, 1);
+        await store.ports.api.writeTag(open.id, tag, 0);
+      } finally {
+        // Even after a failed write: a half-done pulse must not keep the tag forced.
+        await store.ports.api.releaseTag(open.id, tag);
+      }
     },
     (current) => ({
       ...current,
@@ -160,6 +168,6 @@ export async function resetSimulation(store: ViewerStore): Promise<void> {
     }),
   );
   if (reset !== undefined) {
-    await Promise.all([refreshTagValues(store), refreshFaults(store)]);
+    await Promise.all([refreshTagValues(store, true), refreshFaults(store)]);
   }
 }

@@ -170,3 +170,19 @@ describe("the reset button", () => {
     expect(viewOf(INITIAL_CLOCK_MODEL, "fr").resetLabel).toBe("Remise à zéro");
   });
 });
+
+describe("the release all button", () => {
+  const model = clockAfterClockState(INITIAL_CLOCK_MODEL, stateOf());
+  const build = (count: number, language: "fr" | "en") =>
+    buildClockView(model, true, language, createTranslator(language), count).releaseAll;
+
+  it("is absent while no tag is forced", () => {
+    expect(build(0, "fr")).toBeNull();
+  });
+
+  it("counts the forced tags and says why it matters, in both languages", () => {
+    expect(build(3, "fr")?.label).toBe("Relâcher tout (3)");
+    expect(build(3, "en")?.label).toBe("Release all (3)");
+    expect(build(3, "en")?.hint).toContain("PLC");
+  });
+});

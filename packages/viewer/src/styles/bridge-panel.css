@@ -172,3 +172,10 @@
 .bridge-panel__hint {
   font-size: 11px;
 }
+
+.bridge-panel__forced {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

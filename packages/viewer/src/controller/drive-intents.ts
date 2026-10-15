@@ -10,6 +10,8 @@ import {
   toggleInspector,
 } from "./drive-actions.ts";
 import {
+  releaseAllTags,
+  releaseTag,
   setDriveUnresponsive,
   setJointJammed,
   toggleBitTag,
@@ -33,6 +35,8 @@ export function driveIntents(store: ViewerStore) {
       void setDriveUnresponsive(store, driveId, on),
     setJointJammed: (jointId: string, on: boolean) => void setJointJammed(store, jointId, on),
     toggleBitTag: (tagName: string) => void toggleBitTag(store, tagName),
+    releaseTag: (tagName: string) => void releaseTag(store, tagName),
+    releaseAllTags: () => void releaseAllTags(store),
     writeFloatTag: (tagName: string, text: string) => void writeFloatTag(store, tagName, text),
   };
 }

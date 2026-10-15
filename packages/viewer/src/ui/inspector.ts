@@ -107,9 +107,13 @@ export class Inspector {
   }
 
   /** SI values from the core, shown in mm or degrees; bits as On or Off. */
-  showLive(tags: ReadonlyMap<string, number>, runtime: ReadonlyMap<string, DriveRuntime>): void {
+  showLive(
+    tags: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+    forced: ReadonlySet<string>,
+  ): void {
     if (this.translate !== null) {
-      showInspectorLive(this.root, this.live, tags, runtime, this.translate);
+      showInspectorLive(this.root, this.live, tags, runtime, forced, this.translate);
     }
   }
 }

@@ -61,11 +61,13 @@ interface Screen {
   showInspectorLive(
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
+    forced: ReadonlySet<string>,
   ): void;
   renderDiagram(model: DiagramModel, intents: PanelIntents): void;
   showDiagramLive(
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
+    forced: ReadonlySet<string>,
   ): void;
   showConsoleLive(view: ConsoleView | null): void;
   showClock(view: ClockView, intents: PanelIntents): void;
@@ -144,9 +146,9 @@ function createScreen(): Screen {
       inspector.render(view.inspector, view.translate, intents);
     },
     showJointPositions: (positions) => inspector.showJointPositions(positions),
-    showInspectorLive: (tags, runtime) => inspector.showLive(tags, runtime),
+    showInspectorLive: (tags, runtime, forced) => inspector.showLive(tags, runtime, forced),
     renderDiagram: (model, intents) => diagram.render(model, intents),
-    showDiagramLive: (tags, runtime) => diagram.showLive(tags, runtime),
+    showDiagramLive: (tags, runtime, forced) => diagram.showLive(tags, runtime, forced),
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),
     showBridge: (view, intents) => sidePanel.showBridge(view, intents),
@@ -218,9 +220,9 @@ function createPorts(screen: Screen, api: PantinApiClient, late: LateBindings): 
     api,
     renderPanel: (view) => withIntents((intents) => screen.render(view, intents)),
     showJointPositions: (positions) => screen.showJointPositions(positions),
-    showInspectorLive: (tags, runtime) => screen.showInspectorLive(tags, runtime),
+    showInspectorLive: (tags, runtime, forced) => screen.showInspectorLive(tags, runtime, forced),
     renderDiagram: (model) => withIntents((intents) => screen.renderDiagram(model, intents)),
-    showDiagramLive: (tags, runtime) => screen.showDiagramLive(tags, runtime),
+    showDiagramLive: (tags, runtime, forced) => screen.showDiagramLive(tags, runtime, forced),
     showConsoleLive: (view) => screen.showConsoleLive(view),
     showClock: (view) => withIntents((intents) => screen.showClock(view, intents)),
     showBridge: (view) => withIntents((intents) => screen.showBridge(view, intents)),

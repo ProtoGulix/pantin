@@ -735,5 +735,17 @@
   "prompt.close.bridgeRunning": "Le pont automate continue de tourner quand le Pantin est fermé.",
   "prompt.close.stopBridge": "Arrêter le pont et fermer",
   "prompt.close.alsoStopBridge": "Arrêter aussi le pont",
-  "prompt.close.keepBridge": "Fermer sans arrêter le pont"
+  "prompt.close.keepBridge": "Fermer sans arrêter le pont",
+  "forced.badge": "forcé",
+  "forced.badgeHint": "Forcé depuis le viewer : l'automate ne peut pas écrire ce tag tant qu'il n'est pas relâché",
+  "forced.release": "Relâcher",
+  "forced.releaseTitle": "Relâcher le tag {tag}",
+  "forced.releaseTag": "Relâcher {tag}",
+  "forced.releaseAll": "Relâcher tout ({count})",
+  "forced.releaseAllHint": "Les tags forcés depuis le viewer ignorent les écritures de l'automate ; les relâcher lui rend la main",
+  "menubar.edit.releaseAll": "Relâcher tous les tags forcés",
+  "diagram.forcedTitle": "Forcé : {tag}",
+  "diagram.menu.release": "Relâcher",
+  "diagram.menu.releaseTitle": "Tag forcé",
+  "bridge.forced": "{count} tag(s) forcé(s) : l'automate ne peut pas les écrire"
 }

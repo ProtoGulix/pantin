@@ -3,12 +3,14 @@ import { forcedTagUnitLabel } from "../drives/drive-tags.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import {
   commandSocketName,
+  forcedCommandTag,
   forcedDisplayNumber,
   forcedValueText,
   parseForcedInput,
   type SocketPress,
   socketAction,
   socketOf,
+  withForcedWord,
 } from "./diagram-forcing.ts";
 import type { Socket } from "./diagram-types.ts";
 import { wiringDiagram, wiringDocument } from "./diagram-wiring-fixtures.ts";
@@ -116,5 +118,31 @@ describe("the current value in the input", () => {
   it("is a plain number in display units, to start the field with", () => {
     expect(forcedDisplayNumber(0.04, "metre")).toBe("40");
     expect(forcedDisplayNumber(60, null)).toBe("60");
+  });
+});
+
+describe("forcedCommandTag", () => {
+  const forced = new Set(["a.v1.coil_14", "a.sv.count"]);
+
+  it("gives the tag of a command socket while it is forced", () => {
+    expect(forcedCommandTag(bit, forced)).toBe("a.v1.coil_14");
+    expect(forcedCommandTag(number, forced)).toBeNull();
+  });
+
+  it("gives nothing for a port or a read only tag", () => {
+    expect([output, input, feedback].map((socket) => forcedCommandTag(socket, forced))).toEqual([
+      null,
+      null,
+      null,
+    ]);
+  });
+});
+
+describe("withForcedWord", () => {
+  it("adds the word once and removes it again", () => {
+    expect(withForcedWord("Bobine 14", true, "forcé")).toBe("Bobine 14, forcé");
+    expect(withForcedWord("Bobine 14, forcé", true, "forcé")).toBe("Bobine 14, forcé");
+    expect(withForcedWord("Bobine 14, forcé", false, "forcé")).toBe("Bobine 14");
+    expect(withForcedWord("Bobine 14", false, "forcé")).toBe("Bobine 14");
   });
 });

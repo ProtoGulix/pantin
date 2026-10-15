@@ -1,6 +1,6 @@
 import { type BridgeModuleLine, type BridgeView, bridgeRedrawKey } from "../bridge/bridge-view.ts";
 import { moduleConnectionTone } from "../bridge/module-connection.ts";
-import { committingTextInput, element, iconButton, selectInput } from "./dom.ts";
+import { button, committingTextInput, element, iconButton, selectInput } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import type { IconName } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -122,6 +122,21 @@ function modulesBlock(view: BridgeView): HTMLElement {
   return element("ul", { className: "bridge-panel__modules" }, view.moduleLines.map(moduleLine));
 }
 
+// A forced tag ignores the PLC's writes: said here, where the PLC is connected.
+function forcedWarningBlock(view: BridgeView, intents: PanelIntents): HTMLElement | null {
+  const { forcedWarning } = view;
+  if (forcedWarning === null) {
+    return null;
+  }
+  const release = button(forcedWarning.releaseLabel, "button", () => intents.releaseAllTags());
+  release.title = forcedWarning.releaseHint;
+  release.setAttribute("data-focus-key", "bridge-release-all");
+  return element("div", { className: "bridge-panel__forced" }, [
+    element("p", { className: "bridge-panel__hint", text: forcedWarning.text }),
+    release,
+  ]);
+}
+
 function failureBlock(view: BridgeView, onToggle: (open: boolean) => void, logOpen: boolean) {
   const { failure } = view;
   if (failure === null) {
@@ -218,6 +233,7 @@ export class BridgePanel {
       view.runningHint === null
         ? null
         : element("p", { className: "bridge-panel__hint", text: view.runningHint }),
+      forcedWarningBlock(view, intents),
       failureBlock(view, (open) => (this.logOpen = open), this.logOpen),
     ];
     return rows.filter((row): row is HTMLElement => row !== null);

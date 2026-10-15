@@ -36,7 +36,6 @@ import { describeFailure } from "../messages.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
-import { stateMarksKey } from "../tree/device-state.ts";
 import { buildPanelView, type PanelView } from "../view-model.ts";
 import {
   initialViewerState,
@@ -46,6 +45,7 @@ import {
   withRequestStarted,
 } from "../viewer-state.ts";
 import { reloadIoAfterDocumentChange } from "./io-load.ts";
+import { showTagRead } from "./tag-read.ts";
 import { showViewportState } from "./viewport-sync.ts";
 
 // Holds the only mutable state of the viewer and pushes every change to the
@@ -63,6 +63,7 @@ export interface StorePorts {
   showInspectorLive(
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
+    forced: ReadonlySet<string>,
   ): void;
   // The chain diagram (ADR 0029), redrawn from the model; the live state
   // (tags and drive runtime) reaches it without a redraw.
@@ -70,6 +71,7 @@ export interface StorePorts {
   showDiagramLive(
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
+    forced: ReadonlySet<string>,
   ): void;
   // The console panel and its counter, written in place (ADR 0031 point 4).
   showConsoleLive(view: ConsoleView | null): void;
@@ -104,6 +106,8 @@ export class ViewerStore {
   jointPositions: ReadonlyMap<string, number> = new Map();
   // Latest value of every tag (SI), read while the inspector is open.
   tagValues: ReadonlyMap<string, number> = new Map();
+  // Tags a client wrote and nobody released (ADR 0045 point 5): a PLC cannot write them.
+  forcedTags: ReadonlySet<string> = new Set();
   // One tag read at a time: a slow core must not pile requests up.
   readingTags = false;
   // The dragged placements of the gizmo, one request in flight (ADR 0034 point 4).
@@ -162,13 +166,13 @@ export class ViewerStore {
     // After followPoses: the tree's marks must not show another Pantin's tag values.
     this.renderPanel();
     this.ports.showJointPositions(this.jointPositions);
-    this.ports.showInspectorLive(this.tagValues, this.driveRuntime);
+    this.ports.showInspectorLive(this.tagValues, this.driveRuntime, this.forcedTags);
     // After followPoses: a Pantin just opened has no tag values yet.
     this.ports.renderDiagram(this.buildDiagramModel(next));
-    this.ports.showDiagramLive(this.tagValues, this.driveRuntime);
+    this.ports.showDiagramLive(this.tagValues, this.driveRuntime, this.forcedTags);
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());
-    this.ports.showBridge(bridgeViewOf(this.bridgeModel, next));
+    this.ports.showBridge(bridgeViewOf(this.bridgeModel, next, this.forcedTags.size));
     showViewportState(viewport, next, this.chainLinksOf);
     // Last, after every draw: the read it starts re-enters update(), and a
     // draw after that would show this pass's stale state over the newer one.
@@ -191,6 +195,7 @@ export class ViewerStore {
     this.jointPositions = new Map();
     // Another Pantin: the previous one's tag values must not flip a bit here.
     this.tagValues = new Map();
+    this.forcedTags = new Set();
     this.driveRuntime = new Map();
     this.clockModel = INITIAL_CLOCK_MODEL;
     this.bridgeModel = INITIAL_BRIDGE_MODEL;
@@ -232,6 +237,7 @@ export class ViewerStore {
       state.openPantin !== null,
       state.language,
       createTranslator(state.language),
+      this.forcedTags.size,
     );
   }
 
@@ -268,23 +274,15 @@ export class ViewerStore {
   }
 
   /**
-   * One tag read from the core: tag values and drive runtime reach the
-   * inspector, the 3D markers and the diagram without a redraw, the diagram once.
+   * One tag read from the core: tag values, forced tags and drive runtime reach
+   * the inspector, the 3D markers and the diagram without a redraw.
    */
-  showTagRead(values: ReadonlyMap<string, number>, runtime: ReadonlyMap<string, DriveRuntime>) {
-    const document = this.state.openPantin?.document;
-    const marksChanged =
-      document !== undefined &&
-      stateMarksKey(document, this.tagValues) !== stateMarksKey(document, values);
-    this.tagValues = values;
-    this.driveRuntime = runtime;
-    // The tree's marks are part of the panel: redrawn when one flips, not at every poll.
-    if (marksChanged) {
-      this.renderPanel();
-    }
-    this.ports.showInspectorLive(values, runtime);
-    this.ports.viewport().showTagStates(values);
-    this.ports.showDiagramLive(values, runtime);
+  showTagRead(
+    values: ReadonlyMap<string, number>,
+    runtime: ReadonlyMap<string, DriveRuntime>,
+    forced: ReadonlySet<string>,
+  ) {
+    showTagRead(this, values, runtime, forced);
   }
 
   applyIfStillRequested(current: ViewerState, response: PantinResponse): ViewerState {

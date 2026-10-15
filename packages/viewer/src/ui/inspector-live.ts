@@ -4,6 +4,7 @@ import { liveText } from "../inspector/live-text.ts";
 import { type DiagnosticLine, nextDiagnosticUpdate } from "../panel/drive-diagnostics.ts";
 import type { LiveSource } from "../properties/property-rows.ts";
 import { element } from "./dom.ts";
+import { showForcedMarks } from "./forced-mark.ts";
 
 // Writes the latest tag read into the inspector's live cells, in place: the
 // panel is redrawn on changes only, and typing in it must never be disturbed.
@@ -57,8 +58,10 @@ export function showInspectorLive(
   sources: ReadonlyMap<string, LiveSource>,
   tags: ReadonlyMap<string, number>,
   runtime: ReadonlyMap<string, DriveRuntime>,
+  forced: ReadonlySet<string>,
   t: Translate,
 ): void {
+  showForcedMarks(root, forced);
   for (const target of root.querySelectorAll("[data-live-id]")) {
     const source = sources.get(target.getAttribute("data-live-id") ?? "");
     if (source === undefined) {

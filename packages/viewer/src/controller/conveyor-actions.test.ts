@@ -177,13 +177,22 @@ describe("Créer un produit", () => {
       writes.push([name, value]);
       return { name, type: "bit" as const, direction: "command" as const, value, forced: false };
     });
-    const store = openStore({ writeTag });
+    const releaseTag = vi.fn(async (_id: string, name: string) => ({
+      name,
+      type: "bit" as const,
+      direction: "command" as const,
+      value: 0,
+      forced: false,
+    }));
+    const store = openStore({ writeTag, releaseTag });
     await spawnProduct(store, cartonSource.id);
     expect(writes).toEqual([
       ["main.source.spawn", 0],
       ["main.source.spawn", 1],
       ["main.source.spawn", 0],
     ]);
+    // The pulse must not keep the tag forced against the PLC.
+    expect(releaseTag).toHaveBeenCalledWith(expect.any(String), "main.source.spawn");
     expect(store.state.message).toMatchObject({ key: "message.productRequested" });
   });
 
@@ -212,7 +221,14 @@ describe("Créer un produit after a failed closing write", () => {
       writes.push(value);
       return { name, type: "bit" as const, direction: "command" as const, value, forced: false };
     });
-    const store = openStore({ writeTag });
+    const releaseTag = vi.fn(async () => ({
+      name: "main.source.spawn",
+      type: "bit" as const,
+      direction: "command" as const,
+      value: 0,
+      forced: false,
+    }));
+    const store = openStore({ writeTag, releaseTag });
     await spawnProduct(store, cartonSource.id);
     expect(store.state.message?.level).toBe("error");
     expect(writes).toEqual([0, 1]);
@@ -261,5 +277,24 @@ describe("a click on an object in the 3D view", () => {
     const before = store.state.selection;
     selectConveyorFromViewport(store, "belt", "ghost");
     expect(store.state.selection).toBe(before);
+  });
+});
+
+describe("Créer un produit with a refused pulse", () => {
+  it("still releases the spawn tag", async () => {
+    const writeTag = vi.fn(async () => {
+      throw new PantinApiError("api", "Connection lost.", "internal_error", 500);
+    });
+    const releaseTag = vi.fn(async (_id: string, name: string) => ({
+      name,
+      type: "bit" as const,
+      direction: "command" as const,
+      value: 0,
+      forced: false,
+    }));
+    const store = openStore({ writeTag, releaseTag });
+    await spawnProduct(store, cartonSource.id);
+    expect(store.state.message?.level).toBe("error");
+    expect(releaseTag).toHaveBeenCalledWith(expect.any(String), "main.source.spawn");
   });
 });
