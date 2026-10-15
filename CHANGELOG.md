@@ -259,6 +259,8 @@ All notable changes to Pantin. The format follows
 
 ### Fixed
 
+- Bridge tests: the Modbus fuzz test no longer fails at random when the slave
+  resets a connection on a bad header before the client's shutdown (ENOTCONN).
 - Viewer: the bridge card no longer sticks on "Stopping…" after a stop (nor
   goes back to "Starting…" after "Running"): a request's answer, older than a
   status the stream already gave, no longer replaces it.

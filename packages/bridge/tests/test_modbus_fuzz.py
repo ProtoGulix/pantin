@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import errno
 import socket
 import struct
 import threading
@@ -70,12 +71,17 @@ def slave_in_a_thread() -> Iterator[int]:
         raise failures[0]
 
 
+# A reset seen by sendall (EPIPE, ECONNRESET), recv (ECONNRESET) or shutdown (ENOTCONN).
+CONNECTION_CUT_ERRNOS = frozenset({errno.ECONNRESET, errno.EPIPE, errno.ENOTCONN})
+
+
 def exchange(port: int, chunks: list[bytes], *, tolerate_reset: bool) -> bytes:
     """Send the chunks, close the sending side, return everything the server answers.
 
-    After a bad header the server closes at once, so our later bytes may meet a closed socket
-    and the kernel may drop answers still queued: `tolerate_reset` accepts that, and only for
-    streams that contain garbage.
+    After a bad header the server closes at once, with our bytes still unread, so its kernel
+    resets the connection: a later send, our shutdown or a receive may then fail, and answers
+    still queued may be dropped. `tolerate_reset` accepts that, and only for streams that
+    contain garbage.
     """
     with socket.create_connection((HOST, port), timeout=RECEIVE_TIMEOUT_SECONDS) as client:
         received = bytearray()
@@ -85,8 +91,8 @@ def exchange(port: int, chunks: list[bytes], *, tolerate_reset: bool) -> bytes:
             client.shutdown(socket.SHUT_WR)
             while data := client.recv(4096):
                 received.extend(data)
-        except (ConnectionResetError, BrokenPipeError):
-            if not tolerate_reset:
+        except OSError as error:
+            if not (tolerate_reset and error.errno in CONNECTION_CUT_ERRNOS):
                 raise
         return bytes(received)
 
