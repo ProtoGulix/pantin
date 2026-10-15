@@ -15,6 +15,9 @@ All notable changes to Pantin. The format follows
   the `docs` workflow publishes it to `pantin.frezille.fr/docs` on manual
   trigger only, until the trademark search of spike 0004 is done. A short
   bilingual `README.md` at the root points to it.
+- Development exposure (ADR 0014, 0051): the nginx site also serves the built
+  user guide under `pantin-dev.frezille.fr/docs/`, behind the same Access
+  policy, from a copy in `/var/www/pantin-dev/docs/`.
 - Viewer, PLC bridge bar (ADR 0050 slice P3): the top of the I/O view, in view
   and edit modes, shows the bridge state (Arrêté, Démarrage…, En marche,
   Arrêt…, En échec), the network choice ("Local uniquement" or "Réseau privé"

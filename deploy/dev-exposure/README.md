@@ -46,14 +46,40 @@ pnpm serve
 Then open https://pantin-dev.frezille.fr: Cloudflare asks for the code sent
 by email, then the viewer opens.
 
-## 5. Check the barriers
+## 5. The user guide under /docs/ (optional, ADR 0051)
 
-- In a private browser window, https://pantin-dev.frezille.fr must show the
-  Cloudflare Access login, never the viewer.
+nginx runs as `www-data` and cannot read the home directory, so the built
+guide is copied to `/var/www/pantin-dev/docs/`. Once, give that folder to
+your user:
+
+```sh
+sudo install -d -o "$USER" -g "$USER" /var/www/pantin-dev/docs
+```
+
+If the nginx site was installed before this section existed, copy it again
+and reload nginx (section 2). Then, after each change of the guide, without
+sudo:
+
+```sh
+pnpm docs:build
+rsync -a --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r docs/site/.vitepress/dist/ /var/www/pantin-dev/docs/
+```
+
+`--chmod` keeps the files readable by `www-data` whatever your umask.
+
+https://pantin-dev.frezille.fr/docs/ serves it behind the same Access policy
+as the viewer. The core does not need to run for it.
+
+## 6. Check the barriers
+
+- In a private browser window, https://pantin-dev.frezille.fr and
+  https://pantin-dev.frezille.fr/docs/ must show the Cloudflare Access login,
+  never the viewer or the guide.
 - From another machine of the LAN, this must answer 403:
 
   ```sh
   curl -i -H 'Host: pantin-dev.frezille.fr' -H 'X-Forwarded-Proto: https' http://<machine address>/api/pantins
+  curl -i -H 'Host: pantin-dev.frezille.fr' -H 'X-Forwarded-Proto: https' http://<machine address>/docs/
   ```
 
 - The tag bus must not be reachable through the exposure. Run this on the
@@ -73,4 +99,5 @@ by email, then the viewer opens.
 ## Remove the exposure
 
 Delete the public hostname in the tunnel first, then the Access application,
-then `/etc/nginx/sites-enabled/pantin-dev` and reload nginx.
+then `/etc/nginx/sites-enabled/pantin-dev` and reload nginx, and
+remove the guide's copy (`sudo rm -r /var/www/pantin-dev`).

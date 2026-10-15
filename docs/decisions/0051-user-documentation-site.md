@@ -65,3 +65,13 @@ public repository for free, on a custom domain with an automatic certificate
   custom domain in the repository's Pages settings are the user's actions.
 - Screenshots are not in this first version; when added, they must be
   regenerated when the interface changes.
+
+## Amendment (2026-10-15): the guide on the development exposure
+
+Before the public site, the user wants to read the guide at
+`pantin-dev.frezille.fr/docs/`. The nginx site of ADR 0014 serves a copy of
+the build there, from `/var/www/pantin-dev/docs/` (nginx cannot read the home
+directory), behind the same Cloudflare Access policy and loopback rule as the
+viewer (deploy/dev-exposure/README.md). Nothing becomes public, so the
+trademark search does not block it. The copy is refreshed by hand after
+`pnpm docs:build`.
