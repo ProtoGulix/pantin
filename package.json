@@ -20,7 +20,10 @@
     "setup:python": "packages/step-converter/setup.sh && packages/bridge/setup.sh",
     "serve": "pnpm --filter @pantin/viewer build && node packages/core/src/main.ts --viewer-dir packages/viewer/dist --step-converter-python packages/step-converter/.venv/bin/python --bridge-python packages/bridge/.venv/bin/python",
     "pantin": "node packages/cli/src/main.ts",
-    "schema:generate": "node packages/cli/src/main.ts schema > packages/protocol/schema/pantin.schema.json && node packages/cli/src/main.ts schema io > packages/protocol/schema/io.schema.json && biome format --write packages/protocol/schema"
+    "schema:generate": "node packages/cli/src/main.ts schema > packages/protocol/schema/pantin.schema.json && node packages/cli/src/main.ts schema io > packages/protocol/schema/io.schema.json && biome format --write packages/protocol/schema",
+    "docs:dev": "vitepress dev docs/site",
+    "docs:build": "vitepress build docs/site",
+    "docs:preview": "vitepress preview docs/site"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
@@ -29,6 +32,7 @@
     "knip": "6.38.0",
     "lefthook": "2.1.14",
     "typescript": "6.0.3",
+    "vitepress": "1.6.4",
     "vitest": "5.0.2"
   }
 }

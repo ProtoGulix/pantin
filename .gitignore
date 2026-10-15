@@ -34,3 +34,7 @@ __pycache__/
 
 # User's proprietary CAD and test material: never published
 private/
+
+# VitePress build output and cache (ADR 0051)
+docs/site/.vitepress/cache/
+docs/site/.vitepress/dist/

@@ -8,6 +8,13 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Documentation, user guide site (ADR 0051): a VitePress site in `docs/site/`,
+  in French and English, on the fundamentals, the model of a Pantin, a
+  tutorial that builds the `plc-cylinder` example, connecting a PLC and
+  troubleshooting. `pnpm docs:dev`, `docs:build` and `docs:preview` run it;
+  the `docs` workflow publishes it to `pantin.frezille.fr/docs` on manual
+  trigger only, until the trademark search of spike 0004 is done. A short
+  bilingual `README.md` at the root points to it.
 - Viewer, PLC bridge bar (ADR 0050 slice P3): the top of the I/O view, in view
   and edit modes, shows the bridge state (Arrêté, Démarrage…, En marche,
   Arrêt…, En échec), the network choice ("Local uniquement" or "Réseau privé"

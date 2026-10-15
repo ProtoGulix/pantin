@@ -1,0 +1,50 @@
+name: docs
+
+# Publishes the user documentation to pantin.frezille.fr/docs (ADR 0051).
+# Manual trigger only until the user switches it on: add `push: branches: [master]`
+# after the trademark search of spike 0004.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Only released documentation is published (ADR 0044: master holds releases).
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm docs:build
+      # The site lives under /docs/; the root holds a redirect to it.
+      - run: |
+          mkdir -p pages
+          cp -r docs/site/.vitepress/dist pages/docs
+          cp docs/pages-root/* pages/
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
