@@ -14,10 +14,26 @@ const FAULT_KEYS = {
   jammed: "drives.fault.jammed",
 } as const satisfies Record<"unresponsive" | "jammed", MessageKey>;
 
+const LOSS_REASON_KEYS = {
+  closed: "console.reason.closed",
+  timeout: "console.reason.timeout",
+} as const satisfies Record<"closed" | "timeout", MessageKey>;
+
 export interface ConsoleWording {
   text: string;
   // Developer text the core could not translate (step_error), shown apart.
   detail: string | null;
+}
+
+// The connection of a PLC module or of the bridge was lost, and why.
+function connectionLossText(
+  entry: Extract<ConsoleEntry, { code: "plc_disconnected" | "bridge_disconnected" }>,
+  t: Translate,
+): string {
+  const reason = t(LOSS_REASON_KEYS[entry.params.reason]);
+  return entry.code === "plc_disconnected"
+    ? t("console.code.plc_disconnected", { module: entry.params.module, reason })
+    : t("console.code.bridge_disconnected", { reason });
 }
 
 export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWording {
@@ -44,8 +60,22 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
       return { text: t("console.code.migrated", entry.params), detail: null };
     case "clock_paused":
     case "clock_resumed":
+    case "clock_paused_with_bridge":
+    case "bridge_connected":
     case "face_file_missing":
       return { text: t(`console.code.${entry.code}`), detail: null };
+    case "emitter_blocked":
+    case "product_limit":
+      return { text: t(`console.code.${entry.code}`, entry.params), detail: null };
+    case "physics_rebuilt":
+      return { text: t("console.code.physics_rebuilt", entry.params), detail: null };
+    case "plc_connected":
+      return { text: t("console.code.plc_connected", entry.params), detail: null };
+    case "bridge_failed":
+      return { text: t("console.code.bridge_failed"), detail: entry.params.message };
+    case "plc_disconnected":
+    case "bridge_disconnected":
+      return { text: connectionLossText(entry, t), detail: null };
   }
 }
 

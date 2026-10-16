@@ -1,13 +1,34 @@
 import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
-import { clearConsoleLines, mergeConsoleResponse } from "../console/console-list.ts";
+import {
+  type ClientConsole,
+  clearConsoleLines,
+  mergeConsoleResponse,
+} from "../console/console-list.ts";
 import { consoleSourceTarget } from "../console/console-sources.ts";
 import { withConsoleLevelToggled, withConsoleToggled } from "../console/console-state.ts";
+import { buildConsoleView } from "../console/console-view.ts";
+import { createTranslator } from "../i18n/translate.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
 import { selectDevice } from "./diagram-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The Pantin console (ADR 0031): reading what the core logged, and the panel's
 // own state. Nothing here opens the panel on its own.
+
+/** New console lines reach the panel and the toolbar counter in place, without a redraw. */
+function showConsoleList(store: ViewerStore, list: ClientConsole): void {
+  store.consoleList = list;
+  const { state } = store;
+  store.ports.showConsoleLive(
+    buildConsoleView(
+      state.console,
+      list,
+      state.openPantin,
+      state.language,
+      createTranslator(state.language),
+    ),
+  );
+}
 
 /**
  * Reads the entries after the last sequence the viewer has, from the 250 ms
@@ -35,7 +56,7 @@ export async function refreshConsole(store: ViewerStore): Promise<void> {
   ) {
     const next = mergeConsoleResponse(store.consoleList, answer);
     if (next !== store.consoleList) {
-      store.showConsoleList(next);
+      showConsoleList(store, next);
     }
   }
 }

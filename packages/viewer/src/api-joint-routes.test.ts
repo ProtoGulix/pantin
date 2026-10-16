@@ -21,7 +21,11 @@ const pose: PoseResponse = {
     { bodyId: "rail", translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
     { bodyId: "carriage", translation: [0.05, 0, 0], rotation: [0, 0, 0, 1] },
   ],
+  products: [],
+  objects: [],
 };
+
+const NO_PHASE_6 = { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };
 
 describe("PantinApiClient joints", () => {
   it("lists the validated joints of a Pantin", async () => {
@@ -63,6 +67,7 @@ describe("PantinApiClient joints", () => {
         drives: [],
         actuators: [],
         sensors: [],
+        ...NO_PHASE_6,
       },
     };
     const { fetchFunction, requests } = fakeFetch(jsonResponse(pantin));
@@ -129,5 +134,24 @@ describe("PantinApiClient updateJoint", () => {
     );
     expect(error.kind).toBe("invalid_input");
     expect(requests).toHaveLength(0);
+  });
+
+  it("asks the axis of a picked face with POST and validates the answer", async () => {
+    const answer = { origin: [0, 0.01, 0], axis: [-1, 0, 0] };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const request = {
+      bodyId: "rail",
+      faceIndex: 3,
+      hitPoint: [0, 0.01, 0] as [number, number, number],
+    };
+    const result = await createPantinApiClient(fetchFunction).jointAxisFromFace(
+      "press",
+      "slide",
+      request,
+    );
+    expect(result).toEqual(answer);
+    expect(requests[0]?.url).toBe("/api/pantins/press/joints/slide/axis-from-face");
+    expect(requests[0]?.init?.method).toBe("POST");
+    expect(JSON.parse(String(requests[0]?.init?.body))).toEqual(request);
   });
 });

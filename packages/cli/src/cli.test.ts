@@ -37,12 +37,23 @@ describe("pantin command", () => {
     expect(JSON.parse(result.stdout)).toMatchObject({ title: "Pantin document (pantin.json)" });
   });
 
-  it.each([[[]], [["validate"]], [["validate", "a", "b"]], [["schema", "x"]], [["help"]]])(
-    "shows the usage with exit 2 for %j",
-    async (args) => {
-      const result = await run(args);
-      expect([result.code, result.stdout]).toEqual([2, ""]);
-      expect(result.stderr).toMatch(/^Usage: pnpm pantin <command>/);
-    },
-  );
+  it("prints the JSON Schema of io.json with `schema io`, and keeps pantin.json's by default", async () => {
+    const result = await run(["schema", "io"]);
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ title: "Pantin I/O mapping (io.json)" });
+    expect(result.stdout.endsWith("}\n")).toBe(true);
+  });
+
+  it.each([
+    [[]],
+    [["validate"]],
+    [["schema", "io", "x"]],
+    [["validate", "a", "b"]],
+    [["schema", "x"]],
+    [["help"]],
+  ])("shows the usage with exit 2 for %j", async (args) => {
+    const result = await run(args);
+    expect([result.code, result.stdout]).toEqual([2, ""]);
+    expect(result.stderr).toMatch(/^Usage: pnpm pantin <command>/);
+  });
 });

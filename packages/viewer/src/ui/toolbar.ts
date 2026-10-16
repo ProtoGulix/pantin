@@ -22,8 +22,8 @@ function saveButton(view: PanelView, intents: PanelIntents): HTMLElement {
   return save;
 }
 
-// "3D / Schéma / 3D + Schéma": three toggle buttons, exactly one pressed
-// (ADR 0030 point 7).
+// "3D / Schéma / 3D + Schéma / E/S": four toggle buttons, exactly one pressed
+// (ADR 0030 point 7, ADR 0049 point 11).
 function viewSwitch(view: PanelView, intents: PanelIntents): HTMLElement {
   const { translate, toolbar } = view;
   const choice = (layout: CentralLayout, text: string, title: string) => {

@@ -91,3 +91,11 @@ was used instead.
    plus a 394-star Claude Code plugin of the same name). "homunc" is free on
    npm and PyPI but taken on GitHub; weak as a fallback. Consider looking for
    a third candidate only if the trademark search blocks Pantin.
+
+## Update (2026-10-16): manual trademark search
+
+The user ran the manual trademark search of recommendation 3 and found
+nothing that blocks "Pantin" so far (user statement, 2026-10-16). The search
+itself, its registers and its classes are not recorded here: NOT VERIFIED by
+this report. On that basis the name is kept for the 0.1.0-alpha.1
+pre-release and the documentation site may be published.

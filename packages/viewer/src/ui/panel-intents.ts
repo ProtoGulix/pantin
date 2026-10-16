@@ -1,10 +1,13 @@
 import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
+import type { BridgeIntents } from "../bridge/bridge-intents.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
+import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import type { Vector3Tuple } from "../frames.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
+import type { IoIntents } from "../io/io-intents.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
@@ -13,7 +16,7 @@ import type { WelcomeTab } from "../viewer-state.ts";
 // What the user asks for from the menu bar and the left panel. Components
 // only raise intents; the controller decides what to call and how the state
 // changes. Values from form fields arrive as raw strings, validated there.
-export interface PanelIntents {
+export interface PanelIntents extends IoIntents, BridgeIntents {
   runMenuCommand(command: MenuCommand): void;
   // The view cube (ADR 0036 point 5): look from this core direction.
   showViewFromDirection(direction: Vector3Tuple): void;
@@ -47,10 +50,16 @@ export interface PanelIntents {
   cancelRename(): void;
   // A committed edit of a grid (rename, joint field, device field...).
   commitPropertyEdit(target: EditTarget, value: string): void;
+  // Escape, or leaving a field unchanged: drops what it kept (a refused text).
+  cancelPropertyEdit(target: EditTarget): void;
   requestDelete(nodeId: string): void;
   openContextMenu(nodeId: string, x: number, y: number): void;
+  // The choice of the context menu of a device row: the toolbar's edit or delete.
+  runDeviceAction(nodeId: string, action: "edit" | "delete"): void;
   closeContextMenu(): void;
   resolvePrompt(action: PromptAction): void;
+  // The box "Also stop the bridge" of the close prompt.
+  setCloseStopsBridge(stops: boolean): void;
 
   // targetPantinId: the Pantin chosen from its context menu, or null for the open one.
   chooseImportFile(file: File, targetPantinId: string | null): void;
@@ -61,6 +70,9 @@ export interface PanelIntents {
 
   // The inspector on the right (ADR 0022, 0030): the device forms, faults and commands.
   toggleInspector(): void;
+  turnToolOff(): void;
+  // ADR 0039 point 11: sends again the placement kept before the last edit.
+  restorePreviousPlacement(): void;
   openDriveForm(driveId: string | null): void;
   cancelDriveForm(): void;
   editDriveName(name: string): void;
@@ -74,6 +86,9 @@ export interface PanelIntents {
   toggleBitTag(tagName: string): void;
   // Typed in mm or degrees (per second).
   writeFloatTag(tagName: string, text: string): void;
+  // A write from the viewer forces its tag; these give it back to the PLC.
+  releaseTag(tagName: string): void;
+  releaseAllTags(): void;
 
   // The actuators of the same panel (ADR 0028): the feed is a drive and its
   // output port for each input port of the type.
@@ -107,6 +122,23 @@ export interface PanelIntents {
   submitSensorForm(): void;
   deleteSensor(sensorId: string): void;
 
+  // The belts, guides, emitters, absorbers and presence sensors of the same
+  // panel (ADR 0043 point 13); inputs by key ("x", "length", "range"), "name"
+  // is the name, a flag is "true" or "false".
+  openConveyorForm(kind: ConveyorKind, id: string | null): void;
+  cancelConveyorForm(): void;
+  editConveyorField(fieldId: string, text: string): void;
+  changeConveyorType(type: string): void;
+  changeConveyorAssembly(assembly: string): void;
+  // An empty body id follows the assembly's own frame.
+  changeConveyorBody(bodyId: string): void;
+  submitConveyorForm(): void;
+  deleteConveyor(kind: ConveyorKind, id: string): void;
+  // "Créer un produit": writes 1 then 0 to the emitter's spawn tag.
+  spawnProduct(emitterId: string): void;
+  // "Remise à zéro": products, commands and faults go; the edits and the clock stay.
+  resetSimulation(): void;
+
   // A new empty assembly in the Pantin of this tree node (ADR 0019).
   createAssembly(nodeId: string): void;
   // A body dragged onto an assembly, or onto a body of it, in the tree.
@@ -126,6 +158,8 @@ export interface PanelIntents {
   reverseJointAxis(): void;
   submitJointForm(): void;
   cancelJointForm(): void;
+  // ADR 0041: wait for a click on a face, which fills the origin and the axis.
+  pickJointAxisOnFace(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;
 
   // The chain diagram (ADR 0029): the central layout, a band folded,
@@ -155,8 +189,10 @@ export interface PanelIntents {
   // A step of the placement gizmo typed in the toolbar (ADR 0034 point 5), in mm or degrees.
   setGizmoStep(field: keyof SnapSteps, text: string): void;
 
-  // The alignment panel (ADR 0035); the 3D view reports its picks directly.
+  // The alignment block of the inspector (ADR 0035, 0039); the 3D view reports
+  // its picks directly.
   chooseAlignmentKind(kind: string): void;
+  chooseAlignmentPick(index: number): void;
   setAlignmentText(field: "offset" | "rotation", text: string): void;
   setAlignmentFlip(flip: boolean): void;
   setAlignmentFixedJoint(fixedJoint: boolean): void;

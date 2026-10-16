@@ -22,10 +22,25 @@ export interface SensorOutput {
   state: Record<string, number>;
 }
 
+// The input of a presence sensor (ADR 0043 points 7 and 8): the raw signal the
+// core worked out from a ray cast, no joint.
+export interface PresenceSensorInput<Fields> {
+  fields: Fields;
+  // True when a product is within the sensor's reach this step.
+  signal: boolean;
+  // What the previous step returned; null before the first step.
+  state: Values | null;
+  stepSeconds: number;
+}
+
 // A method, not a function type: the registry (evaluators.ts) relies on
 // method parameters being compared bivariantly, as for drive behaviours.
 export interface SensorEvaluator<Fields> {
   evaluate(input: SensorInput<Fields>): SensorOutput;
+}
+
+export interface PresenceSensorEvaluator<Fields> {
+  evaluate(input: PresenceSensorInput<Fields>): SensorOutput;
 }
 
 const INT32_RANGE = 2 ** 32;

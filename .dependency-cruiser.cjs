@@ -1,10 +1,11 @@
-// Enforces the package boundaries of CLAUDE.md section 4: core, viewer and bridge
-// only talk through the tag bus and the API, never through imports.
-const isolatedPackages = ["core", "viewer", "bridge"];
+// Enforces the package boundaries of CLAUDE.md section 4: core and viewer only talk through
+// the tag bus and the API, never through imports. The bridge is Python (ADR 0045): it has
+// no TypeScript to cruise, and its only link to the protocol is the shared fixtures.
+const isolatedPackages = ["core", "viewer"];
 
 const isolationRules = isolatedPackages.map((packageName) => ({
   name: `${packageName}-is-isolated`,
-  comment: `${packageName} must not import core, viewer or bridge: use the tag bus or the API.`,
+  comment: `${packageName} must not import core or viewer: use the tag bus or the API.`,
   severity: "error",
   from: { path: `^packages/${packageName}/` },
   to: {
@@ -128,6 +129,14 @@ module.exports = {
       to: { path: "evaluat", reachable: true },
     },
     {
+      name: "rapier-only-in-rapier-world",
+      comment:
+        "Rapier is imported by core/src/physics/rapier-world.ts alone, so the engine stays behind one boundary (ADR 0043 point 9).",
+      severity: "error",
+      from: { pathNot: "^packages/core/src/physics/rapier-world\\.ts$" },
+      to: { path: "@dimforge/rapier3d" },
+    },
+    {
       name: "no-circular",
       comment: "Circular imports hide the real dependency direction.",
       severity: "error",
@@ -151,7 +160,9 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    exclude: { path: "(^|/)dist/" },
+    // Build output is left out, except Rapier whose entry sits in its own dist/
+    // and must stay visible to the rapier-only-in-rapier-world rule.
+    exclude: { path: "^(?!.*@dimforge).*(^|/)dist/" },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.base.json" },
     combinedDependencies: true,

@@ -1,6 +1,6 @@
 {
   "name": "@pantin/core",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "description": "Headless simulation core: model, fixed-step loop, API, physics.",
   "license": "Apache-2.0",
@@ -12,10 +12,15 @@
     "start": "node src/main.ts"
   },
   "dependencies": {
+    "@dimforge/rapier3d-deterministic-compat": "0.21.0",
     "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
     "@pantin/protocol": "workspace:*",
     "@pantin/sensor-types": "workspace:*",
+    "ws": "8.22.0",
     "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/ws": "8.18.2"
   }
 }

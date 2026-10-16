@@ -1,6 +1,5 @@
 import type {
   AssemblyDeletion,
-  Body,
   FaultsResponse,
   OrphanMeshList,
   PantinResponse,
@@ -11,18 +10,30 @@ import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
+import type { ConveyorFormState } from "./conveyors/conveyor-form.ts";
 import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
+import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
 import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
+import { type IoState, NO_IO_STATE } from "./io/io-state.ts";
+import type { AxisPickState } from "./joints/axis-pick-state.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
+import {
+  DEFAULT_INSPECTOR_PREFERENCES,
+  type InspectorPreferences,
+  preferencesState,
+} from "./layout-preferences.ts";
 import type { PanelMessage } from "./messages.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
+import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.ts";
+import { NO_PREVIOUS_PLACEMENTS, type PreviousPlacements } from "./previous-placement.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
-import { assemblyNodeId, bodyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { selectionExists, withRevealedNode } from "./tree/tree-state.ts";
+import type { ThemeChoice } from "./theme/theme.ts";
+import { assemblyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
+import { selectionExists } from "./tree/tree-state.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
 // truth: this is only the last answer it gave, plus purely local UI state.
@@ -52,6 +63,8 @@ interface PendingAssemblyDeletion {
 
 export interface ViewerState {
   language: Language;
+  // The chosen theme, "system" by default (ADR 0053); the resolved one lives on the page.
+  themeChoice: ThemeChoice;
   pantins: readonly PantinSummary[];
   openPantin: PantinResponse | null;
   expandedNodeIds: ReadonlySet<string>;
@@ -79,6 +92,10 @@ export interface ViewerState {
   welcomeFilter: string;
   // Edit view: closing with unsaved changes waits for the user's choice.
   closePrompt: boolean;
+  // The close prompt also says that the PLC bridge keeps running (ADR 0050 point 7).
+  closeBridgeNotice: boolean;
+  // The box "Also stop the bridge" of that prompt, checked by default.
+  closeStopsBridge: boolean;
   // Edit view: a body waiting for the user to confirm its deletion.
   pendingDeleteBodyId: string | null;
   // Same for a joint.
@@ -100,7 +117,11 @@ export interface ViewerState {
   actuatorForm: ActuatorFormState | null;
   // The sensor form of the same panel (ADR 0023).
   sensorForm: SensorFormState | null;
+  // The form of a belt, guide, emitter, absorber or presence sensor (ADR 0043 point 13).
+  conveyorForm: ConveyorFormState | null;
   faults: FaultsResponse;
+  // The I/O view (ADR 0049 point 11): the last mapping the core answered.
+  io: IoState;
   // What the central area shows (ADR 0030 point 7): a setting of the viewer,
   // kept in the browser and not reset by opening a Pantin. Then the diagram
   // bands the user folded: display state only, never saved.
@@ -116,8 +137,18 @@ export interface ViewerState {
   // setting of the viewer kept in the browser. Display state, never saved.
   gizmoMode: DragKind | null;
   gizmoSteps: SnapSteps;
-  // The alignment under way (ADR 0035), or null. Display state, never saved.
+  // Which axes the gizmo offers (ADR 0042 point 2), also kept in the browser.
+  gizmoSpace: GizmoSpace;
+  // The alignment (ADR 0035) or the axis pick (ADR 0041) under way, or null. Display state.
   alignment: AlignmentSession | null;
+  axisPick: AxisPickState | null;
+  // Placement field feedback (ADR 0039 point 5): the last placement a drag sent
+  // while it lasts, and typed text that is not a number. Display state.
+  placementDraft: PlacementDraft | null;
+  placementInvalid: InvalidPlacementText | null;
+  // The placement each assembly had before its last placement edit (ADR 0039
+  // point 11), by assembly key, for the open Pantin only. Display state.
+  previousPlacements: PreviousPlacements;
   // The mouse preset, wheel direction, arrow step and projection of the 3D
   // view (ADR 0036), kept in the browser like the steps. Never saved.
   navigation: NavigationSettings;
@@ -131,20 +162,49 @@ export interface InspectorFocusRequest {
 // Faults are runtime state of the core, cleared when a Pantin opens.
 const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 
+// Runtime faults and the I/O mapping belong to the open Pantin: cleared with it.
+const NO_DEVICE_DATA = { faults: NO_FAULTS, io: NO_IO_STATE } as const;
+
+const NO_DEVICE_FORMS = {
+  driveForm: null,
+  actuatorForm: null,
+  sensorForm: null,
+  conveyorForm: null,
+} as const;
+
+// The close question is not asked (ADR 0050 point 7 for the bridge notice).
+export const NO_CLOSE_PROMPT = {
+  closePrompt: false,
+  closeBridgeNotice: false,
+  closeStopsBridge: false,
+} as const;
+
+// No positioning tool on, no alignment, nothing kept in the placement fields.
+const NO_TOOL_STATE = {
+  gizmoMode: null,
+  alignment: null,
+  axisPick: null,
+  placementDraft: null,
+  placementInvalid: null,
+} as const;
+
 export function initialViewerState(
   language: Language,
   centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
   gizmoSteps: SnapSteps = DEFAULT_SNAP_STEPS,
   navigation: NavigationSettings = DEFAULT_NAVIGATION,
+  inspector: InspectorPreferences = DEFAULT_INSPECTOR_PREFERENCES,
+  themeChoice: ThemeChoice = "system",
 ): ViewerState {
   return {
     language,
+    themeChoice,
     pantins: [],
     openPantin: null,
     expandedNodeIds: new Set(),
     selection: null,
     renamingNodeId: null,
-    collapsedPropertyGroups: new Set(),
+    ...preferencesState(inspector),
     customAxisJointIds: new Set(),
     creatingPantin: false,
     contextMenu: null,
@@ -156,7 +216,7 @@ export function initialViewerState(
     welcomeHidden: false,
     welcomeTab: "home",
     welcomeFilter: "",
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
@@ -164,18 +224,15 @@ export function initialViewerState(
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
-    inspectorOpen: true,
-    driveForm: null,
-    actuatorForm: null,
-    sensorForm: null,
-    faults: NO_FAULTS,
+    ...NO_DEVICE_FORMS,
+    ...NO_DEVICE_DATA,
     centralLayout,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
     inspectorFocus: null,
     console: INITIAL_CONSOLE_STATE,
-    gizmoMode: null,
-    alignment: null,
+    ...NO_TOOL_STATE,
+    previousPlacements: NO_PREVIOUS_PLACEMENTS,
     gizmoSteps,
     navigation,
   };
@@ -199,7 +256,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     contextMenu: null,
     pendingImport: null,
     importInProgress: false,
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
@@ -208,10 +265,15 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     alignment: null,
+    axisPick: null,
+    placementDraft: null,
+    placementInvalid: null,
+    previousPlacements: NO_PREVIOUS_PLACEMENTS,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,
-    faults: NO_FAULTS,
+    conveyorForm: null,
+    ...NO_DEVICE_DATA,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,
   };
@@ -238,30 +300,4 @@ export function withRequestStarted(state: ViewerState): ViewerState {
 
 export function withRequestFinished(state: ViewerState): ViewerState {
   return { ...state, pendingRequestCount: Math.max(0, state.pendingRequestCount - 1) };
-}
-
-export function withImportStarted(state: ViewerState): ViewerState {
-  return { ...state, importInProgress: true, message: null };
-}
-
-/** The import failed: the form stays open so the user can retry or cancel. */
-export function withImportFailed(state: ViewerState): ViewerState {
-  return { ...state, importInProgress: false };
-}
-
-/**
- * The core created one body (GLB, STL) or several (one per STEP assembly
- * component). The form closes and the first new body is selected and shown
- * in the tree, so the user sees at once what arrived.
- */
-export function withImportedBodies(
-  state: ViewerState,
-  importedBodies: readonly Body[],
-): ViewerState {
-  const closed: ViewerState = { ...state, importInProgress: false, pendingImport: null };
-  const firstBody = importedBodies[0];
-  const pantinId = state.openPantin?.id;
-  return firstBody === undefined || pantinId === undefined
-    ? closed
-    : withRevealedNode(closed, bodyNodeId(pantinId, firstBody.id));
 }

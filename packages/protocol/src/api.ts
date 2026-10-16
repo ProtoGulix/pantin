@@ -1,12 +1,25 @@
 import { z } from "zod";
-import { BodyIdSchema, DisplayNameSchema, JointIdSchema, PantinIdSchema } from "./ids.ts";
+import {
+  BodyIdSchema,
+  DisplayNameSchema,
+  EmitterIdSchema,
+  JointIdSchema,
+  PantinIdSchema,
+} from "./ids.ts";
 import {
   type CreateJointRequest,
   CreateJointRequestSchema,
   JointSchema,
   Vector3Schema,
 } from "./joint.ts";
-import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from "./pantin.ts";
+import {
+  AssemblySchema,
+  BodySchema,
+  LengthUnitSchema,
+  PantinDocumentSchema,
+  UpAxisSchema,
+} from "./pantin.ts";
+import { ProductMaterialSchema } from "./pantin-conveyors.ts";
 
 // REST contract between the core and its clients (viewer, CLI, tests).
 // All routes live under API_PREFIX. Bodies are JSON unless stated otherwise.
@@ -16,13 +29,15 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //   GET    /api/pantins/:pantinId                     -> PantinResponse
 //   PATCH  /api/pantins/:pantinId    RenameRequest    -> PantinResponse
 //   POST   /api/pantins/:pantinId/save                -> PantinResponse
+//   POST   /api/pantins/:pantinId/reset               -> PantinResponse (conveyor-api.ts)
 //   POST   /api/pantins/:pantinId/discard             -> PantinResponse
 //          (throws away unsaved edits: the document is reloaded from
 //          pantin.json, meshes imported since the last save are deleted and
 //          pending mesh deletions are cancelled)
 //   POST   /api/pantins/:pantinId/bodies?<ImportBodyQuery>
 //          raw file bytes (application/octet-stream)  -> 201 ImportBodiesResponse
-//          (one body for GLB and STL, one body per assembly component for STEP;
+//          (one body for GLB and STL, one body per assembly component for STEP,
+//          in one assembly per assembly node of the file, ADR 0040;
 //          several components are also joined by fixed joints, ADR 0017)
 //   PATCH  /api/pantins/:pantinId/bodies/:bodyId  RenameRequest -> BodyResponse
 //   DELETE /api/pantins/:pantinId/bodies/:bodyId  -> PantinResponse
@@ -36,6 +51,10 @@ import { BodySchema, LengthUnitSchema, PantinDocumentSchema, UpAxisSchema } from
 //          (replaces every field but the id, the type included, ADR 0018;
 //          a joint that becomes fixed loses its position and setpoint)
 //   DELETE /api/pantins/:pantinId/joints/:jointId     -> PantinResponse
+//   POST   /api/pantins/:pantinId/joints/:jointId/axis-from-face
+//          JointAxisFromFaceRequest -> JointAxisFromFaceResponse
+//          (ADR 0041: origin and axis of a picked face in the frame of the
+//          joint's parent assembly; stores nothing, contract in joint-axis-api.ts)
 //   GET    /api/pantins/:pantinId/pose                -> PoseResponse
 //   PUT    /api/pantins/:pantinId/joints/:jointId/position
 //          SetJointPositionRequest                    -> PoseResponse
@@ -98,9 +117,11 @@ export type PantinResponse = z.infer<typeof PantinResponseSchema>;
 export const BodyResponseSchema = z.object({ body: BodySchema });
 export type BodyResponse = z.infer<typeof BodyResponseSchema>;
 
-// The joints link the bodies of a multi-component STEP import (ADR 0017);
-// empty for GLB, STL and a single-component STEP file.
+// The assemblies the import created, top level first (ADR 0040: a STEP file
+// gives its tree of assemblies, GLB and STL one). The joints link the bodies
+// (ADR 0017); empty for GLB, STL and a single-component STEP file.
 export const ImportBodiesResponseSchema = z.object({
+  assemblies: z.array(AssemblySchema).min(1),
   bodies: z.array(BodySchema).min(1),
   joints: z.array(JointSchema),
 });
@@ -116,6 +137,8 @@ export const ApiErrorCodeSchema = z.enum([
   "conversion_unavailable",
   // The STEP converter ran but could not convert this file (invalid, empty, too slow).
   "conversion_failed",
+  // The PLC bridge is not configured on this core (no --bridge-python, ADR 0050).
+  "bridge_unavailable",
   "internal_error",
 ]);
 export type ApiErrorCode = z.infer<typeof ApiErrorCodeSchema>;
@@ -164,11 +187,38 @@ export type BodyPose = z.infer<typeof BodyPoseSchema>;
 export const JointPositionSchema = z.object({ jointId: JointIdSchema, position: z.number() });
 export type JointPosition = z.infer<typeof JointPositionSchema>;
 
+// A product in the world (ADR 0043 point 12): the pose of its box centre in
+// the Pantin frame. It carries its size, so that editing or deleting its
+// emitter leaves it drawable. Ids are runtime ones, "p1", "p2"...
+export const ProductPoseSchema = z.object({
+  productId: z.string().min(1),
+  emitterId: EmitterIdSchema,
+  size: Vector3Schema,
+  material: ProductMaterialSchema,
+  translation: Vector3Schema,
+  rotation: QuaternionSchema,
+});
+export type ProductPose = z.infer<typeof ProductPoseSchema>;
+
+// The world pose of a phase 6 object (ADR 0043 point 12), resolved by the core
+// with the frame rule its physics uses: a client only draws it there.
+// The object's own frame: origin and axes as the document places them.
+export const ObjectPoseSchema = z.object({
+  kind: z.enum(["belt", "guide", "emitter", "absorber", "presenceSensor"]),
+  id: z.string().min(1),
+  translation: Vector3Schema,
+  rotation: QuaternionSchema,
+});
+export type ObjectPose = z.infer<typeof ObjectPoseSchema>;
+
 // Every body of the Pantin is listed; a body without a parent joint has the
-// identity displacement.
+// identity displacement. Products are listed in spawn order.
 export const PoseResponseSchema = z.object({
   jointPositions: z.array(JointPositionSchema),
   bodies: z.array(BodyPoseSchema),
+  products: z.array(ProductPoseSchema),
+  // Belts, guides, emitters, absorbers and presence sensors, in that order.
+  objects: z.array(ObjectPoseSchema),
 });
 export type PoseResponse = z.infer<typeof PoseResponseSchema>;
 

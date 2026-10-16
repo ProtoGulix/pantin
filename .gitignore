@@ -11,7 +11,7 @@ coverage/
 # Graphify: local knowledge graph, rebuilt after each commit by lefthook
 graphify-out/
 
-# Python (bridge sidecar, if retained)
+# Python (bridge, step converter)
 __pycache__/
 .venv/
 .ruff_cache/
@@ -34,3 +34,7 @@ __pycache__/
 
 # User's proprietary CAD and test material: never published
 private/
+
+# VitePress build output and cache (ADR 0051)
+docs/site/.vitepress/cache/
+docs/site/.vitepress/dist/

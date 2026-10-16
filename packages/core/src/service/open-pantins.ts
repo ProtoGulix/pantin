@@ -4,12 +4,31 @@ import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
 import { allClearedEvents, migratedEvent } from "../domain/console-events.ts";
+import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
+import {
+  type IoReading,
+  ioTextOf,
+  MISSING_IO,
+  readIoDocument,
+  unreadableFile,
+} from "../domain/io-document-text.ts";
 import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
+import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts";
+import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
+import type { TagStates } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { recordConsoleEvents } from "./console-record.ts";
+import { alignIo } from "./io-alignment.ts";
+import {
+  buildPhysicsRuntime,
+  type PhysicsRuntime,
+  type PhysicsSettings,
+  resetPhysics,
+  syncPhysicsTo,
+} from "./physics-runtime.ts";
 
 // In-memory Pantins of one service instance: documents are edited here and
 // written to disk only on save.
@@ -18,6 +37,15 @@ export type OpenPantin = {
   document: PantinDocument;
   // Canonical text of pantin.json on disk, to detect unsaved changes.
   savedText: string;
+  // The I/O mapping, io.json beside pantin.json (ADR 0049 point 3): edited in
+  // memory like the document, written only by save. Replaced, never mutated:
+  // the bus tells a change by identity.
+  io: IoReading;
+  // Canonical text of io.json on disk; null when it is missing or unreadable.
+  savedIoText: string | null;
+  // The document the mapping was last aligned with, to carry renames over
+  // (ADR 0049 point 10): see alignIo.
+  ioAlignedDocument: PantinDocument;
   // Meshes referenced by pantin.json on disk, and by the one being written.
   savedMeshPaths: Set<string>;
   writingMeshPaths: Set<string>;
@@ -50,6 +78,21 @@ export type OpenPantin = {
   // Joint sensors (ADR 0025): each one's tag values and state of the last
   // step, never saved.
   sensorOutputs: Map<string, SensorOutput>;
+  // Products, belts and guides (ADR 0043 point 11), never saved: the world
+  // with its empty snapshot, and the state around it.
+  physics: PhysicsRuntime;
+  physicsState: PhysicsState;
+  // Forced tags and the PLC's last values (ADR 0045 point 5), by tag state
+  // key, never saved; pruned of deleted elements for `tagStatesDocument`.
+  tagStates: TagStates;
+  tagStatesDocument: PantinDocument;
+  // How many times the runtime was reset or discarded: bus clients that see
+  // it change get a new snapshot (ADR 0045 point 5).
+  resetCount: number;
+  // A PLC bridge is connected on the tag bus (ADR 0045 point 12), set by the bus.
+  bridgeConnected: boolean;
+  // Modules the PLC is connected to, from `plc_status` (ADR 0050 point 5).
+  plcConnectedModules: Set<string>;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
   // The simulation clock (ADR 0032), never saved: reset leaves it as it is.
@@ -62,11 +105,20 @@ export function meshPathsOf(document: PantinDocument): Set<string> {
   return new Set(document.bodies.map((body) => body.mesh));
 }
 
-// `document` is what pantin.json on disk contains.
-export function newOpenPantin(document: PantinDocument, consoleId: string): OpenPantin {
+// `document` is what pantin.json on disk contains. A Pantin always gets a
+// world, even with no belt or guide: its emitters then drop onto nothing.
+export function newOpenPantin(
+  document: PantinDocument,
+  consoleId: string,
+  createWorld: PhysicsWorldFactory = createInertPhysicsWorld,
+  io: IoReading = MISSING_IO,
+): OpenPantin {
   return {
     document,
     savedText: serializePantinDocument(document),
+    io,
+    savedIoText: ioTextOf(io),
+    ioAlignedDocument: document,
     savedMeshPaths: meshPathsOf(document),
     writingMeshPaths: new Set(),
     pendingMeshDeletions: new Set(),
@@ -84,13 +136,24 @@ export function newOpenPantin(document: PantinDocument, consoleId: string): Open
     unresponsiveDriveIds: new Set(),
     jammedJointIds: new Set(),
     sensorOutputs: new Map(),
+    physics: buildPhysicsRuntime(createWorld, document),
+    physicsState: emptyPhysicsState(),
+    tagStates: new Map(),
+    tagStatesDocument: document,
+    resetCount: 0,
+    bridgeConnected: false,
+    plcConnectedModules: new Set(),
     stepCount: 0,
     clock: newClockRuntime(),
     console: emptyConsole(consoleId),
   };
 }
 
-/** Back to the reference configuration: no motion, no command, no fault. */
+/**
+ * Back to the reference configuration: no motion, no command, no fault, no
+ * product. The clock and the step count stay (ADR 0032 point 1). It does not
+ * reload the document.
+ */
 export function resetRuntimeState(context: ServiceContext, openPantin: OpenPantin): void {
   recordConsoleEvents(context, openPantin, allClearedEvents(openPantin));
   openPantin.jointPositions.clear();
@@ -105,6 +168,9 @@ export function resetRuntimeState(context: ServiceContext, openPantin: OpenPanti
   openPantin.unresponsiveDriveIds.clear();
   openPantin.jammedJointIds.clear();
   openPantin.sensorOutputs.clear();
+  openPantin.tagStates.clear();
+  openPantin.resetCount += 1;
+  resetPhysics(context.physics, openPantin);
 }
 // Promises, not values: two requests loading the same Pantin at once share
 // one load, hence one OpenPantin object that both edit.
@@ -115,6 +181,8 @@ export type ServiceContext = {
   loadedPantins: Map<PantinId, OpenPantin>;
   // Undefined when the core was started without --step-converter-python.
   stepConverter: StepConverter | undefined;
+  // The physics engine behind its port, and the product cap (ADR 0043 points 5 and 9).
+  physics: PhysicsSettings;
   // Wall clock of the console entries, injected so tests can fix it.
   wallClock: () => Date;
   // Makes the id of a console (random in the real core, fixed in tests).
@@ -122,11 +190,27 @@ export type ServiceContext = {
   // Receives a step error the console shows for the first time, for the
   // server log: repeats fold in the console and are not reported again.
   reportStepError: (error: unknown) => void;
+  // The bridge or a PLC module connected or left (ADR 0050 point 5).
+  onBridgeActivity: (pantinId: PantinId) => void;
 };
 
 export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinResponse {
-  const unsavedChanges = serializePantinDocument(openPantin.document) !== openPantin.savedText;
-  return { id: pantinId, unsavedChanges, document: openPantin.document };
+  return {
+    id: pantinId,
+    unsavedChanges: hasUnsavedChanges(openPantin),
+    document: openPantin.document,
+  };
+}
+
+// Either file differs from its saved text (ADR 0049 point 3).
+function hasUnsavedChanges(openPantin: OpenPantin): boolean {
+  // Safe in a check: alignIo is idempotent and changes the mapping's text only
+  // after a real rename, which the next read would carry anyway.
+  alignIo(openPantin);
+  return (
+    serializePantinDocument(openPantin.document) !== openPantin.savedText ||
+    ioTextOf(openPantin.io) !== openPantin.savedIoText
+  );
 }
 
 export function loadPantin(context: ServiceContext, pantinId: PantinId): Promise<OpenPantin> {
@@ -164,13 +248,41 @@ async function readSavedReading(context: ServiceContext, pantinId: PantinId) {
   return readValidDocument(text, location);
 }
 
+// A broken io.json is a mapping problem, never a reason to refuse pantin.json.
+export async function readIoReading(
+  context: ServiceContext,
+  pantinId: PantinId,
+): Promise<IoReading> {
+  try {
+    return readIoDocument(await context.store.readIoFile(pantinId));
+  } catch (error) {
+    return unreadableFile(unreadableReason(error));
+  }
+}
+
+// The system error code (EISDIR, EACCES...) says what to fix; the path is left
+// out, as in every other message the API sends.
+function unreadableReason(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  const code = error instanceof Error && "code" in error ? String(error.code) : null;
+  return code === null ? "the file system refused" : `the file system refused (${code})`;
+}
+
 async function readPantinFromDisk(
   context: ServiceContext,
   pantinId: PantinId,
 ): Promise<OpenPantin> {
   // Compared in canonical form, so a hand formatted file is not "unsaved".
   const { document, migratedFrom } = await readSavedReading(context, pantinId);
-  const openPantin = newOpenPantin(document, context.newConsoleId());
+  const io = await readIoReading(context, pantinId);
+  const openPantin = newOpenPantin(
+    document,
+    context.newConsoleId(),
+    context.physics.createWorld,
+    io,
+  );
   if (migratedFrom !== null) {
     recordConsoleEvents(context, openPantin, [migratedEvent(migratedFrom)]);
   }
@@ -183,6 +295,9 @@ export async function updateDocument(
   edit: (document: PantinDocument) => PantinDocument,
 ): Promise<PantinResponse> {
   const openPantin = await loadPantin(context, pantinId);
-  openPantin.document = edit(openPantin.document);
+  const edited = edit(openPantin.document);
+  // Before storing: if the world cannot be rebuilt, the edit is not applied.
+  syncPhysicsTo(context, openPantin, edited);
+  openPantin.document = edited;
   return toResponse(pantinId, openPantin);
 }

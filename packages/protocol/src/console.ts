@@ -1,10 +1,13 @@
 import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
+import { BridgeFailureKindSchema } from "./bridge.ts";
 import {
   ActuatorIdSchema,
   BodyIdSchema,
   DriveIdSchema,
+  EmitterIdSchema,
   JointIdSchema,
+  KeySchema,
   SensorIdSchema,
 } from "./ids.ts";
 import { TagNameSchema } from "./tag.ts";
@@ -78,6 +81,20 @@ const ParamsSchemas = {
   // STEP body, so alignment only offers the fallback pick on it. The reason
   // goes to the core log.
   face_file_missing: z.object({}),
+  // ADR 0043 points 5 and 11: an emitter's spawn that did not happen (the
+  // emitter id), and the products a physics rebuild removed (their count).
+  spawn_skipped: z.object({ emitter: EmitterIdSchema }),
+  physics_rebuilt: z.object({ products: z.number().int().positive() }),
+  // ADR 0045 point 11: a PLC module (its key in io.json) lost or found
+  // its connection, and why: its last connection closed, or no request came
+  // within its watchdog time. The bridge process itself: same reasons, the
+  // bus connection closed or missed its pongs.
+  plc_module: z.object({ module: KeySchema }),
+  plc_module_lost: z.object({ module: KeySchema, reason: z.enum(["closed", "timeout"]) }),
+  bridge_lost: z.object({ reason: z.enum(["closed", "timeout"]) }),
+  // ADR 0050 point 3: the supervised bridge failed; `message` is the bridge's
+  // own English text, cut to keep entries small.
+  bridge_failed: z.object({ kind: BridgeFailureKindSchema, message: z.string().max(300) }),
 };
 
 const eventShapes = {
@@ -141,6 +158,62 @@ const eventShapes = {
     source: BodySourceSchema,
     params: ParamsSchemas.face_file_missing,
   }),
+  emitterBlocked: z.object({
+    code: z.literal("emitter_blocked"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.spawn_skipped,
+  }),
+  productLimit: z.object({
+    code: z.literal("product_limit"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.spawn_skipped,
+  }),
+  physicsRebuilt: z.object({
+    code: z.literal("physics_rebuilt"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.physics_rebuilt,
+  }),
+  plcConnected: z.object({
+    code: z.literal("plc_connected"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.plc_module,
+  }),
+  plcDisconnected: z.object({
+    code: z.literal("plc_disconnected"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.plc_module_lost,
+  }),
+  bridgeConnected: z.object({
+    code: z.literal("bridge_connected"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.clock,
+  }),
+  bridgeDisconnected: z.object({
+    code: z.literal("bridge_disconnected"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.bridge_lost,
+  }),
+  bridgeFailed: z.object({
+    code: z.literal("bridge_failed"),
+    level: z.literal("error"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.bridge_failed,
+  }),
+  // ADR 0045 point 12: paused while a bridge is connected, which the PLC sees
+  // as a frozen machine.
+  clockPausedWithBridge: z.object({
+    code: z.literal("clock_paused_with_bridge"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.clock,
+  }),
 };
 
 // One event: what the core reports, before it gets a sequence and times.
@@ -156,6 +229,15 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.clockPaused,
   eventShapes.clockResumed,
   eventShapes.faceFileMissing,
+  eventShapes.emitterBlocked,
+  eventShapes.productLimit,
+  eventShapes.physicsRebuilt,
+  eventShapes.plcConnected,
+  eventShapes.plcDisconnected,
+  eventShapes.bridgeConnected,
+  eventShapes.bridgeDisconnected,
+  eventShapes.bridgeFailed,
+  eventShapes.clockPausedWithBridge,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
 export type ConsoleCode = ConsoleEvent["code"];
@@ -184,6 +266,15 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.clockPaused.extend(entryFields),
   eventShapes.clockResumed.extend(entryFields),
   eventShapes.faceFileMissing.extend(entryFields),
+  eventShapes.emitterBlocked.extend(entryFields),
+  eventShapes.productLimit.extend(entryFields),
+  eventShapes.physicsRebuilt.extend(entryFields),
+  eventShapes.plcConnected.extend(entryFields),
+  eventShapes.plcDisconnected.extend(entryFields),
+  eventShapes.bridgeConnected.extend(entryFields),
+  eventShapes.bridgeDisconnected.extend(entryFields),
+  eventShapes.bridgeFailed.extend(entryFields),
+  eventShapes.clockPausedWithBridge.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
 

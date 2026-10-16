@@ -27,6 +27,11 @@ const CURRENT_OF_V1 = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 describe("migratePantinDocument", () => {
@@ -82,6 +87,52 @@ describe("migratePantinDocument to version 7 (ADR 0025)", () => {
     );
   });
 });
+
+describe("migratePantinDocument to version 11 (ADR 0040)", () => {
+  it("gives no assembly a parent, so existing structures stay flat", () => {
+    const assemblies = [
+      { key: "a", name: "A" },
+      { key: "b", name: "B" },
+    ];
+    const migrated = migratePantinDocument(
+      { ...CURRENT_OF_V1, schema_version: 10, assemblies },
+      "p",
+    );
+    expect(migrated).toEqual({ ...CURRENT_OF_V1, assemblies });
+    expect(migrated).toMatchObject({ schema_version: PANTIN_SCHEMA_VERSION });
+  });
+});
+
+describe("migratePantinDocument to version 12 (ADR 0043)", () => {
+  const PHASE_6_ARRAYS = ["belts", "guides", "emitters", "absorbers", "presenceSensors"] as const;
+
+  it("adds the five phase 6 arrays empty and changes nothing else", () => {
+    const joints = [{ id: "stroke", name: "Stroke", type: "fixed", parent: "rail", child: "tool" }];
+    const v11 = {
+      ...CURRENT_OF_V1,
+      schema_version: 11,
+      joints: joints.map((joint) => ({ ...joint, tagKey: joint.id })),
+    };
+    for (const name of PHASE_6_ARRAYS) {
+      Reflect.deleteProperty(v11, name);
+    }
+    const migrated = migratePantinDocument(v11, "p");
+    expect(migrated).toEqual({ ...v11, schema_version: 12, ...emptyPhase6Arrays() });
+  });
+
+  it("reads a version 11 file as a valid document", () => {
+    const v11 = { ...CURRENT_OF_V1, schema_version: 11 };
+    for (const name of PHASE_6_ARRAYS) {
+      Reflect.deleteProperty(v11, name);
+    }
+    const document = parsePantinDocument(JSON.stringify(v11), "axis/pantin.json");
+    expect(document).toMatchObject({ schema_version: 12, belts: [], presenceSensors: [] });
+  });
+});
+
+function emptyPhase6Arrays() {
+  return { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };
+}
 
 describe("migratePantinDocument on unusual input", () => {
   it("leaves malformed bodies and joints to the schema, which reports them", () => {

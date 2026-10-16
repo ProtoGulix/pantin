@@ -14,7 +14,8 @@ import type { ChainDiagram } from "./diagram-types.ts";
 
 // Selection shared between the tree, the 3D view and the diagram (ADR 0029
 // point 9, ADR 0030 point 1), as pure functions. A joint node selects its tree
-// row; a drive, an actuator or a sensor is itself the selection.
+// row; a drive, an actuator or a sensor is itself the selection, and its tree
+// row is the selected one (ADR 0047 point 4).
 
 export type NodeHighlight = "selected" | "related";
 

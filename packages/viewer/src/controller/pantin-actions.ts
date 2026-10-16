@@ -1,6 +1,6 @@
 import { infoMessage } from "../messages.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import { withOpenPantin } from "../viewer-state.ts";
+import { type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import { resumeClock } from "./clock-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -49,18 +49,27 @@ export async function createPantin(store: ViewerStore, name: string): Promise<bo
   return true;
 }
 
-/** Runs an edit on a Pantin, then shows its fresh state. Undefined on failure. */
+/**
+ * Runs an edit on a Pantin, then shows its fresh state. Undefined on failure.
+ * `then` changes the state in the same step as the fresh Pantin: what an edit
+ * selects, closes or says must not wait for the list refresh that follows,
+ * which a slow core can delay past the user's next click.
+ */
 export async function editPantin<Result>(
   store: ViewerStore,
   pantinId: string,
   edit: (pantinId: string) => Promise<Result>,
+  then: (state: ViewerState, result: Result) => ViewerState = (state) => state,
 ): Promise<Result | undefined> {
   const outcome = await store.run(
     async () => {
       const result = await edit(pantinId);
       return { result, pantin: await store.ports.api.getPantin(pantinId) };
     },
-    (current, { pantin }) => store.applyIfStillRequested(current, pantin),
+    (current, { pantin, result }) => {
+      const shown = store.applyIfStillRequested(current, pantin);
+      return shown === current ? shown : then(shown, result);
+    },
   );
   await refreshPantinList(store);
   return outcome?.result;

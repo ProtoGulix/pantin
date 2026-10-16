@@ -18,6 +18,7 @@ function groupLine(group: Group, t: Translate): string | null {
 export function assemblyDeletionDetails(deletion: AssemblyDeletion, t: Translate): string[] {
   const names = (items: readonly { name: string }[]) => items.map(({ name }) => name);
   const groups: Group[] = [
+    { key: "prompt.deleteAssembly.subAssemblies", names: names(deletion.descendantAssemblies) },
     { key: "prompt.deleteAssembly.bodies", names: names(deletion.bodies) },
     {
       key: "prompt.deleteAssembly.joints",
@@ -34,7 +35,9 @@ export function assemblyDeletionDetails(deletion: AssemblyDeletion, t: Translate
     { key: "prompt.deleteAssembly.addedTags", names: deletion.addedTags },
   ];
   const kept = deletion.reanchoredAssemblies.map(({ name }) =>
-    t("prompt.deleteAssembly.reanchored", { name, deleted: deletion.assembly.name }),
+    deletion.descendantAssemblies.length === 0
+      ? t("prompt.deleteAssembly.reanchored", { name, deleted: deletion.assembly.name })
+      : t("prompt.deleteAssembly.reanchoredMany", { name }),
   );
   return [...groups.map((group) => groupLine(group, t)), ...kept].filter(
     (line): line is string => line !== null,

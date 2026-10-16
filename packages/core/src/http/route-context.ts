@@ -10,15 +10,19 @@ import {
   SensorIdSchema,
   TagNameSchema,
 } from "@pantin/protocol";
+import type { BridgeSupervisor } from "../bridge/bridge-supervisor.ts";
 import { parseWithSchema } from "../domain/validation.ts";
 import type { PantinService } from "../service/pantin-service.ts";
 import type { PoseStreamRegistry } from "./pose-stream-registry.ts";
 
-// What a route handler receives, and the URL parameter parsers they share.
+// What a route handler receives, and the URL parameter parsers they share. A
+// malformed id, key or tag in the path is a 400 here; a well-formed one that
+// names nothing is a 404 from the service.
 
 export type RouteContext = {
   service: PantinService;
   poseStreams: PoseStreamRegistry;
+  bridge: BridgeSupervisor;
   maxImportBytes: number;
   request: IncomingMessage;
   response: ServerResponse;
@@ -66,4 +70,8 @@ export function assemblyKeyOf(context: RouteContext): string {
 
 export function tagNameOf(context: RouteContext): string {
   return parseWithSchema(TagNameSchema, context.parameters.tagName, "The tag name in the URL");
+}
+
+export function moduleKeyOf(context: RouteContext): string {
+  return parseWithSchema(KeySchema, context.parameters.moduleKey, "The module key in the URL");
 }

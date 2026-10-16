@@ -1,12 +1,29 @@
 import type { PantinDocument } from "@pantin/protocol";
+import {
+  CONVEYOR_KINDS,
+  type ConveyorKind,
+  conveyorsOf,
+  isConveyorKind,
+} from "./conveyors/conveyor-kinds.ts";
 import { actuatorNode, driveNode, sensorNode } from "./diagram/diagram-chains.ts";
 
 // The selection (selection.ts) is a tree node or one of these devices, never
-// both: the tree has no row for a drive, an actuator or a sensor (ADR 0030
-// point 1). Pure functions over the document, shared by the tree, the 3D view,
-// the diagram and the inspector.
+// both. The tree has a row for each of them, and the selected device's row is
+// the tree's selected row (ADR 0047 point 4, which replaces ADR 0030 point 1).
+// The belts, guides, emitters, absorbers and presence sensors of
+// phase 6 are devices too (ADR 0043 point 13); they are in no chain, so the
+// diagram has no node for them. Pure functions over the document, shared by
+// the tree, the 3D view, the diagram and the inspector.
 
-export type DeviceKind = "drive" | "actuator" | "sensor";
+export type DeviceKind = "drive" | "actuator" | "sensor" | ConveyorKind;
+
+// Every kind once, so that a registry keyed by kind can be checked against it.
+export const DEVICE_KINDS: readonly DeviceKind[] = [
+  "drive",
+  "actuator",
+  "sensor",
+  ...CONVEYOR_KINDS,
+];
 
 export interface DeviceRef {
   kind: DeviceKind;
@@ -15,18 +32,21 @@ export interface DeviceRef {
 
 /** True for a drive, an actuator or a sensor, false for a tree node kind. */
 export function isDeviceKind(kind: string): kind is DeviceKind {
-  return kind === "drive" || kind === "actuator" || kind === "sensor";
+  return kind === "drive" || kind === "actuator" || kind === "sensor" || isConveyorKind(kind);
 }
 
-const NODE_IDS: Readonly<Record<DeviceKind, (id: string) => string>> = {
-  drive: driveNode,
-  actuator: actuatorNode,
-  sensor: sensorNode,
-};
-
-/** The diagram node standing for the device. */
+/** The diagram node standing for the device; none exists for a phase 6 object, so this id matches nothing. */
 export function deviceNodeId(device: DeviceRef): string {
-  return NODE_IDS[device.kind](device.id);
+  switch (device.kind) {
+    case "drive":
+      return driveNode(device.id);
+    case "actuator":
+      return actuatorNode(device.id);
+    case "sensor":
+      return sensorNode(device.id);
+    default:
+      return `${device.kind}:${device.id}`;
+  }
 }
 
 /** The device a diagram node id stands for, or null for a joint (a tree node). */
@@ -48,6 +68,8 @@ function elementsOf(
       return document.actuators;
     case "sensor":
       return document.sensors;
+    default:
+      return conveyorsOf(document, kind);
   }
 }
 
@@ -86,5 +108,11 @@ export function relatedJointIds(document: PantinDocument, device: DeviceRef): Se
       const sensor = document.sensors.find((candidate) => candidate.id === device.id);
       return new Set(sensor === undefined ? [] : [sensor.joint]);
     }
+    case "belt": {
+      const belt = document.belts.find((candidate) => candidate.id === device.id);
+      return new Set(belt === undefined ? [] : [belt.drumJoint]);
+    }
+    default:
+      return new Set();
   }
 }

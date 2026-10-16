@@ -1,13 +1,17 @@
 import { parseStoredLayout } from "../central-layout.ts";
+import { isConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
+import { isThemeChoice } from "../theme/theme.ts";
 import { deleteActuator } from "./actuator-actions.ts";
 import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
+import { deleteConveyor, resetSimulation } from "./conveyor-actions.ts";
 import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
-import { toggleGizmo } from "./gizmo-actions.ts";
+import { releaseAllTags } from "./drive-commands.ts";
+import { toggleGizmo, toggleGizmoSpace } from "./gizmo-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import {
   setArrowStep,
@@ -39,6 +43,8 @@ function deleteSelection(store: ViewerStore): void {
   const device = selectedDeviceOf(store.state.selection);
   if (device === null) {
     withSelection(store, (nodeId) => requestDelete(store, nodeId));
+  } else if (isConveyorKind(device.kind)) {
+    void deleteConveyor(store, device.kind, device.id);
   } else if (device.kind === "drive") {
     void deleteDrive(store, device.id);
   } else if (device.kind === "actuator") {
@@ -48,7 +54,14 @@ function deleteSelection(store: ViewerStore): void {
   }
 }
 
-// "language:fr", "layout:3d", "navigation:zw3d" and "arrowStep:15": the part after the colon is the argument.
+function chooseTheme(store: ViewerStore, choice: string): void {
+  if (isThemeChoice(choice)) {
+    store.ports.applyTheme(choice);
+    store.update({ ...store.state, themeChoice: choice });
+  }
+}
+
+// "language:fr", "layout:3d", "navigation:zw3d", "arrowStep:15" and "theme:dark": the part after the colon is the argument.
 // A layout is parsed, not cast: the command is a plain string by now.
 function runParameterisedCommand(
   store: ViewerStore,
@@ -63,6 +76,8 @@ function runParameterisedCommand(
     showStandardView(store, command.slice("view:".length));
   } else if (command.startsWith("arrowStep:")) {
     setArrowStep(store, command.slice("arrowStep:".length));
+  } else if (command.startsWith("theme:")) {
+    chooseTheme(store, command.slice("theme:".length));
   } else {
     changeLanguage(command.slice("language:".length));
   }
@@ -101,6 +116,37 @@ function runViewCommand(
   }
 }
 
+// The positioning tools (ADR 0034, 0035, 0042): the inspector's buttons and keys.
+function runPositioningCommand(
+  store: ViewerStore,
+  command: "gizmoMove" | "gizmoRotate" | "gizmoSpace" | "align",
+): void {
+  if (command === "align") {
+    toggleAlignment(store);
+  } else if (command === "gizmoSpace") {
+    toggleGizmoSpace(store);
+  } else {
+    toggleGizmo(store, command === "gizmoMove" ? "move" : "rotate");
+  }
+}
+
+function runSelectionCommand(store: ViewerStore, command: "rename" | "delete"): void {
+  if (command === "rename") {
+    renameSelection(store);
+  } else {
+    deleteSelection(store);
+  }
+}
+
+// With nothing open, "Ouvrir…" is the list of the welcome dialog.
+function openFromMenu(store: ViewerStore): void {
+  if (store.state.openPantin === null) {
+    store.update(withWelcomeShown(store.state, "all"));
+  } else {
+    requestClose(store);
+  }
+}
+
 export function runMenuCommand(
   store: ViewerStore,
   command: MenuCommand,
@@ -111,12 +157,7 @@ export function runMenuCommand(
       store.update(withWelcomeShown(store.state));
       return;
     case "open":
-      // With nothing open, "Ouvrir…" is the list of the welcome dialog.
-      if (store.state.openPantin === null) {
-        store.update(withWelcomeShown(store.state, "all"));
-      } else {
-        requestClose(store);
-      }
+      openFromMenu(store);
       return;
     case "close":
       requestClose(store);
@@ -130,22 +171,23 @@ export function runMenuCommand(
       void requestOrphanCleanup(store);
       return;
     case "gizmoMove":
-      toggleGizmo(store, "move");
-      return;
     case "gizmoRotate":
-      toggleGizmo(store, "rotate");
-      return;
+    case "gizmoSpace":
     case "align":
-      toggleAlignment(store);
+      runPositioningCommand(store, command);
       return;
     case "newJoint":
       openJointForm(store);
       return;
-    case "rename":
-      renameSelection(store);
+    case "resetSimulation":
+      void resetSimulation(store);
       return;
+    case "releaseAllTags":
+      void releaseAllTags(store);
+      return;
+    case "rename":
     case "delete":
-      deleteSelection(store);
+      runSelectionCommand(store, command);
       return;
     default:
       runViewCommand(store, command, changeLanguage);

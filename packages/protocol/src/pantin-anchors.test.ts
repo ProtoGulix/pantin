@@ -46,6 +46,11 @@ function documentOf(joints: unknown[], assemblies = [assembly("a"), assembly("b"
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

@@ -2,7 +2,13 @@ import type { Assembly, PantinDocument, Placement } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { newAssembly } from "./assemblies.ts";
-import { contentsOfAssembly, describeContents, findAssembly } from "./assembly-contents.ts";
+import {
+  contentsOfAssembly,
+  descendantAssemblies,
+  describeContents,
+  findAssembly,
+} from "./assembly-contents.ts";
+import { refuseBodyUsedAsFrame } from "./conveyor-rules.ts";
 import { reframeMovedBody } from "./move-body-frames.ts";
 import { toPlacement, unitTransform } from "./rigid-transform.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
@@ -14,8 +20,12 @@ import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 export function createAssembly(
   document: PantinDocument,
   name: string,
+  parent?: string,
 ): { document: PantinDocument; assembly: Assembly } {
-  const assembly = newAssembly(document, name);
+  if (parent !== undefined) {
+    findAssembly(document, parent);
+  }
+  const assembly = newAssembly(document, name, parent);
   return { document: { ...document, assemblies: [...document.assemblies, assembly] }, assembly };
 }
 
@@ -36,6 +46,15 @@ export function renameAssembly(
 // (ADR 0037), which the message points to.
 export function deleteAssembly(document: PantinDocument, key: string): PantinDocument {
   const assembly = findAssembly(document, key);
+  if (document.assemblies.some((candidate) => candidate.parent === key)) {
+    const names = document.assemblies
+      .filter((candidate) => candidate.parent === key)
+      .map((candidate) => `"${candidate.name}"`);
+    throw new ApiError(
+      "conflict",
+      `Assembly "${assembly.name}" still contains sub-assemblies: ${names.join(", ")}. Delete it with its contents (DELETE with contents=delete), or move or delete them first.`,
+    );
+  }
   const holds = describeContents(contentsOfAssembly(document, key));
   if (holds !== "") {
     throw new ApiError(
@@ -61,7 +80,11 @@ export function renameAssemblyKey(
   const rekey = (candidate: string) => (candidate === key ? newKey : candidate);
   return {
     ...document,
-    assemblies: document.assemblies.map((assembly) => ({ ...assembly, key: rekey(assembly.key) })),
+    assemblies: document.assemblies.map((assembly) => ({
+      ...assembly,
+      key: rekey(assembly.key),
+      ...(assembly.parent === undefined ? {} : { parent: rekey(assembly.parent) }),
+    })),
     bodies: document.bodies.map((body) => ({ ...body, assembly: rekey(body.assembly) })),
     drives: document.drives.map((drive) => ({ ...drive, assembly: rekey(drive.assembly) })),
     actuators: document.actuators.map((actuator) => ({
@@ -69,7 +92,47 @@ export function renameAssemblyKey(
       assembly: rekey(actuator.assembly),
     })),
     sensors: document.sensors.map((sensor) => ({ ...sensor, assembly: rekey(sensor.assembly) })),
+    belts: document.belts.map((belt) => ({ ...belt, assembly: rekey(belt.assembly) })),
+    guides: document.guides.map((guide) => ({ ...guide, assembly: rekey(guide.assembly) })),
+    emitters: document.emitters.map((emitter) => ({
+      ...emitter,
+      assembly: rekey(emitter.assembly),
+    })),
+    absorbers: document.absorbers.map((absorber) => ({
+      ...absorber,
+      assembly: rekey(absorber.assembly),
+    })),
+    presenceSensors: document.presenceSensors.map((presenceSensor) => ({
+      ...presenceSensor,
+      assembly: rekey(presenceSensor.assembly),
+    })),
   };
+}
+
+// Structure only (ADR 0040 point 7): placements, anchors and tags stay.
+export function setAssemblyParent(
+  document: PantinDocument,
+  key: string,
+  parent: string | null,
+): PantinDocument {
+  const assembly = findAssembly(document, key);
+  if (parent !== null) {
+    const target = findAssembly(document, parent);
+    if (parent === key || descendantAssemblies(document, key).some((sub) => sub.key === parent)) {
+      throw new ApiError(
+        "conflict",
+        `Assembly "${assembly.name}" would contain itself: "${target.name}" is ${parent === key ? "that assembly" : "inside it"}. Pick a parent outside "${assembly.name}".`,
+      );
+    }
+  }
+  const assemblies = document.assemblies.map((item) => {
+    if (item.key !== key) {
+      return item;
+    }
+    const { parent: _old, ...rest } = item;
+    return parent === null ? rest : { ...rest, parent };
+  });
+  return { ...document, assemblies };
 }
 
 export function renameTagKey(
@@ -103,8 +166,13 @@ export function moveBody(
   assembly: string,
 ): PantinDocument {
   findAssembly(document, assembly);
-  if (!document.bodies.some((body) => body.id === bodyId)) {
+  const movedBody = document.bodies.find((body) => body.id === bodyId);
+  if (movedBody === undefined) {
     throw new ApiError("not_found", `This Pantin has no body "${bodyId}".`);
+  }
+  // Objects follow a body of their own assembly only (ADR 0043 point 2).
+  if (movedBody.assembly !== assembly) {
+    refuseBodyUsedAsFrame(document, bodyId, `move to assembly "${assembly}"`);
   }
   const parentJoint = document.joints.find((joint) => joint.child === bodyId);
   const owner =

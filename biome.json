@@ -48,7 +48,14 @@
   },
   "overrides": [
     {
-      "includes": ["*.config.ts", "*.config.mjs", "*.config.cjs", ".dependency-cruiser.cjs"],
+      "includes": [
+        "*.config.ts",
+        "*.config.mjs",
+        "*.config.cjs",
+        ".dependency-cruiser.cjs",
+        "docs/site/.vitepress/config.ts",
+        "docs/site/.vitepress/theme/index.ts"
+      ],
       "linter": {
         "rules": {
           "style": { "noDefaultExport": "off" }

@@ -1,9 +1,15 @@
 import type { AssemblyDeletion, PantinResponse } from "@pantin/protocol";
 import { infoMessage } from "./messages.ts";
+import { NO_PREVIOUS_PLACEMENTS } from "./previous-placement.ts";
 import { nodeSelection } from "./selection.ts";
 import { assemblyNodeId, pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
 import { withSelection } from "./tree/tree-state.ts";
-import { type ViewerState, type WelcomeTab, withOpenPantin } from "./viewer-state.ts";
+import {
+  NO_CLOSE_PROMPT,
+  type ViewerState,
+  type WelcomeTab,
+  withOpenPantin,
+} from "./viewer-state.ts";
 
 // The two views and their transitions, as pure functions. List view: no
 // Pantin open (openPantin null; the welcome dialog, ADR 0027). Edit view:
@@ -21,12 +27,13 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     ...withSelection(state, null),
     listSelectedPantinId: state.openPantin?.id ?? state.listSelectedPantinId,
     openPantin: null,
+    previousPlacements: NO_PREVIOUS_PLACEMENTS,
     welcomeHidden: false,
     expandedNodeIds: new Set(),
     contextMenu: null,
     pendingImport: null,
     importInProgress: false,
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
@@ -36,15 +43,21 @@ export function withPantinClosed(state: ViewerState): ViewerState {
   };
 }
 
-/** Close directly when everything is saved; otherwise ask first. */
-export function withCloseRequested(state: ViewerState): ViewerState {
+/**
+ * Close directly when everything is saved and no bridge runs; otherwise ask
+ * first. The bridge keeps running after the close (ADR 0050 point 7), so the
+ * question says so.
+ */
+export function withCloseRequested(state: ViewerState, bridgeActive = false): ViewerState {
   if (state.openPantin === null) {
     return state;
   }
-  return state.openPantin.unsavedChanges
+  return state.openPantin.unsavedChanges || bridgeActive
     ? {
         ...state,
         closePrompt: true,
+        closeBridgeNotice: bridgeActive,
+        closeStopsBridge: bridgeActive,
         contextMenu: null,
         pendingDeleteBodyId: null,
         pendingDeleteJointId: null,
@@ -63,8 +76,12 @@ export function withEditsDiscarded(state: ViewerState, saved: PantinResponse): V
   return withPantinClosed(withOpenPantin(state, saved));
 }
 
+export function withCloseStopsBridge(state: ViewerState, stops: boolean): ViewerState {
+  return { ...state, closeStopsBridge: stops };
+}
+
 export function withCloseCancelled(state: ViewerState): ViewerState {
-  return { ...state, closePrompt: false };
+  return { ...state, ...NO_CLOSE_PROMPT };
 }
 
 /** Escape or the close button: the empty workspace, without a half-typed name. */
@@ -113,7 +130,7 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     pendingOrphanCleanup: null,
     pendingFeedReplacement: null,
     contextMenu: null,
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
   };
 }
 
@@ -151,7 +168,7 @@ export function withAssemblyDeleteRequested(
     pendingOrphanCleanup: null,
     pendingFeedReplacement: null,
     contextMenu: null,
-    closePrompt: false,
+    ...NO_CLOSE_PROMPT,
   };
 }
 

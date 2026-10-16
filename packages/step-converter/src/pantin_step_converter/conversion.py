@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 
+from OCP.gp import gp_Quaternion, gp_Trsf
 from OCP.TopAbs import TopAbs_FACE, TopAbs_SOLID
 
 from pantin_step_converter.assembly import LeafComponent, SourceNode, find_leaf_components
@@ -17,6 +18,8 @@ from pantin_step_converter.face_map import build_face_file
 from pantin_step_converter.glb_export import export_component_glb, tessellate
 from pantin_step_converter.ocp_helpers import count_subshapes
 from pantin_step_converter.step_reader import StepDocument, read_step
+
+_SCALE_TOLERANCE = 1e-9
 
 # The OpenCascade binding that wrote the GLB: the face map relies on its writer.
 _WRITER = f"cadquery-ocp-novtk {version('cadquery-ocp-novtk')}"
@@ -33,14 +36,32 @@ class ConvertedComponent:
 
 
 @dataclass(frozen=True)
+class AssemblyNodePlacement:
+    """Location of a root or assembly node relative to its parent node (metres, unit quaternion)."""
+
+    path: tuple[int, ...]
+    translation: tuple[float, float, float]
+    rotation: tuple[float, float, float, float]
+
+
+@dataclass(frozen=True)
 class ConversionResult:
     source_unit: str
+    assembly_nodes: tuple[AssemblyNodePlacement, ...]
     components: tuple[ConvertedComponent, ...]
 
     def to_json(self) -> dict[str, object]:
         """The stdout object of the process contract (ADR 0009)."""
         return {
             "sourceUnit": self.source_unit,
+            "assemblyNodes": [
+                {
+                    "path": list(node.path),
+                    "translation": list(node.translation),
+                    "rotation": list(node.rotation),
+                }
+                for node in self.assembly_nodes
+            ],
             "components": [
                 {
                     "file": component.file,
@@ -60,12 +81,62 @@ def convert_step(input_path: Path, output_dir: Path) -> ConversionResult:
         raise ConverterError(f"The output directory {output_dir} does not exist.")
     step = read_step(input_path)
     components = _visible_components(find_leaf_components(step.document))
+    # Before any GLB is written: a scaled or mirrored instance fails fast.
+    assembly_nodes = assembly_node_placements(components, step.document_unit_in_metres)
 
     converted = tuple(
         _convert_component(step, component, output_dir, index)
         for index, component in enumerate(components)
     )
-    return ConversionResult(source_unit=step.source_unit, components=converted)
+    return ConversionResult(
+        source_unit=step.source_unit,
+        assembly_nodes=assembly_nodes,
+        components=converted,
+    )
+
+
+def assembly_node_placements(
+    components: list[LeafComponent], document_unit_in_metres: float
+) -> tuple[AssemblyNodePlacement, ...]:
+    """Locations of the roots and assembly nodes above the kept components.
+
+    The meshes are written in the frame of the STEP root, Z up; the locations
+    are in that same frame, translations in metres.
+    """
+    placements: dict[tuple[int, ...], AssemblyNodePlacement] = {}
+    for component in components:
+        # The last node is the leaf itself: leaves are not listed.
+        for node, location in zip(component.nodes[:-1], component.locations[:-1], strict=True):
+            if node.path not in placements:
+                placements[node.path] = _placement(
+                    node, location.Transformation(), document_unit_in_metres
+                )
+    return tuple(placements.values())
+
+
+def _placement(
+    node: SourceNode, transform: gp_Trsf, document_unit_in_metres: float
+) -> AssemblyNodePlacement:
+    if transform.IsNegative() or abs(transform.ScaleFactor() - 1.0) > _SCALE_TOLERANCE:
+        raise UnusableStepFileError(
+            f'The assembly "{node.name}" is placed with a scale or a mirror, '
+            "which Pantin cannot represent. Export the model without scaled or mirrored instances."
+        )
+    translation = transform.TranslationPart()
+    quaternion = transform.GetRotation()
+    return AssemblyNodePlacement(
+        path=node.path,
+        translation=(
+            translation.X() * document_unit_in_metres,
+            translation.Y() * document_unit_in_metres,
+            translation.Z() * document_unit_in_metres,
+        ),
+        rotation=_quaternion_components(quaternion),
+    )
+
+
+def _quaternion_components(quaternion: gp_Quaternion) -> tuple[float, float, float, float]:
+    return (quaternion.X(), quaternion.Y(), quaternion.Z(), quaternion.W())
 
 
 def _convert_component(

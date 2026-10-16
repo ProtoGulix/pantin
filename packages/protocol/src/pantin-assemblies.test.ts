@@ -53,6 +53,11 @@ const twoCylinders = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function issuesOf(document: unknown): string[] {

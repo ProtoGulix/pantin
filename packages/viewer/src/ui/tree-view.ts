@@ -8,10 +8,12 @@ import { listenToDrags } from "./tree-drag.ts";
 import {
   actuatorBolt,
   chevron,
+  kindText,
   rowAttributes,
   rowClassName,
   rowElementId,
   sensorMark,
+  stateMark,
   stateText,
   visibilityEye,
 } from "./tree-row-parts.ts";
@@ -95,6 +97,7 @@ function rowElement(
     chevron(row),
     icon(row.icon, "icon tree-row__icon"),
     labelOrRenameInput(row, translate, intents, tree),
+    kindText(row),
     stateText(row),
     row.detail === null
       ? null
@@ -102,6 +105,7 @@ function rowElement(
     actuatorBolt(row, translate),
     sensorMark(row, translate),
     visibilityEye(row, translate),
+    stateMark(row),
   ]);
 }
 

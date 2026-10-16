@@ -29,11 +29,13 @@ function setUp() {
   const sources: FakeSource[] = [];
   const snapshots: unknown[] = [];
   const clocks: unknown[] = [];
+  const bridges: unknown[] = [];
   const invalid: string[] = [];
   let closedCount = 0;
   const callbacks: PoseStreamCallbacks = {
     onSnapshot: (snapshot) => snapshots.push(snapshot),
     onClock: (state) => clocks.push(state),
+    onBridge: (status) => bridges.push(status),
     onInvalid: (detail) => invalid.push(detail),
     onClosed: () => {
       closedCount += 1;
@@ -44,13 +46,15 @@ function setUp() {
     sources.push(source);
     return source;
   }, callbacks);
-  return { client, sources, snapshots, clocks, invalid, closedCount: () => closedCount };
+  return { client, sources, snapshots, clocks, bridges, invalid, closedCount: () => closedCount };
 }
 
 const VALID = JSON.stringify({
   stepCount: 3,
   jointPositions: [],
   bodies: [{ bodyId: "a", translation: [0, 0, 1], rotation: [0, 0, 0, 1] }],
+  products: [],
+  objects: [],
 });
 
 const CLOCK = JSON.stringify({
@@ -107,6 +111,29 @@ describe("createPoseStreamClient", () => {
     client.follow("p");
     sources[0]?.emit("other", VALID);
     expect(snapshots.length + invalid.length).toBe(0);
+  });
+});
+
+describe("createPoseStreamClient bridge events", () => {
+  it("delivers valid bridge events and reports a bad one", () => {
+    const { client, sources, bridges, invalid } = setUp();
+    client.follow("p");
+    const status = {
+      availability: "available",
+      state: "stopped",
+      network: null,
+      modules: [],
+      failure: null,
+      log: [],
+      externalBridgeConnected: false,
+      listenChoices: ["127.0.0.1"],
+    };
+    sources[0]?.emit("bridge", JSON.stringify(status));
+    sources[0]?.emit("bridge", JSON.stringify({ ...status, state: "exploded" }));
+    sources[0]?.emit("bridge", "not json");
+    expect(bridges).toEqual([status]);
+    expect(invalid).toHaveLength(2);
+    expect(invalid[1]).toContain("bridge");
   });
 });
 

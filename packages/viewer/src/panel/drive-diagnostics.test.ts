@@ -63,11 +63,13 @@ describe("nextDiagnosticUpdate", () => {
     ).toBeNull();
   });
 
-  it("draws nothing for a clear card, and clears a warning that goes away", () => {
-    expect(nextDiagnosticUpdate("", [], "valve_5_3_closed", t)).toBeNull();
+  it("says None for a clear card, once, and replaces a warning that goes away", () => {
+    const clear = nextDiagnosticUpdate("", [], "valve_5_3_closed", t);
+    expect(clear).toMatchObject({ lines: [], noneText: "Aucun" });
+    expect(nextDiagnosticUpdate(clear?.signature ?? "", [], "valve_5_3_closed", t)).toBeNull();
     const shown = nextDiagnosticUpdate("", ["conflicting_commands"], "valve_5_3_closed", t);
-    expect(nextDiagnosticUpdate(shown?.signature ?? "", [], "valve_5_3_closed", t)).toEqual({
-      signature: "",
+    expect(nextDiagnosticUpdate(shown?.signature ?? "", [], "valve_5_3_closed", t)).toMatchObject({
+      signature: "none",
       lines: [],
     });
   });
@@ -78,6 +80,6 @@ describe("nextDiagnosticUpdate", () => {
     expect(
       nextDiagnosticUpdate(shown?.signature ?? "", [], "reversing_contactor", t)?.lines,
     ).toEqual([]);
-    expect(nextDiagnosticUpdate("", [], "reversing_contactor", t)).toBeNull();
+    expect(nextDiagnosticUpdate("none", [], "reversing_contactor", t)).toBeNull();
   });
 });

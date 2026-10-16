@@ -105,11 +105,25 @@ function reversedField(
   ]);
 }
 
+// ADR 0041: reverse the axis (no request), or take it from a clicked face.
+function axisButtons(axis: JointFormAxisView, intents: PanelIntents): HTMLElement {
+  const fromFace =
+    axis.fromFace === null
+      ? null
+      : button(axis.fromFace.label, "button", intents.pickJointAxisOnFace);
+  fromFace?.setAttribute("aria-pressed", String(axis.fromFace?.waiting === true));
+  return element("div", { className: "inline-form__actions" }, [
+    fromFace,
+    button(axis.invertLabel, "button", intents.reverseJointAxis),
+  ]);
+}
+
 function axisFields(axis: JointFormAxisView, intents: PanelIntents): HTMLElement[] {
   return [
     axisDirectionField(axis, intents),
     ...(axis.components === null ? [] : [numberRow(axis.components, intents)]),
     ...(axis.reversed === null ? [] : [reversedField(axis.reversed, intents)]),
+    axisButtons(axis, intents),
     element("p", { className: "inline-form__hint", text: axis.hint }),
   ];
 }

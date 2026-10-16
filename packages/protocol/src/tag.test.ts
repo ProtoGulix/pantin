@@ -26,12 +26,29 @@ describe("TagNameSchema", () => {
 
 describe("TagSchema", () => {
   it("accepts a float command", () => {
-    const tag = { name: "axis.stroke.setpoint", type: "float", direction: "command", value: 0.05 };
+    const tag = {
+      name: "axis.stroke.setpoint",
+      type: "float",
+      direction: "command",
+      value: 0.05,
+      forced: false,
+    };
     expect(TagSchema.parse(tag)).toEqual(tag);
   });
 
+  it("refuses a tag with no forced flag", () => {
+    const tag = { name: "axis.stroke.setpoint", type: "float", direction: "command", value: 0.05 };
+    expect(TagSchema.safeParse(tag).success).toBe(false);
+  });
+
   it("refuses an unknown direction", () => {
-    const tag = { name: "axis.stroke.setpoint", type: "float", direction: "input", value: 0 };
+    const tag = {
+      name: "axis.stroke.setpoint",
+      type: "float",
+      direction: "input",
+      value: 0,
+      forced: false,
+    };
     expect(TagSchema.safeParse(tag).success).toBe(false);
   });
 });

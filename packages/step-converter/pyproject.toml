@@ -2,7 +2,7 @@
 # (setup.sh), so there is no [build-system] and no build backend dependency.
 [project]
 name = "pantin-step-converter"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "Converts a STEP assembly into one GLB per leaf component for Pantin (ADR 0009)."
 license = "Apache-2.0"
 requires-python = ">=3.13"

@@ -65,6 +65,11 @@ const press = {
   ],
   actuators: [cylinder],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function issuesOf(actuators: unknown[], document = press): string[] {

@@ -10,8 +10,11 @@ import { parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
 import { ACTUATOR_ROUTES } from "./actuator-routes.ts";
 import { ASSEMBLY_ROUTES } from "./assembly-routes.ts";
+import { BRIDGE_ROUTES } from "./bridge-routes.ts";
 import { CLOCK_ROUTES } from "./clock-routes.ts";
+import { CONVEYOR_ROUTES } from "./conveyor-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
+import { IO_ROUTES } from "./io-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
 import { ORPHAN_MESH_ROUTES } from "./orphan-mesh-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
@@ -168,10 +171,13 @@ export const ROUTES: readonly Route[] = [
   ...DRIVE_ROUTES,
   ...ACTUATOR_ROUTES,
   ...SENSOR_ROUTES,
+  ...CONVEYOR_ROUTES,
   ...POSE_STREAM_ROUTES,
   ...CLOCK_ROUTES,
   ...ORPHAN_MESH_ROUTES,
   ...TAG_ROUTES,
+  ...IO_ROUTES,
+  ...BRIDGE_ROUTES,
 ];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {

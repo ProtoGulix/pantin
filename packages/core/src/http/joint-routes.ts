@@ -1,5 +1,6 @@
 import {
   CreateJointRequestSchema,
+  JointAxisFromFaceRequestSchema,
   SetJointPositionRequestSchema,
   UpdateJointRequestSchema,
 } from "@pantin/protocol";
@@ -66,6 +67,23 @@ export const JOINT_ROUTES: readonly Route[] = [
       const { position } = parseWithSchema(SetJointPositionRequestSchema, body, "The position");
       const pose = await context.service.setJointPosition(pantinId, jointId, position);
       sendJson(context.response, 200, pose);
+    },
+  },
+  {
+    method: "POST",
+    pattern: ["pantins", ":pantinId", "joints", ":jointId", "axis-from-face"],
+    handle: async (context) => {
+      const request = parseWithSchema(
+        JointAxisFromFaceRequestSchema,
+        await readJsonBody(context.request),
+        "The face pick",
+      );
+      const answer = await context.service.jointAxisFromFace(
+        pantinIdOf(context),
+        jointIdOf(context),
+        request,
+      );
+      sendJson(context.response, 200, answer);
     },
   },
 ];

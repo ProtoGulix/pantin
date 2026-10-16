@@ -83,7 +83,7 @@ describe("a refused drive deletion", () => {
   it("names the actuators to detach first, found in the document", async () => {
     const store = refusedStore();
     await settle();
-    const view = buildPanelView(store.state, EMPTY_CLIENT_CONSOLE);
+    const view = buildPanelView(store.state, EMPTY_CLIENT_CONSOLE, false);
     expect(view.message?.text).toBe(
       "Le préactionneur « v1 » alimente encore des actionneurs. Détachez-les d'abord :",
     );
@@ -98,7 +98,7 @@ describe("a refused drive deletion", () => {
   it("selects an actuator when its link is followed", async () => {
     const store = refusedStore();
     await settle();
-    const [first] = buildPanelView(store.state, EMPTY_CLIENT_CONSOLE).message?.links ?? [];
+    const [first] = buildPanelView(store.state, EMPTY_CLIENT_CONSOLE, false).message?.links ?? [];
     if (first === undefined) {
       throw new Error("The message has no link.");
     }
@@ -126,10 +126,12 @@ describe("Renommer on a selected device", () => {
     const store = openStore();
     store.update(withSelection(store.state, { kind: "sensor", id: "e1" }));
     runMenuCommand(store, "rename", ignoreLanguage);
-    const first = buildInspectorView(store.state, t).focusRequest;
+    const first = buildInspectorView(store.state, t, false).focusRequest;
     expect(first).toMatchObject({ key: "property-name" });
     runMenuCommand(store, "rename", ignoreLanguage);
-    expect(buildInspectorView(store.state, t).focusRequest?.serial).toBe((first?.serial ?? 0) + 1);
+    expect(buildInspectorView(store.state, t, false).focusRequest?.serial).toBe(
+      (first?.serial ?? 0) + 1,
+    );
     expect(store.state.renamingNodeId).toBeNull();
   });
 

@@ -2,6 +2,7 @@ import { lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type FaceFile, FaceFileSchema, MAX_FACE_FILE_BYTES } from "@pantin/protocol";
+import type { AssemblyLocation } from "../domain/assembly-frames.ts";
 import { hasGlbHeader } from "../domain/glb.ts";
 import type { ConvertedComponent } from "../domain/step-bodies.ts";
 import { formatIssues } from "../domain/validation.ts";
@@ -16,7 +17,11 @@ import { type ProcessLimits, type ProcessSpawner, runProcess } from "./process-r
 // the body is imported all the same (ADR 0035 point 2).
 type ConvertedMesh = ConvertedComponent & { glbBytes: Uint8Array; faceFile: FaceFile | undefined };
 
-export type StepConverter = (stepBytes: Uint8Array) => Promise<ConvertedMesh[]>;
+// `assemblyNodes`: the locations of the assembly nodes (ADR 0040 point 4),
+// empty when the converter gives none.
+type ConvertedStep = { components: ConvertedMesh[]; assemblyNodes: AssemblyLocation[] };
+
+export type StepConverter = (stepBytes: Uint8Array) => Promise<ConvertedStep>;
 
 export type StepConverterOptions = {
   pythonPath: string;
@@ -118,7 +123,7 @@ async function runConversion(
   options: StepConverterOptions,
   limits: ProcessLimits,
   workDirectory: string,
-): Promise<ConvertedMesh[]> {
+): Promise<ConvertedStep> {
   const inputPath = join(workDirectory, "input.step");
   const outputDirectory = await mkdtemp(join(workDirectory, "output-"));
   const args = [
@@ -144,7 +149,8 @@ async function runConversion(
     throw conversionFailed(verdict.clientMessage);
   }
   reportMissingFaceFiles(verdict.output, outcome.stderr, options.reportDetail);
-  return readComponents(outputDirectory, verdict.output, options.reportDetail);
+  const components = await readComponents(outputDirectory, verdict.output, options.reportDetail);
+  return { components, assemblyNodes: verdict.output.assemblyNodes ?? [] };
 }
 
 export function createStepConverter(options: StepConverterOptions): StepConverter {

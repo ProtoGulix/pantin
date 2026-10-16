@@ -1,0 +1,163 @@
+import { type BridgeStatus, BridgeStatusSchema } from "@pantin/protocol";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createFakeSpawner, type FakeSpawner } from "../test-support/fake-bridge-child.ts";
+import { copyPlcCylinder, freePort, PLC_CYLINDER_ID } from "../test-support/plc-cylinder.ts";
+import { openSse, type SseClient } from "../test-support/sse-client.ts";
+import {
+  createTestWorkspace,
+  startTestServer,
+  type TestWorkspace,
+} from "../test-support/test-server.ts";
+import type { RunningPantinServer } from "./server.ts";
+
+const BRIDGE_PATH = `/api/pantins/${PLC_CYLINDER_ID}/bridge`;
+const START = { running: true, listen: "127.0.0.1", allow: [] };
+
+let workspace: TestWorkspace;
+let server: RunningPantinServer | undefined;
+let stream: SseClient | undefined;
+
+beforeEach(async () => {
+  workspace = await createTestWorkspace();
+  await copyPlcCylinder(workspace.pantinsDirectory, await freePort());
+});
+
+afterEach(async () => {
+  stream?.close();
+  stream = undefined;
+  await server?.close();
+  server = undefined;
+  await workspace.remove();
+});
+
+async function startServer(spawner?: FakeSpawner): Promise<RunningPantinServer> {
+  server = await startTestServer(workspace.pantinsDirectory, {
+    hostAddresses: () => ["127.0.0.1", "192.168.1.20"],
+    ...(spawner === undefined
+      ? {}
+      : { bridgePython: "/venv/bin/python", bridgeSpawn: spawner.spawn }),
+  });
+  return server;
+}
+
+async function call(
+  method: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<{ status: number; json: unknown }> {
+  const running = server;
+  if (running === undefined) {
+    throw new Error("Start the server first.");
+  }
+  const response = await fetch(`http://127.0.0.1:${running.address.port}${BRIDGE_PATH}`, {
+    method,
+    headers: { "content-type": "application/json", ...headers },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  return { status: response.status, json: await response.json() };
+}
+
+function errorCodeOf(json: unknown): string | undefined {
+  return (json as { error?: { code?: string } }).error?.code;
+}
+
+describe("without --bridge-python", () => {
+  it("reports the bridge as unavailable and lists the listen choices", async () => {
+    await startServer();
+    const { status, json } = await call("GET");
+    const body = BridgeStatusSchema.parse(json);
+    expect(status).toBe(200);
+    expect(body).toMatchObject({ availability: "unavailable", state: "stopped", network: null });
+    expect(body.listenChoices).toEqual(["127.0.0.1", "192.168.1.20"]);
+  });
+
+  it("answers bridge_unavailable to a start", async () => {
+    await startServer();
+    const { status, json } = await call("PUT", START);
+    expect(status).toBe(503);
+    expect(errorCodeOf(json)).toBe("bridge_unavailable");
+  });
+});
+
+describe("with a bridge Python", () => {
+  it("starts and stops, answering the status at each step", async () => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    const started = await call("PUT", START);
+    expect(started.status).toBe(200);
+    expect(BridgeStatusSchema.parse(started.json)).toMatchObject({
+      availability: "available",
+      state: "starting",
+      network: { listen: "127.0.0.1", allow: [] },
+    });
+    expect(spawner.calls[0]?.args).toContain("--status-lines");
+    const stopped = await call("PUT", { running: false });
+    expect(BridgeStatusSchema.parse(stopped.json).state).toBe("stopped");
+    expect((await call("GET")).status).toBe(200);
+  });
+});
+
+describe("with a bridge Python, refusals", () => {
+  it("refuses the cloudflare exposure for a change, and starts nothing", async () => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    const exposed = { "x-pantin-exposure": "cloudflare" };
+    for (const body of [START, { running: false }]) {
+      const { status } = await call("PUT", body, exposed);
+      expect(status).toBe(403);
+    }
+    for (const value of ["cloudflare, x", "anything"]) {
+      const { status } = await call("PUT", START, { "x-pantin-exposure": value });
+      expect(status).toBe(403);
+    }
+    expect(spawner.calls).toHaveLength(0);
+    expect((await call("GET", undefined, exposed)).status).toBe(200);
+  });
+
+  it.each([
+    ["an unknown field", { ...START, python: "/bin/sh" }],
+    ["a wildcard address", { ...START, listen: "0.0.0.0" }],
+    ["a stop with a listen field", { running: false, listen: "127.0.0.1" }],
+    [
+      "a private address of another machine",
+      { running: true, listen: "10.9.9.9", allow: ["10.0.0.0/8"] },
+    ],
+  ])("answers 400 to %s", async (_name, body) => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    const { status, json } = await call("PUT", body);
+    expect(status).toBe(400);
+    expect(errorCodeOf(json)).toBe("invalid_request");
+    expect(spawner.calls).toHaveLength(0);
+  });
+
+  it("answers 404 for an unknown Pantin", async () => {
+    await startServer(createFakeSpawner());
+    const response = await fetch(
+      `http://127.0.0.1:${server?.address.port}/api/pantins/nobody/bridge`,
+    );
+    expect(response.status).toBe(404);
+  });
+});
+
+describe("the bridge event of the pose stream", () => {
+  it("is sent when the stream opens and on each change", async () => {
+    const spawner = createFakeSpawner();
+    const running = await startServer(spawner);
+    stream = await openSse(running.address.port, `/api/pantins/${PLC_CYLINDER_ID}/pose/stream`);
+    await stream.waitUntil(() => stream?.bridges.length === 1);
+    expect(stream.bridges[0]?.state).toBe("stopped");
+    await call("PUT", START);
+    spawner.children[0]?.writeStdout(
+      `${JSON.stringify({ event: "ready", listen: "127.0.0.1", modules: [{ key: "m1", port: 1502 }] })}\n`,
+    );
+    await stream.waitUntil(() => stream?.bridges.at(-1)?.state === "running");
+    const last: BridgeStatus | undefined = stream.bridges.at(-1);
+    expect(last?.modules).toEqual([{ key: "m1", port: 1502, plcConnected: false }]);
+    expect(stream.bridges.map((status) => status.state)).toEqual([
+      "stopped",
+      "starting",
+      "running",
+    ]);
+  });
+});

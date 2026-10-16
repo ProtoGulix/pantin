@@ -35,6 +35,10 @@ function runAction(
     intents.toggleAssemblyIsolated(nodeId);
   } else if (action === "delete") {
     intents.requestDelete(nodeId);
+  } else if (action === "editDevice" || action === "deleteDevice") {
+    intents.runDeviceAction(nodeId, action === "editDevice" ? "edit" : "delete");
+  } else if (action === "showInIo") {
+    intents.showDeviceInIo(nodeId);
   } else {
     // The file picker must open inside this click: browsers require a user gesture.
     intents.closeContextMenu();
@@ -67,6 +71,8 @@ function menuItem(
 function listenToMenuKeys(menu: HTMLElement, intents: PanelIntents): void {
   menu.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      // Handled here: the window's Escape must not also end a positioning tool.
+      event.preventDefault();
       intents.closeContextMenu();
     } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();

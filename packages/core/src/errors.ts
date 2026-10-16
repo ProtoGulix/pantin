@@ -8,6 +8,7 @@ const HTTP_STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   payload_too_large: 413,
   conversion_unavailable: 503,
   conversion_failed: 422,
+  bridge_unavailable: 503,
   internal_error: 500,
 };
 

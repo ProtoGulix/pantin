@@ -111,5 +111,10 @@ export function documentOf(parts: Parts): PantinDocument {
     drives: parts.drives ?? [],
     actuators: parts.actuators ?? [],
     sensors: parts.sensors ?? [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   });
 }

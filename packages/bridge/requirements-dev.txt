@@ -1,0 +1,10 @@
+# Development tools (CLAUDE.md section 8). Pinned exactly, same as the STEP converter.
+-r requirements.txt
+ruff==0.16.9
+mypy==2.3.1
+pytest==9.1.1
+# Test client only: an independent Modbus implementation to check our framing against (ADR 0048).
+pymodbus==3.15.0
+# Fuzz test of the frame decoder (ADR 0048 point 5), and its one dependency.
+hypothesis==6.168.3
+sortedcontainers==2.4.0

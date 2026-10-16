@@ -32,6 +32,11 @@ function documentWith(joints: Joint[], bodyIds = ["base", "arm", "slider"]): Pan
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

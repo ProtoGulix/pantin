@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { conveyorPantin } from "./conveyors/conveyor-fixtures.ts";
 import {
   deviceExists,
   deviceName,
@@ -54,5 +55,27 @@ describe("relatedJointIds", () => {
     expect(relatedJointIds(document, { kind: "actuator", id: "c2" })).toEqual(new Set(["j2"]));
     expect(relatedJointIds(document, { kind: "sensor", id: "e1" })).toEqual(new Set(["j2"]));
     expect(relatedJointIds(document, { kind: "sensor", id: "gone" }).size).toBe(0);
+  });
+});
+
+describe("phase 6 objects as devices", () => {
+  const conveyors = conveyorPantin().document;
+
+  it("exist, are named and are found by kind and id", () => {
+    expect(deviceExists(conveyors, { kind: "belt", id: "feed" })).toBe(true);
+    expect(deviceExists(conveyors, { kind: "belt", id: "side" })).toBe(false);
+    expect(deviceName(conveyors, { kind: "presenceSensor", id: "cell" })).toBe("Cell");
+    expect(deviceName(conveyors, { kind: "emitter", id: "ghost" })).toBeNull();
+  });
+
+  it("have no diagram node, so a diagram id never selects one", () => {
+    expect(deviceNodeId({ kind: "guide", id: "side" })).toBe("guide:side");
+    expect(deviceOfDiagramNode("guide:side")).toEqual({ kind: "guide", id: "side" });
+    expect(deviceOfDiagramNode("joint:spin")).toBeNull();
+  });
+
+  it("relate a belt to its drum joint and the others to none", () => {
+    expect([...relatedJointIds(conveyors, { kind: "belt", id: "feed" })]).toEqual(["spin"]);
+    expect(relatedJointIds(conveyors, { kind: "absorber", id: "sink" }).size).toBe(0);
   });
 });

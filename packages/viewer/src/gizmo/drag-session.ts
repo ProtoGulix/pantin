@@ -1,6 +1,7 @@
-import { multiplyQuaternions } from "../frames.ts";
-import type { RigidTransform } from "../rigid-transform.ts";
-import { placementOfGizmoNode } from "./anchor-frame.ts";
+import { multiplyQuaternions, type Vector3Tuple } from "../frames.ts";
+import { conjugate, type RigidTransform, rotateVector } from "../rigid-transform.ts";
+import { gizmoAxesRotation, placementOfGizmoNode } from "./anchor-frame.ts";
+import type { GizmoSpace } from "./gizmo-space.ts";
 import {
   type DragKind,
   rotationBetween,
@@ -30,30 +31,42 @@ export function startDragSession(
   anchor: RigidTransform,
   startPlacement: RigidTransform,
   steps: SnapSteps,
+  space: GizmoSpace,
 ): DragSession {
+  // The gizmo's axes seen from the anchor; the drag is snapped along THEM.
+  const axes = gizmoAxesRotation(startPlacement, space);
+  const toAnchor = (vector: Vector3Tuple) => rotateVector(axes, vector);
+  const toGizmo = (vector: Vector3Tuple) => rotateVector(conjugate(axes), vector);
   return {
     startPlacement,
     placementOf: (node, snap) => {
-      const dragged = placementOfGizmoNode(anchor, startPlacement, node);
+      const dragged = placementOfGizmoNode(anchor, startPlacement, node, space);
       if (kind === "move") {
         const [sx, sy, sz] = startPlacement.translation;
-        const [dx, dy, dz] = snapTranslationDelta(
-          [dragged.translation[0] - sx, dragged.translation[1] - sy, dragged.translation[2] - sz],
-          snap ? steps.translationMillimetres : null,
+        const along = toGizmo([
+          dragged.translation[0] - sx,
+          dragged.translation[1] - sy,
+          dragged.translation[2] - sz,
+        ]);
+        const [dx, dy, dz] = toAnchor(
+          snapTranslationDelta(along, snap ? steps.translationMillimetres : null),
         );
         return {
           translation: [sx + dx, sy + dy, sz + dz],
           rotation: startPlacement.rotation,
         };
       }
-      const delta = snapRotationDelta(
-        rotationBetween(startPlacement.rotation, dragged.rotation),
-        snap ? steps.rotationDegrees : null,
-      );
-      return {
-        translation: startPlacement.translation,
-        rotation: multiplyQuaternions(delta, startPlacement.rotation),
-      };
+      // The turn in the anchor frame, as a turn about the gizmo's own axes.
+      const inAnchor = rotationBetween(startPlacement.rotation, dragged.rotation);
+      const own = multiplyQuaternions(multiplyQuaternions(conjugate(axes), inAnchor), axes);
+      const snapped = snapRotationDelta(own, snap ? steps.rotationDegrees : null);
+      // Applied in the gizmo's axes: R0 . s in Local (the assembly's own turn),
+      // s . R0 in Global; no conjugation, so no float noise reaches the document.
+      const rotation =
+        space === "local"
+          ? multiplyQuaternions(startPlacement.rotation, snapped)
+          : multiplyQuaternions(snapped, startPlacement.rotation);
+      return { translation: startPlacement.translation, rotation };
     },
   };
 }

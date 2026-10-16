@@ -1,0 +1,112 @@
+import type {
+  IoDocument,
+  IoMappedChannel,
+  IoMappingResponse,
+  IoProblem,
+  PantinDocument,
+} from "@pantin/protocol";
+import { type IoReading, mappingIdOf } from "./io-document-text.ts";
+import { type IoTag, validateIoDocument } from "./io-validation.ts";
+import { type TagOwner, tagEntries } from "./tag-entries.ts";
+
+// From the open mapping and the document's tags to the answer of GET .../io
+// (ADR 0049 points 5 to 8): pure, the legacy files are looked up by the caller.
+
+/** Legacy files found beside io.json (io.csv, io-modules.json), by name. */
+export type LegacyIoFilesFound = readonly string[];
+
+function ownerOf(owner: TagOwner): IoTag["owner"] {
+  switch (owner.kind) {
+    case "joint":
+      return { kind: "joint", id: owner.joint.id };
+    case "drive":
+      return { kind: "drive", id: owner.drive.id };
+    case "sensor":
+      return { kind: "sensor", id: owner.sensor.id };
+    case "emitter":
+      return { kind: "emitter", id: owner.emitter.id };
+    case "presenceSensor":
+      return { kind: "presenceSensor", id: owner.presenceSensor.id };
+  }
+}
+
+/** The tags a mapping can refer to: those of the open document. */
+export function ioTagsOf(document: PantinDocument): IoTag[] {
+  return tagEntries(document).map((entry) => ({
+    name: entry.name,
+    type: entry.type,
+    direction: entry.direction,
+    owner: ownerOf(entry.owner),
+  }));
+}
+
+// ADR 0049 point 8: two sources of truth are never merged, so the user is told
+// which file to act on.
+function legacyProblem(found: LegacyIoFilesFound, hasIoJson: boolean): IoProblem {
+  const names = found.join(" and ");
+  const message = hasIoJson
+    ? `${names} still exist beside io.json, which replaces them: delete them.`
+    : `${names} exist but io.json does not: run "pnpm pantin io migrate <folder>" to convert them.`;
+  return { path: [], code: "legacy_io_files", message };
+}
+
+function annotated(document: IoDocument, tags: readonly IoTag[]): IoMappingResponse["modules"] {
+  const byName = new Map(tags.map((tag) => [tag.name, tag]));
+  return document.modules.map((module) => ({
+    ...module,
+    channels: module.channels.map((channel): IoMappedChannel => {
+      const tag = byName.get(channel.tag);
+      return {
+        ...channel,
+        tagType: tag?.type ?? null,
+        direction: tag?.direction ?? null,
+        owner: tag?.owner ?? null,
+      };
+    }),
+  }));
+}
+
+function unmappedAll(tags: readonly IoTag[]): IoMappingResponse["unmappedTags"] {
+  return tags.map(({ name, type, direction, owner }) => ({ name, type, direction, owner }));
+}
+
+function statusOf(problems: readonly IoProblem[]): IoMappingResponse["status"] {
+  return problems.length === 0 ? "valid" : "invalid";
+}
+
+/** Checks the open mapping against the tags of the open document. */
+export function evaluateIoMapping(
+  reading: IoReading,
+  legacyFiles: LegacyIoFilesFound,
+  tags: readonly IoTag[],
+): IoMappingResponse {
+  const legacy =
+    legacyFiles.length === 0 ? [] : [legacyProblem(legacyFiles, reading.kind !== "missing")];
+  if (reading.kind === "missing") {
+    return {
+      status: legacy.length === 0 ? "missing" : "invalid",
+      mappingId: null,
+      modules: [],
+      problems: legacy,
+      unmappedTags: unmappedAll(tags),
+    };
+  }
+  if (reading.kind === "unreadable") {
+    return {
+      status: "invalid",
+      mappingId: null,
+      modules: [],
+      problems: [...legacy, ...reading.problems],
+      unmappedTags: unmappedAll(tags),
+    };
+  }
+  const validation = validateIoDocument(reading.document, tags);
+  const problems = [...legacy, ...validation.problems];
+  return {
+    status: statusOf(problems),
+    mappingId: mappingIdOf(reading),
+    modules: annotated(reading.document, tags),
+    problems,
+    unmappedTags: validation.unmappedTags,
+  };
+}

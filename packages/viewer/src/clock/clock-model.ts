@@ -50,6 +50,12 @@ export interface ClockView {
   stepOneHint: string;
   stepTenLabel: string;
   stepTenHint: string;
+  // "Remise à zéro" (ADR 0043 point 12): allowed running or paused.
+  canReset: boolean;
+  resetLabel: string;
+  resetHint: string;
+  // "Relâcher tout (n)": shown only while n > 0 tags are forced.
+  releaseAll: { label: string; hint: string } | null;
   timeLabel: string;
   timeText: string;
   stepLabel: string;
@@ -87,6 +93,7 @@ export function buildClockView(
   visible: boolean,
   language: Language,
   t: Translate,
+  forcedCount = 0,
 ): ClockView {
   const { state } = model;
   const running = state?.running ?? false;
@@ -102,6 +109,18 @@ export function buildClockView(
     stepOneHint: t(pluralKey("clock.stepHint", 1, language), { count: 1 }),
     stepTenLabel: t("clock.stepTen"),
     stepTenHint: t(pluralKey("clock.stepHint", 10, language), { count: 10 }),
+    // Like Pause and the step buttons, the transport bar does not wait for a
+    // request in flight; the Edit menu entry does, as every menu entry does.
+    canReset: state !== null,
+    resetLabel: t("clock.reset"),
+    resetHint: t("clock.resetHint"),
+    releaseAll:
+      forcedCount > 0
+        ? {
+            label: t("forced.releaseAll", { count: forcedCount }),
+            hint: t("forced.releaseAllHint"),
+          }
+        : null,
     timeLabel: t("clock.timeLabel"),
     timeText:
       state === null

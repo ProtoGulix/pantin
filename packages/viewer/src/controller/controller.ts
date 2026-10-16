@@ -1,8 +1,10 @@
 import { pickedNodeId } from "../assembly-display.ts";
+import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
+import { isToolOn } from "../gizmo/tool-rules.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
-import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
+import { selectedNodeIdOf } from "../selection.ts";
 import {
   withListSelection,
   withWelcomeFilter,
@@ -17,6 +19,7 @@ import { actuatorIntents } from "./actuator-intents.ts";
 import {
   applyAlignment,
   chooseAlignmentKind,
+  chooseAlignmentPick,
   restartAlignment,
   setAlignmentFixedJoint,
   setAlignmentFlip,
@@ -28,11 +31,14 @@ import {
   toggleAssemblyHidden,
   toggleAssemblyIsolated,
 } from "./assembly-actions.ts";
+import { startAxisPick } from "./axis-pick-actions.ts";
+import { bridgeIntents } from "./bridge-actions.ts";
 import { clockIntents } from "./clock-actions.ts";
 import { consoleIntents } from "./console-actions.ts";
+import { conveyorIntents } from "./conveyor-intents.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
-import { setGizmoStep } from "./gizmo-actions.ts";
+import { setGizmoStep, turnToolOff } from "./gizmo-actions.ts";
 import {
   cancelImport,
   changeImportOptions,
@@ -40,6 +46,7 @@ import {
   confirmImport,
   createPantinFromFile,
 } from "./import-actions.ts";
+import { ioIntents } from "./io-actions.ts";
 import {
   cancelJointForm,
   changeJointType,
@@ -60,10 +67,24 @@ import {
   renameNode,
   savePantin,
 } from "./pantin-actions.ts";
-import { commitPropertyEdit } from "./property-actions.ts";
+import { restorePreviousPlacement } from "./placement-actions.ts";
+import { cancelPropertyEdit, commitPropertyEdit } from "./property-actions.ts";
 import { sensorIntents } from "./sensor-intents.ts";
-import { requestClose, requestDelete, resolvePrompt } from "./session-actions.ts";
-import { activateNode, frameNode, setExpanded, startRename } from "./tree-actions.ts";
+import {
+  requestClose,
+  requestDelete,
+  resolvePrompt,
+  setCloseStopsBridge,
+} from "./session-actions.ts";
+import {
+  activateNode,
+  frameNode,
+  openContextMenu,
+  runDeviceAction,
+  selectRow,
+  setExpanded,
+  startRename,
+} from "./tree-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Maps every intent to an action. Async actions report their own failures
@@ -93,17 +114,7 @@ function listIntents(store: ViewerStore) {
 
 function treeIntents(store: ViewerStore) {
   return {
-    selectNode: (nodeId: string) => {
-      // No redraw when nothing changes, so a double-click lands on the same row element.
-      const { selection, contextMenu, renamingNodeId } = store.state;
-      if (
-        selectedNodeIdOf(selection) !== nodeId ||
-        contextMenu !== null ||
-        renamingNodeId !== null
-      ) {
-        store.update({ ...withSelection(store.state, nodeSelection(nodeId)), contextMenu: null });
-      }
-    },
+    selectNode: (nodeId: string) => selectRow(store, nodeId),
     selectDevice: (device: DeviceRef) => selectDevice(store, device),
     revealNode: (nodeId: string) =>
       store.update({ ...withRevealedNode(store.state, nodeId), contextMenu: null }),
@@ -113,6 +124,7 @@ function treeIntents(store: ViewerStore) {
     commitRename: (nodeId: string, name: string) => void renameNode(store, nodeId, name),
     commitPropertyEdit: (target: EditTarget, value: string) =>
       void commitPropertyEdit(store, target, value),
+    cancelPropertyEdit: (target: EditTarget) => cancelPropertyEdit(store, target),
     cancelRename: () => store.update({ ...store.state, renamingNodeId: null }),
     requestDelete: (nodeId: string) => requestDelete(store, nodeId),
     dropBody: (dragged: string, target: string) => dropBody(store, dragged, target),
@@ -124,11 +136,7 @@ function treeIntents(store: ViewerStore) {
         void createAssembly(store, pantinId);
       }
     },
-    openContextMenu: (nodeId: string, x: number, y: number) =>
-      store.update({
-        ...withSelection(store.state, nodeSelection(nodeId)),
-        contextMenu: { nodeId, x, y },
-      }),
+    openContextMenu: (nodeId: string, x: number, y: number) => openContextMenu(store, nodeId, x, y),
     closeContextMenu: () => store.update({ ...store.state, contextMenu: null }),
   };
 }
@@ -150,6 +158,7 @@ function editIntents(store: ViewerStore) {
     },
     resolvePrompt: (action: Parameters<PanelIntents["resolvePrompt"]>[0]) =>
       resolvePrompt(store, action),
+    setCloseStopsBridge: (stops: boolean) => setCloseStopsBridge(store, stops),
   };
 }
 
@@ -174,6 +183,7 @@ function jointIntents(store: ViewerStore) {
     reverseJointAxis: () => reverseJointAxis(store),
     submitJointForm: () => void submitJointForm(store),
     cancelJointForm: () => cancelJointForm(store),
+    pickJointAxisOnFace: () => startAxisPick(store),
     moveJoint: (pantinId: string, jointId: string, position: number) =>
       moveJoint(store, pantinId, jointId, position),
   };
@@ -186,7 +196,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
       store.update({ ...store.state, language });
     }
   };
-  return {
+  const intents: PanelIntents = {
     ...listIntents(store),
     ...treeIntents(store),
     ...editIntents(store),
@@ -196,30 +206,40 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...driveIntents(store),
     ...actuatorIntents(store),
     ...sensorIntents(store),
+    ...conveyorIntents(store),
     ...consoleIntents(store),
     ...clockIntents(store),
+    ...bridgeIntents(store),
+    ...ioIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
+    turnToolOff: () => turnToolOff(store),
+    restorePreviousPlacement: () => void restorePreviousPlacement(store),
     setGizmoStep: (field, text) => setGizmoStep(store, field, text),
     chooseAlignmentKind: (kind) => chooseAlignmentKind(store, kind),
+    chooseAlignmentPick: (index) => chooseAlignmentPick(store, index),
     setAlignmentText: (field, text) => setAlignmentText(store, field, text),
     setAlignmentFlip: (flip) => setAlignmentFlip(store, flip),
     setAlignmentFixedJoint: (fixedJoint) => setAlignmentFixedJoint(store, fixedJoint),
     restartAlignment: () => restartAlignment(store),
     applyAlignment: () => void applyAlignment(store),
     showViewFromDirection: (direction) => showViewFromDirection(store, direction),
-    togglePropertyGroup: (groupId) =>
-      store.update({
-        ...store.state,
-        collapsedPropertyGroups: toggledSet(store.state.collapsedPropertyGroups, groupId),
-      }),
+    togglePropertyGroup: (groupId) => {
+      const collapsedPropertyGroups = toggledSet(store.state.collapsedPropertyGroups, groupId);
+      store.update({ ...store.state, collapsedPropertyGroups });
+      store.ports.storeCollapsedGroups(collapsedPropertyGroups);
+    },
     dismissMessage: () => store.update({ ...store.state, message: null }),
+    // The device actions are the toolbar's, which take these same intents.
+    runDeviceAction: (nodeId, action) => runDeviceAction(store, intents, nodeId, action),
     changeLanguage,
   };
+  return intents;
 }
 
 /**
- * A click in the 3D view selects the body's assembly, a double click the body
- * (ADR 0019 point 13); either is revealed in the tree.
+ * A click in the 3D view selects the top-level assembly of the body, each
+ * double click goes one level down, down to the body (ADR 0040 point 9);
+ * the result is revealed in the tree.
  */
 export function selectBodyFromViewport(
   store: ViewerStore,
@@ -228,12 +248,36 @@ export function selectBodyFromViewport(
 ): void {
   const open = store.state.openPantin;
   if (bodyId === null || open === null) {
-    store.update(withSelection(store.state, null));
+    // A missed click must not drop the assembly a tool works on (ADR 0039 point 3).
+    if (!isToolOn(store.state)) {
+      store.update(withSelection(store.state, null));
+    }
     return;
   }
   store.update(
-    withRevealedNode(store.state, pickedNodeId(open.document, open.id, bodyId, doubleClick)),
+    withRevealedNode(
+      store.state,
+      pickedNodeId(
+        open.document,
+        open.id,
+        bodyId,
+        doubleClick,
+        selectedNodeIdOf(store.state.selection),
+      ),
+    ),
   );
+}
+
+/**
+ * A click on a belt, guide, emitter, absorber or presence sensor that no body
+ * hides selects it and shows it in the inspector (ADR 0043 point 13).
+ */
+export function selectConveyorFromViewport(
+  store: ViewerStore,
+  kind: ConveyorKind,
+  id: string,
+): void {
+  selectDevice(store, { kind, id });
 }
 
 export function startViewer(store: ViewerStore): void {

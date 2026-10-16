@@ -1,6 +1,7 @@
 /* The chain diagram (ADR 0029), over the 3D view or under it (ADR 0030). Tokens in base.css. */
 :root {
-  /* One colour and one line style per kind of wire: colour is never the only cue. */
+  /* One colour and one line style per kind of wire: colour is never the only cue.
+     These are data, not theme: they keep their values in both themes (ADR 0053 point 4). */
   --edge-pneumatic: #5aa9e6;
   --edge-ac-power: #f0a030;
   --edge-servo: #b48ead;
@@ -76,11 +77,11 @@
 }
 
 .diagram-band__toggle:hover .diagram-band__name {
-  fill: var(--accent);
+  fill: var(--selection);
 }
 
 .diagram-band__toggle:focus-visible {
-  outline: 1px solid var(--accent);
+  outline: 1px solid var(--selection);
 }
 
 /* Wires: colour, width and dash pattern together tell the kind. */
@@ -143,13 +144,13 @@
 }
 
 .diagram-node.is-related .diagram-node__box {
-  stroke: var(--accent);
+  stroke: var(--selection);
   stroke-opacity: 0.6;
 }
 
 .diagram-node.is-selected .diagram-node__box {
-  fill: var(--accent-soft);
-  stroke: var(--accent);
+  fill: var(--selection-soft);
+  stroke: var(--selection);
   stroke-width: 2;
 }
 
@@ -160,7 +161,7 @@
 }
 
 .diagram-node.has-warning .diagram-node__box {
-  stroke: var(--danger);
+  stroke: var(--state-abnormal);
   stroke-dasharray: 4 2;
   stroke-width: 2;
 }
@@ -178,7 +179,7 @@
 
 .diagram-node__warning {
   font-size: 10px;
-  fill: var(--danger);
+  fill: var(--state-abnormal);
 }
 
 .diagram-socket {
@@ -213,4 +214,21 @@
   font-size: 9px;
   text-anchor: middle;
   fill: var(--text);
+}
+
+/* An "F" beside the socket of a forced command; colour is never the only cue. */
+.diagram-forced {
+  display: none;
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--state-abnormal);
+}
+
+.diagram-port.is-forced .diagram-forced {
+  display: inline;
+}
+
+.diagram-port.is-forced .diagram-socket {
+  stroke: var(--state-abnormal);
 }

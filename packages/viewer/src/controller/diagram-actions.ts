@@ -1,8 +1,8 @@
-import { type CentralLayout, nextLayout } from "../central-layout.ts";
+import { type CentralLayout, nextLayout, showsIo } from "../central-layout.ts";
 import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
-import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
+import { withRevealedDevice, withRevealedNode } from "../tree/tree-state.ts";
 import {
   createDiagramElement,
   type DiagramElementKind,
@@ -19,7 +19,10 @@ import type { ViewerStore } from "./viewer-store.ts";
 export function setCentralLayout(store: ViewerStore, layout: CentralLayout): void {
   if (store.state.centralLayout !== layout) {
     store.ports.storeCentralLayout(layout);
-    store.update({ ...store.state, centralLayout: layout, contextMenu: null });
+    // Showing the I/O view reads the mapping: the store's hook does it (io-load.ts).
+    // Entering it is a gesture: a failed read is tried again.
+    const io = showsIo(layout) ? { ...store.state.io, failedFor: null } : store.state.io;
+    store.update({ ...store.state, centralLayout: layout, contextMenu: null, io });
   }
 }
 
@@ -41,8 +44,9 @@ export function selectDevice(store: ViewerStore, device: DeviceRef): void {
   if (open !== null && deviceExists(open.document, device)) {
     // The inspector is the only place a device is shown: selecting one from the
     // diagram or an index opens it. A tree node never does (ADR 0030 point 2).
+    // Its tree row is unfolded so that the selected row is visible (ADR 0047 point 4).
     store.update({
-      ...withSelection(store.state, device),
+      ...withRevealedDevice(store.state, device),
       inspectorOpen: true,
       contextMenu: null,
     });
@@ -51,7 +55,7 @@ export function selectDevice(store: ViewerStore, device: DeviceRef): void {
 
 /**
  * A drive, an actuator or a sensor node selects that device; a joint node
- * selects its tree row (ADR 0030 point 1).
+ * selects its tree row (ADR 0030 point 1, ADR 0047 point 4).
  */
 export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): void {
   const open = store.state.openPantin;

@@ -17,7 +17,7 @@ const allPackageFolderNames = readdirSync(packagesDirectory, { withFileTypes: tr
   .map((entry) => entry.name)
   .sort();
 
-// Python packages (ADR 0007, ADR 0009) carry a pyproject.toml instead of a package.json.
+// Python packages (the bridge, ADR 0007 and 0045; the STEP converter, ADR 0009) carry a pyproject.toml instead of a package.json.
 const pythonPackageFolderNames = allPackageFolderNames.filter((folderName) =>
   existsSync(join(packagesDirectory, folderName, "pyproject.toml")),
 );
@@ -41,7 +41,7 @@ describe("workspace packages", () => {
   });
 
   it("knows which packages are written in Python", () => {
-    expect(pythonPackageFolderNames).toEqual(["step-converter"]);
+    expect(pythonPackageFolderNames).toEqual(["bridge", "step-converter"]);
   });
 
   it.each(packageFolderNames)("%s follows the package manifest conventions", (folderName) => {

@@ -34,6 +34,11 @@ const EMPTY: PantinDocument = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function link(parent: string, child: string, name = "Link"): CreateJointRequest {

@@ -39,6 +39,10 @@ function assemblyGroups(
 ): GroupDraft[] {
   const bodyCount = pantin.document.bodies.filter((body) => body.assembly === assembly.key).length;
   const target = { kind: "assemblyKey" as const, pantinId: pantin.id, key: assembly.key };
+  // Read only: moving an assembly in the structure tree has no editor yet (ADR 0040).
+  const container = pantin.document.assemblies.find((other) => other.key === assembly.parent);
+  const containerRows =
+    container === undefined ? [] : [row("parent", t("properties.parentAssembly"), container.name)];
   return [
     {
       id: "general",
@@ -46,6 +50,7 @@ function assemblyGroups(
         row("name", t("properties.name"), assembly.name, renameEditor(nodeId)),
         // The key prefixes the tags: renaming it renames them (ADR 0019).
         row("key", t("properties.assemblyKey"), assembly.key, { input: "text", target }),
+        ...containerRows,
         row("bodyCount", t("properties.bodyCount"), String(bodyCount)),
       ],
     },
@@ -195,6 +200,10 @@ export function nodeGroups(source: PropertySource, nodeId: string, t: Translate)
       return [];
     }
     return jointGroups(joint, open, customAxis, t);
+  }
+  if (ref.kind === "family" || ref.kind === "device") {
+    // A device is selected as a device, and a family folder has no property.
+    return [];
   }
   const body = open.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   if (body === undefined) {

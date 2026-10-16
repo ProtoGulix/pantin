@@ -22,6 +22,11 @@ export function createPantinDocument(name: string): PantinDocument {
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
   };
 }
 

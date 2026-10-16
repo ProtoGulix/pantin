@@ -1,11 +1,13 @@
 import { isAligning } from "../alignment/alignment-view.ts";
 import { type CentralLayout, showsViewport } from "../central-layout.ts";
 import type { DeviceKind } from "../device-selection.ts";
+import type { GizmoSpace } from "../gizmo/gizmo-space.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language } from "../i18n/translate.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { Selection } from "../selection.ts";
+import type { ThemeChoice } from "../theme/theme.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
@@ -18,11 +20,13 @@ export interface MenuContext {
   hasBodies: boolean;
   selectedKind: NodeRef["kind"] | DeviceKind | null;
   language: Language;
+  themeChoice: ThemeChoice;
   inspectorOpen: boolean;
   consoleOpen: boolean;
   centralLayout: CentralLayout;
   // The placement gizmo (ADR 0034): on, and whether one assembly is selected to use it on.
   gizmoMode: DragKind | null;
+  gizmoSpace: GizmoSpace;
   gizmoAvailable: boolean;
   // An alignment is under way (ADR 0035).
   aligning: boolean;
@@ -48,13 +52,32 @@ export function menuContext(state: ViewerState): MenuContext {
     hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
     selectedKind: selectedKindOf(state.selection),
     language: state.language,
+    themeChoice: state.themeChoice,
     inspectorOpen: state.inspectorOpen,
     consoleOpen: state.console.open,
     centralLayout: state.centralLayout,
     gizmoMode: state.gizmoMode,
+    gizmoSpace: state.gizmoSpace,
     gizmoAvailable: canUseGizmo(state),
     aligning: isAligning(state),
     navigation: state.navigation,
     viewsAvailable: state.openPantin !== null && showsViewport(state.centralLayout),
   };
+}
+
+/** What a plain Escape does once every component that handles it has had its say. */
+export type EscapeCommand = "turnToolOff";
+
+/**
+ * The last link of the Escape chain (ADR 0039 point 6): after the gizmo drag,
+ * the text field, the menus and prompts, a positioning tool goes off. An open
+ * context menu closes first.
+ */
+export function escapeCommand(state: ViewerState): EscapeCommand | null {
+  if (state.contextMenu !== null) {
+    return null;
+  }
+  return state.gizmoMode !== null || state.alignment !== null || state.axisPick !== null
+    ? "turnToolOff"
+    : null;
 }

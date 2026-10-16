@@ -9,6 +9,7 @@ import {
   type AlignmentSession,
   alignRequestOf,
   newAlignmentSession,
+  withCurrentPick,
   withKind,
   withoutPicks,
   withPick,
@@ -16,11 +17,13 @@ import {
 import { isAligning } from "../alignment/alignment-view.ts";
 import { resolveAlignmentPick, type ViewportPick } from "../alignment/pick-resolution.ts";
 import { anchorOfAssembly } from "../assembly-anchor.ts";
+import { toolAssemblyKeyOf } from "../gizmo/gizmo-spec.ts";
+import { withToolTarget } from "../gizmo/tool-rules.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { describeFailure, errorMessage, infoMessage, type PanelMessage } from "../messages.ts";
-import { selectedNodeIdOf } from "../selection.ts";
-import { parseNodeId } from "../tree/node-ids.ts";
+import { placementBeforeEdit } from "../previous-placement.ts";
 import { editPantin } from "./pantin-actions.ts";
+import { keepPreviousPlacement } from "./placement-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Alignment by picked faces (ADR 0035 points 3, 6 and 8): the session lives
@@ -37,26 +40,32 @@ function updateSession(
   }
 }
 
-/** Starts aligning the selected assembly, or stops; the gizmo goes off meanwhile. */
+/**
+ * Starts aligning the selected assembly, or the assembly of the selected body,
+ * or stops; the gizmo goes off meanwhile.
+ */
 export function toggleAlignment(store: ViewerStore): void {
   const { state } = store;
-  if (isAligning(state)) {
+  const key = toolAssemblyKeyOf(state);
+  // Same assembly (a body of it included): the same command stops the alignment.
+  if (isAligning(state) && state.alignment?.assemblyKey === key) {
     store.update({ ...state, alignment: null });
     return;
   }
-  const ref = parseNodeId(selectedNodeIdOf(state.selection) ?? "");
-  if (
-    state.openPantin === null ||
-    ref?.kind !== "assembly" ||
-    ref.pantinId !== state.openPantin.id
-  ) {
+  if (state.openPantin === null || key === null) {
     return;
   }
-  const alignment = newAlignmentSession(state.openPantin.id, ref.key);
+  const alignment = newAlignmentSession(state.openPantin.id, key);
   // A body id comes back after a deletion and a new import: face files are
   // read again for each alignment rather than trusted across edits.
   store.faceFiles.clear();
-  store.update({ ...state, gizmoMode: null, alignment, message: null });
+  store.update({
+    ...withToolTarget(state),
+    gizmoMode: null,
+    alignment,
+    axisPick: null,
+    message: null,
+  });
 }
 
 export function chooseAlignmentKind(store: ViewerStore, kind: string): void {
@@ -80,12 +89,17 @@ export function setAlignmentFixedJoint(store: ViewerStore, fixedJoint: boolean):
   updateSession(store, (session) => ({ ...session, fixedJoint }));
 }
 
+/** A done pick row was clicked: the next click in 3D replaces that pick. */
+export function chooseAlignmentPick(store: ViewerStore, index: number): void {
+  updateSession(store, (session) => withCurrentPick(session, index));
+}
+
 export function restartAlignment(store: ViewerStore): void {
   updateSession(store, withoutPicks);
 }
 
 // One request per mesh file: the face file never changes while its mesh exists.
-function faceFileOf(
+export function faceFileOf(
   store: ViewerStore,
   pantinId: string,
   meshPath: string,
@@ -213,10 +227,12 @@ export async function applyAlignment(store: ViewerStore): Promise<void> {
     store.update({ ...store.state, message: errorMessage(REQUEST_ERRORS[outcome.reason]) });
     return;
   }
+  const previous = placementBeforeEdit(store.state, session.assemblyKey);
   const result = await alignThenLink(store, session, outcome.request);
   if (result === undefined) {
     return;
   }
+  keepPreviousPlacement(store, session.pantinId, session.assemblyKey, previous);
   const current = store.state.alignment;
   store.update({
     ...store.state,

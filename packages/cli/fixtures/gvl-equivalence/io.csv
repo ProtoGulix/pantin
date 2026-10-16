@@ -1,0 +1,5 @@
+tag;variable;module;zone;address;type;comment
+axis.valve.coil_14;axis_valve_coil_14;m1;coil;0;BOOL;
+axis.valve.coil_12;axis_valve_coil_12;m1;coil;1;BOOL;
+axis.stroke.setpoint;axis_stroke_setpoint;m1;holding_register;0;REAL;
+axis.stroke.position;axis_stroke_position;m2;input_register;0;REAL;feedback

@@ -5,60 +5,25 @@ import {
   isAssemblyHidden,
   NO_ASSEMBLY_DISPLAY,
 } from "../assembly-display.ts";
+import { childAssemblies } from "../assembly-tree.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
+import { familyFolders } from "./device-nodes.ts";
+import { NO_TAG_VALUES, type TagValues } from "./device-state.ts";
 import {
   assemblyNodeId,
   bodyNodeId,
   folderNodeId,
   jointNodeId,
-  type NodeRef,
   pantinNodeId,
   sourceNodeNodeId,
 } from "./node-ids.ts";
+import type { TreeNode } from "./tree-node.ts";
 
 // The tree of the left panel as plain data: first the full tree of nodes,
 // then the flat list of visible rows the DOM draws. Pure, so it is tested
 // without a browser.
-
-export type TreeIcon =
-  | "pantin"
-  | "assembly"
-  | "folder"
-  | "body-glb"
-  | "body-stl"
-  | "body-step"
-  | "joint"
-  | "source-node";
-
-interface JointWiring {
-  // Its actuator, if any: a joint has one at most.
-  actuatorId: string | null;
-  // The sensors watching it, in document order.
-  sensorIds: readonly string[];
-}
-
-export interface TreeNode {
-  id: string;
-  kind: NodeRef["kind"];
-  icon: TreeIcon;
-  label: string;
-  // Secondary text after the label (a count, a path), or null.
-  detail: string | null;
-  // Read-only data from the source file: drawn greyed.
-  muted: boolean;
-  renamable: boolean;
-  // Only assemblies can be hidden in the 3D view: an eye button, not text.
-  visibility: "shown" | "hidden" | null;
-  // A joint an actuator moves or a sensor watches: a bolt or a sensor mark at the
-  // end of its row, like the eye (ADR 0022, ADR 0023); null for other nodes.
-  wiring: JointWiring | null;
-  // What an icon says (an assembly hidden, a joint driven or watched), for screen readers
-  // and as a tooltip; null when there is nothing to say.
-  stateLabel: string | null;
-  children: readonly TreeNode[];
-}
 
 export interface TreeSource {
   // For the plural of "N bodies".
@@ -66,6 +31,8 @@ export interface TreeSource {
   openPantin: PantinResponse | null;
   // Absent means every assembly is shown.
   assemblyDisplay?: AssemblyDisplay;
+  // The polled tag values, for the on or off marks of sensor rows; absent means none known.
+  tagValues?: TagValues;
 }
 
 function sourceNodeChildren(pantinId: string, body: Body, translate: Translate): TreeNode[] {
@@ -80,6 +47,8 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
     visibility: null,
     wiring: null,
     stateLabel: null,
+    kindLabel: null,
+    stateMark: null,
     children: [],
   }));
 }
@@ -114,6 +83,8 @@ function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): Tre
     visibility: null,
     wiring: null,
     stateLabel: null,
+    kindLabel: null,
+    stateMark: null,
     children: [
       ...bodyJointChildren(pantin, body, translate),
       ...sourceNodeChildren(pantin.id, body, translate),
@@ -144,6 +115,8 @@ function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): 
     visibility: null,
     wiring: { actuatorId: actuator?.id ?? null, sensorIds: sensors.map((sensor) => sensor.id) },
     stateLabel: states.length === 0 ? null : states.join(" · "),
+    kindLabel: null,
+    stateMark: null,
     children: [],
   };
 }
@@ -163,9 +136,11 @@ function assemblyNode(
   assembly: Assembly,
   display: AssemblyDisplay,
   translate: Translate,
+  language: Language,
+  tagValues: TagValues,
 ): TreeNode {
   const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
-  const hidden = isAssemblyHidden(display, assembly.key);
+  const hidden = isAssemblyHidden(display, assembly.key, pantin.document.assemblies);
   const joints = pantin.document.joints.filter(
     (joint) => isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === assembly.key,
   );
@@ -181,9 +156,17 @@ function assemblyNode(
     visibility: hidden ? "hidden" : "shown",
     wiring: null,
     stateLabel: hidden ? translate("tree.hidden") : null,
+    kindLabel: null,
+    stateMark: null,
+    // Sub-assemblies first (structure), then bodies and internal joints (ADR 0040),
+    // then the folders of devices (ADR 0047 point 2).
     children: [
+      ...childAssemblies(pantin.document.assemblies, assembly.key).map((child) =>
+        assemblyNode(pantin, child, display, translate, language, tagValues),
+      ),
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
       ...joints.map((joint) => jointNode(pantin, joint, translate)),
+      ...familyFolders(pantin, assembly.key, language, translate, tagValues),
     ],
   };
 }
@@ -201,6 +184,8 @@ function betweenAssembliesFolder(pantin: PantinResponse, translate: Translate): 
     visibility: null,
     wiring: null,
     stateLabel: null,
+    kindLabel: null,
+    stateMark: null,
     children: joints.map((joint) => jointNode(pantin, joint, translate)),
   };
 }
@@ -210,6 +195,7 @@ function pantinNode(
   display: AssemblyDisplay,
   translate: Translate,
   language: Language,
+  tagValues: TagValues,
 ): TreeNode {
   const bodyCount = pantin.document.bodies.length;
   return {
@@ -223,9 +209,11 @@ function pantinNode(
     visibility: null,
     wiring: null,
     stateLabel: null,
+    kindLabel: null,
+    stateMark: null,
     children: [
-      ...pantin.document.assemblies.map((assembly) =>
-        assemblyNode(pantin, assembly, display, translate),
+      ...childAssemblies(pantin.document.assemblies, undefined).map((assembly) =>
+        assemblyNode(pantin, assembly, display, translate, language, tagValues),
       ),
       betweenAssembliesFolder(pantin, translate),
     ],
@@ -237,7 +225,15 @@ export function buildTree(source: TreeSource, translate: Translate): TreeNode[] 
   const display = source.assemblyDisplay ?? NO_ASSEMBLY_DISPLAY;
   return source.openPantin === null
     ? []
-    : [pantinNode(source.openPantin, display, translate, source.language)];
+    : [
+        pantinNode(
+          source.openPantin,
+          display,
+          translate,
+          source.language,
+          source.tagValues ?? NO_TAG_VALUES,
+        ),
+      ];
 }
 
 export function findNode(nodes: readonly TreeNode[], nodeId: string): TreeNode | null {

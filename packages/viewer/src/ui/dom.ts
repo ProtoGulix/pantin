@@ -66,6 +66,9 @@ interface CommitOptions {
   // Where Enter sends keyboard focus (the tree after a rename); without it,
   // Enter just blurs the field.
   focusOnEnter?: () => void;
+  // What Escape restores and what "unchanged" means, when it is not the text
+  // shown: a field showing invalid text over the document's value.
+  baseValue?: string;
 }
 
 function applyOutcome(outcome: EditOutcome, options: CommitOptions): void {
@@ -119,7 +122,8 @@ export function committingTextInput(value: string, options: CommitOptions): HTML
     },
   });
   input.value = value;
-  const session = new EditSession(value);
+  const base = options.baseValue ?? value;
+  const session = new EditSession(base);
   input.addEventListener("focus", () => session.begin());
   if (options.commitOnBlur ?? true) {
     input.addEventListener("blur", () => {
@@ -129,7 +133,7 @@ export function committingTextInput(value: string, options: CommitOptions): HTML
       }
     });
   }
-  listenToEditKeys(input, session, value, options);
+  listenToEditKeys(input, session, base, options);
   return input;
 }
 

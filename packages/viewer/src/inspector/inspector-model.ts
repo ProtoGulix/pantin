@@ -1,9 +1,10 @@
-import type { PantinResponse } from "@pantin/protocol";
+import type { BridgeStatus, PantinResponse } from "@pantin/protocol";
 import { movableJoints } from "../actuators/actuator-joints.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { buildJointSlider, type JointSliderSpec } from "../joints/slider-model.ts";
 import { type ActuatorFormView, buildActuatorFormView } from "../panel/actuator-form-model.ts";
+import { buildConveyorFormView, type ConveyorFormView } from "../panel/conveyor-form-model.ts";
 import { buildDriveFormView, type DriveFormView } from "../panel/drive-form-model.ts";
 import { buildJointFormView, type JointFormView } from "../panel/joint-form-model.ts";
 import { buildSensorFormView, type SensorFormView } from "../panel/sensor-form-model.ts";
@@ -13,8 +14,16 @@ import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import type { InspectorFocusRequest, ViewerState } from "../viewer-state.ts";
 import { actuatorGroups } from "./actuator-inspector.ts";
+import { conveyorInspectorContent } from "./conveyor-inspector.ts";
+import {
+  type ConveyorToolView,
+  conveyorToolViews,
+  type SpawnView,
+  spawnViewOf,
+} from "./conveyor-tools.ts";
 import { driveGroups } from "./drive-inspector.ts";
 import { type InspectorContent, type InspectorContext, NOTHING } from "./inspector-context.ts";
+import { buildInspectorIoView, type InspectorIoView } from "./io-section.ts";
 import { nodeInspectorContent } from "./node-inspector.ts";
 import { buildPositioningView, type PositioningView } from "./positioning-view.ts";
 import { sensorGroups } from "./sensor-inspector.ts";
@@ -34,6 +43,9 @@ export interface InspectorView {
   device: DeviceRef | null;
   canCreateActuator: boolean;
   canCreateSensor: boolean;
+  // The create buttons of the phase 6 objects, and the selected emitter's product button.
+  conveyorTools: ConveyorToolView[];
+  spawn: SpawnView | null;
   // The forms stay the way to create a device or a joint, and to change a
   // type; the joint's slider moves it, when it can move.
   jointForm: JointFormView | null;
@@ -41,9 +53,12 @@ export interface InspectorView {
   driveForm: DriveFormView | null;
   actuatorForm: ActuatorFormView | null;
   sensorForm: SensorFormView | null;
+  conveyorForm: ConveyorFormView | null;
   // The "Positionnement" section (ADR 0039), above the groups; null when the
   // selection cannot be placed.
   positioning: PositioningView | null;
+  // The tags of the selected element and their mapping; null when it owns none.
+  io: InspectorIoView | null;
   groups: PropertyGroup[];
   // Said instead of an empty grid.
   note: string | null;
@@ -62,15 +77,16 @@ function find<Item extends { id: string }>(items: readonly Item[], id: string): 
 function deviceView(device: DeviceRef, context: InspectorContext): InspectorContent | null {
   const { document } = context.pantin;
   const { t } = context;
-  const label = t(`diagram.kind.${device.kind}`);
   switch (device.kind) {
     case "drive": {
+      const label = t("diagram.kind.drive");
       const drive = find(document.drives, device.id);
       return drive === null
         ? null
         : { subject: `${label} · ${drive.name}`, groups: driveGroups(drive, context), hints: [] };
     }
     case "actuator": {
+      const label = t("diagram.kind.actuator");
       const actuator = find(document.actuators, device.id);
       return actuator === null
         ? null
@@ -81,6 +97,7 @@ function deviceView(device: DeviceRef, context: InspectorContext): InspectorCont
           };
     }
     case "sensor": {
+      const label = t("diagram.kind.sensor");
       const sensor = find(document.sensors, device.id);
       return sensor === null
         ? null
@@ -90,6 +107,8 @@ function deviceView(device: DeviceRef, context: InspectorContext): InspectorCont
             hints: [],
           };
     }
+    default:
+      return conveyorInspectorContent(device.kind, device.id, context);
   }
 }
 
@@ -125,6 +144,19 @@ function liveSourcesOf(groups: readonly PropertyGroup[]): Map<string, LiveSource
   return sources;
 }
 
+// The labels the element's own sections give its tags, reused by the I/O section.
+function tagLabelsOf(groups: readonly PropertyGroup[]): Map<string, string> {
+  const labels = new Map<string, string>();
+  for (const group of groups) {
+    for (const { label, live } of group.rows) {
+      if (live?.kind === "tag" && !labels.has(live.tag)) {
+        labels.set(live.tag, label);
+      }
+    }
+  }
+  return labels;
+}
+
 function emptyInspector(t: Translate): InspectorView {
   return {
     open: false,
@@ -133,12 +165,16 @@ function emptyInspector(t: Translate): InspectorView {
     device: null,
     canCreateActuator: false,
     canCreateSensor: false,
+    conveyorTools: [],
+    spawn: null,
     jointForm: null,
     jointSlider: null,
     driveForm: null,
     actuatorForm: null,
     sensorForm: null,
+    conveyorForm: null,
     positioning: null,
+    io: null,
     groups: [],
     note: null,
     hints: [],
@@ -147,7 +183,12 @@ function emptyInspector(t: Translate): InspectorView {
   };
 }
 
-export function buildInspectorView(state: ViewerState, t: Translate): InspectorView {
+export function buildInspectorView(
+  state: ViewerState,
+  t: Translate,
+  clockRunning: boolean,
+  bridgeStatus: BridgeStatus | null = null,
+): InspectorView {
   const pantin = state.openPantin;
   if (pantin === null || !state.inspectorOpen) {
     return emptyInspector(t);
@@ -157,7 +198,7 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
   const slider = selectedJointSlider(state, pantin);
   const groups = content.groups.map((draft) => ({
     ...draft,
-    title: t(GROUP_TITLES[draft.id]),
+    title: draft.title ?? t(GROUP_TITLES[draft.id]),
     collapsed: state.collapsedPropertyGroups.has(draft.id),
   }));
   const { document } = pantin;
@@ -171,10 +212,14 @@ export function buildInspectorView(state: ViewerState, t: Translate): InspectorV
     jointSlider: slider,
     canCreateActuator: canMove,
     canCreateSensor: canMove,
+    conveyorTools: conveyorToolViews(document, t),
+    spawn: spawnViewOf(selectedDeviceOf(state.selection), t),
     driveForm: buildDriveFormView(state, document, t),
     actuatorForm: buildActuatorFormView(state, document, t),
     sensorForm: buildSensorFormView(state, document, t),
-    positioning: buildPositioningView(state, t),
+    conveyorForm: buildConveyorFormView(state, document, t),
+    positioning: buildPositioningView(state, t, clockRunning),
+    io: buildInspectorIoView(state, t, bridgeStatus, tagLabelsOf(groups)),
     groups,
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),

@@ -4,12 +4,17 @@
 
 export const STORAGE_KEYS = {
   language: "pantin.viewer.language",
+  theme: "pantin.viewer.theme",
   panelWidth: "pantin.viewer.panelWidth",
   centralLayout: "pantin.viewer.centralLayout",
   splitRatio: "pantin.viewer.splitRatio",
   consoleHeight: "pantin.viewer.consoleHeight",
   gizmoSteps: "pantin.viewer.gizmoSteps",
+  gizmoSpace: "pantin.viewer.gizmoSpace",
   navigation: "pantin.viewer.navigation",
+  inspectorWidth: "pantin.viewer.inspectorWidth",
+  inspectorOpen: "pantin.viewer.inspectorOpen",
+  collapsedGroups: "pantin.viewer.collapsedGroups",
 } as const;
 
 export function readStoredText(key: string): string | null {

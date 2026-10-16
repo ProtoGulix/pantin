@@ -9,10 +9,16 @@ export const SNAPSHOT_PERIOD_SECONDS = 1 / 30;
 export const SNAPSHOT_PERIOD_STEPS = Math.round(SNAPSHOT_PERIOD_SECONDS / STEP_SECONDS);
 
 // stepCount is left out: it always advances, and only motion is worth a send.
+// Objects (belts, guides... as placed by their frame) and products count: one that moves on a stopped machine, appears or goes is motion.
 export function hasMoved(previous: PoseSnapshot, current: PoseSnapshot): boolean {
   return (
-    JSON.stringify([previous.jointPositions, previous.bodies]) !==
-    JSON.stringify([current.jointPositions, current.bodies])
+    JSON.stringify([
+      previous.jointPositions,
+      previous.bodies,
+      previous.products,
+      previous.objects,
+    ]) !==
+    JSON.stringify([current.jointPositions, current.bodies, current.products, current.objects])
   );
 }
 

@@ -1,0 +1,128 @@
+{
+  "description": "Status lines the PLC bridge writes on stdout under --status-lines (ADR 0050 point 2). Each entry is one JSON line: `message` is the decoded line, `text` a line that is not JSON. The bridge must emit lines equal to every `valid` entry built from the same inputs; the core's Zod schema must accept every `valid` entry and refuse every `invalid` one. A line over maxLineBytes is a log line, not a status line.",
+  "version": 1,
+  "maxLineBytes": 4096,
+  "exitKinds": [
+    "configuration",
+    "core_unavailable",
+    "mapping_not_valid",
+    "mapping_changed",
+    "bus_closed",
+    "protocol",
+    "unexpected"
+  ],
+  "valid": [
+    {
+      "name": "ready with one module",
+      "message": {
+        "event": "ready",
+        "listen": "127.0.0.1",
+        "modules": [{ "key": "m1", "port": 1502 }]
+      }
+    },
+    {
+      "name": "ready with two modules on a private address",
+      "message": {
+        "event": "ready",
+        "listen": "192.168.1.10",
+        "modules": [{ "key": "m1", "port": 1502 }, { "key": "m2", "port": 1503 }]
+      }
+    },
+    {
+      "name": "ready with no module",
+      "message": { "event": "ready", "listen": "127.0.0.1", "modules": [] }
+    },
+    {
+      "name": "exiting, configuration",
+      "message": {
+        "event": "exiting",
+        "kind": "configuration",
+        "message": "Port 1502 is taken, or this user may not bind it."
+      }
+    },
+    {
+      "name": "exiting, core_unavailable",
+      "message": {
+        "event": "exiting",
+        "kind": "core_unavailable",
+        "message": "Cannot reach the core at http://127.0.0.1:4800."
+      }
+    },
+    {
+      "name": "exiting, mapping_not_valid",
+      "message": {
+        "event": "exiting",
+        "kind": "mapping_not_valid",
+        "message": "The io mapping is missing."
+      }
+    },
+    {
+      "name": "exiting, mapping_changed",
+      "message": {
+        "event": "exiting",
+        "kind": "mapping_changed",
+        "message": "The Pantin's tags changed, so the io mapping may no longer match: restart the bridge."
+      }
+    },
+    {
+      "name": "exiting, bus_closed",
+      "message": {
+        "event": "exiting",
+        "kind": "bus_closed",
+        "message": "The tag bus was closed by the core. Restart the bridge."
+      }
+    },
+    {
+      "name": "exiting, protocol",
+      "message": {
+        "event": "exiting",
+        "kind": "protocol",
+        "message": "The core sent something the bridge cannot read."
+      }
+    },
+    {
+      "name": "exiting, unexpected, with accents kept as they are",
+      "message": {
+        "event": "exiting",
+        "kind": "unexpected",
+        "message": "Échec inattendu."
+      }
+    }
+  ],
+  "invalid": [
+    { "name": "not JSON", "text": "Bridge ready: 1 module(s) on 127.0.0.1." },
+    { "name": "no event", "message": { "listen": "127.0.0.1", "modules": [] } },
+    {
+      "name": "unknown event",
+      "message": { "event": "started", "listen": "127.0.0.1", "modules": [] }
+    },
+    {
+      "name": "ready without listen",
+      "message": { "event": "ready", "modules": [] }
+    },
+    {
+      "name": "ready with a port that is not a port",
+      "message": {
+        "event": "ready",
+        "listen": "127.0.0.1",
+        "modules": [{ "key": "m1", "port": 70000 }]
+      }
+    },
+    {
+      "name": "ready with a module without key",
+      "message": { "event": "ready", "listen": "127.0.0.1", "modules": [{ "port": 1502 }] }
+    },
+    {
+      "name": "exiting with an unknown kind",
+      "message": { "event": "exiting", "kind": "restart_required", "message": "x" }
+    },
+    {
+      "name": "exiting without message",
+      "message": { "event": "exiting", "kind": "bus_closed" }
+    },
+    {
+      "name": "exiting with an unknown field",
+      "message": { "event": "exiting", "kind": "bus_closed", "message": "x", "code": 1 }
+    }
+  ]
+}

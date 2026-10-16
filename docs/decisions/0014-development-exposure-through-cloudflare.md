@@ -4,6 +4,7 @@
 - Date: 2026-09-29
 - Departs from: ADR 0004 (local by default, private LAN at most), for the
   development machine only
+- Partly superseded by: ADR 0046 point 7 (no upgrade headers forwarded, tag bus refused)
 
 ## Context
 

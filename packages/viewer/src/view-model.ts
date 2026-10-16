@@ -1,10 +1,11 @@
-import { type AlignmentView, buildAlignmentView } from "./alignment/alignment-view.ts";
-import { type CentralLayout, showsViewport } from "./central-layout.ts";
+import type { BridgeStatus } from "@pantin/protocol";
+import { type CentralLayout, showsIo, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
 import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
+import { buildIoView, type IoView } from "./io/io-view-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
 import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
@@ -13,6 +14,7 @@ import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
 import { buildWelcomeView, type WelcomeView } from "./panel/welcome-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "./selection.ts";
 import { type ViewMode, viewModeOf } from "./session-state.ts";
+import { NO_TAG_VALUES, type TagValues } from "./tree/device-state.ts";
 import { buildTree } from "./tree/tree-model.ts";
 import { flattenTree, type TreeRow } from "./tree/tree-rows.ts";
 import type { ViewerState } from "./viewer-state.ts";
@@ -66,8 +68,8 @@ export interface PanelView {
   inspector: InspectorView;
   // The Pantin console and its counter (ADR 0031); null with no Pantin open.
   console: ConsoleView | null;
-  // The alignment panel (ADR 0035), or null when no alignment is under way.
-  alignment: AlignmentView | null;
+  // The I/O view (ADR 0049 point 11); null unless it is the central layout.
+  io: IoView | null;
 }
 
 function buildToolbarView(state: ViewerState): ToolbarView {
@@ -116,7 +118,22 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
-export function buildPanelView(state: ViewerState, consoleList: ClientConsole): PanelView {
+function buildIo(state: ViewerState, bridgeStatus: BridgeStatus | null): IoView | null {
+  const document = state.openPantin?.document;
+  if (document === undefined || !showsIo(state.centralLayout)) {
+    return null;
+  }
+  const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
+  return buildIoView(state.io, names, state.pendingRequestCount > 0, bridgeStatus);
+}
+
+export function buildPanelView(
+  state: ViewerState,
+  consoleList: ClientConsole,
+  clockRunning: boolean,
+  tagValues: TagValues = NO_TAG_VALUES,
+  bridgeStatus: BridgeStatus | null = null,
+): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
   return {
@@ -126,7 +143,11 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
     menus: buildMenuBar(state, translate),
     toolbar: buildToolbarView(state),
     welcome: buildWelcomeView(state, translate),
-    treeRows: flattenTree(buildTree(state, translate), state, relatedJointsOf(state)),
+    treeRows: flattenTree(
+      buildTree({ ...state, tagValues }, translate),
+      state,
+      relatedJointsOf(state),
+    ),
     importForm: buildImportFormView(state, translate),
     contextMenu: buildContextMenuView(state, translate),
     prompt: buildPromptView(state, translate),
@@ -134,7 +155,7 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
     viewportHint: translate(
       mode === "list" ? "page.viewportEmpty" : `page.viewportHint.${state.navigation.preset}`,
     ),
-    inspector: buildInspectorView(state, translate),
+    inspector: buildInspectorView(state, translate, clockRunning, bridgeStatus),
     console: buildConsoleView(
       state.console,
       consoleList,
@@ -142,6 +163,6 @@ export function buildPanelView(state: ViewerState, consoleList: ClientConsole): 
       state.language,
       translate,
     ),
-    alignment: buildAlignmentView(state, translate),
+    io: buildIo(state, bridgeStatus),
   };
 }

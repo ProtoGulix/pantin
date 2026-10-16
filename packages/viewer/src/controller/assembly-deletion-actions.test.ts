@@ -1,13 +1,16 @@
 import type { AssemblyDeletion, AssemblyDeletionResponse, PantinResponse } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
+import { initialActuatorForm } from "../actuators/actuator-form.ts";
 import { newAlignmentSession } from "../alignment/alignment-session.ts";
 import { PantinApiError } from "../api-transport.ts";
 import { NO_ASSEMBLY_DISPLAY } from "../assembly-display.ts";
+import { initialDriveForm } from "../drives/drive-form.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { initialJointForm } from "../joints/joint-form.ts";
 import { buildPromptView } from "../panel/prompt-model.ts";
 import { selectedNodeIdOf } from "../selection.ts";
-import { pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
+import { initialSensorForm } from "../sensors/sensor-form.ts";
+import { pantinResponse, railBody, stepBody, withNode } from "../test-fixtures.ts";
 import { assemblyNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -42,6 +45,12 @@ const deletion: AssemblyDeletion = {
   drives: [{ id: "d1", name: "Distributeur" }],
   actuators: [{ id: "a1", name: "Vérin" }],
   sensors: [{ id: "s1", name: "Capteur fin" }],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
+  descendantAssemblies: [],
   reanchoredAssemblies: [{ key: "pince", name: "Pince" }],
   removedTags: ["main.j1.setpoint"],
   addedTags: ["pince.tige.setpoint"],
@@ -151,11 +160,11 @@ describe("the assembly deletion prompt", () => {
 });
 
 describe("the assembly deletion prompt, other sessions", () => {
-  it("keeps an alignment and a form that the deleted assembly does not concern", async () => {
+  it("ends the alignment with the selection, and keeps a form the deleted assembly does not concern", async () => {
     const store = await askedStore({ deleteAssemblyWithContents: async () => answer() });
     const alignment = newAlignmentSession("press", "other");
     store.update({
-      ...store.state,
+      ...withNode(store.state, assemblyNodeId("press", "other")),
       alignment,
       sensorForm: {
         sensorId: "s9",
@@ -170,8 +179,46 @@ describe("the assembly deletion prompt, other sessions", () => {
     await vi.waitFor(() =>
       expect(store.state.message?.key).toBe("message.assemblyContentsDeleted"),
     );
-    expect(store.state.alignment).toBe(alignment);
+    // The selection goes to the Pantin, which no tool can act on (ADR 0039 point 3).
+    expect(store.state.alignment).toBeNull();
     expect(store.state.sensorForm?.sensorId).toBe("s9");
+  });
+});
+
+describe("sessions on a descendant assembly of the deleted one", () => {
+  const withSub: AssemblyDeletionResponse = {
+    ...answer(),
+    deleted: { ...deletion, descendantAssemblies: [{ key: "sub", name: "Sub" }] },
+  };
+
+  it("ends an alignment of the descendant", async () => {
+    const store = await askedStore({ deleteAssemblyWithContents: async () => withSub });
+    store.update({ ...store.state, alignment: newAlignmentSession("press", "sub") });
+    resolvePrompt(store, "confirmDelete");
+    await vi.waitFor(() =>
+      expect(store.state.message?.key).toBe("message.assemblyContentsDeleted"),
+    );
+    expect(store.state.alignment).toBeNull();
+  });
+
+  it("closes the drive, actuator and sensor forms of the descendant", async () => {
+    const store = await askedStore({ deleteAssemblyWithContents: async () => withSub });
+    const { document } = pantin;
+    store.update({
+      ...store.state,
+      driveForm: { ...initialDriveForm(document), assembly: "sub" },
+      actuatorForm: { ...initialActuatorForm(document), assembly: "sub" },
+      sensorForm: { ...initialSensorForm(document), assembly: "sub" },
+    });
+    resolvePrompt(store, "confirmDelete");
+    await vi.waitFor(() =>
+      expect(store.state.message?.key).toBe("message.assemblyContentsDeleted"),
+    );
+    expect([store.state.driveForm, store.state.actuatorForm, store.state.sensorForm]).toEqual([
+      null,
+      null,
+      null,
+    ]);
   });
 });
 

@@ -4,8 +4,10 @@ import { readJsonBody } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
 import { pantinIdOf, type Route, tagNameOf } from "./route-context.ts";
 
-// Tag routes (ADR 0012): the REST face of what the tag bus will carry, and
-// the console read (ADR 0031), which the tag bus will carry too.
+// Tag routes (ADR 0012): the REST face of what the tag bus carries, and the
+// console read (ADR 0031), which the tag bus carries too. A REST write is a
+// client write: it forces its tag until a release (ADR 0045 point 5).
+// The I/O mapping routes, which map these tags, are in io-routes.ts.
 export const TAG_ROUTES: readonly Route[] = [
   {
     method: "GET",
@@ -37,8 +39,22 @@ export const TAG_ROUTES: readonly Route[] = [
       const tagName = tagNameOf(context);
       const body = await readJsonBody(context.request);
       const { value } = parseWithSchema(WriteTagRequestSchema, body, "The tag value");
-      const tag = await context.service.writeTag(pantinId, tagName, value);
+      const { tag } = await context.service.writeTag(pantinId, tagName, value, "client");
       sendJson(context.response, 200, { tag });
     },
+  },
+  {
+    method: "DELETE",
+    pattern: ["pantins", ":pantinId", "tags", ":tagName", "force"],
+    handle: async (context) => {
+      const tag = await context.service.releaseTag(pantinIdOf(context), tagNameOf(context));
+      sendJson(context.response, 200, { tag });
+    },
+  },
+  {
+    method: "DELETE",
+    pattern: ["pantins", ":pantinId", "forces"],
+    handle: async (context) =>
+      sendJson(context.response, 200, await context.service.releaseAllTags(pantinIdOf(context))),
   },
 ];

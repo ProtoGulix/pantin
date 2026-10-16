@@ -57,6 +57,25 @@ describe("runMenuCommand on the central layout and the language", () => {
   });
 });
 
+describe("runMenuCommand on the theme", () => {
+  it("applies and remembers the theme named after theme:", () => {
+    const applied: string[] = [];
+    const store = testStore({}, {}, undefined, { applyTheme: (choice) => applied.push(choice) });
+    runMenuCommand(store, "theme:dark", ignoreLanguage);
+    expect(applied).toEqual(["dark"]);
+    expect(store.state.themeChoice).toBe("dark");
+  });
+
+  it("ignores an unknown theme", () => {
+    const applied: string[] = [];
+    const store = testStore({}, {}, undefined, { applyTheme: (choice) => applied.push(choice) });
+    // Cast: the type forbids a bad suffix, which is what this test feeds in.
+    runMenuCommand(store, "theme:sepia" as MenuCommand, ignoreLanguage);
+    expect(applied).toEqual([]);
+    expect(store.state.themeChoice).toBe("system");
+  });
+});
+
 describe("runMenuCommand on the console", () => {
   it("opens and closes the console from Affichage > Console, and from nothing else", () => {
     const store = testStore({});

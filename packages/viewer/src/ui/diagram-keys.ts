@@ -6,9 +6,15 @@ import {
   focusKeyOf,
   neighbour,
 } from "../diagram/diagram-focus.ts";
-import { type SocketPress, socketAction, socketOf } from "../diagram/diagram-forcing.ts";
+import {
+  forcedCommandTag,
+  type SocketPress,
+  socketAction,
+  socketOf,
+} from "../diagram/diagram-forcing.ts";
 import { type LinkChoice, linkChoices } from "../diagram/diagram-link-targets.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
+import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import { deleteInDiagram } from "./diagram-delete.ts";
 import { runForcing } from "./diagram-forcing.ts";
@@ -23,6 +29,8 @@ type ShownModel = Extract<DiagramModel, { shown: true }>;
 export interface KeyContext {
   model(): ShownModel | null;
   intents(): PanelIntents | null;
+  // The tags forced from the viewer, which the menu key offers to release.
+  forcedTags(): ReadonlySet<string>;
   focusKey(key: string): void;
   // A small input beside a numeric command socket (ADR 0030 point 3).
   openValueInput(opener: Element, tag: string): void;
@@ -98,13 +106,27 @@ function openLinkMenu({ item, target, model, intents, context }: Call): boolean 
   return true;
 }
 
+// The menu key on the socket of a forced command: a one entry menu that releases the tag.
+function openReleaseMenu(call: Call, endpoint: Endpoint, tag: string): void {
+  const { item, model, intents, context } = call;
+  const release = { endpoint, label: model.translate("diagram.menu.release") };
+  context.openMenu(item, "diagram.menu.releaseTitle", [release], () => intents.releaseTag(tag));
+}
+
 // What the key does on a focused socket, as socketAction decides it.
 function pressSocket(call: Call, press: SocketPress): boolean {
   const { item, target, model, intents, context } = call;
-  const socket =
-    target === null || target.socketId === null ? null : socketOf(model.diagram, target);
+  if (target === null || target.socketId === null) {
+    return false;
+  }
+  const socket = socketOf(model.diagram, target);
   if (socket === null) {
     return false;
+  }
+  const forcedTag = press === "menu" ? forcedCommandTag(socket, context.forcedTags()) : null;
+  if (forcedTag !== null) {
+    openReleaseMenu(call, { nodeId: target.nodeId, socketId: socket.id }, forcedTag);
+    return true;
   }
   const action = socketAction(socket, press);
   if (action.kind === "openLinkMenu") {

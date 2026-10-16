@@ -7,8 +7,8 @@
     { "path": "packages/protocol" },
     { "path": "packages/core" },
     { "path": "packages/viewer" },
-    { "path": "packages/bridge" },
     { "path": "packages/cli" },
-    { "path": "tests" }
+    { "path": "tests" },
+    { "path": "scripts" }
   ]
 }

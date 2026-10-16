@@ -3,6 +3,7 @@ import { PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { NO_POSITIONS } from "../test-support/no-positions.ts";
 import { deleteJointFromDocument } from "./joint-rules.ts";
+import { emptyPhysicsState } from "./physics-state.ts";
 import { commandTagOf, describeTags, renamedTags } from "./tags.ts";
 
 // Tags with drives and actuators (ADR 0028 point 9): tags live on drives, and
@@ -62,6 +63,11 @@ const PRESS: PantinDocument = {
     },
   ],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 const runtime = {
@@ -70,6 +76,8 @@ const runtime = {
   driveCommands: new Map([["valve", { coil_14: 1 }]]),
   driveFeedback: new Map(),
   sensorOutputs: new Map(),
+  physicsState: emptyPhysicsState(),
+  tagStates: new Map(),
 };
 
 describe("tags with drives and actuators", () => {

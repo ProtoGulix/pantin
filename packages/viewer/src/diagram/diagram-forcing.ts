@@ -47,6 +47,21 @@ export function socketAction(socket: Socket, press: SocketPress): SocketAction {
   }
 }
 
+/** The tag of a command socket while it is forced (ADR 0045 point 5), else null. */
+export function forcedCommandTag(socket: Socket, forced: ReadonlySet<string>): string | null {
+  const tag = socket.tagName;
+  return socket.role === "command" && tag !== undefined && forced.has(tag) ? tag : null;
+}
+
+/** An accessible name that says the tag is forced, or that no longer says it. */
+export function withForcedWord(label: string, forced: boolean, word: string): string {
+  const suffix = `, ${word}`;
+  if (forced) {
+    return label.endsWith(suffix) ? label : `${label}${suffix}`;
+  }
+  return label.endsWith(suffix) ? label.slice(0, -suffix.length) : label;
+}
+
 /** The socket a focus target stands for; null for a node. */
 export function socketOf(diagram: ChainDiagram, target: FocusTarget): Socket | null {
   const node = diagram.nodes.find((candidate) => candidate.id === target.nodeId);

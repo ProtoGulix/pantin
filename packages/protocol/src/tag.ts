@@ -13,11 +13,20 @@ import { KEY_PATTERN_SOURCE } from "./ids.ts";
 // "<assemblyKey>.<tagKey>.position" (feedback), in SI units, where the
 // assembly is the one of the joint's child body.
 //
-//   GET /api/pantins/:pantinId/tags                      -> TagListResponse
-//   PUT /api/pantins/:pantinId/tags/:tagName  WriteTagRequest -> TagResponse
+//   GET    /api/pantins/:pantinId/tags                      -> TagListResponse
+//   PUT    /api/pantins/:pantinId/tags/:tagName  WriteTagRequest -> TagResponse
+//   DELETE /api/pantins/:pantinId/tags/:tagName/force       -> TagResponse
+//   DELETE /api/pantins/:pantinId/forces                    -> TagListResponse
 //
 // A written command takes effect at the next simulation step (1/120 s of
-// simulated time); feedback tags cannot be written.
+// simulated time); feedback tags cannot be written. A bit accepts 0 or 1 only
+// and an integer whole numbers only (ADR 0045 point 5).
+//
+// A write through REST is a client write: it forces its tag (ADR 0031 point 6,
+// ADR 0045 point 5), so that a PLC cannot override it until it is released.
+// The two DELETE routes release one tag, or every tag, and are idempotent: a
+// tag that is not forced stays as it is. A released tag takes the last value
+// the PLC wrote, when the PLC wrote one.
 
 export const TagTypeSchema = z.enum(["bit", "integer", "float"]);
 export type TagType = z.infer<typeof TagTypeSchema>;
@@ -49,15 +58,21 @@ export function jointTagName(assemblyKey: string, tagKey: string, member: JointT
   return tagName(assemblyKey, tagKey, member);
 }
 
-// Every value is a number: a bit will be 0 or 1, as in a PLC's process
-// image (not enforced yet: only float tags exist, ADR 0012 point 2).
-const TagValueSchema = z.number().refine(Number.isFinite, "A tag value must be a finite number.");
+// Every value is a number. A bit is 0 or 1 and an integer a whole number, as in
+// a PLC's process image: the core checks it on write, where the tag type is
+// known (ADR 0045 point 5 ended the ADR 0012 point 2 tolerance).
+export const TagValueSchema = z
+  .number()
+  .refine(Number.isFinite, "A tag value must be a finite number.");
 
 export const TagSchema = z.object({
   name: TagNameSchema,
   type: TagTypeSchema,
   direction: TagDirectionSchema,
   value: TagValueSchema,
+  // A client wrote this command and nobody released it since (ADR 0031 point 6).
+  // Always false for a feedback tag.
+  forced: z.boolean(),
 });
 export type Tag = z.infer<typeof TagSchema>;
 

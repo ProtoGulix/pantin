@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-03
+- Revised: 2026-10-04 (points 1, 2 and 11, new slice P2b, slice P6: one tool
+  bar of icons at the head of the inspector, user answer 5)
 - Amends: ADR 0030 (point 2: what the inspector shows for an assembly,
   a body and a joint; its width and open state), ADR 0034 (points 1, 3,
   5, 6 and 7: where the fields, toggles and steps live, the scope of
@@ -86,7 +88,18 @@ multi-selection (`selection.ts`).
    left column keeps the toolbar, the tree, the prompt line and the
    message line. The inspector's structure, top to bottom:
    - the head: subject (kind and name), and a collapse button;
-   - the "New drive / actuator / sensor" buttons (unchanged, ADR 0030);
+   - one tool bar of icon buttons, in every case (revised 2026-10-04,
+     user answer 5). Up to three groups, separated by a thin line, a
+     group being left out when it does not apply to the selection:
+     - create: new drive, new actuator, new sensor (ADR 0030; always
+       shown, disabled with the reason in the tooltip);
+     - position: "Déplacer (G)", "Tourner (R)", "Aligner (A)" (point 2),
+       the step field of the pressed gizmo tool, and "Rétablir le
+       placement précédent" (point 11); shown when "Positionnement" is;
+     - device: edit and delete the selected drive, actuator or sensor
+       (formerly two text buttons under its name, ADR 0030).
+     Each icon's tooltip and accessible name is the former button text;
+     the bar is a `role="toolbar"`, a pressed tool keeps `aria-pressed`;
    - the form being filled, if any (unchanged);
    - the "Positionnement" section, when the selection can be placed
      (point 2);
@@ -99,18 +112,17 @@ multi-selection (`selection.ts`).
      index of devices (ADR 0030). "Positionnement" contains:
      - the anchor row ("Repère : monde" or the anchor's name) and the
        six fields X, Y, Z (mm), RX, RY, RZ (°) of ADR 0034 point 1;
-     - a tool row of three toggle buttons, at most one pressed:
-       "Déplacer (G)", "Tourner (R)", "Aligner (A)";
-     - the step field of the pressed gizmo tool (mm for Déplacer, ° for
-       Tourner), moved here from the toolbar, still kept in the browser
-       (ADR 0034 point 5);
-     - while "Aligner" is pressed, the alignment block (point 4) below
-       the tool row.
+     - while "Aligner" is pressed, the alignment block (point 4).
+     Its three toggle tools, at most one pressed ("Déplacer (G)",
+     "Tourner (R)", "Aligner (A)"), and the step field of the pressed
+     gizmo tool (mm for Déplacer, ° for Tourner, moved from the left
+     toolbar, still kept in the browser, ADR 0034 point 5) live in the
+     inspector's tool bar (point 1), not in the section.
    - **Body**: its properties, with its placement read only when it has
      one (ADR 0034 point 6). "Positionnement" shows the line "Se place
-     avec l'assemblage « {name} »" and the same three tool buttons. A
-     tool started from a body moves the selection to its assembly first
-     (point 6).
+     avec l'assemblage « {name} »"; the tool bar offers the same three
+     tools. A tool started from a body moves the selection to its
+     assembly first (point 6).
    - **Joint**: unchanged, except the titles. Its origin and axis group
      becomes "Repère de la liaison", and "Position" stays for the live
      position and the slider.
@@ -129,7 +141,9 @@ multi-selection (`selection.ts`).
      its assembly when the gizmo is on, and is a pick while aligning
      (ADR 0035 point 3, unchanged);
    - in the diagram layout, where the 3D view is hidden, the tools are
-     off and their buttons disabled.
+     off and their buttons disabled;
+   - closing the inspector turns the tool off, since its controls live
+     there. Revised 2026-10-04: closing the inspector turns the tool off.
 
 4. **Alignment, inline.** The alignment block holds what the floating
    panel held, in the same order (ADR 0035 points 5 and 8): the kind,
@@ -241,10 +255,10 @@ multi-selection (`selection.ts`).
     as a ghost before "Aligner".
 
 11. **Undo stays out of scope.** One small, viewer-only addition is
-    in scope (user answer 2): "Rétablir le placement précédent" in
-    "Positionnement". It sends again the placement the selected
-    assembly had before the last placement edit of this session
-    (typed, dragged or aligned). It is offered only while the
+    in scope (user answer 2): "Rétablir le placement précédent", a
+    button of the inspector's tool bar (point 1). It sends again the
+    placement the selected assembly had before the last placement edit
+    of this session (typed, dragged or aligned). It is offered only while the
     assembly's anchor is unchanged. An alignment that created a fixed
     joint changes the anchor, so it does not offer it. The value is
     forgotten when the Pantin is closed. It is not a history.
@@ -320,6 +334,16 @@ null pick follows); `alignment-view.test.ts` (note shown only while
 running); `alignment-actions.test.ts` (re-pick, apply keeps kind and
 parameters, empties the picks).
 
+**P2b. Inspector tool bar (revised 2026-10-04).**
+Files: new `ui/inspector-toolbar.ts` (the three groups of point 1),
+`ui/icons.ts` (create, move, rotate, align, edit and delete icons),
+`ui/inspector.ts` and `ui/inspector-positioning.ts` (former button rows
+and step field removed), `styles/inspector.css`, the locales. The view
+models (`InspectorView`, `PositioningView`) do not change.
+Tests: `inspector-toolbar.test.ts` (creation group only with nothing to
+place or edit; the three groups in order with separators; the pressed
+tool; the reason of a disabled creation tool in its tooltip).
+
 **P3. Tool rules and keys.**
 Files: `controller/gizmo-actions.ts`, `controller/alignment-actions.ts`,
 `controller/controller.ts` (selection change and empty click while a
@@ -331,8 +355,8 @@ Tests: `gizmo-actions.test.ts` and `alignment-actions.test.ts` (G/R/A
 from a body select the assembly and open the inspector; selecting a
 joint turns the tool off; another assembly restarts the picks);
 `selection-actions.test.ts` (empty click keeps the selection while a
-tool is on, clears it otherwise); `menu-model.test.ts`
-(`escapeCommand`, enable rules).
+tool is on, clears it otherwise); `menu-model.test.ts` (enable rules); `menu-context.test.ts`
+(`escapeCommand`).
 
 **P4. Edit feedback.**
 Files: `properties/property-rows.ts` and `ui/properties-grid.ts`
@@ -356,7 +380,8 @@ groups restored, corrupt list ignored).
 
 **P6. Restore the previous placement.**
 Files: `viewer-state.ts`, `controller/placement-actions.ts`,
-`controller/alignment-actions.ts`, `inspector/positioning-view.ts`.
+`controller/alignment-actions.ts`, `inspector/positioning-view.ts`,
+`ui/inspector-toolbar.ts` and `ui/icons.ts` (the button in the tool bar).
 Tests: typed, dragged and aligned edits are each restorable once; not
 offered after an anchor change or a fixed joint; forgotten on close.
 
@@ -391,3 +416,9 @@ without leaving the alignment block.
 2. "Rétablir le placement précédent": yes, slice P6 is in scope.
 3. Escape with picks made: leaves the alignment at once.
 4. Gizmo and alignment buttons in the toolbar: removed.
+
+On 2026-10-04, after P2: "les boutons de création et de modification
+doivent se trouver au même endroit, avec des icônes".
+
+5. Creation, positioning and device buttons: one tool bar of icons at
+   the head of the inspector (point 1).

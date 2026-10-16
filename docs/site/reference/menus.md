@@ -1,0 +1,107 @@
+# Menus
+
+La barre de menus contient trois menus : **Fichier**, **Édition** et **Affichage**. Cette page liste chaque entrée dans l'ordre où elle apparaît. Les séparateurs sont indiqués par une ligne « séparateur ».
+
+Une entrée grisée ne fait rien quand on clique dessus, et son raccourci non plus. Une entrée à case (•) est cochable : la puce montre l'état actuel. Voir [Raccourcis](/reference/shortcuts) pour la navigation au clavier dans les menus.
+
+::: info Ctrl ou Cmd
+Les raccourcis avec Ctrl s'affichent en « Ctrl+... » dans les menus, mais le viewer accepte aussi la touche <kbd>Cmd</kbd> (macOS) à la place.
+:::
+
+Termes utilisés dans la colonne « Grisé quand » :
+
+- **Pas de Pantin ouvert** : aucun Pantin n'est ouvert (la fenêtre d'accueil est affichée).
+- **Traitement en cours** : une requête vers le coeur est en cours (l'indicateur de traitement de la barre d'outils est affiché).
+
+## Fichier
+
+| Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
+|---|---|---|---|
+| **Accueil** | | Affiche la fenêtre d'accueil. | Un Pantin est ouvert. |
+| **Ouvrir…** | | Avec un Pantin ouvert, le ferme pour revenir à la fenêtre d'accueil : s'il a des modifications non enregistrées, une question de confirmation s'affiche. La fenêtre d'accueil s'ouvre alors sur le dernier onglet utilisé (**Accueil** au premier affichage). Sans Pantin ouvert, affiche la fenêtre d'accueil sur l'onglet **Tous les Pantins**. | Traitement en cours. |
+| **Enregistrer** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Enregistre le Pantin ouvert. | Pas de Pantin ouvert, aucune modification non enregistrée, ou traitement en cours. |
+| **Importer…** | | Ouvre le sélecteur de fichiers pour importer un modèle 3D (GLB, STL, STEP) dans le Pantin ouvert. | Pas de Pantin ouvert, traitement en cours, ou import déjà en cours. |
+| **Nettoyer les fichiers orphelins…** | | Propose de supprimer les fichiers orphelins du dossier meshes du Pantin, que aucun corps n'utilise (après confirmation). | Mêmes conditions que **Importer…**. |
+| séparateur | | | |
+| **Fermer** | | Ferme le Pantin et revient à l'accueil. Une question s'affiche s'il reste des modifications non enregistrées. | Pas de Pantin ouvert. |
+
+## Édition
+
+| Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
+|---|---|---|---|
+| **Nouvelle liaison…** | | Ouvre le formulaire de création d'une liaison. | Pas de Pantin ouvert, aucun corps dans le Pantin, ou traitement en cours. |
+| **Remise à zéro de la simulation** | | Remet la simulation à son état initial. | Pas de Pantin ouvert ou traitement en cours. |
+| **Relâcher tous les tags forcés** | | Relâche tous les tags forcés depuis le viewer. Sans effet si aucun tag n'est forcé. | Pas de Pantin ouvert ou traitement en cours. |
+| séparateur | | | |
+| **Renommer** | <kbd>F2</kbd> | Renomme l'élément sélectionné. | La sélection n'est ni un Pantin, ni un corps, ni un élément de la chaîne d'action (préactionneur, actionneur, capteur, bande...). Un assemblage ne se renomme pas par ce menu : utilisez <kbd>F2</kbd> dans l'arborescence ou son menu contextuel. |
+| **Supprimer** | <kbd>Suppr</kbd> | Supprime l'élément sélectionné (corps, liaison ou élément de la chaîne d'action). Pour un corps ou une liaison, une question de confirmation s'affiche. Un préactionneur encore relié à un actionneur est refusé par le coeur. | La sélection n'est ni un corps, ni une liaison, ni un élément de la chaîne d'action, ou traitement en cours. |
+| séparateur | | | |
+| **Déplacer** (case) | <kbd>G</kbd> | Active ou coupe le manipulateur de déplacement de l'assemblage sélectionné. Avec un corps sélectionné, la sélection passe à son assemblage. | Aucun assemblage utilisable n'est sélectionné. |
+| **Tourner** (case) | <kbd>R</kbd> | Active ou coupe le manipulateur de rotation. | Idem. |
+| **Repère local de l'assemblage** (case) | <kbd>L</kbd> | Coché : le manipulateur suit les axes propres de l'assemblage. Décoché : il suit les axes du monde. | Idem. |
+| **Aligner…** (case) | <kbd>A</kbd> | Démarre ou coupe l'outil d'alignement de l'assemblage sélectionné. | Aucun assemblage utilisable n'est sélectionné et aucun alignement n'est en cours. |
+
+Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [Panneaux et boutons](/reference/panels).
+
+## Affichage
+
+| Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
+|---|---|---|---|
+| **Tout cadrer** | <kbd>F</kbd> | Cadre la vue 3D sur tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (dispositions **Schéma des chaînes seul** et **E/S seules**). |
+| **Cadrer la sélection** | | Cadre la vue 3D sur l'élément sélectionné. | Aucun corps, aucune sélection, sélection d'un élément de la chaîne d'action, ou vue 3D non affichée. |
+| séparateur | | | |
+| **Face** | <kbd>Ctrl</kbd>+<kbd>1</kbd> | Tourne la caméra vers la vue de face, en 300 ms. | Pas de Pantin ouvert ou vue 3D non affichée. |
+| **Arrière** | <kbd>Ctrl</kbd>+<kbd>2</kbd> | Vue arrière. | Idem. |
+| **Gauche** | <kbd>Ctrl</kbd>+<kbd>3</kbd> | Vue de gauche. | Idem. |
+| **Droite** | <kbd>Ctrl</kbd>+<kbd>4</kbd> | Vue de droite. | Idem. |
+| **Dessus** | <kbd>Ctrl</kbd>+<kbd>5</kbd> | Vue de dessus. | Idem. |
+| **Dessous** | <kbd>Ctrl</kbd>+<kbd>6</kbd> | Vue de dessous. | Idem. |
+| **Isométrique** | <kbd>Ctrl</kbd>+<kbd>7</kbd> | Vue isométrique. | Idem. |
+| séparateur | | | |
+| **Inspecteur** (case) | | Affiche ou masque l'inspecteur. Coché quand il est affiché. | Pas de Pantin ouvert. |
+| **Console** (case) | <kbd>F8</kbd> | Affiche ou masque la console. | Pas de Pantin ouvert. |
+| séparateur | | | |
+| **Changer la vue centrale** | <kbd>F4</kbd> | Passe à la disposition suivante : **3D + Schéma**, **3D seule**, **Schéma des chaînes seul**, puis de nouveau **3D + Schéma**. La disposition **E/S seules** est hors de ce cycle : <kbd>F4</kbd> la quitte pour **3D + Schéma**. | Pas de Pantin ouvert. |
+| **3D seule** (case) | | Choisit cette disposition. | Pas de Pantin ouvert. |
+| **Schéma des chaînes seul** (case) | | Choisit cette disposition. | Idem. |
+| **3D + Schéma** (case) | | Choisit cette disposition (celle par défaut). | Idem. |
+| **E/S seules** (case) | | Choisit cette disposition (liste d'E/S). | Idem. |
+| séparateur | | | |
+| **Perspective** (case) | | Bascule la caméra entre perspective et projection orthographique. | Jamais. |
+| **Souris : SolidWorks** (case) | | Choisit la configuration de souris SolidWorks. | Jamais. |
+| **Souris : ZW3D** (case) | | Choisit la configuration de souris ZW3D. | Jamais. |
+| **Inverser le sens de la molette** (case) | | Inverse le sens du zoom à la molette. | Jamais. |
+| **Pas des flèches : 5°** (case) | | Les flèches du clavier tournent la vue de 5° dans la vue 3D. | Jamais. |
+| **Pas des flèches : 15°** (case) | | Idem, 15°. | Jamais. |
+| **Pas des flèches : 45°** (case) | | Idem, 45°. | Jamais. |
+| séparateur | | | |
+| **Langue : FR** (case) | | Passe l'interface en français. | Jamais. |
+| **Langue : EN** (case) | | Passe l'interface en anglais. | Jamais. |
+| **Thème : Système** (case) | | Suit le thème clair ou sombre du navigateur ; c'est le réglage par défaut. | Jamais. |
+| **Thème : Clair** (case) | | Force le thème clair. | Jamais. |
+| **Thème : Sombre** (case) | | Force le thème sombre. | Jamais. |
+
+Les réglages de souris sont détaillés dans [Raccourcis](/reference/shortcuts#vue-3d-et-navigation-de-la-camera).
+
+## Menu contextuel de l'arborescence
+
+Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du clavier, ouvre le menu de cette ligne. Son titre est « Actions sur « nom » ». Les entrées dépendent du type de ligne :
+
+| Type de ligne | Entrées, dans l'ordre |
+|---|---|
+| Pantin | **Renommer**, **Cadrer la vue sur l'élément**, **Importer dans ce Pantin**, **Nouvel assemblage** |
+| Assemblage | **Renommer**, **Cadrer la vue sur l'élément**, **Nouvelle liaison…**, **Masquer dans la vue 3D** (devient **Afficher dans la vue 3D** s'il est masqué), **Isoler dans la vue 3D** (devient **Afficher tous les assemblages** s'il est isolé), **Supprimer** |
+| Dossier « Liaisons entre assemblages » | **Cadrer la vue sur l'élément**, **Nouvelle liaison…** |
+| Corps | **Renommer**, **Cadrer la vue sur l'élément**, **Supprimer** |
+| Liaison | **Cadrer la vue sur l'élément**, **Changer le type…**, **Ajouter un actionneur…** (devient **Modifier son actionneur…** si elle en a un), **Ajouter un capteur…**, **Ajouter les fins de course**, **Supprimer** |
+| Élément de la chaîne d'action (préactionneur, actionneur, capteur, bande...) | **Modifier**, **Afficher dans E/S**, **Supprimer** |
+| Autres lignes (noeud du fichier source, famille d'éléments) | **Cadrer la vue sur l'élément** |
+
+Précisions, d'après le code :
+
+- **Renommer** n'est proposé que pour une ligne renommable (Pantin, assemblage, corps).
+- Sur une liaison fixe, les entrées **Ajouter un actionneur…**, **Ajouter un capteur…** et **Ajouter les fins de course** ne sont pas proposées. **Ajouter les fins de course** n'est pas non plus proposée sur une liaison sans limites (pivot continu).
+- **Afficher dans E/S** n'est proposée que pour un élément qui peut posséder des tags.
+- Une entrée absente n'est pas grisée : elle n'apparaît pas.
+
+Le menu se ferme avec <kbd>Échap</kbd> ou par un clic ailleurs.

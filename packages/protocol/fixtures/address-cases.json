@@ -1,0 +1,315 @@
+{
+  "description": "Address classification of ADR 0004 and ADR 0046 point 2, shared by the core (TypeScript) and the bridge (Python) so that both classify and filter sources the same way. `class` is one of loopback, private, wildcard, link-local, public, invalid. A source is accepted when it is loopback or private and, when `allow` is not empty, inside one of its CIDRs.",
+  "classification": [
+    {
+      "address": "127.0.0.1",
+      "class": "loopback"
+    },
+    {
+      "address": "127.255.255.254",
+      "class": "loopback"
+    },
+    {
+      "address": "::1",
+      "class": "loopback"
+    },
+    {
+      "address": "0:0:0:0:0:0:0:1",
+      "class": "loopback"
+    },
+    {
+      "address": "::ffff:127.0.0.1",
+      "class": "loopback"
+    },
+    {
+      "address": "10.0.0.1",
+      "class": "private"
+    },
+    {
+      "address": "10.255.255.255",
+      "class": "private"
+    },
+    {
+      "address": "172.16.0.1",
+      "class": "private"
+    },
+    {
+      "address": "172.31.255.255",
+      "class": "private"
+    },
+    {
+      "address": "192.168.1.20",
+      "class": "private"
+    },
+    {
+      "address": "fc00::1",
+      "class": "private"
+    },
+    {
+      "address": "fd12:3456:789a::1",
+      "class": "private"
+    },
+    {
+      "address": "::ffff:10.0.0.1",
+      "class": "private"
+    },
+    {
+      "address": "::FFFF:192.168.0.1",
+      "class": "private"
+    },
+    {
+      "address": "::ffff:c0a8:1",
+      "class": "private"
+    },
+    {
+      "address": "0.0.0.0",
+      "class": "wildcard"
+    },
+    {
+      "address": "::",
+      "class": "wildcard"
+    },
+    {
+      "address": "0:0:0:0:0:0:0:0",
+      "class": "wildcard"
+    },
+    {
+      "address": "169.254.0.1",
+      "class": "link-local"
+    },
+    {
+      "address": "169.254.255.255",
+      "class": "link-local"
+    },
+    {
+      "address": "fe80::1",
+      "class": "link-local"
+    },
+    {
+      "address": "febf::1",
+      "class": "link-local"
+    },
+    {
+      "address": "172.15.255.255",
+      "class": "public"
+    },
+    {
+      "address": "172.32.0.1",
+      "class": "public"
+    },
+    {
+      "address": "100.64.0.1",
+      "class": "public"
+    },
+    {
+      "address": "100.127.255.255",
+      "class": "public"
+    },
+    {
+      "address": "192.169.0.1",
+      "class": "public"
+    },
+    {
+      "address": "11.0.0.1",
+      "class": "public"
+    },
+    {
+      "address": "8.8.8.8",
+      "class": "public"
+    },
+    {
+      "address": "fec0::1",
+      "class": "public"
+    },
+    {
+      "address": "fe00::1",
+      "class": "public"
+    },
+    {
+      "address": "2001:db8::1",
+      "class": "public"
+    },
+    {
+      "address": "::ffff:8.8.8.8",
+      "class": "public"
+    },
+    {
+      "address": "localhost",
+      "class": "invalid"
+    },
+    {
+      "address": "example.com",
+      "class": "invalid"
+    },
+    {
+      "address": "",
+      "class": "invalid"
+    },
+    {
+      "address": "256.0.0.1",
+      "class": "invalid"
+    },
+    {
+      "address": "10.0.0",
+      "class": "invalid"
+    },
+    {
+      "address": "10.0.0.1.2",
+      "class": "invalid"
+    },
+    {
+      "address": "010.0.0.1",
+      "class": "invalid"
+    },
+    {
+      "address": "10.0.0.1/8",
+      "class": "invalid"
+    },
+    {
+      "address": " 10.0.0.1",
+      "class": "invalid"
+    },
+    {
+      "address": "1::2::3",
+      "class": "invalid"
+    },
+    {
+      "address": ":::",
+      "class": "invalid"
+    },
+    {
+      "address": "1:2:3:4:5:6:7:8:9",
+      "class": "invalid"
+    },
+    {
+      "address": "1:2:3:4:5:6:7",
+      "class": "invalid"
+    },
+    {
+      "address": "12345::1",
+      "class": "invalid"
+    },
+    {
+      "address": "fe80::1%eth0",
+      "class": "invalid"
+    },
+    {
+      "address": "::ffff:300.0.0.1",
+      "class": "invalid"
+    },
+    {
+      "address": "[::1]",
+      "class": "invalid"
+    }
+  ],
+  "sourceAcceptance": [
+    {
+      "allow": [],
+      "source": "127.0.0.1",
+      "accepted": true,
+      "note": "loopback"
+    },
+    {
+      "allow": [],
+      "source": "::1",
+      "accepted": true,
+      "note": "IPv6 loopback"
+    },
+    {
+      "allow": [],
+      "source": "::ffff:127.0.0.1",
+      "accepted": true,
+      "note": "IPv4-mapped loopback is normalised"
+    },
+    {
+      "allow": [],
+      "source": "10.1.2.3",
+      "accepted": true,
+      "note": "private, no allow list"
+    },
+    {
+      "allow": [],
+      "source": "::ffff:192.168.1.20",
+      "accepted": true,
+      "note": "IPv4-mapped private is normalised"
+    },
+    {
+      "allow": [],
+      "source": "fd12:3456:789a::1",
+      "accepted": true,
+      "note": "unique local IPv6"
+    },
+    {
+      "allow": [],
+      "source": "8.8.8.8",
+      "accepted": false,
+      "note": "public"
+    },
+    {
+      "allow": [],
+      "source": "::ffff:8.8.8.8",
+      "accepted": false,
+      "note": "IPv4-mapped public"
+    },
+    {
+      "allow": [],
+      "source": "169.254.0.1",
+      "accepted": false,
+      "note": "link-local"
+    },
+    {
+      "allow": [],
+      "source": "0.0.0.0",
+      "accepted": false,
+      "note": "wildcard is not a source"
+    },
+    {
+      "allow": [],
+      "source": "localhost",
+      "accepted": false,
+      "note": "a hostname is never an address"
+    },
+    {
+      "allow": [],
+      "source": "",
+      "accepted": false,
+      "note": "empty"
+    },
+    {
+      "allow": ["192.168.1.0/24"],
+      "source": "192.168.1.200",
+      "accepted": true,
+      "note": "inside the allow list"
+    },
+    {
+      "allow": ["192.168.1.0/24"],
+      "source": "::ffff:192.168.1.9",
+      "accepted": true,
+      "note": "IPv4-mapped inside the allow list"
+    },
+    {
+      "allow": ["192.168.1.0/24"],
+      "source": "192.168.2.1",
+      "accepted": false,
+      "note": "private but outside the allow list"
+    },
+    {
+      "allow": ["192.168.1.0/24"],
+      "source": "127.0.0.1",
+      "accepted": false,
+      "note": "loopback is narrowed by the allow list too"
+    },
+    {
+      "allow": ["192.168.1.0/24", "127.0.0.1"],
+      "source": "127.0.0.1",
+      "accepted": true,
+      "note": "loopback allowed explicitly"
+    },
+    {
+      "allow": ["0.0.0.0/0"],
+      "source": "8.8.8.8",
+      "accepted": false,
+      "note": "an allow list never widens beyond private and loopback"
+    }
+  ]
+}

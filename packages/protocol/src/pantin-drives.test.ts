@@ -23,6 +23,11 @@ const press = {
   drives: [valve],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function issuesOf(document: unknown): string[] {

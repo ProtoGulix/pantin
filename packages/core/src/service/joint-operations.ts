@@ -12,7 +12,11 @@ import {
   updateJointInDocument,
 } from "../domain/joint-rules.ts";
 import { clampJointPosition, haveSameCoordinateUnit } from "../domain/joint-types/registry.ts";
-import { computePoses, currentJointPosition } from "../domain/kinematics.ts";
+import { computeDisplacements, computePoses, currentJointPosition } from "../domain/kinematics.ts";
+import { toObjectPoses } from "../domain/object-poses.ts";
+import { toProductPoses } from "../domain/product-poses.ts";
+import { forgetTagStates } from "../domain/tag-states.ts";
+import { tagStateOwnerPrefix } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type OpenPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
@@ -29,12 +33,16 @@ function findJoint(pantinId: PantinId, openPantin: OpenPantin, jointId: string):
 
 function toPoseResponse(openPantin: OpenPantin): PoseResponse {
   const { document, jointPositions } = openPantin;
+  const displacements = computeDisplacements(document, jointPositions);
+  const bodies = computePoses(document, jointPositions, displacements);
   return {
     jointPositions: document.joints.map((joint) => ({
       jointId: joint.id,
       position: currentJointPosition(joint, jointPositions),
     })),
-    bodies: computePoses(document, jointPositions),
+    bodies,
+    objects: toObjectPoses(document, bodies, displacements),
+    products: toProductPoses(openPantin.physicsState.products),
   };
 }
 
@@ -128,6 +136,7 @@ export function forgetJointRuntimeState(openPantin: OpenPantin, jointId: string)
   openPantin.queuedSetpoints.delete(jointId);
   openPantin.jointVelocities.delete(jointId);
   openPantin.jammedJointIds.delete(jointId);
+  forgetTagStates(openPantin.tagStates, tagStateOwnerPrefix("joint", jointId));
 }
 
 export async function getPose(context: ServiceContext, pantinId: PantinId): Promise<PoseResponse> {

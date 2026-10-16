@@ -1,6 +1,7 @@
 import { actuatorOfJoint, movableJoints } from "../actuators/actuator-joints.ts";
-import { type AssemblyDisplay, isAssemblyHidden } from "../assembly-display.ts";
+import type { AssemblyDisplay } from "../assembly-display.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
+import { ownerOfDevice } from "../io/io-owner.ts";
 import { endSwitchRequests } from "../sensors/joint-sensors.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
@@ -20,7 +21,12 @@ export type ContextAction =
   | "addEndSwitches"
   | "toggleAssemblyHidden"
   | "toggleAssemblyIsolated"
-  | "delete";
+  | "delete"
+  // The actions of the inspector toolbar, on a device row (ADR 0047 point 5).
+  | "editDevice"
+  | "deleteDevice"
+  // The I/O view on the device's tags (ADR 0049 point 11).
+  | "showInIo";
 
 export interface ContextMenuView {
   nodeId: string;
@@ -34,9 +40,14 @@ export interface ContextMenuView {
  * Entries depend on the node: only Pantins accept an import or a new
  * assembly, assemblies and the "between assemblies" folder a new joint, only
  * joints a type change, bodies, joints and assemblies a deletion. An
- * assembly can also be hidden or isolated in the 3D view.
+ * assembly can also be hidden or isolated in the 3D view. A device row offers
+ * what the inspector toolbar offers: edit and delete.
  */
 export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[] {
+  if (ref.kind === "device") {
+    // Rename stays in the inspector, and a device has nothing to frame.
+    return ["editDevice", "showInIo", "deleteDevice"];
+  }
   const entries: ContextAction[] = renamable ? ["rename"] : [];
   entries.push("frame");
   if (ref.kind === "pantin") {
@@ -70,6 +81,9 @@ const CONTEXT_LABELS = {
   toggleAssemblyHidden: "menu.hideAssembly",
   toggleAssemblyIsolated: "menu.isolateAssembly",
   delete: "menu.delete",
+  editDevice: "drives.edit",
+  deleteDevice: "drives.delete",
+  showInIo: "menu.showInIo",
 } as const;
 
 const JOINT_WIRING: readonly ContextAction[] = ["actuateJoint", "addJointSensor", "addEndSwitches"];
@@ -77,6 +91,10 @@ const JOINT_WIRING: readonly ContextAction[] = ["actuateJoint", "addJointSensor"
 // A fixed joint gets no actuator nor sensor entry (ADR 0028, ADR 0023), and a
 // joint without limits (continuous) no end-of-stroke switches.
 function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boolean {
+  if (action === "showInIo") {
+    // Only an element that can own tags has something to show there.
+    return ref.kind === "device" && ownerOfDevice({ kind: ref.deviceKind, id: ref.id }) !== null;
+  }
   if (!JOINT_WIRING.includes(action) || ref.kind !== "joint") {
     return true;
   }
@@ -100,9 +118,14 @@ function isActuated(ref: NodeRef, state: ViewerState): boolean {
 
 // The visibility entries say what they will do: show a hidden assembly, or
 // show every assembly again once one is isolated.
-function labelKeyOf(action: ContextAction, ref: NodeRef, display: AssemblyDisplay): MessageKey {
+function labelKeyOf(
+  action: ContextAction,
+  ref: NodeRef,
+  display: AssemblyDisplay,
+  hidden: boolean,
+): MessageKey {
   if (ref.kind === "assembly" && action === "toggleAssemblyHidden") {
-    return isAssemblyHidden(display, ref.key) ? "menu.showAssembly" : "menu.hideAssembly";
+    return hidden ? "menu.showAssembly" : "menu.hideAssembly";
   }
   if (ref.kind === "assembly" && action === "toggleAssemblyIsolated") {
     return display.isolatedAssemblyKey === ref.key
@@ -131,7 +154,7 @@ export function buildContextMenuView(state: ViewerState, t: Translate): ContextM
         label: t(
           action === "actuateJoint" && isActuated(ref, state)
             ? "menu.editJointActuator"
-            : labelKeyOf(action, ref, state.assemblyDisplay),
+            : labelKeyOf(action, ref, state.assemblyDisplay, node.visibility === "hidden"),
         ),
       })),
   };

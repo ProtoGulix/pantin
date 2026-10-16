@@ -24,6 +24,8 @@ export function toggleInspector(store: ViewerStore): void {
     driveForm: open ? store.state.driveForm : null,
     jointForm: open ? store.state.jointForm : null,
   });
+  // Only this explicit toggle is remembered; a form opening the inspector is not.
+  store.ports.storeInspectorOpen(open);
   if (open) {
     void refreshFaults(store);
   }

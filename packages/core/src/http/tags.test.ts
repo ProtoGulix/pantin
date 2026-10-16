@@ -74,6 +74,7 @@ describe("axis driven by a tag (phase 2 exit criterion)", () => {
       type: "float",
       direction: "command",
       value: 0.05,
+      forced: true,
     });
     expect(await carriageTranslation()).toEqual([0, 0, 0]);
 
@@ -81,9 +82,9 @@ describe("axis driven by a tag (phase 2 exit criterion)", () => {
 
     const tags = await readTags();
     expect(tags.stepCount).toBe(1);
-    expect(tags.tags).toEqual([
-      { name: "carriage.stroke.setpoint", type: "float", direction: "command", value: 0.05 },
-      { name: "carriage.stroke.position", type: "float", direction: "feedback", value: 0.05 },
+    expect(tags.tags.map((tag) => [tag.name, tag.direction, tag.value, tag.forced])).toEqual([
+      ["carriage.stroke.setpoint", "command", 0.05, true],
+      ["carriage.stroke.position", "feedback", 0.05, false],
     ]);
     const translation = await carriageTranslation();
     expect(translation[0]).toBeCloseTo(0.05, 12);

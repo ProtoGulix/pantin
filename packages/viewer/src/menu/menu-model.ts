@@ -4,6 +4,7 @@ import { LANGUAGES, type Translate } from "../i18n/translate.ts";
 import { NAVIGATION_PRESET_IDS } from "../navigation/navigation-presets.ts";
 import { ARROW_STEPS_DEGREES } from "../navigation/navigation-settings.ts";
 import { STANDARD_VIEW_IDS } from "../navigation/standard-views.ts";
+import { THEME_CHOICES } from "../theme/theme.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type MenuContext, menuContext } from "./menu-context.ts";
 import {
@@ -20,6 +21,7 @@ import {
   navigationToggleItem,
   type Shortcut,
   standardViewItem,
+  themeItem,
 } from "./menu-definitions.ts";
 
 export type { MenuCommand } from "./menu-definitions.ts";
@@ -67,6 +69,13 @@ const MENUS: readonly MenuDefinition[] = [
         "menubar.edit.newJoint",
         (context) => context.editing && context.hasBodies && !context.busy,
       ),
+      item("resetSimulation", "menubar.edit.reset", (context) => context.editing && !context.busy),
+      // Always allowed while editing: releasing a tag that is not forced changes nothing.
+      item(
+        "releaseAllTags",
+        "menubar.edit.releaseAll",
+        (context) => context.editing && !context.busy,
+      ),
       "separator",
       item(
         "rename",
@@ -94,6 +103,15 @@ const MENUS: readonly MenuDefinition[] = [
       "separator",
       gizmoItem("gizmoMove", "menubar.edit.gizmoMove", "g", "shortcut.gizmoMove", "move"),
       gizmoItem("gizmoRotate", "menubar.edit.gizmoRotate", "r", "shortcut.gizmoRotate", "rotate"),
+      {
+        // ADR 0042 point 2: checked on the assembly's own axes (Local).
+        ...item("gizmoSpace", "menubar.edit.gizmoSpace", (context) => context.gizmoAvailable, {
+          key: "l",
+          primaryModifier: false,
+          labelKey: "shortcut.gizmoSpace",
+        }),
+        checked: (context) => context.gizmoSpace === "local",
+      },
       {
         // ADR 0035: on the selected assembly, like the gizmo; checked while aligning.
         ...item(
@@ -168,6 +186,7 @@ const MENUS: readonly MenuDefinition[] = [
       ...ARROW_STEPS_DEGREES.map(arrowStepItem),
       "separator",
       ...LANGUAGES.map(languageItem),
+      ...THEME_CHOICES.map(themeItem),
     ],
   },
 ];

@@ -1,5 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
-import { commandSocketName, forcedValueText } from "../diagram/diagram-forcing.ts";
+import { commandSocketName, forcedValueText, withForcedWord } from "../diagram/diagram-forcing.ts";
 import { type LitState, nodeLitStates } from "../diagram/diagram-lit-states.ts";
 import {
   changedDiagnostics,
@@ -114,11 +114,16 @@ export function applyLitText(
  */
 export function applyForcedValues(
   drawn: DrawnDiagram,
-  context: { diagram: ChainDiagram; document: PantinDocument; t: Translate },
+  context: {
+    diagram: ChainDiagram;
+    document: PantinDocument;
+    t: Translate;
+    forced: ReadonlySet<string>;
+  },
   previous: ReadonlyMap<string, number>,
   next: ReadonlyMap<string, number>,
 ): void {
-  const { diagram, document, t } = context;
+  const { diagram, document, t, forced } = context;
   for (const node of diagram.nodes) {
     for (const socket of node.sockets) {
       const value = socket.tagName === undefined ? undefined : next.get(socket.tagName);
@@ -129,9 +134,43 @@ export function applyForcedValues(
         const unit = forcedTagUnit(document, socket.tagName);
         const symbol = forcedTagUnitLabel(document, socket.tagName, t);
         const text = forcedValueText(value, unit, symbol);
-        const label = commandSocketName(socket, t, { text });
+        const named = commandSocketName(socket, t, { text });
+        const label = withForcedWord(named, forced.has(socket.tagName), t("forced.badge"));
         drawn.nodes.get(node.id)?.sockets.get(socket.id)?.group.setAttribute("aria-label", label);
       }
+    }
+  }
+}
+
+interface MarkedPort {
+  tagName: string | null;
+  group: {
+    classList: { toggle(name: string, on: boolean): unknown };
+    getAttribute(name: string): string | null;
+    setAttribute(name: string, value: string): void;
+  };
+}
+
+/**
+ * Marks the sockets of forced command tags (ADR 0045 point 5): a class for the
+ * "F" the stylesheet shows, and the word in the accessible name. Only the
+ * sockets whose tag changed state are touched.
+ */
+export function applyForcedMarks(
+  drawn: { nodes: ReadonlyMap<string, { sockets: ReadonlyMap<string, MarkedPort> }> },
+  t: Translate,
+  previous: ReadonlySet<string>,
+  next: ReadonlySet<string>,
+): void {
+  for (const node of drawn.nodes.values()) {
+    for (const port of node.sockets.values()) {
+      if (port.tagName === null || previous.has(port.tagName) === next.has(port.tagName)) {
+        continue;
+      }
+      const forced = next.has(port.tagName);
+      port.group.classList.toggle("is-forced", forced);
+      const label = port.group.getAttribute("aria-label") ?? "";
+      port.group.setAttribute("aria-label", withForcedWord(label, forced, t("forced.badge")));
     }
   }
 }

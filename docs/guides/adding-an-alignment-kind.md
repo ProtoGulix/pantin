@@ -2,7 +2,7 @@
 
 An alignment kind is two files, a few registration lines and its labels in
 the viewer (ADR 0035 point 9). Nothing else in the core or the viewer tests a
-kind by name: the route, the pick checks and the alignment panel read its
+kind by name: the route, the pick checks and the alignment block of the inspector read its
 descriptor. An alignment is never stored, so a new kind changes no document
 schema and needs no migration. The steps below use a hypothetical `example`
 kind; replace it with the real name.

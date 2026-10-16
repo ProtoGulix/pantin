@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { displayedAssemblyFrame } from "../assembly-frame.ts";
 import { composeTransforms, IDENTITY_TRANSFORM, type RigidTransform } from "../rigid-transform.ts";
 import {
   anchorFrameOf,
@@ -74,7 +75,7 @@ describe("the gizmo's node", () => {
     if (frame === null) {
       throw new Error("the frame is known");
     }
-    const node = gizmoNodeFrame(frame, placement);
+    const node = gizmoNodeFrame(frame, placement, "global");
     const displayed = composeTransforms(frame, placement);
     expectClose(node.translation, displayed.translation);
     expectClose(node.rotation, frame.rotation);
@@ -83,7 +84,7 @@ describe("the gizmo's node", () => {
 
 describe("a gizmo released under a turned revolute body", () => {
   const frame = anchorFrameOf(target, poseOf) ?? IDENTITY_TRANSFORM;
-  const start = gizmoNodeFrame(frame, placement);
+  const start = gizmoNodeFrame(frame, placement, "global");
 
   it("maps a drag along the anchor's X axis to a placement shift along X", () => {
     // Ten centimetres along the anchor's X axis, which the joint turned 100 degrees from the world's.
@@ -99,7 +100,7 @@ describe("a gizmo released under a turned revolute body", () => {
       ],
       rotation: start.rotation,
     };
-    const result = placementOfGizmoNode(frame, placement, moved);
+    const result = placementOfGizmoNode(frame, placement, moved, "global");
     expectClose(result.translation, [0.6, 0.25, 0]);
     expectClose(result.rotation, placement.rotation);
   });
@@ -112,13 +113,13 @@ describe("a gizmo released under a turned revolute body", () => {
         { translation: [0, 0, 0], rotation: aboutZ(30) },
       ).rotation,
     };
-    const result = placementOfGizmoNode(frame, placement, turnedNode);
+    const result = placementOfGizmoNode(frame, placement, turnedNode, "global");
     expectClose(result.rotation, aboutZ(50));
     expectClose(result.translation, placement.translation);
   });
 
   it("gives back the placement for a node that was not touched", () => {
-    const result = placementOfGizmoNode(frame, placement, start);
+    const result = placementOfGizmoNode(frame, placement, start, "global");
     expectClose(result.translation, placement.translation);
     expectClose(result.rotation, placement.rotation);
   });
@@ -158,5 +159,24 @@ describe("gizmoTargetOf", () => {
 
   it("is null for an unknown assembly", () => {
     expect(gizmoTargetOf(asDocument(document), "zz")).toBeNull();
+  });
+});
+
+describe("the local gizmo and the assembly trihedron", () => {
+  it("read the same frame for an assembly anchored to another one", () => {
+    const gizmoFrame = gizmoNodeFrame(
+      anchorFrameOf(target, poseOf) ?? IDENTITY_TRANSFORM,
+      placement,
+      "local",
+    );
+    // Another body e of X, never the anchoring one: pose = D . W(A) . p . B(e).
+    const placementOfE = turned(33, [0.2, 0, 0.1]);
+    const poseOfE = composeTransforms(
+      displacement,
+      composeTransforms(worldOfA, composeTransforms(placement, placementOfE)),
+    );
+    const frame = displayedAssemblyFrame(poseOfE, placementOfE);
+    expectClose(gizmoFrame.translation, frame.translation);
+    expectClose(gizmoFrame.rotation, frame.rotation);
   });
 });

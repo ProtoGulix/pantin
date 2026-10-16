@@ -3,11 +3,16 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 340px;
+  width: var(--inspector-width, 340px);
   padding: 8px;
   overflow-y: auto;
   background: var(--surface-1);
   border-left: 1px solid var(--border);
+}
+
+/* Its splitter, on the left edge, leaves with it. */
+.splitter--inspector:has(+ .inspector[hidden]) {
+  display: none;
 }
 
 .inspector[hidden] {
@@ -21,12 +26,26 @@
   gap: 8px;
 }
 
-.inspector__head,
-.inspector__create {
+.inspector__head {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+}
+
+/* Every tool of the inspector in one row of icons (inspector-toolbar.ts). */
+.inspector__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+  padding: 2px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.inspector__toolbar .gizmo-step {
+  margin-left: 4px;
 }
 
 .inspector__title {
@@ -53,9 +72,9 @@
   margin: 2px 0;
   padding: 4px 6px;
   font-size: 12px;
-  color: var(--danger);
-  background: var(--danger-soft);
-  border-left: 3px solid var(--danger);
+  color: var(--state-abnormal);
+  background: var(--state-abnormal-soft);
+  border-left: 3px solid var(--state-abnormal);
   border-radius: var(--radius);
 }
 
@@ -91,8 +110,8 @@
 }
 
 .property-grid__toggle[aria-pressed="true"] {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--text);
+  border-color: var(--brand);
 }
 
 .inspector__detail {
@@ -119,11 +138,6 @@
   gap: 6px;
 }
 
-.positioning__tool[aria-pressed="true"] {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
 .positioning__title {
   margin: 0;
   font-size: 12px;
@@ -131,4 +145,34 @@
   padding: 0 4px;
   line-height: var(--row-height);
   background: var(--surface-2);
+}
+
+.inspector-io__value {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.inspector-io__address {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-source);
+  font-size: 11.5px;
+}
+
+.inspector-io__address.is-unmapped {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--text-muted);
+}
+
+.inspector-io__action {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.property-grid__none {
+  color: var(--text-muted);
 }

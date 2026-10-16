@@ -1,6 +1,7 @@
 import { JOINT_COORDINATE_UNITS, JOINT_PARAMETERS, type JointType } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
 import { AXIS_DIRECTIONS, type AxisChoice } from "../joints/axis-choice.ts";
+import { canPickAxis, isPickingAxis } from "../joints/axis-pick.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
@@ -65,6 +66,10 @@ export interface JointFormAxisView {
   reversed: { label: string; checked: boolean } | null;
   // The three components, shown only for a custom direction.
   components: JointFormRowView | null;
+  // Buttons of ADR 0041: "Inverser l'axe" and, on a stored joint that moves,
+  // "Prendre l'axe sur une face" (waiting: the 3D view waits for the click).
+  invertLabel: string;
+  fromFace: { label: string; waiting: boolean } | null;
 }
 
 const PART_LABELS = {
@@ -78,8 +83,12 @@ function vectorRow(
   form: JointFormState,
   unit: string | null,
   t: Translate,
+  assemblyName: string,
 ): JointFormRowView {
-  const label = t(vector === "origin" ? "joint.form.origin" : "joint.form.axis");
+  // The vectors are read in the frame of the parent body's assembly (ADR 0042 point 3).
+  const label = t(vector === "origin" ? "joint.form.originIn" : "joint.form.axisIn", {
+    assembly: assemblyName,
+  });
   return {
     label,
     unit,
@@ -94,10 +103,15 @@ function vectorRow(
   };
 }
 
-function axisView(form: JointFormState, t: Translate): JointFormAxisView {
+function axisView(
+  form: JointFormState,
+  t: Translate,
+  assemblyName: string,
+  picking: boolean,
+): JointFormAxisView {
   const choice = formAxisChoice(form);
   return {
-    label: t("joint.form.axis"),
+    label: t("joint.form.axisIn", { assembly: assemblyName }),
     hint: t("joint.form.axis.hint"),
     choice,
     options: [
@@ -111,7 +125,15 @@ function axisView(form: JointFormState, t: Translate): JointFormAxisView {
       choice.direction === "custom"
         ? null
         : { label: t("joint.form.axis.reversed"), checked: choice.reversed },
-    components: choice.direction === "custom" ? vectorRow("axis", form, null, t) : null,
+    components:
+      choice.direction === "custom" ? vectorRow("axis", form, null, t, assemblyName) : null,
+    invertLabel: t("joint.form.axis.invert"),
+    fromFace: canPickAxis(form)
+      ? {
+          label: t(picking ? "joint.form.axisFromFace.waiting" : "joint.form.axisFromFace"),
+          waiting: picking,
+        }
+      : null,
   };
 }
 
@@ -140,6 +162,9 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
     return null;
   }
   const creating = form.jointId === null;
+  const parentBody = open.document.bodies.find((body) => body.id === form.values[FIELD_PARENT]);
+  const assembly = open.document.assemblies.find((item) => item.key === parentBody?.assembly);
+  const assemblyName = assembly?.name ?? parentBody?.assembly ?? "";
   return {
     // The name typed in the form: the joint may have been deleted meanwhile.
     title: creating
@@ -155,8 +180,8 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
     parent: form.values[FIELD_PARENT] ?? "",
     child: form.values[FIELD_CHILD] ?? "",
     bodyOptions: open.document.bodies.map((body) => ({ value: body.id, label: body.name })),
-    origin: vectorRow("origin", form, displayUnitLabel("mm", t), t),
-    axis: axisView(form, t),
+    origin: vectorRow("origin", form, displayUnitLabel("mm", t), t, assemblyName),
+    axis: axisView(form, t, assemblyName, isPickingAxis(state)),
     rows: parameterRows(form, t),
     canSubmit: state.pendingRequestCount === 0,
   };

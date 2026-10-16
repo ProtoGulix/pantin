@@ -1,83 +1,23 @@
-import type { AlignRequest, CreateJointRequest, FaceFile, PantinResponse } from "@pantin/protocol";
-import { describe, expect, it, vi } from "vitest";
-import type { ViewportPick } from "../alignment/pick-resolution.ts";
-import { bodyOf, documentOf } from "../diagram/diagram-fixtures.ts";
+import { describe, expect, it } from "vitest";
+import { selectedNodeIdOf } from "../selection.ts";
 import { withNode } from "../test-fixtures.ts";
-import { assemblyNodeId } from "../tree/node-ids.ts";
+import { assemblyNodeId, bodyNodeId, jointNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import {
   applyAlignment,
+  chooseAlignmentKind,
+  chooseAlignmentPick,
   receiveAlignmentPick,
   setAlignmentFixedJoint,
   toggleAlignment,
 } from "./alignment-actions.ts";
-import { testStore } from "./controller-test-helpers.ts";
+import { alignmentStore, click, PANTIN, pickBoth } from "./alignment-test-helpers.ts";
+import { createPanelIntents } from "./controller.ts";
+import { toggleInspector } from "./drive-actions.ts";
 import { toggleGizmo } from "./gizmo-actions.ts";
 
 // Aligning from the viewer (ADR 0035): the session, the picks checked at once,
 // then one request to the core, and the fixed joint when asked.
-
-const PANTIN: PantinResponse = {
-  id: "bench",
-  unsavedChanges: false,
-  document: documentOf({ assemblies: ["a", "block"], bodies: [bodyOf("block", "block")] }),
-};
-
-const FACE_FILE: FaceFile = {
-  formatVersion: 1,
-  writer: "test",
-  solid: true,
-  primitives: [{ mesh: 0, primitive: 0, ranges: [[0, 2, 0]] }],
-  faces: [{ kind: "plane", point: [0, 0, 0], normal: [0, 0, -1] }],
-};
-
-function click(bodyId: string): ViewportPick {
-  return {
-    bodyId,
-    meshIndex: 0,
-    pointers: ["/meshes/0/primitives/0"],
-    triangle: 1,
-    point: [0, 0, 0.1],
-    normal: [0, 0, 1],
-  };
-}
-
-function alignmentStore(targetDisplaced = false, jointFails = false) {
-  const fetchFaceFile = vi.fn(async (_pantinId: string, meshPath: string) =>
-    meshPath === "meshes/block.glb" ? FACE_FILE : null,
-  );
-  const aligned: AlignRequest[] = [];
-  const joints: CreateJointRequest[] = [];
-  const store = testStore({
-    getPantin: async () => PANTIN,
-    listPantins: async () => [],
-    fetchFaceFile,
-    alignAssembly: async (_pantinId, _key, request) => {
-      aligned.push(request);
-      return {
-        placement: { translation: [0, 0, 0.1], rotation: [0, 0, 0, 1] },
-        anchor: { kind: "world" },
-        targetDisplaced,
-      };
-    },
-    createJoint: async (_pantinId, request) => {
-      if (jointFails) {
-        throw new Error("joint refused");
-      }
-      joints.push(request);
-      return { ...request, id: "link", tagKey: "link" };
-    },
-  });
-  store.requestedPantinId = PANTIN.id;
-  store.state = withNode(withOpenPantin(store.state, PANTIN), assemblyNodeId("bench", "block"));
-  return { store, fetchFaceFile, aligned, joints };
-}
-
-async function pickBoth(store: ReturnType<typeof alignmentStore>["store"]) {
-  toggleAlignment(store);
-  await receiveAlignmentPick(store, click("block"));
-  await receiveAlignmentPick(store, click("frame"));
-}
 
 describe("alignment session in the viewer", () => {
   it("starts on the selected assembly with the gizmo off, and stops on the same command", () => {
@@ -86,6 +26,57 @@ describe("alignment session in the viewer", () => {
     toggleAlignment(store);
     expect(store.state).toMatchObject({ gizmoMode: null, alignment: { assemblyKey: "block" } });
     toggleAlignment(store);
+    expect(store.state.alignment).toBeNull();
+  });
+});
+
+describe("alignment follows the selection", () => {
+  it("from a body moves the selection to its assembly and opens the inspector", () => {
+    const { store } = alignmentStore();
+    store.update({ ...withNode(store.state, bodyNodeId("bench", "block")), inspectorOpen: false });
+    toggleAlignment(store);
+    expect(selectedNodeIdOf(store.state.selection)).toBe(assemblyNodeId("bench", "block"));
+    expect(store.state).toMatchObject({ inspectorOpen: true, alignment: { assemblyKey: "block" } });
+  });
+  it("A with a body of the aligned assembly selected stops the alignment", () => {
+    const { store } = alignmentStore();
+    toggleAlignment(store);
+    createPanelIntents(store).selectNode(bodyNodeId("bench", "block"));
+    expect(store.state.alignment).not.toBeNull();
+    toggleAlignment(store);
+    expect(store.state.alignment).toBeNull();
+  });
+
+  it("A with a body of another assembly moves to it and starts there", () => {
+    const { store } = alignmentStore();
+    toggleAlignment(store);
+    createPanelIntents(store).selectNode(bodyNodeId("bench", "frame"));
+    toggleAlignment(store);
+    expect(store.state.alignment?.assemblyKey).toBe("a");
+    expect(selectedNodeIdOf(store.state.selection)).toBe(assemblyNodeId("bench", "a"));
+  });
+});
+
+describe("alignment follows the selection to another assembly", () => {
+  it("restarts with no picks on another assembly, keeping the kind", async () => {
+    const { store } = alignmentStore();
+    await pickBoth(store);
+    chooseAlignmentKind(store, "axis_on_axis");
+    createPanelIntents(store).selectNode(assemblyNodeId("bench", "a"));
+    expect(store.state.alignment).toMatchObject({ assemblyKey: "a", kind: "axis_on_axis" });
+    expect(store.state.alignment?.picks.every((pick) => pick === null)).toBe(true);
+  });
+});
+
+describe("alignment ends with its conditions", () => {
+  it("ends on a closed inspector or a joint", () => {
+    const { store } = alignmentStore();
+    toggleAlignment(store);
+    toggleInspector(store);
+    expect(store.state.alignment).toBeNull();
+    toggleInspector(store);
+    toggleAlignment(store);
+    createPanelIntents(store).selectNode(jointNodeId("bench", "j1"));
     expect(store.state.alignment).toBeNull();
   });
 
@@ -174,5 +165,60 @@ describe("applying an alignment", () => {
     await pickBoth(store);
     await applyAlignment(store);
     expect(store.state.message?.key).toBe("alignment.targetDisplaced");
+  });
+});
+
+describe("picking again and aligning again", () => {
+  it("replaces a chosen pick with the next click and keeps the other", async () => {
+    const { store } = alignmentStore();
+    await pickBoth(store);
+    const target = store.state.alignment?.picks[1];
+    chooseAlignmentPick(store, 0);
+    expect(store.state.alignment?.currentPick).toBe(0);
+    await receiveAlignmentPick(store, click("block"));
+    expect(store.state.alignment?.picks[1]).toBe(target);
+    expect(store.state.alignment?.currentPick).toBeNull();
+    expect(store.state.message).toBeNull();
+    // Every pick is made again: a further click is refused.
+    await receiveAlignmentPick(store, click("block"));
+    expect(store.state.message?.key).toBe("alignment.refusal.allPicked");
+  });
+
+  it("keeps the kind and the parameters for the next alignment", async () => {
+    const { store } = alignmentStore();
+    chooseAlignmentKind(store, "plane_on_plane");
+    toggleAlignment(store);
+    store.state = {
+      ...store.state,
+      alignment: store.state.alignment && {
+        ...store.state.alignment,
+        flip: true,
+        offsetText: "2",
+        fixedJoint: true,
+      },
+    };
+    await receiveAlignmentPick(store, click("block"));
+    await receiveAlignmentPick(store, click("frame"));
+    await applyAlignment(store);
+    expect(store.state.alignment).toMatchObject({
+      kind: "plane_on_plane",
+      flip: true,
+      offsetText: "2",
+      fixedJoint: true,
+      picks: [null, null],
+      currentPick: null,
+    });
+  });
+});
+
+describe("cancelling a re-pick", () => {
+  it("cancels a re-pick on a second choice and keeps the old pick", async () => {
+    const { store } = alignmentStore();
+    await pickBoth(store);
+    const first = store.state.alignment?.picks[0];
+    chooseAlignmentPick(store, 0);
+    chooseAlignmentPick(store, 0);
+    expect(store.state.alignment).toMatchObject({ currentPick: null });
+    expect(store.state.alignment?.picks[0]).toBe(first);
   });
 });

@@ -1,0 +1,282 @@
+/* The I/O view (ADR 0049 point 11), over the 3D view like the diagram. Tokens in base.css. */
+.viewport--io .viewport__canvas {
+  visibility: hidden;
+}
+
+.viewport--io .viewport__hint {
+  display: none;
+}
+
+.io-view {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  overflow: auto;
+  background: var(--viewport-background);
+}
+
+.io-view[hidden] {
+  display: none;
+}
+
+.io-view__title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.io-view__toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.io-button.is-busy {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.io-view__note {
+  margin: 4px 0;
+  max-width: 60ch;
+  color: var(--text-muted);
+}
+
+.io-view__body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) minmax(190px, 260px);
+  gap: 12px;
+  min-height: 0;
+}
+
+.io-view__main,
+.io-modules,
+.io-unmapped {
+  min-width: 0;
+  overflow: auto;
+}
+
+.io-view__main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.io-button {
+  padding: 3px 9px;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.io-button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.io-button:focus-visible,
+.io-module:focus-visible,
+.io-problem__go:focus-visible,
+.io-cell:focus-visible,
+.io-cell input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.io-button:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.io-button--small {
+  padding: 1px 6px;
+}
+
+.io-button--danger {
+  color: var(--state-emergency);
+}
+
+.io-problems {
+  padding: 6px 8px;
+  background: var(--state-emergency-soft);
+  border: 1px solid var(--state-emergency);
+  border-radius: var(--radius);
+}
+
+.io-problems__list,
+.io-modules__list,
+.io-unmapped__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.io-problem__go {
+  padding: 1px 0;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.io-problem--file {
+  color: var(--text);
+}
+
+.io-modules__list {
+  margin-bottom: 8px;
+}
+
+.io-module {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  width: 100%;
+  padding: 4px 6px;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.io-module .status-dot {
+  align-self: center;
+}
+
+.io-module:hover {
+  background: var(--hover);
+}
+
+.io-module.is-selected {
+  background: var(--selection-soft);
+  border-color: var(--selection);
+}
+
+.io-module__key {
+  font-weight: 600;
+}
+
+.io-module__port,
+.io-module__count {
+  color: var(--text-muted);
+}
+
+.io-module__problems {
+  color: var(--state-emergency);
+}
+
+.io-settings__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.io-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.io-field__label {
+  color: var(--text-muted);
+}
+
+.io-table-scroll {
+  overflow: auto;
+}
+
+.io-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.io-table__head {
+  padding: 3px 6px;
+  color: var(--text-muted);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.io-cell {
+  padding: 1px 4px;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.io-cell--derived {
+  padding: 3px 6px;
+  font-family: var(--font-source);
+  color: var(--text-muted);
+}
+
+.io-cell--actions {
+  white-space: nowrap;
+}
+
+.io-cell input {
+  width: 100%;
+  min-width: 70px;
+}
+
+/* A problem is marked by an outline as well as by colour. */
+.is-problem {
+  outline: 1px dashed var(--state-emergency);
+  background: var(--state-emergency-soft);
+}
+
+.io-unmapped__assembly {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.io-unmapped__tag {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+
+.io-unmapped__name {
+  overflow: hidden;
+  font-family: var(--font-source);
+  text-overflow: ellipsis;
+}
+
+/* A tag that selects its owner: reads as text, behaves as a link. */
+.io-tag-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--selection);
+  font: inherit;
+  font-family: var(--font-source);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.io-tag-link:focus-visible {
+  outline: 2px solid var(--selection);
+  outline-offset: 1px;
+}
+
+.io-view__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  min-height: 0;
+}

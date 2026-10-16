@@ -7,6 +7,9 @@ the detail, loaded on demand.
 | --- | --- |
 | [decisions](decisions/) | Architecture Decision Records, one short note per decision |
 | [spikes](spikes/) | Phase 0 verification reports: what worked, failed, remains unverified |
+| [guides](guides/) | How to add a type (drive, actuator, sensor, joint, alignment kind) and how to read the Pantin document |
+| [site](site/) | User guide in French and English (VitePress, ADR 0051): `pnpm docs:dev`; `pnpm docs:screenshots` regenerates its pictures |
+| [brand](brand/) | Logo, symbol, favicon, colour and type tokens (ADR 0052) |
 | [backlog](backlog/) | Ideas outside the current phase scope |
 
 ## Writing an ADR

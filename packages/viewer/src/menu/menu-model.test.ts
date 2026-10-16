@@ -51,6 +51,9 @@ const LIST_VIEW_COMMANDS = [
   "arrowStep:45",
   "language:fr",
   "language:en",
+  "theme:system",
+  "theme:light",
+  "theme:dark",
 ];
 
 describe("menu bar model", () => {
@@ -152,9 +155,10 @@ describe("menu bar model layouts", () => {
       ["layout:3d", false],
       ["layout:diagram", true],
       ["layout:both", false],
+      ["layout:io", false],
     ]);
     expect(enabledCommands(editing(false))).toEqual(
-      expect.arrayContaining(["layout:3d", "layout:diagram", "layout:both"]),
+      expect.arrayContaining(["layout:3d", "layout:diagram", "layout:both", "layout:io"]),
     );
     expect(enabledCommands(listing)).not.toContain("layout:both");
   });
@@ -261,6 +265,7 @@ describe("shortcut listing", () => {
       { keys: "Suppr", action: "Supprimer" },
       { keys: "G", action: "Déplacer" },
       { keys: "R", action: "Tourner" },
+      { keys: "L", action: "Repère local de l'assemblage" },
       { keys: "A", action: "Aligner…" },
       { keys: "F", action: "Tout cadrer" },
       { keys: "Ctrl+1", action: "Face" },
@@ -273,5 +278,20 @@ describe("shortcut listing", () => {
       { keys: "F8", action: "Console" },
       { keys: "F4", action: "Changer la vue centrale" },
     ]);
+  });
+});
+
+describe("the simulation reset (ADR 0043 point 12)", () => {
+  it("is in the Edit menu, off with no Pantin open and on while one is", () => {
+    expect(enabledCommands(listing)).not.toContain("resetSimulation");
+    expect(enabledCommands(editing(false))).toContain("resetSimulation");
+    const edit = buildMenuBar(editing(false), translate).find((menu) => menu.id === "edit");
+    const labels = edit?.entries.flatMap((entry) => (entry.type === "item" ? [entry.label] : []));
+    expect(labels).toContain("Remise à zéro de la simulation");
+  });
+
+  it("waits for a request in flight to finish", () => {
+    const busy = { ...editing(false), pendingRequestCount: 1 };
+    expect(enabledCommands(busy)).not.toContain("resetSimulation");
   });
 });

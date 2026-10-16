@@ -3,6 +3,7 @@ import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import type { NavigationPresetId } from "../navigation/navigation-presets.ts";
 import type { StandardViewId } from "../navigation/standard-views.ts";
+import type { ThemeChoice } from "../theme/theme.ts";
 import type { MenuContext } from "./menu-context.ts";
 
 // The vocabulary of the menu bar: commands, item definitions and the helpers
@@ -16,6 +17,8 @@ export type MenuCommand =
   | "cleanOrphans"
   | "close"
   | "newJoint"
+  | "resetSimulation"
+  | "releaseAllTags"
   | "rename"
   | "delete"
   | "frameAll"
@@ -27,12 +30,14 @@ export type MenuCommand =
   | `navigation:${NavigationPresetId}`
   | "gizmoMove"
   | "gizmoRotate"
+  | "gizmoSpace"
   | "align"
   | "toggleInspector"
   | "toggleConsole"
   | "cycleLayout"
   | `layout:${CentralLayout}`
-  | `language:${Language}`;
+  | `language:${Language}`
+  | `theme:${ThemeChoice}`;
 
 export type MenuId = "file" | "edit" | "view";
 
@@ -81,10 +86,21 @@ export function languageItem(language: Language): MenuItemDefinition {
   };
 }
 
+/** "Thème : Clair" (ADR 0053 point 1): checked on the choice in use, like the language. */
+export function themeItem(choice: ThemeChoice): MenuItemDefinition {
+  return {
+    command: `theme:${choice}`,
+    label: (translate) => translate("menubar.view.theme", { theme: translate(`theme.${choice}`) }),
+    enabled: always,
+    checked: (context) => context.themeChoice === choice,
+  };
+}
+
 const LAYOUT_LABEL_KEYS: Readonly<Record<CentralLayout, MessageKey>> = {
   "3d": "menubar.view.layout3d",
   diagram: "menubar.view.layoutDiagram",
   both: "menubar.view.layoutBoth",
+  io: "menubar.view.layoutIo",
 };
 
 // Explicit entries next to the F4 cycle, checked on the layout in use (ADR 0030).

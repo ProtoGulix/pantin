@@ -1,3 +1,4 @@
+import { isConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { RowLink, ToggleAction } from "../properties/property-rows.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -22,11 +23,13 @@ export function applyToggle(action: ToggleAction, on: boolean, intents: ToggleIn
   }
 }
 
-type DeviceIntents = Pick<
+export type DeviceIntents = Pick<
   PanelIntents,
   | "openDriveForm"
   | "openActuatorForm"
   | "openSensorForm"
+  | "openConveyorForm"
+  | "deleteConveyor"
   | "deleteDrive"
   | "deleteActuator"
   | "deleteSensor"
@@ -34,6 +37,10 @@ type DeviceIntents = Pick<
 
 /** The device's form, to change what the grid cannot (its type, its feed). */
 export function editDevice(device: DeviceRef, intents: DeviceIntents): void {
+  if (isConveyorKind(device.kind)) {
+    intents.openConveyorForm(device.kind, device.id);
+    return;
+  }
   const open = {
     drive: intents.openDriveForm,
     actuator: intents.openActuatorForm,
@@ -43,6 +50,10 @@ export function editDevice(device: DeviceRef, intents: DeviceIntents): void {
 }
 
 export function deleteDevice(device: DeviceRef, intents: DeviceIntents): void {
+  if (isConveyorKind(device.kind)) {
+    intents.deleteConveyor(device.kind, device.id);
+    return;
+  }
   const remove = {
     drive: intents.deleteDrive,
     actuator: intents.deleteActuator,

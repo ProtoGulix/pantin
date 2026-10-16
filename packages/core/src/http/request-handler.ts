@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { API_PREFIX } from "@pantin/protocol";
+import type { BridgeSupervisor } from "../bridge/bridge-supervisor.ts";
 import {
   describeAcceptedHosts,
   isHostAccepted,
@@ -16,6 +17,7 @@ import { serveViewerFile } from "./static-files.ts";
 export type RequestHandlerOptions = {
   service: PantinService;
   poseStreams: PoseStreamRegistry;
+  bridge: BridgeSupervisor;
   network: NetworkConfig;
   maxImportBytes: number;
   viewerDirectory: string | undefined;

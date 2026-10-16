@@ -31,8 +31,8 @@
 
 .list-row--selected,
 .list-row--selected:hover {
-  background: var(--accent-soft);
-  box-shadow: inset 2px 0 0 var(--accent);
+  background: var(--selection-soft);
+  box-shadow: inset 2px 0 0 var(--selection);
 }
 
 .list-row__icon {
@@ -73,8 +73,8 @@
   flex-direction: column;
   gap: 6px;
   padding: 6px 8px;
-  background: var(--accent-soft);
-  border-top: 1px solid var(--accent);
+  background: var(--selection-soft);
+  border-top: 1px solid var(--selection);
 }
 
 .prompt-line__question {
@@ -85,7 +85,7 @@
 }
 
 .prompt-line__question .icon {
-  color: var(--accent);
+  color: var(--selection);
 }
 
 .prompt-line__details {
@@ -100,4 +100,11 @@
   flex-wrap: wrap;
   gap: 6px;
   justify-content: flex-end;
+}
+
+.prompt-line__option {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
 }

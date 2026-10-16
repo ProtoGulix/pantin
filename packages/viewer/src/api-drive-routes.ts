@@ -43,6 +43,9 @@ export interface DriveRoutes {
   ): Promise<FaultsResponse>;
   listTags(pantinId: string): Promise<TagListResponse>;
   writeTag(pantinId: string, tagName: string, value: number): Promise<Tag>;
+  // A REST write forces its tag (ADR 0045 point 5): these give it back to the PLC.
+  releaseTag(pantinId: string, tagName: string): Promise<Tag>;
+  releaseAllTags(pantinId: string): Promise<TagListResponse>;
 }
 
 function driveUrl(pantinId: string, driveId: string, suffix = ""): string {
@@ -84,6 +87,14 @@ export function driveRoutes(send: SendJson): DriveRoutes {
         jsonRequest("PUT", { fault }),
         FaultsResponseSchema,
       ),
+    ...tagRoutes(send),
+  };
+}
+
+type TagRoutes = Pick<DriveRoutes, "listTags" | "writeTag" | "releaseTag" | "releaseAllTags">;
+
+function tagRoutes(send: SendJson): TagRoutes {
+  return {
     listTags: (pantinId) =>
       send(pantinUrl(pantinId, "/tags"), jsonRequest("GET"), TagListResponseSchema),
     writeTag: async (pantinId, tagName, value) => {
@@ -91,5 +102,11 @@ export function driveRoutes(send: SendJson): DriveRoutes {
       const url = pantinUrl(pantinId, `/tags/${encodeURIComponent(tagName)}`);
       return (await send(url, jsonRequest("PUT", valid), TagResponseSchema)).tag;
     },
+    releaseTag: async (pantinId, tagName) => {
+      const url = pantinUrl(pantinId, `/tags/${encodeURIComponent(tagName)}/force`);
+      return (await send(url, jsonRequest("DELETE"), TagResponseSchema)).tag;
+    },
+    releaseAllTags: (pantinId) =>
+      send(pantinUrl(pantinId, "/forces"), jsonRequest("DELETE"), TagListResponseSchema),
   };
 }

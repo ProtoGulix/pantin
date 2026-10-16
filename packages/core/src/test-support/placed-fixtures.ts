@@ -56,6 +56,7 @@ export function documentOf(
   joints: Joint[],
   bodies?: Body[],
   assemblies?: Assembly[],
+  extra: Partial<PantinDocument> = {},
 ): PantinDocument {
   return {
     schema_version: PANTIN_SCHEMA_VERSION,
@@ -77,6 +78,12 @@ export function documentOf(
     drives: [],
     actuators: [],
     sensors: [],
+    belts: [],
+    guides: [],
+    emitters: [],
+    absorbers: [],
+    presenceSensors: [],
+    ...extra,
   };
 }
 

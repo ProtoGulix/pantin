@@ -53,6 +53,11 @@ const PRESS: PantinDocument = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function limitSwitch(name = "Tige", assembly = "pince"): CreateSensorRequest {

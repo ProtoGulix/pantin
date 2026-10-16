@@ -11,20 +11,18 @@ import { CreateLineSystem } from "@babylonjs/core/Meshes/Builders/linesBuilder.j
 import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { coreToBabylonPosition, type Vector3Tuple } from "../frames.ts";
+import type { ScenePalette } from "../theme/scene-palette.ts";
 import { chooseGridStep } from "./scene-plan.ts";
 
 // The fixed decor of the viewport: background, lights, ground, grid and the
 // world axes. Grid and axes are built from core coordinates and converted, so
 // they show the core frame (Z up) whatever Babylon uses internally.
 //
-// The look is a product studio: a dark seamless background, soft light from
+// The look is a product studio: a seamless background that follows the theme, soft light from
 // above, and a ground that shows nothing but the soft shadow of the bodies,
 // so they seem to rest on an endless floor.
 
-// Same value as --viewport-background in base.css, shown before the first frame.
-const BACKGROUND = Color4.FromHexString("#1b1e24ff");
-const GRID_MINOR_COLOR = Color4.FromHexString("#3a404bff");
-const GRID_MAJOR_COLOR = Color4.FromHexString("#4f5766ff");
+// The axes code the core's X, Y and Z (data, not theme): they keep their colours in both themes.
 const AXIS_X_COLOR = Color4.FromHexString("#e5534bff");
 const AXIS_Y_COLOR = Color4.FromHexString("#57ab5aff");
 const AXIS_Z_COLOR = Color4.FromHexString("#539bf5ff");
@@ -33,10 +31,11 @@ export interface Stage {
   shadowGenerator: ShadowGenerator;
   /** Resizes ground, grid and axes around the bodies; the floor stands at core z = floorZ (metres). */
   fitToBodies(centre: Vector3Tuple, extentMetres: number, floorZ: number): void;
+  /** The theme changed: background and grid take its colours at once. */
+  setPalette(palette: ScenePalette): void;
 }
 
 function setUpLighting(scene: Scene): ShadowGenerator {
-  scene.clearColor = BACKGROUND;
   // Neutral tone mapping keeps CAD colours close to their authored values.
   scene.imageProcessingConfiguration.toneMappingEnabled = true;
   scene.imageProcessingConfiguration.toneMappingType =
@@ -136,33 +135,53 @@ function createCoreAxes(scene: Scene, length: number): Mesh[] {
   );
 }
 
-function buildDecor(
-  scene: Scene,
-  centre: Vector3Tuple,
-  extentMetres: number,
-  floorZ: number,
-): Mesh[] {
+interface DecorFit {
+  centre: Vector3Tuple;
+  extentMetres: number;
+  floorZ: number;
+}
+
+function buildDecor(scene: Scene, fit: DecorFit, palette: ScenePalette): Mesh[] {
+  const { centre, extentMetres, floorZ } = fit;
   const halfSize = Math.max(extentMetres * 1.5, 0.5);
   const step = chooseGridStep(halfSize * 2);
   const { minor, major } = gridLines(centre, halfSize, step, floorZ);
   return [
     createGroundMesh(scene, centre, halfSize, floorZ),
-    uniformLines(scene, "grid-minor", minor, GRID_MINOR_COLOR),
-    uniformLines(scene, "grid-major", major, GRID_MAJOR_COLOR),
+    uniformLines(scene, "grid-minor", minor, hexToColor4(palette.gridMinor)),
+    uniformLines(scene, "grid-major", major, hexToColor4(palette.gridMajor)),
     ...createCoreAxes(scene, step * 3),
   ];
 }
 
-export function createStage(scene: Scene): Stage {
+function hexToColor4(hex: string): Color4 {
+  return Color4.FromHexString(`${hex}ff`);
+}
+
+// The decor is rebuilt, not recoloured: it is cheap, and the same path serves a
+// new fit around the bodies and a new theme.
+export function createStage(scene: Scene, initialPalette: ScenePalette): Stage {
   const shadowGenerator = setUpLighting(scene);
-  let decor = buildDecor(scene, [0, 0, 0], 1, 0);
+  let palette = initialPalette;
+  let fit: DecorFit = { centre: [0, 0, 0], extentMetres: 1, floorZ: 0 };
+  let decor: Mesh[] = [];
+  const rebuild = () => {
+    for (const mesh of decor) {
+      mesh.dispose(false, true);
+    }
+    scene.clearColor = hexToColor4(palette.background);
+    decor = buildDecor(scene, fit, palette);
+  };
+  rebuild();
   return {
     shadowGenerator,
     fitToBodies: (centre, extentMetres, floorZ) => {
-      for (const mesh of decor) {
-        mesh.dispose(false, true);
-      }
-      decor = buildDecor(scene, centre, extentMetres, floorZ);
+      fit = { centre, extentMetres, floorZ };
+      rebuild();
+    },
+    setPalette: (next) => {
+      palette = next;
+      rebuild();
     },
   };
 }

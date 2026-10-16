@@ -46,6 +46,7 @@ export function startTestServer(
     reportRejectedSource: () => undefined,
     simulationTimer: createManualTimer().timer,
     streamTimer: createManualTimer().timer,
+    busTimer: createManualTimer().timer,
     ...overrides,
   });
 }
@@ -54,6 +55,7 @@ export type RawResponse = {
   status: number;
   contentType: string;
   cacheControl: string | undefined;
+  contentDisposition: string | undefined;
   bytes: Buffer;
   body: string;
   json: unknown;
@@ -86,6 +88,7 @@ export function sendRaw(
             status: incoming.statusCode ?? 0,
             contentType,
             cacheControl,
+            contentDisposition: incoming.headers["content-disposition"],
             bytes,
             body: text,
             json,

@@ -1,4 +1,6 @@
 packages:
   - packages/*
 allowBuilds:
+  # The platform binary comes from an optional dependency: its install script only checks it.
+  esbuild: false
   lefthook: true

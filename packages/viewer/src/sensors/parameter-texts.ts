@@ -24,6 +24,9 @@ const perUnitToDisplay = (unit: JointCoordinateUnit, value: number) =>
 const numberText = (stored: unknown, convert: (value: number) => number) =>
   typeof stored === "number" ? formatDisplayNumber(convert(stored)) : "";
 
+// Presence sensor lengths and durations are stored in metres and seconds, shown in mm and ms.
+const MILLI_PER_UNIT = 1000;
+
 /** The texts of a stored value, one per input key. */
 export function parameterTexts(
   parameter: SensorParameter,
@@ -38,6 +41,9 @@ export function parameterTexts(
       return [typeof stored === "string" ? stored : ""];
     case "percent":
       return [numberText(stored, (value) => value)];
+    case "length":
+    case "duration":
+      return [numberText(stored, (value) => value * MILLI_PER_UNIT)];
     case "pulsesPerUnit":
       return [numberText(stored, (value) => perUnitToDisplay(unit, value))];
     case "coordinate":
@@ -61,6 +67,9 @@ export function parameterValue(
       return first;
     case "percent":
       return parseNumber(first);
+    case "length":
+    case "duration":
+      return parseNumber(first) / MILLI_PER_UNIT;
     case "pulsesPerUnit":
       return perUnitFromDisplay(unit, parseNumber(first));
     case "coordinate":

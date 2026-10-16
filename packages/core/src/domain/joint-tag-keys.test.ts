@@ -44,6 +44,11 @@ const TWO_CYLINDERS: PantinDocument = {
   drives: [],
   actuators: [],
   sensors: [],
+  belts: [],
+  guides: [],
+  emitters: [],
+  absorbers: [],
+  presenceSensors: [],
 };
 
 function rod(parent: string, child: string, name = "Tige"): CreateJointRequest {

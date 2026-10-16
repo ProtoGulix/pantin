@@ -1,22 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_CLIENT_CONSOLE } from "./console/console-list.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
+import { withImportStarted } from "./import-state.ts";
 import { errorMessage } from "./messages.ts";
 import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { withSelection } from "./tree/tree-state.ts";
+import { withRevealedDevice } from "./tree/tree-state.ts";
 import { buildPanelView as buildPanelViewWith } from "./view-model.ts";
 import {
   initialViewerState,
   type ViewerState,
-  withImportStarted,
   withOpenPantin,
   withRequestStarted,
 } from "./viewer-state.ts";
 
 // The console lines are not what these tests are about.
-const buildPanelView = (state: ViewerState) => buildPanelViewWith(state, EMPTY_CLIENT_CONSOLE);
+const buildPanelView = (state: ViewerState) =>
+  buildPanelViewWith(state, EMPTY_CLIENT_CONSOLE, false);
 
 function opened(unsavedChanges: boolean, language: "fr" | "en" = "fr"): ViewerState {
   return withOpenPantin(
@@ -180,11 +181,11 @@ describe("message line and language", () => {
 
   it("has no properties of its own: the left column is the tree and its notifications", () => {
     expect(Object.keys(buildPanelView(opened(false))).sort()).toEqual([
-      "alignment",
       "console",
       "contextMenu",
       "importForm",
       "inspector",
+      "io",
       "language",
       "menus",
       "message",
@@ -268,14 +269,14 @@ describe("devices in the tree and the inspector", () => {
     actuators: [cylinderOf("verin1", "main", "verin1-dist", ["slide"])],
   });
   const onDevice = (language: "fr" | "en") =>
-    withSelection(
+    withRevealedDevice(
       withOpenPantin(initialViewerState(language), { ...pantinResponse(false), document }),
       { kind: "drive", id: "verin1-dist" },
     );
 
-  it("selects no row for a device, only related joints", () => {
+  it("selects the row of a device, unfolded, and marks its related joints", () => {
     const view = buildPanelView(onDevice("fr"));
-    expect(view.treeRows.some((row) => row.selected)).toBe(false);
+    expect(view.treeRows.filter((row) => row.selected).map((row) => row.kind)).toEqual(["device"]);
     const related = view.treeRows.filter((row) => row.related);
     expect(related.length).toBeGreaterThan(0);
     expect(related.every((row) => row.kind === "joint")).toBe(true);

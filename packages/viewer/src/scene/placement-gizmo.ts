@@ -15,8 +15,8 @@ import type { RigidTransform } from "../rigid-transform.ts";
 // invisible node and forwards what happens to it.
 //
 // The node sits at the assembly's displayed frame origin, turned like the
-// anchor, and the gizmo follows the node's own axes, which are then the
-// anchor's. While the user drags, the gizmo alone moves the node; the bodies
+// assembly (Local) or like the anchor (Global, ADR 0042 point 2), and the gizmo
+// follows the node's own axes. While the user drags, the gizmo alone moves the node; the bodies
 // move through the pose stream once the core has the placement.
 
 export interface PlacementGizmoCallbacks {
@@ -149,8 +149,8 @@ class PlacementGizmoLayer implements PlacementGizmo {
     if (anchor === null) {
       return;
     }
-    const { target, kind, steps } = this.spec;
-    this.session = startDragSession(kind, anchor, target.placement, steps);
+    const { target, kind, steps, space } = this.spec;
+    this.session = startDragSession(kind, anchor, target.placement, steps, space);
     document.addEventListener("keydown", this.onKeyDown, { capture: true });
   }
 
@@ -185,7 +185,7 @@ class PlacementGizmoLayer implements PlacementGizmo {
       gizmo.attachedNode = null;
       return;
     }
-    const frame = gizmoNodeFrame(anchor, spec.target.placement);
+    const frame = gizmoNodeFrame(anchor, spec.target.placement, spec.space);
     const babylon = coreDisplacementToBabylon(frame.translation, frame.rotation);
     node.position.set(...babylon.translation);
     node.rotationQuaternion?.set(...babylon.rotation);

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "modules": [
+    {
+      "key": "m1",
+      "port": 1502,
+      "unitId": 1,
+      "wordOrder": "low_word_first",
+      "watchdogMilliseconds": 1000,
+      "channels": [
+        {
+          "tag": "verin1.verin1.coil_14",
+          "variable": "verin1_verin1_coil_14",
+          "zone": "coil",
+          "address": 0,
+          "ioType": "BOOL",
+          "comment": ""
+        },
+        {
+          "tag": "verin1.verin1.coil_12",
+          "variable": "verin1_verin1_coil_12",
+          "zone": "coil",
+          "address": 1,
+          "ioType": "BOOL",
+          "comment": ""
+        },
+        {
+          "tag": "verin1.verin-min.state",
+          "variable": "verin1_verin_min_state",
+          "zone": "discrete_input",
+          "address": 0,
+          "ioType": "BOOL",
+          "comment": ""
+        },
+        {
+          "tag": "verin1.verin-max.state",
+          "variable": "verin1_verin_max_state",
+          "zone": "discrete_input",
+          "address": 1,
+          "ioType": "BOOL",
+          "comment": ""
+        },
+        {
+          "tag": "verin1.verin.position",
+          "variable": "verin1_verin_position",
+          "zone": "input_register",
+          "address": 0,
+          "ioType": "REAL",
+          "comment": ""
+        }
+      ]
+    }
+  ]
+}

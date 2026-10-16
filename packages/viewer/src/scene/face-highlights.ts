@@ -7,6 +7,7 @@ import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import type { AlignmentSide } from "@pantin/protocol";
 import type { FaceHighlight } from "../alignment/alignment-session.ts";
+import type { ScenePalette } from "../theme/scene-palette.ts";
 import type { LoadedBody } from "./body-loader.ts";
 
 // The faces picked for an alignment (ADR 0035 point 3), tinted whole: a copy
@@ -15,17 +16,21 @@ import type { LoadedBody } from "./body-loader.ts";
 
 export interface FaceHighlights {
   show(highlights: readonly FaceHighlight[]): void;
+  setPalette(palette: ScenePalette): void;
 }
 
-// The moving side takes the selection's orange, the target a blue.
-const SIDE_COLORS: Readonly<Record<AlignmentSide, string>> = {
-  moving: "#f0a030",
-  target: "#3fa7ff",
-};
+// The moving side plays the part of a joint preview's child, so it takes the
+// theme's selection blue; the target, like the preview's parent, keeps the
+// parent violet (body-highlights.ts), which is data and the same in both themes.
+const TARGET_COLOR = "#a371f7";
 
-function sideMaterial(scene: Scene, side: AlignmentSide): StandardMaterial {
+function sideColor(side: AlignmentSide, palette: ScenePalette): string {
+  return side === "moving" ? palette.selection : TARGET_COLOR;
+}
+
+function sideMaterial(scene: Scene, side: AlignmentSide, palette: ScenePalette): StandardMaterial {
   const material = new StandardMaterial(`face-highlight:${side}`, scene);
-  material.emissiveColor = Color3.FromHexString(SIDE_COLORS[side]);
+  material.emissiveColor = Color3.FromHexString(sideColor(side, palette));
   material.disableLighting = true;
   material.backFaceCulling = false;
   // Drawn in front of the body's own triangles at the same place.
@@ -59,10 +64,11 @@ function faceMesh(
 export function createFaceHighlights(
   scene: Scene,
   loadedBodies: ReadonlyMap<string, LoadedBody>,
+  palette: ScenePalette,
 ): FaceHighlights {
-  const materials = {
-    moving: sideMaterial(scene, "moving"),
-    target: sideMaterial(scene, "target"),
+  const materials: Record<AlignmentSide, StandardMaterial> = {
+    moving: sideMaterial(scene, "moving", palette),
+    target: sideMaterial(scene, "target", palette),
   };
   let meshes: Mesh[] = [];
   // The panel redraws often: the same picks keep their meshes.
@@ -85,6 +91,9 @@ export function createFaceHighlights(
             : faceMesh(scene, source, highlight, materials[highlight.side]);
         return mesh === null ? [] : [mesh];
       });
+    },
+    setPalette: (next) => {
+      materials.moving.emissiveColor = Color3.FromHexString(sideColor("moving", next));
     },
   };
 }

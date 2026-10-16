@@ -27,9 +27,12 @@ function selectedDriveStore() {
     listPantins: async () => [],
   });
   store.requestedPantinId = "press";
-  store.update(
-    withSelection(withOpenPantin(store.state, wiringPantin), { kind: "drive", id: "v1" }),
-  );
+  // Closed, so that the inspector's I/O section does not read the mapping: a
+  // request in flight would make the store busy and the delete wait.
+  store.update({
+    ...withSelection(withOpenPantin(store.state, wiringPantin), { kind: "drive", id: "v1" }),
+    inspectorOpen: false,
+  });
   return { store, deleteDrive, updateActuator };
 }
 

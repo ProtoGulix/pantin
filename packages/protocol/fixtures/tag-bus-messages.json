@@ -1,0 +1,769 @@
+{
+  "description": "Tag bus messages of ADR 0045 point 4. Each entry is one JSON text frame: `message` is the decoded frame, `text` a frame that is not JSON at all. Every decoder (the Zod schemas in tag-bus.ts, the Python bridge) must accept every `valid` entry and refuse every `invalid` one.",
+  "version": 1,
+  "client": {
+    "valid": [
+      {
+        "name": "hello as a client",
+        "message": {
+          "type": "hello",
+          "version": 1,
+          "role": "client"
+        }
+      },
+      {
+        "name": "hello as a plc",
+        "message": {
+          "type": "hello",
+          "version": 1,
+          "role": "plc",
+          "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      },
+      {
+        "name": "hello with a version the core does not support, still a valid hello",
+        "message": {
+          "type": "hello",
+          "version": 2,
+          "role": "client"
+        }
+      },
+      {
+        "name": "subscribe to every tag",
+        "message": {
+          "type": "subscribe",
+          "tags": "*"
+        }
+      },
+      {
+        "name": "subscribe to named tags",
+        "message": {
+          "type": "subscribe",
+          "tags": ["press.valve.extend", "press.cylinder.position"]
+        }
+      },
+      {
+        "name": "subscribe to no tag",
+        "message": {
+          "type": "subscribe",
+          "tags": []
+        }
+      },
+      {
+        "name": "write a bit",
+        "message": {
+          "type": "write",
+          "id": "w1",
+          "tag": "press.valve.extend",
+          "value": 1
+        }
+      },
+      {
+        "name": "write a float",
+        "message": {
+          "type": "write",
+          "id": "w2",
+          "tag": "axis.stroke.setpoint",
+          "value": 0.05
+        }
+      },
+      {
+        "name": "release one tag",
+        "message": {
+          "type": "release",
+          "id": "r1",
+          "tag": "press.valve.extend"
+        }
+      },
+      {
+        "name": "release all tags",
+        "message": {
+          "type": "release",
+          "id": "r2",
+          "all": true
+        }
+      },
+      {
+        "name": "plc_status connected",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": true,
+          "reason": null
+        }
+      },
+      {
+        "name": "plc_status disconnected, closed",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": false,
+          "reason": "closed"
+        }
+      },
+      {
+        "name": "plc_status disconnected, timeout",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": false,
+          "reason": "timeout"
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "not JSON",
+        "text": "{not json"
+      },
+      {
+        "name": "a JSON array",
+        "message": []
+      },
+      {
+        "name": "a JSON number",
+        "message": 42
+      },
+      {
+        "name": "no type",
+        "message": {
+          "version": 1,
+          "role": "client"
+        }
+      },
+      {
+        "name": "unknown type",
+        "message": {
+          "type": "ping"
+        }
+      },
+      {
+        "name": "hello without version",
+        "message": {
+          "type": "hello",
+          "role": "client"
+        }
+      },
+      {
+        "name": "hello with version 0",
+        "message": {
+          "type": "hello",
+          "version": 0,
+          "role": "client"
+        }
+      },
+      {
+        "name": "hello with a fractional version",
+        "message": {
+          "type": "hello",
+          "version": 1.5,
+          "role": "client"
+        }
+      },
+      {
+        "name": "hello with a version as text",
+        "message": {
+          "type": "hello",
+          "version": "1",
+          "role": "client"
+        }
+      },
+      {
+        "name": "hello with an unknown role",
+        "message": {
+          "type": "hello",
+          "version": 1,
+          "role": "viewer"
+        }
+      },
+      {
+        "name": "plc hello without mappingId",
+        "message": {
+          "type": "hello",
+          "version": 1,
+          "role": "plc"
+        }
+      },
+      {
+        "name": "client hello with a mappingId",
+        "message": {
+          "type": "hello",
+          "version": 1,
+          "role": "client",
+          "mappingId": "abc"
+        }
+      },
+      {
+        "name": "plc hello with an empty mappingId",
+        "message": {
+          "type": "hello",
+          "version": 1,
+          "role": "plc",
+          "mappingId": ""
+        }
+      },
+      {
+        "name": "subscribe with a bare tag name",
+        "message": {
+          "type": "subscribe",
+          "tags": "press.valve.extend"
+        }
+      },
+      {
+        "name": "subscribe with a bad tag name",
+        "message": {
+          "type": "subscribe",
+          "tags": ["Press.Valve"]
+        }
+      },
+      {
+        "name": "write without id",
+        "message": {
+          "type": "write",
+          "tag": "press.valve.extend",
+          "value": 1
+        }
+      },
+      {
+        "name": "write with an empty id",
+        "message": {
+          "type": "write",
+          "id": "",
+          "tag": "press.valve.extend",
+          "value": 1
+        }
+      },
+      {
+        "name": "write with a numeric id",
+        "message": {
+          "type": "write",
+          "id": 1,
+          "tag": "press.valve.extend",
+          "value": 1
+        }
+      },
+      {
+        "name": "write with a value as text",
+        "message": {
+          "type": "write",
+          "id": "w1",
+          "tag": "press.valve.extend",
+          "value": "1"
+        }
+      },
+      {
+        "name": "write with a null value",
+        "message": {
+          "type": "write",
+          "id": "w1",
+          "tag": "press.valve.extend",
+          "value": null
+        }
+      },
+      {
+        "name": "write to a bad tag name",
+        "message": {
+          "type": "write",
+          "id": "w1",
+          "tag": "extend",
+          "value": 1
+        }
+      },
+      {
+        "name": "release with neither tag nor all",
+        "message": {
+          "type": "release",
+          "id": "r1"
+        }
+      },
+      {
+        "name": "release with both tag and all",
+        "message": {
+          "type": "release",
+          "id": "r1",
+          "tag": "press.valve.extend",
+          "all": true
+        }
+      },
+      {
+        "name": "release with all false",
+        "message": {
+          "type": "release",
+          "id": "r1",
+          "all": false
+        }
+      },
+      {
+        "name": "plc_status connected with a reason",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": true,
+          "reason": "closed"
+        }
+      },
+      {
+        "name": "plc_status disconnected without a reason",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": false,
+          "reason": null
+        }
+      },
+      {
+        "name": "plc_status with an unknown reason",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": false,
+          "reason": "crashed"
+        }
+      },
+      {
+        "name": "plc_status with a bad module key",
+        "message": {
+          "type": "plc_status",
+          "module": "M 1",
+          "connected": true,
+          "reason": null
+        }
+      },
+      {
+        "name": "plc_status without reason field",
+        "message": {
+          "type": "plc_status",
+          "module": "m1",
+          "connected": true
+        }
+      }
+    ]
+  },
+  "server": {
+    "valid": [
+      {
+        "name": "welcome",
+        "message": {
+          "type": "welcome",
+          "version": 1,
+          "consoleId": "c-1",
+          "clock": {
+            "running": true,
+            "step": 1200,
+            "stepSeconds": 0.008333333333333333,
+            "achievedRatio": 1,
+            "droppedSteps": 0
+          }
+        }
+      },
+      {
+        "name": "welcome of a paused Pantin",
+        "message": {
+          "type": "welcome",
+          "version": 1,
+          "consoleId": "c-1",
+          "clock": {
+            "running": false,
+            "step": 0,
+            "stepSeconds": 0.008333333333333333,
+            "achievedRatio": null,
+            "droppedSteps": 0
+          }
+        }
+      },
+      {
+        "name": "snapshot",
+        "message": {
+          "type": "snapshot",
+          "step": 1200,
+          "tags": [
+            {
+              "name": "press.valve.extend",
+              "value": 1,
+              "forced": true
+            },
+            {
+              "name": "press.cylinder.position",
+              "value": 0.0125,
+              "forced": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "empty snapshot",
+        "message": {
+          "type": "snapshot",
+          "step": 0,
+          "tags": []
+        }
+      },
+      {
+        "name": "tags",
+        "message": {
+          "type": "tags",
+          "step": 1201,
+          "tags": [
+            {
+              "name": "press.cylinder.position",
+              "value": 0.0127,
+              "forced": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "ack of an applied write",
+        "message": {
+          "type": "ack",
+          "id": "w1",
+          "tag": {
+            "name": "press.valve.extend",
+            "value": 1,
+            "forced": true
+          },
+          "ignored": null
+        }
+      },
+      {
+        "name": "ack of an ignored PLC write",
+        "message": {
+          "type": "ack",
+          "id": "w2",
+          "tag": {
+            "name": "press.valve.extend",
+            "value": 1,
+            "forced": true
+          },
+          "ignored": "forced"
+        }
+      },
+      {
+        "name": "ack of release all",
+        "message": {
+          "type": "ack",
+          "id": "r2",
+          "tag": null,
+          "ignored": null
+        }
+      },
+      {
+        "name": "error to a message",
+        "message": {
+          "type": "error",
+          "id": "w3",
+          "code": "not_found",
+          "message": "No tag \"press.valve.nothing\"."
+        }
+      },
+      {
+        "name": "error with no message id",
+        "message": {
+          "type": "error",
+          "id": null,
+          "code": "invalid_request",
+          "message": "Unknown tag in the subscription."
+        }
+      },
+      {
+        "name": "console entry, forced_tag_written",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 3,
+            "firstSequence": 3,
+            "wallTime": "2026-10-13T08:00:00.000Z",
+            "simulationTime": 10.0,
+            "count": 2,
+            "code": "forced_tag_written",
+            "level": "error",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {
+              "tag": "press.valve.extend",
+              "forcedValue": 1,
+              "writtenValue": 0
+            }
+          }
+        }
+      },
+      {
+        "name": "console entry, plc_connected",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "plc_connected",
+            "level": "info",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {
+              "module": "m1"
+            }
+          }
+        }
+      },
+      {
+        "name": "console entry, plc_disconnected",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "plc_disconnected",
+            "level": "warning",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {
+              "module": "m1",
+              "reason": "timeout"
+            }
+          }
+        }
+      },
+      {
+        "name": "console entry, bridge_connected",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "bridge_connected",
+            "level": "info",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {}
+          }
+        }
+      },
+      {
+        "name": "console entry, bridge_disconnected",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "bridge_disconnected",
+            "level": "warning",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {
+              "reason": "closed"
+            }
+          }
+        }
+      },
+      {
+        "name": "console entry, clock_paused_with_bridge",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "clock_paused_with_bridge",
+            "level": "warning",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {}
+          }
+        }
+      },
+      {
+        "name": "clock",
+        "message": {
+          "type": "clock",
+          "clock": {
+            "running": true,
+            "step": 1200,
+            "stepSeconds": 0.008333333333333333,
+            "achievedRatio": 1,
+            "droppedSteps": 0
+          }
+        }
+      },
+      {
+        "name": "io_changed",
+        "message": {
+          "type": "io_changed"
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "welcome with another version",
+        "message": {
+          "type": "welcome",
+          "version": 2,
+          "consoleId": "c-1",
+          "clock": {
+            "running": true,
+            "step": 1200,
+            "stepSeconds": 0.008333333333333333,
+            "achievedRatio": 1,
+            "droppedSteps": 0
+          }
+        }
+      },
+      {
+        "name": "welcome without clock",
+        "message": {
+          "type": "welcome",
+          "version": 1,
+          "consoleId": "c-1"
+        }
+      },
+      {
+        "name": "snapshot item without forced",
+        "message": {
+          "type": "snapshot",
+          "step": 1,
+          "tags": [
+            {
+              "name": "press.valve.extend",
+              "value": 1
+            }
+          ]
+        }
+      },
+      {
+        "name": "snapshot with a negative step",
+        "message": {
+          "type": "snapshot",
+          "step": -1,
+          "tags": []
+        }
+      },
+      {
+        "name": "tags with a bad tag name",
+        "message": {
+          "type": "tags",
+          "step": 1,
+          "tags": [
+            {
+              "name": "extend",
+              "value": 1,
+              "forced": false
+            }
+          ]
+        }
+      },
+      {
+        "name": "ack with an unknown ignored reason",
+        "message": {
+          "type": "ack",
+          "id": "w1",
+          "tag": {
+            "name": "press.valve.extend",
+            "value": 1,
+            "forced": false
+          },
+          "ignored": "other"
+        }
+      },
+      {
+        "name": "ack without ignored",
+        "message": {
+          "type": "ack",
+          "id": "w1",
+          "tag": {
+            "name": "press.valve.extend",
+            "value": 1,
+            "forced": false
+          }
+        }
+      },
+      {
+        "name": "error with an unknown code",
+        "message": {
+          "type": "error",
+          "id": null,
+          "code": "oops",
+          "message": "x"
+        }
+      },
+      {
+        "name": "console without an entry",
+        "message": {
+          "type": "console"
+        }
+      },
+      {
+        "name": "console entry with an unknown code",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "plc_exploded",
+            "level": "error",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {}
+          }
+        }
+      },
+      {
+        "name": "console entry with the wrong level",
+        "message": {
+          "type": "console",
+          "entry": {
+            "sequence": 4,
+            "firstSequence": 4,
+            "wallTime": "2026-10-13T08:00:01.000Z",
+            "simulationTime": 10.5,
+            "count": 1,
+            "code": "bridge_disconnected",
+            "level": "info",
+            "source": {
+              "kind": "pantin"
+            },
+            "params": {
+              "reason": "closed"
+            }
+          }
+        }
+      },
+      {
+        "name": "clock with flat fields",
+        "message": {
+          "type": "clock",
+          "running": true,
+          "step": 1200,
+          "stepSeconds": 0.008333333333333333,
+          "achievedRatio": 1,
+          "droppedSteps": 0
+        }
+      },
+      {
+        "name": "io_changed with a payload that is not an object",
+        "message": ["io_changed"]
+      }
+    ]
+  }
+}

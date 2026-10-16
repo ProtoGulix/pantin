@@ -7,6 +7,7 @@ import {
   parseStoredLayout,
   shouldRender,
   showsDiagram,
+  showsIo,
   showsViewport,
 } from "./central-layout.ts";
 
@@ -57,5 +58,22 @@ describe("central layout", () => {
     expect(shouldRender("both", true)).toBe(true);
     expect(shouldRender("diagram", true)).toBe(false);
     expect(shouldRender("diagram", false)).toBe(true);
+  });
+});
+
+describe("central layout, the I/O view", () => {
+  it("shows the I/O table alone, with no 3D view, no diagram and no rendering", () => {
+    expect([showsIo("io"), showsIo("both"), showsViewport("io"), showsDiagram("io")]).toEqual([
+      true,
+      false,
+      false,
+      false,
+    ]);
+    expect([shouldRender("io", true), shouldRender("io", false)]).toEqual([false, true]);
+  });
+
+  it("leaves the I/O view out of the F4 cycle, which goes back to both", () => {
+    expect(nextLayout("io")).toBe("both");
+    expect([nextLayout("both"), nextLayout("3d"), nextLayout("diagram")]).not.toContain("io");
   });
 });

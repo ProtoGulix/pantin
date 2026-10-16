@@ -1,9 +1,11 @@
 import { NullEngine } from "@babylonjs/core/Engines/nullEngine.js";
+import type { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial.js";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder.js";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import { describe, expect, it } from "vitest";
 import type { FaceHighlight } from "../alignment/alignment-session.ts";
+import { SCENE_PALETTES } from "../theme/scene-palette.ts";
 import type { LoadedBody } from "./body-loader.ts";
 import { createFaceHighlights } from "./face-highlights.ts";
 
@@ -19,7 +21,11 @@ function sceneWithBox() {
     setDisplacement: () => undefined,
     dispose: () => undefined,
   };
-  return { scene, box, highlights: createFaceHighlights(scene, new Map([["block", loaded]])) };
+  return {
+    scene,
+    box,
+    highlights: createFaceHighlights(scene, new Map([["block", loaded]]), SCENE_PALETTES.dark),
+  };
 }
 
 const SIDE: FaceHighlight = {
@@ -41,6 +47,21 @@ describe("face highlights", () => {
     expect(tint?.isPickable).toBe(false);
     highlights.show([]);
     expect(box.getChildMeshes()).toEqual([]);
+    scene.dispose();
+  });
+
+  it("tints the moving side with the theme's selection and follows a theme change", () => {
+    const { scene, box, highlights } = sceneWithBox();
+    highlights.show([SIDE]);
+    // The cast: a face tint's material is always the StandardMaterial of its side.
+    const material = () => box.getChildMeshes()[0]?.material as StandardMaterial | undefined;
+    expect(material()?.emissiveColor.toHexString().toLowerCase()).toBe(
+      SCENE_PALETTES.dark.selection,
+    );
+    highlights.setPalette(SCENE_PALETTES.light);
+    expect(material()?.emissiveColor.toHexString().toLowerCase()).toBe(
+      SCENE_PALETTES.light.selection,
+    );
     scene.dispose();
   });
 });

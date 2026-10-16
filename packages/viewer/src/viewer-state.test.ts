@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { withImportedBodies, withImportFailed, withImportStarted } from "./import-state.ts";
 import { nodeSelection, selectedNodeIdOf } from "./selection.ts";
 import { pantinResponse, pantinSummaries, stepBody, withNode } from "./test-fixtures.ts";
 import {
@@ -9,14 +10,7 @@ import {
   sourceNodeNodeId,
 } from "./tree/node-ids.ts";
 import { nodeExists, withExpanded, withRevealedNode } from "./tree/tree-state.ts";
-import {
-  initialViewerState,
-  type ViewerState,
-  withImportedBodies,
-  withImportFailed,
-  withImportStarted,
-  withOpenPantin,
-} from "./viewer-state.ts";
+import { initialViewerState, type ViewerState, withOpenPantin } from "./viewer-state.ts";
 
 function listed(): ViewerState {
   return { ...initialViewerState("fr"), pantins: pantinSummaries };
@@ -107,5 +101,24 @@ describe("multi-body import", () => {
     const failed = withImportFailed(importing);
     expect(failed.importInProgress).toBe(false);
     expect(failed.pendingImport?.fileName).toBe("3630.step");
+  });
+});
+
+describe("initialViewerState inspector preferences", () => {
+  it("starts from the stored open state and folded groups", () => {
+    const state = initialViewerState("fr", undefined, undefined, undefined, {
+      gizmoSpace: "global",
+      inspectorOpen: false,
+      collapsedGroups: new Set(["placement"]),
+    });
+    expect(state.inspectorOpen).toBe(false);
+    expect(state.gizmoSpace).toBe("global");
+    expect(state.collapsedPropertyGroups.has("placement")).toBe(true);
+  });
+
+  it("opens the inspector with no group folded by default", () => {
+    const state = initialViewerState("fr");
+    expect(state.inspectorOpen).toBe(true);
+    expect(state.collapsedPropertyGroups.size).toBe(0);
   });
 });

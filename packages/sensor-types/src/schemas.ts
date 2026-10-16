@@ -19,6 +19,11 @@ import {
   LimitSwitchFieldsSchema,
 } from "./limit-switch/schema.ts";
 import {
+  PHOTOELECTRIC_PARAMETERS,
+  PHOTOELECTRIC_TAGS,
+  PhotoelectricFieldsSchema,
+} from "./photoelectric/schema.ts";
+import {
   POSITION_SWITCH_PARAMETERS,
   POSITION_SWITCH_TAGS,
   PositionSwitchFieldsSchema,
@@ -89,3 +94,20 @@ export function sensorPlacementProblem(fields: SensorFields, stroke: Stroke): st
   const rule: PlacementRule<SensorFields> | null = SENSOR_PLACEMENT[fields.type];
   return rule?.problem(fields, stroke) ?? null;
 }
+
+// The second family (ADR 0043 point 8): presence sensors, which look at
+// products instead of a joint. Own records, so that a joint sensor never has
+// to narrow its type and a type is complete when each record has its entry.
+export const PresenceSensorFieldsSchema = z.discriminatedUnion("type", [PhotoelectricFieldsSchema]);
+export type PresenceSensorFields = z.infer<typeof PresenceSensorFieldsSchema>;
+export type PresenceSensorType = PresenceSensorFields["type"];
+
+export const PRESENCE_SENSOR_PARAMETERS: Readonly<
+  Record<PresenceSensorType, readonly SensorParameter[]>
+> = {
+  photoelectric: PHOTOELECTRIC_PARAMETERS,
+};
+
+export const PRESENCE_SENSOR_TAGS: Readonly<Record<PresenceSensorType, readonly SensorTag[]>> = {
+  photoelectric: PHOTOELECTRIC_TAGS,
+};

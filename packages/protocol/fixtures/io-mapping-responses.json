@@ -1,0 +1,3193 @@
+{
+  "description": "Responses of GET /api/pantins/:pantinId/io (IoMappingResponse, ADR 0049 point 5), shared by the core's Zod schema and the Python bridge's decoder. Each `message` is a decoded JSON answer. Every decoder must accept every `valid` entry and refuse every `invalid` one. The pairing of a zone with an io type is checked by the core's validation, not by the schema, so no entry here depends on it.",
+  "version": 1,
+  "valid": [
+    {
+      "name": "a valid mapping with two modules and every zone",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "io.json missing",
+      "message": {
+        "status": "missing",
+        "mappingId": null,
+        "modules": [],
+        "problems": [],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping with a problem on a channel address",
+      "message": {
+        "status": "invalid",
+        "mappingId": "abc",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "x.y.z",
+                "variable": "x_y_z",
+                "zone": "coil",
+                "address": 3,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": null,
+                "direction": null,
+                "owner": null
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "path": ["modules", 0, "channels", 0, "tag"],
+            "code": "unknown_tag",
+            "message": "No tag \"x.y.z\"."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an unreadable mapping with a problem on the whole file",
+      "message": {
+        "status": "invalid",
+        "mappingId": null,
+        "modules": [],
+        "problems": [
+          {
+            "path": [],
+            "code": "legacy_io_files",
+            "message": "io.csv is a legacy file."
+          },
+          {
+            "path": ["modules", 0, "port"],
+            "code": "schema_invalid",
+            "message": "Bad port."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an empty variable, reported as invalid_variable",
+      "message": {
+        "status": "invalid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "path": ["modules", 0, "channels", 0, "variable"],
+            "code": "invalid_variable",
+            "message": "Variable \"\" must start with a letter."
+          }
+        ],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "not an object",
+      "message": []
+    },
+    {
+      "name": "unknown status",
+      "message": {
+        "status": "ok",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "no status",
+      "message": {
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "mappingId as a number",
+      "message": {
+        "status": "valid",
+        "mappingId": 7,
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "modules as an object",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": {},
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "modules missing",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "the old rows field alone",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ],
+        "rows": []
+      }
+    },
+    {
+      "name": "unmappedTags as bare names",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": ["press.cylinder.position"]
+      }
+    },
+    {
+      "name": "unmappedTags with a bad tag name",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "Bad Name",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "j"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "unmappedTags without an owner",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "a.b.c",
+            "type": "float",
+            "direction": "feedback"
+          }
+        ]
+      }
+    },
+    {
+      "name": "module port as text",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": "1502",
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module port below 1024",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1023,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module with an unknown word order",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "big",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module unit id 0",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 0,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module watchdog below 100 ms",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 99,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module with an unknown field",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ],
+            "extra": 1
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module key with capitals",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "M1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module without channels",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel with an unknown zone",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "holding",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel with an unknown io type",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "INT",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel with a fractional address",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 1.5,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel with a negative address",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": -1,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel without a tag",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel without an owner field",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command"
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel with an owner of an unknown kind",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "robot",
+                  "id": "r"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "problem with an unknown code",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "path": [],
+            "code": "bad_header",
+            "message": ""
+          }
+        ],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "problem with a negative path index",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "path": ["modules", -1],
+            "code": "unknown_tag",
+            "message": ""
+          }
+        ],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "problem with a file and a line instead of a path",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "unitId": 1,
+            "wordOrder": "low_word_first",
+            "watchdogMilliseconds": 1000,
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "zone": "coil",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "extend coil",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "zone": "coil",
+                "address": 1,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "zone": "discrete_input",
+                "address": 0,
+                "ioType": "BOOL",
+                "comment": "",
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "zone": "holding_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "zone": "input_register",
+                "address": 0,
+                "ioType": "REAL",
+                "comment": "",
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "port": 1503,
+            "unitId": 7,
+            "wordOrder": "high_word_first",
+            "watchdogMilliseconds": 250,
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "zone": "input_register",
+                "address": 4,
+                "ioType": "DINT",
+                "comment": "",
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "file": "io.csv",
+            "line": 3,
+            "column": 1,
+            "code": "unknown_tag",
+            "message": ""
+          }
+        ],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

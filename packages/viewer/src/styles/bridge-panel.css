@@ -1,0 +1,182 @@
+/* The bridge block (ADR 0050 point 8), stacked at the bottom of the side panel. */
+.bridge-panel {
+  flex-shrink: 0;
+  max-height: 50%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+}
+
+.bridge-panel[hidden] {
+  display: none;
+}
+
+.bridge-panel__header,
+.bridge-panel__state {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.bridge-panel__title {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.bridge-panel__tools {
+  display: flex;
+  gap: 2px;
+}
+
+.bridge-panel__tool[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bridge-panel__tool--text {
+  width: auto;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+/* The shortcut of the current layout is a mark, not a disabled button. */
+.bridge-panel__tool[aria-current="true"] {
+  color: var(--brand);
+}
+
+.bridge-panel__state-text {
+  flex: 1;
+}
+
+.bridge-panel__choice {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.bridge-panel__allow {
+  width: 100%;
+}
+
+.bridge-panel__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bridge-panel__chip {
+  padding: 1px 8px;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.bridge-panel__chip:hover,
+.bridge-panel__chip[aria-expanded="true"] {
+  color: var(--text);
+}
+
+.bridge-panel__chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* One dot colour per status: the text next to it says the same. */
+.status-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--text-faint);
+  border-radius: 50%;
+}
+
+.status-dot.is-ok {
+  background: var(--state-normal);
+}
+
+.status-dot.is-busy {
+  /* Starting or stopping is a transition, not an abnormal condition (ADR 0053 point 3). */
+  background: var(--selection);
+}
+
+.status-dot.is-error {
+  background: var(--state-emergency);
+}
+
+.bridge-panel__notice,
+.bridge-panel__hint,
+.bridge-panel__message {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.bridge-panel__error {
+  margin: 0;
+  color: var(--state-emergency);
+}
+
+.bridge-panel__failure {
+  padding: 4px 8px;
+  background: var(--state-emergency-soft);
+  border-left: 3px solid var(--state-emergency);
+}
+
+.bridge-panel__failure.is-warning {
+  background: var(--state-abnormal-soft);
+  border-left-color: var(--state-abnormal);
+}
+
+.bridge-panel__log pre {
+  max-height: 10em;
+  margin: 4px 0 0;
+  overflow: auto;
+  font-family: var(--font-source);
+  white-space: pre-wrap;
+}
+
+.bridge-panel__modules {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-source);
+  list-style: none;
+}
+
+.bridge-panel__module {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  align-items: center;
+}
+
+.bridge-panel__module-key {
+  font-weight: 600;
+}
+
+.bridge-panel__module-address,
+.bridge-panel__module-status {
+  color: var(--text-muted);
+}
+
+.bridge-panel__hint {
+  font-size: 11px;
+}
+
+.bridge-panel__forced {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -103,17 +103,17 @@
 }
 
 .console-line:focus-visible {
-  background: var(--accent-soft);
+  background: var(--selection-soft);
   box-shadow: var(--focus-ring);
 }
 
 .console-line--error {
-  background: var(--danger-soft);
-  border-left-color: var(--danger);
+  background: var(--state-emergency-soft);
+  border-left-color: var(--state-emergency);
 }
 
 .console-line--warning {
-  border-left-color: var(--accent);
+  border-left-color: var(--state-abnormal);
 }
 
 .console-line__time {
@@ -129,11 +129,11 @@
 }
 
 .console-line--error .console-line__level {
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 .console-line--warning .console-line__level {
-  color: var(--accent);
+  color: var(--state-abnormal);
 }
 
 .console-line--info .console-line__level {
@@ -195,7 +195,7 @@
 }
 
 .console-counter.is-pressed {
-  background: var(--accent-soft);
+  background: var(--brand-soft);
   border-color: var(--border);
 }
 
@@ -209,9 +209,9 @@
 }
 
 .console-counter__count--errors.is-active {
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 .console-counter__count--warnings.is-active {
-  color: var(--accent);
+  color: var(--state-abnormal);
 }

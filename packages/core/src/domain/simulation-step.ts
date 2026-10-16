@@ -3,7 +3,7 @@ import { stepActuators } from "./actuator-step.ts";
 import { stepDrives } from "./drive-step.ts";
 import { clampJointPosition } from "./joint-types/registry.ts";
 import type { SimulationState, SteppedState } from "./simulation-state.ts";
-import { movedJointIds } from "./tags.ts";
+import { movedJointIds } from "./tag-entries.ts";
 
 // One simulation step of a Pantin (ADR 0028 point 11), as a pure function, at
 // 1/120 s: the drives first (commands to port states and feedback), then the

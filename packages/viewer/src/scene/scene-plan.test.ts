@@ -7,6 +7,7 @@ import {
   chooseGridStep,
   floorHeight,
   frameBounds,
+  isCurrentLoad,
   placeJointArrow,
   planSceneSync,
 } from "./scene-plan.ts";
@@ -51,6 +52,22 @@ describe("planSceneSync", () => {
   it("clears the scene when no Pantin is open", () => {
     const loaded = new Map([["a", bodyRenderKey("press", body("a"))]]);
     expect(planSceneSync(loaded, null, [])).toEqual({ bodiesToLoad: [], bodyIdsToRemove: ["a"] });
+  });
+});
+
+describe("failed mesh load", () => {
+  it("is not retried while its key is kept, and retried once the key changes", () => {
+    const initial = body("b1", "mm");
+    const wanted = new Map([[initial.id, bodyRenderKey("p", initial)]]);
+    expect(planSceneSync(wanted, "p", [initial]).bodiesToLoad).toEqual([]);
+    expect(planSceneSync(wanted, "p", [body("b1", "m")]).bodiesToLoad).toHaveLength(1);
+  });
+
+  it("ignores a result whose key was replaced while it ran", () => {
+    const wanted = new Map([["b1", "new"]]);
+    expect(isCurrentLoad(wanted, "b1", "new")).toBe(true);
+    expect(isCurrentLoad(wanted, "b1", "old")).toBe(false);
+    expect(isCurrentLoad(wanted, "gone", "old")).toBe(false);
   });
 });
 

@@ -1,5 +1,7 @@
 import type { Translate } from "../i18n/translate.ts";
+import type { InspectorIoView } from "../inspector/io-section.ts";
 import {
+  type EditTarget,
   liveKey,
   type PropertyGroup,
   type PropertyRow,
@@ -7,7 +9,10 @@ import {
   rowFocusKey,
 } from "../properties/property-rows.ts";
 import { committingTextInput, element, selectInput } from "./dom.ts";
-import { icon } from "./icons.ts";
+import { focusField } from "./focus.ts";
+import { forcedMark } from "./forced-mark.ts";
+import { groupHeader } from "./group-header.ts";
+import { renderInspectorIo } from "./inspector-io.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { followLink } from "./row-actions.ts";
 import { numberControl, toggleControl } from "./row-controls.ts";
@@ -60,11 +65,51 @@ function editorCell(
         translate("properties.editSelectLabel", { property: row.label }),
         (value) => (value === editor.selected ? undefined : commit(value)),
       )
-    : committingTextInput(row.value, {
-        label: translate("properties.editLabel", { property: row.label }),
-        focusKey: rowFocusKey(row.id),
-        onCommit: commit,
-      });
+    : textEditor(row, editor.target, commit, translate, intents);
+}
+
+// A text field. A refused text stays in it, marked. Leaving the field with that
+// text commits it again: still refused, the mark stays and no request is sent.
+// Escape, or typing the document's value back, clears the mark (ADR 0039 point 5).
+// Enter moves on when the row says so.
+function textEditor(
+  row: PropertyRow,
+  target: EditTarget,
+  commit: (value: string) => void,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLInputElement {
+  const { nextFocusKey } = row;
+  const input = committingTextInput(row.invalidText ?? row.value, {
+    label: translate("properties.editLabel", { property: row.label }),
+    focusKey: rowFocusKey(row.id),
+    baseValue: row.value,
+    onCommit: commit,
+    onCancel: () => intents.cancelPropertyEdit(target),
+    ...(nextFocusKey === undefined
+      ? {}
+      : { focusOnEnter: () => focusNextField(input, nextFocusKey) }),
+  });
+  if (row.invalidText !== undefined) {
+    input.setAttribute("aria-invalid", "true");
+    input.classList.add("is-invalid");
+  }
+  if (row.dragged === true) {
+    input.classList.add("is-dragged");
+    input.setAttribute("data-dragged", "true");
+  }
+  return input;
+}
+
+function focusNextField(from: HTMLElement, focusKey: string): void {
+  // The region outlives the redraws of the grid it holds.
+  const region = from.closest<HTMLElement>(".inspector") ?? from.ownerDocument.body;
+  focusField(region, focusKey);
+  // Focusing the next field blurs this one, whose commit can redraw the panel
+  // at once and replace the field just focused: focus it again once redrawn.
+  if (!region.contains(from.ownerDocument.activeElement)) {
+    focusField(region, focusKey);
+  }
 }
 
 function valueCell(
@@ -106,6 +151,20 @@ function valueCell(
   });
 }
 
+function valueCellWithMark(
+  row: PropertyRow,
+  liveId: string | null,
+  translate: Translate,
+  intents: PanelIntents,
+): HTMLElement {
+  const cell = valueCell(row, liveId, translate, intents);
+  const mark = forcedMark(row, translate, intents);
+  if (mark !== null) {
+    cell.append(mark);
+  }
+  return cell;
+}
+
 function dataRow(
   group: PropertyGroup,
   row: PropertyRow,
@@ -122,7 +181,7 @@ function dataRow(
       text: row.label,
       attributes: { scope: "row" },
     }),
-    valueCell(row, liveId, translate, intents),
+    valueCellWithMark(row, liveId, translate, intents),
   ]);
   const { link } = row;
   if (link !== null) {
@@ -131,34 +190,35 @@ function dataRow(
   return line;
 }
 
-function groupBody(group: PropertyGroup, translate: Translate, intents: PanelIntents): HTMLElement {
-  const toggle = element(
-    "button",
-    {
-      className: "property-grid__group-toggle",
-      attributes: { type: "button", "aria-expanded": String(!group.collapsed) },
-    },
-    [
-      icon("chevron", group.collapsed ? "icon" : "icon icon--rotated"),
-      element("span", { text: group.title }),
-    ],
-  );
-  toggle.addEventListener("click", () => intents.togglePropertyGroup(group.id));
-  const header = element("tr", { className: "property-grid__group" }, [
-    element("th", { attributes: { colspan: "2", scope: "colgroup" } }, [toggle]),
+// Why a typed value was refused, on one line under the group (role="alert").
+function errorRow(group: PropertyGroup): HTMLElement | null {
+  if (group.error === undefined || group.collapsed) {
+    return null;
+  }
+  return element("tr", {}, [
+    element("td", {
+      className: "property-grid__error",
+      text: group.error,
+      attributes: { colspan: "2", role: "alert" },
+    }),
   ]);
+}
+
+function groupBody(group: PropertyGroup, translate: Translate, intents: PanelIntents): HTMLElement {
+  const header = groupHeader(group, intents);
   const rows = group.collapsed
     ? []
     : group.rows.map((row) => dataRow(group, row, translate, intents));
-  return element("tbody", {}, [header, ...rows]);
+  return element("tbody", {}, [header, ...rows, errorRow(group)]);
 }
 
 export function renderPropertiesGrid(
   groups: readonly PropertyGroup[],
   translate: Translate,
   intents: PanelIntents,
+  io: InspectorIoView | null = null,
 ): HTMLElement {
-  if (groups.length === 0) {
+  if (groups.length === 0 && io === null) {
     return element("p", { className: "pane-empty", text: translate("inspector.empty") });
   }
   const head = element("thead", {}, [
@@ -171,5 +231,6 @@ export function renderPropertiesGrid(
     element("caption", { className: "visually-hidden", text: translate("properties.label") }),
     head,
     ...groups.map((group) => groupBody(group, translate, intents)),
+    io === null ? null : renderInspectorIo(io, intents),
   ]);
 }

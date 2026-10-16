@@ -3,22 +3,17 @@ import { addJointToDocument } from "./joint-rules.ts";
 
 const NO_POSITIONS: ReadonlyMap<string, number> = new Map();
 
-// Fixed joints that keep the bodies of one import together (ADR 0017): the
-// first body is the root, every other body is its child. Moving the root
-// then moves the whole import. The bodies must already be in the document.
-// Joints inside one fresh assembly anchor nothing, so no position is read.
-// One body gives no joint, which is always the case for GLB and STL.
-export function addStarJoints(
+// Fixed joints that keep the bodies of one import together (ADR 0017,
+// ADR 0040 point 3), in the order given, each named after its child. The
+// bodies and their assemblies must already be in the document. Placements
+// are identity and joints fixed, so no displayed position is read.
+export function addFixedJoints(
   document: PantinDocument,
-  bodies: readonly Body[],
+  links: readonly { parent: Body; child: Body }[],
 ): { document: PantinDocument; joints: Joint[] } {
-  const [root, ...children] = bodies;
   const joints: Joint[] = [];
   let current = document;
-  if (root === undefined) {
-    return { document: current, joints };
-  }
-  for (const child of children) {
+  for (const { parent, child } of links) {
     // A fixed joint never moves: origin and axis are only there because the
     // schema requires them for every joint.
     const added = addJointToDocument(
@@ -26,7 +21,7 @@ export function addStarJoints(
       {
         type: "fixed",
         name: child.name,
-        parent: root.id,
+        parent: parent.id,
         child: child.id,
         origin: [0, 0, 0],
         axis: [0, 0, 1],

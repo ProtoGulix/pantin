@@ -1,6 +1,6 @@
-import { type Selection, selectedNodeIdOf } from "../selection.ts";
+import { type Selection, selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "./node-ids.ts";
-import type { TreeIcon, TreeNode } from "./tree-model.ts";
+import type { TreeIcon, TreeNode } from "./tree-node.ts";
 
 // The flat list of visible rows the tree's DOM draws, from the tree of nodes
 // (tree-model.ts). Pure, so it is tested without a browser.
@@ -16,6 +16,8 @@ export interface TreeRow {
   visibility: TreeNode["visibility"];
   wiring: TreeNode["wiring"];
   stateLabel: string | null;
+  kindLabel: string | null;
+  stateMark: TreeNode["stateMark"];
   depth: number;
   parentId: string | null;
   expandable: boolean;
@@ -46,6 +48,18 @@ function isRelatedJoint(nodeId: string, relatedJointIds: ReadonlySet<string>): b
   return ref?.kind === "joint" && relatedJointIds.has(ref.jointId);
 }
 
+// A device is selected by its own value, not by a node id: its row is the
+// selected one (ADR 0047 point 4). The tree shows one Pantin, so the kind and
+// the id are enough.
+function isSelectedRow(nodeId: string, selection: Selection | null): boolean {
+  if (nodeId === selectedNodeIdOf(selection)) {
+    return true;
+  }
+  const device = selectedDeviceOf(selection);
+  const ref = device === null ? null : parseNodeId(nodeId);
+  return ref?.kind === "device" && ref.deviceKind === device?.kind && ref.id === device.id;
+}
+
 /** Visible rows, depth first: children only under expanded nodes. */
 export function flattenTree(
   nodes: readonly TreeNode[],
@@ -53,7 +67,6 @@ export function flattenTree(
   relatedJointIds: ReadonlySet<string> = NO_JOINTS,
 ): TreeRow[] {
   const rows: TreeRow[] = [];
-  const selectedId = selectedNodeIdOf(view.selection);
   const visit = (siblings: readonly TreeNode[], depth: number, parentId: string | null) => {
     siblings.forEach((node, index) => {
       const expanded = isExpandable(node) && view.expandedNodeIds.has(node.id);
@@ -68,11 +81,13 @@ export function flattenTree(
         visibility: node.visibility,
         wiring: node.wiring,
         stateLabel: node.stateLabel,
+        kindLabel: node.kindLabel,
+        stateMark: node.stateMark,
         depth,
         parentId,
         expandable: isExpandable(node),
         expanded,
-        selected: node.id === selectedId,
+        selected: isSelectedRow(node.id, view.selection),
         related: isRelatedJoint(node.id, relatedJointIds),
         renaming: node.id === view.renamingNodeId,
         positionInSet: index + 1,

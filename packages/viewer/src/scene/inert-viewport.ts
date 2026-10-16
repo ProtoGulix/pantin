@@ -16,12 +16,16 @@ export function createInertViewport(): Viewport {
     clearPoses: ignore,
     showJointPreview: ignore,
     showSensorMarkers: ignore,
+    showConveyorObjects: ignore,
+    setSelectedConveyor: ignore,
     showTagStates: ignore,
     setRendering: ignore,
+    showAssemblyFrame: ignore,
     showPlacementGizmo: ignore,
     releasePlacementGizmo: ignore,
     setNavigation: ignore,
     showView: ignore,
     onCameraOrientation: ignore,
+    setScenePalette: ignore,
   };
 }

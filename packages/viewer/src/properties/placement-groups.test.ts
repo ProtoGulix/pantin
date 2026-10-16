@@ -63,6 +63,11 @@ describe("placement of an assembly", () => {
   it("names the world as the frame of an assembly with no incoming joint", () => {
     const group = assemblyFields(twoAssemblies(), "main");
     expect(group?.rows[0]).toMatchObject({ label: "Repère", value: "monde" });
+    expect(group?.title).toBe("Position dans le monde");
+  });
+
+  it("titles the group with the anchor's name (ADR 0042 point 3)", () => {
+    expect(assemblyFields(twoAssemblies(), "clevis")?.title).toBe("Position dans « main »");
   });
 });
 

@@ -1,4 +1,4 @@
-import { SENSOR_PARAMETERS } from "@pantin/protocol";
+import { PRESENCE_SENSOR_PARAMETERS, SENSOR_PARAMETERS } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { defaultTexts, parameterKeys, parameterTexts, parameterValue } from "./parameter-texts.ts";
 
@@ -40,5 +40,22 @@ describe("parameter texts", () => {
     const range = SENSOR_PARAMETERS.position_switch[0];
     expect(range === undefined ? [] : parameterKeys(range)).toEqual(["range.lower", "range.upper"]);
     expect(parameterKeys(parameter("material"))).toEqual(["material"]);
+  });
+});
+
+describe("presence sensor parameters (ADR 0043)", () => {
+  const cell = (field: string) => {
+    const found = PRESENCE_SENSOR_PARAMETERS.photoelectric.find((item) => item.field === field);
+    if (found === undefined) {
+      throw new Error(`No parameter "${field}".`);
+    }
+    return found;
+  };
+
+  it("shows a length in mm and a duration in ms, and sends metres and seconds", () => {
+    expect(parameterTexts(cell("range"), 0.6, "metre")).toEqual(["600"]);
+    expect(parameterTexts(cell("offDelay"), 0.05, "metre")).toEqual(["50"]);
+    expect(parameterValue(cell("range"), { range: "600" }, "metre")).toBeCloseTo(0.6, 12);
+    expect(parameterValue(cell("onDelay"), { onDelay: "25" }, "metre")).toBeCloseTo(0.025, 12);
   });
 });

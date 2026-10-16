@@ -9,15 +9,37 @@ import type { PanelIntents } from "./panel-intents.ts";
 // the buttons and make a screen reader announce the warning again. A text is
 // only written when it changed.
 
-function setText(target: HTMLElement, text: string): void {
+function setText(target: { textContent: string | null }, text: string): void {
   if (target.textContent !== text) {
     target.textContent = text;
   }
 }
 
-function setLabel(target: HTMLElement, label: string, hint: string): void {
+function setLabel(
+  target: { title: string; setAttribute(name: string, value: string): void },
+  label: string,
+  hint: string,
+): void {
   target.setAttribute("aria-label", label);
   target.title = hint;
+}
+
+interface ReleaseAllParts {
+  button: {
+    hidden: boolean | string;
+    title: string;
+    setAttribute(name: string, value: string): void;
+  };
+  label: { textContent: string | null };
+}
+
+/** Shown only while a tag is forced; its hint says why that matters to the PLC. */
+export function showReleaseAll(parts: ReleaseAllParts, releaseAll: ClockView["releaseAll"]): void {
+  parts.button.hidden = releaseAll === null;
+  if (releaseAll !== null) {
+    setText(parts.label, releaseAll.label);
+    setLabel(parts.button, releaseAll.label, releaseAll.hint);
+  }
 }
 
 function transportButton(iconName: IconName, onClick: () => void) {
@@ -37,6 +59,8 @@ export class TransportBar {
   private readonly toggle = transportButton("pause", () => this.intents?.toggleClockRunning());
   private readonly stepOne = transportButton("step", () => this.intents?.stepClock(1));
   private readonly stepTen = transportButton("step", () => this.intents?.stepClock(10));
+  private readonly reset = transportButton("reset", () => this.intents?.resetSimulation());
+  private readonly releaseAll = transportButton("unlock", () => this.intents?.releaseAllTags());
   private readonly time = element("span", { className: "transport__time" });
   private readonly steps = element("span", { className: "transport__steps" });
   private readonly warning = element("span", {
@@ -54,6 +78,8 @@ export class TransportBar {
       this.toggle.button,
       this.stepOne.button,
       this.stepTen.button,
+      this.reset.button,
+      this.releaseAll.button,
       this.time,
       this.steps,
       this.warning,
@@ -88,6 +114,10 @@ export class TransportBar {
     setLabel(stepOne.button, view.stepOneLabel, view.stepOneHint);
     setText(stepTen.label, view.stepTenLabel);
     setLabel(stepTen.button, view.stepTenLabel, view.stepTenHint);
+    setText(this.reset.label, view.resetLabel);
+    setLabel(this.reset.button, view.resetLabel, view.resetHint);
+    this.reset.button.disabled = !view.canReset;
+    showReleaseAll(this.releaseAll, view.releaseAll);
     stepOne.button.disabled = !view.canStep;
     stepTen.button.disabled = !view.canStep;
   }

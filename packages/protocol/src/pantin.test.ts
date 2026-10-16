@@ -34,6 +34,8 @@ describe("KeySchema (ADR 0019)", () => {
   });
 });
 
+const NO_PHASE_6 = { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };
+
 describe("PantinDocumentSchema", () => {
   const validDocument = {
     schema_version: PANTIN_SCHEMA_VERSION,
@@ -64,6 +66,7 @@ describe("PantinDocumentSchema", () => {
     drives: [],
     actuators: [],
     sensors: [],
+    ...NO_PHASE_6,
   };
 
   it("accepts a complete document", () => {

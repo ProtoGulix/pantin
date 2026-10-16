@@ -7,6 +7,7 @@ import {
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { findAnchorConflict } from "./anchor-conflicts.ts";
+import { refuseDrumJointLoss } from "./conveyor-rules.ts";
 import { makeUniqueId, slugifyDisplayName } from "./ids.ts";
 import { haveSameCoordinateUnit } from "./joint-types/registry.ts";
 import { keepDisplayedPose } from "./keep-displayed-pose.ts";
@@ -120,6 +121,9 @@ export function updateJointInDocument(
   if (problem !== undefined) {
     throw new ApiError("invalid_request", problem);
   }
+  if (request.type !== "continuous") {
+    refuseDrumJointLoss(document, jointId, `become a ${request.type} joint`);
+  }
   const joint: Joint = { id: jointId, tagKey: existing.tagKey, ...request };
   const replaced = replaceJoint(document, joint);
   refuseAnchorConflict(replaced, jointId);
@@ -161,6 +165,7 @@ export function deleteJointFromDocument(
     );
   }
   sensorsWatchingGuard(document, jointId);
+  refuseDrumJointLoss(document, jointId, "be deleted");
   const removed = removeJoint(document, jointId);
   return parseWithSchema(
     PantinDocumentSchema,

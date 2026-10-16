@@ -159,3 +159,30 @@ describe("clock warning", () => {
     expect(viewOf(clockAfterPose(behind, 99)).warning).not.toBeNull();
   });
 });
+
+describe("the reset button", () => {
+  it("waits for the first clock state, then works running or paused, in both languages", () => {
+    expect(viewOf(INITIAL_CLOCK_MODEL).canReset).toBe(false);
+    const running = viewOf(clockAfterClockState(INITIAL_CLOCK_MODEL, stateOf({ running: true })));
+    const paused = viewOf(clockAfterClockState(INITIAL_CLOCK_MODEL, stateOf({ running: false })));
+    expect([running.canReset, paused.canReset]).toEqual([true, true]);
+    expect(running.resetLabel).toBe("Reset");
+    expect(viewOf(INITIAL_CLOCK_MODEL, "fr").resetLabel).toBe("Remise à zéro");
+  });
+});
+
+describe("the release all button", () => {
+  const model = clockAfterClockState(INITIAL_CLOCK_MODEL, stateOf());
+  const build = (count: number, language: "fr" | "en") =>
+    buildClockView(model, true, language, createTranslator(language), count).releaseAll;
+
+  it("is absent while no tag is forced", () => {
+    expect(build(0, "fr")).toBeNull();
+  });
+
+  it("counts the forced tags and says why it matters, in both languages", () => {
+    expect(build(3, "fr")?.label).toBe("Relâcher tout (3)");
+    expect(build(3, "en")?.label).toBe("Release all (3)");
+    expect(build(3, "en")?.hint).toContain("PLC");
+  });
+});
