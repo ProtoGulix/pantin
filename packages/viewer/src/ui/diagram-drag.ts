@@ -103,7 +103,8 @@ class LinkDrag {
   private readonly context: DragContext;
   private readonly onEscape = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
-      // Other document-level listeners must not also act on this Escape.
+      // Registered in the capture phase (see begin), so that this runs before the
+      // window shortcuts and this Escape does not also turn the tool off.
       event.stopImmediatePropagation();
       this.end();
     }
@@ -156,7 +157,7 @@ class LinkDrag {
     this.live?.unmark();
     this.live = null;
     this.press = null;
-    document.removeEventListener("keydown", this.onEscape);
+    document.removeEventListener("keydown", this.onEscape, { capture: true });
   }
 
   private begin(from: Endpoint): void {
@@ -169,7 +170,7 @@ class LinkDrag {
     const preview = svgElement("path", { class: "diagram-link-preview" });
     drawn.svg.append(preview);
     this.live = { preview, unmark: mark(drawn, from, targets) };
-    document.addEventListener("keydown", this.onEscape);
+    document.addEventListener("keydown", this.onEscape, { capture: true });
   }
 
   private follow(from: Endpoint, event: PointerEvent): void {

@@ -273,6 +273,8 @@ All notable changes to Pantin. The format follows
 
 ### Fixed
 
+- Viewer: Escape during a wiring in the diagram only abandons the wiring; it
+  no longer also turns the active placement tool off (ADR 0039 point 6).
 - Bridge tests: the Modbus fuzz test no longer fails at random when the slave
   resets a connection on a bad header before the client's shutdown (ENOTCONN).
 - Viewer: the bridge card no longer sticks on "Stopping…" after a stop (nor

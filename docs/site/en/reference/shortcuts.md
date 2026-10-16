@@ -32,11 +32,7 @@ Single-key shortcuts (<kbd>F2</kbd>, <kbd>Del</kbd>, <kbd>G</kbd>...) give way t
 
 ### The Escape chain
 
-<kbd>Esc</kbd> acts on the nearest component, in this order: a placement gizmo drag (it goes back to the starting position; this listener is attached to the document, in the capture phase, so it goes before everything else), an input field (it restores its value), a confirmation question (it chooses cancel), a menu or a context menu (it closes), then the active placement tool (gizmo, alignment, axis pick). <kbd>Esc</kbd> does not end the tool when a context menu is open, nor when a field has focus.
-
-::: info Known behaviour: wiring in the diagram
-A wiring in progress in the diagram is abandoned by <kbd>Esc</kbd>, but this listener is attached after the one for the window shortcuts. If a placement tool is active at that moment, the same <kbd>Esc</kbd> therefore abandons the wiring and also turns the tool off.
-:::
+<kbd>Esc</kbd> acts on the nearest component, in this order: a placement gizmo drag (it goes back to the starting position; this listener is attached to the document, in the capture phase, so it goes before everything else), a wiring in progress in the diagram (it is abandoned; an active placement tool stays on, the next <kbd>Esc</kbd> ends it; this listener is also on the document, in the capture phase), an input field (it restores its value), a confirmation question (it chooses cancel), a menu or a context menu (it closes), then the active placement tool (gizmo, alignment, axis pick). <kbd>Esc</kbd> does not end the tool when a context menu is open, nor when a field has focus.
 
 ## Menu bar
 

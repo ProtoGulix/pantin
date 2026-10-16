@@ -32,11 +32,7 @@ Les raccourcis à touche simple (<kbd>F2</kbd>, <kbd>Suppr</kbd>, <kbd>G</kbd>..
 
 ### Chaîne d'Échap
 
-<kbd>Échap</kbd> agit sur le composant le plus proche, dans cet ordre : un glisser du manipulateur de placement (il revient à la position de départ ; cet écouteur est posé sur le document, en phase de capture, donc il passe avant tout le reste), un champ de saisie (il restaure sa valeur), une question de confirmation (elle choisit l'annulation), un menu ou un menu contextuel (il se ferme), puis l'outil de placement actif (manipulateur, alignement, choix d'axe). <kbd>Échap</kbd> ne termine l'outil ni quand un menu contextuel est ouvert, ni quand un champ a le focus.
-
-::: info Comportement connu : câblage dans le schéma
-Un câblage en cours dans le schéma est abandonné par <kbd>Échap</kbd>, mais cet écouteur est posé après celui des raccourcis de la fenêtre. Si un outil de placement est actif à ce moment, le même <kbd>Échap</kbd> abandonne donc le câblage et éteint aussi l'outil.
-:::
+<kbd>Échap</kbd> agit sur le composant le plus proche, dans cet ordre : un glisser du manipulateur de placement (il revient à la position de départ ; cet écouteur est posé sur le document, en phase de capture, donc il passe avant tout le reste), un câblage en cours dans le schéma (il est abandonné ; l'outil de placement actif reste en place, le <kbd>Échap</kbd> suivant le termine ; cet écouteur est aussi sur le document, en phase de capture), un champ de saisie (il restaure sa valeur), une question de confirmation (elle choisit l'annulation), un menu ou un menu contextuel (il se ferme), puis l'outil de placement actif (manipulateur, alignement, choix d'axe). <kbd>Échap</kbd> ne termine l'outil ni quand un menu contextuel est ouvert, ni quand un champ a le focus.
 
 ## Barre de menus
 
