@@ -6,6 +6,12 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Removed
+
+- The `CNAME` and `docs/CNAME` files that GitHub committed on `master` while
+  the Pages domain was set: with the Actions workflow GitHub ignores them, the
+  domain lives in the repository's Pages settings (ADR 0051 point 4).
+
 ## [0.1.0-alpha.1] - 2026-10-16
 
 First pre-release. Not there yet: a real CODESYS program driving a scene
