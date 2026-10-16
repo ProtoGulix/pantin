@@ -223,9 +223,10 @@ pas le pare-feu de la machine (ADR 0004, 0046).
   liaisons simulées.
 - Les services écoutent sur `127.0.0.1` par défaut. Ouvrir le réseau est un choix
   explicite, limité aux réseaux privés.
-- Modbus ne passe jamais par un tunnel ou un proxy (Cloudflare, nginx) :
-  le cœur refuse de démarrer ou d'arrêter le pont par une requête venue d'un tel
-  tunnel (ADR 0046 point 7).
+- Modbus ne passe jamais par un tunnel ou un proxy (Cloudflare, nginx) : le pont
+  écoute sur l'adresse que vous choisissez, sur votre réseau. Une exposition par
+  tunnel protégée par Cloudflare Access peut démarrer ou arrêter le pont, mais
+  n'ouvre jamais le bus de tags (ADR 0046 point 7, ADR 0050).
 - Avant tout usage sur un vrai réseau de production, la position de Pantin doit
   être réévaluée par une nouvelle décision (authentification, TLS, segmentation).
 

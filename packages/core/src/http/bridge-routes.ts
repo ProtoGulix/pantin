@@ -1,25 +1,12 @@
 import { SetBridgeRequestSchema } from "@pantin/protocol";
-import { EXPOSURE_HEADER } from "../domain/bus-upgrade-rules.ts";
 import { parseWithSchema } from "../domain/validation.ts";
-import { ApiError } from "../errors.ts";
 import { readJsonBody } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
-import { pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
+import { pantinIdOf, type Route } from "./route-context.ts";
 
-// The PLC bridge routes (ADR 0050 point 5).
-
-// A process is never started or stopped from the internet (ADR 0046 point 7).
-function refuseExposedChange(context: RouteContext): void {
-  // Any value refuses, as for the tag bus: a repeated header arrives joined
-  // ("cloudflare, x") and must not slip through.
-  if (context.request.headers[EXPOSURE_HEADER] !== undefined) {
-    throw new ApiError(
-      "invalid_request",
-      "The PLC bridge cannot be started or stopped through an internet exposure. Use the local viewer.",
-      403,
-    );
-  }
-}
+// The PLC bridge routes (ADR 0050 point 5). Allowed through the Cloudflare
+// exposure since the 2026-10-16 amendment of ADR 0050, behind Cloudflare
+// Access; only the tag bus stays closed there (ADR 0046 point 7).
 
 const BRIDGE = ["pantins", ":pantinId", "bridge"];
 
@@ -38,7 +25,6 @@ export const BRIDGE_ROUTES: readonly Route[] = [
     method: "PUT",
     pattern: BRIDGE,
     handle: async (context) => {
-      refuseExposedChange(context);
       const pantinId = pantinIdOf(context);
       await context.service.getPantin(pantinId);
       const body = await readJsonBody(context.request);

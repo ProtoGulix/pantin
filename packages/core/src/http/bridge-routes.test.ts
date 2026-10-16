@@ -95,25 +95,19 @@ describe("with a bridge Python", () => {
     expect(BridgeStatusSchema.parse(stopped.json).state).toBe("stopped");
     expect((await call("GET")).status).toBe(200);
   });
-});
 
-describe("with a bridge Python, refusals", () => {
-  it("refuses the cloudflare exposure for a change, and starts nothing", async () => {
+  it("starts and stops through the cloudflare exposure (ADR 0050, 2026-10-16 amendment)", async () => {
     const spawner = createFakeSpawner();
     await startServer(spawner);
     const exposed = { "x-pantin-exposure": "cloudflare" };
-    for (const body of [START, { running: false }]) {
-      const { status } = await call("PUT", body, exposed);
-      expect(status).toBe(403);
-    }
-    for (const value of ["cloudflare, x", "anything"]) {
-      const { status } = await call("PUT", START, { "x-pantin-exposure": value });
-      expect(status).toBe(403);
-    }
-    expect(spawner.calls).toHaveLength(0);
+    expect((await call("PUT", START, exposed)).status).toBe(200);
+    expect(spawner.calls).toHaveLength(1);
+    expect((await call("PUT", { running: false }, exposed)).status).toBe(200);
     expect((await call("GET", undefined, exposed)).status).toBe(200);
   });
+});
 
+describe("with a bridge Python, refusals", () => {
   it.each([
     ["an unknown field", { ...START, python: "/bin/sh" }],
     ["a wildcard address", { ...START, listen: "0.0.0.0" }],
@@ -122,12 +116,14 @@ describe("with a bridge Python, refusals", () => {
       "a private address of another machine",
       { running: true, listen: "10.9.9.9", allow: ["10.0.0.0/8"] },
     ],
-  ])("answers 400 to %s", async (_name, body) => {
+  ])("answers 400 to %s, through the exposure too", async (_name, body) => {
     const spawner = createFakeSpawner();
     await startServer(spawner);
-    const { status, json } = await call("PUT", body);
-    expect(status).toBe(400);
-    expect(errorCodeOf(json)).toBe("invalid_request");
+    for (const headers of [{}, { "x-pantin-exposure": "cloudflare" }]) {
+      const { status, json } = await call("PUT", body, headers);
+      expect(status).toBe(400);
+      expect(errorCodeOf(json)).toBe("invalid_request");
+    }
     expect(spawner.calls).toHaveLength(0);
   });
 

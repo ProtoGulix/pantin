@@ -220,9 +220,10 @@ the machine (ADR 0004, 0046).
 - Pantin reaches no real actuator: its outputs only move simulated joints.
 - Services listen on `127.0.0.1` by default. Opening the network is an explicit
   choice, limited to private networks.
-- Modbus never goes through a tunnel or a proxy (Cloudflare, nginx): the core
-  refuses to start or stop the bridge on a request coming from such a tunnel
-  (ADR 0046 point 7).
+- Modbus never goes through a tunnel or a proxy (Cloudflare, nginx): the bridge
+  listens on the address you choose, on your network. A tunnel exposure
+  protected by Cloudflare Access can start or stop the bridge, but never opens
+  the tag bus (ADR 0046 point 7, ADR 0050).
 - Before any use on a real production network, the position of Pantin must be
   re-evaluated by a new decision (authentication, TLS, segmentation).
 

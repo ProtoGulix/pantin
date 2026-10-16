@@ -65,7 +65,6 @@ restarts on its own.
 | ""…" is not an address of this machine. Choose one of: …" | The **Listen address** is not an address of the machine | Choose an address from the list |
 | "A private-network listen address needs at least one allowed IP or CIDR." | **Private network** with no entry in **Allowed PLCs (IPs or CIDRs, comma separated)** | Enter the IP or CIDR of the PLC |
 | "Allow entry "…" is outside the loopback and private ranges, so no source could match it." | An entry of the list is a public address | Use only private or loopback addresses |
-| "The PLC bridge cannot be started or stopped through an internet exposure. Use the local viewer." | Request coming from a tunnel (Cloudflare) | Start the bridge from the local viewer |
 
 ### The bridge stops with a failure
 

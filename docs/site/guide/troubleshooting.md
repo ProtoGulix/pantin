@@ -64,7 +64,6 @@ redémarre jamais seul.
 | « "…" is not an address of this machine. Choose one of: … » | L'**Adresse d'écoute** n'est pas une adresse de la machine | Choisissez une adresse dans la liste |
 | « A private-network listen address needs at least one allowed IP or CIDR. » | **Réseau privé** sans entrée dans **Automates autorisés** | Saisissez l'IP ou le CIDR de l'automate |
 | « Allow entry "…" is outside the loopback and private ranges, so no source could match it. » | Une entrée de la liste est une adresse publique | N'utilisez que des adresses privées ou de bouclage |
-| « The PLC bridge cannot be started or stopped through an internet exposure. Use the local viewer. » | Requête venue d'un tunnel (Cloudflare) | Démarrez le pont depuis le viewer local |
 
 ### Le pont s'arrête en échec
 

@@ -6,6 +6,12 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Changed
+
+- Core, the PLC bridge can be started and stopped through the Cloudflare
+  development exposure, now behind Cloudflare Access (ADR 0050, 2026-10-16
+  amendment). The tag bus stays closed there (ADR 0046 point 7).
+
 ### Added
 
 - Claude Code, a `doc-writer` subagent that keeps the user guide (ADR 0051)

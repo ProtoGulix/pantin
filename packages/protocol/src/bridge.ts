@@ -7,8 +7,8 @@ import { KeySchema } from "./ids.ts";
 //   PUT /api/pantins/:pantinId/bridge  SetBridgeRequest -> BridgeStatus
 //        {running: true, listen, allow}: start (the answer is `starting`);
 //        {running: false}: stop (`stopping`, or the current state when the
-//        bridge is already stopped or failed). 403 under the cloudflare
-//        exposure header; `bridge_unavailable` without --bridge-python.
+//        bridge is already stopped or failed). `bridge_unavailable` without
+//        --bridge-python.
 //
 // The pose stream (ADR 0015) also carries the `bridge` event: a BridgeStatus,
 // sent when the stream opens and on every change of it.
