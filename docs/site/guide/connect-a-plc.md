@@ -19,7 +19,9 @@ mesure.
 
 ## Comment ça marche
 
-    automate (CODESYS)  <--Modbus TCP-->  pont (Python)  <--tag bus-->  cœur  <--REST/SSE-->  viewer
+```text
+automate (CODESYS)  <--Modbus TCP-->  pont (Python)  <--tag bus-->  cœur  <--REST/SSE-->  viewer
+```
 
 - Le **cœur** simule la machine et détient les tags.
 - Le **pont** est un processus séparé. Il ouvre un esclave Modbus TCP **par
@@ -191,8 +193,10 @@ Autres règles :
 Sans le viewer, le pont se lance à la main (voir
 [`packages/bridge/README.md`](https://github.com/ProtoGulix/pantin/blob/develop/packages/bridge/README.md)) :
 
-    .venv/bin/python -m pantin_bridge --core http://127.0.0.1:4800 \
-      --pantin plc-cylinder --listen 127.0.0.1 --allow 127.0.0.1
+```sh
+.venv/bin/python -m pantin_bridge --core http://127.0.0.1:4800 \
+  --pantin plc-cylinder --listen 127.0.0.1 --allow 127.0.0.1
+```
 
 ## Tags forcés
 

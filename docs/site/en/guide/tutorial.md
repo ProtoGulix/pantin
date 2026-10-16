@@ -389,7 +389,9 @@ unreadable or invalid.
 
 **From the command line**
 
-    pnpm pantin gvl examples/plc-cylinder
+```sh
+pnpm pantin gvl examples/plc-cylinder
+```
 
 The command prints the GVL on standard output. It refuses an invalid mapping
 and lists the problems. For a Pantin without `io.json`, the command line

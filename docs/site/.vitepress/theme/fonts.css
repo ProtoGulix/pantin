@@ -1,0 +1,39 @@
+/* Self-hosted fonts, no request to Google Fonts or any CDN (ADR 0052 point 6).
+   Archivo from github.com/Omnibus-Type/Archivo (commit 2111276), IBM Plex Mono
+   2.5.0 from github.com/IBM/plex; both under the SIL Open Font License 1.1, whose texts
+   sit next to the files. */
+@font-face {
+  font-family: "Archivo";
+  src: url("./fonts/archivo-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("./fonts/archivo-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("./fonts/archivo-800.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./fonts/ibm-plex-mono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}

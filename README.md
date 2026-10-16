@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/pantin-symbol-dark.svg">
+  <img src="docs/brand/pantin-symbol.svg" alt="" width="120" height="120">
+</picture>
+
 # Pantin
 
 **FR** : simulateur open source de machines industrielles, piloté en boucle

@@ -1,0 +1,27 @@
+/* Pantin colour tokens. Source of truth: ADR 0052. Hex values are sRGB.
+   RAL references are approximations: RAL publishes no official sRGB value. */
+:root {
+  /* Brand */
+  --pantin-armoire: #cfd3ce; /* light ground, about RAL 7035 */
+  --pantin-paper: #ecede8; /* raised light surface (cards, panels) */
+  --pantin-anthracite: #30383c; /* dark ground, about RAL 7016 */
+  --pantin-graphite: #1a1e20; /* ink: text, symbol, DIN rail */
+  --pantin-bornier: #e3631c; /* brand accent on dark grounds; never a machine state */
+  --pantin-bornier-light: #b54a12; /* brand accent on light grounds (3.5:1 on armoire) */
+  --pantin-ficelle: #c9b38a; /* second plane, tag addresses on dark */
+  --pantin-commande: #1d3f8c; /* links, selection, keyboard focus */
+  --pantin-far-light: #8a918f; /* far limbs of the symbol, light version */
+  --pantin-far-dark: #7e878a; /* far limbs of the symbol, dark version */
+
+  /* Machine states, IEC 60204-1 indicator meanings */
+  --pantin-state-emergency: #b3261e; /* danger, immediate action */
+  --pantin-state-abnormal: #f2b10a; /* abnormal, manual mode, setting */
+  --pantin-state-normal: #2e7d46; /* normal, automatic cycle */
+  --pantin-state-mandatory: #1f5fa8; /* operator action required */
+  --pantin-state-monitoring: #f4f4f0; /* powered, monitoring */
+
+  /* Type */
+  --pantin-font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --pantin-font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --pantin-radius: 2px;
+}

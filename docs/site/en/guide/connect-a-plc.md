@@ -20,7 +20,9 @@ repository, not from a measurement.
 
 ## How it works
 
-    PLC (CODESYS)  <--Modbus TCP-->  bridge (Python)  <--tag bus-->  core  <--REST/SSE-->  viewer
+```text
+PLC (CODESYS)  <--Modbus TCP-->  bridge (Python)  <--tag bus-->  core  <--REST/SSE-->  viewer
+```
 
 - The **core** simulates the machine and holds the tags.
 - The **bridge** is a separate process. It opens one Modbus TCP slave **per
@@ -191,8 +193,10 @@ Other rules:
 Without the viewer, the bridge is started by hand (see
 [`packages/bridge/README.md`](https://github.com/ProtoGulix/pantin/blob/develop/packages/bridge/README.md)):
 
-    .venv/bin/python -m pantin_bridge --core http://127.0.0.1:4800 \
-      --pantin plc-cylinder --listen 127.0.0.1 --allow 127.0.0.1
+```sh
+.venv/bin/python -m pantin_bridge --core http://127.0.0.1:4800 \
+  --pantin plc-cylinder --listen 127.0.0.1 --allow 127.0.0.1
+```
 
 ## Forced tags
 

@@ -8,6 +8,12 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Documentation, visual identity (ADR 0052): the walking puppet hung from a
+  DIN rail as symbol, logo and favicon, and the "Armoire" palette, in
+  `docs/brand/`. The guide site uses them, with Archivo and IBM Plex Mono
+  served from the site itself (SIL OFL 1.1), and the root README shows the
+  symbol. The guide's indented code blocks are now fenced, so they get the
+  code style.
 - Documentation, screenshots (ADR 0051): the guide shows the viewer in French and
   English; `pnpm docs:screenshots` regenerates them with `playwright-core` (dev
   dependency) and a local Chromium, outside `pnpm check`.

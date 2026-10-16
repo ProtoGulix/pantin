@@ -38,9 +38,13 @@ const englishReference = [
 export default defineConfig({
   base: "/docs/",
   title: "Pantin",
+  // `head` links are not rewritten with `base`, unlike the theme's images.
+  head: [["link", { rel: "icon", type: "image/svg+xml", href: "/docs/favicon.svg" }]],
   cleanUrls: true,
   lastUpdated: false,
   themeConfig: {
+    // Below 48 px only the favicon glyph is used, never the symbol (ADR 0052 point 3).
+    logo: "/favicon.svg",
     search: { provider: "local" },
     socialLinks: [{ icon: "github", link: "https://github.com/ProtoGulix/pantin" }],
   },

@@ -50,6 +50,7 @@ Monorepo :
     examples/            projets de démonstration complets
     docs/decisions       une note courte par décision d'architecture (ADR)
     docs/spikes          rapports de vérification (phase 0)
+    docs/brand           identité visuelle : logo, symbole, favicon, couleurs (ADR 0052)
 
 Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/cli ; le pont est un paquet Python non publié, pantin-bridge, ADR 0045) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
 

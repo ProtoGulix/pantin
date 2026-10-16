@@ -407,7 +407,9 @@ illisible ou invalide.
 
 **Depuis la ligne de commande**
 
-    pnpm pantin gvl examples/plc-cylinder
+```sh
+pnpm pantin gvl examples/plc-cylinder
+```
 
 La commande imprime la GVL sur la sortie standard. Elle refuse un mapping
 invalide et énumère les problèmes. Pour un Pantin sans `io.json`, la ligne de

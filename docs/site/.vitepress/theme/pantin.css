@@ -1,0 +1,93 @@
+/* Pantin palette "Armoire" mapped onto the VitePress default theme variables.
+   Source of truth: ADR 0052 and docs/brand/colors.css.
+   Every text/ground pair below was checked against WCAG 2 AA (ADR 0052 point 9). */
+
+:root {
+  --vp-font-family-base: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --vp-font-family-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Grounds and ink */
+  --vp-c-bg: #ecede8; /* paper */
+  --vp-c-bg-alt: #dfe2dd; /* light armoire: sidebar, code blocks */
+  --vp-c-bg-elv: #f4f4f0; /* dialogs, menus */
+  --vp-c-bg-soft: #dfe2dd;
+  --vp-c-text-1: #1a1e20; /* graphite, 14.3:1 on paper */
+  --vp-c-text-2: #4a5254; /* 6.8:1 on paper */
+  --vp-c-text-3: #5e6668;
+  --vp-c-divider: #c2c7c2;
+
+  /* Brand: bornier orange, darkened for text on light grounds */
+  --vp-c-brand-1: #9a3e0f; /* links: 5.8:1 on paper, 4.5:1 on armoire */
+  --vp-c-brand-2: #b54a12; /* hover */
+  --vp-c-brand-3: #b54a12; /* brand button ground, white text 5.3:1 */
+  --vp-c-brand-soft: rgba(227, 99, 28, 0.14);
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-text: #ffffff;
+
+  /* Callouts: tip in commande blue, warning and danger from IEC 60204-1 hues.
+     The brand orange is never a warning. */
+  --vp-c-tip-1: #1d3f8c;
+  --vp-c-tip-2: #2a52a8;
+  --vp-c-tip-3: #1d3f8c;
+  --vp-c-tip-soft: rgba(29, 63, 140, 0.12);
+  --vp-c-warning-1: #8a6400; /* 4.6:1 on paper */
+  --vp-c-warning-2: #a57900;
+  --vp-c-warning-3: #f2b10a;
+  --vp-c-warning-soft: rgba(242, 177, 10, 0.18);
+  --vp-c-danger-1: #b3261e; /* 5.6:1 on paper */
+  --vp-c-danger-2: #c93a30;
+  --vp-c-danger-3: #b3261e;
+  --vp-c-danger-soft: rgba(179, 38, 30, 0.12);
+
+  /* Home page: flat name, no gradient (ADR 0052 point 7) */
+  --vp-home-hero-name-color: var(--vp-c-text-1);
+  --vp-home-hero-image-background-image: none;
+}
+
+.dark {
+  --vp-c-bg: #262d30; /* deep anthracite */
+  --vp-c-bg-alt: #30383c; /* anthracite, about RAL 7016 */
+  --vp-c-bg-elv: #30383c;
+  --vp-c-bg-soft: #30383c;
+  --vp-c-text-1: #ecede8; /* 11.9:1 */
+  --vp-c-text-2: #b9bec5; /* 7.5:1 */
+  --vp-c-text-3: #8e959c;
+  --vp-c-divider: #3e474b;
+
+  --vp-c-brand-1: #f59a62; /* links: 6.5:1 */
+  --vp-c-brand-2: #f08a4b;
+  --vp-c-brand-3: #e3631c; /* bornier, button ground */
+  --vp-c-brand-soft: rgba(227, 99, 28, 0.18);
+  --vp-button-brand-text: #1a1e20; /* graphite on bornier 4.9:1 */
+  --vp-button-brand-hover-text: #1a1e20;
+  --vp-button-brand-active-text: #1a1e20;
+
+  --vp-c-tip-1: #6f9ce8; /* 5.1:1 */
+  --vp-c-tip-2: #8fb3ee; /* link hover in a callout */
+  --vp-c-tip-soft: rgba(111, 156, 232, 0.16);
+  --vp-c-warning-1: #e8b923; /* 7.6:1 */
+  --vp-c-warning-2: #f2c94c;
+  --vp-c-warning-soft: rgba(242, 177, 10, 0.16);
+  --vp-c-danger-1: #f07b72; /* 5.2:1 */
+  --vp-c-danger-2: #f59a92;
+  --vp-c-danger-soft: rgba(179, 38, 30, 0.22);
+}
+
+/* Small radii, like terminal blocks and labels (ADR 0052 point 7). The default
+   theme sets the radius in scoped styles, which win over a plain class. */
+.VPButton {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides the theme's scoped `.VPButton.medium` radius. */
+  border-radius: 2px !important;
+}
+
+/* The symbol's SVG is 120 px wide; let it fill the hero's image box, whose
+   maximum size the default theme sets per screen width. */
+.VPHero .image-src {
+  width: 100%;
+}
+
+.vp-doc div[class*="language-"],
+.vp-doc .custom-block {
+  border-radius: 4px;
+}
