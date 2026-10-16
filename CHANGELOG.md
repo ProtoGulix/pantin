@@ -6,6 +6,12 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.1.0-alpha.1] - 2026-10-16
+
+First pre-release. Not there yet: a real CODESYS program driving a scene
+(phase 7, waiting for a CODESYS VM), choosing which nodes of an imported file
+become bodies (phase 8), and phase 9 (packs, several instances).
+
 ### Added
 
 - Viewer, visual identity (ADR 0053): a light and a dark theme, chosen in
@@ -303,3 +309,5 @@ All notable changes to Pantin. The format follows
   every redraw.
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
+
+[0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1
