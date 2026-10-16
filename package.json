@@ -23,7 +23,8 @@
     "schema:generate": "node packages/cli/src/main.ts schema > packages/protocol/schema/pantin.schema.json && node packages/cli/src/main.ts schema io > packages/protocol/schema/io.schema.json && biome format --write packages/protocol/schema",
     "docs:dev": "vitepress dev docs/site",
     "docs:build": "vitepress build docs/site",
-    "docs:preview": "vitepress preview docs/site"
+    "docs:preview": "vitepress preview docs/site",
+    "docs:screenshots": "node scripts/docs-screenshots.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
@@ -31,6 +32,7 @@
     "dependency-cruiser": "18.4.0",
     "knip": "6.38.0",
     "lefthook": "2.1.14",
+    "playwright-core": "1.64.1",
     "typescript": "6.0.3",
     "vitepress": "1.6.4",
     "vitest": "5.0.2"

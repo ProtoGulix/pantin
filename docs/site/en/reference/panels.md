@@ -56,6 +56,8 @@ The icons carry no text: each row also has a hidden text that gives its type and
 
 ### The context menu of a row
 
+![The context menu of an assembly in the tree](/screenshots/en/tree-context-menu.webp)
+
 Right-click on a row (or the **Menu** key). An entry is offered only when it makes sense for the row.
 
 | Entry | On | What it does |
@@ -80,6 +82,8 @@ Esc or a click elsewhere closes the menu.
 
 ### The import form
 
+![The import form under the toolbar, with the Up axis list](/screenshots/en/import-form.webp)
+
 It opens under the toolbar after a file is chosen (**3D file to import**) through **Import a 3D file...**, **Import…** or **Import into this Pantin**. The accepted formats are `.glb`, `.stl`, `.stp` and `.step`; any other file produces an error message.
 
 | Control | What it does | Greyed out when |
@@ -94,6 +98,10 @@ It opens under the toolbar after a file is chosen (**3D file to import**) throug
 During the import, the form shows **Importing…**. For a STEP: **Converting STEP… Up to 2 minutes; keep this page open.**
 
 ### The PLC bridge card
+
+![The PLC bridge card, bridge stopped](/screenshots/en/bridge-stopped.webp)
+
+![The PLC bridge card, bridge running](/screenshots/en/bridge-running.webp)
 
 The card is at the very bottom of the left panel. It is visible in all central layouts. It appears as soon as the core answers about the bridge state.
 
@@ -254,6 +262,8 @@ A folder (for example **Joints between assemblies**) shows **Name** and **Item c
 
 #### A joint
 
+![The inspector of a slider joint, with its position slider](/screenshots/en/inspector-joint.webp)
+
 Under the subject **Joint · name** appears the slider **Position of "name"**: it moves the joint by hand, in mm or degrees, between its limits. It sends at most 30 positions per second and follows the core's stream when you do not hold it.
 
 | Section | Rows |
@@ -358,6 +368,8 @@ A sentence reminds that the axis is taken in the parent body's frame, Z up, and 
 
 ### New drive
 
+![The New drive form in the inspector](/screenshots/en/form-new-drive.webp)
+
 Title **New drive** or **Edit drive**.
 
 | Field | Role |
@@ -370,6 +382,8 @@ Title **New drive** or **Edit drive**.
 As long as no actuator moves a joint, a note specifies that the speeds are in mm (**Speeds are in the unit of the joints it will move: mm until it feeds a rotary actuator.**).
 
 ### New actuator
+
+![The New actuator form in the inspector](/screenshots/en/form-new-actuator.webp)
 
 Title **New actuator** or **Edit actuator**.
 
@@ -432,6 +446,10 @@ A refused pick shows the reason in the message line (for example **This face is 
 
 ## The transport bar
 
+![The transport bar: Pause, 1 step, 10 steps, Reset, simulated time and step count](/screenshots/en/transport-bar.webp)
+
+![The transport bar with the Release all button while a tag is forced](/screenshots/en/release-all.webp)
+
 It is at the top of the central area and exists only while a Pantin is open. Simulated time advances in fixed steps of 1/120 s.
 
 | Control | What it does | Greyed out when |
@@ -468,6 +486,8 @@ A line whose source still exists is clickable: a click (or **Enter**) selects th
 The console reports in particular: a PLC write ignored on a forced tag, an error in a simulation step, a diagnostic that appeared or cleared, a fault injected or removed, a document migrated on opening, a pause or a resume, a blocked emitter, the product limit reached, the connections and disconnections of the PLC and of the bridge.
 
 ## The welcome window
+
+![The welcome window, Home tab](/screenshots/en/welcome.webp)
 
 It is displayed when no Pantin is open. It is a modal window above the empty 3D view. **Esc** or the **Close the welcome window** cross hides it; **File**, **Welcome** brings it back. Two tabs, with the left and right arrows to switch between them.
 

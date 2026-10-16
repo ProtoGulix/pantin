@@ -44,6 +44,8 @@ Le sens de molette du préréglage ZW3D n'a pas été confronté au vrai ZW3D : 
 
 ### Le cube des vues
 
+![Le cube des vues, en haut à droite de la vue 3D](/screenshots/fr/view-cube.webp)
+
 Un petit cube est dessiné dans la vue ; il tourne avec la caméra. Son rôle : regarder la machine depuis une direction précise, d'un clic. Il est visible quand la vue 3D est affichée.
 
 | Élément du cube | Effet du clic |
@@ -133,6 +135,8 @@ Le curseur **Position de « nom »** de l'inspecteur, pour une liaison mobile, d
 
 ## Le schéma des chaînes
 
+![Le schéma des chaînes : distributeur, vérin, liaison et capteurs](/screenshots/fr/diagram.webp)
+
 Le schéma dessine la chaîne d'action de la machine : ce que l'automate commande, ce que cela déplace, ce qui le surveille. Il lit les mêmes tags que l'inspecteur et s'allume en temps réel.
 
 ### La structure
@@ -215,6 +219,8 @@ Une alerte accompagne un préactionneur en diagnostic : le noeud est entouré et
 
 ### Forcer une commande depuis le schéma
 
+![Une bobine forcée depuis le schéma, avec sa marque F](/screenshots/fr/forced-tag.webp)
+
 Les connecteurs de commande à gauche d'un préactionneur sont des boutons. Ils écrivent le tag comme le ferait l'automate, avec les mêmes règles que l'inspecteur.
 
 | Geste | Effet |
@@ -231,6 +237,8 @@ Un clic sur un connecteur de commande ne sélectionne pas le noeud : l'inspecteu
 Le schéma se parcourt entièrement au clavier : les flèches passent d'un noeud à l'autre, **Entrée** entre dans les connecteurs d'un noeud, **Espace** sélectionne le noeud (ou bascule une commande booléenne), **Échap** revient en arrière, **Début** et **Fin** vont au premier ou dernier noeud, **Suppr** retire le lien d'un connecteur ou le lien sélectionné, **F2** renomme un préactionneur, un actionneur ou un capteur. Le détail est dans [Raccourcis](/reference/shortcuts). **Suppr** ne supprime jamais un élément : pour cela, utilisez le menu **Édition**. Si vous appuyez dessus sur un noeud, la ligne de message vous le rappelle.
 
 ## La vue E/S
+
+![La vue E/S avec le module m1, ses réglages et le tableau des voies](/screenshots/fr/io-view.webp)
 
 La vue E/S est l'éditeur de la liste d'entrées/sorties du Pantin (`io.json`) : quels tags sont donnés à l'automate, sur quel module Modbus, à quelle adresse. Elle remplace la 3D et le schéma. Ce qu'elle écrit est enregistré et annulé avec le Pantin, comme le reste.
 

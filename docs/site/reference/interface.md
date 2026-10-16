@@ -2,6 +2,8 @@
 
 Cette page décrit les zones de la fenêtre du viewer, de haut en bas et de gauche à droite. Chaque zone renvoie vers la page qui la détaille. Les noms en **gras** sont ceux de l'interface.
 
+![Le viewer avec l'exemple plc-cylinder ouvert : arborescence à gauche, vue 3D et schéma au centre, inspecteur à droite](/screenshots/fr/overview.webp)
+
 ```
 +----------------------------------------------------------------------+
 | Fichier   Édition   Affichage                         (barre de menus)|
@@ -47,6 +49,8 @@ Colonne de droite, il s'affiche et se masque avec **Affichage** puis **Inspecteu
 
 ## La barre de transport
 
+![La barre de transport : Pause, 1 pas, 10 pas, Remise à zéro, temps simulé et nombre de pas](/screenshots/fr/transport-bar.webp)
+
 En haut de la zone centrale, elle pilote le temps de la simulation : pause et reprise, avance de 1 ou 10 pas, remise à zéro, temps simulé, et un bouton qui relâche tous les tags forcés (visible seulement tant qu'un tag est forcé). Un avertissement apparaît si la simulation prend du retard sur le temps réel. Voir [Panneaux et boutons](/reference/panels).
 
 ## La console
@@ -58,6 +62,8 @@ Sous la vue centrale, elle s'affiche et se masque avec **Affichage** puis **Cons
 Dans le panneau de gauche, une question de confirmation (fermer avec des modifications non enregistrées, supprimer un corps ou une liaison) s'affiche sous la carte **Pont automate**. Elle prend le clavier : <kbd>Entrée</kbd> choisit le bouton principal, <kbd>Échap</kbd> annule. La ligne de message juste dessous affiche les erreurs et les confirmations.
 
 ## La fenêtre d'accueil
+
+![La fenêtre d'accueil, onglet Accueil](/screenshots/fr/welcome.webp)
 
 Tant qu'aucun Pantin n'est ouvert, une fenêtre modale **Bienvenue — Pantin** s'affiche au centre de la vue 3D. Elle a deux onglets :
 

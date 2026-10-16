@@ -8,6 +8,9 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Documentation, screenshots (ADR 0051): the guide shows the viewer in French and
+  English; `pnpm docs:screenshots` regenerates them with `playwright-core` (dev
+  dependency) and a local Chromium, outside `pnpm check`.
 - Documentation, user guide site (ADR 0051): a VitePress site in `docs/site/`,
   in French and English, on the fundamentals, the model of a Pantin, a
   tutorial that builds the `plc-cylinder` example, connecting a PLC and

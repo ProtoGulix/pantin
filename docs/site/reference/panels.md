@@ -56,6 +56,8 @@ Les icônes ne portent pas de texte : chaque ligne a aussi un texte caché qui d
 
 ### Le menu contextuel d'une ligne
 
+![Le menu contextuel d'un assemblage dans l'arborescence](/screenshots/fr/tree-context-menu.webp)
+
 Clic droit sur une ligne (ou touche **Menu**). L'entrée se propose seulement quand elle a un sens pour la ligne.
 
 | Entrée | Sur | Ce qu'elle fait |
@@ -80,6 +82,8 @@ Clic droit sur une ligne (ou touche **Menu**). L'entrée se propose seulement qu
 
 ### Le formulaire d'import
 
+![Le formulaire d'import sous la barre d'outils, avec la liste Axe vertical](/screenshots/fr/import-form.webp)
+
 Il s'ouvre sous la barre d'outils après le choix d'un fichier (**Fichier 3D à importer**) via **Importer un fichier 3D...**, **Importer…** ou **Importer dans ce Pantin**. Les formats acceptés sont `.glb`, `.stl`, `.stp` et `.step` ; un autre fichier produit un message d'erreur.
 
 | Contrôle | Ce qu'il fait | Grisé quand |
@@ -94,6 +98,10 @@ Il s'ouvre sous la barre d'outils après le choix d'un fichier (**Fichier 3D à 
 Pendant l'import, le formulaire affiche **Import en cours…**. Pour un STEP : **Conversion STEP en cours… Jusqu'à 2 minutes ; gardez cette page ouverte.**
 
 ### La carte Pont automate
+
+![La carte Pont automate, pont arrêté](/screenshots/fr/bridge-stopped.webp)
+
+![La carte Pont automate, pont en marche](/screenshots/fr/bridge-running.webp)
 
 La carte est tout en bas du panneau de gauche. Elle est visible dans toutes les dispositions centrales. Elle apparaît dès que le cœur répond sur l'état du pont.
 
@@ -254,6 +262,8 @@ Un dossier (par exemple **Liaisons entre assemblages**) montre **Nom** et **Nomb
 
 #### Une liaison
 
+![L'inspecteur d'une liaison glissière, avec son curseur de position](/screenshots/fr/inspector-joint.webp)
+
 Sous le sujet **Liaison · nom** apparaît le curseur **Position de « nom »** : il déplace la liaison à la main, en mm ou en degrés, entre ses limites. Il envoie au plus 30 positions par seconde et suit le flux du cœur quand vous ne le tenez pas.
 
 | Section | Lignes |
@@ -358,6 +368,8 @@ Une phrase rappelle que l'axe est pris dans le repère du corps parent, Z vers l
 
 ### Nouveau préactionneur
 
+![Le formulaire Nouveau préactionneur dans l'inspecteur](/screenshots/fr/form-new-drive.webp)
+
 Titre **Nouveau préactionneur** ou **Modifier le préactionneur**.
 
 | Champ | Rôle |
@@ -370,6 +382,8 @@ Titre **Nouveau préactionneur** ou **Modifier le préactionneur**.
 Tant qu'aucun actionneur ne déplace de liaison, une note précise que les vitesses sont en mm (**Les vitesses sont dans l'unité des liaisons qu'il déplacera : en mm tant qu'il n'alimente aucun actionneur rotatif.**).
 
 ### Nouvel actionneur
+
+![Le formulaire Nouvel actionneur dans l'inspecteur](/screenshots/fr/form-new-actuator.webp)
 
 Titre **Nouvel actionneur** ou **Modifier l'actionneur**.
 
@@ -432,6 +446,10 @@ Un pointage refusé affiche la raison dans la ligne de message (par exemple **Ce
 
 ## La barre de transport
 
+![La barre de transport : Pause, 1 pas, 10 pas, Remise à zéro, temps simulé et nombre de pas](/screenshots/fr/transport-bar.webp)
+
+![La barre de transport avec le bouton Relâcher tout quand un tag est forcé](/screenshots/fr/release-all.webp)
+
 Elle est en haut de la zone centrale et n'existe que pendant qu'un Pantin est ouvert. Le temps simulé avance par pas fixes de 1/120 s.
 
 | Contrôle | Ce qu'il fait | Grisé quand |
@@ -468,6 +486,8 @@ Une ligne dont la source existe encore est cliquable : un clic (ou **Entrée**) 
 La console rapporte notamment : une écriture de l'automate ignorée sur un tag forcé, une erreur dans un pas de simulation, un diagnostic apparu ou résolu, un défaut injecté ou retiré, un document migré à l'ouverture, une pause ou une reprise, un émetteur bloqué, la limite de produits atteinte, les connexions et déconnexions de l'automate et du pont.
 
 ## La fenêtre d'accueil
+
+![La fenêtre d'accueil, onglet Accueil](/screenshots/fr/welcome.webp)
 
 Elle s'affiche quand aucun Pantin n'est ouvert. C'est une fenêtre modale au-dessus de la vue 3D vide. **Échap** ou la croix **Fermer la fenêtre d'accueil** la masque ; **Fichier**, **Accueil** la rappelle. Deux onglets, avec les flèches gauche et droite pour passer de l'un à l'autre.
 

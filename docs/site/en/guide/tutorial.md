@@ -38,6 +38,8 @@ English.
 
 ## 1. Create a Pantin
 
+![The welcome window, Home tab](/screenshots/en/welcome.webp)
+
 1. Open the viewer. The **Welcome — Pantin** window appears. If not, open the
    **File** menu, then **Welcome**.
 2. In the **Home** tab, under **New**, click the **Empty Pantin** tile.
@@ -51,6 +53,8 @@ The **From a 3D file** tile creates the Pantin and imports the file in a single
 action. The result is the same as with steps 1 and 2.
 
 ## 2. Import the 3D model
+
+![The import form under the toolbar, with the Up axis list](/screenshots/en/import-form.webp)
 
 1. In the toolbar, click the import button (tooltip **Import a 3D file (GLB,
    STL, STEP) into the open Pantin**). The **File** menu, **Import…** does the
@@ -163,6 +167,8 @@ full example. If the form refuses, delete the joint and create it again.
 
 ## 5. Add the drive: the valve
 
+![The New drive form in the inspector](/screenshots/en/form-new-drive.webp)
+
 The drive is the device the PLC commands. Here, it is the valve.
 
 1. In the inspector, look for the **Drives** section, or the **New drive**
@@ -184,6 +190,8 @@ position, with no diagnostic. The **Conflicting commands** diagnostic only
 exists for 5/3 valves and the reversing contactor.
 
 ## 6. Add the actuator: the cylinder
+
+![The New actuator form in the inspector](/screenshots/en/form-new-actuator.webp)
 
 The actuator reads the outputs of the drive and moves a joint.
 
@@ -210,6 +218,8 @@ are in degrees per second.
 :::
 
 ## 7. See and link the chain in the diagram
+
+![The chain diagram: valve, cylinder, joint and sensors](/screenshots/en/diagram.webp)
 
 The central view has three layouts. In the toolbar, the **Central view**
 selector offers **3D**, **Diagram** and **3D + Diagram** (F4 changes layout).
@@ -278,6 +288,8 @@ The core simulates continuously. You can command the valve by hand.
 
 ### Force a command
 
+![A coil forced from the diagram, with its F mark](/screenshots/en/forced-tag.webp)
+
 1. Switch to **Diagram** or **3D + Diagram**, or select the valve and look at
    the **Commands** group of the inspector.
 2. In the diagram, click the **Coil 14** command: it is a switch (**On** /
@@ -305,6 +317,8 @@ drive, or **Jammed** on the joint, to see what happens to your program.
 
 ### The simulation bar
 
+![The transport bar: Pause, 1 step, 10 steps, Reset, simulated time and step count](/screenshots/en/transport-bar.webp)
+
 At the top of the central area:
 
 | Button | Effect |
@@ -322,6 +336,8 @@ console says so: "Simulation paused while a PLC bridge is connected".
 :::
 
 ## 10. Configure the inputs and outputs
+
+![The I/O view with module m1, its settings and the channel table](/screenshots/en/io-view.webp)
 
 The PLC does not see the tags directly: it reads and writes Modbus coils and
 registers. The I/O list (`io.json`) makes the link. It is edited in the viewer,
@@ -387,6 +403,8 @@ links the Modbus channels to these variables. The page
 [Connect a PLC](/en/guide/connect-a-plc) explains what comes next.
 
 ## 12. Start the bridge
+
+![The PLC bridge card, bridge running](/screenshots/en/bridge-running.webp)
 
 1. Save the Pantin and check, in **I/O config**, that the mapping has no
    problem.

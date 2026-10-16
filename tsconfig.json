@@ -8,6 +8,7 @@
     { "path": "packages/core" },
     { "path": "packages/viewer" },
     { "path": "packages/cli" },
-    { "path": "tests" }
+    { "path": "tests" },
+    { "path": "scripts" }
   ]
 }

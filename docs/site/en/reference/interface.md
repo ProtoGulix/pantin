@@ -2,6 +2,8 @@
 
 This page describes the areas of the viewer window, from top to bottom and from left to right. Each area points to the page that details it. Names in **bold** are those of the interface.
 
+![The viewer with the plc-cylinder example open: tree on the left, 3D view and diagram in the centre, inspector on the right](/screenshots/en/overview.webp)
+
 ```
 +----------------------------------------------------------------------+
 | File   Edit   View                                       (menu bar)  |
@@ -47,6 +49,8 @@ The right-hand column; it is shown and hidden with **View** then **Inspector**. 
 
 ## The transport bar
 
+![The transport bar: Pause, 1 step, 10 steps, Reset, simulated time and step count](/screenshots/en/transport-bar.webp)
+
 At the top of the central area, it controls the simulation time: pause and resume, advance by 1 or 10 steps, reset, simulated time, and a button that releases all forced tags (visible only while a tag is forced). A warning appears if the simulation falls behind real time. See [Panels and buttons](/en/reference/panels).
 
 ## The console
@@ -58,6 +62,8 @@ Under the central view, it is shown and hidden with **View** then **Console**, o
 In the left panel, a confirmation question (closing with unsaved changes, deleting a body or a joint) is shown under the **PLC bridge** card. It takes the keyboard: <kbd>Enter</kbd> chooses the primary button, <kbd>Esc</kbd> cancels. The message line just below shows errors and confirmations.
 
 ## The welcome window
+
+![The welcome window, Home tab](/screenshots/en/welcome.webp)
 
 As long as no Pantin is open, a modal window **Welcome — Pantin** is displayed in the centre of the 3D view. It has two tabs:
 

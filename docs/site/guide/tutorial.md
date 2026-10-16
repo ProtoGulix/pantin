@@ -39,6 +39,8 @@ français.
 
 ## 1. Créer un Pantin
 
+![La fenêtre d'accueil, onglet Accueil](/screenshots/fr/welcome.webp)
+
 1. Ouvrez le viewer. La fenêtre **Bienvenue — Pantin** s'affiche. Sinon, ouvrez
    le menu **Fichier**, puis **Accueil**.
 2. Dans l'onglet **Accueil**, sous **Nouveau**, cliquez la tuile **Pantin vide**.
@@ -52,6 +54,8 @@ La tuile **Depuis un fichier 3D** crée le Pantin et importe le fichier en une
 seule action. Le résultat est le même qu'aux étapes 1 et 2.
 
 ## 2. Importer le modèle 3D
+
+![Le formulaire d'import sous la barre d'outils, avec la liste Axe vertical](/screenshots/fr/import-form.webp)
 
 1. Dans la barre d'outils, cliquez le bouton d'import (infobulle **Importer un
    fichier 3D (GLB, STL, STEP) dans le Pantin ouvert**). Le menu
@@ -168,6 +172,8 @@ complet. Si le formulaire refuse, supprimez la liaison et recréez-la.
 
 ## 5. Ajouter le préactionneur : le distributeur
 
+![Le formulaire Nouveau préactionneur dans l'inspecteur](/screenshots/fr/form-new-drive.webp)
+
 Le préactionneur est l'appareil que l'automate commande. Ici, c'est le
 distributeur.
 
@@ -191,6 +197,8 @@ tiroir garde sa position, sans diagnostic. Le diagnostic **Commandes
 contradictoires** n'existe que pour les distributeurs 5/3 et le contacteur inverseur.
 
 ## 6. Ajouter l'actionneur : le vérin
+
+![Le formulaire Nouvel actionneur dans l'inspecteur](/screenshots/fr/form-new-actuator.webp)
 
 L'actionneur lit les sorties du préactionneur et déplace une liaison.
 
@@ -219,6 +227,8 @@ un pivot, ils sont en degrés par seconde.
 :::
 
 ## 7. Voir et relier la chaîne dans le schéma
+
+![Le schéma des chaînes : distributeur, vérin, liaison et capteurs](/screenshots/fr/diagram.webp)
 
 La vue centrale a trois dispositions. Dans la barre d'outils, le sélecteur **Vue
 centrale** propose **3D**, **Schéma** et **3D + Schéma** (F4 change de
@@ -292,6 +302,8 @@ Le cœur simule en continu. Vous pouvez commander le distributeur à la main.
 
 ### Forcer une commande
 
+![Une bobine forcée depuis le schéma, avec sa marque F](/screenshots/fr/forced-tag.webp)
+
 1. Passez en **Schéma** ou **3D + Schéma**, ou sélectionnez le distributeur et
    regardez le groupe **Commandes** de l'inspecteur.
 2. Dans le schéma, cliquez la commande **Bobine 14** : c'est un interrupteur
@@ -320,6 +332,8 @@ programme.
 
 ### La barre de simulation
 
+![La barre de transport : Pause, 1 pas, 10 pas, Remise à zéro, temps simulé et nombre de pas](/screenshots/fr/transport-bar.webp)
+
 En haut de la zone centrale :
 
 | Bouton | Effet |
@@ -338,6 +352,8 @@ connecté ».
 :::
 
 ## 10. Configurer les entrées et sorties
+
+![La vue E/S avec le module m1, ses réglages et le tableau des voies](/screenshots/fr/io-view.webp)
 
 L'automate ne voit pas les tags directement : il lit et écrit des coils et des
 registres Modbus. La liste d'E/S (`io.json`) fait le lien. Elle est modifiée dans
@@ -405,6 +421,8 @@ projet CODESYS qui relie les canaux Modbus à ces variables. La page
 [Connecter un automate](/guide/connect-a-plc) explique la suite.
 
 ## 12. Démarrer le pont
+
+![La carte Pont automate, pont en marche](/screenshots/fr/bridge-running.webp)
 
 1. Enregistrez le Pantin et vérifiez, dans **Config E/S**, que le mapping n'a
    aucun problème.

@@ -44,6 +44,8 @@ The wheel direction of the ZW3D preset has not been checked against the real ZW3
 
 ### The view cube
 
+![The view cube, at the top right of the 3D view](/screenshots/en/view-cube.webp)
+
 A small cube is drawn in the view; it turns with the camera. Its role: to look at the machine from a precise direction, with one click. It is visible when the 3D view is displayed.
 
 | Cube element | Effect of the click |
@@ -133,6 +135,8 @@ The **Position of "name"** slider of the inspector, for a moving joint, moves th
 
 ## The chain diagram
 
+![The chain diagram: valve, cylinder, joint and sensors](/screenshots/en/diagram.webp)
+
 The diagram draws the machine's action chain: what the PLC commands, what that moves, what watches it. It reads the same tags as the inspector and lights up in real time.
 
 ### Structure
@@ -215,6 +219,8 @@ An alert accompanies a drive with a diagnostic: the node is outlined and the sho
 
 ### Forcing a command from the diagram
 
+![A coil forced from the diagram, with its F mark](/screenshots/en/forced-tag.webp)
+
 The command connectors on the left of a drive are buttons. They write the tag as the PLC would, with the same rules as the inspector.
 
 | Gesture | Effect |
@@ -231,6 +237,8 @@ A click on a command connector does not select the node: the inspector does not 
 The diagram can be navigated entirely from the keyboard: the arrows move from node to node, **Enter** goes into a node's connectors, **Space** selects the node (or toggles a boolean command), **Esc** goes back, **Home** and **End** go to the first or last node, **Del** removes the link of a connector or the selected link, **F2** renames a drive, an actuator or a sensor. The detail is in [Shortcuts](/en/reference/shortcuts). **Del** never deletes an element: for that, use the **Edit** menu. If you press it on a node, the message line reminds you.
 
 ## The I/O view
+
+![The I/O view with module m1, its settings and the channel table](/screenshots/en/io-view.webp)
 
 The I/O view is the editor of the Pantin's input/output list (`io.json`): which tags are given to the PLC, on which Modbus module, at which address. It replaces the 3D view and the diagram. What it writes is saved and undone with the Pantin, like the rest.
 

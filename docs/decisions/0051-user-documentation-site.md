@@ -75,3 +75,24 @@ directory), behind the same Cloudflare Access policy and loopback rule as the
 viewer (deploy/dev-exposure/README.md). Nothing becomes public, so the
 trademark search does not block it. The copy is refreshed by hand after
 `pnpm docs:build`.
+
+## Amendment (2026-10-16): screenshots
+
+The guide now carries screenshots, in French and English, under
+`docs/site/public/screenshots/<fr|en>/` and referenced as
+`/screenshots/<lang>/<name>.webp`. `pnpm docs:screenshots`
+(`scripts/docs-screenshots.ts`) regenerates all of them: it starts a throwaway
+core on a free localhost port with a copy of `examples/plc-cylinder`, drives
+the viewer in headless Chromium through `playwright-core`, and encodes WebP in
+that same browser, so no image tool is added. The viewer must be built first
+(`pnpm --filter @pantin/viewer build`).
+
+`playwright-core` 1.64.1 is a development dependency, approved by the user on
+2026-10-16. The command is not in `pnpm check` nor in CI because it needs a
+local Chromium (`PANTIN_CHROMIUM`, else the Playwright cache) and software
+WebGL, which is slow. Run it again after any change of the interface that a
+picture shows, and commit the result with the change.
+
+The capture starts the bridge of the example on 127.0.0.1:1502, so it fails if
+that port is already taken, for instance by the bridge of the user's own run
+of the same example. Stop it before running the command.
