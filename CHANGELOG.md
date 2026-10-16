@@ -6,6 +6,12 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Added
+
+- Claude Code, a `doc-writer` subagent that keeps the user guide (ADR 0051)
+  and its screenshots in step with a change, in French and English; CLAUDE.md
+  section 7 lists it and calls it before the reviewer.
+
 ### Removed
 
 - The `CNAME` and `docs/CNAME` files that GitHub committed on `master` while
