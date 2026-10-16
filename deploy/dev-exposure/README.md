@@ -62,10 +62,13 @@ sudo:
 
 ```sh
 pnpm docs:build
-rsync -a --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r docs/site/.vitepress/dist/ /var/www/pantin-dev/docs/
+find /var/www/pantin-dev/docs -mindepth 1 -delete
+cp -r docs/site/.vitepress/dist/. /var/www/pantin-dev/docs/
+chmod -R u=rwX,go=rX /var/www/pantin-dev/docs
 ```
 
-`--chmod` keeps the files readable by `www-data` whatever your umask.
+The `chmod` keeps the files readable by `www-data` whatever your umask; plain
+`cp` because rsync is not installed on every machine.
 
 https://pantin-dev.frezille.fr/docs/ serves it behind the same Access policy
 as the viewer. The core does not need to run for it.

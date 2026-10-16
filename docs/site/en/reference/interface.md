@@ -1,0 +1,67 @@
+# The screen
+
+This page describes the areas of the viewer window, from top to bottom and from left to right. Each area points to the page that details it. Names in **bold** are those of the interface.
+
+```
++----------------------------------------------------------------------+
+| File   Edit   View                                       (menu bar)  |
++--------------------+-------------------------------------+-----------+
+| Toolbar            | Transport bar                       |           |
+|--------------------|-------------------------------------|           |
+| Tree               |                                     |           |
+|  (Pantin,          |  Central view:                      | Inspector |
+|   assemblies,      |  3D, Diagram, 3D + Diagram or I/O   |           |
+|   bodies, joints,  |                                     |           |
+|   elements)        |-------------------------------------|           |
+|--------------------| Console                             |           |
+| PLC bridge         |                                     |           |
++--------------------+-------------------------------------+-----------+
+```
+
+The splitters between the left column, the central area and the inspector move with the mouse or the keyboard (see [Shortcuts](/en/reference/shortcuts)). The detail of each panel is in [Panels and buttons](/en/reference/panels), that of each view in [Central views](/en/reference/views).
+
+## The menu bar
+
+It occupies the top of the window and contains three menus: **File**, **Edit** and **View**. A menu opens on click, and the keyboard arrows move through it. The most common shortcuts are displayed in it. See [Menus](/en/reference/menus).
+
+## The toolbar
+
+It is at the top of the left column, when a Pantin is open. It gathers the quick-access buttons: back to the welcome window (**Close the Pantin**), **Save**, import of a 3D file, framing, and the **Central view** selector (**3D**, **Diagram**, **3D + Diagram**). An indicator shows that a request is in progress. See [Panels and buttons](/en/reference/panels).
+
+## The left side panel
+
+It exists only when a Pantin is open. From top to bottom, it contains the toolbar, the import form (the only form of this panel), the **Pantin tree**, then at the bottom the **PLC bridge** card. Below appear, when there are any, the confirmation question and the message line. The other forms (joint, actuator, sensor...) open in the inspector.
+
+- The tree lists the Pantin, its assemblies, its bodies, its joints and the elements of the action chain. A right-click opens the element's menu (see [Menus](/en/reference/menus#tree-context-menu)).
+- The **PLC bridge** card shows the state of the Modbus bridge and of its modules. See [Connect a PLC](/en/guide/connect-a-plc).
+
+## The central view
+
+It has four layouts, to choose from: **3D only**, **Chain diagram only**, **3D + Diagram** (the default) and **I/O alone**. The toolbar selector offers the first three. The **View** menu offers all four, and <kbd>F4</kbd> cycles through the first three. With no Pantin open, the 3D view takes up the whole area. See [Central views](/en/reference/views).
+
+In the 3D view, a view cube lets you choose a standard view with one click.
+
+## The inspector
+
+The right-hand column; it is shown and hidden with **View** then **Inspector**. It shows the properties of the selected element, its tags, the forcing buttons and the placement tools. See [Panels and buttons](/en/reference/panels).
+
+## The transport bar
+
+At the top of the central area, it controls the simulation time: pause and resume, advance by 1 or 10 steps, reset, simulated time, and a button that releases all forced tags (visible only while a tag is forced). A warning appears if the simulation falls behind real time. See [Panels and buttons](/en/reference/panels).
+
+## The console
+
+Under the central view, it is shown and hidden with **View** then **Console**, or with <kbd>F8</kbd>. It lists the messages of the Pantin, with filters by level and a clear button. Its top edge is a splitter: drag it to change its height. See [Panels and buttons](/en/reference/panels).
+
+## The question line and the message line
+
+In the left panel, a confirmation question (closing with unsaved changes, deleting a body or a joint) is shown under the **PLC bridge** card. It takes the keyboard: <kbd>Enter</kbd> chooses the primary button, <kbd>Esc</kbd> cancels. The message line just below shows errors and confirmations.
+
+## The welcome window
+
+As long as no Pantin is open, a modal window **Welcome — Pantin** is displayed in the centre of the 3D view. It has two tabs:
+
+- **Home**: create a Pantin (**Empty Pantin** or **From a 3D file**), the **Recent** list, the **Resources** and the **Keyboard shortcuts** of the menu;
+- **All Pantins**: the full list, with a filter field by name or identifier, and one open button per row.
+
+It closes with its button or with <kbd>Esc</kbd>. **File** then **Welcome** reopens it on the last tab used (**Home** by default). **File** then **Open…** closes the open Pantin, if there is one, and the window then opens on the last tab used; with no Pantin open, it opens on **All Pantins**. See [Panels and buttons](/en/reference/panels).

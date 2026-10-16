@@ -18,6 +18,10 @@ All notable changes to Pantin. The format follows
 - Development exposure (ADR 0014, 0051): the nginx site also serves the built
   user guide under `pantin-dev.frezille.fr/docs/`, behind the same Access
   policy, from a copy in `/var/www/pantin-dev/docs/`.
+- Documentation, interface reference (ADR 0051): five pages in French and
+  English on the screen, every menu entry, every panel button and field, the
+  central views, and the keyboard shortcuts and mouse gestures, checked
+  against the viewer's code (the forms' own keys are not listed yet).
 - Viewer, PLC bridge bar (ADR 0050 slice P3): the top of the I/O view, in view
   and edit modes, shows the bridge state (Arrêté, Démarrage…, En marche,
   Arrêt…, En échec), the network choice ("Local uniquement" or "Réseau privé"
