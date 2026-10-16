@@ -43,8 +43,8 @@
 }
 
 .diagram-columns__add:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--selection);
+  border-color: var(--selection);
 }
 
 .diagram-columns__add:focus-visible,
@@ -74,21 +74,21 @@
 }
 
 .diagram-port:focus-visible .diagram-socket {
-  fill: var(--accent);
-  stroke: var(--accent);
+  fill: var(--selection);
+  stroke: var(--selection);
   stroke-width: 6;
   stroke-opacity: 0.35;
 }
 
 .diagram-node:focus-visible > .diagram-node__box {
-  stroke: var(--accent);
+  stroke: var(--selection);
   stroke-width: 2.5;
 }
 
 /* Lit sockets are drawn on the port group since ports are groups now. */
 .diagram-port.is-lit .diagram-socket {
-  fill: var(--accent);
-  stroke: var(--accent);
+  fill: var(--state-normal);
+  stroke: var(--state-normal);
 }
 
 /* Links are thin: a wide invisible path over each is what the pointer hits. */
@@ -112,12 +112,12 @@
 
 .diagram-edge-remove circle {
   fill: var(--surface-3);
-  stroke: var(--danger);
+  stroke: var(--state-emergency);
 }
 
 .diagram-edge-remove path {
   fill: none;
-  stroke: var(--danger);
+  stroke: var(--state-emergency);
   stroke-linecap: round;
   stroke-width: 1.6;
 }
@@ -130,7 +130,7 @@
 /* While a link is dragged: what can receive it is lit, the rest steps back. */
 .diagram-link-preview {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--selection);
   stroke-dasharray: 5 3;
   stroke-width: 2;
   pointer-events: none;
@@ -150,20 +150,20 @@
 }
 
 .diagram--linking .is-link-target .diagram-socket {
-  fill: var(--success);
-  stroke: var(--success);
+  fill: var(--state-normal);
+  stroke: var(--state-normal);
   stroke-width: 7;
   stroke-opacity: 0.35;
 }
 
 .diagram--linking .diagram-node.is-link-target > .diagram-node__box {
-  stroke: var(--success);
+  stroke: var(--state-normal);
   stroke-width: 2;
 }
 
 .diagram--linking .is-link-hover .diagram-socket,
 .diagram--linking .diagram-node.is-link-hover > .diagram-node__box {
-  stroke: var(--accent);
+  stroke: var(--selection);
   stroke-width: 3;
 }
 
@@ -194,5 +194,5 @@
 }
 
 .diagram-value-input .text-input.is-invalid {
-  border-color: var(--danger);
+  border-color: var(--state-emergency);
 }

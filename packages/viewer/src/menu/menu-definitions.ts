@@ -3,6 +3,7 @@ import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import type { NavigationPresetId } from "../navigation/navigation-presets.ts";
 import type { StandardViewId } from "../navigation/standard-views.ts";
+import type { ThemeChoice } from "../theme/theme.ts";
 import type { MenuContext } from "./menu-context.ts";
 
 // The vocabulary of the menu bar: commands, item definitions and the helpers
@@ -35,7 +36,8 @@ export type MenuCommand =
   | "toggleConsole"
   | "cycleLayout"
   | `layout:${CentralLayout}`
-  | `language:${Language}`;
+  | `language:${Language}`
+  | `theme:${ThemeChoice}`;
 
 export type MenuId = "file" | "edit" | "view";
 
@@ -81,6 +83,16 @@ export function languageItem(language: Language): MenuItemDefinition {
       translate("menubar.view.language", { language: translate(`language.${language}`) }),
     enabled: always,
     checked: (context) => context.language === language,
+  };
+}
+
+/** "Thème : Clair" (ADR 0053 point 1): checked on the choice in use, like the language. */
+export function themeItem(choice: ThemeChoice): MenuItemDefinition {
+  return {
+    command: `theme:${choice}`,
+    label: (translate) => translate("menubar.view.theme", { theme: translate(`theme.${choice}`) }),
+    enabled: always,
+    checked: (context) => context.themeChoice === choice,
   };
 }
 

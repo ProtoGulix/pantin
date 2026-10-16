@@ -3,6 +3,7 @@ import { isConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
+import { isThemeChoice } from "../theme/theme.ts";
 import { deleteActuator } from "./actuator-actions.ts";
 import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
@@ -53,7 +54,14 @@ function deleteSelection(store: ViewerStore): void {
   }
 }
 
-// "language:fr", "layout:3d", "navigation:zw3d" and "arrowStep:15": the part after the colon is the argument.
+function chooseTheme(store: ViewerStore, choice: string): void {
+  if (isThemeChoice(choice)) {
+    store.ports.applyTheme(choice);
+    store.update({ ...store.state, themeChoice: choice });
+  }
+}
+
+// "language:fr", "layout:3d", "navigation:zw3d", "arrowStep:15" and "theme:dark": the part after the colon is the argument.
 // A layout is parsed, not cast: the command is a plain string by now.
 function runParameterisedCommand(
   store: ViewerStore,
@@ -68,6 +76,8 @@ function runParameterisedCommand(
     showStandardView(store, command.slice("view:".length));
   } else if (command.startsWith("arrowStep:")) {
     setArrowStep(store, command.slice("arrowStep:".length));
+  } else if (command.startsWith("theme:")) {
+    chooseTheme(store, command.slice("theme:".length));
   } else {
     changeLanguage(command.slice("language:".length));
   }

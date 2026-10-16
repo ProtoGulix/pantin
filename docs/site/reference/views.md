@@ -80,7 +80,7 @@ La sélection est partagée entre la vue 3D, l'arborescence et le schéma : ce q
 | Clic dans le vide | Désélectionne. Pendant qu'un outil de placement est actif, ce clic est ignoré pour ne pas perdre l'assemblage sur lequel l'outil travaille. |
 | Glisser avec un bouton de caméra | Fait tourner ou déplace la caméra, et ne sélectionne jamais. |
 
-Un corps ou un assemblage sélectionné prend une teinte orange. Quand vous sélectionnez une liaison (ou que vous remplissez son formulaire), ses deux corps sont teintés : le parent en violet, l'enfant (le corps qui bouge) en orange, comme les pastilles du [formulaire de liaison](/reference/panels#nouvelle-liaison). Une flèche montre l'axe de la liaison et son sens positif ; elle est jaune pour une liaison libre et verte quand un actionneur la déplace.
+Un corps ou un assemblage sélectionné prend une teinte bleue (la couleur de sélection). Quand vous sélectionnez une liaison (ou que vous remplissez son formulaire), ses deux corps sont teintés : le parent en violet, l'enfant (le corps qui bouge) en bleu, comme les pastilles du [formulaire de liaison](/reference/panels#nouvelle-liaison). Une flèche montre l'axe de la liaison et son sens positif ; elle est bleue pour une liaison libre et verte quand un actionneur la déplace.
 
 ### Les capteurs dans la vue
 

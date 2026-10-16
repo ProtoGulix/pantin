@@ -7,6 +7,7 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import type { BabylonDisplacement } from "../frames.ts";
+import type { ScenePalette } from "../theme/scene-palette.ts";
 import type { ArrowPlacement } from "./scene-plan.ts";
 
 // The arrow of the previewed joint: a dot on its origin, a shaft along its
@@ -14,15 +15,15 @@ import type { ArrowPlacement } from "./scene-plan.ts";
 // group 1), since the axis usually runs inside them. It hangs from a node
 // that takes the parent body's displacement, so it moves with that body.
 
-// Yellow for a free joint; green once a drive moves it (ADR 0022), which the
-// joint's properties also say in words.
-const ARROW_COLOR = Color3.FromHexString("#ffd33d");
-const DRIVEN_ARROW_COLOR = Color3.FromHexString("#3fb950");
+// The selection blue for a free joint; the theme's normal-state green once a
+// drive moves it (ADR 0022), which the joint's properties also say in words.
 const OVERLAY_GROUP = 1;
 
 export interface JointArrow {
   show(placement: ArrowPlacement, driven: boolean): void;
   hide(): void;
+  /** The theme changed: both materials take its colours. */
+  setPalette(palette: ScenePalette): void;
   /** The parent body's displacement, already in the Babylon frame. */
   follow(displacement: BabylonDisplacement): void;
 }
@@ -59,11 +60,19 @@ function arrowParts(scene: Scene, length: number, material: StandardMaterial): M
   return parts;
 }
 
-export function createJointArrow(scene: Scene): JointArrow {
+export function createJointArrow(scene: Scene, palette: ScenePalette): JointArrow {
   const root = new TransformNode("joint-arrow", scene);
   root.rotationQuaternion = Quaternion.Identity();
-  const freeMaterial = arrowMaterial(scene, "joint-arrow-material", ARROW_COLOR);
-  const drivenMaterial = arrowMaterial(scene, "joint-arrow-driven-material", DRIVEN_ARROW_COLOR);
+  const freeMaterial = arrowMaterial(
+    scene,
+    "joint-arrow-material",
+    Color3.FromHexString(palette.selection),
+  );
+  const drivenMaterial = arrowMaterial(
+    scene,
+    "joint-arrow-driven-material",
+    Color3.FromHexString(palette.drivenJoint),
+  );
   let geometry: TransformNode | null = null;
   // The store redraws on every change; the meshes are rebuilt only when the
   // arrow itself changes.
@@ -91,6 +100,10 @@ export function createJointArrow(scene: Scene): JointArrow {
       }
     },
     hide,
+    setPalette: (next) => {
+      freeMaterial.emissiveColor = Color3.FromHexString(next.selection);
+      drivenMaterial.emissiveColor = Color3.FromHexString(next.drivenJoint);
+    },
     follow: ({ translation, rotation }) => {
       root.position.copyFromFloats(...translation);
       root.rotationQuaternion?.copyFromFloats(...rotation);

@@ -100,13 +100,13 @@
 }
 
 .io-button--danger {
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 .io-problems {
   padding: 6px 8px;
-  background: var(--danger-soft);
-  border: 1px solid var(--danger);
+  background: var(--state-emergency-soft);
+  border: 1px solid var(--state-emergency);
   border-radius: var(--radius);
 }
 
@@ -159,8 +159,8 @@
 }
 
 .io-module.is-selected {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  background: var(--selection-soft);
+  border-color: var(--selection);
 }
 
 .io-module__key {
@@ -173,7 +173,7 @@
 }
 
 .io-module__problems {
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 .io-settings__fields {
@@ -231,8 +231,8 @@
 
 /* A problem is marked by an outline as well as by colour. */
 .is-problem {
-  outline: 1px dashed var(--danger);
-  background: var(--danger-soft);
+  outline: 1px dashed var(--state-emergency);
+  background: var(--state-emergency-soft);
 }
 
 .io-unmapped__assembly {
@@ -260,7 +260,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--selection);
   font: inherit;
   font-family: var(--font-source);
   text-align: left;
@@ -269,7 +269,7 @@
 }
 
 .io-tag-link:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--selection);
   outline-offset: 1px;
 }
 

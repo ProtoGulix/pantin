@@ -8,6 +8,13 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer, visual identity (ADR 0053): a light and a dark theme, chosen in
+  Affichage > Thème (System by default, following the browser), with the
+  colours of the "Armoire" palette by role (brand, selection in blue, machine
+  states after IEC 60204-1). The 3D view's background, grid and selection
+  colours follow the theme without a reload. The viewer serves Archivo and
+  IBM Plex Mono itself (SIL OFL 1.1) and shows the Pantin favicon. A unit
+  test keeps every text colour above 4.5:1 in both themes.
 - Documentation, visual identity (ADR 0052): the walking puppet hung from a
   DIN rail as symbol, logo and favicon, and the "Armoire" palette, in
   `docs/brand/`. The guide site uses them, with Archivo and IBM Plex Mono

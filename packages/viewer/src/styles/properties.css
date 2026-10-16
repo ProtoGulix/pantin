@@ -50,7 +50,7 @@
   padding: 0;
   overflow: hidden;
   font: inherit;
-  color: var(--accent);
+  color: var(--selection);
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -85,7 +85,7 @@
 
 .property-grid__value--editable .text-input:focus {
   background: var(--surface-0);
-  border-color: var(--accent);
+  border-color: var(--selection);
 }
 
 .property-grid .property-grid__group th {
@@ -141,7 +141,7 @@
 .joint-slider__input {
   flex: 1;
   min-width: 0;
-  accent-color: var(--accent);
+  accent-color: var(--selection);
 }
 
 .joint-slider__value {
@@ -152,21 +152,21 @@
 
 /* A refused typed value (ADR 0039 point 5): the field and one line under the group. */
 .property-grid__value--editable .text-input.is-invalid {
-  color: var(--danger);
-  border-color: var(--danger);
-  background: var(--danger-soft);
+  color: var(--state-emergency);
+  border-color: var(--state-emergency);
+  background: var(--state-emergency-soft);
 }
 
 .property-grid__error {
   padding: 2px 6px;
   font-size: 12px;
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 /* The value of a gizmo drag in progress, not yet the document's. */
 .property-grid__value--editable .text-input.is-dragged {
   font-style: italic;
-  color: var(--accent);
+  color: var(--selection);
 }
 
 /* A tag forced from the viewer (ADR 0045 point 5): the word says it, the colour only helps. */
@@ -187,7 +187,7 @@
   align-items: center;
   padding: 0 5px;
   font-size: 10px;
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--state-abnormal);
+  background: var(--state-abnormal-soft);
   border-radius: var(--radius);
 }

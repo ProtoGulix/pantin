@@ -34,6 +34,8 @@ export interface ConveyorMeshes {
   keyOfMesh(mesh: AbstractMesh): string | null;
   /** Outlines the object of the selection (key "kind:id"); null removes the outline. */
   select(key: string | null): void;
+  /** The theme changed: the outline takes the selection colour (hex). */
+  setSelectionColor(hex: string): void;
 }
 
 interface Drawn {
@@ -43,7 +45,6 @@ interface Drawn {
   meshes: Mesh[];
 }
 
-const SELECTION_OUTLINE_COLOR = "#ffd54a";
 // Scene units (metres): visible on a belt, still thin on a 1 cm beam.
 const SELECTION_OUTLINE_WIDTH = 0.008;
 
@@ -206,21 +207,46 @@ function paintBeams(
   }
 }
 
-function paintSelection(drawn: readonly Drawn[], selectedKey: string | null): void {
+function paintSelection(
+  drawn: readonly Drawn[],
+  selectedKey: string | null,
+  outlineColor: Color3,
+): void {
   for (const entry of drawn) {
     const selected = entry.item.key === selectedKey;
     for (const mesh of entry.meshes) {
       mesh.renderOutline = selected;
-      mesh.outlineColor = Color3.FromHexString(SELECTION_OUTLINE_COLOR);
+      mesh.outlineColor = outlineColor;
       mesh.outlineWidth = SELECTION_OUTLINE_WIDTH;
     }
+  }
+}
+
+function placeByKey(byKey: ReadonlyMap<string, Drawn>, key: string, pose: InterpolatedPose): void {
+  const entry = byKey.get(key);
+  if (entry !== undefined) {
+    place(entry, pose);
+  }
+}
+
+function disposeDrawn(drawn: readonly Drawn[]): void {
+  for (const entry of drawn) {
+    entry.node.dispose(false, false);
+  }
+}
+
+function hideDrawn(drawn: readonly Drawn[]): void {
+  for (const entry of drawn) {
+    entry.node.setEnabled(false);
   }
 }
 
 export function createConveyorMeshes(
   scene: Scene,
   latestPose: (key: string) => InterpolatedPose | undefined,
+  selectionHex: string,
 ): ConveyorMeshes {
+  let outlineColor = Color3.FromHexString(selectionHex);
   const material = createMaterials(scene);
   let drawn: Drawn[] = [];
   const byKey = new Map<string, Drawn>();
@@ -229,9 +255,7 @@ export function createConveyorMeshes(
   let selectedKey: string | null = null;
   let values: ReadonlyMap<string, number> = new Map();
   const show = (items: readonly DrawingItem[]) => {
-    for (const entry of drawn) {
-      entry.node.dispose(false, false);
-    }
+    disposeDrawn(drawn);
     byKey.clear();
     keyByMesh.clear();
     drawn = items.map((item) => drawItem(scene, item, material));
@@ -243,7 +267,7 @@ export function createConveyorMeshes(
       }
     }
     paintBeams(drawn, values, material);
-    paintSelection(drawn, selectedKey);
+    paintSelection(drawn, selectedKey, outlineColor);
   };
   return {
     show: (items) => {
@@ -257,21 +281,16 @@ export function createConveyorMeshes(
       values = next;
       paintBeams(drawn, values, material);
     },
-    place: (key, pose) => {
-      const entry = byKey.get(key);
-      if (entry !== undefined) {
-        place(entry, pose);
-      }
-    },
-    forgetPoses: () => {
-      for (const entry of drawn) {
-        entry.node.setEnabled(false);
-      }
-    },
+    place: (key, pose) => placeByKey(byKey, key, pose),
+    forgetPoses: () => hideDrawn(drawn),
     keyOfMesh: (mesh) => keyByMesh.get(mesh) ?? null,
     select: (key) => {
       selectedKey = key;
-      paintSelection(drawn, selectedKey);
+      paintSelection(drawn, selectedKey, outlineColor);
+    },
+    setSelectionColor: (hex) => {
+      outlineColor = Color3.FromHexString(hex);
+      paintSelection(drawn, selectedKey, outlineColor);
     },
   };
 }

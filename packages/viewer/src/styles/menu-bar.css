@@ -60,7 +60,7 @@
 
 .menu__item:hover,
 .menu__item:focus-visible {
-  background: var(--accent-soft);
+  background: var(--selection-soft);
   box-shadow: none;
 }
 
@@ -73,7 +73,7 @@
 }
 
 .menu__check {
-  color: var(--accent);
+  color: var(--selection);
   text-align: center;
 }
 

@@ -31,6 +31,7 @@ import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.
 import { NO_PREVIOUS_PLACEMENTS, type PreviousPlacements } from "./previous-placement.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
+import type { ThemeChoice } from "./theme/theme.ts";
 import { assemblyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { selectionExists } from "./tree/tree-state.ts";
 
@@ -62,6 +63,8 @@ interface PendingAssemblyDeletion {
 
 export interface ViewerState {
   language: Language;
+  // The chosen theme, "system" by default (ADR 0053); the resolved one lives on the page.
+  themeChoice: ThemeChoice;
   pantins: readonly PantinSummary[];
   openPantin: PantinResponse | null;
   expandedNodeIds: ReadonlySet<string>;
@@ -162,6 +165,13 @@ const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 // Runtime faults and the I/O mapping belong to the open Pantin: cleared with it.
 const NO_DEVICE_DATA = { faults: NO_FAULTS, io: NO_IO_STATE } as const;
 
+const NO_DEVICE_FORMS = {
+  driveForm: null,
+  actuatorForm: null,
+  sensorForm: null,
+  conveyorForm: null,
+} as const;
+
 // The close question is not asked (ADR 0050 point 7 for the bridge notice).
 export const NO_CLOSE_PROMPT = {
   closePrompt: false,
@@ -184,9 +194,11 @@ export function initialViewerState(
   gizmoSteps: SnapSteps = DEFAULT_SNAP_STEPS,
   navigation: NavigationSettings = DEFAULT_NAVIGATION,
   inspector: InspectorPreferences = DEFAULT_INSPECTOR_PREFERENCES,
+  themeChoice: ThemeChoice = "system",
 ): ViewerState {
   return {
     language,
+    themeChoice,
     pantins: [],
     openPantin: null,
     expandedNodeIds: new Set(),
@@ -212,10 +224,7 @@ export function initialViewerState(
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
-    driveForm: null,
-    actuatorForm: null,
-    sensorForm: null,
-    conveyorForm: null,
+    ...NO_DEVICE_FORMS,
     ...NO_DEVICE_DATA,
     centralLayout,
     collapsedDiagramBands: new Set(),

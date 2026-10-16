@@ -36,6 +36,7 @@ import { describeFailure } from "../messages.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
+import type { ThemeChoice } from "../theme/theme.ts";
 import { buildPanelView, type PanelView } from "../view-model.ts";
 import {
   initialViewerState,
@@ -87,6 +88,8 @@ export interface StorePorts {
   // Hands a generated text file to the browser as a download.
   saveTextFile(fileName: string, text: string): void;
   storeLanguage(language: Language): void;
+  // Remembers the theme choice and applies it to the page and the 3D view (ADR 0053).
+  applyTheme(choice: ThemeChoice): void;
   storeCentralLayout(layout: CentralLayout): void;
   storeGizmoSteps(steps: SnapSteps): void;
   storeGizmoSpace(space: GizmoSpace): void;
@@ -142,9 +145,17 @@ export class ViewerStore {
     gizmoSteps?: SnapSteps,
     navigation?: NavigationSettings,
     inspector?: InspectorPreferences,
+    themeChoice?: ThemeChoice,
   ) {
     this.ports = ports;
-    this.state = initialViewerState(language, centralLayout, gizmoSteps, navigation, inspector);
+    this.state = initialViewerState(
+      language,
+      centralLayout,
+      gizmoSteps,
+      navigation,
+      inspector,
+      themeChoice,
+    );
   }
 
   update(requested: ViewerState): void {

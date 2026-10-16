@@ -24,6 +24,12 @@ beforeEach(async () => {
   await writeFile(join(viewerDirectory, "assets", "app.js"), "console.log('viewer');");
   await writeFile(join(viewerDirectory, "assets", "style.css"), "body{}");
   await writeFile(join(viewerDirectory, "assets", "notes.txt"), "not in the table");
+  await mkdir(join(viewerDirectory, "fonts"), { recursive: true });
+  await writeFile(join(viewerDirectory, "fonts", "archivo-400.woff2"), "font bytes");
+  await writeFile(
+    join(viewerDirectory, "favicon.svg"),
+    "<svg xmlns='http://www.w3.org/2000/svg'/>",
+  );
   await symlink(workspace.sentinelPath, join(viewerDirectory, "assets", "leak.js"));
   await writeFile(join(workspace.root, "secret.js"), SENTINEL_CONTENT);
   await symlink(workspace.root, join(viewerDirectory, "outside"), "dir");
@@ -47,6 +53,8 @@ describe("static viewer files", () => {
     ["/assets/app.js", "text/javascript; charset=utf-8"],
     ["/assets/style.css", "text/css; charset=utf-8"],
     ["/index.html", "text/html; charset=utf-8"],
+    ["/fonts/archivo-400.woff2", "font/woff2"],
+    ["/favicon.svg", "image/svg+xml"],
   ])("serves %s as %s", async (path, contentType) => {
     const response = await sendRaw(server, "GET", path);
     expect(response.status).toBe(200);

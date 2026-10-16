@@ -47,6 +47,7 @@ export function testStore(
       poseStream: { follow: () => undefined },
       saveTextFile: () => undefined,
       storeLanguage: () => undefined,
+      applyTheme: () => undefined,
       showConsoleLive: () => undefined,
       showClock: () => undefined,
       showBridge: () => undefined,

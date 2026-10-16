@@ -26,6 +26,8 @@
 
 /* The face: solid, shaded from the camera each frame, edges darker, name engraved. */
 .view-cube__face {
+  /* The cube is drawn the same in both themes, like the axes it labels: these
+     literal colours are its fixed look, not theme tokens. */
   position: absolute;
   top: 50%;
   left: 50%;
@@ -63,7 +65,7 @@
 }
 
 .view-cube__cell.is-hot {
-  background: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--selection) 60%, transparent);
 }
 
 .view-cube__triad {

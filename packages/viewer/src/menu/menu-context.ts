@@ -7,6 +7,7 @@ import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language } from "../i18n/translate.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { Selection } from "../selection.ts";
+import type { ThemeChoice } from "../theme/theme.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
@@ -19,6 +20,7 @@ export interface MenuContext {
   hasBodies: boolean;
   selectedKind: NodeRef["kind"] | DeviceKind | null;
   language: Language;
+  themeChoice: ThemeChoice;
   inspectorOpen: boolean;
   consoleOpen: boolean;
   centralLayout: CentralLayout;
@@ -50,6 +52,7 @@ export function menuContext(state: ViewerState): MenuContext {
     hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
     selectedKind: selectedKindOf(state.selection),
     language: state.language,
+    themeChoice: state.themeChoice,
     inspectorOpen: state.inspectorOpen,
     consoleOpen: state.console.open,
     centralLayout: state.centralLayout,

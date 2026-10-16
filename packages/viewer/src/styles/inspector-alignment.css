@@ -56,15 +56,15 @@ button.alignment__step:hover {
 }
 
 .alignment__step--done .alignment__step-detail {
-  color: var(--success);
+  color: var(--state-normal);
 }
 
 .alignment__step--current {
-  background: var(--accent-soft);
+  background: var(--selection-soft);
 }
 
 .alignment__step--current .alignment__step-label {
-  color: var(--accent);
+  color: var(--selection);
   font-weight: 600;
 }
 

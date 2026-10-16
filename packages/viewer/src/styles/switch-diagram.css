@@ -12,17 +12,17 @@
 }
 
 .switch-diagram__hold {
-  fill: var(--accent);
+  fill: var(--state-normal);
   fill-opacity: 0.3;
 }
 
 .switch-diagram__on {
-  fill: var(--accent);
+  fill: var(--state-normal);
   fill-opacity: 0.75;
 }
 
 .switch-diagram__zone-arrow {
-  fill: var(--accent);
+  fill: var(--state-normal);
 }
 
 .switch-diagram__symbol {
@@ -37,8 +37,8 @@
 }
 
 .switch-diagram__symbol--refused {
-  fill: var(--danger);
-  stroke: var(--danger);
+  fill: var(--state-emergency);
+  stroke: var(--state-emergency);
 }
 
 .switch-diagram__extension {
@@ -63,5 +63,5 @@
 
 .switch-diagram__problem {
   margin: 2px 0 0;
-  color: var(--danger);
+  color: var(--state-emergency);
 }

@@ -77,6 +77,9 @@ Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [P
 | séparateur | | | |
 | **Langue : FR** (case) | | Passe l'interface en français. | Jamais. |
 | **Langue : EN** (case) | | Passe l'interface en anglais. | Jamais. |
+| **Thème : Système** (case) | | Suit le thème clair ou sombre du navigateur ; c'est le réglage par défaut. | Jamais. |
+| **Thème : Clair** (case) | | Force le thème clair. | Jamais. |
+| **Thème : Sombre** (case) | | Force le thème sombre. | Jamais. |
 
 Les réglages de souris sont détaillés dans [Raccourcis](/reference/shortcuts#vue-3d-et-navigation-de-la-camera).
 

@@ -3,8 +3,9 @@ import type { Scene } from "@babylonjs/core/scene.js";
 import { coreDisplacementToBabylon, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 import type { InterpolatedPose } from "../pose-interpolation.ts";
+import type { ScenePalette } from "../theme/scene-palette.ts";
 import type { LoadedBody } from "./body-loader.ts";
-import { createJointArrow } from "./joint-arrow.ts";
+import { createJointArrow, type JointArrow } from "./joint-arrow.ts";
 import {
   type ArrowPlacement,
   type BodyHighlight,
@@ -20,6 +21,8 @@ import {
 export interface BodyHighlights {
   setSelectedBodies(bodyIds: ReadonlySet<string>): void;
   setJointPreview(preview: JointPreview | null): void;
+  /** The theme changed: the selection tint and the arrow colours follow it. */
+  setPalette(palette: ScenePalette): void;
   /** After bodies were loaded: new meshes get their tint, the arrow its size. */
   redraw(): void;
   /** A body's pose of this frame; the arrow moves with the previewed parent. */
@@ -33,13 +36,13 @@ export interface BodyHighlights {
 }
 
 // Parent and child match the swatches of the joint form (--joint-parent and
-// --joint-child in base.css); the child is the body that moves.
-const SELECTION_COLOR = Color3.FromHexString("#f0a030");
-const HIGHLIGHT_COLORS: Readonly<Record<BodyHighlight, Color3>> = {
-  selected: SELECTION_COLOR,
-  parent: Color3.FromHexString("#a371f7"),
-  child: SELECTION_COLOR,
-};
+// --joint-child in base.css); the child is the body that moves, so it takes the
+// selection colour. The parent's violet codes data, not the theme.
+const PARENT_COLOR = Color3.FromHexString("#a371f7");
+
+function highlightColor(highlight: BodyHighlight, selection: Color3): Color3 {
+  return highlight === "parent" ? PARENT_COLOR : selection;
+}
 
 /** The latest pose of a body, if the stream gave one (the viewport's interpolator). */
 export type LatestPose = (bodyId: string) => InterpolatedPose | undefined;
@@ -48,12 +51,13 @@ function tintLoadedBodies(
   loadedBodies: ReadonlyMap<string, LoadedBody>,
   selectedBodyIds: ReadonlySet<string>,
   preview: JointPreview | null,
+  selectionColor: Color3,
 ): void {
   for (const [bodyId, loaded] of loadedBodies) {
     const highlight = bodyHighlight(bodyId, selectedBodyIds, preview);
     for (const mesh of loaded.meshes) {
       mesh.renderOverlay = highlight !== null;
-      mesh.overlayColor = HIGHLIGHT_COLORS[highlight ?? "selected"];
+      mesh.overlayColor = highlightColor(highlight ?? "selected", selectionColor);
       mesh.overlayAlpha = 0.35;
     }
   }
@@ -69,31 +73,45 @@ function arrowPlacement(preview: JointPreview, child: LoadedBody): ArrowPlacemen
   return placeJointArrow(preview.origin, preview.axis, extent);
 }
 
+function drawJointArrow(
+  arrow: JointArrow,
+  loadedBodies: ReadonlyMap<string, LoadedBody>,
+  preview: JointPreview | null,
+  parentPosed: boolean,
+): void {
+  const child = preview === null ? undefined : loadedBodies.get(preview.childBodyId);
+  const placement =
+    parentPosed && preview !== null && child ? arrowPlacement(preview, child) : null;
+  if (placement === null || preview === null) {
+    arrow.hide();
+  } else {
+    arrow.show(placement, preview.driven);
+  }
+}
+
 export function createBodyHighlights(
   scene: Scene,
   loadedBodies: ReadonlyMap<string, LoadedBody>,
   latestPose: LatestPose,
+  palette: ScenePalette,
 ): BodyHighlights {
-  const arrow = createJointArrow(scene);
+  const arrow = createJointArrow(scene, palette);
+  let selectionColor = Color3.FromHexString(palette.selection);
   let selectedBodyIds: ReadonlySet<string> = new Set();
   let preview: JointPreview | null = null;
   // The arrow's origin and axis are relative to the parent body's pose: without
   // that pose it would be drawn in a place no body is.
   let parentPosed = false;
 
-  const tintBodies = () => tintLoadedBodies(loadedBodies, selectedBodyIds, preview);
-  const drawArrow = () => {
-    const child = preview === null ? undefined : loadedBodies.get(preview.childBodyId);
-    const placement =
-      parentPosed && preview !== null && child ? arrowPlacement(preview, child) : null;
-    if (placement === null || preview === null) {
-      arrow.hide();
-    } else {
-      arrow.show(placement, preview.driven);
-    }
-  };
+  const tintBodies = () => tintLoadedBodies(loadedBodies, selectedBodyIds, preview, selectionColor);
+  const drawArrow = () => drawJointArrow(arrow, loadedBodies, preview, parentPosed);
 
   return {
+    setPalette: (next) => {
+      selectionColor = Color3.FromHexString(next.selection);
+      arrow.setPalette(next);
+      tintBodies();
+    },
     setSelectedBodies: (bodyIds) => {
       selectedBodyIds = bodyIds;
       tintBodies();

@@ -18,6 +18,7 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
+  /* A scrim: dark in both themes, so the dialog stands out. */
   background: rgb(10 11 14 / 55%);
 }
 
@@ -34,8 +35,7 @@
   overflow: hidden;
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
+  border-radius: 4px;
 }
 
 .welcome__header {
@@ -78,7 +78,7 @@
 }
 
 .welcome__tab[aria-selected="true"] {
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--brand);
 }
 
 .welcome__panel {
@@ -157,14 +157,14 @@
 
 .welcome-tile:hover,
 .welcome-tile[aria-pressed="true"] {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  background: var(--selection-soft);
+  border-color: var(--selection);
 }
 
 .welcome-tile__icon {
   width: 32px;
   height: 32px;
-  color: var(--accent);
+  color: var(--brand);
 }
 
 .welcome-tile__label {
@@ -206,7 +206,7 @@
 }
 
 .welcome-card:hover {
-  border-color: var(--accent);
+  border-color: var(--selection);
 }
 
 .welcome-card__icon {
@@ -238,7 +238,7 @@
 }
 
 .welcome-link {
-  color: var(--accent);
+  color: var(--selection);
 }
 
 .welcome-shortcut {

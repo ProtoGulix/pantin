@@ -1,6 +1,5 @@
 import "@babylonjs/core/Culling/ray.js";
 import { Engine } from "@babylonjs/core/Engines/engine.js";
-import { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
@@ -15,14 +14,14 @@ import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { CameraAngles } from "../navigation/standard-views.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
-import { viewportPickOf } from "./alignment-pick.ts";
+import type { ScenePalette } from "../theme/scene-palette.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
-import { clickTargetOf } from "./click-target.ts";
 import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, isCurrentLoad, planSceneSync } from "./scene-plan.ts";
 import { createContext, type ViewportContext } from "./viewport-context.ts";
+import { listenToPicks, pickBody } from "./viewport-picks.ts";
 import { applyPosesEachFrame, forgetPoses, pushSnapshot } from "./viewport-poses.ts";
 
 // The Babylon canvas: shows the bodies it is given and reports clicks. It
@@ -90,6 +89,8 @@ export interface Viewport {
   setAlignmentPicking(active: boolean): void;
   /** Tints the faces picked for an alignment; an empty list removes them. */
   showFaceHighlights(highlights: readonly FaceHighlight[]): void;
+  /** The theme changed (ADR 0053): background, grid and selection colours follow, without a reload. */
+  setScenePalette(palette: ScenePalette): void;
 }
 
 function removeBody(context: ViewportContext, bodyId: string): void {
@@ -109,6 +110,12 @@ function applyVisibility(context: ViewportContext): void {
   for (const [bodyId, loaded] of context.loadedBodies) {
     loaded.node.setEnabled(!context.hiddenBodyIds.has(bodyId));
   }
+}
+
+function hideBodies(context: ViewportContext, bodyIds: ReadonlySet<string>): void {
+  context.hiddenBodyIds = bodyIds;
+  applyVisibility(context);
+  context.sensorMarkers.setHidden(bodyIds);
 }
 
 function addLoadedBody(context: ViewportContext, bodyId: string, loaded: LoadedBody): void {
@@ -140,53 +147,6 @@ async function loadAndShow(
     return;
   }
   addLoadedBody(context, body.id, loaded);
-}
-
-// A hidden body cannot be picked.
-function pickBody(context: ViewportContext, x: number, y: number) {
-  const { scene, bodyIdByMesh } = context;
-  return scene.pick(x, y, (mesh) => bodyIdByMesh.has(mesh) && mesh.isEnabled());
-}
-
-// One pass over bodies and phase 6 objects: the nearest hit wins.
-function pickScene(context: ViewportContext, x: number, y: number) {
-  const { scene, bodyIdByMesh, conveyors } = context;
-  return scene.pick(
-    x,
-    y,
-    (mesh) => mesh.isEnabled() && (bodyIdByMesh.has(mesh) || conveyors.keyOfMesh(mesh) !== null),
-  );
-}
-
-function listenToPicks(context: ViewportContext, callbacks: ViewportCallbacks): void {
-  context.scene.onPointerObservable.add((pointerInfo) => {
-    // A tap is a click without drag, so orbiting the camera never selects.
-    const { type } = pointerInfo;
-    if (type !== PointerEventTypes.POINTERTAP && type !== PointerEventTypes.POINTERDOUBLETAP) {
-      return;
-    }
-    const { scene, bodyIdByMesh, conveyors } = context;
-    if (context.alignmentPicking) {
-      // A double click is a tap then a double tap: one pick, not two.
-      if (type === PointerEventTypes.POINTERTAP) {
-        const pick = pickBody(context, scene.pointerX, scene.pointerY);
-        callbacks.onAlignmentPick(viewportPickOf(context, pick));
-      }
-      return;
-    }
-    const pick = pickScene(context, scene.pointerX, scene.pointerY);
-    const target = clickTargetOf(
-      pick.hit ? pick.pickedMesh : null,
-      bodyIdByMesh,
-      conveyors.keyOfMesh,
-    );
-    if (target.kind === "conveyor") {
-      callbacks.onConveyorPicked(target.conveyor.kind, target.conveyor.id);
-    } else {
-      const bodyId = target.kind === "body" ? target.bodyId : null;
-      callbacks.onBodyPicked(bodyId, type === PointerEventTypes.POINTERDOUBLETAP);
-    }
-  });
 }
 
 function createEngine(canvas: HTMLCanvasElement): Engine {
@@ -246,17 +206,30 @@ function navigationOf(context: ViewportContext, canvas: HTMLCanvasElement) {
   });
 }
 
+function applyScenePalette(context: ViewportContext, palette: ScenePalette): void {
+  context.stage.setPalette(palette);
+  context.highlights.setPalette(palette);
+  context.conveyors.setSelectionColor(palette.selection);
+  context.faceHighlights.setPalette(palette);
+}
+
 export function createViewport(
   canvas: HTMLCanvasElement,
   loadBytes: MeshBytesLoader,
   callbacks: ViewportCallbacks,
+  palette: ScenePalette,
 ): Viewport {
   const engine = createEngine(canvas);
   const scene = new Scene(engine);
-  const context = createContext(scene, canvas, {
-    onDragged: callbacks.onPlacementDragged,
-    onDragEnded: callbacks.onPlacementDragEnded,
-  });
+  const context = createContext(
+    scene,
+    canvas,
+    {
+      onDragged: callbacks.onPlacementDragged,
+      onDragEnded: callbacks.onPlacementDragEnded,
+    },
+    palette,
+  );
   listenToPicks(context, callbacks);
   applyPosesEachFrame(context);
   const navigation = navigationOf(context, canvas);
@@ -267,11 +240,7 @@ export function createViewport(
     pushPoses: (snapshot) => pushSnapshot(context, snapshot),
     clearPoses: () => forgetPoses(context),
     setSelectedBodies: (bodyIds) => context.highlights.setSelectedBodies(bodyIds),
-    setHiddenBodies: (bodyIds) => {
-      context.hiddenBodyIds = bodyIds;
-      applyVisibility(context);
-      context.sensorMarkers.setHidden(bodyIds);
-    },
+    setHiddenBodies: (bodyIds) => hideBodies(context, bodyIds),
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
     showSensorMarkers: (markers) => context.sensorMarkers.show(markers),
     showConveyorObjects: (items) => context.conveyors.show(items),
@@ -291,5 +260,6 @@ export function createViewport(
       context.alignmentPicking = active;
     },
     showFaceHighlights: (highlights) => context.faceHighlights.show(highlights),
+    setScenePalette: (next) => applyScenePalette(context, next),
   };
 }

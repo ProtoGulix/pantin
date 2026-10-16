@@ -4,6 +4,7 @@ import { LANGUAGES, type Translate } from "../i18n/translate.ts";
 import { NAVIGATION_PRESET_IDS } from "../navigation/navigation-presets.ts";
 import { ARROW_STEPS_DEGREES } from "../navigation/navigation-settings.ts";
 import { STANDARD_VIEW_IDS } from "../navigation/standard-views.ts";
+import { THEME_CHOICES } from "../theme/theme.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type MenuContext, menuContext } from "./menu-context.ts";
 import {
@@ -20,6 +21,7 @@ import {
   navigationToggleItem,
   type Shortcut,
   standardViewItem,
+  themeItem,
 } from "./menu-definitions.ts";
 
 export type { MenuCommand } from "./menu-definitions.ts";
@@ -184,6 +186,7 @@ const MENUS: readonly MenuDefinition[] = [
       ...ARROW_STEPS_DEGREES.map(arrowStepItem),
       "separator",
       ...LANGUAGES.map(languageItem),
+      ...THEME_CHOICES.map(themeItem),
     ],
   },
 ];

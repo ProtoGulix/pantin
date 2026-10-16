@@ -48,7 +48,7 @@
 
 /* The shortcut of the current layout is a mark, not a disabled button. */
 .bridge-panel__tool[aria-current="true"] {
-  color: var(--accent);
+  color: var(--brand);
 }
 
 .bridge-panel__state-text {
@@ -76,7 +76,7 @@
   color: var(--text-muted);
   background: none;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   cursor: pointer;
 }
 
@@ -101,15 +101,16 @@
 }
 
 .status-dot.is-ok {
-  background: var(--success);
+  background: var(--state-normal);
 }
 
 .status-dot.is-busy {
-  background: var(--accent);
+  /* Starting or stopping is a transition, not an abnormal condition (ADR 0053 point 3). */
+  background: var(--selection);
 }
 
 .status-dot.is-error {
-  background: var(--danger);
+  background: var(--state-emergency);
 }
 
 .bridge-panel__notice,
@@ -121,18 +122,18 @@
 
 .bridge-panel__error {
   margin: 0;
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 .bridge-panel__failure {
   padding: 4px 8px;
-  background: var(--danger-soft);
-  border-left: 3px solid var(--danger);
+  background: var(--state-emergency-soft);
+  border-left: 3px solid var(--state-emergency);
 }
 
 .bridge-panel__failure.is-warning {
-  background: var(--accent-soft);
-  border-left-color: var(--accent);
+  background: var(--state-abnormal-soft);
+  border-left-color: var(--state-abnormal);
 }
 
 .bridge-panel__log pre {

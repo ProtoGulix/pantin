@@ -13,15 +13,15 @@
 }
 
 .message-line--error {
-  background: var(--danger-soft);
+  background: var(--state-emergency-soft);
 }
 
 .message-line--error .message-line__level {
-  color: var(--danger);
+  color: var(--state-emergency);
 }
 
 .message-line--info .message-line__level {
-  color: var(--success);
+  color: var(--state-normal);
 }
 
 .message-line__body {
@@ -37,7 +37,7 @@
 .message-line__link {
   padding: 0;
   font: inherit;
-  color: var(--accent);
+  color: var(--selection);
   cursor: pointer;
   background: none;
   border: none;

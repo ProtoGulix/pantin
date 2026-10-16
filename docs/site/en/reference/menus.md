@@ -77,6 +77,9 @@ The **Move**, **Rotate** and **Align…** tools are detailed in [Panels and butt
 | separator | | | |
 | **Language: FR** (box) | | Switches the interface to French. | Never. |
 | **Language: EN** (box) | | Switches the interface to English. | Never. |
+| **Theme: System** (box) | | Follows the browser's light or dark theme; this is the default. | Never. |
+| **Theme: Light** (box) | | Forces the light theme. | Never. |
+| **Theme: Dark** (box) | | Forces the dark theme. | Never. |
 
 The mouse settings are detailed in [Shortcuts](/en/reference/shortcuts#_3d-view-and-camera-navigation).
 

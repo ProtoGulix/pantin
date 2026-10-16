@@ -4,6 +4,7 @@
 
 export const STORAGE_KEYS = {
   language: "pantin.viewer.language",
+  theme: "pantin.viewer.theme",
   panelWidth: "pantin.viewer.panelWidth",
   centralLayout: "pantin.viewer.centralLayout",
   splitRatio: "pantin.viewer.splitRatio",

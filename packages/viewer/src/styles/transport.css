@@ -38,7 +38,7 @@
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  color: var(--accent);
+  color: var(--state-abnormal);
 }
 
 .transport__button[hidden] {

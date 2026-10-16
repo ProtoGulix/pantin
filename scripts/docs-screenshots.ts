@@ -71,6 +71,9 @@ async function captureLanguage(
     viewport: { width: 1600, height: 900 },
     deviceScaleFactor: 1,
     locale: entry.locale,
+    // The viewer follows the browser's scheme by default (ADR 0053): pinned, the pictures do not
+    // depend on the machine that takes them.
+    colorScheme: "dark",
   });
   // A missing element should fail the run quickly, with a readable message.
   context.setDefaultTimeout(ACTION_TIMEOUT_MS);

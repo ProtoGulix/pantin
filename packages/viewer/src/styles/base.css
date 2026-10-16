@@ -1,32 +1,81 @@
-/* Dark neutral theme. One accent (amber) marks selection and primary actions. */
-:root {
+/*
+ * Colour tokens by role (ADR 0053), in two themes. The page's root element
+ * carries data-theme="light" or "dark" (ui/theme-controller.ts); the dark set
+ * also applies before that, so a page without the attribute is never unstyled.
+ * Values come from the Armoire palette (ADR 0052). Roles:
+ *   brand        Pantin itself: primary buttons, the active tab or mode mark
+ *   selection    what is selected, the focus ring, links
+ *   state-*      machine states, IEC 60204-1: abnormal (forced, warning),
+ *                emergency (error, failure, injected fault), normal (running)
+ * The brand orange never shows a state. Contrast is checked by
+ * tests/viewer-theme-contrast.test.ts, which reads this file.
+ */
+:root,
+:root[data-theme="dark"] {
   color-scheme: dark;
-  --surface-0: #14161a;
-  --surface-1: #1b1e24;
-  --surface-2: #232730;
-  --surface-3: #2c313c;
-  --border: #353b47;
-  --text: #e4e7ec;
-  --text-muted: #9aa3b2;
-  --text-faint: #6d7686;
-  --accent: #f0a030;
-  --accent-soft: rgb(240 160 48 / 14%);
-  --related-fill: rgb(240 160 48 / 6%);
-  --related-bar: rgb(240 160 48 / 55%);
-  --danger: #f06c6c;
-  --danger-soft: rgb(240 108 108 / 12%);
-  --success: #6cc38a;
-  /* Bodies of a previewed joint; the same colours as in the 3D view (scene/body-highlights.ts). */
-  --joint-parent: #a371f7;
-  --joint-child: #f0a030;
-  /* Background of the 3D view; the same value as BACKGROUND in stage.ts. */
-  --viewport-background: #1b1e24;
+  --surface-0: #1f2528;
+  --surface-1: #262d30;
+  --surface-2: #30383c;
+  --surface-3: #3a4347;
+  --border: #3e474b;
+  --text: #eceee8;
+  --text-muted: #b9bec5;
+  --text-faint: #a0a7ad;
+  --brand: #e3631c;
+  --brand-text: #1a1e20;
+  --selection: #7fa8ec;
+  --state-abnormal: #e8b923;
+  --state-emergency: #f48a82;
+  --state-normal: #5cb87a;
   --hover: rgb(255 255 255 / 5%);
-  --focus-ring: 0 0 0 1px var(--accent);
+  /* Same value as the dark scene background in theme/scene-palette.ts. */
+  --viewport-background: #262d30;
+  /* Data colour of the sensor marks in the tree. The dark value is the blue of the 3D
+     markers (scene/sensor-markers.ts), which stay the same in both themes; the light
+     value is darker to stay readable on a light ground. */
+  --sensor-mark: #58a6ff;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --surface-0: #dfe2dd;
+  --surface-1: #ecede8;
+  --surface-2: #f4f4f0;
+  --surface-3: #ffffff;
+  --border: #c2c7c2;
+  --text: #1a1e20;
+  --text-muted: #4a5254;
+  --text-faint: #5a6264;
+  --brand: #b54a12;
+  --brand-text: #ffffff;
+  --selection: #1d3f8c;
+  --state-abnormal: #7a5800;
+  --state-emergency: #b3261e;
+  --state-normal: #2a6e3f;
+  --hover: rgb(0 0 0 / 6%);
+  /* Same value as the light scene background in theme/scene-palette.ts. */
+  --viewport-background: #dfe2dd;
+  --sensor-mark: #1f5fa8;
+}
+
+:root {
+  /* Tints of a role, for selected rows and badges: they follow the theme with the role. */
+  --brand-soft: color-mix(in srgb, var(--brand) 16%, transparent);
+  --selection-soft: color-mix(in srgb, var(--selection) 14%, transparent);
+  --related-fill: color-mix(in srgb, var(--selection) 6%, transparent);
+  --related-bar: color-mix(in srgb, var(--selection) 55%, transparent);
+  --state-abnormal-soft: color-mix(in srgb, var(--state-abnormal) 14%, transparent);
+  --state-emergency-soft: color-mix(in srgb, var(--state-emergency) 12%, transparent);
+  /* Bodies of a previewed joint, the same colours as in the 3D view (scene/body-highlights.ts).
+     The parent's violet codes data, not the theme; the child, which moves, is the selection. */
+  --joint-parent: #a371f7;
+  --joint-child: var(--selection);
+  --focus-ring: 0 0 0 1px var(--selection);
   --row-height: 22px;
   --radius: 3px;
-  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-source: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --font-ui: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-source:
+    "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
   font-family: var(--font-ui);
   font-size: 12.5px;
   line-height: 1.3;
@@ -101,7 +150,7 @@ body {
 .text-input:focus,
 .select-input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--selection);
   box-shadow: none;
 }
 
@@ -139,9 +188,9 @@ body {
 }
 
 .button--primary {
-  color: #1b1405;
-  background: var(--accent);
-  border-color: var(--accent);
+  color: var(--brand-text);
+  background: var(--brand);
+  border-color: var(--brand);
 }
 
 .icon-button {
@@ -166,8 +215,8 @@ body {
 }
 
 .icon-button[aria-pressed="true"] {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--brand);
+  background: var(--brand-soft);
 }
 
 .icon-button:disabled {
@@ -188,7 +237,7 @@ body {
   height: 12px;
   flex-shrink: 0;
   border: 2px solid var(--border);
-  border-top-color: var(--accent);
+  border-top-color: var(--selection);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -207,7 +256,7 @@ body {
 
 .splitter:hover,
 .splitter:focus-visible {
-  background: var(--accent);
+  background: var(--selection);
   box-shadow: none;
 }
 

@@ -2,6 +2,7 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { PoseInterpolator } from "../pose-interpolation.ts";
+import type { ScenePalette } from "../theme/scene-palette.ts";
 import { type AssemblyTrihedron, createAssemblyTrihedron } from "./assembly-trihedron.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import type { LoadedBody } from "./body-loader.ts";
@@ -50,13 +51,14 @@ export function createContext(
   scene: Scene,
   canvas: HTMLCanvasElement,
   placementCallbacks: PlacementGizmoCallbacks,
+  palette: ScenePalette,
 ): ViewportContext {
   const loadedBodies = new Map<string, LoadedBody>();
   const poses = new PoseInterpolator();
   const objectPoses = new PoseInterpolator();
   const latestPose = (bodyId: string) => poses.latestPose(bodyId);
   const camera = createCamera(scene);
-  const stage = createStage(scene);
+  const stage = createStage(scene, palette);
   return {
     scene,
     camera,
@@ -69,13 +71,13 @@ export function createContext(
     productPoses: new PoseInterpolator(),
     objectPoses,
     productMeshes: createProductMeshes(scene, stage.shadowGenerator),
-    conveyors: createConveyorMeshes(scene, (key) => objectPoses.latestPose(key)),
-    highlights: createBodyHighlights(scene, loadedBodies, latestPose),
+    conveyors: createConveyorMeshes(scene, (key) => objectPoses.latestPose(key), palette.selection),
+    highlights: createBodyHighlights(scene, loadedBodies, latestPose, palette),
     sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
     placementGizmo: createPlacementGizmo(scene, placementCallbacks),
     assemblyTrihedron: createAssemblyTrihedron(scene),
     hiddenBodyIds: new Set(),
     alignmentPicking: false,
-    faceHighlights: createFaceHighlights(scene, loadedBodies),
+    faceHighlights: createFaceHighlights(scene, loadedBodies, palette),
   };
 }

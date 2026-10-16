@@ -48,6 +48,9 @@ const VIEW_MENU_ENTRIES = [
   ["Pas des flèches : 45°", false],
   ["Langue : FR", true],
   ["Langue : EN", false],
+  ["Thème : Système", true],
+  ["Thème : Clair", false],
+  ["Thème : Sombre", false],
 ];
 
 describe("menu bar model navigation", () => {

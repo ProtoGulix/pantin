@@ -51,6 +51,9 @@ const LIST_VIEW_COMMANDS = [
   "arrowStep:45",
   "language:fr",
   "language:en",
+  "theme:system",
+  "theme:light",
+  "theme:dark",
 ];
 
 describe("menu bar model", () => {
