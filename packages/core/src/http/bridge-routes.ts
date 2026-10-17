@@ -1,7 +1,7 @@
 import { SetBridgeRequestSchema } from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { readJsonBody } from "./request-reading.ts";
-import { sendJson } from "./responses.ts";
+import { sendJson, sendText } from "./responses.ts";
 import { pantinIdOf, type Route } from "./route-context.ts";
 
 // The PLC bridge routes (ADR 0050 point 5). Allowed through the Cloudflare
@@ -19,6 +19,17 @@ export const BRIDGE_ROUTES: readonly Route[] = [
       // 404 for an unknown Pantin, and loads it, as every Pantin route does.
       await context.service.getPantin(pantinId);
       sendJson(context.response, 200, context.bridge.status(pantinId));
+    },
+  },
+  {
+    method: "GET",
+    pattern: [...BRIDGE, "log"],
+    handle: async (context) => {
+      const pantinId = pantinIdOf(context);
+      await context.service.getPantin(pantinId);
+      const text = await context.bridge.readLog(pantinId);
+      const fileName = context.query.get("download") === "1" ? `${pantinId}-bridge.log` : undefined;
+      sendText(context.response, text, fileName);
     },
   },
   {

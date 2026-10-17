@@ -1,4 +1,5 @@
 import type { DriveRuntime } from "@pantin/protocol";
+import type { JournalView } from "../bridge/bridge-journal.ts";
 import type { BridgeView } from "../bridge/bridge-view.ts";
 import { effectiveLayout } from "../central-layout.ts";
 import type { ClockView } from "../clock/clock-model.ts";
@@ -10,6 +11,7 @@ import { ConsolePanel } from "./console-panel.ts";
 import { DiagramView } from "./diagram-view.ts";
 import { Inspector } from "./inspector.ts";
 import { IoPanel } from "./io-panel.ts";
+import { JournalDialog } from "./journal-dialog.ts";
 import { MenuBar } from "./menu-bar.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { SidePanel } from "./side-panel.ts";
@@ -45,6 +47,7 @@ export interface Screen {
   showConsoleLive(view: ConsoleView | null): void;
   showClock(view: ClockView, intents: PanelIntents): void;
   showBridge(view: BridgeView | null, intents: PanelIntents): void;
+  showBridgeJournal(view: JournalView | null, intents: PanelIntents): void;
   showCameraOrientation(alpha: number, beta: number): void;
 }
 
@@ -94,6 +97,7 @@ export function createScreen(): Screen {
   const welcome = new WelcomeDialog(requireElement("#welcome", HTMLElement), (mode) =>
     mode === "edit" ? sidePanel.focusTree() : canvas.focus(),
   );
+  const journal = new JournalDialog(requireElement("#journal", HTMLElement));
   const diagram = createDiagramView();
   const ioPanel = createIoPanel();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
@@ -125,6 +129,7 @@ export function createScreen(): Screen {
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),
     showBridge: (view, intents) => sidePanel.showBridge(view, intents),
+    showBridgeJournal: (view, intents) => journal.render(view, intents),
     showCameraOrientation: (alpha, beta) => viewCube.showOrientation(alpha, beta),
   };
 }

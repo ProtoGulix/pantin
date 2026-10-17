@@ -27,8 +27,6 @@ from pantin_bridge.network_address import IpNetwork, SourceFilter
 
 _log = logging.getLogger(__name__)
 
-_CONSOLE_LOG_LEVELS = {"error": logging.ERROR, "warning": logging.WARNING, "info": logging.INFO}
-
 
 @dataclass(frozen=True)
 class BridgeConfig:
@@ -87,7 +85,12 @@ def require_valid_mapping(mapping: IoMapping) -> str:
 
 
 def _log_console(entry: ConsoleEntry) -> None:
-    _log.log(_CONSOLE_LOG_LEVELS[entry.level], "core: %s %s", entry.code, entry.params)
+    if entry.code == "bridge_log":
+        # The core made this entry from our own log: logging it again would loop.
+        return
+    # Always INFO: the entry is already in the console at its own level, and a
+    # WARNING here would come back as a second, `bridge_log`, entry (ADR 0054).
+    _log.info("core: %s %s %s", entry.level, entry.code, entry.params)
 
 
 class Bridge:

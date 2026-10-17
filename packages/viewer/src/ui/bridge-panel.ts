@@ -106,6 +106,18 @@ function configureIoButton(view: BridgeView, intents: PanelIntents): HTMLElement
   return created;
 }
 
+// Text only: the log has no icon of its own, and the word is clearer than a guess.
+function journalButton(view: BridgeView, intents: PanelIntents): HTMLElement {
+  const created = button(
+    view.journalButton.text,
+    "icon-button bridge-panel__tool bridge-panel__tool--text",
+    () => intents.openBridgeJournal(),
+  );
+  created.title = view.journalButton.label;
+  created.setAttribute("data-focus-key", "bridge-journal");
+  return created;
+}
+
 function moduleLine(line: BridgeModuleLine): HTMLElement {
   return element("li", { className: "bridge-panel__module" }, [
     statusDot(moduleConnectionTone(line.connection)),
@@ -211,6 +223,7 @@ export class BridgePanel {
     const header = element("div", { className: "bridge-panel__header" }, [
       element("h2", { className: "bridge-panel__title", text: view.label }),
       element("div", { className: "bridge-panel__tools" }, [
+        journalButton(view, intents),
         configureIoButton(view, intents),
         actionButton(view, intents),
       ]),

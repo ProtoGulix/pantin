@@ -117,6 +117,7 @@ The status line shows a coloured dot and the state text, followed by a clickable
 
 | Control | What it does | Greyed out when |
 | --- | --- | --- |
+| **Log** (tooltip **Open the PLC bridge log**) | Opens the [**PLC bridge log**](#the-plc-bridge-log) window. Always shown, to the left of **I/O config**. | Never |
 | **I/O config** (tooltip **Configure I/O**) | Switches to the I/O view, where the modules are set. Stays marked "active" while the I/O view is displayed. | Never |
 | **Start** / **Stop** / **Restart** | Starts, stops or restarts the bridge. The icon follows the action. A stop is never blocked, except during **Stopping…**. | A request to the bridge is in progress; for **Start** and **Restart** only, the bridge is unavailable (the core has no bridge configured) or a bridge started outside Pantin is already connected; **Stop** is blocked by neither of these two reasons |
 | Pill **Network: local** / **Network: private network** | Unfolds or folds the network settings. It restates the mode even when folded. It stays open as long as a network error is displayed. | Never |
@@ -469,6 +470,32 @@ It is at the top of the central area and exists only while a Pantin is open. Sim
 
 The console also warns when the simulation is paused while a PLC bridge is connected: the PLC sees a frozen machine.
 
+### The PLC bridge log
+
+The card's **Log** button opens a **PLC bridge log** window. It shows the end of the bridge log file (see [The log file](#the-log-file)) in a monospace list (**Log lines**), scrolled to the bottom. While it is open, it refreshes on every new bridge state.
+
+| Control | What it does | Greyed out when |
+| --- | --- | --- |
+| **Copy** | Copies the whole file to the clipboard, older lines not displayed included; the button says **Copied**, or **Cannot copy** if the browser refuses. | Never |
+| **Download** | Downloads the whole file, named `<pantinId>-bridge.log`. | Never |
+| **Close** | Closes the window. <kbd>Escape</kbd> does the same. | Never |
+
+Window messages: **Reading the log…** while reading; **No log yet: it fills as soon as the bridge starts.** when the file does not exist; **Cannot read the log: …** on error; **n older lines are not shown: download the log to get them.** when the file is longer than the window.
+
+Not to be confused with the **Bridge log** pane of the failure block, which only shows the last 20 lines of the bridge's output, and only after a failure.
+
+#### The log file
+
+The core writes one file per Pantin: `<Pantins folder>/.logs/<pantinId>/bridge.log` (the core's `--logs-dir` option changes the `.logs` folder). Past 1 MB it becomes `bridge.log.1` (the previous one is replaced) and a new file starts. This folder is part of no Pantin: if the Pantins folder is a git repository, add `.logs/` to its `.gitignore` (the core does not write that file).
+
+Each line starts with the UTC time: `CORE INFO …` for core events (start requested, ready, stop), `CORE ERROR …` for a failure, `BRIDGE …` for lines written by the bridge. The Modbus bridge records accepted and closed connections (with the reason and the number of requests answered and refused) and each distinct refused request, for example:
+
+```text
+Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
+```
+
+Only the first identical refused request is recorded per connection; the total is in the closing line. The file is also served by `GET /api/pantins/:pantinId/bridge/log` (with `?download=1` to download it) and is read without the core by the `pnpm pantin bridge-log` command (see [Connect a PLC](/en/guide/connect-a-plc#reading-the-bridge-log)). A bridge started outside Pantin has no file.
+
 ## The console
 
 The console is a panel under the central area. The toolbar counter opens and closes it, like **F8**. A handle above it lets you change its height (**Resize the console**); a double-click on the handle restores the original height. The height is kept in the browser.
@@ -483,7 +510,7 @@ The console is a panel under the central area. The toolbar counter opens and clo
 
 A line whose source still exists is clickable: a click (or **Enter**) selects the source (a drive, a joint...). A deleted source is shown as **(deleted)**. When nothing is displayed, the list says **Nothing to report for this Pantin.** or **No line for the levels shown.**
 
-The console reports in particular: a PLC write ignored on a forced tag, an error in a simulation step, a diagnostic that appeared or cleared, a fault injected or removed, a document migrated on opening, a pause or a resume, a blocked emitter, the product limit reached, the connections and disconnections of the PLC and of the bridge.
+The console reports in particular: a PLC write ignored on a forced tag, an error in a simulation step, a diagnostic that appeared or cleared, a fault injected or removed, a document migrated on opening, a pause or a resume, a blocked emitter, the product limit reached, the connections and disconnections of the PLC and of the bridge, and the warning or error lines of the bridge log, as `PLC bridge: <message>` (information lines stay in the log file).
 
 ## The welcome window
 

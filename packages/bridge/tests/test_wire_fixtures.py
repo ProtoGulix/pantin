@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from fixture_files import FixtureCase, bus_cases, io_cases, message_of
+from fixture_files import FixtureCase, bus_cases, io_cases, load_json, message_of
 from pantin_bridge import bus_messages
 from pantin_bridge.errors import ProtocolError
 from pantin_bridge.io_mapping import IoStatus, IoType, IoZone, WordOrder, decode_io_mapping
@@ -114,3 +114,8 @@ def test_the_bridge_builds_messages_the_fixtures_call_valid() -> None:
 
     for kind, frame in sent.items():
         assert json.loads(frame) in [message for message in valid if message["type"] == kind]
+
+
+def test_console_levels_equal_the_shared_fixture() -> None:
+    # The fixture is checked against the Zod schema by the protocol tests (ADR 0045 point 2).
+    assert dict(bus_messages._CONSOLE_LEVELS) == load_json("console-codes.json")

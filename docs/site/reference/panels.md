@@ -117,6 +117,7 @@ La ligne d'état affiche une pastille de couleur et le texte de l'état, suivis 
 
 | Contrôle | Ce qu'il fait | Grisé quand |
 | --- | --- | --- |
+| **Journal** (info-bulle **Ouvrir le journal du pont automate**) | Ouvre la fenêtre [**Journal du pont automate**](#le-journal-du-pont-automate). Toujours affiché, à gauche de **Config E/S**. | Jamais |
 | **Config E/S** (info-bulle **Configurer les E/S**) | Passe en vue E/S, où se règlent les modules. Reste marqué « actif » quand la vue E/S est affichée. | Jamais |
 | **Démarrer** / **Arrêter** / **Redémarrer** | Lance, arrête ou relance le pont. L'icône suit l'action. Un arrêt n'est jamais bloqué, sauf pendant **Arrêt…**. | Une demande au pont est en cours ; pour **Démarrer** et **Redémarrer** seulement, le pont est indisponible (le cœur n'a pas de pont configuré) ou un pont lancé hors de Pantin est déjà connecté ; **Arrêter** n'est bloqué par aucune de ces deux raisons |
 | Pastille **Réseau : local** / **Réseau : réseau privé** | Déplie ou replie les réglages réseau. Elle redit le mode même repliée. Elle reste ouverte tant qu'une erreur réseau est affichée. | Jamais |
@@ -469,6 +470,32 @@ Elle est en haut de la zone centrale et n'existe que pendant qu'un Pantin est ou
 
 La console prévient aussi quand la simulation est en pause alors qu'un pont automate est connecté : l'automate voit une machine figée.
 
+### Le journal du pont automate
+
+Le bouton **Journal** de la carte ouvre une fenêtre **Journal du pont automate**. Elle montre la fin du fichier de journal du pont (voir [Le fichier de journal](#le-fichier-de-journal)) dans une liste à chasse fixe (**Lignes du journal**), calée en bas. Tant qu'elle est ouverte, elle se met à jour à chaque nouvel état du pont.
+
+| Contrôle | Ce qu'il fait | Grisé quand |
+| --- | --- | --- |
+| **Copier** | Copie tout le fichier dans le presse-papiers, y compris les lignes anciennes non affichées ; le bouton dit **Copié**, ou **Copie impossible** si le navigateur refuse. | Jamais |
+| **Télécharger** | Télécharge le fichier complet, nommé `<pantinId>-bridge.log`. | Jamais |
+| **Fermer** | Ferme la fenêtre. <kbd>Échap</kbd> fait la même chose. | Jamais |
+
+Messages de la fenêtre : **Lecture du journal…** pendant la lecture ; **Pas encore de journal : il se remplit dès que le pont démarre.** quand le fichier n'existe pas ; **Lecture du journal impossible : …** en cas d'erreur ; **n lignes plus anciennes ne sont pas affichées : télécharger le journal pour les avoir.** quand le fichier est plus long que la fenêtre.
+
+Ne confondez pas avec le volet **Journal du pont** du bloc d'échec, qui ne montre que les 20 dernières lignes de la sortie du pont, et seulement après un échec.
+
+#### Le fichier de journal
+
+Le cœur écrit un fichier par Pantin : `<dossier des Pantins>/.logs/<pantinId>/bridge.log` (option `--logs-dir` du cœur pour changer le dossier `.logs`). Au-delà de 1 Mo, il devient `bridge.log.1` (le précédent est remplacé) et un nouveau fichier commence. Ce dossier ne fait partie d'aucun Pantin : si le dossier des Pantins est un dépôt git, ajoutez `.logs/` à son `.gitignore` (le cœur n'écrit pas ce fichier).
+
+Chaque ligne commence par l'heure UTC : `CORE INFO …` pour les événements du cœur (demande de démarrage, prêt, arrêt), `CORE ERROR …` pour un échec, `BRIDGE …` pour les lignes écrites par le pont. Le pont Modbus y note les connexions acceptées et fermées (avec la raison et le nombre de requêtes servies et refusées) et chaque requête refusée distincte, par exemple :
+
+```text
+Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
+```
+
+Seule la première requête refusée identique est notée par connexion ; le total est dans la ligne de fermeture. Le fichier lui-même est aussi servi par `GET /api/pantins/:pantinId/bridge/log` (avec `?download=1` pour le télécharger) et se lit sans le cœur avec la commande `pnpm pantin bridge-log` (voir [Connecter un automate](/guide/connect-a-plc#lire-le-journal-du-pont)). Un pont lancé hors de Pantin n'a pas de fichier.
+
 ## La console
 
 La console est un panneau sous la zone centrale. Le compteur de la barre d'outils l'ouvre et la ferme, comme **F8**. Une poignée au-dessus d'elle permet de changer sa hauteur (**Redimensionner la console**) ; un double-clic sur la poignée rétablit la hauteur d'origine. La hauteur est gardée dans le navigateur.
@@ -483,7 +510,7 @@ La console est un panneau sous la zone centrale. Le compteur de la barre d'outil
 
 Une ligne dont la source existe encore est cliquable : un clic (ou **Entrée**) sélectionne la source (un préactionneur, une liaison...). Une source supprimée s'affiche **(supprimé)**. Quand rien n'est affiché, la liste dit **Rien à signaler pour ce Pantin.** ou **Aucune ligne pour les niveaux affichés.**
 
-La console rapporte notamment : une écriture de l'automate ignorée sur un tag forcé, une erreur dans un pas de simulation, un diagnostic apparu ou résolu, un défaut injecté ou retiré, un document migré à l'ouverture, une pause ou une reprise, un émetteur bloqué, la limite de produits atteinte, les connexions et déconnexions de l'automate et du pont.
+La console rapporte notamment : une écriture de l'automate ignorée sur un tag forcé, une erreur dans un pas de simulation, un diagnostic apparu ou résolu, un défaut injecté ou retiré, un document migré à l'ouverture, une pause ou une reprise, un émetteur bloqué, la limite de produits atteinte, les connexions et déconnexions de l'automate et du pont, et les lignes d'avertissement ou d'erreur du journal du pont, sous la forme `Pont automate : <message>` (les lignes d'information restent dans le fichier de journal).
 
 ## La fenêtre d'accueil
 

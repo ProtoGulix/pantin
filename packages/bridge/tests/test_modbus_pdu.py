@@ -9,7 +9,13 @@ from dataclasses import dataclass
 import pytest
 
 from pantin_bridge.io_mapping import IoZone
-from pantin_bridge.modbus_pdu import ModbusStore, PlcWrite, handle_pdu
+from pantin_bridge.modbus_pdu import (
+    ExceptionCode,
+    ModbusStore,
+    PlcWrite,
+    Refusal,
+    handle_pdu,
+)
 
 UNIT = 1
 SIZES = {
@@ -305,3 +311,19 @@ def test_an_empty_pdu_is_illegal_function() -> None:
 def test_the_store_refuses_a_write_outside_its_zone() -> None:
     with pytest.raises(ValueError, match="outside"):
         make_store().write(IoZone.COIL, 1999, [True, True])
+
+
+def test_a_refusal_carries_what_the_log_needs_and_an_answer_carries_none() -> None:
+    refused = handle_pdu(UNIT, bytes([3]) + struct.pack(">HH", 150, 100), make_store())
+    wrong_unit = handle_pdu(7, bytes([6]) + struct.pack(">HH", 4, 99), make_store())
+    unknown_function = handle_pdu(UNIT, bytes([43, 14, 1, 0]), make_store())
+    too_short = handle_pdu(UNIT, bytes([3, 0]), make_store())
+    answered = handle_pdu(UNIT, bytes([3]) + struct.pack(">HH", 0, 1), make_store())
+
+    assert refused.refusal == Refusal(UNIT, UNIT, 3, 150, 100, ExceptionCode.ILLEGAL_ADDRESS)
+    assert wrong_unit.refusal == Refusal(7, UNIT, 6, 4, 1, ExceptionCode.GATEWAY_NO_RESPONSE)
+    assert unknown_function.refusal == Refusal(
+        UNIT, UNIT, 43, None, None, ExceptionCode.ILLEGAL_FUNCTION
+    )
+    assert too_short.refusal == Refusal(UNIT, UNIT, 3, None, None, ExceptionCode.ILLEGAL_VALUE)
+    assert answered.refusal is None

@@ -157,3 +157,54 @@ describe("the bridge event of the pose stream", () => {
     ]);
   });
 });
+
+describe("the bridge log route", () => {
+  async function getLog(path: string): Promise<Response> {
+    return fetch(`http://127.0.0.1:${server?.address.port}${path}`);
+  }
+
+  it("answers an empty text/plain body when there is no file yet", async () => {
+    await startServer(createFakeSpawner());
+    const response = await getLog(`${BRIDGE_PATH}/log`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+    expect(response.headers.get("content-disposition")).toBeNull();
+    expect(await response.text()).toBe("");
+  });
+
+  it("answers the file, as an attachment with ?download=1", async () => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    await call("PUT", START);
+    spawner.children[0]?.writeStderr("WARNING module m1 refused a request\n");
+    await call("PUT", { running: false });
+
+    const plain = await getLog(`${BRIDGE_PATH}/log`);
+    const text = await plain.text();
+    expect(text).toMatch(/^\S+Z CORE INFO Start requested: listen 127.0.0.1, allow none.\n/);
+    expect(text).toContain("BRIDGE WARNING module m1 refused a request\n");
+
+    const download = await getLog(`${BRIDGE_PATH}/log?download=1`);
+    expect(download.headers.get("content-disposition")).toBe(
+      `attachment; filename="${PLC_CYLINDER_ID}-bridge.log"`,
+    );
+    expect(await download.text()).toBe(text);
+  });
+
+  it("answers 404 for an unknown Pantin", async () => {
+    await startServer(createFakeSpawner());
+    expect((await getLog("/api/pantins/nobody/bridge/log")).status).toBe(404);
+  });
+
+  it("keeps the .logs folder out of the Pantin list", async () => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    await call("PUT", START);
+    await call("PUT", { running: false });
+    const listed = (await (await getLog("/api/pantins")).json()) as
+      | { id: string }[]
+      | { pantins: { id: string }[] };
+    const ids = (Array.isArray(listed) ? listed : listed.pantins).map(({ id }) => id);
+    expect(ids).toEqual([PLC_CYLINDER_ID]);
+  });
+});

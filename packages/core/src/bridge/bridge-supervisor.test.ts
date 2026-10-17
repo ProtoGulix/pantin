@@ -235,3 +235,49 @@ describe("the external bridge", () => {
     expect(supervisor.status("axis").externalBridgeConnected).toBe(false);
   });
 });
+
+describe("the bridge log file", () => {
+  const LOG = "/logs/axis/bridge.log";
+
+  it("records the core events and every bridge line, in order", async () => {
+    const { supervisor, spawner, logFiles } = await runningBridge();
+    spawner.children[0]?.writeStderr("2026-10-17 10:00:01,000 INFO hello\n");
+    await tick();
+    supervisor.stop("axis");
+    spawner.children[0]?.end(0, null);
+    await tick();
+
+    expect(logFiles.files.get(LOG)?.split("\n")).toEqual([
+      "2026-10-17T10:00:00.000Z CORE INFO Start requested: listen 127.0.0.1, allow none.",
+      "2026-10-17T10:00:00.000Z CORE INFO Bridge ready: modules m1:1502.",
+      "2026-10-17T10:00:00.000Z BRIDGE 2026-10-17 10:00:01,000 INFO hello",
+      "2026-10-17T10:00:00.000Z CORE INFO Stop requested.",
+      "2026-10-17T10:00:00.000Z CORE INFO Bridge stopped.",
+      "",
+    ]);
+    expect(await supervisor.readLog("axis")).toBe(logFiles.files.get(LOG));
+  });
+
+  it("records a failure with its kind, and a spawn failure", async () => {
+    const { supervisor, spawner, logFiles } = await runningBridge();
+    spawner.children[0]?.end(null, "SIGKILL");
+    await supervisor.close();
+    expect(logFiles.files.get(LOG)).toContain("CORE ERROR Bridge failed (crashed):");
+  });
+
+  it("sends only WARNING and ERROR bridge lines to the console, without timestamp or level", async () => {
+    const { supervisor, spawner, consoleMessages } = await runningBridge();
+    spawner.children[0]?.writeStderr("2026-10-17 10:00:01,000 INFO quiet\n");
+    spawner.children[0]?.writeStderr("2026-10-17 10:00:02,000 WARNING m: refused a request\n");
+    spawner.children[0]?.writeStderr("2026-10-17 10:00:03,000 ERROR m: broke\n");
+    spawner.children[0]?.writeStderr("Traceback (most recent call last):\n");
+    await tick();
+    expect(consoleMessages).toEqual(["m: refused a request", "m: broke"]);
+    await supervisor.close();
+  });
+
+  it("reads an empty log for a Pantin that never ran a bridge", async () => {
+    const { supervisor } = await runningBridge();
+    expect(await supervisor.readLog("never")).toBe("");
+  });
+});

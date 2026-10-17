@@ -15,6 +15,7 @@ import {
 } from "../bridge/bridge-model.ts";
 import { bridgeViewOf } from "../bridge/bridge-view.ts";
 import { describeFailure } from "../messages.ts";
+import { closeJournal, openJournal, refreshJournalOnStatus } from "./journal-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The PLC bridge of the open Pantin (ADR 0050 point 8). The core starts and
@@ -32,6 +33,7 @@ function setBridgeModel(store: ViewerStore, next: BridgeModel): void {
 /** A bridge event of the stream. */
 export function receiveBridge(store: ViewerStore, status: BridgeStatus): void {
   setBridgeModel(store, bridgeAfterStreamStatus(store.bridgeModel, status));
+  refreshJournalOnStatus(store);
 }
 
 // 400 is the core refusing the address or the allow list: its message belongs
@@ -100,5 +102,7 @@ export function bridgeIntents(store: ViewerStore): BridgeIntents {
       })),
     chooseBridgeListen: (address) => changeDraft(store, (draft) => ({ ...draft, listen: address })),
     editBridgeAllow: (text) => changeDraft(store, (draft) => ({ ...draft, allowText: text })),
+    openBridgeJournal: () => openJournal(store),
+    closeBridgeJournal: () => closeJournal(store),
   };
 }

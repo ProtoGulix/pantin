@@ -1,0 +1,70 @@
+/* The bridge log window (ADR 0054), over the central area. Tokens in base.css. */
+.journal {
+  width: 900px;
+}
+
+.journal__lines {
+  flex: 1;
+  min-height: 120px;
+  margin: 0;
+  padding: 8px 12px;
+  overflow: auto;
+  list-style: none;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface-0);
+}
+
+.journal__lines[hidden] {
+  display: none;
+}
+
+.journal__line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The level word stays in the text: colour is never the only cue. */
+.journal__line--warning {
+  color: var(--state-abnormal);
+}
+
+.journal__line--error {
+  color: var(--state-emergency);
+}
+
+.journal__error,
+.journal__note {
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.journal__error {
+  color: var(--state-emergency);
+  background: var(--state-emergency-soft);
+}
+
+.journal__note {
+  color: var(--text-muted);
+}
+
+.journal__error[hidden],
+.journal__note[hidden] {
+  display: none;
+}
+
+.journal__footer {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+}
+
+.journal__footer .button {
+  text-decoration: none;
+}

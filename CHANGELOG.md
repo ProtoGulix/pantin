@@ -12,8 +12,25 @@ All notable changes to Pantin. The format follows
   development exposure, now behind Cloudflare Access (ADR 0050, 2026-10-16
   amendment). The tag bus stays closed there (ADR 0046 point 7).
 
+### Fixed
+
+- Bridge, a console entry with the code `bridge_failed` stopped the bridge with a
+  protocol error, because its table of console codes lacked it. The table is now
+  checked against a shared fixture (`console-codes.json`, ADR 0045), and a
+  console entry of an unknown code is skipped with a log line instead of
+  stopping the bridge, so an older bridge keeps running with a newer core.
+
 ### Added
 
+- Bridge log (ADR 0054): the core writes one file per Pantin,
+  `<logs dir>/<pantinId>/bridge.log` (default `<pantins dir>/.logs`, option
+  `--logs-dir`, rotated at 1 MB), with its own events and every line the bridge
+  writes on stderr. The Modbus bridge now logs connections accepted, refused
+  and closed, and each refused request with its function, address and
+  exception. `GET /api/pantins/:pantinId/bridge/log` serves the file
+  (`?download=1` for an attachment), the bridge's WARNING and ERROR lines reach
+  the Pantin console as the code `bridge_log`, and `pnpm pantin bridge-log
+  <pantinId> [--follow]` reads the file with the core stopped.
 - Claude Code, a `doc-writer` subagent that keeps the user guide (ADR 0051)
   and its screenshots in step with a change, in French and English; CLAUDE.md
   section 7 lists it and calls it before the reviewer.

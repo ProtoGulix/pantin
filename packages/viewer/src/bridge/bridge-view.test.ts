@@ -57,6 +57,20 @@ describe("the state chip and the button, for every state", () => {
   });
 });
 
+describe("the Journal button", () => {
+  it.each([
+    bridgeStatusOf(),
+    RUNNING_STATUS,
+    FAILED_STATUS,
+    bridgeStatusOf({ availability: "unavailable" }),
+  ])("is there whatever the bridge state ($state)", (status) => {
+    expect(viewOf(status).journalButton).toEqual({
+      text: "Journal",
+      label: "Ouvrir le journal du pont automate",
+    });
+  });
+});
+
 describe("the network", () => {
   it("offers the local choice and the private network, with the core's choices", () => {
     const view = viewOf(bridgeStatusOf());

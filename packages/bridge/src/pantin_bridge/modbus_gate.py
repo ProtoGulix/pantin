@@ -46,6 +46,8 @@ class ConnectionGate:
         self._source_filter = source_filter
         self.listener = listener
         self._open_connections = 0
+        # Set when the bridge shuts the slave down, so a close is not blamed on the PLC.
+        self.stopping = False
 
     def admit(self, source: str) -> bool:
         if not self._source_filter.is_accepted(source):

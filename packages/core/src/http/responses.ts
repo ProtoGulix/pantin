@@ -11,14 +11,21 @@ export function sendJson(response: ServerResponse, status: number, value: unknow
   response.end(body);
 }
 
-/** A generated text file, offered for download under `fileName`. */
-export function sendTextDownload(response: ServerResponse, text: string, fileName: string): void {
+/** A text answer, offered for download under `fileName` when one is given. */
+export function sendText(response: ServerResponse, text: string, fileName?: string): void {
   response.writeHead(200, {
     "content-type": "text/plain; charset=utf-8",
     "content-length": Buffer.byteLength(text),
-    "content-disposition": `attachment; filename="${fileName}"`,
+    ...(fileName === undefined
+      ? {}
+      : { "content-disposition": `attachment; filename="${fileName}"` }),
   });
   response.end(text);
+}
+
+/** A generated text file, offered for download under `fileName`. */
+export function sendTextDownload(response: ServerResponse, text: string, fileName: string): void {
+  sendText(response, text, fileName);
 }
 
 export function sendApiError(response: ServerResponse, error: ApiError): void {

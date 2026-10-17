@@ -8,4 +8,7 @@ export interface BridgeIntents {
   chooseBridgeNetwork(mode: string): void;
   chooseBridgeListen(address: string): void;
   editBridgeAllow(text: string): void;
+  // The log window (ADR 0054 point 5).
+  openBridgeJournal(): void;
+  closeBridgeJournal(): void;
 }

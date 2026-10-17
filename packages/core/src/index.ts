@@ -1,6 +1,8 @@
 // Public entry point of @pantin/core. The document reader serves the
 // command line validator, which checks a folder without a server (ADR 0021).
 
+export { BRIDGE_LOG_FILE_NAME, BRIDGE_LOG_ROTATED_FILE_NAME } from "./bridge/bridge-log-file.ts";
+export { defaultLogsDirectory, defaultPantinsDirectory } from "./domain/default-directories.ts";
 export { renderGvl } from "./domain/gvl.ts";
 export { allocateVariable, proposeAddress, zoneAndTypeOf } from "./domain/io-allocation.ts";
 export {

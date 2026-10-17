@@ -90,6 +90,7 @@ in the log.
 | --- | --- | --- |
 | The module stays on **waiting for the PLC** | No request has arrived | Check the IP address, the **Port** and the **Unit id** of the Modbus master of the PLC |
 | The module stays waiting, with the PLC on a virtual machine | The source is refused: in NAT, it can come from the host, and the `100.64.0.0/10` space is refused | Read the bridge log ("Module m1 refused a connection from …"). Switch the virtual machine to bridged networking, or adapt the list of allowed PLCs. See [Connect a PLC](/en/guide/connect-a-plc) |
+| The PLC connects then the connection drops; the log says "no request for 5.0 s" | The bridge refuses the PLC's requests (unexpected unit, function or address) then closes the idle connection | Open **Log** in the **PLC bridge** block and look for "refused a request": it gives the unit asked and the one the module expects. The CODESYS master's unit ID must equal the module's **Unit id**. See [Connect a PLC](/en/guide/connect-a-plc#reading-the-bridge-log) |
 | The console: "PLC disconnected from module m1 (no answer in time)" | No request during the **Watchdog (ms)** duration | Increase the watchdog, or check that the PLC does query the module. Boolean commands are reset to 0 |
 | The console: "PLC disconnected… (connection closed)" | The PLC closed its connection | Same thing: boolean commands are reset to 0 |
 | The console: "PLC bridge disconnected… the mapped bit commands are reset to 0" | The bridge stopped or lost the core | Restart the bridge |
