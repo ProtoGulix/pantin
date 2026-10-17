@@ -1,4 +1,5 @@
 import {
+  JOURNAL_LEVELS,
   type JournalEntryView,
   type JournalFilterView,
   type JournalView,
@@ -17,11 +18,10 @@ import type { PanelIntents } from "./panel-intents.ts";
 const FOCUSABLE = "button:not([disabled]), a[href], [tabindex='0']";
 const FEEDBACK_MILLISECONDS = 1500;
 
-const FILTER_LEVELS: readonly JournalLevel[] = ["error", "warning", "info"];
-
+// An entry with no source (a line found before any entry) keeps an empty cell.
 function badge(kind: string, value: string, label: string): HTMLElement {
   return element("span", {
-    className: label === "" ? "journal__cell" : `journal__badge journal__badge--${kind}-${value}`,
+    className: label === "" ? "" : `journal__badge journal__badge--${kind}-${value}`,
     text: label,
   });
 }
@@ -84,7 +84,7 @@ export class JournalDialog {
   constructor(overlay: HTMLElement) {
     this.overlay = overlay;
     this.closeButton.append(icon("close"));
-    this.filterGroup.append(...FILTER_LEVELS.map((level) => this.createFilterButton(level)));
+    this.filterGroup.append(...JOURNAL_LEVELS.map((level) => this.createFilterButton(level)));
     this.dialog = element(
       "div",
       { className: "welcome journal", attributes: { role: "dialog", "aria-modal": "true" } },

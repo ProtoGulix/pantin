@@ -61,6 +61,28 @@ function token(tokens: Map<string, string>, name: string): string {
   return value;
 }
 
+// The share of a "-soft" tint, read from its color-mix() in base.css.
+function tintShare(name: string): number {
+  const match = new RegExp(
+    `--${name}-soft: color-mix\\(in srgb, var\\(--${name}\\) (\\d+)%, transparent\\);`,
+  ).exec(BASE_CSS);
+  if (match?.[1] === undefined) {
+    throw new Error(`--${name}-soft must be a color-mix() of --${name} with transparent.`);
+  }
+  return Number(match[1]) / 100;
+}
+
+// A see-through tint over a ground, as the browser composes it: channel by channel in sRGB.
+function tintOver(tint: string, share: number, ground: string): string {
+  const channels = [1, 3, 5].map((offset) => {
+    const tintChannel = Number.parseInt(tint.slice(offset, offset + 2), 16);
+    const groundChannel = Number.parseInt(ground.slice(offset, offset + 2), 16);
+    const mixed = Math.round(share * tintChannel + (1 - share) * groundChannel);
+    return mixed.toString(16).padStart(2, "0");
+  });
+  return `#${channels.join("")}`;
+}
+
 const TEXT_TOKENS = [
   "text",
   "text-muted",
@@ -90,6 +112,16 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
 
   it.each(["state-abnormal", "state-emergency"])("gives the text on a --%s fill 4.5:1", (state) => {
     expect(contrast(token(tokens, "on-state"), token(tokens, state))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // The journal's warning and error rows (journal.css) lay a tint over --surface-0.
+  it.each(
+    ["state-abnormal", "state-emergency"].flatMap((state) =>
+      ["text", "text-muted"].map((text) => [text, state] as const),
+    ),
+  )("gives --%s 4.5:1 on a --%s-soft row", (text, state) => {
+    const row = tintOver(token(tokens, state), tintShare(state), token(tokens, "surface-0"));
+    expect(contrast(token(tokens, text), row)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("keeps the 3D scene palette in step with the page", () => {

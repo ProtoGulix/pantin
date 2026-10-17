@@ -14,7 +14,7 @@ import {
 export const JOURNAL_MAX_ENTRIES = 2000;
 
 // Same order as the Pantin console's filters.
-const JOURNAL_LEVELS: readonly JournalLevel[] = ["error", "warning", "info"];
+export const JOURNAL_LEVELS: readonly JournalLevel[] = ["error", "warning", "info"];
 
 export interface JournalEntryView {
   // Local HH:MM:SS.mmm, empty for lines found before any entry.
