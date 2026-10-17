@@ -33,14 +33,18 @@ describe("classifyBridgeLine", () => {
 });
 
 describe("consoleMessageOfBridgeLine", () => {
-  it("drops the timestamp and the level, and cuts to 300 characters", () => {
+  it("drops the timestamp, the level and the logger name, and cuts to 300 characters", () => {
     expect(
       consoleMessageOfBridgeLine(
         "2026-10-17 10:11:12,345 WARNING pantin_bridge.m: Module m1 refused",
       ),
-    ).toBe("pantin_bridge.m: Module m1 refused");
+    ).toBe("Module m1 refused");
     expect(consoleMessageOfBridgeLine(`ERROR ${"x".repeat(400)}`)).toHaveLength(300);
     expect(consoleMessageOfBridgeLine("plain line")).toBe("plain line");
+  });
+
+  it("keeps a leading word with a colon when the line has no Python timestamp", () => {
+    expect(consoleMessageOfBridgeLine("WARNING Refused: unit 2")).toBe("Refused: unit 2");
   });
 });
 

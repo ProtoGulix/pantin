@@ -14,10 +14,19 @@ import type { ViewerState } from "../viewer-state.ts";
 interface JournalTarget {
   state: ViewerState;
   journalModel: JournalModel;
+  journalShownFor: JournalInputs | null;
   ports: {
     api: Pick<PantinApiClient, "getBridgeLog">;
     showBridgeJournal(view: JournalView | null): void;
   };
+}
+
+// What the window was last drawn from. The model is replaced, never changed in
+// place, so the same three values mean the same view.
+export interface JournalInputs {
+  model: JournalModel;
+  pantinId: string | null;
+  language: ViewerState["language"];
 }
 
 // The bridge log window of the open Pantin (ADR 0054 point 5). The file is read
@@ -29,12 +38,32 @@ function setJournalModel(store: JournalTarget, next: JournalModel): void {
   showJournal(store);
 }
 
-/** The window shows the model in place; the store also calls it after every update. */
-export function showJournal(store: JournalTarget): void {
-  const translate = createTranslator(store.state.language);
-  store.ports.showBridgeJournal(
-    journalViewOf(store.journalModel, store.state.openPantin?.id ?? null, translate),
+function sameInputs(shown: JournalInputs | null, next: JournalInputs): boolean {
+  return (
+    shown !== null &&
+    shown.model === next.model &&
+    shown.pantinId === next.pantinId &&
+    shown.language === next.language
   );
+}
+
+/**
+ * The window shows the model in place; the store also calls it after every update.
+ * Nothing is done when the inputs did not change: building the view reads the whole
+ * file (up to 1 MB), and the store updates many times a second.
+ */
+export function showJournal(store: JournalTarget): void {
+  const inputs: JournalInputs = {
+    model: store.journalModel,
+    pantinId: store.state.openPantin?.id ?? null,
+    language: store.state.language,
+  };
+  if (sameInputs(store.journalShownFor, inputs)) {
+    return;
+  }
+  store.journalShownFor = inputs;
+  const translate = createTranslator(inputs.language);
+  store.ports.showBridgeJournal(journalViewOf(inputs.model, inputs.pantinId, translate));
 }
 
 function errorTextOf(error: unknown): string {

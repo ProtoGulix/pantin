@@ -96,3 +96,13 @@ statements, 2026-10-17).
   are not affected (codes are only added).
 - NOT VERIFIED: which requests CODESYS Control Win V3 sends for a given
   channel configuration; the log is what will show it.
+
+## Amendment (2026-10-17): the console message drops the logger name
+
+Point 5's console message `{ message }` is the line without its timestamp,
+its level word and, when the line has Python's full layout (a timestamp
+first), the logger name that follows the level (`pantin_bridge.modbus_journal: `).
+The name is noise for the reader of the console; the file and the journal
+window keep it (the window shows it as the message's tooltip). Without a
+timestamp the text after the level is kept whole: a bridge in another
+language may start its message with "Word: ".

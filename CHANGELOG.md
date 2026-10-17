@@ -29,7 +29,8 @@ All notable changes to Pantin. The format follows
   and closed, and each refused request with its function, address and
   exception. `GET /api/pantins/:pantinId/bridge/log` serves the file
   (`?download=1` for an attachment), the bridge's WARNING and ERROR lines reach
-  the Pantin console as the code `bridge_log`, and `pnpm pantin bridge-log
+  the Pantin console as the code `bridge_log` (without the timestamp and the
+  Python logger name, ADR 0054 amendment), and `pnpm pantin bridge-log
   <pantinId> [--follow]` reads the file with the core stopped. The user guide
   shows the log window (new `bridge-journal` screenshot, fr and en). The
   window shows the log as columns (local time, Core/Bridge source badge,

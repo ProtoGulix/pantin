@@ -265,14 +265,14 @@ describe("the bridge log file", () => {
     expect(logFiles.files.get(LOG)).toContain("CORE ERROR Bridge failed (crashed):");
   });
 
-  it("sends only WARNING and ERROR bridge lines to the console, without timestamp or level", async () => {
+  it("sends only WARNING and ERROR bridge lines to the console, without timestamp, level or logger name", async () => {
     const { supervisor, spawner, consoleMessages } = await runningBridge();
     spawner.children[0]?.writeStderr("2026-10-17 10:00:01,000 INFO quiet\n");
     spawner.children[0]?.writeStderr("2026-10-17 10:00:02,000 WARNING m: refused a request\n");
     spawner.children[0]?.writeStderr("2026-10-17 10:00:03,000 ERROR m: broke\n");
     spawner.children[0]?.writeStderr("Traceback (most recent call last):\n");
     await tick();
-    expect(consoleMessages).toEqual(["m: refused a request", "m: broke"]);
+    expect(consoleMessages).toEqual(["refused a request", "broke"]);
     await supervisor.close();
   });
 

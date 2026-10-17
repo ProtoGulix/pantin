@@ -43,7 +43,7 @@ import {
   withRequestStarted,
 } from "../viewer-state.ts";
 import { reloadIoAfterDocumentChange } from "./io-load.ts";
-import { showJournal } from "./journal-actions.ts";
+import { type JournalInputs, showJournal } from "./journal-actions.ts";
 import type { StorePorts } from "./store-ports.ts";
 import { showTagRead } from "./tag-read.ts";
 import { showViewportState } from "./viewport-sync.ts";
@@ -88,6 +88,8 @@ export class ViewerStore {
   bridgeModel: BridgeModel = INITIAL_BRIDGE_MODEL;
   // The bridge log window and the text it last read, outside ViewerState for the same reason.
   journalModel: JournalModel = CLOSED_JOURNAL;
+  // What the journal window was last drawn from, so an unrelated update skips it.
+  journalShownFor: JournalInputs | null = null;
   // Pantin whose poses are shown, to reset them only when it changes.
   private followedPantinId: string | null = null;
   // Who is linked to whom in the open document, built once per answer of the core.

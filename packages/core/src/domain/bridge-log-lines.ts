@@ -28,10 +28,17 @@ export function classifyBridgeLine(line: string): BridgeLogLevel {
   return (level === undefined ? undefined : LEVELS[level]) ?? "info";
 }
 
-// The line without its timestamp and level word: the console entry already
-// says "warning", and the file has the full line.
+// The logger name Python's layout puts after the level ("pantin_bridge.modbus_journal: ").
+// Only dropped after a Python timestamp: without one, "Word: " may be the message itself.
+const LOGGER_NAME = /^[\w.-]+: /;
+
+// The line without its timestamp, level word and logger name: the console entry
+// already says "warning", and the file has the full line (ADR 0054, 2026-10-17 amendment).
 export function consoleMessageOfBridgeLine(line: string): string {
-  return line.replace(LEVEL_PATTERN, "").slice(0, MAX_CONSOLE_MESSAGE_CHARACTERS);
+  const match = LEVEL_PATTERN.exec(line);
+  const rest = match === null ? line : line.slice(match[0].length);
+  const message = match?.groups?.timestamp === undefined ? rest : rest.replace(LOGGER_NAME, "");
+  return message.slice(0, MAX_CONSOLE_MESSAGE_CHARACTERS);
 }
 
 export function shouldReachConsole(level: BridgeLogLevel): boolean {

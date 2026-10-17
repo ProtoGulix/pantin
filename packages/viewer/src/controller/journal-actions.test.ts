@@ -70,6 +70,22 @@ describe("the bridge log window", () => {
   });
 });
 
+describe("the bridge log window between reads", () => {
+  it("does not rebuild the window on an update that does not touch it", async () => {
+    const { store, intents, views } = journalStore(
+      async () => "2026-10-17T10:00:00.000Z CORE INFO a",
+    );
+    intents.openBridgeJournal();
+    await flush();
+    const drawn = views.length;
+    store.update(store.state);
+    store.update({ ...store.state });
+    expect(views.length).toBe(drawn);
+    store.update({ ...store.state, language: store.state.language === "fr" ? "en" : "fr" });
+    expect(views.length).toBe(drawn + 1);
+  });
+});
+
 describe("the bridge log filters", () => {
   const log = async () =>
     "2026-10-17T10:00:00.000Z CORE ERROR boom\n2026-10-17T10:00:01.000Z CORE INFO fine\n";
