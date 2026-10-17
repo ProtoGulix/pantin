@@ -472,17 +472,21 @@ The console also warns when the simulation is paused while a PLC bridge is conne
 
 ### The PLC bridge log
 
-![The PLC bridge log window: CORE and BRIDGE lines, with a coloured WARNING line](/screenshots/en/bridge-journal.webp)
+![The PLC bridge log window: time, source and level columns, with a tinted warning line](/screenshots/en/bridge-journal.webp)
 
-The card's **Log** button opens a **PLC bridge log** window. It shows the end of the bridge log file (see [The log file](#the-log-file)) in a monospace list (**Log lines**), scrolled to the bottom. While it is open, it refreshes on every new bridge state.
+The card's **Log** button opens a **PLC bridge log** window. It shows the end of the bridge log file (see [The log file](#the-log-file)) as columns (**Log lines**), scrolled to the bottom. While it is open, it refreshes on every new bridge state.
+
+Each entry shows: the local time `HH:MM:SS.mmm` (the full date is in the tooltip); a source badge, **Core** or **Bridge**; a level badge, **Info**, **Warn.** (amber fill) or **Error** (red fill); the message (the Python logger name is only in the tooltip, the bridge's own timestamp is hidden). Continuation lines of an entry (a traceback, for instance) are indented under it. Warning and error rows are tinted, with a bar on the left.
+
+Three toggles, in the **Levels shown** group, filter by level: **Error**, **Warning**, **Info**, each with its entry count. As in the console, the choice is kept while the page stays open. When no entry matches: **No entry for the levels shown.**
 
 | Control | What it does | Greyed out when |
 | --- | --- | --- |
-| **Copy** | Copies the whole file to the clipboard, older lines not displayed included; the button says **Copied**, or **Cannot copy** if the browser refuses. | Never |
-| **Download** | Downloads the whole file, named `<pantinId>-bridge.log`. | Never |
+| **Copy** | Copies the whole raw file to the clipboard, older lines not displayed included; the button says **Copied**, or **Cannot copy** if the browser refuses. | Never |
+| **Download** | Downloads the whole raw file, named `<pantinId>-bridge.log`. | Never |
 | **Close** | Closes the window. <kbd>Escape</kbd> does the same. | Never |
 
-Window messages: **Reading the log…** while reading; **No log yet: it fills as soon as the bridge starts.** when the file does not exist; **Cannot read the log: …** on error; **n older lines are not shown: download the log to get them.** when the file is longer than the window.
+Window messages: **Reading the log…** while reading; **No log yet: it fills as soon as the bridge starts.** when the file does not exist; **Cannot read the log: …** on error; **n older entries are not shown: download the log to get them.** when the file is longer than the window.
 
 Not to be confused with the **Bridge log** pane of the failure block, which only shows the last 20 lines of the bridge's output, and only after a failure.
 

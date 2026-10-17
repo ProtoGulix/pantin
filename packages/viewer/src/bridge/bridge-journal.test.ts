@@ -3,41 +3,40 @@ import { createTranslator } from "../i18n/translate.ts";
 import {
   CLOSED_JOURNAL,
   isScrolledToEnd,
-  JOURNAL_MAX_LINES,
-  journalLevelOf,
-  journalLinesOf,
+  JOURNAL_MAX_ENTRIES,
+  journalEntriesOf,
   journalViewOf,
+  localClockTime,
   scrollTopAfterRefresh,
 } from "./bridge-journal.ts";
 
 const t = createTranslator("en");
 const open = { ...CLOSED_JOURNAL, open: true };
 
-describe("journalLevelOf", () => {
-  it.each([
-    ["2026-10-17T10:00:00Z CORE INFO start requested", "normal"],
-    ["2026-10-17T10:00:00Z CORE ERROR spawn failed", "error"],
-    ["2026-10-17T10:00:00Z BRIDGE WARNING refused request", "warning"],
-    ["2026-10-17T10:00:00Z BRIDGE 2026-10-17 10:00:00,123 WARNING refused", "warning"],
-    ["2026-10-17T10:00:00Z BRIDGE 2026-10-17 10:00:00,123 CRITICAL boom", "error"],
-    ["2026-10-17T10:00:00Z BRIDGE INFO connection from 10.0.0.5", "normal"],
-    ["2026-10-17T10:00:00Z BRIDGE the word WARNING inside a message", "normal"],
-    ["no prefix at all", "normal"],
-  ])("%s is %s", (line, level) => {
-    expect(journalLevelOf(line)).toBe(level);
+const TIME = "2026-10-17T10:00:00.250Z";
+const core = (level: string, text: string) => `${TIME} CORE ${level} ${text}`;
+
+describe("localClockTime", () => {
+  it("is HH:MM:SS.mmm in the local zone", () => {
+    const date = new Date(TIME);
+    const expected = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}.250`;
+    expect(localClockTime(TIME)).toBe(expected);
+  });
+
+  it("shows an unreadable time as written", () => {
+    expect(localClockTime("2026-99-99Tjunk")).toBe("2026-99-99Tjunk");
   });
 });
 
-describe("journalLinesOf", () => {
-  it("drops empty lines and keeps the order", () => {
-    const { lines } = journalLinesOf("a\n\nb\n");
-    expect(lines.map((line) => line.text)).toEqual(["a", "b"]);
-  });
-
-  it("keeps the newest lines when the file is long", () => {
-    const text = Array.from({ length: JOURNAL_MAX_LINES + 3 }, (_, index) => `line ${index}`);
-    const { lines, hiddenCount } = journalLinesOf(text.join("\n"));
-    expect([lines.length, hiddenCount, lines[0]?.text]).toEqual([JOURNAL_MAX_LINES, 3, "line 3"]);
+describe("journalEntriesOf", () => {
+  it("keeps the newest entries when the file is long", () => {
+    const text = Array.from({ length: JOURNAL_MAX_ENTRIES + 3 }, (_, i) => core("INFO", `n ${i}`));
+    const { entries, hiddenCount } = journalEntriesOf(text.join("\n"));
+    expect([entries.length, hiddenCount, entries[0]?.message]).toEqual([
+      JOURNAL_MAX_ENTRIES,
+      3,
+      "n 3",
+    ]);
   });
 });
 
@@ -65,8 +64,9 @@ describe("journalViewOf", () => {
   });
 
   it("keeps the text read before when a refresh fails", () => {
-    const view = journalViewOf({ ...open, text: "a\nb", error: "boom" }, "press", t);
-    expect([view?.lines.length, view?.errorText === null]).toEqual([2, false]);
+    const text = `${core("INFO", "a")}\n${core("INFO", "b")}`;
+    const view = journalViewOf({ ...open, text, error: "boom" }, "press", t);
+    expect([view?.entries.length, view?.errorText === null]).toEqual([2, false]);
   });
 
   it("offers the whole file to Copy and the download route", () => {
@@ -77,9 +77,84 @@ describe("journalViewOf", () => {
     ]);
   });
 
-  it("tells how many older lines are cut", () => {
-    const text = Array.from({ length: JOURNAL_MAX_LINES + 2 }, () => "x").join("\n");
-    expect(journalViewOf({ ...open, text }, "press", t)?.truncatedText).toContain("2 older lines");
+  it("tells how many older entries are cut", () => {
+    const text = Array.from({ length: JOURNAL_MAX_ENTRIES + 2 }, () => core("INFO", "x")).join(
+      "\n",
+    );
+    expect(journalViewOf({ ...open, text }, "press", t)?.truncatedText).toContain(
+      "2 older entries",
+    );
+  });
+});
+
+describe("journalViewOf entries and filters", () => {
+  const text = [
+    core("INFO", "started"),
+    `${TIME} BRIDGE 2026-10-17 12:00:00,100 WARNING a.b: slow`,
+    `${TIME} BRIDGE 2026-10-17 12:00:00,200 ERROR a.b: failed`,
+    "  traceback line",
+    core("ERROR", "second"),
+  ].join("\n");
+
+  it("describes an entry with labels, local time and the logger as tooltip", () => {
+    const entry = journalViewOf({ ...open, text }, "press", t)?.entries[1];
+    expect(entry).toMatchObject({
+      timeTitle: TIME,
+      sourceLabel: "Bridge",
+      levelLabel: "Warn.",
+      logger: "a.b",
+      message: "slow",
+    });
+  });
+
+  it("counts the entries of each level, in the console's order", () => {
+    const filters = journalViewOf({ ...open, text }, "press", t)?.filters;
+    expect(filters?.map(({ level, count, pressed }) => [level, count, pressed])).toEqual([
+      ["error", 2, true],
+      ["warning", 1, true],
+      ["info", 1, true],
+    ]);
+  });
+
+  it("hides the filtered levels but still counts them", () => {
+    const hiddenLevels = new Set(["error" as const]);
+    const view = journalViewOf({ ...open, text, hiddenLevels }, "press", t);
+    expect(view?.entries.map((entry) => entry.message)).toEqual(["started", "slow"]);
+    expect(view?.filters[0]).toMatchObject({ count: 2, pressed: false });
+    expect(view?.copyText).toBe(text);
+  });
+
+  it("says so when every level is filtered out", () => {
+    const hiddenLevels = new Set(["error" as const, "warning" as const, "info" as const]);
+    const view = journalViewOf({ ...open, text, hiddenLevels }, "press", t);
+    expect([view?.entries.length, view?.placeholder]).toEqual([
+      0,
+      "No entry for the levels shown.",
+    ]);
+  });
+
+  it("keeps the continuation lines with their entry", () => {
+    expect(journalViewOf({ ...open, text }, "press", t)?.entries[2]?.continuation).toEqual([
+      "  traceback line",
+    ]);
+  });
+});
+
+describe("the redraw key", () => {
+  const keyOf = (model: Parameters<typeof journalViewOf>[0]) =>
+    journalViewOf(model, "press", t)?.redrawKey;
+  const text = core("INFO", "a");
+
+  it("is stable while nothing changed", () => {
+    expect(keyOf({ ...open, text })).toBe(keyOf({ ...open, text, reading: true }));
+  });
+
+  it("changes when the file grows, restarts or a filter moves", () => {
+    const base = keyOf({ ...open, text });
+    const grown = keyOf({ ...open, text: `${text}\n${core("INFO", "b")}` });
+    const restarted = keyOf({ ...open, text: core("INFO", "z") });
+    const filtered = keyOf({ ...open, text, hiddenLevels: new Set(["info" as const]) });
+    expect(new Set([base, grown, restarted, filtered]).size).toBe(4);
   });
 });
 

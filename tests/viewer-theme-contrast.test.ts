@@ -88,6 +88,10 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
     );
   });
 
+  it.each(["state-abnormal", "state-emergency"])("gives the text on a --%s fill 4.5:1", (state) => {
+    expect(contrast(token(tokens, "on-state"), token(tokens, state))).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("keeps the 3D scene palette in step with the page", () => {
     const block = SCENE_PALETTE_TS.slice(SCENE_PALETTE_TS.indexOf(`${theme}: {`));
     const sceneColor = (name: string) => new RegExp(`${name}: "(#[0-9a-f]{6})"`).exec(block)?.[1];

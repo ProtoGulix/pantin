@@ -5,6 +5,7 @@ import {
   type JournalView,
   journalViewOf,
 } from "../bridge/bridge-journal.ts";
+import type { JournalLevel } from "../bridge/bridge-log-parser.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
@@ -72,12 +73,25 @@ export function openJournal(store: JournalTarget): void {
   if (store.state.openPantin === null) {
     return;
   }
-  setJournalModel(store, { ...CLOSED_JOURNAL, open: true });
+  setJournalModel(store, {
+    ...CLOSED_JOURNAL,
+    hiddenLevels: store.journalModel.hiddenLevels,
+    open: true,
+  });
   void readJournal(store);
 }
 
 export function closeJournal(store: JournalTarget): void {
-  setJournalModel(store, CLOSED_JOURNAL);
+  // The filters outlive the window, like the console's.
+  setJournalModel(store, { ...CLOSED_JOURNAL, hiddenLevels: store.journalModel.hiddenLevels });
+}
+
+export function toggleJournalLevel(store: JournalTarget, level: JournalLevel): void {
+  const hiddenLevels = new Set(store.journalModel.hiddenLevels);
+  if (!hiddenLevels.delete(level)) {
+    hiddenLevels.add(level);
+  }
+  setJournalModel(store, { ...store.journalModel, hiddenLevels });
 }
 
 /** A bridge status reached the viewer: the file has probably grown. */

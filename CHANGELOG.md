@@ -31,7 +31,11 @@ All notable changes to Pantin. The format follows
   (`?download=1` for an attachment), the bridge's WARNING and ERROR lines reach
   the Pantin console as the code `bridge_log`, and `pnpm pantin bridge-log
   <pantinId> [--follow]` reads the file with the core stopped. The user guide
-  shows the log window (new `bridge-journal` screenshot, fr and en).
+  shows the log window (new `bridge-journal` screenshot, fr and en). The
+  window shows the log as columns (local time, Core/Bridge source badge,
+  Info/Warn./Error level badge, message, indented tracebacks, tinted warning
+  and error rows) with level filters and counts; Copy and Download still give
+  the raw file.
 - Claude Code, a `doc-writer` subagent that keeps the user guide (ADR 0051)
   and its screenshots in step with a change, in French and English; CLAUDE.md
   section 7 lists it and calls it before the reviewer.

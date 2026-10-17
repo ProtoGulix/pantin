@@ -1,9 +1,10 @@
 import {
-  type JournalLine,
+  type JournalEntryView,
+  type JournalFilterView,
   type JournalView,
-  journalRedrawKey,
   scrollTopAfterRefresh,
 } from "../bridge/bridge-journal.ts";
+import type { JournalLevel } from "../bridge/bridge-log-parser.ts";
 import { nextFocusIndex } from "../panel/welcome-model.ts";
 import { element } from "./dom.ts";
 import { icon } from "./icons.ts";
@@ -16,11 +17,34 @@ import type { PanelIntents } from "./panel-intents.ts";
 const FOCUSABLE = "button:not([disabled]), a[href], [tabindex='0']";
 const FEEDBACK_MILLISECONDS = 1500;
 
-function lineItem(line: JournalLine): HTMLElement {
-  return element("li", {
-    className: `journal__line journal__line--${line.level}`,
-    text: line.text,
+const FILTER_LEVELS: readonly JournalLevel[] = ["error", "warning", "info"];
+
+function badge(kind: string, value: string, label: string): HTMLElement {
+  return element("span", {
+    className: label === "" ? "journal__cell" : `journal__badge journal__badge--${kind}-${value}`,
+    text: label,
   });
+}
+
+// The level and the source are words in a badge: colour is never the only cue.
+function entryItem(entry: JournalEntryView): HTMLElement {
+  const message = element("div", { className: "journal__message", text: entry.message });
+  if (entry.logger !== null) {
+    message.title = entry.logger;
+  }
+  const continuation = entry.continuation.map((text) =>
+    element("div", { className: "journal__continuation", text }),
+  );
+  return element("li", { className: `journal__entry journal__entry--${entry.level}` }, [
+    element("span", {
+      className: "journal__time",
+      text: entry.time,
+      attributes: { title: entry.timeTitle },
+    }),
+    badge("source", entry.source ?? "", entry.sourceLabel),
+    badge("level", entry.level, entry.levelLabel),
+    element("div", { className: "journal__body" }, [message, ...continuation]),
+  ]);
 }
 
 export class JournalDialog {
@@ -41,6 +65,11 @@ export class JournalDialog {
   });
   private readonly truncatedLine = element("p", { className: "journal__note" });
   private readonly placeholder = element("p", { className: "pane-empty" });
+  private readonly filterGroup = element("div", {
+    className: "console__filters journal__filters",
+    attributes: { role: "group" },
+  });
+  private readonly filterButtons = new Map<JournalLevel, HTMLButtonElement>();
   private readonly lines = element("ol", {
     className: "journal__lines",
     attributes: { tabindex: "0" },
@@ -55,11 +84,13 @@ export class JournalDialog {
   constructor(overlay: HTMLElement) {
     this.overlay = overlay;
     this.closeButton.append(icon("close"));
+    this.filterGroup.append(...FILTER_LEVELS.map((level) => this.createFilterButton(level)));
     this.dialog = element(
       "div",
       { className: "welcome journal", attributes: { role: "dialog", "aria-modal": "true" } },
       [
         element("header", { className: "welcome__header" }, [this.title, this.closeButton]),
+        this.filterGroup,
         this.errorLine,
         this.truncatedLine,
         this.placeholder,
@@ -77,7 +108,7 @@ export class JournalDialog {
       this.hide();
       return;
     }
-    const key = journalRedrawKey(view);
+    const key = view.redrawKey;
     if (this.overlay.hidden) {
       this.returnFocusTo = document.activeElement;
       this.overlay.hidden = false;
@@ -108,13 +139,35 @@ export class JournalDialog {
     this.closeButton.setAttribute("aria-label", view.closeLabel);
     this.closeButton.title = view.closeLabel;
     this.lines.setAttribute("aria-label", view.linesLabel);
+    this.filterGroup.setAttribute("aria-label", view.filtersLabel);
+    this.drawFilters(view.filters);
     this.setText(this.errorLine, view.errorText);
     this.setText(this.truncatedLine, view.truncatedText);
     this.setText(this.placeholder, view.placeholder);
     this.copyButton.textContent = view.copyLabel;
     this.downloadLink.textContent = view.downloadLabel;
     this.downloadLink.href = view.downloadUrl;
-    this.drawLines(view.lines);
+    this.drawEntries(view.entries);
+  }
+
+  // The buttons are made once and only updated: a click must not lose its focus.
+  private createFilterButton(level: JournalLevel): HTMLButtonElement {
+    const created = element("button", {
+      className: `console__filter console__filter--${level}`,
+      attributes: { type: "button" },
+    });
+    created.addEventListener("click", () => this.intents?.toggleBridgeJournalLevel(level));
+    this.filterButtons.set(level, created);
+    return created;
+  }
+
+  private drawFilters(filters: readonly JournalFilterView[]): void {
+    for (const filter of filters) {
+      const created = this.filterButtons.get(filter.level);
+      created?.classList.toggle("is-pressed", filter.pressed);
+      created?.setAttribute("aria-pressed", String(filter.pressed));
+      created?.replaceChildren(icon(filter.level), `${filter.label} ${filter.count}`);
+    }
   }
 
   private setText(target: HTMLElement, text: string | null): void {
@@ -124,10 +177,10 @@ export class JournalDialog {
 
   // Before the replacement the reader's position is measured: at the end they
   // follow the new lines, scrolled up they stay where they are.
-  private drawLines(lines: readonly JournalLine[]): void {
+  private drawEntries(entries: readonly JournalEntryView[]): void {
     const before = this.lines.childElementCount === 0 ? null : this.metrics();
-    this.lines.replaceChildren(...lines.map(lineItem));
-    this.lines.hidden = lines.length === 0;
+    this.lines.replaceChildren(...entries.map(entryItem));
+    this.lines.hidden = entries.length === 0;
     this.lines.scrollTop = scrollTopAfterRefresh(
       before,
       this.lines.scrollHeight,

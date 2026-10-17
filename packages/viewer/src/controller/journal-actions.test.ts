@@ -23,11 +23,14 @@ function journalStore(readLog: () => Promise<string>) {
 
 describe("the bridge log window", () => {
   it("opens, reads the file and shows its lines", async () => {
-    const { intents, last } = journalStore(async () => "first\nsecond\n");
+    const { intents, last } = journalStore(
+      async () =>
+        "2026-10-17T10:00:00.000Z CORE INFO first\n2026-10-17T10:00:01.000Z CORE INFO second\n",
+    );
     intents.openBridgeJournal();
     expect(last()?.placeholder).not.toBeNull();
     await flush();
-    expect(last()?.lines.map((line) => line.text)).toEqual(["first", "second"]);
+    expect(last()?.entries.map((entry) => entry.message)).toEqual(["first", "second"]);
   });
 
   it("reads again on each bridge status while open", async () => {
@@ -64,6 +67,32 @@ describe("the bridge log window", () => {
     releases[1]?.();
     await flush();
     expect([reads, store.journalModel.reading]).toEqual([2, false]);
+  });
+});
+
+describe("the bridge log filters", () => {
+  const log = async () =>
+    "2026-10-17T10:00:00.000Z CORE ERROR boom\n2026-10-17T10:00:01.000Z CORE INFO fine\n";
+
+  it("hide a level and keep doing so after the window closes and opens again", async () => {
+    const { intents, last } = journalStore(log);
+    intents.openBridgeJournal();
+    await flush();
+    intents.toggleBridgeJournalLevel("error");
+    expect(last()?.entries.map((entry) => entry.message)).toEqual(["fine"]);
+    intents.closeBridgeJournal();
+    intents.openBridgeJournal();
+    await flush();
+    expect(last()?.entries.map((entry) => entry.message)).toEqual(["fine"]);
+  });
+
+  it("show the level again on a second toggle", async () => {
+    const { intents, last } = journalStore(log);
+    intents.openBridgeJournal();
+    await flush();
+    intents.toggleBridgeJournalLevel("error");
+    intents.toggleBridgeJournalLevel("error");
+    expect(last()?.entries).toHaveLength(2);
   });
 });
 

@@ -15,7 +15,12 @@ import {
 } from "../bridge/bridge-model.ts";
 import { bridgeViewOf } from "../bridge/bridge-view.ts";
 import { describeFailure } from "../messages.ts";
-import { closeJournal, openJournal, refreshJournalOnStatus } from "./journal-actions.ts";
+import {
+  closeJournal,
+  openJournal,
+  refreshJournalOnStatus,
+  toggleJournalLevel,
+} from "./journal-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The PLC bridge of the open Pantin (ADR 0050 point 8). The core starts and
@@ -104,5 +109,6 @@ export function bridgeIntents(store: ViewerStore): BridgeIntents {
     editBridgeAllow: (text) => changeDraft(store, (draft) => ({ ...draft, allowText: text })),
     openBridgeJournal: () => openJournal(store),
     closeBridgeJournal: () => closeJournal(store),
+    toggleBridgeJournalLevel: (level) => toggleJournalLevel(store, level),
   };
 }

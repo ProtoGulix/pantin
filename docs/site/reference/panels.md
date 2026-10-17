@@ -472,17 +472,21 @@ La console prévient aussi quand la simulation est en pause alors qu'un pont aut
 
 ### Le journal du pont automate
 
-![La fenêtre Journal du pont automate : lignes CORE et BRIDGE, avec une ligne WARNING en couleur](/screenshots/fr/bridge-journal.webp)
+![La fenêtre Journal du pont automate : colonnes heure, source et niveau, avec une ligne d'avertissement teintée](/screenshots/fr/bridge-journal.webp)
 
-Le bouton **Journal** de la carte ouvre une fenêtre **Journal du pont automate**. Elle montre la fin du fichier de journal du pont (voir [Le fichier de journal](#le-fichier-de-journal)) dans une liste à chasse fixe (**Lignes du journal**), calée en bas. Tant qu'elle est ouverte, elle se met à jour à chaque nouvel état du pont.
+Le bouton **Journal** de la carte ouvre une fenêtre **Journal du pont automate**. Elle montre la fin du fichier de journal du pont (voir [Le fichier de journal](#le-fichier-de-journal)) sous forme de colonnes (**Lignes du journal**), calées en bas. Tant qu'elle est ouverte, elle se met à jour à chaque nouvel état du pont.
+
+Chaque entrée affiche : l'heure locale `HH:MM:SS.mmm` (la date complète est dans l'info-bulle) ; un badge de source, **Cœur** ou **Pont** ; un badge de niveau, **Info**, **Avert.** (fond ambre) ou **Erreur** (fond rouge) ; le message (le nom du logger Python n'est que dans l'info-bulle, l'horodatage propre au pont est masqué). Les lignes de suite d'une entrée (une trace d'erreur, par exemple) sont indentées sous elle. Les lignes d'avertissement et d'erreur sont teintées, avec une barre à gauche.
+
+Trois bascules, groupe **Niveaux affichés**, filtrent par niveau : **Erreur**, **Avertissement**, **Info**, chacune avec son nombre d'entrées. Comme dans la console, le choix est conservé tant que la page reste ouverte. Quand aucune entrée ne correspond : **Aucune entrée pour les niveaux affichés.**
 
 | Contrôle | Ce qu'il fait | Grisé quand |
 | --- | --- | --- |
-| **Copier** | Copie tout le fichier dans le presse-papiers, y compris les lignes anciennes non affichées ; le bouton dit **Copié**, ou **Copie impossible** si le navigateur refuse. | Jamais |
-| **Télécharger** | Télécharge le fichier complet, nommé `<pantinId>-bridge.log`. | Jamais |
+| **Copier** | Copie tout le fichier brut dans le presse-papiers, y compris les lignes anciennes non affichées ; le bouton dit **Copié**, ou **Copie impossible** si le navigateur refuse. | Jamais |
+| **Télécharger** | Télécharge le fichier brut complet, nommé `<pantinId>-bridge.log`. | Jamais |
 | **Fermer** | Ferme la fenêtre. <kbd>Échap</kbd> fait la même chose. | Jamais |
 
-Messages de la fenêtre : **Lecture du journal…** pendant la lecture ; **Pas encore de journal : il se remplit dès que le pont démarre.** quand le fichier n'existe pas ; **Lecture du journal impossible : …** en cas d'erreur ; **n lignes plus anciennes ne sont pas affichées : télécharger le journal pour les avoir.** quand le fichier est plus long que la fenêtre.
+Messages de la fenêtre : **Lecture du journal…** pendant la lecture ; **Pas encore de journal : il se remplit dès que le pont démarre.** quand le fichier n'existe pas ; **Lecture du journal impossible : …** en cas d'erreur ; **n entrées plus anciennes ne sont pas affichées : téléchargez le journal pour les avoir.** quand le fichier est plus long que la fenêtre.
 
 Ne confondez pas avec le volet **Journal du pont** du bloc d'échec, qui ne montre que les 20 dernières lignes de la sortie du pont, et seulement après un échec.
 

@@ -26,6 +26,8 @@
   --selection: #7fa8ec;
   --state-abnormal: #e8b923;
   --state-emergency: #f48a82;
+  /* Text on a state colour used as a fill (the log level badges). */
+  --on-state: #1a1e20;
   --state-normal: #5cb87a;
   --hover: rgb(255 255 255 / 5%);
   /* Same value as the dark scene background in theme/scene-palette.ts. */
@@ -51,6 +53,7 @@
   --selection: #1d3f8c;
   --state-abnormal: #7a5800;
   --state-emergency: #b3261e;
+  --on-state: #ffffff;
   --state-normal: #2a6e3f;
   --hover: rgb(0 0 0 / 6%);
   /* Same value as the light scene background in theme/scene-palette.ts. */

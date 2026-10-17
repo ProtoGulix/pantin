@@ -202,7 +202,7 @@ Without the viewer, the bridge is started by hand (see
 
 When the PLC connects but nothing works, the bridge log says what the PLC asked and why the bridge refused it.
 
-- In the **PLC bridge** block, click **Log**: the **PLC bridge log** window opens and refreshes by itself. **Copy** and **Download** let you attach the log to a request for help.
+- In the **PLC bridge** block, click **Log**: the **PLC bridge log** window opens and refreshes by itself, as columns (time, source **Core** or **Bridge**, level), with **Error**, **Warning** and **Info** toggles to filter. **Copy** and **Download** let you attach the log to a request for help.
 - Warning and error lines also reach the console: "PLC bridge: …".
 - Without the viewer, and even with the core stopped: `pnpm pantin bridge-log <pantinId>`, with `--logs-dir <folder>` if the core was started with that option, `--pantins-dir <folder>` if the Pantins are not in the default folder, and `--follow` to follow the file live.
 

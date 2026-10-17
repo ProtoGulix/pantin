@@ -37,7 +37,10 @@ async function captureJournal(session: Session, card: Locator): Promise<void> {
   await sendRefusedRequest();
   await card.getByRole("button", { name: label("bridge.journal.button") }).click(FORCED);
   const dialog = session.page.getByRole("dialog", { name: label("bridge.journal.title") });
-  await dialog.getByText("WARNING").first().waitFor({ timeout: 15_000 });
+  await dialog
+    .getByText(label("bridge.journal.level.warning"), { exact: true })
+    .first()
+    .waitFor({ timeout: 15_000 });
   await saveShot(session, "bridge-journal", dialog);
   await session.page.keyboard.press("Escape");
   await dialog.waitFor({ state: "hidden" });
