@@ -95,25 +95,19 @@ describe("with a bridge Python", () => {
     expect(BridgeStatusSchema.parse(stopped.json).state).toBe("stopped");
     expect((await call("GET")).status).toBe(200);
   });
-});
 
-describe("with a bridge Python, refusals", () => {
-  it("refuses the cloudflare exposure for a change, and starts nothing", async () => {
+  it("starts and stops through the cloudflare exposure (ADR 0050, 2026-10-16 amendment)", async () => {
     const spawner = createFakeSpawner();
     await startServer(spawner);
     const exposed = { "x-pantin-exposure": "cloudflare" };
-    for (const body of [START, { running: false }]) {
-      const { status } = await call("PUT", body, exposed);
-      expect(status).toBe(403);
-    }
-    for (const value of ["cloudflare, x", "anything"]) {
-      const { status } = await call("PUT", START, { "x-pantin-exposure": value });
-      expect(status).toBe(403);
-    }
-    expect(spawner.calls).toHaveLength(0);
+    expect((await call("PUT", START, exposed)).status).toBe(200);
+    expect(spawner.calls).toHaveLength(1);
+    expect((await call("PUT", { running: false }, exposed)).status).toBe(200);
     expect((await call("GET", undefined, exposed)).status).toBe(200);
   });
+});
 
+describe("with a bridge Python, refusals", () => {
   it.each([
     ["an unknown field", { ...START, python: "/bin/sh" }],
     ["a wildcard address", { ...START, listen: "0.0.0.0" }],
@@ -122,12 +116,14 @@ describe("with a bridge Python, refusals", () => {
       "a private address of another machine",
       { running: true, listen: "10.9.9.9", allow: ["10.0.0.0/8"] },
     ],
-  ])("answers 400 to %s", async (_name, body) => {
+  ])("answers 400 to %s, through the exposure too", async (_name, body) => {
     const spawner = createFakeSpawner();
     await startServer(spawner);
-    const { status, json } = await call("PUT", body);
-    expect(status).toBe(400);
-    expect(errorCodeOf(json)).toBe("invalid_request");
+    for (const headers of [{}, { "x-pantin-exposure": "cloudflare" }]) {
+      const { status, json } = await call("PUT", body, headers);
+      expect(status).toBe(400);
+      expect(errorCodeOf(json)).toBe("invalid_request");
+    }
     expect(spawner.calls).toHaveLength(0);
   });
 
@@ -159,5 +155,56 @@ describe("the bridge event of the pose stream", () => {
       "starting",
       "running",
     ]);
+  });
+});
+
+describe("the bridge log route", () => {
+  async function getLog(path: string): Promise<Response> {
+    return fetch(`http://127.0.0.1:${server?.address.port}${path}`);
+  }
+
+  it("answers an empty text/plain body when there is no file yet", async () => {
+    await startServer(createFakeSpawner());
+    const response = await getLog(`${BRIDGE_PATH}/log`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+    expect(response.headers.get("content-disposition")).toBeNull();
+    expect(await response.text()).toBe("");
+  });
+
+  it("answers the file, as an attachment with ?download=1", async () => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    await call("PUT", START);
+    spawner.children[0]?.writeStderr("WARNING module m1 refused a request\n");
+    await call("PUT", { running: false });
+
+    const plain = await getLog(`${BRIDGE_PATH}/log`);
+    const text = await plain.text();
+    expect(text).toMatch(/^\S+Z CORE INFO Start requested: listen 127.0.0.1, allow none.\n/);
+    expect(text).toContain("BRIDGE WARNING module m1 refused a request\n");
+
+    const download = await getLog(`${BRIDGE_PATH}/log?download=1`);
+    expect(download.headers.get("content-disposition")).toBe(
+      `attachment; filename="${PLC_CYLINDER_ID}-bridge.log"`,
+    );
+    expect(await download.text()).toBe(text);
+  });
+
+  it("answers 404 for an unknown Pantin", async () => {
+    await startServer(createFakeSpawner());
+    expect((await getLog("/api/pantins/nobody/bridge/log")).status).toBe(404);
+  });
+
+  it("keeps the .logs folder out of the Pantin list", async () => {
+    const spawner = createFakeSpawner();
+    await startServer(spawner);
+    await call("PUT", START);
+    await call("PUT", { running: false });
+    const listed = (await (await getLog("/api/pantins")).json()) as
+      | { id: string }[]
+      | { pantins: { id: string }[] };
+    const ids = (Array.isArray(listed) ? listed : listed.pantins).map(({ id }) => id);
+    expect(ids).toEqual([PLC_CYLINDER_ID]);
   });
 });

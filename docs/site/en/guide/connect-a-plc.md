@@ -164,8 +164,8 @@ changes the source address that Pantin sees:
 The exact behaviour of CODESYS depending on the network mode has not been
 measured (spike 0004b pending, ADR 0046). Addresses of the shared space
 `100.64.0.0/10`, sometimes used by the NAT of virtual machines, are **refused**
-for now (ADR 0004, open points). If your PLC is not accepted, look at the output
-of the core: the bridge writes a line "Module m1 refused a connection from"
+for now (ADR 0004, open points). If your PLC is not accepted, open the bridge
+**Log**: it has a line "Module m1 refused a connection from"
 followed by the address, for each refused connection.
 :::
 
@@ -198,6 +198,28 @@ Without the viewer, the bridge is started by hand (see
   --pantin plc-cylinder --listen 127.0.0.1 --allow 127.0.0.1
 ```
 
+## Reading the bridge log
+
+When the PLC connects but nothing works, the bridge log says what the PLC asked and why the bridge refused it.
+
+- In the **PLC bridge** block, click **Log**: the **PLC bridge log** window opens and refreshes by itself, as columns (time, source **Core** or **Bridge**, level), with **Error**, **Warning** and **Info** toggles to filter. **Copy** and **Download** let you attach the log to a request for help.
+- Warning and error lines also reach the console: "PLC bridge: …".
+- Without the viewer, and even with the core stopped: `pnpm pantin bridge-log <pantinId>`, with `--logs-dir <folder>` if the core was started with that option, `--pantins-dir <folder>` if the Pantins are not in the default folder, and `--follow` to follow the file live.
+
+The file is `<Pantins folder>/.logs/<pantinId>/bridge.log` (details in [Panels and buttons](/en/reference/panels#the-plc-bridge-log)).
+
+Example: the PLC connects, then the connection drops after a few seconds ("no request for 5.0 s"). The log contains:
+
+```text
+Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
+```
+
+The module answers unit 1 (its **Unit id** in `io.json`), the PLC queries unit 2. The Modbus slave's **Unit-ID** in CODESYS must equal the module's **Unit id**: align one on the other, then restart the bridge.
+
+::: warning Not verified
+This example was produced with a test Modbus client sending a wrong Unit-ID, not with CODESYS; the repository has not replayed the case with a complete CODESYS program.
+:::
+
 ## Forced tags
 
 A command written from the viewer **forces** the tag: the PLC can no longer
@@ -220,9 +242,10 @@ the machine (ADR 0004, 0046).
 - Pantin reaches no real actuator: its outputs only move simulated joints.
 - Services listen on `127.0.0.1` by default. Opening the network is an explicit
   choice, limited to private networks.
-- Modbus never goes through a tunnel or a proxy (Cloudflare, nginx): the core
-  refuses to start or stop the bridge on a request coming from such a tunnel
-  (ADR 0046 point 7).
+- Modbus never goes through a tunnel or a proxy (Cloudflare, nginx): the bridge
+  listens on the address you choose, on your network. A tunnel exposure
+  protected by Cloudflare Access can start or stop the bridge, but never opens
+  the tag bus (ADR 0046 point 7, ADR 0050).
 - Before any use on a real production network, the position of Pantin must be
   re-evaluated by a new decision (authentication, TLS, segmentation).
 

@@ -73,6 +73,8 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
       return { text: t("console.code.plc_connected", entry.params), detail: null };
     case "bridge_failed":
       return { text: t("console.code.bridge_failed"), detail: entry.params.message };
+    case "bridge_log":
+      return { text: t("console.code.bridge_log", entry.params), detail: null };
     case "plc_disconnected":
     case "bridge_disconnected":
       return { text: connectionLossText(entry, t), detail: null };

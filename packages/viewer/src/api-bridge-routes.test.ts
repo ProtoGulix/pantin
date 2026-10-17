@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { bridgeLogDownloadUrl } from "./api-bridge-routes.ts";
 import { createPantinApiClient } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
 import { bridgeStatusOf } from "./bridge/bridge-fixtures.ts";
@@ -53,5 +54,27 @@ describe("PantinApiClient bridge", () => {
     const { fetchFunction } = fakeFetch(jsonResponse({ state: "running" }));
     const error = await captureError(createPantinApiClient(fetchFunction).getBridge("press"));
     expect(error.kind).toBe("invalid_response");
+  });
+});
+
+describe("PantinApiClient bridge log", () => {
+  it("reads the log as text with GET", async () => {
+    const { fetchFunction, requests } = fakeFetch(new Response("line one\nline two\n"));
+    const text = await createPantinApiClient(fetchFunction).getBridgeLog("press");
+    expect(text).toBe("line one\nline two\n");
+    expect(sent(requests[0])).toEqual(["GET", "/api/pantins/press/bridge/log", undefined]);
+  });
+
+  it("raises the core's error when the log cannot be read", async () => {
+    const body = { error: { code: "not_found", message: "No such Pantin." } };
+    const { fetchFunction } = fakeFetch(jsonResponse(body, 404));
+    const error = await captureError(createPantinApiClient(fetchFunction).getBridgeLog("nope"));
+    expect([error.kind, error.status]).toEqual(["api", 404]);
+  });
+
+  it("builds the download link", () => {
+    expect(bridgeLogDownloadUrl("press line")).toBe(
+      "/api/pantins/press%20line/bridge/log?download=1",
+    );
   });
 });

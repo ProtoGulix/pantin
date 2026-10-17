@@ -16,6 +16,7 @@ from pantin_bridge.errors import ConfigurationError
 from pantin_bridge.io_mapping import IoModule, IoZone
 from pantin_bridge.modbus_frames import Frame, FrameDecoder, FrameError, encode_frame
 from pantin_bridge.modbus_gate import ConnectionGate, SlaveListener
+from pantin_bridge.modbus_journal import ConnectionJournal
 from pantin_bridge.modbus_pdu import ModbusStore, handle_pdu
 from pantin_bridge.network_address import SourceFilter
 
@@ -47,6 +48,8 @@ class _Connection(asyncio.Protocol):
         self._drain_scheduled = False
         self._eof = False
         self._idle_timer: asyncio.TimerHandle | None = None
+        self._journal: ConnectionJournal | None = None
+        self._close_reason = "closed by the PLC"
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Refuse before the first read: asyncio adds the reader only after this returns.
@@ -63,6 +66,8 @@ class _Connection(asyncio.Protocol):
             return
         self._admitted = True
         self._transport = transport
+        self._journal = ConnectionJournal(self._gate.module_key, source)
+        self._journal.opened()
         sock = transport.get_extra_info("socket")
         if sock is not None:
             # The idle timer covers a silent master; keepalive makes the kernel notice a dead path.
@@ -79,6 +84,7 @@ class _Connection(asyncio.Protocol):
 
     def _close_idle(self) -> None:
         self._idle_timer = None
+        self._close_reason = f"no request for {self._gate.idle_timeout_seconds:.1f} s"
         _log.warning(
             "Module %s closed a connection: no request for %.1f s.",
             self._gate.module_key,
@@ -98,6 +104,7 @@ class _Connection(asyncio.Protocol):
     def eof_received(self) -> bool:
         """Keep the connection open for the answers owed: a master may half-close after a burst."""
         self._eof = True
+        self._close_reason = "the PLC finished sending"
         self._schedule_drain()
         return True
 
@@ -134,10 +141,12 @@ class _Connection(asyncio.Protocol):
         try:
             more = self._answer_batch(transport)
         except FrameError as error:
+            self._close_reason = f"bad frame: {error}"
             _log.warning("Module %s closed a connection: %s.", self._gate.module_key, error)
             transport.close()
             return
         except Exception:  # noqa: BLE001 - logged with its traceback, and the connection is dropped
+            self._close_reason = "request handling failed"
             # Run from call_soon, so nobody above would close this connection for us.
             _log.exception(
                 "Module %s dropped a connection: request handling failed.", self._gate.module_key
@@ -162,6 +171,8 @@ class _Connection(asyncio.Protocol):
     def _answer(self, transport: asyncio.Transport, frame: Frame) -> None:
         self._restart_idle_timer()
         result = handle_pdu(frame.unit_id, frame.pdu, self._store)
+        if self._journal is not None:
+            self._journal.request_handled(result)
         transport.write(encode_frame(frame.transaction_id, frame.unit_id, result.response))
         listener = self._gate.listener
         if result.served:
@@ -180,13 +191,17 @@ class _Connection(asyncio.Protocol):
 
     def connection_lost(self, exc: Exception | None) -> None:
         if exc is not None:
-            _log.info("Module %s lost a connection: %s.", self._gate.module_key, exc)
+            self._close_reason = f"connection lost: {exc}"
+        elif self._gate.stopping:
+            self._close_reason = "the bridge is stopping"
         if self._idle_timer is not None:
             self._idle_timer.cancel()
             self._idle_timer = None
         # A refused connection is aborted too, and was never counted.
         if self._admitted:
             self._admitted = False
+            if self._journal is not None:
+                self._journal.closed(self._close_reason)
             self._gate.released()
 
 
@@ -232,6 +247,7 @@ class ModbusSlave:
 
     async def stop(self) -> None:
         if self._server is not None:
+            self._gate.stopping = True
             self._server.close()
             self._server.close_clients()
             await self._server.wait_closed()

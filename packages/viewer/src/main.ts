@@ -11,7 +11,8 @@ import {
 } from "./controller/controller.ts";
 import { refreshTagValues } from "./controller/drive-commands.ts";
 import { dragPlacement, finishPlacementDrag } from "./controller/placement-actions.ts";
-import { type StorePorts, ViewerStore } from "./controller/viewer-store.ts";
+import type { StorePorts } from "./controller/store-ports.ts";
+import { ViewerStore } from "./controller/viewer-store.ts";
 import { parseStoredGizmoSpace } from "./gizmo/gizmo-space.ts";
 import { parseStoredSteps, serializeSteps } from "./gizmo/gizmo-steps.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
@@ -128,6 +129,9 @@ function createPorts(
     showConsoleLive: (view) => screen.showConsoleLive(view),
     showClock: (view) => withIntents((intents) => screen.showClock(view, intents)),
     showBridge: (view) => withIntents((intents) => screen.showBridge(view, intents)),
+    // A draw dropped here is not retried (showJournal skips unchanged inputs); none is,
+    // since the window only opens through the intents.
+    showBridgeJournal: (view) => withIntents((intents) => screen.showBridgeJournal(view, intents)),
     viewport: () => {
       if (late.viewport === null) {
         throw new Error("The viewport is used before it was created.");

@@ -51,11 +51,26 @@ class PlcWrite:
 
 
 @dataclass(frozen=True)
+class Refusal:
+    """What an exception answer was about, for the log (ADR 0054 point 3). Never logged here."""
+
+    unit_id: int
+    expected_unit_id: int
+    function_code: int
+    # None when the request is too short to carry them.
+    address: int | None
+    quantity: int | None
+    exception: ExceptionCode
+
+
+@dataclass(frozen=True)
 class PduResult:
     response: bytes
     writes: tuple[PlcWrite, ...] = ()
     # False for a request addressed to another unit id: it is not traffic of this module.
     served: bool = True
+    # Set exactly when the response is an exception.
+    refusal: Refusal | None = None
 
 
 class ModbusStore:
@@ -230,18 +245,34 @@ def _exception_pdu(function_code: int, code: ExceptionCode) -> bytes:
     return bytes([function_code | _EXCEPTION_FLAG, code])
 
 
+def _requested_range(function_code: int, body: bytes) -> tuple[int | None, int | None]:
+    """The address and quantity a request asks for, as far as its first four bytes tell."""
+    if function_code not in _HANDLERS or len(body) < struct.calcsize(">HH"):
+        return None, None
+    address, second = struct.unpack(">HH", body[:4])
+    # The second word of functions 5 and 6 is the value written, not a quantity.
+    return address, 1 if function_code in (5, 6) else second
+
+
+def _refused(
+    unit_id: int, pdu: bytes, store: ModbusStore, code: ExceptionCode, *, served: bool
+) -> PduResult:
+    function_code = pdu[0] if pdu else 0
+    address, quantity = _requested_range(function_code, pdu[1:])
+    refusal = Refusal(unit_id, store.unit_id, function_code, address, quantity, code)
+    return PduResult(_exception_pdu(function_code, code), served=served, refusal=refusal)
+
+
 def handle_pdu(unit_id: int, pdu: bytes, store: ModbusStore) -> PduResult:
     """Answer one request. The store changes only for a request that is answered normally."""
     function_code = pdu[0] if pdu else 0
     if unit_id != store.unit_id:
-        return PduResult(
-            _exception_pdu(function_code, ExceptionCode.GATEWAY_NO_RESPONSE), served=False
-        )
+        return _refused(unit_id, pdu, store, ExceptionCode.GATEWAY_NO_RESPONSE, served=False)
     handler = _HANDLERS.get(function_code)
     if handler is None:
-        return PduResult(_exception_pdu(function_code, ExceptionCode.ILLEGAL_FUNCTION))
+        return _refused(unit_id, pdu, store, ExceptionCode.ILLEGAL_FUNCTION, served=True)
     try:
         outcome = handler(store, pdu[1:])
     except ModbusException as refusal:
-        return PduResult(_exception_pdu(function_code, refusal.code))
+        return _refused(unit_id, pdu, store, refusal.code, served=True)
     return PduResult(bytes([function_code]) + outcome.body, outcome.writes)

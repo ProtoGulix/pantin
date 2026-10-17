@@ -72,6 +72,8 @@ export interface BridgeView {
   noModuleText: string | null;
   // Switches the central layout to the I/O view, where the mapping is edited.
   configureIo: { text: string; label: string; active: boolean };
+  // Opens the log window; shown whatever the bridge state (ADR 0054 point 5).
+  journalButton: { text: string; label: string };
   // The chip that unfolds the network part: it tells the mode even when folded.
   networkTitle: string;
   // A refusal from the core must not stay hidden in a closed part.
@@ -184,6 +186,14 @@ function forcedWarningOf(forcedCount: number, t: Translate): BridgeView["forcedW
   };
 }
 
+function configureIoOf(t: Translate, layout: CentralLayout): BridgeView["configureIo"] {
+  return {
+    text: t("bridge.configureIoShort"),
+    label: t("bridge.configureIo"),
+    active: layout === "io",
+  };
+}
+
 export function buildBridgeView(
   model: BridgeModel,
   t: Translate,
@@ -223,11 +233,8 @@ export function buildBridgeView(
     moduleLines,
     noModuleText:
       moduleLines.length === 0 && mappingModules !== null ? t("bridge.modules.none") : null,
-    configureIo: {
-      text: t("bridge.configureIoShort"),
-      label: t("bridge.configureIo"),
-      active: layout === "io",
-    },
+    configureIo: configureIoOf(t, layout),
+    journalButton: { text: t("bridge.journal.button"), label: t("bridge.journal.buttonHint") },
     networkTitle: t(draft.mode === "lan" ? "bridge.network.titleLan" : "bridge.network.titleLocal"),
     networkForcedOpen: model.networkError !== null,
     runningHint: status.state === "running" ? t("bridge.running.hint") : null,

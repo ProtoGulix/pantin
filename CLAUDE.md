@@ -123,7 +123,7 @@ Liste d'E/S : un fichier io.json par Pantin, qui porte les modules et leurs voie
 
 Le travail se fait par délégation. L'agent principal planifie, orchestre et intègre. Il lance en parallèle les tâches indépendantes, par exemple un chantier coeur et un chantier viewer qui ne partagent que le contrat protocol. Chaque subagent reçoit les outils minimum nécessaires.
 
-À créer en phase 0 dans .claude/agents/<nom>.md (frontmatter : name et description obligatoires, tools et model optionnels). Modèle par rôle : sonnet pour core-dev, viewer-dev, test-writer et researcher ; opus seulement pour architect et reviewer. Un agent neuf par tranche, avec une consigne ciblée, plutôt que la reprise d'un agent chargé de tout son historique ; les petites corrections se font sans agent.
+À créer en phase 0 dans .claude/agents/<nom>.md (frontmatter : name et description obligatoires, tools et model optionnels). Modèle par rôle : sonnet pour core-dev, viewer-dev, test-writer, researcher et doc-writer ; opus seulement pour architect et reviewer. Un agent neuf par tranche, avec une consigne ciblée, plutôt que la reprise d'un agent chargé de tout son historique ; les petites corrections se font sans agent.
 
 1. architect : conçoit, rédige les ADR, tranche les questions de découpage. Lecture seule (Read, Grep, Glob).
 2. core-dev : implémente dans packages/core, protocol et bridge. Outils de lecture et d'édition, Bash.
@@ -131,8 +131,9 @@ Le travail se fait par délégation. L'agent principal planifie, orchestre et in
 4. test-writer : écrit tests unitaires et scénarios de pièces.
 5. reviewer : relit le diff contre ce fichier (lisibilité, dépendances, tests, sécurité). Lecture seule plus Bash pour lancer les vérifications, jamais d'édition.
 6. researcher : spikes et vérifications externes (bibliothèques, formats). Recherche web autorisée. Rapporte des faits et signale ce qui n'a pas pu être vérifié.
+7. doc-writer : met à jour le guide utilisateur (docs/site, français et anglais, ADR 0051) et ses captures d'écran après un changement visible par l'utilisateur, avant le reviewer. N'écrit que dans docs/site, les scripts de captures et le CHANGELOG, ne publie rien.
 
-Après chaque lot significatif, reviewer passe avant tout commit. Un avis négatif bloque.
+Après chaque lot qui change ce que voit ou fait l'utilisateur, doc-writer met le guide à jour. Après chaque lot significatif, reviewer passe avant tout commit. Un avis négatif bloque.
 
 ## 8. Qualité du code (non négociable, coeur, viewer et pont)
 

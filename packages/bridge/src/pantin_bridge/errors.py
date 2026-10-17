@@ -13,6 +13,10 @@ class ProtocolError(BridgeError):
     """The core sent something the bridge's hand-written decoders refuse."""
 
 
+class UnknownConsoleCodeError(ProtocolError):
+    """A console entry of a code this bridge does not know: a newer core, harmless to skip."""
+
+
 class CoreUnavailableError(BridgeError):
     """The core could not be reached, or refused the bridge."""
 

@@ -6,6 +6,55 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.1.0-alpha.2] - 2026-10-17
+
+Second pre-release: the bridge log, the bridge started through the
+Access-protected exposure, and the fix of a bridge that stopped on a console
+code it did not know. Still not there: a real CODESYS program driving a scene
+(phase 7, the first test on CODESYS is under way), choosing which nodes of an
+imported file become bodies (phase 8), and phase 9 (packs, several instances).
+
+### Changed
+
+- Core, the PLC bridge can be started and stopped through the Cloudflare
+  development exposure, now behind Cloudflare Access (ADR 0050, 2026-10-16
+  amendment). The tag bus stays closed there (ADR 0046 point 7).
+
+### Fixed
+
+- Bridge, a console entry with the code `bridge_failed` stopped the bridge with a
+  protocol error, because its table of console codes lacked it. The table is now
+  checked against a shared fixture (`console-codes.json`, ADR 0045), and a
+  console entry of an unknown code is skipped with a log line instead of
+  stopping the bridge, so an older bridge keeps running with a newer core.
+
+### Added
+
+- Bridge log (ADR 0054): the core writes one file per Pantin,
+  `<logs dir>/<pantinId>/bridge.log` (default `<pantins dir>/.logs`, option
+  `--logs-dir`, rotated at 1 MB), with its own events and every line the bridge
+  writes on stderr. The Modbus bridge now logs connections accepted, refused
+  and closed, and each refused request with its function, address and
+  exception. `GET /api/pantins/:pantinId/bridge/log` serves the file
+  (`?download=1` for an attachment), the bridge's WARNING and ERROR lines reach
+  the Pantin console as the code `bridge_log` (without the timestamp and the
+  Python logger name, ADR 0054 amendment), and `pnpm pantin bridge-log
+  <pantinId> [--follow]` reads the file with the core stopped. The user guide
+  shows the log window (new `bridge-journal` screenshot, fr and en). The
+  window shows the log as columns (local time, Core/Bridge source badge,
+  Info/Warn./Error level badge, message, indented tracebacks, tinted warning
+  and error rows) with level filters and counts; Copy and Download still give
+  the raw file.
+- Claude Code, a `doc-writer` subagent that keeps the user guide (ADR 0051)
+  and its screenshots in step with a change, in French and English; CLAUDE.md
+  section 7 lists it and calls it before the reviewer.
+
+### Removed
+
+- The `CNAME` and `docs/CNAME` files that GitHub committed on `master` while
+  the Pages domain was set: with the Actions workflow GitHub ignores them, the
+  domain lives in the repository's Pages settings (ADR 0051 point 4).
+
 ## [0.1.0-alpha.1] - 2026-10-16
 
 First pre-release. Not there yet: a real CODESYS program driving a scene
@@ -310,4 +359,5 @@ become bodies (phase 8), and phase 9 (packs, several instances).
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
 
+[0.1.0-alpha.2]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1

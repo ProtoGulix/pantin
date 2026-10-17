@@ -6,22 +6,15 @@ import {
   type SupervisedBridgeClaim,
 } from "../domain/bridge-checks.ts";
 import { appendLogLine, bridgeArguments, truncateLogLine } from "../domain/bridge-output.ts";
-import {
-  type BridgeEvent,
-  type BridgeExitingLine,
-  type BridgeMachineState,
-  INITIAL_BRIDGE_STATE,
-  nextBridgeState,
-} from "../domain/bridge-state.ts";
+import { type BridgeEvent, nextBridgeState } from "../domain/bridge-state.ts";
 import { buildBridgeStatus } from "../domain/bridge-status.ts";
 import { describeIoProblem } from "../domain/io-problem-text.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinService } from "../service/pantin-service.ts";
-import {
-  type BridgeProcess,
-  type BridgeProcessHandlers,
-  startBridgeProcess,
-} from "./bridge-process.ts";
+import { type Entry, isActive, newEntry } from "./bridge-entry.ts";
+import type { BridgeLogFile } from "./bridge-log-file.ts";
+import { type BridgeProcessHandlers, startBridgeProcess } from "./bridge-process.ts";
+import { type BridgeLogSinks, logBridgeLine, logTransition } from "./bridge-supervisor-log.ts";
 
 // Supervises the bridge children of one core, one per Pantin (ADR 0050). It
 // glues the pure state machine and checks to the process adapter, and holds
@@ -33,13 +26,18 @@ export type BridgeSupervisorOptions = {
   // Python of the bridge's venv; undefined when the core has no --bridge-python.
   pythonPath: string | undefined;
   spawn: ProcessSpawner;
-  service: Pick<PantinService, "readIo" | "peekBridgeBusFacts" | "recordBridgeFailure">;
+  service: Pick<
+    PantinService,
+    "readIo" | "peekBridgeBusFacts" | "recordBridgeFailure" | "recordBridgeLog"
+  >;
   // Where the core listens now; read at each start, after the server is bound.
   coreAddress: () => { host: string; port: number };
   // Every address of the host's interfaces (os.networkInterfaces in the real core).
   hostAddresses: () => readonly string[];
   // Receives each bridge log line, to copy it to the core's stderr.
   mirrorLogLine: (pantinId: PantinId, line: string) => void;
+  // The bridge log file of each Pantin (ADR 0054).
+  logFile: BridgeLogFile;
   // Called when the status of a Pantin's bridge changed.
   onChange: (pantinId: PantinId) => void;
   reportError: (error: unknown) => void;
@@ -56,46 +54,11 @@ export type BridgeSupervisor = {
   stop(pantinId: PantinId): BridgeStatus;
   // To call when the bus side of a status may have changed.
   refresh(pantinId: PantinId): void;
+  // The bridge log file as text, empty when there is none (ADR 0054).
+  readLog(pantinId: PantinId): Promise<string>;
   // Stops every child and waits for them to be gone.
   close(): Promise<void>;
 };
-
-type Entry = {
-  state: BridgeMachineState;
-  network: BridgeNetwork | null;
-  log: string[];
-  // Changes at each start, so that a late event of an old child is ignored.
-  generation: number;
-  process: BridgeProcess | undefined;
-  exiting: BridgeExitingLine | undefined;
-  startTimer: NodeJS.Timeout | undefined;
-  ports: number[];
-};
-
-function newEntry(): Entry {
-  return {
-    state: INITIAL_BRIDGE_STATE,
-    network: null,
-    log: [],
-    generation: 0,
-    process: undefined,
-    exiting: undefined,
-    startTimer: undefined,
-    ports: [],
-  };
-}
-
-function isActive(entry: Entry): boolean {
-  // A child still alive counts, also after a start timeout made the state
-  // `failed`: it may still hold its ports and its slot.
-  const { phase } = entry.state;
-  return (
-    entry.process !== undefined ||
-    phase === "starting" ||
-    phase === "running" ||
-    phase === "stopping"
-  );
-}
 
 type Context = {
   options: BridgeSupervisorOptions;
@@ -125,9 +88,24 @@ function refresh(context: Context, pantinId: PantinId): void {
   }
 }
 
+function sinksOf(context: Context): BridgeLogSinks {
+  const { options } = context;
+  return {
+    logFile: options.logFile,
+    recordConsole: options.service.recordBridgeLog,
+    reportError: options.reportError,
+  };
+}
+
 function dispatch(context: Context, pantinId: PantinId, entry: Entry, event: BridgeEvent): void {
   const before = entry.state;
   entry.state = nextBridgeState(before, event);
+  logTransition(sinksOf(context), pantinId, {
+    before,
+    after: entry.state,
+    event,
+    network: entry.network,
+  });
   if (entry.state.phase !== "starting") {
     clearTimeout(entry.startTimer);
   }
@@ -163,6 +141,7 @@ function handlersFor(
       current(() => {
         entry.log = appendLogLine(entry.log, line);
         context.options.mirrorLogLine(pantinId, truncateLogLine(line));
+        logBridgeLine(sinksOf(context), pantinId, line);
         refresh(context, pantinId);
       }),
     onSpawnError: (error) =>
@@ -285,12 +264,14 @@ export function createBridgeSupervisor(options: BridgeSupervisorOptions): Bridge
     start: (pantinId, request) => startBridge(context, pantinId, request),
     stop: (pantinId) => stopBridge(context, pantinId),
     refresh: (pantinId) => refresh(context, pantinId),
+    readLog: (pantinId) => options.logFile.read(pantinId),
     close: async () => {
       context.closed = true;
       for (const pantinId of context.entries.keys()) {
         stopBridge(context, pantinId);
       }
       await Promise.all([...context.liveProcesses]);
+      await options.logFile.flush();
     },
   };
 }

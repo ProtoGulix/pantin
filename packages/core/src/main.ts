@@ -1,7 +1,8 @@
 import { mkdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { defaultPantinsDirectory } from "./domain/default-directories.ts";
 import { type RunningPantinServer, StartupRefusedError, startPantinServer } from "./http/server.ts";
 import { createPhysicsWorldFactory, loadRapier } from "./physics/rapier-world.ts";
 
@@ -10,7 +11,7 @@ const USAGE = [
   "Usage: node packages/core/src/main.ts [--pantins-dir <path>] [--port <0-65535>]",
   "  [--listen <127.0.0.1 or one private address>] [--allow <ip or cidr>]... [--viewer-dir <path>]",
   "  [--step-converter-python <python of the step-converter venv>]",
-  "  [--bridge-python <python of the bridge venv>]",
+  "  [--bridge-python <python of the bridge venv>] [--logs-dir <path>]",
 ].join("\n");
 
 function parsePort(text: string | undefined): number {
@@ -140,10 +141,12 @@ async function main(): Promise<void> {
       "viewer-dir": { type: "string" },
       "step-converter-python": { type: "string" },
       "bridge-python": { type: "string" },
+      "logs-dir": { type: "string" },
     },
     strict: true,
   });
-  const pantinsDirectory = resolve(values["pantins-dir"] ?? join(homedir(), "pantin-projects"));
+  const pantinsDirectory = resolve(values["pantins-dir"] ?? defaultPantinsDirectory(homedir()));
+  const logsDirectory = values["logs-dir"] === undefined ? undefined : resolve(values["logs-dir"]);
   const port = parsePort(values.port);
   const viewerDirectory = await resolveViewerDirectory(values["viewer-dir"]);
   const stepConverterPython = values["step-converter-python"];
@@ -160,6 +163,7 @@ async function main(): Promise<void> {
     ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
     ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
     ...(bridgePython === undefined ? {} : { bridgePython }),
+    ...(logsDirectory === undefined ? {} : { logsDirectory }),
     reportBridgeLine: (pantinId, line) => writeLine(process.stderr, `[bridge ${pantinId}] ${line}`),
     reportError,
     reportRejectedSource: (source) =>

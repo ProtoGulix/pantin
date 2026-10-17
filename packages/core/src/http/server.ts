@@ -2,11 +2,14 @@ import { spawn } from "node:child_process";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo, Socket } from "node:net";
 import { MAX_IMPORT_BYTES, type PantinId } from "@pantin/protocol";
+import { createBridgeLogFile } from "../bridge/bridge-log-file.ts";
 import { type BridgeSupervisor, createBridgeSupervisor } from "../bridge/bridge-supervisor.ts";
 import { listHostAddresses } from "../bridge/host-addresses.ts";
+import { nodeLogFileSystem } from "../bridge/node-log-file-system.ts";
 import { type BusEndpoint, createBusEndpoint } from "../bus/bus-endpoint.ts";
 import type { ProcessLimits, ProcessSpawner } from "../converter/process-runner.ts";
 import { createStepConverter, type StepConverter } from "../converter/step-converter.ts";
+import { defaultLogsDirectory } from "../domain/default-directories.ts";
 import type { IoMappingSource } from "../domain/io-mapping.ts";
 import {
   isSourceAccepted,
@@ -60,6 +63,8 @@ export type PantinServerOptions = {
   bridgeKillGraceMs?: number;
   // The host's interface addresses; `os.networkInterfaces()` by default.
   hostAddresses?: () => readonly string[];
+  // Bridge log files (ADR 0054): <logs dir>/<pantinId>/bridge.log, `.logs` under the Pantins by default.
+  logsDirectory?: string;
   // Receives each line the bridge writes, to copy it to the core's stderr.
   reportBridgeLine?: (pantinId: string, line: string) => void;
   // Clock of the fixed-step loop (ADR 0012); the real one by default.
@@ -171,6 +176,12 @@ function bridgeSupervisorOf(
       return { host: address.address, port: address.port };
     },
     hostAddresses: options.hostAddresses ?? listHostAddresses,
+    logFile: createBridgeLogFile({
+      logsDirectory: options.logsDirectory ?? defaultLogsDirectory(options.pantinsDirectory),
+      fileSystem: nodeLogFileSystem,
+      now: () => new Date(),
+      reportWriteFailure: options.reportError,
+    }),
     mirrorLogLine: options.reportBridgeLine ?? (() => undefined),
     onChange: parts.onChange,
     reportError: options.reportError,

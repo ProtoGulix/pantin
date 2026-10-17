@@ -64,7 +64,6 @@ redémarre jamais seul.
 | « "…" is not an address of this machine. Choose one of: … » | L'**Adresse d'écoute** n'est pas une adresse de la machine | Choisissez une adresse dans la liste |
 | « A private-network listen address needs at least one allowed IP or CIDR. » | **Réseau privé** sans entrée dans **Automates autorisés** | Saisissez l'IP ou le CIDR de l'automate |
 | « Allow entry "…" is outside the loopback and private ranges, so no source could match it. » | Une entrée de la liste est une adresse publique | N'utilisez que des adresses privées ou de bouclage |
-| « The PLC bridge cannot be started or stopped through an internet exposure. Use the local viewer. » | Requête venue d'un tunnel (Cloudflare) | Démarrez le pont depuis le viewer local |
 
 ### Le pont s'arrête en échec
 
@@ -90,6 +89,7 @@ journal.
 | --- | --- | --- |
 | Le module reste sur **en attente de l'automate** | Aucune requête n'est arrivée | Vérifiez l'adresse IP, le **Port** et l'**Adresse d'unité** du maître Modbus de l'automate |
 | Le module reste en attente, avec l'automate sur une machine virtuelle | La source est refusée : en NAT, elle peut arriver de l'hôte, et l'espace `100.64.0.0/10` est refusé | Lisez le journal du pont (« Module m1 refused a connection from … »). Passez la machine virtuelle en réseau en pont, ou adaptez la liste des automates autorisés. Voir [Connecter un automate](/guide/connect-a-plc) |
+| L'automate se connecte puis la connexion tombe ; le journal dit « no request for 5.0 s » | Le pont refuse les requêtes de l'automate (unité, fonction ou adresse inattendues) puis ferme la connexion inactive | Ouvrez **Journal** dans le bloc **Pont automate** et cherchez « refused a request » : il donne l'unité demandée et celle que le module attend. L'ID d'unité du maître CODESYS doit égaler l'**Adresse d'unité** du module. Voir [Connecter un automate](/guide/connect-a-plc#lire-le-journal-du-pont) |
 | La console : « Automate déconnecté du module m1 (plus de réponse dans le délai) » | Aucune requête pendant la durée du **Chien de garde (ms)** | Augmentez le chien de garde, ou vérifiez que l'automate interroge bien le module. Les commandes booléennes sont remises à 0 |
 | La console : « Automate déconnecté… (connexion fermée) » | L'automate a fermé sa connexion | Même chose : les commandes booléennes sont remises à 0 |
 | La console : « Pont automate déconnecté… les commandes booléennes mappées sont remises à 0 » | Le pont s'est arrêté ou a perdu le cœur | Redémarrez le pont |

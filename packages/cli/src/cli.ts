@@ -1,8 +1,10 @@
+import { BRIDGE_LOG_USAGE, type BridgeLogEnvironment, bridgeLog } from "./bridge-log-command.ts";
 import type { CommandResult } from "./command-result.ts";
 import { generateGvl } from "./gvl.ts";
 import { ioInit } from "./io-init-command.ts";
 import { ioMigrate } from "./io-migrate.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
+import { realEnvironment } from "./real-environment.ts";
 import { validatePantinFolder } from "./validate-folder.ts";
 
 // The pantin command's logic, with its output streams injected so that tests
@@ -16,6 +18,7 @@ const USAGE = [
   "                      write io.json, or with --update map the unmapped tags into m1",
   "  io migrate <folder> convert a legacy io.csv and io-modules.json into io.json",
   "  gvl <folder>        print the CODESYS global variable list of io.json",
+  BRIDGE_LOG_USAGE,
 ].join("\n");
 
 export interface Output {
@@ -74,9 +77,33 @@ async function runGvl(folder: string, { stdout, stderr }: Streams): Promise<numb
   return result.exitCode;
 }
 
+async function runBridgeLog(
+  args: readonly string[],
+  streams: Streams,
+  environment: BridgeLogEnvironment,
+): Promise<number> {
+  const result = await bridgeLog(args, environment, (text) => streams.stdout.write(text));
+  if (result === undefined) {
+    writeLine(streams.stderr, USAGE);
+    return 2;
+  }
+  return report(result, streams);
+}
+
 /** Runs one command; the answer is the exit code: 0 valid, 1 problems, 2 bad usage. */
-export async function runCommand(args: readonly string[], streams: Streams): Promise<number> {
+export async function runCommand(
+  args: readonly string[],
+  streams: Streams,
+  environment: BridgeLogEnvironment = realEnvironment(),
+): Promise<number> {
   const [command, argument, ...extra] = args;
+  if (command === "bridge-log") {
+    return runBridgeLog(
+      [argument, ...extra].filter((value) => value !== undefined),
+      streams,
+      environment,
+    );
+  }
   if (command === "validate" && argument !== undefined && extra.length === 0) {
     return validate(argument, streams);
   }

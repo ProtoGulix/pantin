@@ -166,7 +166,7 @@ Le comportement exact de CODESYS selon le mode réseau n'a pas été mesuré (sp
 0004b en attente, ADR 0046). Les adresses de l'espace partagé `100.64.0.0/10`,
 parfois utilisées par le NAT des machines virtuelles, sont **refusées** pour
 l'instant (ADR 0004, points ouverts). Si votre automate n'est pas accepté,
-regardez la sortie du cœur : le pont y écrit une ligne « Module m1 refused a connection from » suivie de l'adresse, pour chaque connexion refusée.
+ouvrez le **Journal** du pont : il y écrit une ligne « Module m1 refused a connection from » suivie de l'adresse, pour chaque connexion refusée.
 :::
 
 ## Démarrer, arrêter, redémarrer
@@ -198,6 +198,28 @@ Sans le viewer, le pont se lance à la main (voir
   --pantin plc-cylinder --listen 127.0.0.1 --allow 127.0.0.1
 ```
 
+## Lire le journal du pont
+
+Quand l'automate se connecte mais que rien ne marche, le journal du pont dit ce que l'automate a demandé et pourquoi le pont l'a refusé.
+
+- Dans le bloc **Pont automate**, cliquez **Journal** : la fenêtre **Journal du pont automate** s'ouvre et se met à jour toute seule, en colonnes (heure, source **Cœur** ou **Pont**, niveau), avec des bascules **Erreur**, **Avertissement** et **Info** pour filtrer. **Copier** et **Télécharger** servent à joindre le journal à une demande d'aide.
+- Les lignes d'avertissement et d'erreur arrivent aussi dans la console : « Pont automate : … ».
+- Sans le viewer, et même cœur arrêté : `pnpm pantin bridge-log <pantinId>`, avec `--logs-dir <dossier>` si le cœur a été lancé avec cette option, `--pantins-dir <dossier>` si les Pantins ne sont pas dans le dossier par défaut, et `--follow` pour suivre le fichier en direct.
+
+Le fichier est `<dossier des Pantins>/.logs/<pantinId>/bridge.log` (détails dans [Panneaux et boutons](/reference/panels#le-journal-du-pont-automate)).
+
+Exemple : l'automate se connecte, puis la connexion tombe au bout de quelques secondes (« no request for 5.0 s »). Le journal contient :
+
+```text
+Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
+```
+
+Le module répond à l'unité 1 (son **Adresse d'unité** dans `io.json`), l'automate interroge l'unité 2. L'**ID d'unité** (Unit-ID) de l'esclave Modbus dans CODESYS doit être égal à l'**Adresse d'unité** du module : alignez l'un sur l'autre, puis redémarrez le pont.
+
+::: warning Non vérifié
+Cet exemple a été produit avec un client Modbus de test qui envoie un mauvais Unit-ID, pas avec CODESYS ; le dépôt n'a pas rejoué le cas avec un programme CODESYS complet.
+:::
+
 ## Tags forcés
 
 Une commande écrite depuis le viewer **force** le tag : l'automate ne peut plus
@@ -223,9 +245,10 @@ pas le pare-feu de la machine (ADR 0004, 0046).
   liaisons simulées.
 - Les services écoutent sur `127.0.0.1` par défaut. Ouvrir le réseau est un choix
   explicite, limité aux réseaux privés.
-- Modbus ne passe jamais par un tunnel ou un proxy (Cloudflare, nginx) :
-  le cœur refuse de démarrer ou d'arrêter le pont par une requête venue d'un tel
-  tunnel (ADR 0046 point 7).
+- Modbus ne passe jamais par un tunnel ou un proxy (Cloudflare, nginx) : le pont
+  écoute sur l'adresse que vous choisissez, sur votre réseau. Une exposition par
+  tunnel protégée par Cloudflare Access peut démarrer ou arrêter le pont, mais
+  n'ouvre jamais le bus de tags (ADR 0046 point 7, ADR 0050).
 - Avant tout usage sur un vrai réseau de production, la position de Pantin doit
   être réévaluée par une nouvelle décision (authentification, TLS, segmentation).
 

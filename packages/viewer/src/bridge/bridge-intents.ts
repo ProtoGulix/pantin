@@ -1,3 +1,5 @@
+import type { JournalLevel } from "./bridge-log-parser.ts";
+
 // What the bridge block asks of the controller (ADR 0050 point 8). Texts arrive
 // raw, as typed or chosen; the core is the one that validates them.
 export interface BridgeIntents {
@@ -8,4 +10,8 @@ export interface BridgeIntents {
   chooseBridgeNetwork(mode: string): void;
   chooseBridgeListen(address: string): void;
   editBridgeAllow(text: string): void;
+  // The log window (ADR 0054 point 5).
+  openBridgeJournal(): void;
+  closeBridgeJournal(): void;
+  toggleBridgeJournalLevel(level: JournalLevel): void;
 }

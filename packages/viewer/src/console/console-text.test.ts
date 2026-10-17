@@ -110,6 +110,12 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "pantin" },
     params: { kind: "mapping_changed", message: "The I/O mapping changed." },
   }),
+  bridge_log: entryOf(20, {
+    code: "bridge_log",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { message: "WARNING refused request: function 3, address 40000" },
+  }),
 };
 
 const expected = {
@@ -138,6 +144,7 @@ const expected = {
     clock_paused_with_bridge:
       "Simulation en pause alors qu'un pont automate est connecté : l'automate voit une machine figée.",
     bridge_failed: "Le pont automate s'est arrêté sur une erreur (détail ci-dessous).",
+    bridge_log: "Pont automate : WARNING refused request: function 3, address 40000",
   },
   en: {
     forced_tag_written:
@@ -164,6 +171,7 @@ const expected = {
     clock_paused_with_bridge:
       "Simulation paused while a PLC bridge is connected: the PLC sees a frozen machine.",
     bridge_failed: "The PLC bridge stopped on an error (detail below).",
+    bridge_log: "PLC bridge: WARNING refused request: function 3, address 40000",
   },
 } as const;
 

@@ -7,7 +7,7 @@ import { withOpenPantin } from "../viewer-state.ts";
 import { clearConsole, refreshConsole } from "./console-actions.ts";
 import { createPanelIntents } from "./controller.ts";
 import { testStore } from "./controller-test-helpers.ts";
-import type { StorePorts } from "./viewer-store.ts";
+import type { StorePorts } from "./store-ports.ts";
 
 // Reading the console in the 250 ms loop, and the panel's intents (ADR 0031).
 

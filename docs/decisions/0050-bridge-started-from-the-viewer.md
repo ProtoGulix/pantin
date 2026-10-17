@@ -400,3 +400,26 @@ at all times while a Pantin is open, whatever the central layout.
   same dots. The viewer reads io.json whenever a Pantin is open.
 - The `io` choice leaves the top toolbar; the View menu keeps it.
 - Viewer only: the core already pushes the status in every layout.
+
+## Amendment (2026-10-16): start and stop through the Cloudflare exposure
+
+Asked by the user, who opens the viewer through pantin-dev and could not
+start the bridge (user statements, 2026-10-16). Cloudflare Access now
+protects the exposure: on 2026-10-16 an unauthenticated request to `/` and
+to `/api/pantins` was redirected (302) to the Access login, and nginx on the
+LAN address answered 403 for the pantin-dev name.
+
+- Point 4, **Exposure**, is lifted: `PUT .../bridge` no longer looks at
+  `X-Pantin-Exposure`. Starting or stopping the bridge through the exposure
+  is the same request as from the local viewer, with the same checks (listen
+  address of this host, private allow list, ports, cap).
+- Unchanged: the tag bus stays closed through the exposure, at nginx and in
+  the core (ADR 0046 point 7), and Modbus is never proxied. The bridge
+  listens on the address chosen in the request, never through the tunnel.
+- Risk accepted: whoever passes the Access policy can open a Modbus slave on
+  the LAN. The Access token is still not checked at the origin
+  (docs/backlog/access-token-at-origin.md), so a misconfigured policy or
+  tunnel would open this too. That item becomes a prerequisite of any
+  exposure shared beyond the user.
+- Rejected: keeping the refusal and reaching the viewer through an SSH
+  tunnel or the core's `lan` mode. Both work, but the user wants one address.

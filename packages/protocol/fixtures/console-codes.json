@@ -1,0 +1,22 @@
+{
+  "forced_tag_written": "error",
+  "step_error": "error",
+  "diagnostic_raised": "warning",
+  "diagnostic_cleared": "info",
+  "fault_set": "info",
+  "fault_cleared": "info",
+  "migrated": "info",
+  "clock_paused": "info",
+  "clock_resumed": "info",
+  "face_file_missing": "warning",
+  "emitter_blocked": "warning",
+  "product_limit": "warning",
+  "physics_rebuilt": "info",
+  "plc_connected": "info",
+  "plc_disconnected": "warning",
+  "bridge_connected": "info",
+  "bridge_disconnected": "warning",
+  "bridge_failed": "error",
+  "bridge_log": "warning",
+  "clock_paused_with_bridge": "warning"
+}

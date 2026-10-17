@@ -1,5 +1,5 @@
 import type { BridgeFailure, PantinId } from "@pantin/protocol";
-import { bridgeFailedEvent } from "../domain/console-events.ts";
+import { bridgeFailedEvent, bridgeLogEvent } from "../domain/console-events.ts";
 import { recordConsoleEvents } from "./console-record.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
 
@@ -25,6 +25,11 @@ export function bridgeOperations(context: ServiceContext) {
     recordBridgeFailure: async (pantinId: PantinId, failure: BridgeFailure): Promise<void> => {
       const openPantin = await loadPantin(context, pantinId);
       recordConsoleEvents(context, openPantin, [bridgeFailedEvent(failure)]);
+    },
+    // ADR 0054 point 4: a warning or error line of the bridge's log.
+    recordBridgeLog: async (pantinId: PantinId, message: string): Promise<void> => {
+      const openPantin = await loadPantin(context, pantinId);
+      recordConsoleEvents(context, openPantin, [bridgeLogEvent(message)]);
     },
   };
 }

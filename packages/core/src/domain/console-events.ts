@@ -212,3 +212,14 @@ export function bridgeFailedEvent(failure: {
     params: { kind: failure.kind, message: failure.message.slice(0, MAX_BRIDGE_FAILURE_MESSAGE) },
   };
 }
+
+// ADR 0054 point 4: a WARNING or ERROR line of the bridge's log, as the bridge
+// wrote it minus its timestamp and level.
+export function bridgeLogEvent(message: string): ConsoleEvent {
+  return {
+    code: "bridge_log",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { message: message.slice(0, MAX_BRIDGE_FAILURE_MESSAGE) },
+  };
+}

@@ -13,7 +13,12 @@ from websockets.exceptions import ConnectionClosed, InvalidHandshake, InvalidURI
 
 from pantin_bridge import bus_messages
 from pantin_bridge.bus_messages import CloseCode, ServerMessage, Welcome
-from pantin_bridge.errors import BusClosedError, CoreUnavailableError, ProtocolError
+from pantin_bridge.errors import (
+    BusClosedError,
+    CoreUnavailableError,
+    ProtocolError,
+    UnknownConsoleCodeError,
+)
 
 _log = logging.getLogger(__name__)
 
@@ -129,7 +134,12 @@ class BusClient:
         """Decoded messages until the core closes the bus, which is always an error here."""
         try:
             async for raw in self._connection:
-                yield bus_messages.decode_server_message(self._as_text(raw))
+                try:
+                    yield bus_messages.decode_server_message(self._as_text(raw))
+                except UnknownConsoleCodeError as error:
+                    # Console entries only inform the log: an older bridge keeps running
+                    # against a newer core. Every other message stays strictly validated.
+                    _log.info("Skipped a console entry: %s", error)
         except ConnectionClosed as error:
             raise _closed_error(error) from error
         raise BusClosedError("The tag bus was closed by the core. Restart the bridge.")

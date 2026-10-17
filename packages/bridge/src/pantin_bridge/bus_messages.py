@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
 
-from pantin_bridge.errors import ProtocolError
+from pantin_bridge.errors import ProtocolError, UnknownConsoleCodeError
 from pantin_bridge.wire_decoding import (
     JsonObject,
     as_boolean,
@@ -50,7 +50,9 @@ class ErrorCode(StrEnum):
     INTERNAL_ERROR = "internal_error"
 
 
-# The level of each console code is fixed by the code (ADR 0031 point 3).
+# The level of each console code is fixed by the code (ADR 0031 point 3). A test checks this
+# table against packages/protocol/fixtures/console-codes.json, which the protocol tests check
+# against the schema.
 _CONSOLE_LEVELS: Final = {
     "forced_tag_written": "error",
     "step_error": "error",
@@ -69,6 +71,8 @@ _CONSOLE_LEVELS: Final = {
     "plc_disconnected": "warning",
     "bridge_connected": "info",
     "bridge_disconnected": "warning",
+    "bridge_failed": "error",
+    "bridge_log": "warning",
     "clock_paused_with_bridge": "warning",
 }
 
@@ -170,7 +174,7 @@ def _decode_console_entry(raw: object) -> ConsoleEntry:
     code = as_string(entry.get("code"), "entry.code")
     expected_level = _CONSOLE_LEVELS.get(code)
     if expected_level is None:
-        raise ProtocolError(f'entry.code "{code}" is not a known console code.')
+        raise UnknownConsoleCodeError(f'entry.code "{code}" is not a known console code.')
     level = as_string(entry.get("level"), "entry.level")
     if level != expected_level:
         raise ProtocolError(f'entry.level of "{code}" must be {expected_level}, got {level}.')

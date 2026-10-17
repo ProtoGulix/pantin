@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 
 import pytest
 
 from fake_core import FakeCore
+from pantin_bridge import bus_messages
 from pantin_bridge.bus_client import BusClient
 from pantin_bridge.bus_messages import (
     CloseCode,
@@ -216,3 +218,76 @@ def test_a_full_outbox_fails_the_client_instead_of_raising_in_a_modbus_callback(
             return client.failed.exception()
 
     assert isinstance(asyncio.run(scenario()), BusClosedError)
+
+
+def _console_frame(code: str, level: str) -> dict[str, object]:
+    return {
+        "type": "console",
+        "entry": {
+            "sequence": 1,
+            "firstSequence": 1,
+            "wallTime": "2026-10-13T08:00:00.000Z",
+            "simulationTime": 0,
+            "count": 1,
+            "code": code,
+            "level": level,
+            "source": {"kind": "pantin"},
+            "params": {},
+        },
+    }
+
+
+def test_skips_a_console_entry_of_an_unknown_code_and_keeps_reading() -> None:
+    async def scenario() -> ServerMessage:
+        async with FakeCore({}) as core:
+            client, _welcome = await BusClient.open(_url(core), MAPPING_ID)
+            await core.send(_console_frame("a_code_of_a_newer_core", "warning"))
+            await core.send({"type": "io_changed"})
+            return await anext(client.messages())
+
+    # The unknown entry is skipped, and the next message arrives.
+    assert isinstance(asyncio.run(scenario()), IoChanged)
+
+
+def test_a_known_console_code_with_the_wrong_level_still_fails() -> None:
+    async def scenario() -> None:
+        async with FakeCore({}) as core:
+            client, _welcome = await BusClient.open(_url(core), MAPPING_ID)
+            await core.send(_console_frame("bridge_log", "info"))
+            await anext(client.messages())
+
+    with pytest.raises(ProtocolError):
+        asyncio.run(scenario())
+
+
+def test_decodes_the_bridge_log_and_bridge_failed_entries() -> None:
+    for code, level in (("bridge_log", "warning"), ("bridge_failed", "error")):
+        message = bus_messages.decode_server_message(json.dumps(_console_frame(code, level)))
+        assert isinstance(message, ConsoleEntry)
+        assert message.code == code
+
+
+def test_a_bridge_log_entry_is_not_logged_again(caplog: pytest.LogCaptureFixture) -> None:
+    # The core builds it from the bridge's own log: logging it would feed back for ever.
+    from pantin_bridge.bridge import _log_console  # noqa: PLC0415
+
+    caplog.set_level(logging.INFO)
+    entry = bus_messages.decode_server_message(json.dumps(_console_frame("bridge_log", "warning")))
+    assert isinstance(entry, ConsoleEntry)
+    _log_console(entry)
+
+    assert caplog.records == []
+
+
+def test_a_core_warning_is_logged_at_info(caplog: pytest.LogCaptureFixture) -> None:
+    # At WARNING it would come back from the core as a duplicate bridge_log entry.
+    from pantin_bridge.bridge import _log_console  # noqa: PLC0415
+
+    caplog.set_level(logging.INFO)
+    entry = bus_messages.decode_server_message(
+        json.dumps(_console_frame("plc_disconnected", "warning"))
+    )
+    assert isinstance(entry, ConsoleEntry)
+    _log_console(entry)
+
+    assert [record.levelno for record in caplog.records] == [logging.INFO]

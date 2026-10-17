@@ -1,16 +1,12 @@
-import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
-import { BridgeFailureKindSchema } from "./bridge.ts";
+import { ParamsSchemas } from "./console-params.ts";
 import {
   ActuatorIdSchema,
   BodyIdSchema,
   DriveIdSchema,
-  EmitterIdSchema,
   JointIdSchema,
-  KeySchema,
   SensorIdSchema,
 } from "./ids.ts";
-import { TagNameSchema } from "./tag.ts";
 
 // The Pantin console (ADR 0031): what happens in the core, per open Pantin,
 // kept in memory (last 1000 entries), never saved.
@@ -56,46 +52,6 @@ const JointOrDriveSourceSchema = z.discriminatedUnion("kind", [
 ]);
 const PantinSourceSchema = z.object({ kind: z.literal("pantin") });
 const BodySourceSchema = z.object({ kind: z.literal("body"), id: BodyIdSchema });
-
-// Params are typed per code, not a loose record: a client's translation of a
-// code knows which placeholders exist, and a new code cannot ship without
-// saying what it carries. Every param is a primitive, so folding compares
-// them by value.
-const ParamsSchemas = {
-  forced_tag_written: z.object({
-    tag: TagNameSchema,
-    forcedValue: z.number().finite(),
-    writtenValue: z.number().finite(),
-  }),
-  // `detail` is the exception's message: developer text, not translated, but
-  // what tells two different step errors apart. Cut to keep entries small.
-  step_error: z.object({ detail: z.string().max(300) }),
-  diagnostic: z.object({ diagnostic: z.enum(DRIVE_DIAGNOSTICS) }),
-  fault: z.object({ fault: z.enum(["unresponsive", "jammed"]) }),
-  migrated: z.object({
-    from: z.number().int().positive(),
-    to: z.number().int().positive(),
-  }),
-  clock: z.object({}),
-  // ADR 0035 point 2: the converter could not prove the face map of this
-  // STEP body, so alignment only offers the fallback pick on it. The reason
-  // goes to the core log.
-  face_file_missing: z.object({}),
-  // ADR 0043 points 5 and 11: an emitter's spawn that did not happen (the
-  // emitter id), and the products a physics rebuild removed (their count).
-  spawn_skipped: z.object({ emitter: EmitterIdSchema }),
-  physics_rebuilt: z.object({ products: z.number().int().positive() }),
-  // ADR 0045 point 11: a PLC module (its key in io.json) lost or found
-  // its connection, and why: its last connection closed, or no request came
-  // within its watchdog time. The bridge process itself: same reasons, the
-  // bus connection closed or missed its pongs.
-  plc_module: z.object({ module: KeySchema }),
-  plc_module_lost: z.object({ module: KeySchema, reason: z.enum(["closed", "timeout"]) }),
-  bridge_lost: z.object({ reason: z.enum(["closed", "timeout"]) }),
-  // ADR 0050 point 3: the supervised bridge failed; `message` is the bridge's
-  // own English text, cut to keep entries small.
-  bridge_failed: z.object({ kind: BridgeFailureKindSchema, message: z.string().max(300) }),
-};
 
 const eventShapes = {
   forcedTagWritten: z.object({
@@ -206,6 +162,12 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.bridge_failed,
   }),
+  bridgeLog: z.object({
+    code: z.literal("bridge_log"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.bridge_log,
+  }),
   // ADR 0045 point 12: paused while a bridge is connected, which the PLC sees
   // as a frozen machine.
   clockPausedWithBridge: z.object({
@@ -237,6 +199,7 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.bridgeConnected,
   eventShapes.bridgeDisconnected,
   eventShapes.bridgeFailed,
+  eventShapes.bridgeLog,
   eventShapes.clockPausedWithBridge,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
@@ -274,6 +237,7 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.bridgeConnected.extend(entryFields),
   eventShapes.bridgeDisconnected.extend(entryFields),
   eventShapes.bridgeFailed.extend(entryFields),
+  eventShapes.bridgeLog.extend(entryFields),
   eventShapes.clockPausedWithBridge.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;

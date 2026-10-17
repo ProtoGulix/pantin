@@ -2,7 +2,8 @@ import type { IoMappingResponse } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import type { Viewport } from "../scene/viewport.ts";
-import { type StorePorts, ViewerStore } from "./viewer-store.ts";
+import type { StorePorts } from "./store-ports.ts";
+import { ViewerStore } from "./viewer-store.ts";
 
 // A store over a fake API, for the tests of controller actions.
 
@@ -51,6 +52,7 @@ export function testStore(
       showConsoleLive: () => undefined,
       showClock: () => undefined,
       showBridge: () => undefined,
+      showBridgeJournal: () => undefined,
       storeCentralLayout,
       storeGizmoSteps: () => undefined,
       storeGizmoSpace: () => undefined,

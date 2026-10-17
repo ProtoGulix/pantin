@@ -7,8 +7,12 @@ import { KeySchema } from "./ids.ts";
 //   PUT /api/pantins/:pantinId/bridge  SetBridgeRequest -> BridgeStatus
 //        {running: true, listen, allow}: start (the answer is `starting`);
 //        {running: false}: stop (`stopping`, or the current state when the
-//        bridge is already stopped or failed). 403 under the cloudflare
-//        exposure header; `bridge_unavailable` without --bridge-python.
+//        bridge is already stopped or failed). `bridge_unavailable` without
+//        --bridge-python.
+//   GET /api/pantins/:pantinId/bridge/log  -> text/plain; charset=utf-8
+//        The bridge log file (ADR 0054), empty when there is none yet;
+//        `?download=1` adds `Content-Disposition: attachment;
+//        filename="<pantinId>-bridge.log"`. 404 for an unknown Pantin.
 //
 // The pose stream (ADR 0015) also carries the `bridge` event: a BridgeStatus,
 // sent when the stream opens and on every change of it.
