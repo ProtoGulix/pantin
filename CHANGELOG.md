@@ -6,6 +6,14 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.1.0-alpha.2] - 2026-10-17
+
+Second pre-release: the bridge log, the bridge started through the
+Access-protected exposure, and the fix of a bridge that stopped on a console
+code it did not know. Still not there: a real CODESYS program driving a scene
+(phase 7, the first test on CODESYS is under way), choosing which nodes of an
+imported file become bodies (phase 8), and phase 9 (packs, several instances).
+
 ### Changed
 
 - Core, the PLC bridge can be started and stopped through the Cloudflare
@@ -351,4 +359,5 @@ become bodies (phase 8), and phase 9 (packs, several instances).
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
 
+[0.1.0-alpha.2]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1
