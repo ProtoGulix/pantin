@@ -472,6 +472,8 @@ The console also warns when the simulation is paused while a PLC bridge is conne
 
 ### The PLC bridge log
 
+![The PLC bridge log window: CORE and BRIDGE lines, with a coloured WARNING line](/screenshots/en/bridge-journal.webp)
+
 The card's **Log** button opens a **PLC bridge log** window. It shows the end of the bridge log file (see [The log file](#the-log-file)) in a monospace list (**Log lines**), scrolled to the bottom. While it is open, it refreshes on every new bridge state.
 
 | Control | What it does | Greyed out when |

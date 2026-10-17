@@ -117,8 +117,12 @@ async function captureAllLanguages(
   encoderPage: Page,
   baseUrl: string,
   outputRoot: string,
+  pantinsDirectory: string,
 ): Promise<void> {
   for (const entry of LANGUAGES) {
+    // The bridge log outlives a run: start each language with an empty one, so the journal
+    // picture shows that run only.
+    await rm(join(pantinsDirectory, ".logs"), { recursive: true, force: true });
     const names = await captureLanguage(browser, encoderPage, baseUrl, outputRoot, entry);
     process.stdout.write(`${entry.language}: ${names.length} screenshots (${names.join(", ")})\n`);
   }
@@ -161,7 +165,7 @@ async function main(): Promise<void> {
     // Pictures go to a temporary folder first: a failed run leaves the published ones untouched.
     const freshOutput = join(pantinsDirectory, "screenshots");
     await Promise.race([
-      captureAllLanguages(browser, encoderPage, core.baseUrl, freshOutput),
+      captureAllLanguages(browser, encoderPage, core.baseUrl, freshOutput, pantinsDirectory),
       interruption(),
     ]);
     await replaceDirectory(freshOutput, OUTPUT_ROOT);

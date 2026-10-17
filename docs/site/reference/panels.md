@@ -472,6 +472,8 @@ La console prévient aussi quand la simulation est en pause alors qu'un pont aut
 
 ### Le journal du pont automate
 
+![La fenêtre Journal du pont automate : lignes CORE et BRIDGE, avec une ligne WARNING en couleur](/screenshots/fr/bridge-journal.webp)
+
 Le bouton **Journal** de la carte ouvre une fenêtre **Journal du pont automate**. Elle montre la fin du fichier de journal du pont (voir [Le fichier de journal](#le-fichier-de-journal)) dans une liste à chasse fixe (**Lignes du journal**), calée en bas. Tant qu'elle est ouverte, elle se met à jour à chaque nouvel état du pont.
 
 | Contrôle | Ce qu'il fait | Grisé quand |

@@ -30,7 +30,8 @@ All notable changes to Pantin. The format follows
   exception. `GET /api/pantins/:pantinId/bridge/log` serves the file
   (`?download=1` for an attachment), the bridge's WARNING and ERROR lines reach
   the Pantin console as the code `bridge_log`, and `pnpm pantin bridge-log
-  <pantinId> [--follow]` reads the file with the core stopped.
+  <pantinId> [--follow]` reads the file with the core stopped. The user guide
+  shows the log window (new `bridge-journal` screenshot, fr and en).
 - Claude Code, a `doc-writer` subagent that keeps the user guide (ADR 0051)
   and its screenshots in step with a change, in French and English; CLAUDE.md
   section 7 lists it and calls it before the reviewer.
