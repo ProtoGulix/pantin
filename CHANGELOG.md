@@ -48,6 +48,9 @@ All notable changes to Pantin. The format follows
   its own dash and width, with per-theme colours away from the state hues
   and the brand; conveyor volumes are greys of different lightness, the
   emitter marked "+" and the absorber "−".
+- Documentation (ADR 0057, last slice): a reference page "Lire les couleurs et
+  les repères" / "Reading colours and cues" lists every coding with its
+  non-colour cue first; the screenshots are regenerated with the new look.
 
 ### Fixed
 

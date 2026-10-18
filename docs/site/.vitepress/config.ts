@@ -37,6 +37,7 @@ const frenchReference = [
   { text: "Menus", link: "/reference/menus" },
   { text: "Panneaux et boutons", link: "/reference/panels" },
   { text: "Vues centrales", link: "/reference/views" },
+  { text: "Lire les couleurs et les repères", link: "/reference/colours" },
   { text: "Raccourcis clavier et souris", link: "/reference/shortcuts" },
 ];
 
@@ -77,6 +78,7 @@ const englishReference = [
   { text: "Menus", link: "/en/reference/menus" },
   { text: "Panels and buttons", link: "/en/reference/panels" },
   { text: "Central views", link: "/en/reference/views" },
+  { text: "Reading colours and cues", link: "/en/reference/colours" },
   { text: "Keyboard and mouse shortcuts", link: "/en/reference/shortcuts" },
 ];
 

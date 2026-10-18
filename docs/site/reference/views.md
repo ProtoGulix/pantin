@@ -84,7 +84,7 @@ Un corps ou un assemblage sélectionné prend une teinte bleue (la couleur de s�
 
 ### Les capteurs dans la vue
 
-Chaque capteur de liaison est dessiné dans la vue : un tronçon épais de l'axe pour un capteur de plage, un arc pour un pivot, un anneau sinon. Il s'allume (bleu) quand son tag d'état est à 1 et reste grisé à 0. Le viewer ne calcule jamais cet état : il lit le tag.
+Chaque capteur de liaison est dessiné dans la vue : un tronçon épais de l'axe pour un capteur de plage, un arc pour un pivot, un anneau sinon. Il s'allume (vert, plus épais et opaque) quand son tag d'état est à 1 et reste neutre, fin et translucide à 0 ; voir [Lire les couleurs et les repères](/reference/colours). Le viewer ne calcule jamais cet état : il lit le tag.
 
 ### Masquer et isoler
 

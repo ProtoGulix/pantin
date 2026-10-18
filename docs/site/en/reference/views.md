@@ -84,7 +84,7 @@ A selected body or assembly takes a blue tint (the selection colour) and an outl
 
 ### Sensors in the view
 
-Each joint sensor is drawn in the view: a thick stretch of the axis for a range sensor, an arc for a pivot, a ring otherwise. It lights up (blue) when its state tag is 1 and stays greyed out at 0. The viewer never computes this state: it reads the tag.
+Each joint sensor is drawn in the view: a thick stretch of the axis for a range sensor, an arc for a pivot, a ring otherwise. It lights up (green, thicker and opaque) when its state tag is 1 and stays neutral, thin and translucent at 0; see [Reading colours and cues](/en/reference/colours). The viewer never computes this state: it reads the tag.
 
 ### Hiding and isolating
 
