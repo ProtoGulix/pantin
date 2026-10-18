@@ -6,6 +6,15 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.1.0] - 2026-10-18
+
+First release. A real CODESYS program drives a simulated machine in closed
+loop: CODESYS Control Win V3 x64 drove `examples/plc-cylinder` both ways over
+Modbus TCP on 2026-10-18, with the setup described in the user guide. Verified
+on that one case only: other CODESYS versions, the English CODESYS interface
+and WAGO targets are not. Not there yet: choosing which nodes of an imported
+file become bodies (phase 8), and phase 9 (packs, several instances).
+
 ### Added
 
 - User guide, Connect a PLC: the CODESYS setup verified on 2026-10-18 with a
@@ -386,5 +395,6 @@ become bodies (phase 8), and phase 9 (packs, several instances).
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
 
+[0.1.0]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0
 [0.1.0-alpha.2]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1
