@@ -5,5 +5,10 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["."]
+  "include": [
+    ".",
+    "../packages/viewer/src/theme/data-palette.ts",
+    "../packages/viewer/src/theme/scene-palette.ts",
+    "../packages/viewer/src/theme/theme.ts"
+  ]
 }

@@ -18,6 +18,7 @@ import {
   type Vector3Tuple,
 } from "../frames.ts";
 import { type MeshFileFormat, meshFormatFromPath, meshLoaderOptions } from "../mesh-format.ts";
+import { DATA_COLOURS } from "../theme/data-palette.ts";
 
 export interface LoadedBody {
   // Parent of everything the loader produced; carries the frame conversion.
@@ -31,7 +32,7 @@ export interface LoadedBody {
 // STL has no material; a light neutral grey reads well under the stage lights.
 function applyDefaultMaterial(scene: Scene, body: Body, meshes: AbstractMesh[]): void {
   const material = new PBRMaterial(`body-material:${body.id}`, scene);
-  material.albedoColor = Color3.FromHexString("#b9bec7");
+  material.albedoColor = Color3.FromHexString(DATA_COLOURS.defaultBody);
   material.metallic = 0.1;
   material.roughness = 0.55;
   for (const mesh of meshes) {

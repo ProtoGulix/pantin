@@ -1,3 +1,5 @@
+import { DATA_COLOURS } from "../theme/data-palette.ts";
+
 // The beam of a presence sensor follows its `state` tag (ADR 0024 points 4 and 5):
 // the viewer reads the bit, it never evaluates the sensor.
 
@@ -6,8 +8,8 @@ export interface BeamLook {
   alpha: number;
 }
 
-export const BEAM_OFF_LOOK: BeamLook = { color: "#8a4a44", alpha: 0.5 };
-export const BEAM_ON_LOOK: BeamLook = { color: "#ff5a4d", alpha: 1 };
+export const BEAM_OFF_LOOK: BeamLook = { color: DATA_COLOURS.lightBeam.off, alpha: 0.5 };
+export const BEAM_ON_LOOK: BeamLook = { color: DATA_COLOURS.lightBeam.on, alpha: 1 };
 
 /** A missing tag (not read yet) counts as off, like the sensor markers. */
 export function isBeamOn(stateTag: string | null, values: ReadonlyMap<string, number>): boolean {

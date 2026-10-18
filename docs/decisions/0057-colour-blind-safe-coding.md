@@ -164,3 +164,17 @@ Codings to change (identity untouched):
   per-theme values, live in `theme/data-palette.ts` and follow this ADR.
 - Point 5: every selected body gets an outline, not only a joint's child.
 - Point 7: the contrast test is extended by `tests/viewer-colour-pairs.test.ts`.
+
+## Amendment (2026-10-18): the pair ratio of rule 2, found in slice 1
+
+Measured in slice 1: with every colour at 3:1 or more from its ground (WCAG
+1.4.11), no pair of the viewer reaches 3:1 between its two colours, not even
+the joint preview pair the user validated (2.3 light, 1.9 dark). The pair
+ratio of rule 2 is therefore dropped. Rule 2 becomes: every pair keeps a
+simulated ΔE of at least 40 for protanopia, deuteranopia and tritanopia, and
+each colour keeps 3:1 against its ground. Where the ground limit makes ΔE 40
+unreachable (light theme axes: X/Y deutan 32, Y/Z tritan 31), the pair is
+registered in the test with its measured floor and its second cue (the
+letters), so that the waiver is visible and cannot widen silently. Rule 1
+(colour is never the only cue) is unchanged and carries the meaning in every
+case.

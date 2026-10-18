@@ -13,6 +13,12 @@ All notable changes to Pantin. The format follows
   deuteranopia and tritanopia (tested), one meaning per colour everywhere,
   the brand orange only for Pantin itself, with the visual identity of
   ADR 0053 unchanged. Decision only: the viewer slices follow.
+- Viewer (ADR 0057, first slice): the data colours of the 3D view (axes,
+  sensor markers, light beams, conveyor volumes, face target, view cube) live
+  in one module; the X/Y/Z axes use one set per theme for the stage, the
+  frame trihedrons and the view cube, red, green and blue with distinct
+  lightness; a test checks the registered colour pairs under colour-blindness
+  simulations and that no literal colour is left in the 3D code.
 
 ### Fixed
 

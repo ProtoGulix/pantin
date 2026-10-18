@@ -1,3 +1,4 @@
+import { DATA_COLOURS } from "../theme/data-palette.ts";
 import type { VolumeStyle } from "./conveyor-drawing.ts";
 
 // Colours of the outlined volumes. Each kind of object has its own hue so that
@@ -11,13 +12,15 @@ export interface VolumeLook {
   edges: string | null;
 }
 
+const VOLUMES = DATA_COLOURS.conveyorVolume;
+
 export const VOLUME_LOOKS: Readonly<Record<VolumeStyle, VolumeLook>> = {
-  belt: { color: "#2a2d33", alpha: 1, edges: "#4b525e" },
+  belt: { ...VOLUMES.belt, alpha: 1 },
   // A guide collides, so it is nearly solid.
-  guide: { color: "#7d6ff0", alpha: 0.75, edges: "#b3a9ff" },
-  emitter: { color: "#3fb950", alpha: 0.16, edges: "#56d364" },
-  absorber: { color: "#f0883e", alpha: 0.16, edges: "#ffa657" },
-  receiver: { color: "#6b3a36", alpha: 1, edges: null },
+  guide: { ...VOLUMES.guide, alpha: 0.75 },
+  emitter: { ...VOLUMES.emitter, alpha: 0.16 },
+  absorber: { ...VOLUMES.absorber, alpha: 0.16 },
+  receiver: { ...VOLUMES.receiver, alpha: 1 },
 };
 
-export const ARROW_COLOR = "#e6edf3";
+export const ARROW_COLOR = DATA_COLOURS.conveyorArrow;

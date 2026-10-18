@@ -1,11 +1,9 @@
 import { Camera } from "@babylonjs/core/Cameras/camera.js";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial.js";
-import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture.js";
 import { Color3 } from "@babylonjs/core/Maths/math.color.js";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder.js";
-import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder.js";
-import { Mesh } from "@babylonjs/core/Meshes/mesh.js";
+import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { type AssemblyFrameTarget, frameFromInverse } from "../assembly-frame.ts";
@@ -16,6 +14,8 @@ import {
   type Vector3Tuple,
 } from "../frames.ts";
 import { invertTransform, type RigidTransform } from "../rigid-transform.ts";
+import type { AxisColours } from "../theme/data-palette.ts";
+import { createAxisLabel } from "./axis-label.ts";
 
 // The trihedron of the selected assembly's frame (ADR 0042 point 1): X red,
 // Y green, Z blue, each tip labelled, over the bodies (rendering group 1, like
@@ -27,9 +27,9 @@ const OVERLAY_GROUP = 1;
 // Length of an axis as a share of the view height at the trihedron's distance.
 const SCREEN_SHARE = 0.12;
 const AXES = [
-  { label: "X", color: "#f85149", core: [1, 0, 0] },
-  { label: "Y", color: "#3fb950", core: [0, 1, 0] },
-  { label: "Z", color: "#58a6ff", core: [0, 0, 1] },
+  { label: "X", key: "x", core: [1, 0, 0] },
+  { label: "Y", key: "y", core: [0, 1, 0] },
+  { label: "Z", key: "z", core: [0, 0, 1] },
 ] as const;
 
 export interface AssemblyTrihedron {
@@ -39,27 +39,20 @@ export interface AssemblyTrihedron {
   followPose(bodyId: string, translation: Vector3Tuple, rotation: QuaternionTuple): void;
   /** Poses were forgotten: hidden until the target body has a pose again. */
   forgetPoses(): void;
-}
-
-function labelPlane(scene: Scene, text: string, color: string): Mesh {
-  const texture = new DynamicTexture(`trihedron-label-${text}`, 64, scene, true);
-  texture.drawText(text, null, 50, "bold 48px sans-serif", color, "transparent", true);
-  texture.hasAlpha = true;
-  const material = new StandardMaterial(`trihedron-label-material-${text}`, scene);
-  material.disableLighting = true;
-  material.emissiveTexture = texture;
-  material.opacityTexture = texture;
-  const plane = CreatePlane(`trihedron-label-${text}`, { size: 0.3 }, scene);
-  plane.material = material;
-  plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  return plane;
+  /** The theme changed: the axes take its colours. */
+  setAxisColours(colours: AxisColours): void;
 }
 
 // One axis of unit length, in the Babylon frame, under `root`.
-function buildAxis(scene: Scene, root: TransformNode, axis: (typeof AXES)[number]): Mesh[] {
+function buildAxis(
+  scene: Scene,
+  root: TransformNode,
+  axis: (typeof AXES)[number],
+  color: string,
+): Mesh[] {
   const material = new StandardMaterial(`trihedron-material-${axis.label}`, scene);
   material.disableLighting = true;
-  material.emissiveColor = Color3.FromHexString(axis.color);
+  material.emissiveColor = Color3.FromHexString(color);
   const direction = Vector3.FromArray(coreToBabylonPosition(axis.core));
   const shaft = CreateCylinder(
     `trihedron-axis-${axis.label}`,
@@ -76,7 +69,7 @@ function buildAxis(scene: Scene, root: TransformNode, axis: (typeof AXES)[number
   const tip = new TransformNode(`trihedron-tip-${axis.label}`, scene);
   tip.parent = root;
   tip.position = direction.scale(1.2);
-  const label = labelPlane(scene, axis.label, axis.color);
+  const label = createAxisLabel(scene, `trihedron-label-${axis.label}`, axis.label, color, 0.3);
   label.parent = tip;
   shaft.parent = root;
   const parts = [shaft, label];
@@ -101,7 +94,22 @@ function worldSize(scene: Scene, at: Vector3): number {
   return SCREEN_SHARE * 2 * Vector3.Distance(camera.globalPosition, at) * Math.tan(camera.fov / 2);
 }
 
-export function createAssemblyTrihedron(scene: Scene): AssemblyTrihedron {
+// Hidden until the target body has a pose.
+function buildTrihedron(scene: Scene, colours: AxisColours): TransformNode {
+  const node = new TransformNode("assembly-trihedron", scene);
+  node.rotationQuaternion = Quaternion.Identity();
+  node.setEnabled(false);
+  for (const axis of AXES) {
+    buildAxis(scene, node, axis, colours[axis.key]);
+  }
+  return node;
+}
+
+export function createAssemblyTrihedron(
+  scene: Scene,
+  initialColours: AxisColours,
+): AssemblyTrihedron {
+  let colours = initialColours;
   let root: TransformNode | null = null;
   let target: AssemblyFrameTarget | null = null;
   // B^-1 of the target body, computed when the target changes, not every frame.
@@ -115,27 +123,21 @@ export function createAssemblyTrihedron(scene: Scene): AssemblyTrihedron {
     root = null;
   };
   const build = () => {
-    const node = new TransformNode("assembly-trihedron", scene);
-    node.rotationQuaternion = Quaternion.Identity();
-    node.setEnabled(false);
-    for (const axis of AXES) {
-      buildAxis(scene, node, axis);
-    }
+    root = buildTrihedron(scene, colours);
+    const node = root;
     observer = scene.onBeforeRenderObservable.add(() => {
       node.scaling.setAll(worldSize(scene, node.position));
     });
-    root = node;
   };
   return {
     show: (next) => {
-      if (next?.bodyId === target?.bodyId) {
-        target = next;
-        inversePlacement = next?.bodyPlacement && invertTransform(next.bodyPlacement);
+      const sameBody = next?.bodyId === target?.bodyId;
+      target = next;
+      inversePlacement = next?.bodyPlacement && invertTransform(next.bodyPlacement);
+      if (sameBody) {
         return;
       }
       dispose();
-      target = next;
-      inversePlacement = next?.bodyPlacement && invertTransform(next.bodyPlacement);
       if (next !== null) {
         build();
       }
@@ -151,5 +153,12 @@ export function createAssemblyTrihedron(scene: Scene): AssemblyTrihedron {
       root.setEnabled(true);
     },
     forgetPoses: () => root?.setEnabled(false),
+    setAxisColours: (next) => {
+      colours = next;
+      if (root !== null) {
+        dispose();
+        build();
+      }
+    },
   };
 }

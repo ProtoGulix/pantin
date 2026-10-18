@@ -12,6 +12,8 @@ import {
   type TriadSegment,
   triadSegments,
 } from "../navigation/view-cube-model.ts";
+import { AXIS_COLOURS, type AxisColours, viewCubeFaceColour } from "../theme/data-palette.ts";
+import type { ThemeName } from "../theme/theme.ts";
 import type { PanelView } from "../view-model.ts";
 import { element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -101,6 +103,11 @@ export class ViewCube {
     }
   }
 
+  /** The theme changed: the triad takes the colours of its axes. */
+  setTheme(theme: ThemeName): void {
+    paintTriad(this.triad, AXIS_COLOURS[theme]);
+  }
+
   /** Alpha and beta of the camera: the cube turns with it. */
   showOrientation(alpha: number, beta: number): void {
     const basis = coreBasisOf(alpha, beta);
@@ -111,7 +118,7 @@ export class ViewCube {
     for (const { face, node } of this.faces) {
       node.style.transform = `${cellTransform(face, basis, CELL_PIXELS)} translateZ(-0.5px)`;
       const lightness = faceLightness(basis, STANDARD_VIEWS[face.face].camera);
-      node.style.background = `hsl(220 8% ${lightness.toFixed(1)}%)`;
+      node.style.background = viewCubeFaceColour(lightness);
     }
     for (const segment of triadSegments(basis, HALF_SIZE, TRIAD_LENGTH, CUBE_PERSPECTIVE)) {
       showSegment(this.triad[segment.axis], segment);
@@ -119,23 +126,30 @@ export class ViewCube {
   }
 }
 
-const TRIAD_COLOURS: Readonly<Record<TriadAxis, string>> = {
-  x: "#e5484d",
-  y: "#46a758",
-  z: "#3e63dd",
-};
+interface Paintable {
+  setAttribute(name: string, value: string): void;
+}
+
+/** The line and the letter of each axis take that axis's colour. */
+export function paintTriad(
+  nodes: Readonly<Record<TriadAxis, { line: Paintable; letter: Paintable }>>,
+  colours: AxisColours,
+): void {
+  for (const axis of ["x", "y", "z"] as const) {
+    nodes[axis].line.setAttribute("stroke", colours[axis]);
+    nodes[axis].letter.setAttribute("fill", colours[axis]);
+  }
+}
 
 function triadNodes(): Record<TriadAxis, { line: SVGElement; letter: SVGElement }> {
   const make = (axis: TriadAxis) => ({
     line: svgElement("line", {
-      stroke: TRIAD_COLOURS[axis],
       "stroke-width": 2,
       "stroke-linecap": "round",
     }),
     letter: svgElement(
       "text",
       {
-        fill: TRIAD_COLOURS[axis],
         "text-anchor": "middle",
         "dominant-baseline": "central",
         class: "view-cube__letter",

@@ -75,7 +75,7 @@ export function createContext(
     highlights: createBodyHighlights(scene, loadedBodies, latestPose, palette),
     sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
     placementGizmo: createPlacementGizmo(scene, placementCallbacks),
-    assemblyTrihedron: createAssemblyTrihedron(scene),
+    assemblyTrihedron: createAssemblyTrihedron(scene, palette.axes),
     hiddenBodyIds: new Set(),
     alignmentPicking: false,
     faceHighlights: createFaceHighlights(scene, loadedBodies, palette),

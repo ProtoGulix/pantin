@@ -9,6 +9,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { coreDisplacementToBabylon, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
+import { DATA_COLOURS } from "../theme/data-palette.ts";
 import type { LatestPose } from "./body-highlights.ts";
 import type { LoadedBody } from "./body-loader.ts";
 import { arcAboutAxis, placeAlongAxis } from "./sensor-marker-plan.ts";
@@ -19,8 +20,8 @@ import { arcAboutAxis, placeAlongAxis } from "./sensor-marker-plan.ts";
 // is drawn over the bodies (rendering group 1), like the joint arrow. A marker
 // lights up when its bit tag reads 1: the viewer never computes the state.
 
-const ON_COLOR = Color3.FromHexString("#58a6ff");
-const OFF_COLOR = Color3.FromHexString("#6e7681");
+const ON_COLOR = Color3.FromHexString(DATA_COLOURS.sensorMarker.on);
+const OFF_COLOR = Color3.FromHexString(DATA_COLOURS.sensorMarker.off);
 const OVERLAY_GROUP = 1;
 // Sizes follow the child body, so that markers read at any scale.
 const THICKNESS_SHARE = 0.04;

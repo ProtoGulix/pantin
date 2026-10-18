@@ -211,6 +211,7 @@ function applyScenePalette(context: ViewportContext, palette: ScenePalette): voi
   context.highlights.setPalette(palette);
   context.conveyors.setSelectionColor(palette.selection);
   context.faceHighlights.setPalette(palette);
+  context.assemblyTrihedron.setAxisColours(palette.axes);
 }
 
 export function createViewport(

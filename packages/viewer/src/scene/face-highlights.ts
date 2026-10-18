@@ -7,6 +7,7 @@ import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import type { AlignmentSide } from "@pantin/protocol";
 import type { FaceHighlight } from "../alignment/alignment-session.ts";
+import { DATA_COLOURS } from "../theme/data-palette.ts";
 import type { ScenePalette } from "../theme/scene-palette.ts";
 import type { LoadedBody } from "./body-loader.ts";
 
@@ -20,12 +21,10 @@ export interface FaceHighlights {
 }
 
 // The moving side plays the part of a joint preview's child, so it takes the
-// theme's selection blue; the target, like the preview's parent, keeps the
-// parent violet (body-highlights.ts), which is data and the same in both themes.
-const TARGET_COLOR = "#a371f7";
+// theme's selection blue; the target keeps its data colour (data-palette.ts).
 
 function sideColor(side: AlignmentSide, palette: ScenePalette): string {
-  return side === "moving" ? palette.selection : TARGET_COLOR;
+  return side === "moving" ? palette.selection : DATA_COLOURS.faceTarget;
 }
 
 function sideMaterial(scene: Scene, side: AlignmentSide, palette: ScenePalette): StandardMaterial {
