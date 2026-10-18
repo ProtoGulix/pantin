@@ -124,3 +124,17 @@ replace it (`displacedNodePlacement`, `packages/viewer/src/frames.ts`).
 - ADR 0011 and ADR 0019 get "Amended by: ADR 0033".
 - Placement editing in the viewer: ADR 0034. Alignment by picked faces:
   ADR 0035.
+
+## Amendment (2026-10-18): groups as joint endpoints (ADR 0055)
+
+- Point 2: an assembly is anchored by the joint whose child is that
+  assembly used as a group; a joint between assemblies must have a group as
+  child. The rule "at most one incoming joint, anchors form a forest" is
+  unchanged.
+- Point 3: origin and axis are in the frame of the parent's assembly, which
+  is the group itself when the parent is a group.
+- Point 4: the reference configuration is unchanged; a body without a
+  parent joint now follows its group (ADR 0055 point 2).
+- Point 7: moving a body to another assembly also deletes its fixed joints
+  to the old assembly and lists them; a moving or referenced joint is
+  refused.

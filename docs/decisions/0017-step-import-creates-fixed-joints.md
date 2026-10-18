@@ -96,3 +96,14 @@ NOT VERIFIED: an import of a real nested assembly (spike 0001 had one level).
 - The import route and its rollback gain tests: joints created for several
   components, none for one component, none for GLB and STL, rollback of
   joints and bodies together, in that order.
+
+## Amendment (2026-10-18): superseded by ADR 0055
+
+Points 1 and 3 are superseded. The import no longer creates a star of fixed
+joints around a handle body: the bodies of an assembly follow it without a
+joint, and a sub-assembly is joined to its parent by one fixed joint between
+the two groups (ADR 0055 point 10). The group is now an entity, the
+assembly used as a joint endpoint, so "the root body is the handle" no
+longer applies. Point 7 is superseded too: there is no star any more; a
+second import gives its own independent group, and nothing links two
+imports unless the user creates a joint. Points 2, 4, 5 and 6 still hold.

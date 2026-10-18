@@ -5,6 +5,8 @@ Left out of ADR 0040 (nested assemblies that follow the STEP tree), 2026-10-04:
 1. Collapse a sub-assembly into one rigid body. Bought parts such as
    bearings import as sub-assemblies of many bodies (20 and 18 bodies in
    `Translateur SCIE.step`), which adds noise to the tree and the joints.
+   Covered by ADR 0055 (2026-10-18): a sub-assembly is a rigid group, its
+   bodies follow it without joints of their own, and no body is merged.
 2. Guess a slider or pivot axis from the geometry (for example by picking
    the rod's cylindrical face, from the face files of ADR 0035), instead
    of the default axis [0, 0, 1] of the assembly frame.

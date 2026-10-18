@@ -6,6 +6,16 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Added
+
+- ADR 0055, accepted: an assembly used as a joint endpoint is a rigid group
+  whose bodies move together, and the user cuts an assembly into groups by
+  hand (Grouper, Dégrouper). Amendments to ADR 0011, 0017, 0033, 0040 and
+  0041; CLAUDE.md section 5 states the body, assembly and group concepts;
+  backlog notes for splitting a GLB by nodes, removing redundant fixed
+  joints and multi-selection in 3D. Decision only: the implementation
+  follows.
+
 ## [0.1.0] - 2026-10-18
 
 First release. A real CODESYS program drives a simulated machine in closed

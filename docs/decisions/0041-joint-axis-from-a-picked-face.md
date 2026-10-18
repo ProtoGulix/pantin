@@ -91,3 +91,8 @@ Facts checked in the repository on 2026-10-05:
   shown). Exit criterion: on "scie", the rod joint of `ID1S0400125E_0:1`
   gets axis [-1, 0, 0] or [1, 0, 0] from a click on the rod, and the
   slider preview moves the rod along the cylinder.
+
+## Amendment (2026-10-18): frame of the result for a group parent (ADR 0055)
+
+Point 2: when the joint's parent is an assembly used as a group, the origin
+and the axis are answered in that group's frame. The request is unchanged.
