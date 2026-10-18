@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { AXIS_COLOURS } from "../packages/viewer/src/theme/data-palette.ts";
 import { SCENE_PALETTES } from "../packages/viewer/src/theme/scene-palette.ts";
-import { COLOUR_BLIND_MATRICES, contrast, simulatedDifference } from "./colour-maths.ts";
+import { signalLookFor } from "../packages/viewer/src/theme/signal-look.ts";
+import { blend, COLOUR_BLIND_MATRICES, contrast, simulatedDifference } from "./colour-maths.ts";
 
 // ADR 0057 rule 2: two data colours shown together stay apart for colour blind
 // users (CIE76 difference of at least 40 under protanopia, deuteranopia and
@@ -78,6 +79,28 @@ function fillPairs(): ColourPair[] {
   ];
 }
 
+// Sensor markers and light beams share one coding (signal on / off, ADR 0057 rule 3).
+// The OFF neutral is drawn translucent, so the pair measures the colour as drawn, its
+// blend over the scene ground. Markers render in group 1 over the bodies: what is
+// behind them is not always the ground, so the ground is the reference, not a guarantee.
+// ON against the drawn OFF stays under 40 (floors measured below): the second cue is
+// thickness and opacity.
+const SIGNAL_DRAWN_FLOORS: Record<ThemeName, number> = { light: 25, dark: 28 };
+
+function signalPairs(theme: ThemeName): ColourPair[] {
+  const scene = SCENE_PALETTES[theme];
+  const drawnOff = blend(scene.signalOff, scene.background, signalLookFor(false).alpha);
+  return [
+    {
+      name: "sensor marker and light beam, on and as drawn off",
+      first: scene.signalOn,
+      second: drawnOff,
+      minDifference: SIGNAL_DRAWN_FLOORS[theme],
+      secondCue: "thickness and opacity",
+    },
+  ];
+}
+
 function themeToken(theme: ThemeName, name: string): string {
   const start = BASE_CSS.indexOf(`:root[data-theme="${theme}"] {`);
   const block = BASE_CSS.slice(start, BASE_CSS.indexOf("}", start));
@@ -99,7 +122,14 @@ function registeredPairs(theme: ThemeName): ColourPair[] {
       second: scene.selection,
       minDifference: 45,
     },
+    {
+      name: "face alignment moving and target",
+      first: scene.selection,
+      second: scene.jointParent,
+      minDifference: 45,
+    },
     ...axesPairs(theme),
+    ...signalPairs(theme),
     ...fillPairs(),
   ];
 }

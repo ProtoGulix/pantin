@@ -1,4 +1,4 @@
-import type { Body } from "@pantin/protocol";
+import type { AlignmentSide, Body } from "@pantin/protocol";
 import { coreToBabylonPosition, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 
@@ -172,6 +172,32 @@ export function overlayAlphaFor(highlight: BodyHighlight): number {
     return PARENT_OVERLAY_ALPHA;
   }
   return highlight === "child" ? CHILD_OVERLAY_ALPHA : SELECTED_OVERLAY_ALPHA;
+}
+
+/**
+ * Every selected body is outlined (ADR 0057, amending ADR 0053 point 5), and
+ * so is a joint's child. A joint's parent is a tint alone, the other cue
+ * telling the pair apart.
+ */
+export function isOutlined(highlight: BodyHighlight): boolean {
+  return highlight !== "parent";
+}
+
+export interface FaceSideLook {
+  /** A key of the scene palette: the theme's colour for this side. */
+  colour: "selection" | "jointParent";
+  outlined: boolean;
+}
+
+/**
+ * The faces of an alignment read like a joint's two bodies: the moving side
+ * takes the selection blue and an outline, the target the joint parent's
+ * yellow-orange as a tint alone (ADR 0057).
+ */
+export function faceSideLook(side: AlignmentSide): FaceSideLook {
+  return side === "moving"
+    ? { colour: "selection", outlined: true }
+    : { colour: "jointParent", outlined: false };
 }
 
 const OUTLINE_SHARE_OF_EXTENT = 0.015;

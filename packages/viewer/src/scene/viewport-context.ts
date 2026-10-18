@@ -2,7 +2,7 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera.js
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { PoseInterpolator } from "../pose-interpolation.ts";
-import type { ScenePalette } from "../theme/scene-palette.ts";
+import { type ScenePalette, signalColoursOf } from "../theme/scene-palette.ts";
 import { type AssemblyTrihedron, createAssemblyTrihedron } from "./assembly-trihedron.ts";
 import { type BodyHighlights, createBodyHighlights } from "./body-highlights.ts";
 import type { LoadedBody } from "./body-loader.ts";
@@ -71,9 +71,14 @@ export function createContext(
     productPoses: new PoseInterpolator(),
     objectPoses,
     productMeshes: createProductMeshes(scene, stage.shadowGenerator),
-    conveyors: createConveyorMeshes(scene, (key) => objectPoses.latestPose(key), palette.selection),
+    conveyors: createConveyorMeshes(
+      scene,
+      (key) => objectPoses.latestPose(key),
+      palette.selection,
+      signalColoursOf(palette),
+    ),
     highlights: createBodyHighlights(scene, loadedBodies, latestPose, palette),
-    sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose),
+    sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose, signalColoursOf(palette)),
     placementGizmo: createPlacementGizmo(scene, placementCallbacks),
     assemblyTrihedron: createAssemblyTrihedron(scene, palette.axes),
     hiddenBodyIds: new Set(),

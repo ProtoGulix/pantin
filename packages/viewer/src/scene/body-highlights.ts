@@ -10,6 +10,7 @@ import {
   type ArrowPlacement,
   type BodyHighlight,
   bodyHighlight,
+  isOutlined,
   outlineWidthInMeshSpace,
   overlayAlphaFor,
   placeJointArrow,
@@ -40,7 +41,7 @@ export interface BodyHighlights {
 // Parent and child match the swatches of the joint form (--joint-parent and
 // --joint-child in base.css); the child is the body that moves, so it takes the
 // selection colour and an outline, the parent a yellow-orange tint alone: the
-// two stay apart without telling hues.
+// two stay apart without telling hues. A selected body is outlined too.
 interface Tints {
   selection: Color3;
   parent: Color3;
@@ -62,7 +63,8 @@ export type LatestPose = (bodyId: string) => InterpolatedPose | undefined;
 
 function paintBody(loaded: LoadedBody, highlight: BodyHighlight | null, tints: Tints): void {
   let extent = 0;
-  if (highlight === "child") {
+  const outlined = highlight !== null && isOutlined(highlight);
+  if (outlined) {
     const bounds = loaded.node.getHierarchyBoundingVectors(true);
     extent = bounds.max.subtract(bounds.min).length();
   }
@@ -70,8 +72,8 @@ function paintBody(loaded: LoadedBody, highlight: BodyHighlight | null, tints: T
     mesh.renderOverlay = highlight !== null;
     mesh.overlayColor = highlightColor(highlight ?? "selected", tints);
     mesh.overlayAlpha = overlayAlphaFor(highlight ?? "selected");
-    mesh.renderOutline = highlight === "child";
-    if (highlight === "child") {
+    mesh.renderOutline = outlined;
+    if (outlined) {
       mesh.computeWorldMatrix(true);
       mesh.outlineColor = tints.selection;
       // Body nodes carry a uniform unit scale; abs guards against a mirrored GLB node.

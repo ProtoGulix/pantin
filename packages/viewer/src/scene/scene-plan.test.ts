@@ -5,9 +5,11 @@ import {
   bodyHighlight,
   bodyRenderKey,
   chooseGridStep,
+  faceSideLook,
   floorHeight,
   frameBounds,
   isCurrentLoad,
+  isOutlined,
   outlineWidthInMeshSpace,
   overlayAlphaFor,
   placeJointArrow,
@@ -211,5 +213,23 @@ describe("overlayAlphaFor", () => {
   it("tints the parent more strongly than the child, and the child more than a selection", () => {
     expect(overlayAlphaFor("parent")).toBeGreaterThan(overlayAlphaFor("child"));
     expect(overlayAlphaFor("child")).toBeGreaterThan(overlayAlphaFor("selected"));
+  });
+});
+
+describe("isOutlined", () => {
+  it("outlines a selected body and a joint's child, not a joint's parent", () => {
+    expect(isOutlined("selected")).toBe(true);
+    expect(isOutlined("child")).toBe(true);
+    expect(isOutlined("parent")).toBe(false);
+  });
+});
+
+describe("faceSideLook", () => {
+  it("tints the moving face with the selection and outlines it", () => {
+    expect(faceSideLook("moving")).toEqual({ colour: "selection", outlined: true });
+  });
+
+  it("tints the target face with the joint parent colour and no outline", () => {
+    expect(faceSideLook("target")).toEqual({ colour: "jointParent", outlined: false });
   });
 });

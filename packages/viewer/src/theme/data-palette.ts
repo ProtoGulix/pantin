@@ -25,6 +25,19 @@ export const AXIS_COLOURS: Readonly<Record<ThemeName, Readonly<AxisColours>>> = 
   dark: { x: "#e8505b", y: "#7dff4d", z: "#5577ff" },
 };
 
+/**
+ * The neutral of a signal that is off (sensor markers and light beams). A signal
+ * that is on takes the theme's state-normal green (ScenePalette.signalOn). It is
+ * drawn translucent (signal-look.ts), so the colour seen is its blend over the
+ * ground: tests/viewer-colour-pairs.test.ts measures that blend, 3:1 from the
+ * ground and a deuteranopia difference from the green of about 26 (light) and
+ * 28 (dark), not 40. Thickness and opacity are the cue that tells the two apart.
+ */
+export const SIGNAL_OFF_COLOURS: Readonly<Record<ThemeName, string>> = {
+  light: "#0d1117",
+  dark: "#ffffff",
+};
+
 interface VolumeColours {
   color: string;
   /** Edges are drawn when set. */
@@ -37,10 +50,6 @@ export function viewCubeFaceColour(lightness: number): string {
 }
 
 export const DATA_COLOURS = {
-  /** The target face of an alignment; the moving face takes the selection. */
-  faceTarget: "#a371f7",
-  sensorMarker: { on: "#58a6ff", off: "#6e7681" },
-  lightBeam: { on: "#ff5a4d", off: "#8a4a44" },
   conveyorVolume: {
     belt: { color: "#2a2d33", edges: "#4b525e" },
     guide: { color: "#7d6ff0", edges: "#b3a9ff" },

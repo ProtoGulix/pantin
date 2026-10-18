@@ -9,11 +9,13 @@ import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder.
 import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
-import { beamLookFor, isBeamOn } from "../conveyors/beam-appearance.ts";
+import { isBeamOn } from "../conveyors/beam-appearance.ts";
 import type { DrawingItem, DrawingPart } from "../conveyors/conveyor-drawing.ts";
 import { ARROW_COLOR, VOLUME_LOOKS } from "../conveyors/volume-appearance.ts";
 import { coreDisplacementToBabylon, type Vector3Tuple } from "../frames.ts";
 import type { InterpolatedPose } from "../pose-interpolation.ts";
+import type { SignalColours } from "../theme/signal-look.ts";
+import { type BeamMaterials, createBeamMaterials } from "./beam-materials.ts";
 
 // Belts, guides, emitters, absorbers and the beams of presence sensors (ADR 0043
 // point 13). Thin on purpose: what to draw comes from conveyors/, here are only
@@ -36,6 +38,8 @@ export interface ConveyorMeshes {
   select(key: string | null): void;
   /** The theme changed: the outline takes the selection colour (hex). */
   setSelectionColor(hex: string): void;
+  /** The theme changed: the beams take its signal-on and signal-off colours. */
+  setSignalColours(colours: SignalColours): void;
 }
 
 interface Drawn {
@@ -65,15 +69,6 @@ function volumeMaterial(scene: Scene, style: keyof typeof VOLUME_LOOKS) {
   return material;
 }
 
-function beamMaterial(scene: Scene, on: boolean) {
-  const look = beamLookFor(on);
-  const material = new StandardMaterial(on ? "conveyor-beam-on" : "conveyor-beam-off", scene);
-  material.disableLighting = true;
-  material.emissiveColor = Color3.FromHexString(look.color);
-  material.alpha = look.alpha;
-  return material;
-}
-
 function createMaterials(scene: Scene) {
   const arrow = new StandardMaterial("conveyor-arrow", scene);
   arrow.disableLighting = true;
@@ -86,8 +81,6 @@ function createMaterials(scene: Scene) {
       absorber: volumeMaterial(scene, "absorber"),
       receiver: volumeMaterial(scene, "receiver"),
     },
-    beamOn: beamMaterial(scene, true),
-    beamOff: beamMaterial(scene, false),
     arrow,
   };
 }
@@ -194,15 +187,22 @@ function indexEntry(
   }
 }
 
+function placeKnown(entry: Drawn, latestPose: (key: string) => InterpolatedPose | undefined): void {
+  const known = latestPose(entry.item.key);
+  if (known !== undefined) {
+    place(entry, known);
+  }
+}
+
 function paintBeams(
   drawn: readonly Drawn[],
   values: ReadonlyMap<string, number>,
-  material: Materials,
+  beamMaterials: BeamMaterials,
 ): void {
   for (const entry of drawn) {
     const on = isBeamOn(entry.item.stateTag, values);
     for (const beam of entry.beams) {
-      beam.material = on ? material.beamOn : material.beamOff;
+      beamMaterials.paint(beam, on);
     }
   }
 }
@@ -245,9 +245,11 @@ export function createConveyorMeshes(
   scene: Scene,
   latestPose: (key: string) => InterpolatedPose | undefined,
   selectionHex: string,
+  signalColours: SignalColours,
 ): ConveyorMeshes {
   let outlineColor = Color3.FromHexString(selectionHex);
   const material = createMaterials(scene);
+  const beamMaterials = createBeamMaterials(scene, signalColours);
   let drawn: Drawn[] = [];
   const byKey = new Map<string, Drawn>();
   const keyByMesh = new Map<AbstractMesh, string>();
@@ -261,12 +263,9 @@ export function createConveyorMeshes(
     drawn = items.map((item) => drawItem(scene, item, material));
     for (const entry of drawn) {
       indexEntry(entry, byKey, keyByMesh);
-      const known = latestPose(entry.item.key);
-      if (known !== undefined) {
-        place(entry, known);
-      }
+      placeKnown(entry, latestPose);
     }
-    paintBeams(drawn, values, material);
+    paintBeams(drawn, values, beamMaterials);
     paintSelection(drawn, selectedKey, outlineColor);
   };
   return {
@@ -279,7 +278,7 @@ export function createConveyorMeshes(
     },
     setStates: (next) => {
       values = next;
-      paintBeams(drawn, values, material);
+      paintBeams(drawn, values, beamMaterials);
     },
     place: (key, pose) => placeByKey(byKey, key, pose),
     forgetPoses: () => hideDrawn(drawn),
@@ -287,6 +286,10 @@ export function createConveyorMeshes(
     select: (key) => {
       selectedKey = key;
       paintSelection(drawn, selectedKey, outlineColor);
+    },
+    setSignalColours: (next) => {
+      beamMaterials.setColours(next);
+      paintBeams(drawn, values, beamMaterials);
     },
     setSelectionColor: (hex) => {
       outlineColor = Color3.FromHexString(hex);

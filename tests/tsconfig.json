@@ -9,6 +9,7 @@
     ".",
     "../packages/viewer/src/theme/data-palette.ts",
     "../packages/viewer/src/theme/scene-palette.ts",
+    "../packages/viewer/src/theme/signal-look.ts",
     "../packages/viewer/src/theme/theme.ts"
   ]
 }

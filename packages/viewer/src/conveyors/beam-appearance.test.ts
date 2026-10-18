@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BEAM_OFF_LOOK, BEAM_ON_LOOK, beamLookFor, isBeamOn } from "./beam-appearance.ts";
+import { SCENE_PALETTES } from "../theme/scene-palette.ts";
+import { beamLookFor, isBeamOn } from "./beam-appearance.ts";
 
 describe("isBeamOn", () => {
   const values = new Map([["line.cell.state", 1]]);
@@ -16,9 +17,18 @@ describe("isBeamOn", () => {
 });
 
 describe("beamLookFor", () => {
-  it("is dim off and bright on", () => {
-    expect(beamLookFor(false)).toBe(BEAM_OFF_LOOK);
-    expect(beamLookFor(true)).toBe(BEAM_ON_LOOK);
-    expect(BEAM_ON_LOOK.alpha).toBeGreaterThan(BEAM_OFF_LOOK.alpha);
+  const { signalOn, signalOff } = SCENE_PALETTES.dark;
+  const colours = { on: signalOn, off: signalOff };
+
+  it("is the signal-on colour, thick and opaque, when on", () => {
+    expect(beamLookFor(true, colours)).toMatchObject({ color: signalOn, alpha: 1 });
+  });
+
+  it("is the neutral, thin and translucent, when off", () => {
+    const off = beamLookFor(false, colours);
+    const on = beamLookFor(true, colours);
+    expect(off.color).toBe(signalOff);
+    expect(off.alpha).toBeLessThan(on.alpha);
+    expect(off.thicknessScale).toBeLessThan(on.thicknessScale);
   });
 });

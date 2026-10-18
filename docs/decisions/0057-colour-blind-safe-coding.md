@@ -190,3 +190,28 @@ case.
   filled badge an outline that reaches 3:1 against the surfaces it sits on,
   fills unchanged; the test checks the outline, and the text on the fill
   keeps 4.5:1. The normal fill is added with the first screen that uses it.
+
+## Amendment (2026-10-18): green axis and signal on, found in slices 4 and 5
+
+Rule 3 says data colours never take a state hue, but the user kept the
+red/green/blue axis convention: the Y axis is green like "signal on". The Y
+letter at every axis tip (slice 1) is the cue that tells them apart; this is
+the declared exception to rule 3.
+
+Signal on/off (sensor markers and light beams), measured as drawn: the off
+look is translucent (alpha 0.8) and blends with the viewport ground, so the
+test blends it before measuring. Drawn, the pair reaches ΔE 33 / 26 / 29
+(protanopia / deuteranopia / tritanopia) in the light theme and 34 / 28 / 39
+in the dark theme, under 40; the drawn off colour stands 8.6:1 (light) and
+9.5:1 (dark) on the ground, the on colour 4.7:1 and 5.7:1. A more opaque off
+look would lose the translucency cue. The pair is registered in both themes
+with floors 25 and 28 and its second cue, thickness (×1.5 on, ×0.6 off) and
+opacity. Markers draw over the bodies (rendering group 1), so the ground is
+not always what lies behind them. A first draft of this amendment quoted
+the opaque colours (ΔE 39.1); those figures did not describe what is drawn.
+
+This replaces the "Sensor marker ON / OFF" row of the Decision table, whose
+"3:1 apart" never held (ON against the drawn OFF is 1.8:1 light, 1.7:1
+dark): ON state-normal, OFF neutral drawn at alpha 0.8, the drawn OFF at 3:1
+or more on the ground, ON and OFF told apart by thickness and opacity. The
+"Light beam ON / OFF" row follows the same coding.

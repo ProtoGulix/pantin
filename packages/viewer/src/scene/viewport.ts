@@ -14,7 +14,7 @@ import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { CameraAngles } from "../navigation/standard-views.ts";
 import type { RigidTransform } from "../rigid-transform.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
-import type { ScenePalette } from "../theme/scene-palette.ts";
+import { type ScenePalette, signalColoursOf } from "../theme/scene-palette.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
@@ -210,6 +210,8 @@ function applyScenePalette(context: ViewportContext, palette: ScenePalette): voi
   context.stage.setPalette(palette);
   context.highlights.setPalette(palette);
   context.conveyors.setSelectionColor(palette.selection);
+  context.conveyors.setSignalColours(signalColoursOf(palette));
+  context.sensorMarkers.setColours(signalColoursOf(palette));
   context.faceHighlights.setPalette(palette);
   context.assemblyTrihedron.setAxisColours(palette.axes);
 }

@@ -66,3 +66,15 @@ export function simulatedDifference(first: string, second: string, vision: strin
   };
   return Math.hypot(...seen(first).map((value, i) => value - (seen(second)[i] ?? 0)));
 }
+
+/** The colour a translucent foreground gives over a background, as the framebuffer blends it (sRGB). */
+export function blend(foreground: string, background: string, alpha: number): string {
+  const channel = (offset: number) => {
+    const front = Number.parseInt(foreground.slice(offset, offset + 2), 16);
+    const back = Number.parseInt(background.slice(offset, offset + 2), 16);
+    return Math.round(alpha * front + (1 - alpha) * back)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${channel(1)}${channel(3)}${channel(5)}`;
+}

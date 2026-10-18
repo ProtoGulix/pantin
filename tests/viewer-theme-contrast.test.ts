@@ -129,7 +129,7 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
     const sceneColor = (name: string) => new RegExp(`${name}: "(#[0-9a-f]{6})"`).exec(block)?.[1];
     expect(sceneColor("background")).toBe(token(tokens, "viewport-background"));
     expect(sceneColor("selection")).toBe(token(tokens, "selection"));
-    expect(sceneColor("drivenJoint")).toBe(token(tokens, "state-normal"));
+    expect(sceneColor("signalOn")).toBe(token(tokens, "state-normal"));
     expect(sceneColor("jointParent")).toBe(token(tokens, "joint-parent"));
   });
 

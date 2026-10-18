@@ -36,6 +36,13 @@ All notable changes to Pantin. The format follows
   errors in the bridge card, the properties, the I/O view and the journal
   carry the error glyph, and invalid fields a dashed border. A test lists
   every use of a state, fill or brand colour with its second cue.
+- Viewer (ADR 0057, fourth and fifth slices): a driven joint's arrow keeps
+  the free joint's blue and gets a collar at its base; a face alignment's
+  target takes the joint parent's yellow-orange, the moving face keeps the
+  selection colour with an outline; every selected body gets an outline;
+  sensor markers and light beams code "signal on" by thickness and opacity
+  (on: green, thick, opaque; off: neutral, thin, translucent), so beams are
+  no longer red.
 
 ### Fixed
 
