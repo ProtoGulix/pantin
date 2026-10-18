@@ -134,7 +134,7 @@ tige (`ID1S0400125E_0_2`) et le chariot (`ID1S040CF-16040_3`). Le corps du véri
    nommée `Tige`.
 
 La procédure complète, les refus possibles et **Dégrouper** sont dans
-[Le modèle d'un Pantin](/guide/model#faire-un-groupe).
+[Grouper, dégrouper, déplacer un corps](/guide/groups#faire-un-groupe).
 
 ### Transformer la liaison fixe en glissière
 

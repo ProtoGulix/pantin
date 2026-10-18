@@ -122,7 +122,8 @@ L'écran d'**Accueil** vous propose de créer un Pantin (**Pantin vide** ou **De
 
 ## Et ensuite
 
-- Comprendre chaque élément d'une machine (corps, assemblage, groupe, liaisons) : [Le modèle d'un Pantin](/guide/model).
 - Construire un premier exemple pas à pas : [Tutoriel](/guide/tutorial).
+- Préparer vos fichiers de CAO avant l'import : [Préparer ses modèles 3D](/guide/preparing-models).
+- Comprendre les éléments d'une machine : [Le modèle d'un Pantin](/guide/model) (corps, assemblage, groupe, liaisons), puis [Grouper, dégrouper, déplacer un corps](/guide/groups), [Préactionneurs, actionneurs et capteurs](/guide/action-chain), [Produits et convoyage](/guide/conveying) et [Tags, défauts et liste d'E/S](/guide/tags).
 - Relier un automate : [Connecter un automate](/guide/connect-a-plc).
 - Quelque chose ne marche pas : [Dépannage](/guide/troubleshooting).

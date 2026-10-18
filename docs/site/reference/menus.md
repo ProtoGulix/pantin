@@ -30,8 +30,8 @@ Termes utilisés dans la colonne « Grisé quand » :
 | Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
 |---|---|---|---|
 | **Nouvelle liaison…** | | Ouvre le formulaire de création d'une liaison. | Pas de Pantin ouvert, aucun corps dans le Pantin, ou traitement en cours. |
-| **Grouper…** | | Crée un groupe avec les corps et sous-groupes sélectionnés dans l'arborescence : une ligne demande le nom du groupe. Voir [Faire un groupe](/guide/model#faire-un-groupe). | La sélection n'est pas faite de corps et de sous-groupes d'un même assemblage, ou traitement en cours. |
-| **Dégrouper** | | Dissout le groupe sélectionné dans l'assemblage où il est rangé. Voir [Défaire un groupe](/guide/model#defaire-un-groupe). | La ligne sélectionnée n'est pas un assemblage rangé dans un autre assemblage, ou traitement en cours. |
+| **Grouper…** | | Crée un groupe avec les corps et sous-groupes sélectionnés dans l'arborescence : une ligne demande le nom du groupe. Voir [Faire un groupe](/guide/groups#faire-un-groupe). | La sélection n'est pas faite de corps et de sous-groupes d'un même assemblage, ou traitement en cours. |
+| **Dégrouper** | | Dissout le groupe sélectionné dans l'assemblage où il est rangé. Voir [Défaire un groupe](/guide/groups#defaire-un-groupe). | La ligne sélectionnée n'est pas un assemblage rangé dans un autre assemblage, ou traitement en cours. |
 | **Remise à zéro de la simulation** | | Remet la simulation à son état initial. | Pas de Pantin ouvert ou traitement en cours. |
 | **Relâcher tous les tags forcés** | | Relâche tous les tags forcés depuis le viewer. Sans effet si aucun tag n'est forcé. | Pas de Pantin ouvert ou traitement en cours. |
 | séparateur | | | |

@@ -122,7 +122,8 @@ The **Home** screen offers you to create a Pantin (**Empty Pantin** or **From a 
 
 ## What next
 
-- Understand each element of a machine (bodies, assemblies, groups, joints): [The model of a Pantin](/en/guide/model).
 - Build a first example step by step: [Tutorial](/en/guide/tutorial).
+- Prepare your CAD files before the import: [Preparing 3D models](/en/guide/preparing-models).
+- Understand the elements of a machine: [The model of a Pantin](/en/guide/model) (bodies, assemblies, groups, joints), then [Group, ungroup, move a body](/en/guide/groups), [Drives, actuators and sensors](/en/guide/action-chain), [Products and conveying](/en/guide/conveying) and [Tags, faults and the I/O list](/en/guide/tags).
 - Link a PLC: [Connect a PLC](/en/guide/connect-a-plc).
 - Something does not work: [Troubleshooting](/en/guide/troubleshooting).

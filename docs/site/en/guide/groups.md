@@ -1,0 +1,57 @@
+# Group, ungroup, move a body
+
+These procedures set the structure of a Pantin: which bodies move together. The words **body**, **assembly** and **group** are defined in [The model of a Pantin](/en/guide/model#concepts-body-assembly-group).
+
+## Make a group
+
+Make a group when the import did not separate what moves: a STEP with no sub-assembly puts all bodies in a single assembly, with no joint. The **Group…** command creates a sub-assembly with the chosen bodies and a fixed joint that links it to the original assembly.
+
+1. In the tree, click the first body. Add the others with <kbd>Ctrl</kbd>+click (adds or removes a row), <kbd>Shift</kbd>+click (the range up to the clicked row) or <kbd>Shift</kbd>+arrows. Only bodies and sub-groups of **one assembly** can be selected together.
+2. Choose **Edit** then **Group…**, or **Group…** in the context menu of a selected row.
+3. A line appears under the tree: `Group N items of assembly "X": what should the group be called?`. Type the name in the **Group name** field, then click **Group** (or **Cancel**).
+4. The message `Group "name" created.` appears.
+
+![The left panel: two bodies selected, and the line asking for the name of the group](/screenshots/en/group-prompt.webp)
+
+Nothing moves on screen: the group is attached to the assembly by a **Fixed** joint of the same name. Turning this joint into a **Prismatic (slider)** or a **Revolute (limited pivot)** makes the whole group move.
+
+The message can add two sentences:
+
+- **Joints deleted: …**: fixed joints made useless between the bodies of the group and the rest of the assembly were removed;
+- **Tags were renamed: regenerate the PLC's GVL.**: the joints of the moved bodies take the prefix of the new group, so their tags change. `io.json` follows; you must however **export the GVL again** (see [The I/O list](/en/guide/tags#the-i-o-list-io-json)) and reload it in the PLC program.
+
+**Group…** is offered only if the selection is made of bodies and sub-groups of one assembly, itself filed in a Pantin.
+
+The core refuses, without changing anything, when the group would move a body against its will. Its message is shown word for word. Frequent cases:
+
+| Situation | What to do |
+| --- | --- |
+| A body of the group hangs, by a moving joint, from a body of the assembly that is not in the group: the group would take it along. | Add the parent body to the group, or delete the joint. |
+| A body of the group is linked by a joint to a body that is not in the group: the group would leave it behind. | Add that body to the group, or delete the joint. |
+| A joint to delete is used by a drive, an actuator, a sensor or a belt. | Remove that element first, then try again. |
+
+## Ungroup a group
+
+**Ungroup** dissolves a group into the assembly where it is filed: its bodies and sub-groups move into that assembly, without moving on screen.
+
+1. Select the row of the group (an assembly filed inside another assembly).
+2. Choose **Edit** then **Ungroup**, or **Ungroup** in its context menu.
+3. The message `Group "name" dissolved.` appears, with the same optional sentences as for **Group…** (joints deleted, GVL to regenerate).
+
+A top-level assembly cannot be ungrouped: there is no assembly to pour it into.
+
+The core refuses as long as the bodies of the group would stop following it. Frequent cases:
+
+| Situation | What to do |
+| --- | --- |
+| A slider or a pivot moves the group: its bodies would no longer follow. | Make that joint **Fixed**, or delete it, then ungroup. |
+| The group is held by a joint to an assembly other than the one it would dissolve into. | Delete that joint or change its parent. |
+| The group does not move, but the assembly it would dissolve into is moved by a joint: its bodies would start following it. | Ungroup when that assembly does not move, or first hold the group with a fixed joint to it. |
+| The group hangs from something that moves inside the destination assembly. | First change the parent of that joint. |
+| A tag key of an element of the group already exists in the destination assembly (the message proposes a free key). | Rename one of the two keys. |
+
+Group then ungroup does not guarantee the original document. What is guaranteed: nothing moves on screen. The fixed joints that were deleted are not restored, identifiers or tag keys may differ, and a moving joint that hung from a rigid body may come back attached to the parent group rather than that body. To undo, discard the unsaved changes.
+
+## Move a body to another assembly
+
+Dragging a body onto another assembly (or choosing the **Assembly** in the inspector) moves it. Its fixed joints to the old assembly are deleted and listed in the message. The core refuses the move if the body, its old group and its new group are not moved by the same joint (or by none): then move the whole group, or use **Group…**. The core also refuses when a moving joint links the body to the old assembly (`Joint "…" (…) links … and moves. Delete it or make it a group joint first, then move the body.`), or when the body would "jump" when the groups move (`Body "…" would jump when the groups move: … Move it to an assembly that moves with "…".`). The fixed joints to delete must not be used by another element.

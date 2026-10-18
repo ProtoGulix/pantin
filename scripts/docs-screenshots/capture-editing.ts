@@ -44,6 +44,32 @@ export async function captureTreeContextMenu(session: Session): Promise<void> {
   await page.keyboard.press("Escape");
 }
 
+/** Two bodies of the example's assembly. */
+const FIRST_BODY_ROW = /^ID1S0400125E_0_1\b/;
+const SECOND_BODY_ROW = /^ID1S0400125E_0_2\b/;
+
+/**
+ * Selects two bodies of the example and opens the group name line, then cancels: the example is
+ * never actually grouped, so the pictures that follow keep showing the unchanged machine.
+ */
+export async function captureGroupPrompt(session: Session): Promise<void> {
+  const { page, label } = session;
+  await page.getByRole("treeitem", { name: FIRST_BODY_ROW }).click(FORCED);
+  await page
+    .getByRole("treeitem", { name: SECOND_BODY_ROW })
+    .click({ ...FORCED, modifiers: ["Control"] });
+  await page
+    .getByRole("treeitem", { name: SECOND_BODY_ROW })
+    .click({ ...FORCED, button: "right", modifiers: ["Control"] });
+  await page.getByRole("menuitem", { name: label("menu.group") }).click(FORCED);
+  const nameField = page.getByLabel(label("prompt.group.nameLabel"));
+  await nameField.waitFor();
+  await saveShot(session, "group-prompt", treePanel(page));
+  // The toolbar also has an icon button with the same name, so the text button is told apart by its class.
+  await page.locator("button.button", { hasText: label("prompt.group.cancel") }).click(FORCED);
+  await nameField.waitFor({ state: "detached" });
+}
+
 export async function captureJointInspector(session: Session): Promise<void> {
   await jointRow(session.page).click(FORCED);
   await session.page.locator("input.joint-slider__input").waitFor();

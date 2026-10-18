@@ -72,7 +72,7 @@ Right-click on a row (or the **Menu** key). An entry is offered only when it mak
 | **New assembly** | Pantin | Creates an empty assembly (default name **New assembly**). |
 | **New joint…** | Assembly, **Joints between assemblies** folder | Opens the [joint form](#new-joint). |
 | **Group…** | Body, assembly | Opens the [group name line](#group) for the selected rows. Offered only if the selection is made of bodies and sub-groups of one assembly. |
-| **Ungroup** | Assembly filed inside another | Dissolves the group into its assembly. See [Ungroup a group](/en/guide/model#ungroup-a-group). |
+| **Ungroup** | Assembly filed inside another | Dissolves the group into its assembly. See [Ungroup a group](/en/guide/groups#ungroup-a-group). |
 | **Change type…** | Joint | Opens the joint form, pre-filled. |
 | **Add an actuator…** / **Edit its actuator…** | Moving joint | Opens the actuator form for this joint. The entry says **Edit** if the joint already has an actuator. Absent on a fixed joint. |
 | **Add a sensor…** | Moving joint | Opens the sensor form for this joint. |
@@ -383,7 +383,7 @@ After **Group…**, a line opens under the tree: `Group N items of assembly "X":
 | **Group** | Creates the group. Message: `Group "name" created.`, followed by **Joints deleted: …** and **Tags were renamed: regenerate the PLC's GVL.** when they apply. |
 | **Cancel** | Closes the line without sending anything. |
 
-If the core refuses, its sentence is shown word for word and nothing changed. See [Make a group](/en/guide/model#make-a-group).
+If the core refuses, its sentence is shown word for word and nothing changed. See [Make a group](/en/guide/groups#make-a-group).
 
 ### New drive
 

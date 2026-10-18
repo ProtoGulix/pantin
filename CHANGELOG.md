@@ -16,6 +16,12 @@ All notable changes to Pantin. The format follows
   joints and multi-selection in 3D. Decision only: the implementation
   follows.
 - User guide (French and English): a concepts section (body, assembly, group, the rule "a body with no parent joint moves with its group"), procedures to make and dissolve a group, tree multi-selection, the Grouper and Dégrouper entries, and the refusals in the troubleshooting page. The tutorial now groups the rod and turns the fixed joint into a slider. No new screenshot yet.
+- User guide (French and English) restructured in sections (Démarrer,
+  Préparer ses modèles 3D, Construire un Pantin, Connecter un automate,
+  Dépannage): a new page on preparing CAD files before import (one
+  sub-assembly per kinematic group), the model page split into concepts,
+  group procedures, drives/actuators/sensors, conveying, and tags/I/O, and a
+  new "group-prompt" screenshot.
 
 ### Changed
 

@@ -30,8 +30,8 @@ Terms used in the "Greyed out when" column:
 | Entry | Shortcut | What it does | Greyed out when |
 |---|---|---|---|
 | **New joint…** | | Opens the joint creation form. | No Pantin open, no body in the Pantin, or working. |
-| **Group…** | | Creates a group with the bodies and sub-groups selected in the tree: a line asks for the name of the group. See [Make a group](/en/guide/model#make-a-group). | The selection is not made of bodies and sub-groups of one assembly, or working. |
-| **Ungroup** | | Dissolves the selected group into the assembly where it is filed. See [Ungroup a group](/en/guide/model#ungroup-a-group). | The selected row is not an assembly filed inside another assembly, or working. |
+| **Group…** | | Creates a group with the bodies and sub-groups selected in the tree: a line asks for the name of the group. See [Make a group](/en/guide/groups#make-a-group). | The selection is not made of bodies and sub-groups of one assembly, or working. |
+| **Ungroup** | | Dissolves the selected group into the assembly where it is filed. See [Ungroup a group](/en/guide/groups#ungroup-a-group). | The selected row is not an assembly filed inside another assembly, or working. |
 | **Reset the simulation** | | Puts the simulation back to its initial state. | No Pantin open or working. |
 | **Release all forced tags** | | Releases all the tags forced from the viewer. No effect if no tag is forced. | No Pantin open or working. |
 | separator | | | |

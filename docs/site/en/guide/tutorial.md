@@ -128,7 +128,7 @@ rod to slide, you must first say which bodies move together: the rod
    is a sub-assembly, linked to the assembly by a **Fixed** joint named `Tige`.
 
 The full procedure, the possible refusals and **Ungroup** are in
-[The model of a Pantin](/en/guide/model#make-a-group).
+[Group, ungroup, move a body](/en/guide/groups#make-a-group).
 
 ### Turn the fixed joint into a slider
 

@@ -72,7 +72,7 @@ Clic droit sur une ligne (ou touche **Menu**). L'entrée se propose seulement qu
 | **Nouvel assemblage** | Pantin | Crée un assemblage vide (nom par défaut **Nouvel assemblage**). |
 | **Nouvelle liaison…** | Assemblage, dossier **Liaisons entre assemblages** | Ouvre le [formulaire de liaison](#nouvelle-liaison). |
 | **Grouper…** | Corps, assemblage | Ouvre la [ligne de nom du groupe](#grouper) pour les lignes sélectionnées. Proposée seulement si la sélection est faite de corps et de sous-groupes d'un même assemblage. |
-| **Dégrouper** | Assemblage rangé dans un autre | Dissout le groupe dans son assemblage. Voir [Défaire un groupe](/guide/model#defaire-un-groupe). |
+| **Dégrouper** | Assemblage rangé dans un autre | Dissout le groupe dans son assemblage. Voir [Défaire un groupe](/guide/groups#defaire-un-groupe). |
 | **Changer le type…** | Liaison | Ouvre le formulaire de la liaison, prérempli. |
 | **Ajouter un actionneur…** / **Modifier son actionneur…** | Liaison mobile | Ouvre le formulaire d'actionneur pour cette liaison. L'entrée dit **Modifier** si la liaison a déjà un actionneur. Absente sur une liaison fixe. |
 | **Ajouter un capteur…** | Liaison mobile | Ouvre le formulaire de capteur pour cette liaison. |
@@ -383,7 +383,7 @@ Après **Grouper…**, une ligne s'ouvre sous l'arborescence : « Grouper N él�
 | **Grouper** | Crée le groupe. Message : « Groupe « nom » créé. », suivi de **Liaisons supprimées : …** et de **Des tags ont été renommés : régénérez la GVL de l'automate.** quand c'est le cas. |
 | **Annuler** | Referme la ligne sans rien envoyer. |
 
-Si le cœur refuse, sa phrase s'affiche telle quelle et rien n'a changé. Voir [Faire un groupe](/guide/model#faire-un-groupe).
+Si le cœur refuse, sa phrase s'affiche telle quelle et rien n'a changé. Voir [Faire un groupe](/guide/groups#faire-un-groupe).
 
 ### Nouveau préactionneur
 

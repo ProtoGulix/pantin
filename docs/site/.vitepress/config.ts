@@ -4,11 +4,32 @@ import { defineConfig } from "vitepress";
 // served under /docs/ of pantin.frezille.fr so that the root stays free.
 
 const frenchGuide = [
-  { text: "Les fondamentaux", link: "/guide/fundamentals" },
-  { text: "Le modèle d'un Pantin", link: "/guide/model" },
-  { text: "Tutoriel : modéliser un vérin", link: "/guide/tutorial" },
-  { text: "Connecter un automate", link: "/guide/connect-a-plc" },
-  { text: "Dépannage", link: "/guide/troubleshooting" },
+  {
+    text: "Démarrer",
+    items: [
+      { text: "Les fondamentaux", link: "/guide/fundamentals" },
+      { text: "Tutoriel : modéliser un vérin", link: "/guide/tutorial" },
+    ],
+  },
+  {
+    text: "Préparer ses modèles 3D",
+    items: [{ text: "Préparer ses fichiers de CAO", link: "/guide/preparing-models" }],
+  },
+  {
+    text: "Construire un Pantin",
+    items: [
+      { text: "Le modèle d'un Pantin", link: "/guide/model" },
+      { text: "Grouper, dégrouper, déplacer un corps", link: "/guide/groups" },
+      { text: "Préactionneurs, actionneurs et capteurs", link: "/guide/action-chain" },
+      { text: "Produits et convoyage", link: "/guide/conveying" },
+      { text: "Tags, défauts et liste d'E/S", link: "/guide/tags" },
+    ],
+  },
+  {
+    text: "Connecter un automate",
+    items: [{ text: "Connecter un automate", link: "/guide/connect-a-plc" }],
+  },
+  { text: "Dépannage", items: [{ text: "Dépannage", link: "/guide/troubleshooting" }] },
 ];
 
 const frenchReference = [
@@ -20,11 +41,35 @@ const frenchReference = [
 ];
 
 const englishGuide = [
-  { text: "The fundamentals", link: "/en/guide/fundamentals" },
-  { text: "The model of a Pantin", link: "/en/guide/model" },
-  { text: "Tutorial: modelling a cylinder", link: "/en/guide/tutorial" },
-  { text: "Connecting a PLC", link: "/en/guide/connect-a-plc" },
-  { text: "Troubleshooting", link: "/en/guide/troubleshooting" },
+  {
+    text: "Getting started",
+    items: [
+      { text: "The fundamentals", link: "/en/guide/fundamentals" },
+      { text: "Tutorial: modelling a cylinder", link: "/en/guide/tutorial" },
+    ],
+  },
+  {
+    text: "Preparing 3D models",
+    items: [{ text: "Preparing your CAD files", link: "/en/guide/preparing-models" }],
+  },
+  {
+    text: "Building a Pantin",
+    items: [
+      { text: "The model of a Pantin", link: "/en/guide/model" },
+      { text: "Group, ungroup, move a body", link: "/en/guide/groups" },
+      { text: "Drives, actuators and sensors", link: "/en/guide/action-chain" },
+      { text: "Products and conveying", link: "/en/guide/conveying" },
+      { text: "Tags, faults and the I/O list", link: "/en/guide/tags" },
+    ],
+  },
+  {
+    text: "Connecting a PLC",
+    items: [{ text: "Connecting a PLC", link: "/en/guide/connect-a-plc" }],
+  },
+  {
+    text: "Troubleshooting",
+    items: [{ text: "Troubleshooting", link: "/en/guide/troubleshooting" }],
+  },
 ];
 
 const englishReference = [
@@ -58,10 +103,7 @@ export default defineConfig({
           { text: "Guide", link: "/guide/fundamentals" },
           { text: "Référence", link: "/reference/interface" },
         ],
-        sidebar: [
-          { text: "Guide", items: frenchGuide },
-          { text: "Référence de l'interface", items: frenchReference },
-        ],
+        sidebar: [...frenchGuide, { text: "Référence de l'interface", items: frenchReference }],
         outline: { label: "Sur cette page" },
         docFooter: { prev: "Page précédente", next: "Page suivante" },
         darkModeSwitchLabel: "Apparence",
@@ -80,10 +122,7 @@ export default defineConfig({
           { text: "Guide", link: "/en/guide/fundamentals" },
           { text: "Reference", link: "/en/reference/interface" },
         ],
-        sidebar: [
-          { text: "Guide", items: englishGuide },
-          { text: "Interface reference", items: englishReference },
-        ],
+        sidebar: [...englishGuide, { text: "Interface reference", items: englishReference }],
       },
     },
   },

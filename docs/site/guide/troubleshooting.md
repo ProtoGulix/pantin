@@ -36,6 +36,7 @@ temps de simulation.
 | « Import STEP indisponible : lancez le cœur avec --step-converter-python … » | Le cœur n'a pas été lancé avec le convertisseur (le démarrage affiche « STEP import disabled (no --step-converter-python) ») | Lancez `pnpm setup:python` puis `pnpm serve`. À défaut, exportez en GLB ou STL |
 | « The STEP converter could not be started with "…". Check --step-converter-python. » | Le chemin de Python du convertisseur est faux, ou l'environnement est cassé | Relancez `pnpm setup:python`, puis le cœur avec le bon chemin |
 | « Conversion STEP impossible : vérifiez que le fichier s'ouvre dans votre CAO, réexportez-le en STEP (AP214 ou AP242) ou exportez-le en GLB ou STL. » | La conversion a échoué ou dépassé ses limites (2 minutes, taille de sortie) | Réexportez en STEP AP214 ou AP242, simplifiez l'assemblage, ou exportez en GLB ou STL. Le détail est dans la sortie du cœur |
+| « The assembly "…" is placed with a scale or a mirror, which Pantin cannot represent. Export the model without scaled or mirrored instances. » | Une instance d'assemblage du STEP est mise à l'échelle ou en miroir | Dans la CAO, remplacez l'instance en miroir par une vraie pièce symétrique, puis réexportez |
 | Un message dans la console : « Pas de fichier de faces… » | Le corps n'a pas de table de faces | Le modèle s'affiche et s'anime normalement. Seul **Aligner** ne peut pas viser d'axe sur ce corps |
 | « Impossible d'afficher le corps « … » » | Le maillage du corps ne se charge pas | Réimportez le fichier. Si le problème persiste, vérifiez qu'il s'ouvre dans votre CAO |
 
@@ -44,7 +45,7 @@ cours… Jusqu'à 2 minutes ».
 
 ## Groupes et liaisons
 
-Le cœur refuse sans rien changer, et le viewer affiche sa phrase telle quelle (en anglais). Le nom de la liaison ou du corps en cause y figure. Les cas sont expliqués dans [Faire un groupe](/guide/model#faire-un-groupe) et [Défaire un groupe](/guide/model#defaire-un-groupe).
+Le cœur refuse sans rien changer, et le viewer affiche sa phrase telle quelle (en anglais). Le nom de la liaison ou du corps en cause y figure. Les cas sont expliqués dans [Faire un groupe](/guide/groups#faire-un-groupe) et [Défaire un groupe](/guide/groups#defaire-un-groupe).
 
 | Ce que vous voyez | Cause | Que faire |
 | --- | --- | --- |
@@ -62,7 +63,7 @@ Le cœur refuse sans rien changer, et le viewer affiche sa phrase telle quelle (
 | Refus au déplacement d'un corps vers un autre assemblage | Le corps et ses deux groupes ne sont pas déplacés par la même liaison | Déplacez le groupe entier, ou utilisez **Grouper…** |
 | Liaison entre assemblages refusée : l'enfant est un corps | Entre deux assemblages, l'enfant doit être un groupe | Choisissez l'entrée **Groupe : nom** comme **Corps enfant** |
 | Après **Grouper…**, le programme de l'automate ne trouve plus ses variables | Des tags ont été renommés (« régénérez la GVL de l'automate ») | **Exporter la GVL** à nouveau, puis recharger dans le programme |
-| Un corps bouge maintenant avec son groupe, alors qu'il restait fixe | Pantin ancien (schéma 12) migré à l'ouverture : un corps sans liaison parente suit désormais son groupe. La **Console** liste ces corps (« Les corps sans liaison parente suivent maintenant leur groupe quand il bouge : … ») | Vérifiez la scène. Pour qu'il reste immobile, déplacez-le dans un assemblage qui ne bouge pas (voir [Déplacer un corps](/guide/model#deplacer-un-corps-dans-un-autre-assemblage)), ou mettez-le à part dans un groupe (non vérifié dans le viewer) |
+| Un corps bouge maintenant avec son groupe, alors qu'il restait fixe | Pantin ancien (schéma 12) migré à l'ouverture : un corps sans liaison parente suit désormais son groupe. La **Console** liste ces corps (« Les corps sans liaison parente suivent maintenant leur groupe quand il bouge : … ») | Vérifiez la scène. Pour qu'il reste immobile, déplacez-le dans un assemblage qui ne bouge pas (voir [Déplacer un corps](/guide/groups#deplacer-un-corps-dans-un-autre-assemblage)), ou mettez-le à part dans un groupe (non vérifié dans le viewer) |
 
 ## Le pont automate
 

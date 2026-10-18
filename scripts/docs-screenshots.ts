@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { type Browser, chromium, type Page } from "playwright-core";
 import { captureBridgeCard } from "./docs-screenshots/capture-bridge.ts";
 import {
+  captureGroupPrompt,
   captureImportForm,
   captureJointInspector,
   captureNewActuatorForm,
@@ -99,6 +100,7 @@ async function captureLanguage(
     await captureTransportBar(session, "transport-bar");
     await captureImportForm(session, REPOSITORY_ROOT);
     await captureTreeContextMenu(session);
+    await captureGroupPrompt(session);
     await captureJointInspector(session);
     await captureNewDriveForm(session);
     await captureNewActuatorForm(session);

@@ -37,6 +37,7 @@ time.
 | "STEP import unavailable: start the core with --step-converter-python …" | The core was not started with the converter (startup prints "STEP import disabled (no --step-converter-python)") | Run `pnpm setup:python` then `pnpm serve`. Otherwise, export as GLB or STL |
 | "The STEP converter could not be started with "…". Check --step-converter-python." | The path of the converter's Python is wrong, or the environment is broken | Run `pnpm setup:python` again, then the core with the right path |
 | "STEP conversion failed: check that the file opens in your CAD, re-export it as STEP (AP214 or AP242) or export it as GLB or STL." | The conversion failed or exceeded its limits (2 minutes, output size) | Export again as STEP AP214 or AP242, simplify the assembly, or export as GLB or STL. The detail is in the core output |
+| "The assembly "…" is placed with a scale or a mirror, which Pantin cannot represent. Export the model without scaled or mirrored instances." | An assembly instance of the STEP is scaled or mirrored | In the CAD, replace the mirrored instance with a real symmetric part, then export again |
 | A message in the console: "No face file…" | The body has no face table | The model is displayed and animated normally. Only **Align** cannot pick an axis on this body |
 | "Cannot display body "…"" | The mesh of the body does not load | Import the file again. If the problem persists, check that it opens in your CAD |
 
@@ -45,7 +46,7 @@ minutes".
 
 ## Groups and joints
 
-The core refuses without changing anything, and the viewer shows its sentence word for word (in English). The name of the joint or body involved is in it. The cases are explained in [Make a group](/en/guide/model#make-a-group) and [Ungroup a group](/en/guide/model#ungroup-a-group).
+The core refuses without changing anything, and the viewer shows its sentence word for word (in English). The name of the joint or body involved is in it. The cases are explained in [Make a group](/en/guide/groups#make-a-group) and [Ungroup a group](/en/guide/groups#ungroup-a-group).
 
 | What you see | Cause | What to do |
 | --- | --- | --- |
@@ -63,7 +64,7 @@ The core refuses without changing anything, and the viewer shows its sentence wo
 | Refusal when moving a body to another assembly | The body and its two groups are not moved by the same joint | Move the whole group, or use **Group…** |
 | Joint between assemblies refused: the child is a body | Between two assemblies the child must be a group | Pick the **Group: name** entry as **Child body** |
 | After **Group…**, the PLC program no longer finds its variables | Tags were renamed ("regenerate the PLC's GVL") | **Export GVL** again, then reload it in the program |
-| A body now moves with its group although it used to stay still | An old Pantin (schema 12) migrated on opening: a body with no parent joint now follows its group. The **Console** lists these bodies ("Bodies with no parent joint now follow their group when it moves: …") | Check the scene. For it to stay still, move it into an assembly that does not move (see [Move a body](/en/guide/model#move-a-body-to-another-assembly)), or put it apart in a group (not verified in the viewer) |
+| A body now moves with its group although it used to stay still | An old Pantin (schema 12) migrated on opening: a body with no parent joint now follows its group. The **Console** lists these bodies ("Bodies with no parent joint now follow their group when it moves: …") | Check the scene. For it to stay still, move it into an assembly that does not move (see [Move a body](/en/guide/groups#move-a-body-to-another-assembly)), or put it apart in a group (not verified in the viewer) |
 
 ## The PLC bridge
 
