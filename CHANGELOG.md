@@ -6,6 +6,42 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.1.0] - 2026-10-18
+
+First release. A real CODESYS program drives a simulated machine in closed
+loop: CODESYS Control Win V3 x64 drove `examples/plc-cylinder` both ways over
+Modbus TCP on 2026-10-18, with the setup described in the user guide. Verified
+on that one case only: other CODESYS versions, the English CODESYS interface
+and WAGO targets are not. Not there yet: choosing which nodes of an imported
+file become bodies (phase 8), and phase 9 (packs, several instances).
+
+### Added
+
+- User guide, Connect a PLC: the CODESYS setup verified on 2026-10-18 with a
+  real CODESYS Control Win V3 x64 driving `examples/plc-cylinder` both ways
+  (Unit-ID, one server channel per zone, I/O mapping to the GVL, "always
+  update variables", a REAL read as two words through a union), and the
+  matching troubleshooting lines, including an **Init serveur Modbus** command
+  on a missing zone, which stops CODESYS after its refusal. CLAUDE.md records
+  phase 7's CODESYS demonstration.
+
+### Changed
+
+- Bridge log (ADR 0054, 2026-10-18 amendment): the core writes the PLC link
+  events of a bridge it started (PLC write ignored on a forced tag, PLC and
+  bridge connected or disconnected) into `bridge.log` at their own level, so
+  an error shows as an error in the Journal window; the bridge no longer
+  echoes the core console on its log. A PLC write ignored on a forced tag
+  names the tag instead of the bus message id.
+
+### Fixed
+
+- Bridge, a request on a zone the module does not map (for example "Read
+  Holding Registers" on a module with no holding register) was answered with
+  a meaningless 0. It is now refused with ILLEGAL_ADDRESS (02) and shows in
+  the bridge log, as ADR 0048 point 3 intended (zones sized to the mapped
+  range).
+
 ## [0.1.0-alpha.2] - 2026-10-17
 
 Second pre-release: the bridge log, the bridge started through the
@@ -359,5 +395,6 @@ become bodies (phase 8), and phase 9 (packs, several instances).
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
 
+[0.1.0]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0
 [0.1.0-alpha.2]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1

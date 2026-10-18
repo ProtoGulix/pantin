@@ -11,7 +11,7 @@ from pantin_bridge.bus_client import BusClient
 from pantin_bridge.bus_messages import (
     Ack,
     BusError,
-    ConsoleEntry,
+    BusTag,
     IoChanged,
     ServerMessage,
     Snapshot,
@@ -84,15 +84,6 @@ def require_valid_mapping(mapping: IoMapping) -> str:
     )
 
 
-def _log_console(entry: ConsoleEntry) -> None:
-    if entry.code == "bridge_log":
-        # The core made this entry from our own log: logging it again would loop.
-        return
-    # Always INFO: the entry is already in the console at its own level, and a
-    # WARNING here would come back as a second, `bridge_log`, entry (ADR 0054).
-    _log.info("core: %s %s %s", entry.level, entry.code, entry.params)
-
-
 class Bridge:
     def __init__(self, bus: BusClient, modules: Sequence[ModuleBridge]) -> None:
         self._bus = bus
@@ -111,14 +102,16 @@ class Bridge:
                     "The Pantin's tags changed, so the io mapping may no longer match: "
                     "restart the bridge."
                 )
-            case Ack() if message.ignored_because_forced:
-                _log.info("Write %s ignored: its tag is forced in the core.", message.message_id)
+            case Ack(tag=BusTag(name=name), ignored_because_forced=True):
+                # The core's own CORE ERROR line in the log says why (ADR 0054 amendment).
+                _log.info("PLC write to %s ignored: the tag is forced in the core.", name)
+            case Ack(ignored_because_forced=True):
+                _log.info("PLC write ignored: its tag is forced in the core.")
             case BusError():
                 _log.warning("Core error %s: %s", message.code.value, message.message)
-            case ConsoleEntry():
-                _log_console(message)
             case _:
-                # welcome (handled at start), clock and plain acks need nothing.
+                # welcome (handled at start), clock, plain acks and the core's console entries
+                # need nothing: the core writes its own events in the bridge log itself.
                 return
 
     async def serve(self, background: BackgroundWork) -> None:

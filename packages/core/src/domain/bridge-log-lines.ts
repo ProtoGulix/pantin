@@ -1,4 +1,4 @@
-import { BRIDGE_MAX_LOG_LINE_CHARACTERS } from "@pantin/protocol";
+import { BRIDGE_MAX_LOG_LINE_CHARACTERS, type ConsoleEvent } from "@pantin/protocol";
 import type { BridgeEvent, BridgeMachineState } from "./bridge-state.ts";
 
 // The lines of the bridge log file (ADR 0054 point 2) and the level of a line
@@ -92,4 +92,44 @@ export function describeBridgeTransition(
     return { level: "info", text: "Bridge stopped." };
   }
   return undefined;
+}
+
+const LOSS_REASONS = {
+  closed: "its connection closed",
+  timeout: "no request within its watchdog time",
+};
+
+// What the core says in the bridge log about a console event of the PLC link
+// (ADR 0054, amendment of 2026-10-18). The bridge no longer echoes the core's
+// console, so the core writes these lines itself, at the event's own level.
+// `bridge_failed` is left out (the supervisor logs that transition) and so is
+// `bridge_log` (it comes from this very log: writing it back would loop).
+export function describePlcLinkEvent(event: ConsoleEvent): CoreLogEntry | undefined {
+  switch (event.code) {
+    case "forced_tag_written": {
+      const { tag, forcedValue, writtenValue } = event.params;
+      return {
+        level: event.level,
+        text: `PLC write ignored on forced tag ${tag} (forced ${forcedValue}, PLC wrote ${writtenValue}).`,
+      };
+    }
+    case "plc_connected":
+      return { level: event.level, text: `PLC connected to module ${event.params.module}.` };
+    case "plc_disconnected": {
+      const { module, reason } = event.params;
+      return {
+        level: event.level,
+        text: `PLC disconnected from module ${module}: ${LOSS_REASONS[reason]}.`,
+      };
+    }
+    case "bridge_connected":
+      return { level: event.level, text: "Bridge connected to the tag bus." };
+    case "bridge_disconnected":
+      return {
+        level: event.level,
+        text: `Bridge disconnected from the tag bus: ${LOSS_REASONS[event.params.reason]}.`,
+      };
+    default:
+      return undefined;
+  }
 }

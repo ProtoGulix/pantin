@@ -220,7 +220,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 4. Drives : discret, position, vitesse, défauts injectables. Sortie : un vérin double effet se comporte comme décrit, y compris sans rappel ressort.
 5. Capteurs de liaison. Sortie : fins de course qui basculent aux bonnes positions.
 6. Produits et capteurs de présence, convoyeur. Sortie : un carton traverse un convoyeur, un capteur le détecte, de façon reproductible.
-7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA repoussé, ADR 0045, 0049). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel qui pilote une scène reste à démontrer (en attente : pas de VM CODESYS au 2026-10-13).
+7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA repoussé, ADR 0045, 0049). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel a piloté examples/plc-cylinder dans les deux sens le 2026-10-18 (CODESYS Control Win V3 x64, démonstration manuelle de l'utilisateur, réglages dans le guide Connecter un automate).
 8. UI d'édition : bibliothèque de pièces, éditeur de scène, éditeur de pièce (import, choix des noeuds, type de liaison, limites, aperçu par curseurs, écriture du manifeste), mapping I/O, inspecteur avec forçage de tags. Sortie : on crée une machine complète sans éditer de fichier à la main.
 9. Communauté et multi instance : index de packs dans un dépôt git, CI qui exécute un test de scénario par pièce, documentation, plusieurs instances dans un même coeur. Sortie : une pièce tierce s'installe sans modifier le coeur.
 

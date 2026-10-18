@@ -2,7 +2,7 @@
 # (setup.sh), so there is no [build-system] and no build backend dependency.
 [project]
 name = "pantin-bridge"
-version = "0.1.0a2"
+version = "0.1.0"
 description = "Bridges a Pantin core to a PLC: Modbus TCP slaves fed by the tag bus (ADR 0045)."
 license = "Apache-2.0"
 requires-python = ">=3.13"

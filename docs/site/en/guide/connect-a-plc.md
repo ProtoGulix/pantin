@@ -9,13 +9,12 @@ This page describes the bridge, the network setting, the GVL and the
 precautions. To build the machine and its I/O list, follow the
 [tutorial](/en/guide/tutorial).
 
-::: warning Not yet demonstrated with a real CODESYS
-A real CODESYS program driving a scene has **not been demonstrated yet**
-(CLAUDE.md, phase 7; ADR 0045, step 2). What is tested: an automatic closed
-loop, with a test Modbus client that plays the PLC
-(`packages/bridge/tests/test_closed_loop.py`, run by `pnpm check`). Everything
-this page says about the CODESYS side comes from the documentation of the
-repository, not from a measurement.
+::: tip Verified with a real CODESYS
+Driving the `plc-cylinder` example from a real CODESYS Control Win V3 x64 was
+verified on 18 October 2026 (see [Configure the PLC](#configure-the-plc-codesys)).
+Other CODESYS versions and WAGO targets are not verified. The automatic closed
+loop (`packages/bridge/tests/test_closed_loop.py`, run by `pnpm check`) plays the
+PLC with a test Modbus client.
 :::
 
 ## How it works
@@ -72,11 +71,10 @@ quantity or byte count gets exception 3.
 - Values are in SI units: metres, radians, metres per second.
 
 ::: warning Not verified
-The repository has not verified which function codes CODESYS Control Win V3
-actually sends, nor the word order expected for a REAL (the **Low word first**
-default is an assumption based on the little-endian architecture), nor the unit
-id that CODESYS sends. If a float value is wrong, try the other **Word order**
-(ADR 0045 points 6 and 8).
+With the `plc-cylinder` example, CODESYS sent functions 15, 02 and 04 and the
+**Low word first** order was right. For other channels or versions, nothing is
+verified: if a float value is wrong, try the other **Word order** (ADR 0045
+points 6 and 8).
 :::
 
 ### Losing the PLC: the watchdog
@@ -89,7 +87,11 @@ writes "PLC disconnected from module m1" with the reason.
 
 ## Configure the PLC (CODESYS)
 
-What the repository documents, and nothing more.
+This setup was **verified on 18 October 2026** on a real CODESYS Control Win V3
+x64 (IDE with the French interface, version not recorded), with the example
+`examples/plc-cylinder`: module `m1`, `192.168.1.161:1502`, unit 1. The menu
+names below are those of the French interface, as displayed; the English labels
+were not seen, so they are not given.
 
 1. **Generate the GVL** and import it into the CODESYS project:
    - from the viewer: **I/O** view, **Export GVL** button;
@@ -99,22 +101,96 @@ What the repository documents, and nothing more.
    `verin1_verin1_coil_14 : BOOL;`, followed by a comment with the module, the
    zone, the address and the tag. It has **no `AT` addresses**: it is in the
    CODESYS device tree that you link each Modbus channel to these variables.
-2. **Add a Modbus TCP master** and one Modbus TCP slave per module, with the IP
-   address and the **port** shown in the **PLC bridge** block (for example
-   `127.0.0.1:1502`) and the **unit id** of the module.
-3. Declare the channels from the address table: commands on the `coil`,
-   feedback on the `discrete_input`, analog values on the registers.
-4. Link each channel to the variable of the same name in the GVL.
+   Do not edit it: it is regenerated.
+2. **Add the master and one server per module.** In the device tree, under
+   **Device**, add **Ethernet**, then **Modbus_TCP_Client** (the master: the
+   PLC), then one **Modbus_TCP_Server** (a Pantin module) **per module**.
+3. **Set the server**, **Général** tab:
+   - **Adresse IP** (IP address): the listen address of the bridge (an address such as 192.168.1.161 needs the bridge's **Private network** mode, see [Network: local or private](#network-local-or-private));
+   - **Port**: the port of the module (1502 worked);
+   - **Unit-ID**: the module's **Unit id** (1 for `m1`).
+
+   **Unit-ID defaults to 16#FF (255).** With 255, the bridge refuses every
+   request: the log says "refused a request ... : unit 255, function 16 ...
+   -> GATEWAY_NO_RESPONSE (11); this module answers unit 1."
+4. **Create the channels**, **Canal serveur Modbus** tab, **Ajouter un canal**
+   button (see the [CODESYS help](https://content.helpme-codesys.com/en/CODESYS%20Modbus/_mod_edt_slave_com_channel.html)).
+   Rule: **one channel per zone used**, with the lowest address as offset and
+   the number of addresses as length, from the address table of the **I/O**
+   view. Do not configure a channel on a zone the module does not have (for
+   example **Read Holding Registers** on `m1`): the bridge log shows a refused
+   request.
+
+   For `m1`, with the **CYCLIC** trigger and 100 ms:
+
+   | Channel | Function | Offset | Length |
+   | --- | --- | --- | --- |
+   | Commandes | Write Multiple Coils (15) | 0 | 2 |
+   | Capteurs | Read Discrete Inputs (02) | 0 | 2 |
+   | Position | Read Input Registers (04) | 0 | 2 |
+
+   The **ModbusTCPServer Configuration** tab is only a read-only parameter list.
+
+   Leave the **Init serveur Modbus** tab empty. Seen on 18 October 2026: a
+   command of this tab (a register write, function 16, on `m1`) went first on
+   each connection; the bridge refused it, and CODESYS sent nothing more after
+   that. The log showed the refused request, then "PLC disconnected …
+   watchdog", and a reconnection that repeated in a loop.
+5. **Link the channels to the variables**, **ModbusTCPServer Mappage E/S** tab:
+   double-click the **Variable** column of a line, "…" button, then
+   **Application**, **GVL**, the variable (icon "mapper sur la variable
+   existante", map onto the existing variable).
+   - Commandes `Bit0` → `verin1_verin1_coil_14`, `Bit1` → `verin1_verin1_coil_12`;
+   - Capteurs `Bit0` → `verin1_verin_min_state`, `Bit1` → `verin1_verin_max_state`;
+   - Position `[0]` and `[1]` (the WORD lines, not their bits) → two WORD
+     variables of **your own** GVL.
+
+   Without this link, the **Valeur actuelle** column shows "Pas actualisé
+   (vérifier l'info-bulle)".
+6. At the bottom of the same tab, set **Toujours actualiser les variables** to
+   "Activé 2 (toujours dans la tâche du cycle de bus)". The default value
+   ("Utiliser les paramètres de l'appareil parent") does not refresh unused
+   variables.
+
+The mapping and the options can only be edited **offline**: if these fields are
+greyed out, use **En ligne**, **Déconnexion**. This is what was observed; the
+rule "log out to edit" comes from [ABB's CODESYS help](https://help.plc.abb.com/_cds_cmd_login.html).
+
+### A REAL on two registers
+
+In this setup, the channel lines are WORDs: a REAL could not be mapped onto them directly. The bridge sends the **low
+word first**. Use a UNION in **your** code (never in the generated GVL):
+
+```text
+TYPE U_REAL_WORDS :
+UNION
+    r : REAL;
+    w : ARRAY[0..1] OF WORD;
+END_UNION
+END_TYPE
+```
+
+Declare in the program (`VAR`) `conversion : U_REAL_WORDS;` and, in **your** GVL, `position_word_0 : WORD;` and `position_word_1 : WORD;` (the two variables linked to the `Position[0]` and `Position[1]` lines). Then, each cycle:
+
+```text
+conversion.w[0] := position_word_0;
+conversion.w[1] := position_word_1;
+GVL.verin1_verin_position := conversion.r;
+```
+
+On the Windows SoftPLC (little-endian), `w[0]` is the low word. Values are in SI
+units (metres): the extended cylinder gave position 0.125, that is words
+`16#0000` and `16#3E00`.
 
 The test target is **CODESYS Control Win V3** (the SoftPLC supplied with the
 IDE). The Simulation mode of the IDE cuts all communication, so it is not
 suitable (CLAUDE.md, section 10).
 
 ::: warning Not verified
-The exact CODESYS menu names, the channels to create for the registers, how
-CODESYS reconnects after a refused connection and support for port 1502 are not
-verified: the repository has no CODESYS virtual machine (ADR 0045, step 2;
-spike 0009).
+Still to verify: other CODESYS versions and the English interface (the labels
+above are those of the French interface), menu names on WAGO targets, how
+CODESYS reconnects after a refused connection, and the 10-channel limit
+reported on forums.
 :::
 
 ## Network: local or private
@@ -211,13 +287,15 @@ The file is `<Pantins folder>/.logs/<pantinId>/bridge.log` (details in [Panels a
 Example: the PLC connects, then the connection drops after a few seconds ("no request for 5.0 s"). The log contains:
 
 ```text
-Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
+Module m1 refused a request from 192.168.1.137: unit 255, function 16, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
 ```
 
-The module answers unit 1 (its **Unit id** in `io.json`), the PLC queries unit 2. The Modbus slave's **Unit-ID** in CODESYS must equal the module's **Unit id**: align one on the other, then restart the bridge.
+The module answers unit 1 (its **Unit id** in `io.json`), the PLC queries unit 255. This is what the CODESYS **Modbus_TCP_Server** does as long as its **Unit-ID** keeps the default 16#FF (255). Here, the first channel tried was a Write Multiple Registers (16), which this module does not need: only the unit matters in this example.
 
-::: warning Not verified
-This example was produced with a test Modbus client sending a wrong Unit-ID, not with CODESYS; the repository has not replayed the case with a complete CODESYS program.
+Set the **Unit-ID** to the module's **Unit id**, then download the project to CODESYS again. The bridge only needs a restart if you change the **Unit id** in `io.json`.
+
+::: tip Seen with CODESYS
+This line was obtained with a real CODESYS Control Win V3 and the default **Unit-ID**, on 18 October 2026.
 :::
 
 ## Forced tags
@@ -225,7 +303,9 @@ This example was produced with a test Modbus client sending a wrong Unit-ID, not
 A command written from the viewer **forces** the tag: the PLC can no longer
 write it. The console writes: "PLC write ignored on forced tag …". The **PLC
 bridge** block shows "N forced tag(s): the PLC cannot write them" with a
-**Release all** button. Release before handing control to the PLC.
+**Release all** button. Release before handing control to the PLC. This is the
+usual cause of "the PLC writes but nothing moves" after a manual test from the
+viewer: **Release** or **Release all** gives control back to the PLC.
 
 ## Security
 

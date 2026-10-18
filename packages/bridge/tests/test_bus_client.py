@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 
 import pytest
 
@@ -265,29 +264,3 @@ def test_decodes_the_bridge_log_and_bridge_failed_entries() -> None:
         message = bus_messages.decode_server_message(json.dumps(_console_frame(code, level)))
         assert isinstance(message, ConsoleEntry)
         assert message.code == code
-
-
-def test_a_bridge_log_entry_is_not_logged_again(caplog: pytest.LogCaptureFixture) -> None:
-    # The core builds it from the bridge's own log: logging it would feed back for ever.
-    from pantin_bridge.bridge import _log_console  # noqa: PLC0415
-
-    caplog.set_level(logging.INFO)
-    entry = bus_messages.decode_server_message(json.dumps(_console_frame("bridge_log", "warning")))
-    assert isinstance(entry, ConsoleEntry)
-    _log_console(entry)
-
-    assert caplog.records == []
-
-
-def test_a_core_warning_is_logged_at_info(caplog: pytest.LogCaptureFixture) -> None:
-    # At WARNING it would come back from the core as a duplicate bridge_log entry.
-    from pantin_bridge.bridge import _log_console  # noqa: PLC0415
-
-    caplog.set_level(logging.INFO)
-    entry = bus_messages.decode_server_message(
-        json.dumps(_console_frame("plc_disconnected", "warning"))
-    )
-    assert isinstance(entry, ConsoleEntry)
-    _log_console(entry)
-
-    assert [record.levelno for record in caplog.records] == [logging.INFO]

@@ -8,13 +8,12 @@ interrogerait des modules réels (ADR 0003).
 Cette page décrit le pont, le réglage réseau, la GVL et les précautions. Pour
 construire la machine et sa liste d'E/S, suivez le [tutoriel](/guide/tutorial).
 
-::: warning Pas encore démontré avec un vrai CODESYS
-Un programme CODESYS réel qui pilote une scène n'a **pas encore été démontré**
-(CLAUDE.md, phase 7 ; ADR 0045, étape 2). Ce qui est testé : une boucle fermée
-automatique, avec un client Modbus de test qui joue l'automate
-(`packages/bridge/tests/test_closed_loop.py`, lancé par `pnpm check`). Tout ce
-que cette page dit du côté CODESYS vient de la documentation du dépôt, pas d'une
-mesure.
+::: tip Vérifié avec un vrai CODESYS
+Le pilotage de l'exemple `plc-cylinder` par un CODESYS Control Win V3 x64 réel a
+été vérifié le 18 octobre 2026 (voir [Configurer l'automate](#configurer-l-automate-codesys)).
+Les autres versions de CODESYS et les cibles WAGO ne sont pas vérifiées. La boucle
+fermée automatique (`packages/bridge/tests/test_closed_loop.py`, lancée par
+`pnpm check`) joue l'automate avec un client Modbus de test.
 :::
 
 ## Comment ça marche
@@ -72,11 +71,10 @@ un nombre d'octets incorrect l'exception 3.
 - Les valeurs sont en unités SI : mètres, radians, mètres par seconde.
 
 ::: warning Non vérifié
-Le dépôt n'a pas vérifié quels codes fonction CODESYS Control Win V3 envoie
-réellement, ni l'ordre des mots attendu pour un REAL (le défaut **Mot faible en
-premier** est une hypothèse fondée sur l'architecture little-endian), ni
-l'adresse d'unité que CODESYS envoie. Si une valeur flottante est fausse, essayez
-l'autre **Ordre des mots** (ADR 0045 points 6 et 8).
+Avec l'exemple `plc-cylinder`, CODESYS a envoyé les fonctions 15, 02 et 04 et
+l'ordre **Mot faible en premier** convenait. Pour d'autres canaux ou versions,
+rien n'est vérifié : si une valeur flottante est fausse, essayez l'autre **Ordre
+des mots** (ADR 0045 points 6 et 8).
 :::
 
 ### Perte de l'automate : le chien de garde
@@ -89,7 +87,10 @@ leur valeur. La console écrit « Automate déconnecté du module m1 » avec la 
 
 ## Configurer l'automate (CODESYS)
 
-Ce que le dépôt documente, et rien de plus.
+Ce réglage a été **vérifié le 18 octobre 2026** sur un CODESYS Control Win V3
+x64 réel (IDE en interface française, version non relevée), avec l'exemple
+`examples/plc-cylinder` : module `m1`, `192.168.1.161:1502`, unité 1. Les noms
+de menus ci-dessous sont ceux de l'interface française, tels qu'ils s'affichent.
 
 1. **Générez la GVL** et importez-la dans le projet CODESYS :
    - depuis le viewer : vue **E/S**, bouton **Exporter la GVL** ;
@@ -99,23 +100,99 @@ Ce que le dépôt documente, et rien de plus.
    `verin1_verin1_coil_14 : BOOL;`, suivie en commentaire du module, de la zone,
    de l'adresse et du tag. Elle **n'a pas d'adresses `AT`** : c'est dans l'arbre
    des appareils CODESYS que vous reliez chaque canal Modbus à ces variables.
-2. **Ajoutez un maître Modbus TCP** et un esclave Modbus TCP par module, avec
-   l'adresse IP et le **port** affichés dans le bloc **Pont automate** (par
-   exemple `127.0.0.1:1502`) et l'**adresse d'unité** du module.
-3. Déclarez les canaux d'après le tableau d'adresses : les commandes sur les
-   `coil`, les retours sur les `discrete_input`, les valeurs analogiques sur les
-   registres.
-4. Reliez chaque canal à la variable de même nom dans la GVL.
+   Ne la modifiez pas : elle est régénérée.
+2. **Ajoutez le maître et un serveur par module.** Dans l'arbre des appareils,
+   sous **Device**, ajoutez **Ethernet**, puis **Modbus_TCP_Client** (le maître :
+   l'automate), puis un **Modbus_TCP_Server** (un module Pantin) **par module**.
+3. **Réglez le serveur**, onglet **Général** :
+   - **Adresse IP** : l'adresse d'écoute du pont (une adresse comme 192.168.1.161 demande le mode **Réseau privé** du pont, voir [Réseau : local ou privé](#reseau-local-ou-prive)) ;
+   - **Port** : le port du module (1502 a fonctionné) ;
+   - **Unit-ID** : l'**Adresse d'unité** du module (1 pour `m1`).
+
+   **Unit-ID vaut par défaut 16#FF (255).** Avec 255, le pont refuse chaque
+   requête : le journal dit « refused a request ... : unit 255, function 16 ...
+   -> GATEWAY_NO_RESPONSE (11); this module answers unit 1. »
+4. **Créez les canaux**, onglet **Canal serveur Modbus**, bouton **Ajouter un
+   canal** (voir l'[aide CODESYS](https://content.helpme-codesys.com/en/CODESYS%20Modbus/_mod_edt_slave_com_channel.html)).
+   Règle : **un canal par zone utilisée**, avec pour décalage (offset) la plus
+   petite adresse et pour longueur le nombre d'adresses, d'après le tableau
+   d'adresses de la vue **E/S**. Ne configurez pas de canal sur une zone que le
+   module n'a pas (par exemple **Read Holding Registers** sur `m1`) : le journal
+   du pont montre une requête refusée.
+
+   Pour `m1`, avec le déclenchement (Trigger) **CYCLIC** et 100 ms :
+
+   | Canal | Fonction | Offset | Longueur |
+   | --- | --- | --- | --- |
+   | Commandes | Write Multiple Coils (15) | 0 | 2 |
+   | Capteurs | Read Discrete Inputs (02) | 0 | 2 |
+   | Position | Read Input Registers (04) | 0 | 2 |
+
+   L'onglet **ModbusTCPServer Configuration** est une simple liste de
+   paramètres en lecture seule.
+
+   Laissez l'onglet **Init serveur Modbus** vide. Vu le 18 octobre 2026 : une
+   commande de cet onglet (une écriture de registre, fonction 16, sur `m1`)
+   partait en premier à chaque connexion ; le pont l'a refusée, et CODESYS n'a
+   plus rien envoyé ensuite. Le journal montrait la requête refusée, puis
+   « PLC disconnected … watchdog », et une reconnexion qui recommençait en
+   boucle.
+5. **Reliez les canaux aux variables**, onglet **ModbusTCPServer Mappage E/S** :
+   double-cliquez la colonne **Variable** d'une ligne, bouton « … », puis
+   **Application**, **GVL**, la variable (icône « mapper sur la variable
+   existante »).
+   - Commandes `Bit0` → `verin1_verin1_coil_14`, `Bit1` → `verin1_verin1_coil_12` ;
+   - Capteurs `Bit0` → `verin1_verin_min_state`, `Bit1` → `verin1_verin_max_state` ;
+   - Position `[0]` et `[1]` (les lignes WORD, pas leurs bits) → deux variables
+     WORD de **votre propre** GVL.
+
+   Sans cette liaison, la colonne **Valeur actuelle** affiche « Pas actualisé
+   (vérifier l'info-bulle) ».
+6. En bas du même onglet, réglez **Toujours actualiser les variables** sur
+   « Activé 2 (toujours dans la tâche du cycle de bus) ». La valeur par défaut
+   (« Utiliser les paramètres de l'appareil parent ») n'actualise pas les
+   variables non utilisées.
+
+Le mappage et les options ne se modifient que **hors ligne** : si ces champs
+sont grisés, faites **En ligne**, **Déconnexion**. C'est ce qui a été observé ;
+la règle « se déconnecter pour modifier » vient de l'[aide CODESYS d'ABB](https://help.plc.abb.com/_cds_cmd_login.html).
+
+### Un REAL sur deux registres
+
+Dans ce montage, les lignes du canal sont des WORD : on n'a pas pu y relier directement un REAL. Le pont envoie le
+**mot faible en premier**. Utilisez une UNION dans **votre** code (jamais dans
+la GVL générée) :
+
+```text
+TYPE U_REAL_WORDS :
+UNION
+    r : REAL;
+    w : ARRAY[0..1] OF WORD;
+END_UNION
+END_TYPE
+```
+
+Déclarez dans le programme (`VAR`) `conversion : U_REAL_WORDS;` et, dans **votre** GVL, `position_word_0 : WORD;` et `position_word_1 : WORD;` (les deux variables reliées aux lignes `Position[0]` et `Position[1]`). Puis, à chaque cycle :
+
+```text
+conversion.w[0] := position_word_0;
+conversion.w[1] := position_word_1;
+GVL.verin1_verin_position := conversion.r;
+```
+
+Sur le SoftPLC Windows (little-endian), `w[0]` est le mot faible. Les valeurs
+sont en unités SI (mètres) : le vérin sorti a donné la position 0,125, soit les
+mots `16#0000` et `16#3E00`.
 
 La cible de test est **CODESYS Control Win V3** (le SoftPLC livré avec
 l'IDE). Le mode Simulation de l'IDE coupe toute communication, il ne convient pas
 (CLAUDE.md, section 10).
 
 ::: warning Non vérifié
-Les noms exacts des menus CODESYS, les canaux à créer pour les registres, la
-reconnexion de CODESYS après une connexion refusée et la prise en charge du
-port 1502 ne sont pas vérifiés : le dépôt n'a pas de machine virtuelle CODESYS
-(ADR 0045, étape 2 ; spike 0009).
+Restent à vérifier : les autres versions de CODESYS et l'interface en anglais
+(les libellés ci-dessus sont ceux de l'interface française), les noms de menus
+sur les cibles WAGO, la reconnexion de CODESYS après une connexion refusée, et la
+limite de 10 canaux signalée sur des forums.
 :::
 
 ## Réseau : local ou privé
@@ -211,13 +288,15 @@ Le fichier est `<dossier des Pantins>/.logs/<pantinId>/bridge.log` (détails dan
 Exemple : l'automate se connecte, puis la connexion tombe au bout de quelques secondes (« no request for 5.0 s »). Le journal contient :
 
 ```text
-Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
+Module m1 refused a request from 192.168.1.137: unit 255, function 16, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
 ```
 
-Le module répond à l'unité 1 (son **Adresse d'unité** dans `io.json`), l'automate interroge l'unité 2. L'**ID d'unité** (Unit-ID) de l'esclave Modbus dans CODESYS doit être égal à l'**Adresse d'unité** du module : alignez l'un sur l'autre, puis redémarrez le pont.
+Le module répond à l'unité 1 (son **Adresse d'unité** dans `io.json`), l'automate interroge l'unité 255. C'est ce que fait le **Modbus_TCP_Server** de CODESYS tant que son **Unit-ID** garde la valeur par défaut 16#FF (255). Ici, le premier canal essayé était un Write Multiple Registers (16), dont ce module n'a pas besoin : seule l'unité compte dans cet exemple.
 
-::: warning Non vérifié
-Cet exemple a été produit avec un client Modbus de test qui envoie un mauvais Unit-ID, pas avec CODESYS ; le dépôt n'a pas rejoué le cas avec un programme CODESYS complet.
+Réglez l'**Unit-ID** sur l'**Adresse d'unité** du module, puis chargez de nouveau le projet dans CODESYS. Le pont ne se redémarre que si vous changez l'**Adresse d'unité** dans `io.json`.
+
+::: tip Vu avec CODESYS
+Cette ligne a été obtenue avec un CODESYS Control Win V3 réel et l'**Unit-ID** par défaut, le 18 octobre 2026.
 :::
 
 ## Tags forcés
@@ -225,8 +304,11 @@ Cet exemple a été produit avec un client Modbus de test qui envoie un mauvais 
 Une commande écrite depuis le viewer **force** le tag : l'automate ne peut plus
 l'écrire. La console l'écrit : « Écriture de l'automate ignorée sur le tag forcé
 … ». Le bloc **Pont automate** affiche « N tag(s) forcé(s) : l'automate ne peut
-pas les écrire » avec un bouton **Relâcher tout**. Relâchez avant de passer la main à
-l'automate.
+pas les écrire » avec un bouton **Relâcher tout**.
+Relâchez avant de passer la main à
+l'automate. C'est la cause habituelle de « l'automate écrit mais rien ne bouge »
+après un essai manuel depuis le viewer : **Relâcher** ou **Relâcher tout** rend la
+main à l'automate.
 
 ## Sécurité
 

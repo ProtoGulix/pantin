@@ -106,3 +106,32 @@ The name is noise for the reader of the console; the file and the journal
 window keep it (the window shows it as the message's tooltip). Without a
 timestamp the text after the level is kept whole: a bridge in another
 language may start its message with "Word: ".
+
+## Amendment (2026-10-18): the core writes the PLC events itself; the bridge stops echoing the console
+
+The first real CODESYS test (2026-10-17) showed that the bridge logged each
+core console entry at INFO ("core: error forced_tag_written {...}"), so an
+error read as information in the journal window. The bridge did so because a
+WARNING line would have come back from the core as a `bridge_log` console
+entry (point 4), an echo loop.
+
+- The bridge no longer logs the core's console entries at all (it still
+  ignores codes it does not know). Its own lines carry its own levels.
+- The core writes the events that concern the PLC link itself. When it
+  records `forced_tag_written`, `plc_connected`, `plc_disconnected`,
+  `bridge_connected` or `bridge_disconnected` for a Pantin whose bridge is
+  supervised, it also appends a CORE line at the event's own level to that
+  Pantin's `bridge.log`, in readable English, for example `CORE ERROR PLC
+  write ignored on forced tag verin1.verin1.coil_14 (forced 0, PLC wrote 1).`
+  A bridge started outside Pantin has no file, so nothing is written for it.
+  `bridge_failed` is left out (the supervisor already logs that transition)
+  and so is `bridge_log`.
+- No loop: only BRIDGE lines are classified for the console (point 4); CORE
+  lines never are. The rule is generic: it needs nothing of a bridge, so a
+  future bridge type gets the same lines.
+- Two related fixes of the same test. An unmapped Modbus zone has size 0
+  (ADR 0048 point 3: zones are sized to the mapped range), so any access to
+  it is refused with ILLEGAL_ADDRESS and shows as a refused request in the
+  journal, instead of being answered with a meaningless 0. And the INFO line
+  for a PLC write ignored on a forced tag names the tag, not the bus message
+  id: "PLC write to <tag> ignored: the tag is forced in the core."

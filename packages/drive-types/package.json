@@ -1,6 +1,6 @@
 {
   "name": "@pantin/drive-types",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0",
   "private": true,
   "description": "One folder per drive type: schema, pure behaviour, labels (ADR 0022, 0028).",
   "license": "Apache-2.0",

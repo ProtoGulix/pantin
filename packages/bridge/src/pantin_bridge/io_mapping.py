@@ -276,8 +276,12 @@ def decode_io_mapping(document: object) -> IoMapping:
 
 
 def zone_sizes(rows: tuple[IoRow, ...]) -> dict[IoZone, int]:
-    """How many coils, inputs or registers each zone needs to hold the rows (at least 1)."""
-    sizes = dict.fromkeys(IoZone, 1)
+    """How many coils, inputs or registers each zone needs to hold the rows.
+
+    A zone without rows has size 0, so any access to it is refused with ILLEGAL_ADDRESS and
+    shows in the journal (ADR 0048 point 3), instead of being answered with a meaningless 0.
+    """
+    sizes = dict.fromkeys(IoZone, 0)
     for row in rows:
         sizes[row.zone] = max(sizes[row.zone], row.address + row.width)
     return sizes

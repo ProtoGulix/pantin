@@ -17,8 +17,8 @@ The closed loop works like this:
 
 You import your own 3D models, animate them, then link the machine's tags to your PLC.
 
-::: warning Not verified
-The PLC bridge is tested in a closed loop with a test Modbus client that plays the PLC. A real CODESYS program (SoftPLC Control Win V3, WAGO targets) driving a scene is **still to be demonstrated**: no CODESYS virtual machine was available when this page was written. See [Connect a PLC](/en/guide/connect-a-plc).
+::: warning Verified on one case
+The bridge is tested in a closed loop with a test Modbus client. A real CODESYS Control Win V3 x64 drove the `plc-cylinder` example on 18 October 2026 ([setup](/en/guide/connect-a-plc#configure-the-plc-codesys)). Other CODESYS versions and WAGO targets are not verified.
 :::
 
 ## The three processes
