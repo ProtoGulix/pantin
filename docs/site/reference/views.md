@@ -175,7 +175,7 @@ Un clic sur un noeud le sélectionne : un préactionneur, un actionneur ou un ca
 
 ### Les liens
 
-Un lien relie deux connecteurs. Il y en a de cinq sortes, nommées dans les info-bulles et pour les lecteurs d'écran : **Liaison pneumatique**, **Liaison de puissance alternative**, **Liaison d'asservissement** (d'un préactionneur à un actionneur), **Liaison mécanique** (d'un actionneur à une liaison) et **Liaison d'observation** (d'un capteur à une liaison).
+Un lien relie deux connecteurs. Il y en a de cinq sortes, nommées dans les info-bulles et pour les lecteurs d'écran : **Liaison pneumatique**, **Liaison de puissance alternative**, **Liaison d'asservissement** (d'un préactionneur à un actionneur), **Liaison mécanique** (d'un actionneur à une liaison) et **Liaison d'observation** (d'un capteur à une liaison). Chaque sorte a son style de trait, une courte étiquette écrite sur le fil et sa couleur, pour que la couleur ne soit jamais le seul repère : **PNEU** pneumatique (longs tirets, bleu ciel), **CA** puissance alternative (trait plein épais, presque blanc en thème sombre, presque noir en thème clair), **SERVO** asservissement (pointillés, pourpre rougeâtre), **MÉC** mécanique (trait plein fin, gris) et **OBS** observation (tiret et point, bleu). Ces couleurs ne sont jamais l'ambre, le rouge ou le vert des états, ni l'orange de Pantin.
 
 Un clic sur un lien le sélectionne et fait apparaître un petit **×** à mi-chemin. Cliquer le **×** retire le lien. Pour un lien d'observation, le **×** est grisé : un capteur surveille toujours une liaison, il se **déplace** en glissant son lien sur une autre liaison.
 

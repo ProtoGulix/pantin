@@ -76,6 +76,7 @@ export function createContext(
       (key) => objectPoses.latestPose(key),
       palette.selection,
       signalColoursOf(palette),
+      palette.volumes,
     ),
     highlights: createBodyHighlights(scene, loadedBodies, latestPose, palette),
     sensorMarkers: createSensorMarkers(scene, loadedBodies, latestPose, signalColoursOf(palette)),

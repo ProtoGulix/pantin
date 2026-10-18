@@ -1,12 +1,24 @@
 /* The chain diagram (ADR 0029), over the 3D view or under it (ADR 0030). Tokens in base.css. */
-:root {
-  /* One colour and one line style per kind of wire: colour is never the only cue.
-     These are data, not theme: they keep their values in both themes (ADR 0053 point 4). */
-  --edge-pneumatic: #5aa9e6;
-  --edge-ac-power: #f0a030;
-  --edge-servo: #b48ead;
-  --edge-mechanical: #9aa3b2;
-  --edge-observation: #6cc38a;
+:root,
+:root[data-theme="dark"] {
+  /* One colour, one line style and one abbreviation per kind of wire: colour is never the only
+     cue. Data colours (ADR 0057 rule 3): none takes a state hue (amber, red, green) or the brand
+     orange. Per theme, so that each stays at 3:1 or more from the band ground as drawn
+     (tests/viewer-colour-pairs.test.ts). Five wires cannot all be 40 apart under colour blindness
+     on a 3:1 ground: the dash pattern and the label tell them apart, floors are in that test. */
+  --edge-pneumatic: #a8d6ff;
+  --edge-ac-power: #f8f8f8;
+  --edge-servo: #b270b2;
+  --edge-mechanical: #b0b0b0;
+  --edge-observation: #6783f2;
+}
+
+:root[data-theme="light"] {
+  --edge-pneumatic: #0a62c4;
+  --edge-ac-power: #0a0a0a;
+  --edge-servo: #610061;
+  --edge-mechanical: #635f5f;
+  --edge-observation: #1200b6;
 }
 
 /* The canvas stays in place (its size, and the engine's, do not change); the diagram covers it. */
@@ -88,7 +100,7 @@
 .diagram-edge {
   fill: none;
   stroke-linejoin: round;
-  stroke-opacity: 0.6;
+  stroke-opacity: 0.8;
   stroke-width: 1.5;
 }
 
@@ -116,6 +128,19 @@
 .diagram-edge--observation {
   stroke: var(--edge-observation);
   stroke-dasharray: 9 3 2 3;
+  stroke-width: 1;
+}
+
+/* The abbreviation of the kind, a second cue to the dash pattern; neutral, with a halo of the band. */
+.diagram-edge__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--text-muted);
+  stroke: var(--surface-0);
+  stroke-width: 3;
+  paint-order: stroke;
+  pointer-events: none;
 }
 
 /* Under pressure or powered: full strength and thicker. */
@@ -156,7 +181,8 @@
 
 /* With a selection, what is outside its chain steps back. */
 .diagram--focus .diagram-node:not(.is-selected, .is-related),
-.diagram--focus .diagram-edge:not(.is-related) {
+.diagram--focus .diagram-edge:not(.is-related),
+.diagram--focus .diagram-edge:not(.is-related) + .diagram-edge__label {
   opacity: 0.4;
 }
 

@@ -1,6 +1,4 @@
 import "@babylonjs/core/Rendering/edgesRenderer.js";
-import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial.js";
-import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial.js";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color.js";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.js";
@@ -11,11 +9,12 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { isBeamOn } from "../conveyors/beam-appearance.ts";
 import type { DrawingItem, DrawingPart } from "../conveyors/conveyor-drawing.ts";
-import { ARROW_COLOR, VOLUME_LOOKS } from "../conveyors/volume-appearance.ts";
 import { coreDisplacementToBabylon, type Vector3Tuple } from "../frames.ts";
 import type { InterpolatedPose } from "../pose-interpolation.ts";
+import type { ConveyorVolumeColours } from "../theme/data-palette.ts";
 import type { SignalColours } from "../theme/signal-look.ts";
 import { type BeamMaterials, createBeamMaterials } from "./beam-materials.ts";
+import { createKit, type Kit, recolourKit } from "./conveyor-kit.ts";
 
 // Belts, guides, emitters, absorbers and the beams of presence sensors (ADR 0043
 // point 13). Thin on purpose: what to draw comes from conveyors/, here are only
@@ -40,6 +39,8 @@ export interface ConveyorMeshes {
   setSelectionColor(hex: string): void;
   /** The theme changed: the beams take its signal-on and signal-off colours. */
   setSignalColours(colours: SignalColours): void;
+  /** The theme changed: the volumes and their glyphs take its greys. */
+  setVolumeColours(colours: ConveyorVolumeColours): void;
 }
 
 interface Drawn {
@@ -52,51 +53,12 @@ interface Drawn {
 // Scene units (metres): visible on a belt, still thin on a 1 cm beam.
 const SELECTION_OUTLINE_WIDTH = 0.008;
 
-function volumeMaterial(scene: Scene, style: keyof typeof VOLUME_LOOKS) {
-  const look = VOLUME_LOOKS[style];
-  if (style === "belt" || style === "guide") {
-    const material = new PBRMaterial(`conveyor-${style}`, scene);
-    material.albedoColor = Color3.FromHexString(look.color);
-    material.metallic = 0;
-    material.roughness = 0.8;
-    material.alpha = look.alpha;
-    return material;
-  }
-  const material = new StandardMaterial(`conveyor-${style}`, scene);
-  material.disableLighting = true;
-  material.emissiveColor = Color3.FromHexString(look.color);
-  material.alpha = look.alpha;
-  return material;
-}
-
-function createMaterials(scene: Scene) {
-  const arrow = new StandardMaterial("conveyor-arrow", scene);
-  arrow.disableLighting = true;
-  arrow.emissiveColor = Color3.FromHexString(ARROW_COLOR);
-  return {
-    volumes: {
-      belt: volumeMaterial(scene, "belt"),
-      guide: volumeMaterial(scene, "guide"),
-      emitter: volumeMaterial(scene, "emitter"),
-      absorber: volumeMaterial(scene, "absorber"),
-      receiver: volumeMaterial(scene, "receiver"),
-    },
-    arrow,
-  };
-}
-
-type Materials = ReturnType<typeof createMaterials>;
-
 function fromTuple([x, y, z]: Vector3Tuple): Vector3 {
   return new Vector3(x, y, z);
 }
 
 // A shaft and a cone head, both cylinders turned from Babylon Y onto the arrow's axis.
-function buildArrow(
-  scene: Scene,
-  part: Extract<DrawingPart, { kind: "arrow" }>,
-  material: Materials,
-) {
+function buildArrow(scene: Scene, part: Extract<DrawingPart, { kind: "arrow" }>, kit: Kit) {
   const tail = fromTuple(part.tail);
   const tip = fromTuple(part.tip);
   const direction = tip.subtract(tail).normalize();
@@ -117,17 +79,18 @@ function buildArrow(
   head.position = tip.subtract(direction.scale(part.headLength / 2));
   for (const mesh of [shaft, head]) {
     mesh.rotationQuaternion = turn.clone();
-    mesh.material = material.arrow;
+    mesh.material = kit.materials.arrow;
   }
   return [shaft, head];
 }
 
-function buildBox(scene: Scene, part: Extract<DrawingPart, { kind: "box" }>, material: Materials) {
+function buildBox(scene: Scene, part: Extract<DrawingPart, { kind: "box" }>, kit: Kit) {
   const [width, height, depth] = part.size;
   const box = CreateBox("conveyor-box", { width, height, depth }, scene);
   box.position = fromTuple(part.centre);
-  box.material = material.volumes[part.style];
-  const edges = VOLUME_LOOKS[part.style].edges;
+  box.material = kit.materials.volumes[part.style];
+  kit.glyphs.attach(part.style, box, Math.max(width, height, depth));
+  const edges = kit.looks[part.style].edges;
   if (edges !== null) {
     box.enableEdgesRendering();
     box.edgesWidth = 3;
@@ -136,12 +99,12 @@ function buildBox(scene: Scene, part: Extract<DrawingPart, { kind: "box" }>, mat
   return [box];
 }
 
-function buildPart(scene: Scene, part: DrawingPart, material: Materials, beams: Mesh[]): Mesh[] {
+function buildPart(scene: Scene, part: DrawingPart, kit: Kit, beams: Mesh[]): Mesh[] {
   if (part.kind === "box") {
-    return buildBox(scene, part, material);
+    return buildBox(scene, part, kit);
   }
   if (part.kind === "arrow") {
-    return buildArrow(scene, part, material);
+    return buildArrow(scene, part, kit);
   }
   const beam = CreateCylinder(
     "conveyor-beam",
@@ -153,14 +116,14 @@ function buildPart(scene: Scene, part: DrawingPart, material: Materials, beams: 
   return [beam];
 }
 
-function drawItem(scene: Scene, item: DrawingItem, material: Materials): Drawn {
+function drawItem(scene: Scene, item: DrawingItem, kit: Kit): Drawn {
   const node = new TransformNode(`conveyor-${item.key}`, scene);
   node.rotationQuaternion = Quaternion.Identity();
   node.setEnabled(false);
   const beams: Mesh[] = [];
   const meshes: Mesh[] = [];
   for (const part of item.parts) {
-    for (const mesh of buildPart(scene, part, material, beams)) {
+    for (const mesh of buildPart(scene, part, kit, beams)) {
       mesh.parent = node;
       mesh.isPickable = true;
       meshes.push(mesh);
@@ -184,6 +147,18 @@ function indexEntry(
   byKey.set(entry.item.key, entry);
   for (const mesh of entry.meshes) {
     keyByMesh.set(mesh, entry.item.key);
+  }
+}
+
+function reindex(
+  drawn: readonly Drawn[],
+  byKey: Map<string, Drawn>,
+  keyByMesh: Map<AbstractMesh, string>,
+): void {
+  byKey.clear();
+  keyByMesh.clear();
+  for (const entry of drawn) {
+    indexEntry(entry, byKey, keyByMesh);
   }
 }
 
@@ -229,10 +204,24 @@ function placeByKey(byKey: ReadonlyMap<string, Drawn>, key: string, pose: Interp
   }
 }
 
-function disposeDrawn(drawn: readonly Drawn[]): void {
+function disposeDrawn(drawn: readonly Drawn[], kit: Kit): void {
   for (const entry of drawn) {
     entry.node.dispose(false, false);
   }
+  kit.glyphs.forgetAll();
+}
+
+function drawAll(
+  scene: Scene,
+  items: readonly DrawingItem[],
+  kit: Kit,
+  latestPose: (key: string) => InterpolatedPose | undefined,
+): Drawn[] {
+  const drawn = items.map((item) => drawItem(scene, item, kit));
+  for (const entry of drawn) {
+    placeKnown(entry, latestPose);
+  }
+  return drawn;
 }
 
 function hideDrawn(drawn: readonly Drawn[]): void {
@@ -246,33 +235,29 @@ export function createConveyorMeshes(
   latestPose: (key: string) => InterpolatedPose | undefined,
   selectionHex: string,
   signalColours: SignalColours,
+  volumeColours: ConveyorVolumeColours,
 ): ConveyorMeshes {
   let outlineColor = Color3.FromHexString(selectionHex);
-  const material = createMaterials(scene);
+  const kit = createKit(scene, volumeColours);
   const beamMaterials = createBeamMaterials(scene, signalColours);
   let drawn: Drawn[] = [];
   const byKey = new Map<string, Drawn>();
   const keyByMesh = new Map<AbstractMesh, string>();
-  let shownKey: string | null = null;
+  let shown: { key: string; items: readonly DrawingItem[] } | null = null;
   let selectedKey: string | null = null;
   let values: ReadonlyMap<string, number> = new Map();
   const show = (items: readonly DrawingItem[]) => {
-    disposeDrawn(drawn);
-    byKey.clear();
-    keyByMesh.clear();
-    drawn = items.map((item) => drawItem(scene, item, material));
-    for (const entry of drawn) {
-      indexEntry(entry, byKey, keyByMesh);
-      placeKnown(entry, latestPose);
-    }
+    disposeDrawn(drawn, kit);
+    drawn = drawAll(scene, items, kit, latestPose);
+    reindex(drawn, byKey, keyByMesh);
     paintBeams(drawn, values, beamMaterials);
     paintSelection(drawn, selectedKey, outlineColor);
   };
   return {
     show: (items) => {
       const key = JSON.stringify(items);
-      if (key !== shownKey) {
-        shownKey = key;
+      if (key !== shown?.key) {
+        shown = { key, items };
         show(items);
       }
     },
@@ -290,6 +275,10 @@ export function createConveyorMeshes(
     setSignalColours: (next) => {
       beamMaterials.setColours(next);
       paintBeams(drawn, values, beamMaterials);
+    },
+    setVolumeColours: (next) => {
+      recolourKit(kit, next);
+      show(shown?.items ?? []);
     },
     setSelectionColor: (hex) => {
       outlineColor = Color3.FromHexString(hex);

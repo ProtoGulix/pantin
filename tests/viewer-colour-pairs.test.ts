@@ -1,6 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { AXIS_COLOURS } from "../packages/viewer/src/theme/data-palette.ts";
+import {
+  AXIS_COLOURS,
+  CONVEYOR_VOLUME_COLOURS,
+  VOLUME_ALPHAS,
+} from "../packages/viewer/src/theme/data-palette.ts";
 import { SCENE_PALETTES } from "../packages/viewer/src/theme/scene-palette.ts";
 import { signalLookFor } from "../packages/viewer/src/theme/signal-look.ts";
 import { blend, COLOUR_BLIND_MATRICES, contrast, simulatedDifference } from "./colour-maths.ts";
@@ -101,6 +105,59 @@ function signalPairs(theme: ThemeName): ColourPair[] {
   ];
 }
 
+// Conveyor volumes (ADR 0057): neutral greys. The guide and the belt are lit PBR materials,
+// whose lit colour depends on the lights; the guide's albedo blended over the ground at its
+// alpha stands in for what is drawn, and the belt is measured by its unlit edge colour.
+// The emitter and absorber glow, so their edge colours are what is drawn. Greys differ by lightness only, which the
+// ground limit squeezes to about 45 at best: the floors below are measured, and the second
+// cue is the glyph ("+" emitter, "−" absorber), the form (outlined volume, solid guide, flat
+// slab with an arrow) and, against the selection, the outline drawn around the selected object.
+type GreyMark = "emitter" | "absorber" | "guide" | "belt" | "selection outline";
+const GREY_FLOORS: Record<ThemeName, readonly (readonly [GreyMark, GreyMark, number])[]> = {
+  light: [
+    ["emitter", "absorber", 40],
+    ["emitter", "guide", 30],
+    ["absorber", "guide", 16],
+    ["guide", "belt", 8],
+    ["emitter", "belt", 22],
+    ["absorber", "belt", 25],
+    ["emitter", "selection outline", 33],
+    ["absorber", "selection outline", 29],
+    ["guide", "selection outline", 17],
+  ],
+  dark: [
+    ["emitter", "absorber", 40],
+    ["emitter", "guide", 26],
+    ["absorber", "guide", 19],
+    ["guide", "belt", 10],
+    ["emitter", "belt", 15],
+    ["absorber", "belt", 29],
+    ["emitter", "selection outline", 40],
+    ["absorber", "selection outline", 34],
+    ["guide", "selection outline", 25],
+  ],
+};
+
+function volumePairs(theme: ThemeName): ColourPair[] {
+  const scene = SCENE_PALETTES[theme];
+  const volumes = CONVEYOR_VOLUME_COLOURS[theme];
+  const drawnGuide = blend(volumes.guide.color, scene.background, VOLUME_ALPHAS.guide);
+  const marks = {
+    emitter: volumes.emitter.edges ?? volumes.emitter.color,
+    absorber: volumes.absorber.edges ?? volumes.absorber.color,
+    guide: drawnGuide,
+    belt: volumes.belt.edges ?? volumes.belt.color,
+    "selection outline": scene.selection,
+  };
+  return GREY_FLOORS[theme].map(([first, second, minDifference]) => ({
+    name: `conveyor ${first} and ${second}`,
+    first: marks[first],
+    second: marks[second],
+    minDifference,
+    secondCue: "glyph, form and outline",
+  }));
+}
+
 function themeToken(theme: ThemeName, name: string): string {
   const start = BASE_CSS.indexOf(`:root[data-theme="${theme}"] {`);
   const block = BASE_CSS.slice(start, BASE_CSS.indexOf("}", start));
@@ -130,6 +187,7 @@ function registeredPairs(theme: ThemeName): ColourPair[] {
     },
     ...axesPairs(theme),
     ...signalPairs(theme),
+    ...volumePairs(theme),
     ...fillPairs(),
   ];
 }
@@ -180,6 +238,30 @@ describe.each(["light", "dark"] as const)("the filled badges of the %s theme", (
 
   it.each(fills)("fill %s has an outline apart from the fill itself", (fill) => {
     expect(contrast(outline, fill)).toBeGreaterThan(1);
+  });
+});
+
+// The "+" and "−" glyphs are the second cue of the grey volume pairs, so they stay legible
+// whatever the grey: text-level contrast (4.5:1) against the ground, against the volume as
+// drawn (its colour blended over the ground) and against their own halo.
+describe.each(["light", "dark"] as const)("the volume glyphs of the %s theme", (theme) => {
+  const ground = SCENE_PALETTES[theme].background;
+  const { glyph, ...volumes } = CONVEYOR_VOLUME_COLOURS[theme];
+  const TEXT_RATIO = 4.5;
+
+  it("stands out from the ground", () => {
+    expect(contrast(glyph.fill, ground)).toBeGreaterThanOrEqual(TEXT_RATIO);
+  });
+
+  it.each(["emitter", "absorber"] as const)("stands out from the drawn %s volume", (style) => {
+    const drawn = blend(volumes[style].color, ground, VOLUME_ALPHAS[style]);
+    expect(contrast(glyph.fill, drawn)).toBeGreaterThanOrEqual(TEXT_RATIO);
+    const edges = volumes[style].edges ?? volumes[style].color;
+    expect(contrast(glyph.halo, edges)).toBeGreaterThan(1);
+  });
+
+  it("stands out from its own halo, which covers any grey behind it", () => {
+    expect(contrast(glyph.fill, glyph.halo)).toBeGreaterThanOrEqual(TEXT_RATIO);
   });
 });
 

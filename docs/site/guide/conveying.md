@@ -14,6 +14,8 @@ Les objets de convoyage se créent depuis la famille **Convoyage** de l'arboresc
 
 Le produit n'est jamais enregistré : il n'existe que pendant que le cœur tourne. Le bouton **Créer un produit** de l'émetteur écrit 1 puis 0 sur son tag `spawn`.
 
+Dans la vue 3D, les volumes sont des gris neutres qui suivent le thème. Un émetteur est une boîte en contour avec un signe **+**, un absorbeur une boîte en contour avec un signe **−** (les signes font toujours face à vous et gardent une taille lisible), un guide une boîte presque pleine gris acier. Les gris ne diffèrent que par la clarté : ce sont les signes et les formes qui distinguent les trois.
+
 La chaîne d'une bande est : un préactionneur (par exemple un **Contacteur**) alimente un actionneur (par exemple un **Moteur alternatif**), qui déplace la liaison du tambour, que la bande nomme.
 
 | Tag | Propriétaire | Direction |

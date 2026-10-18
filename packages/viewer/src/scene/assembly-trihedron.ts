@@ -1,4 +1,3 @@
-import { Camera } from "@babylonjs/core/Cameras/camera.js";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial.js";
 import { Color3 } from "@babylonjs/core/Maths/math.color.js";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector.js";
@@ -16,6 +15,7 @@ import {
 import { invertTransform, type RigidTransform } from "../rigid-transform.ts";
 import type { AxisColours } from "../theme/data-palette.ts";
 import { createAxisLabel } from "./axis-label.ts";
+import { visibleHeightAt } from "./view-height.ts";
 
 // The trihedron of the selected assembly's frame (ADR 0042 point 1): X red,
 // Y green, Z blue, each tip labelled, over the bodies (rendering group 1, like
@@ -80,20 +80,6 @@ function buildAxis(
   return parts;
 }
 
-// World size of one unit of the trihedron so that it keeps its size on screen.
-function worldSize(scene: Scene, at: Vector3): number {
-  const camera = scene.activeCamera;
-  if (camera === null) {
-    return 1;
-  }
-  if (camera.mode === Camera.ORTHOGRAPHIC_CAMERA) {
-    // camera-view.ts sets the bounds from the view each frame (ADR 0036); the
-    // fallback only covers a camera whose bounds were never set.
-    return SCREEN_SHARE * ((camera.orthoTop ?? 1) - (camera.orthoBottom ?? -1));
-  }
-  return SCREEN_SHARE * 2 * Vector3.Distance(camera.globalPosition, at) * Math.tan(camera.fov / 2);
-}
-
 // Hidden until the target body has a pose.
 function buildTrihedron(scene: Scene, colours: AxisColours): TransformNode {
   const node = new TransformNode("assembly-trihedron", scene);
@@ -126,7 +112,7 @@ export function createAssemblyTrihedron(
     root = buildTrihedron(scene, colours);
     const node = root;
     observer = scene.onBeforeRenderObservable.add(() => {
-      node.scaling.setAll(worldSize(scene, node.position));
+      node.scaling.setAll(SCREEN_SHARE * visibleHeightAt(scene, node.position));
     });
   };
   return {

@@ -215,3 +215,31 @@ This replaces the "Sensor marker ON / OFF" row of the Decision table, whose
 dark): ON state-normal, OFF neutral drawn at alpha 0.8, the drawn OFF at 3:1
 or more on the ground, ON and OFF told apart by thickness and opacity. The
 "Light beam ON / OFF" row follows the same coding.
+
+## Amendment (2026-10-18): diagram wires and conveyor volumes, found in slice 7
+
+Measured as drawn (wires at stroke opacity 0.8 on the band and viewport
+grounds; guide and belt are lit PBR materials, their albedo or edge colour
+stands in for the lit colour):
+
+- **Diagram wires.** Five colours cannot stay ΔE 40 apart for the three
+  simulations while each keeps 3:1 on the ground: within the allowed hues
+  (sky blue to reddish purple, plus greys; green, amber, red and the brand
+  are reserved) the best search reached about 20 in the dark theme and 29 in
+  the light one. Three wires are therefore in blue to violet. Each wire is
+  told apart by its own dash and width (pneumatic 1.5 px dashes, AC 2.5 px
+  solid, servo 2 px dotted, mechanical 1.5 px solid, observation 1 px
+  dash-dot) and by its energy label on the wire (PNEU, CA/AC, SERVO,
+  MÉC/MECH, OBS). Pairs are registered with floors from 21 (dark) and 25
+  (light) and that second cue. Pneumatic and observation, both bluish, keep
+  their colours: the dash, the width and the label differ, and no free hue
+  is left. This closes the "Okabe-Ito candidates, NOT VERIFIED" row of the
+  Decision table.
+- **Conveyor volumes.** Greys of different lightness (user's choice): the
+  emitter and absorber stay ΔE 45 apart; the other pairs fall to floors of
+  8 (guide and belt, light) to 34, each registered with its second cue
+  (glyph, form and outline). The "+" and "−" glyphs are drawn in a
+  high-contrast fill with a halo, independent of the volume's grey, at 4.5:1
+  or more against the ground, the drawn volumes and their halo (tested); in
+  the dark theme the belt edge was lightened so the absorber's outline no
+  longer merges with it.

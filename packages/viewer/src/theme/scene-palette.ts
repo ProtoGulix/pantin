@@ -1,4 +1,10 @@
-import { AXIS_COLOURS, type AxisColours, SIGNAL_OFF_COLOURS } from "./data-palette.ts";
+import {
+  AXIS_COLOURS,
+  type AxisColours,
+  CONVEYOR_VOLUME_COLOURS,
+  type ConveyorVolumeColours,
+  SIGNAL_OFF_COLOURS,
+} from "./data-palette.ts";
 import type { SignalColours } from "./signal-look.ts";
 import type { ThemeName } from "./theme.ts";
 
@@ -22,6 +28,7 @@ export interface ScenePalette {
   /** The parent body of a previewed joint; --joint-parent in base.css. */
   jointParent: string;
   axes: AxisColours;
+  volumes: ConveyorVolumeColours;
 }
 
 export const SCENE_PALETTES: Readonly<Record<ThemeName, ScenePalette>> = {
@@ -34,6 +41,7 @@ export const SCENE_PALETTES: Readonly<Record<ThemeName, ScenePalette>> = {
     signalOff: SIGNAL_OFF_COLOURS.light,
     jointParent: "#c25e00",
     axes: AXIS_COLOURS.light,
+    volumes: CONVEYOR_VOLUME_COLOURS.light,
   },
   dark: {
     background: "#262d30",
@@ -44,6 +52,7 @@ export const SCENE_PALETTES: Readonly<Record<ThemeName, ScenePalette>> = {
     signalOff: SIGNAL_OFF_COLOURS.dark,
     jointParent: "#ffe08a",
     axes: AXIS_COLOURS.dark,
+    volumes: CONVEYOR_VOLUME_COLOURS.dark,
   },
 };
 

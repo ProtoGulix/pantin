@@ -43,6 +43,11 @@ All notable changes to Pantin. The format follows
   sensor markers and light beams code "signal on" by thickness and opacity
   (on: green, thick, opaque; off: neutral, thin, translucent), so beams are
   no longer red.
+- Viewer (ADR 0057, seventh slice): each wire of the chain diagram carries
+  its energy's abbreviation (PNEU, CA/AC, ASS/SERVO, MÉC/MECH, OBS) beside
+  its own dash and width, with per-theme colours away from the state hues
+  and the brand; conveyor volumes are greys of different lightness, the
+  emitter marked "+" and the absorber "−".
 
 ### Fixed
 

@@ -1,9 +1,10 @@
-import { DATA_COLOURS } from "../theme/data-palette.ts";
+import { type ConveyorVolumeColours, DATA_COLOURS, VOLUME_ALPHAS } from "../theme/data-palette.ts";
 import type { VolumeStyle } from "./conveyor-drawing.ts";
 
-// Colours of the outlined volumes. Each kind of object has its own hue so that
-// an emitter, an absorber and a guide read apart at a glance; the belt is a
-// dark slab that lets products and the arrow stand out.
+// Looks of the outlined volumes. The colours are neutral greys that follow the
+// theme (ADR 0057); an emitter and an absorber are told apart by their glyph
+// (volume-glyph.ts), a guide by being nearly solid; the belt is a slab that lets
+// products and the arrow stand out.
 
 export interface VolumeLook {
   color: string;
@@ -12,15 +13,18 @@ export interface VolumeLook {
   edges: string | null;
 }
 
-const VOLUMES = DATA_COLOURS.conveyorVolume;
-
-export const VOLUME_LOOKS: Readonly<Record<VolumeStyle, VolumeLook>> = {
-  belt: { ...VOLUMES.belt, alpha: 1 },
-  // A guide collides, so it is nearly solid.
-  guide: { ...VOLUMES.guide, alpha: 0.75 },
-  emitter: { ...VOLUMES.emitter, alpha: 0.16 },
-  absorber: { ...VOLUMES.absorber, alpha: 0.16 },
-  receiver: { ...VOLUMES.receiver, alpha: 1 },
-};
+export function volumeLooksFor(colours: ConveyorVolumeColours): Record<VolumeStyle, VolumeLook> {
+  const look = (style: VolumeStyle): VolumeLook => ({
+    ...colours[style],
+    alpha: VOLUME_ALPHAS[style],
+  });
+  return {
+    belt: look("belt"),
+    guide: look("guide"),
+    emitter: look("emitter"),
+    absorber: look("absorber"),
+    receiver: look("receiver"),
+  };
+}
 
 export const ARROW_COLOR = DATA_COLOURS.conveyorArrow;

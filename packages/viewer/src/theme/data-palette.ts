@@ -38,11 +38,58 @@ export const SIGNAL_OFF_COLOURS: Readonly<Record<ThemeName, string>> = {
   dark: "#ffffff",
 };
 
-interface VolumeColours {
+interface VolumeColour {
   color: string;
   /** Edges are drawn when set. */
   edges: string | null;
 }
+
+/** A sign on a volume: a high-contrast fill and the halo that keeps it legible on any grey. */
+export interface GlyphColours {
+  readonly fill: string;
+  readonly halo: string;
+}
+
+export type ConveyorVolumeColours = Readonly<
+  Record<"belt" | "guide" | "emitter" | "absorber" | "receiver", VolumeColour>
+> & { readonly glyph: GlyphColours };
+
+/**
+ * Neutral greys of the conveyor volumes (ADR 0057, user's choice): the emitter is the
+ * grey farthest from the ground, the absorber the nearest the 3:1 rule allows, the
+ * guide a steel grey between. Greys cannot reach a difference of 40 on a 3:1 ground,
+ * so the glyphs "+" and "−" and the form (outlined volume or solid body) are the cue;
+ * tests/viewer-colour-pairs.test.ts measures the colours as drawn and keeps the floors.
+ */
+export const CONVEYOR_VOLUME_COLOURS: Readonly<Record<ThemeName, ConveyorVolumeColours>> = {
+  light: {
+    belt: { color: "#17191d", edges: "#3a414b" },
+    guide: { color: "#1c262e", edges: "#1c262e" },
+    emitter: { color: "#121212", edges: "#121212" },
+    absorber: { color: "#7c7c7c", edges: "#7c7c7c" },
+    receiver: { color: "#5a5f66", edges: null },
+    glyph: { fill: "#1a1e20", halo: "#f4f4f0" },
+  },
+  dark: {
+    belt: { color: "#3a4046", edges: "#c4cad1" },
+    guide: { color: "#d0d8e0", edges: "#d0d8e0" },
+    emitter: { color: "#f5f5f5", edges: "#f5f5f5" },
+    absorber: { color: "#7a7a7a", edges: "#7a7a7a" },
+    receiver: { color: "#8a9099", edges: null },
+    glyph: { fill: "#f4f4f0", halo: "#1a1e20" },
+  },
+};
+
+/** How opaque each volume is drawn: a guide collides, so it is nearly solid; the others are faint. */
+export const VOLUME_ALPHAS: Readonly<
+  Record<Exclude<keyof ConveyorVolumeColours, "glyph">, number>
+> = {
+  belt: 1,
+  guide: 0.75,
+  emitter: 0.16,
+  absorber: 0.16,
+  receiver: 1,
+};
 
 /** Shading of a view cube face by its lightness (percent): a bluish grey. */
 export function viewCubeFaceColour(lightness: number): string {
@@ -50,13 +97,6 @@ export function viewCubeFaceColour(lightness: number): string {
 }
 
 export const DATA_COLOURS = {
-  conveyorVolume: {
-    belt: { color: "#2a2d33", edges: "#4b525e" },
-    guide: { color: "#7d6ff0", edges: "#b3a9ff" },
-    emitter: { color: "#3fb950", edges: "#56d364" },
-    absorber: { color: "#f0883e", edges: "#ffa657" },
-    receiver: { color: "#6b3a36", edges: null },
-  } satisfies Record<string, VolumeColours>,
   conveyorArrow: "#e6edf3",
   /** The white sky light. */
   skyLight: "#ffffff",

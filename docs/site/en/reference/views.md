@@ -175,7 +175,7 @@ A click on a node selects it: a drive, an actuator or a sensor is shown in the i
 
 ### Links
 
-A link joins two connectors. There are five kinds, named in the tooltips and for screen readers: **Pneumatic link**, **AC power link**, **Servo link** (from a drive to an actuator), **Mechanical link** (from an actuator to a joint) and **Observation link** (from a sensor to a joint).
+A link joins two connectors. There are five kinds, named in the tooltips and for screen readers: **Pneumatic link**, **AC power link**, **Servo link** (from a drive to an actuator), **Mechanical link** (from an actuator to a joint) and **Observation link** (from a sensor to a joint). Each kind has its own line style, a short label written on the wire and its own colour, so colour is never the only cue: **PNEU** pneumatic (long dashes, sky blue), **AC** AC power (thick solid line, near white in the dark theme, near black in the light one), **SERVO** servo (dots, reddish purple), **MECH** mechanical (thin solid line, grey) and **OBS** observation (dash and dot, blue). The colours are never the amber, red or green of the states, nor the orange of Pantin.
 
 A click on a link selects it and makes a small **×** appear halfway along. Clicking the **×** removes the link. For an observation link, the **×** is greyed out: a sensor always watches a joint, it is **moved** by dragging its link onto another joint.
 

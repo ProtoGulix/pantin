@@ -14,6 +14,8 @@ Conveying objects are created from the **Conveying** family of the tree (**New b
 
 The product is never saved: it only exists while the core is running. The **Create a product** button of the emitter writes 1 then 0 on its `spawn` tag.
 
+In the 3D view the volumes are neutral greys that follow the theme. An emitter is an outlined box with a **+** sign, an absorber an outlined box with a **−** sign (the signs always face you and keep a readable size), a guide a nearly solid steel-grey box. The greys differ in lightness only, so the signs and the shapes are what tell the three apart.
+
 The chain of a belt is: a drive (for example a **Contactor**) feeds an actuator (for example an **AC motor**), which moves the joint of the drum, which the belt names.
 
 | Tag | Owner | Direction |
