@@ -1,4 +1,6 @@
 import {
+  type AlignFramesResponse,
+  AlignFramesResponseSchema,
   type CreateJointRequest,
   CreateJointRequestSchema,
   type Joint,
@@ -34,6 +36,8 @@ export interface JointRoutes {
     jointId: string,
     request: JointAxisFromFaceRequest,
   ): Promise<JointAxisFromFaceResponse>;
+  // Turns the frames so the stored axis reads [0, 0, 1] (ADR 0056); no body.
+  alignFrames(pantinId: string, jointId: string): Promise<AlignFramesResponse>;
   // The core clamps the position to the joint limits and answers the new pose.
   setJointPosition(pantinId: string, jointId: string, position: number): Promise<PoseResponse>;
 }
@@ -66,6 +70,12 @@ export function jointRoutes(send: SendJson): JointRoutes {
       const url = jointUrl(pantinId, jointId, "/position");
       return send(url, jsonRequest("PUT", request), PoseResponseSchema);
     },
+    alignFrames: (pantinId, jointId) =>
+      send(
+        jointUrl(pantinId, jointId, "/align-frames"),
+        jsonRequest("POST"),
+        AlignFramesResponseSchema,
+      ),
     jointAxisFromFace: async (pantinId, jointId, request) => {
       const validRequest = validInputOrThrow(JointAxisFromFaceRequestSchema, request);
       const url = jointUrl(pantinId, jointId, "/axis-from-face");

@@ -86,4 +86,12 @@ export const JOINT_ROUTES: readonly Route[] = [
       sendJson(context.response, 200, answer);
     },
   },
+  {
+    method: "POST",
+    pattern: ["pantins", ":pantinId", "joints", ":jointId", "align-frames"],
+    handle: async (context) => {
+      const answer = await context.service.alignFrames(pantinIdOf(context), jointIdOf(context));
+      sendJson(context.response, 200, answer);
+    },
+  },
 ];

@@ -17,6 +17,7 @@ import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
 import type { WelcomeTab } from "../viewer-state.ts";
 import { actuatorIntents } from "./actuator-intents.ts";
+import { alignFramesOnJointAxis } from "./align-frames-actions.ts";
 import {
   applyAlignment,
   chooseAlignmentKind,
@@ -188,6 +189,7 @@ function jointIntents(store: ViewerStore) {
     submitJointForm: () => void submitJointForm(store),
     cancelJointForm: () => cancelJointForm(store),
     pickJointAxisOnFace: () => startAxisPick(store),
+    alignFramesOnJointAxis: () => void alignFramesOnJointAxis(store),
     moveJoint: (pantinId: string, jointId: string, position: number) =>
       moveJoint(store, pantinId, jointId, position),
   };

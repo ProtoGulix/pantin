@@ -160,3 +160,34 @@ describe("PantinApiClient updateJoint", () => {
     expect(JSON.parse(String(requests[0]?.init?.body))).toEqual(request);
   });
 });
+
+describe("PantinApiClient alignFrames", () => {
+  it("aligns the frames with a bodiless POST and validates the answer", async () => {
+    const pantin = {
+      id: "press",
+      unsavedChanges: true,
+      document: {
+        schema_version: PANTIN_SCHEMA_VERSION,
+        name: "Press",
+        assemblies: [],
+        bodies: [],
+        joints: [],
+        drives: [],
+        actuators: [],
+        sensors: [],
+        ...NO_PHASE_6,
+      },
+    };
+    const answer = {
+      pantin,
+      reframedAssemblies: ["main", "arm"],
+      rewrittenJoints: [{ id: "slide", name: "Slide" }],
+    };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const result = await createPantinApiClient(fetchFunction).alignFrames("press", "slide");
+    expect(result).toEqual(answer);
+    expect(requests[0]?.url).toBe("/api/pantins/press/joints/slide/align-frames");
+    expect(requests[0]?.init?.method).toBe("POST");
+    expect(requests[0]?.init?.body).toBeUndefined();
+  });
+});

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { BodyIdSchema } from "./ids.ts";
+import { PantinResponseSchema } from "./api.ts";
+import { BodyIdSchema, DisplayNameSchema, JointIdSchema, KeySchema } from "./ids.ts";
 import { Vector3Schema } from "./joint.ts";
 
 // Joint axis from a picked face (ADR 0041):
@@ -35,3 +36,26 @@ export const JointAxisFromFaceResponseSchema = z.object({
   axis: Vector3Schema,
 });
 export type JointAxisFromFaceResponse = z.infer<typeof JointAxisFromFaceResponseSchema>;
+
+// Align the frames on a joint axis (ADR 0056):
+//
+//   POST /api/pantins/:pantinId/joints/:jointId/align-frames, no body
+//        -> AlignFramesResponse
+//
+// Reorients, without moving anything, the frame of the assembly of the joint's
+// parent so that the joint reads [0, 0, 1], and the frame of the child when
+// it is a group (ADR 0056 point 2). It is a document edit, unsaved like any
+// other; positions and drive states are kept. `reframedAssemblies` lists the
+// assemblies whose frame turned (none when both were already aligned),
+// `rewrittenJoints` the joints whose origin or axis numbers changed with it,
+// the joint itself included.
+//
+// Refusals: `not_found` for an unknown joint, `conflict` for a fixed joint
+// (it has no axis to align with).
+
+export const AlignFramesResponseSchema = z.object({
+  pantin: PantinResponseSchema,
+  reframedAssemblies: z.array(KeySchema),
+  rewrittenJoints: z.array(z.object({ id: JointIdSchema, name: DisplayNameSchema })),
+});
+export type AlignFramesResponse = z.infer<typeof AlignFramesResponseSchema>;

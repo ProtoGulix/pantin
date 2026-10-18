@@ -67,10 +67,11 @@ Exemple : un chariot sur des glissières inclinées à 70°, dont le repère de 
 
 Si vous ne pouvez pas modifier le fichier de CAO :
 
-1. Transformez la liaison fixe en **Glissière** et enregistrez-la.
-2. Cliquez sur **Prendre l'axe sur une face**, puis sur une face cylindrique de la tige ou sur une face plane du rail.
+1. Transformez la liaison fixe en **Glissière**, puis cliquez **Appliquer**.
+2. Cliquez sur **Prendre l'axe sur une face**, puis sur une face cylindrique de la tige ou sur une face plane du rail. Cliquez **Appliquer**.
+3. Cliquez sur **Aligner le repère sur cet axe**. Le repère de l'assemblage parent et celui du groupe déplacé tournent pour que l'axe se lise `[0, 0, 1]` ; rien ne bouge.
 
-Ce bouton n'est proposé que pour une liaison enregistrée dont le type bouge ; voir [Panneaux et boutons](/reference/panels). Une commande pour réorienter le repère d'un groupe sans déplacer ses corps est à l'étude (sans promesse ni date).
+Ces boutons ne sont proposés que pour une liaison enregistrée dont le type bouge ; voir [Panneaux et boutons](/reference/panels) et [Dans quel repère se lit une liaison](/guide/model#dans-quel-repere-se-lit-une-liaison). Les autres liaisons du même parent sont réécrites aussi : groupez d'abord les rails pour garder un petit parent. Cette marche à suivre n'est pas encore vérifiée sur la machine réelle de l'utilisateur.
 
 ## Pièces achetées
 

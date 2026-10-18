@@ -4,11 +4,11 @@ import { groupingTargetOf, ungroupTargetOf } from "../grouping/grouping-model.ts
 import {
   type GroupingKind,
   type GroupingResult,
-  groupingFailureMessage,
   groupingResultMessage,
 } from "../grouping/grouping-result.ts";
 import { withGroupCancelled, withGroupRequested } from "../grouping/grouping-state.ts";
 import { createTranslator } from "../i18n/translate.ts";
+import { coreRefusalMessage } from "../messages.ts";
 import { withPreviousPlacementDropped } from "../previous-placement.ts";
 import { selectedNodeIdOf, selectedNodeIdsOf } from "../selection.ts";
 import { assemblyNodeId } from "../tree/node-ids.ts";
@@ -59,7 +59,7 @@ async function runGroupingCommand<Answer extends GroupingResult & { pantin: Pant
       message: groupingResultMessage(kind, answer, store.state.language),
     });
   } catch (error) {
-    store.update({ ...withRequestFinished(store.state), message: groupingFailureMessage(error) });
+    store.update({ ...withRequestFinished(store.state), message: coreRefusalMessage(error) });
     return;
   }
   await refreshPantinList(store);

@@ -106,6 +106,14 @@ Le bouton **Prendre l'axe sur une face** place l'axe d'après une face cliquée 
 
 Un corps ou un groupe a au plus une liaison qui l'amène à son parent, et les liaisons ne forment jamais de boucle.
 
+### Dans quel repère se lit une liaison
+
+L'origine et l'axe d'une liaison se lisent dans le repère de l'assemblage de son **parent** (le groupe lui-même quand le parent est un groupe), et non dans le repère du groupe qu'elle déplace. Le trièdre affiché dans la vue 3D quand une liaison est sélectionnée est ce repère. Tourner le repère du groupe déplacé ne change donc jamais les nombres de sa liaison.
+
+Pour qu'un axe incliné (des rails à 70°, par exemple) se lise `[0, 0, 1]` sans rien déplacer, le formulaire de la liaison offre **Aligner le repère sur cet axe**. La commande n'est proposée que pour une liaison déjà créée dont le type bouge, jamais pour une liaison **Fixe**. Elle est grisée tant que le formulaire a des modifications non appliquées : cliquez d'abord **Appliquer**, car elle utilise l'axe enregistré dans le document. Elle tourne le repère de l'assemblage du parent et celui du groupe que la liaison déplace, pour que l'axe se lise `[0, 0, 1]` ; aucun corps ne bouge. Le message nomme les assemblages tournés et les liaisons réécrites, ou dit que les repères étaient déjà alignés.
+
+Le message de résultat nomme les assemblages dont le repère a tourné et liste les liaisons dont les nombres ont changé : les autres liaisons du même parent sont réécrites aussi, puisqu'elles se lisent dans le même repère. Avec un parent volumineux, la liste peut être longue : groupez d'abord les rails pour obtenir un petit parent (voir [Grouper](/guide/groups)). Si rien n'a changé, le message est **Les repères sont déjà alignés sur cet axe, rien n'a changé.** La marche à suivre pour des glissières inclinées est dans [Préparer ses modèles 3D](/guide/preparing-models). Décision : [ADR 0056](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0056-reorient-a-group-frame.md).
+
 ### Tags d'une liaison
 
 Les tags d'une liaison utilisent l'assemblage qu'elle déplace : celui de son corps enfant, ou le groupe enfant lui-même.

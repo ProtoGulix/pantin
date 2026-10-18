@@ -67,10 +67,11 @@ Example: a carriage on slides tilted at 70°, whose sub-assembly frame is not ti
 
 If you cannot change the CAD file:
 
-1. Turn the fixed joint into **Prismatic (slider)** and save it.
-2. Click **Take the axis from a face**, then click a cylindrical face of the rod or a plane face of the rail.
+1. Turn the fixed joint into **Prismatic (slider)**, then click **Apply**.
+2. Click **Take the axis from a face**, then click a cylindrical face of the rod or a plane face of the rail. Click **Apply**.
+3. Click **Align the frame on this axis**. The frame of the parent's assembly and that of the moved group turn so that the axis reads `[0, 0, 1]`; nothing moves.
 
-This button is offered only for a saved joint whose type moves; see [Panels and buttons](/en/reference/panels). A command to reorient a group's frame without moving its bodies is being designed (no promise, no date).
+These buttons are offered only for a saved joint whose type moves; see [Panels and buttons](/en/reference/panels) and [In which frame a joint is read](/en/guide/model#in-which-frame-a-joint-is-read). The other joints of the same parent are rewritten too: group the rails first to keep a small parent. These steps are not yet verified on the user's real machine.
 
 ## Bought parts
 

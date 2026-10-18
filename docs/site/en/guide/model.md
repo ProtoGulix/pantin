@@ -106,6 +106,14 @@ The **Take the axis from a face** button places the axis from a face you click i
 
 A body or a group has at most one joint bringing it to its parent, and joints never form a loop.
 
+### In which frame a joint is read
+
+A joint's origin and axis are read in the frame of its **parent's** assembly (the group itself when the parent is a group), not in the frame of the group it moves. The trihedron shown in the 3D view when a joint is selected is that frame. Turning the frame of the moved group therefore never changes the numbers of its joint.
+
+To make a tilted axis (rails at 70°, for example) read `[0, 0, 1]` without moving anything, the joint form offers **Align the frame on this axis**. The command is offered only for a joint already created whose type moves, never for a **Fixed** joint. It is disabled while the form has changes not applied: click **Apply** first, since it uses the axis stored in the document. It turns the frame of the parent's assembly and that of the group the joint moves, so that the axis reads `[0, 0, 1]`; no body moves. The message names the turned assemblies and the rewritten joints, or says the frames were already aligned.
+
+The result message names the assemblies whose frame turned and lists the joints whose numbers changed: the other joints of the same parent are rewritten too, since they are read in the same frame. With a large parent the list can be long: group the rails first to get a small parent (see [Group](/en/guide/groups)). When nothing changed, the message is **The frames are already aligned on this axis, nothing changed.** The steps for tilted slides are in [Preparing your 3D models](/en/guide/preparing-models). Decision: [ADR 0056](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0056-reorient-a-group-frame.md).
+
 ### Tags of a joint
 
 The tags of a joint use the assembly it moves: that of its child body, or the child group itself.

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { PantinApiError } from "../api-transport.ts";
 import { createTranslator } from "../i18n/translate.ts";
-import { groupingFailureMessage, groupingResultMessage } from "./grouping-result.ts";
+import { coreRefusalMessage } from "../messages.ts";
+import { groupingResultMessage } from "./grouping-result.ts";
 
 const fr = createTranslator("fr");
 const en = createTranslator("en");
@@ -34,16 +35,16 @@ describe("groupingResultMessage", () => {
   });
 });
 
-describe("groupingFailureMessage", () => {
+describe("coreRefusalMessage", () => {
   it("shows the core's refusal as it is", () => {
     const refusal = new PantinApiError("api", 'Joint "Slide" moves "Rod".', "conflict", 409);
-    const message = groupingFailureMessage(refusal);
+    const message = coreRefusalMessage(refusal);
     expect(fr(message.key, message.parameters)).toBe('Joint "Slide" moves "Rod".');
     expect(message.level).toBe("error");
   });
 
   it("keeps the usual message for a network failure", () => {
-    const message = groupingFailureMessage(new PantinApiError("network", "down", null, null));
+    const message = coreRefusalMessage(new PantinApiError("network", "down", null, null));
     expect(message.key).toBe("error.network");
   });
 });

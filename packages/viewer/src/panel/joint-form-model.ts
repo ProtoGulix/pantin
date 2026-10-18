@@ -5,6 +5,7 @@ import {
   type JointType,
 } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { type AlignFramesButtonView, alignFramesButtonOf } from "../joints/align-frames.ts";
 import { AXIS_DIRECTIONS, type AxisChoice } from "../joints/axis-choice.ts";
 import { canPickAxis, isPickingAxis } from "../joints/axis-pick.ts";
 import { endpointOptions, fieldToEndpoint } from "../joints/joint-endpoint-field.ts";
@@ -58,6 +59,8 @@ export interface JointFormView {
   axis: JointFormAxisView;
   // The type's parameters, from JOINT_PARAMETERS.
   rows: JointFormRowView[];
+  // ADR 0056: a command of the stored joint, null on a new or fixed joint.
+  alignFrames: AlignFramesButtonView | null;
   canSubmit: boolean;
 }
 
@@ -193,6 +196,7 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
     origin: vectorRow("origin", form, displayUnitLabel("mm", t), t, assemblyName),
     axis: axisView(form, t, assemblyName, isPickingAxis(state)),
     rows: parameterRows(form, t),
+    alignFrames: alignFramesButtonOf(form, open.document.joints, t, state.pendingRequestCount > 0),
     canSubmit: state.pendingRequestCount === 0,
   };
 }
