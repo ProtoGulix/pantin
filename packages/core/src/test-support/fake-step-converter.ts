@@ -75,11 +75,27 @@ export const TWO_COMPONENTS = {
   ],
 };
 
+// A one-level assembly: a plate and two parts that a rod could move, as
+// ZW3D exports a machine without sub-assemblies.
+const THREE_COMPONENTS = {
+  sourceUnit: "mm",
+  components: ["Plate", "Rod", "Tip"].map((name, index) => ({
+    file: `${index}.glb`,
+    faceFile: `${index}.faces.json`,
+    name,
+    nodes: [
+      { name: "MACHINE", path: [0] },
+      { name, path: [0, index] },
+    ],
+  })),
+};
+
 const writeBoth = `writeGlb("0.glb"); writeGlb("1.glb");`;
 const noFaceFileReason = `process.stderr.write("no face file for Carriage 3630.00: Triangles of face 3 differ.");`;
 
 const FAKE_CONVERTER_BEHAVIOURS = {
   success: `${writeBoth} writeFileSync(join(outputDir, "0.faces.json"), ${JSON.stringify(JSON.stringify(SAMPLE_FACE_FILE))}); ${noFaceFileReason} reply(${JSON.stringify(TWO_COMPONENTS)});`,
+  threeComponents: `writeGlb("0.glb"); writeGlb("1.glb"); writeGlb("2.glb"); for (const index of [0, 1, 2]) writeFileSync(join(outputDir, index + ".faces.json"), ${JSON.stringify(JSON.stringify(SAMPLE_FACE_FILE))}); reply(${JSON.stringify(THREE_COMPONENTS)});`,
   invalidFaceFile: `${writeBoth} writeFileSync(join(outputDir, "0.faces.json"), '{"formatVersion": 7}'); reply(${JSON.stringify(TWO_COMPONENTS)});`,
   symlinkedFaceFile: `${writeBoth} symlinkSync(inputPath, join(outputDir, "0.faces.json")); reply(${JSON.stringify(TWO_COMPONENTS)});`,
   escapingFaceFileName: `${writeBoth} reply({ sourceUnit: "mm", components: [{ file: "0.glb", faceFile: "../0.faces.json", name: "x", nodes: [] }] });`,

@@ -24,8 +24,15 @@ All notable changes to Pantin. The format follows
   opening with poses unchanged; the console's migration line lists the bodies
   whose behaviour changes. A joint between two assemblies must have the group
   as child. The joint form offers "Groupe : <name>" as an end. The examples
-  are written in version 13. Not yet: Grouper and Dégrouper, the import
-  without inner fixed joints, group rows in the tree.
+  are written in version 13. Not yet: the import without inner fixed joints,
+  group rows in the tree.
+- Core API (ADR 0055, second slice): `POST .../assemblies/:key/groups`
+  (Grouper) makes a group of direct bodies and sub-assemblies of an assembly,
+  held by a fixed joint, with nothing moving; `POST .../assemblies/:key/ungroup`
+  (Dégrouper) dissolves a group into its parent assembly. Both are atomic,
+  answer the deleted joints and the renamed tags (io.json follows), and
+  refuse, naming the joint or the item, any change that would move a body or
+  orphan a drive, an actuator, a sensor or a belt. No viewer command yet.
 
 ## [0.1.0] - 2026-10-18
 

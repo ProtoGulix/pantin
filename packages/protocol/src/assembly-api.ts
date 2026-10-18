@@ -46,6 +46,14 @@ import { TagNameSchema } from "./tag.ts";
 //          -> RenamedTagsResponse
 //   PUT    /api/pantins/:pantinId/bodies/:bodyId/assembly  MoveBodyRequest
 //          -> RenamedTagsResponse
+//   POST   /api/pantins/:pantinId/assemblies/:assemblyKey/groups  GroupBodiesRequest
+//          -> 201 GroupBodiesResponse (ADR 0055 point 6: one atomic command that
+//          makes a group of direct bodies and sub-assemblies of that assembly;
+//          404 for an unknown assembly or member, 409 for a refusal, the message
+//          names the joint, body or item in the way)
+//   POST   /api/pantins/:pantinId/assemblies/:assemblyKey/ungroup, no body
+//          -> UngroupResponse (ADR 0055 point 7: dissolves the group into its
+//          structure parent; 404 for an unknown assembly, 409 for a refusal)
 //   PUT    /api/pantins/:pantinId/assemblies/:assemblyKey/placement  Placement
 //          -> AssemblyPlacementResponse (ADR 0033 point 8; 404 for an unknown
 //          assembly, 400 for a non finite value or a quaternion off unit length)
@@ -81,6 +89,38 @@ export const RenamedTagsResponseSchema = z.object({
   renamedTags: z.array(RenamedTagSchema),
 });
 export type RenamedTagsResponse = z.infer<typeof RenamedTagsResponseSchema>;
+
+// The most members one grouping may take: far above any machine, and a bound
+// on the request.
+export const MAX_GROUP_MEMBERS = 1000;
+
+// The direct bodies and direct sub-assemblies of the assembly in the path
+// that become the group (ADR 0055 point 6). The key of the group comes from
+// the name, as for a new assembly.
+export const GroupBodiesRequestSchema = RenameRequestSchema.extend({
+  bodies: z.array(BodyIdSchema).max(MAX_GROUP_MEMBERS),
+  assemblies: z.array(KeySchema).max(MAX_GROUP_MEMBERS),
+}).refine(
+  (request) => request.bodies.length + request.assemblies.length > 0,
+  "A group needs at least one body or one sub-assembly.",
+);
+export type GroupBodiesRequest = z.infer<typeof GroupBodiesRequestSchema>;
+
+// A joint the command deleted because the group made it redundant (a fixed
+// joint inside what is now rigid).
+export const DeletedJointSchema = z.object({ id: JointIdSchema, name: DisplayNameSchema });
+export type DeletedJoint = z.infer<typeof DeletedJointSchema>;
+
+export const GroupBodiesResponseSchema = RenamedTagsResponseSchema.extend({
+  group: z.object({ key: KeySchema, name: DisplayNameSchema }),
+  deletedJoints: z.array(DeletedJointSchema),
+});
+export type GroupBodiesResponse = z.infer<typeof GroupBodiesResponseSchema>;
+
+export const UngroupResponseSchema = RenamedTagsResponseSchema.extend({
+  deletedJoints: z.array(DeletedJointSchema),
+});
+export type UngroupResponse = z.infer<typeof UngroupResponseSchema>;
 
 // The request body is a Placement (translation in metres, quaternion
 // [x, y, z, w]) in the frame of the assembly's anchor.

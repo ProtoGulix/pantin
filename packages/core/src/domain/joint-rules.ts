@@ -134,13 +134,11 @@ export function updateJointInDocument(
   );
 }
 
-// A moved or watched joint cannot go: its actuator would move nothing, or a
-// joint that is no longer there (ADR 0028 point 9, ADR 0023 point 5).
-export function deleteJointFromDocument(
-  document: PantinDocument,
-  jointId: string,
-  positions: ReadonlyMap<string, number>,
-): PantinDocument {
+/**
+ * Refuses to lose a joint that something relies on: an actuator moves it, a
+ * sensor watches it, a belt turns on it. The message names the item.
+ */
+export function refuseJointInUse(document: PantinDocument, jointId: string): void {
   const actuator = document.actuators.find((candidate) => candidate.joints.includes(jointId));
   if (actuator !== undefined) {
     throw new ApiError(
@@ -150,6 +148,16 @@ export function deleteJointFromDocument(
   }
   sensorsWatchingGuard(document, jointId);
   refuseDrumJointLoss(document, jointId, "be deleted");
+}
+
+// A moved or watched joint cannot go: its actuator would move nothing, or a
+// joint that is no longer there (ADR 0028 point 9, ADR 0023 point 5).
+export function deleteJointFromDocument(
+  document: PantinDocument,
+  jointId: string,
+  positions: ReadonlyMap<string, number>,
+): PantinDocument {
+  refuseJointInUse(document, jointId);
   const removed = removeJoint(document, jointId);
   return parseWithSchema(
     PantinDocumentSchema,

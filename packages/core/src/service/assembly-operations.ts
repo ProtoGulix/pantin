@@ -29,13 +29,37 @@ import { loadPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
 type Edit = (document: PantinDocument) => PantinDocument;
 
-async function applyEdit(context: ServiceContext, pantinId: PantinId, edit: Edit) {
+// An edit that answers more than the document (the group it made, the joints
+// it deleted): `outcome` carries that, `document` is the one to store.
+export async function applyOutcomeEdit<Outcome extends { document: PantinDocument }>(
+  context: ServiceContext,
+  pantinId: PantinId,
+  edit: (document: PantinDocument) => Outcome,
+) {
   const openPantin = await loadPantin(context, pantinId);
   // An import in flight rolls back its assembly by key: let it settle first.
   await waitForImports(openPantin);
   const before = openPantin.document;
-  openPantin.document = parseWithSchema(PantinDocumentSchema, edit(before), "The changed Pantin");
-  return { before, after: openPantin.document, response: toResponse(pantinId, openPantin) };
+  const outcome = edit(before);
+  openPantin.document = parseWithSchema(
+    PantinDocumentSchema,
+    outcome.document,
+    "The changed Pantin",
+  );
+  return {
+    outcome,
+    openPantin,
+    before,
+    after: openPantin.document,
+    response: toResponse(pantinId, openPantin),
+  };
+}
+
+async function applyEdit(context: ServiceContext, pantinId: PantinId, edit: Edit) {
+  const { before, after, response } = await applyOutcomeEdit(context, pantinId, (document) => ({
+    document: edit(document),
+  }));
+  return { before, after, response };
 }
 
 async function editPantin(

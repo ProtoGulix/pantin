@@ -252,3 +252,13 @@ NOT VERIFIED:
 4. viewer: tree multi-selection, Grouper and Dégrouper, joint form
    endpoints, group rows.
 5. doc-writer (concepts first, French and English), then the reviewer.
+
+## Amendment (2026-10-18): precisions found while implementing slice 2
+
+- "Rigid with A" (points 6 and 7) also covers a body linked to A through a
+  chain of fixed joints that ends at an unjointed body of A: its pose is
+  identical to A's at every joint position.
+- Grouper then Dégrouper: a moving joint that hung from a rigid body of A
+  and was re-pointed to G comes back with group A as parent, not the
+  original body. The pose is the same; the document differs in that parent
+  and in the deleted fixed joints.
