@@ -76,7 +76,7 @@ A **body** is an imported 3D mesh. Pantin reads:
 - **GLB** (glTF): node names are kept;
 - **STEP**: converted to a mesh by a separate process (OpenCascade).
 
-To import, use **File** then **Import…**, or the **Import into this Pantin** action of the menu of a Pantin. The form asks for the **Unit** of the file and its **Up axis**, then **Import**. STEP conversion can take up to 2 minutes: keep the page open.
+To import, use **File** then **Import…**, or the **Import into this Pantin** action of the menu of a Pantin. The form asks for the **Unit** (STL only) and the **Up axis** (GLB and STL), then **Import**. A STEP has nothing to set: its unit is read from the file and Z is up. STEP conversion can take up to 2 minutes: keep the page open.
 
 A STEP that contains named sub-assemblies becomes several bodies and several assemblies. The import creates no joint inside an assembly: its bodies follow the assembly. It creates one fixed joint per sub-assembly, between the parent group and the child group. A STEP with no sub-assembly gives a single assembly and no joint. GLB and STL files create no joint.
 

@@ -65,7 +65,7 @@ Quand la simulation est en pause alors qu'un pont automate est connecté, l'auto
 
 Les valeurs des tags sont en unités du système international (mètres, radians), pas en millimètres.
 
-L'axe **Z pointe vers le haut**, comme dans un logiciel de CAO. Le viewer convertit vers le repère de son moteur 3D, vous n'avez pas à vous en occuper. À l'import d'un fichier 3D, vous indiquez l'unité du fichier (**mm**, **cm**, **m**, **in**) et son **Axe vertical** (**Z vers le haut (CAO)** ou **Y vers le haut (standard glTF)**).
+L'axe **Z pointe vers le haut**, comme dans un logiciel de CAO. Le viewer convertit vers le repère de son moteur 3D, vous n'avez pas à vous en occuper. À l'import d'un STL, vous indiquez l'unité du fichier (**mm**, **cm**, **m**, **in**) ; pour un GLB ou un STL, son **Axe vertical** (**Z vers le haut (CAO)** ou **Y vers le haut (standard glTF)**). Un STEP n'a rien à régler.
 
 ## Un Pantin, c'est un dossier
 

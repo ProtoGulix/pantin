@@ -84,7 +84,7 @@ export function renderImportForm(
       element("div", { className: "inline-form__title", text: view.title }),
       fileLine(view),
       view.showUnit ? field(translate("import.unit"), unit) : null,
-      field(translate("import.upAxis"), upAxis),
+      view.showUpAxis ? field(translate("import.upAxis"), upAxis) : null,
       actions(view, translate, intents),
     ],
   );

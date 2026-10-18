@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./node-ids.ts";
+import { assemblyNodeId, bodyNodeId, jointNodeId, pantinNodeId } from "./node-ids.ts";
 import { rowClickSelection, siblingRowId } from "./row-selection.ts";
 import type { TreeRow } from "./tree-rows.ts";
 
@@ -76,6 +76,32 @@ describe("siblingRowId", () => {
     expect(siblingRowId(rowsWith([rod, head, cap]), 1)).toBeNull();
     expect(siblingRowId(rowsWith([cap, head]), -1)).toBe(rod);
     expect(siblingRowId(rowsWith([head]), -1)).toBe(rod);
+  });
+
+  it("steps over joint rows between the siblings", () => {
+    const jointOne = jointNodeId("p", "j1");
+    const jointTwo = jointNodeId("p", "j2");
+    const [first, second, third, fourth, fifth, sixth, seventh] = rowsWith([]);
+    const withJoints = [
+      first,
+      second,
+      third,
+      row(jointOne, "joint", frame, 2),
+      fourth,
+      row(jointTwo, "joint", frame, 2),
+      fifth,
+      sixth,
+      seventh,
+    ] as TreeRow[];
+    const selecting = (id: string) =>
+      withJoints.map((candidate) => ({
+        ...candidate,
+        selected: candidate.id === id,
+        active: candidate.id === id,
+      }));
+    expect(siblingRowId(selecting(rod), 1)).toBe(head);
+    expect(siblingRowId(selecting(head), 1)).toBe(cap);
+    expect(siblingRowId(selecting(cap), -1)).toBe(head);
   });
 
   it("has nowhere to go with nothing selected", () => {

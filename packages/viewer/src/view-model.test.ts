@@ -100,6 +100,7 @@ describe("import form", () => {
     const form = buildPanelView(withStep(opened(false))).importForm;
     expect(form).toMatchObject({
       showUnit: false,
+      showUpAxis: false,
       formatLabel: "STEP",
       title: "Import dans « Press »",
     });

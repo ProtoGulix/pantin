@@ -1,6 +1,6 @@
 import type { LengthUnit, SourceFormat, UpAxis } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
-import { importNeedsUnit } from "../import-options.ts";
+import { importNeedsUnit, importNeedsUpAxis } from "../import-options.ts";
 import type { ViewerState } from "../viewer-state.ts";
 
 // The inline import form, as data.
@@ -10,6 +10,7 @@ export interface ImportFormView {
   fileName: string;
   formatLabel: string;
   showUnit: boolean;
+  showUpAxis: boolean;
   unit: LengthUnit;
   upAxis: UpAxis;
   unitOptions: Readonly<Record<LengthUnit, string>>;
@@ -33,6 +34,7 @@ export function buildImportFormView(state: ViewerState, t: Translate): ImportFor
     fileName: pendingImport.fileName,
     formatLabel: t(`format.${pendingImport.format}`),
     showUnit: importNeedsUnit(pendingImport),
+    showUpAxis: importNeedsUpAxis(pendingImport),
     unit: pendingImport.unit,
     upAxis: pendingImport.upAxis,
     unitOptions: { m: t("unit.m"), mm: t("unit.mm"), cm: t("unit.cm"), in: t("unit.in") },

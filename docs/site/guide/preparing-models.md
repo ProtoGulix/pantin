@@ -50,7 +50,7 @@ Ces deux cas sont tirés des essais du projet, décrits de façon générique.
 ## Unités, axe vertical et repères
 
 - **Unités.** Pour un STEP et un GLB, le fichier porte sa propre unité : rien à choisir. Pour un STL, le formulaire demande l'**Unité** (m, mm, cm ou pouces) : choisissez celle de votre export, sinon la pièce apparaît mille fois trop grande ou trop petite.
-- **Axe vertical.** Le formulaire propose **Y vers le haut (standard glTF)** ou **Z vers le haut (CAO)**. Pour un STEP, l'option est affichée mais **sans effet** : un STEP converti est toujours en Z vers le haut, comme la CAO. Pour un GLB ou un STL, choisissez la valeur qui correspond à votre export.
+- **Axe vertical.** Le formulaire propose **Y vers le haut (standard glTF)** ou **Z vers le haut (CAO)**. Pour un STEP, l'option n'est pas proposée : un STEP converti est toujours en Z vers le haut, comme la CAO. Pour un GLB ou un STL, choisissez la valeur qui correspond à votre export.
 - **Chaque assemblage garde son repère de CAO** ([ADR 0040](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0040-nested-assemblies-from-step.md), point 4). L'origine et l'axe d'une liaison sont exprimés dans le repère de l'assemblage parent. Si un vérin est monté incliné dans la machine, sa tige glisse donc le long de **son** axe, pas selon l'axe du monde.
 
 ### Placer la pièce selon les axes de la CAO

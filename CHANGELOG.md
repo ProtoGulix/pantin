@@ -52,6 +52,9 @@ All notable changes to Pantin. The format follows
   joints and, when tags were renamed, says to regenerate the PLC's GVL. A
   group row lists the joints that have the group as an end. A body move lists
   the fixed joints it deleted. The core's refusals are shown word for word.
+- Viewer, the import form no longer offers the up axis for a STEP file, which
+  the core always converts Z up (the choice had no effect); Shift+arrows in
+  the tree step over joint rows instead of selecting them.
 
 ## [0.1.0] - 2026-10-18
 

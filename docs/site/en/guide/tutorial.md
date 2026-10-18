@@ -63,11 +63,12 @@ action. The result is the same as with steps 1 and 2.
    same thing.
 2. Choose your file. A small form appears under the toolbar, with the name of
    the file and its format.
-3. Set **Unit** and **Up axis**:
-   - **Unit**: `m (metres)`, `mm (millimetres)`, `cm (centimetres)` or
-     `in (inches)`. This is the unit in which the file was drawn.
-   - **Up axis**: **Z up (CAD)** for a CAD file, **Y up (glTF standard)** for a
-     GLB coming from Blender.
+3. For a STEP, as here, there is nothing to set: the unit is read from the
+   file and Z is up. For the other formats the form asks for:
+   - **Unit** (STL only): `m (metres)`, `mm (millimetres)`, `cm (centimetres)`
+     or `in (inches)`, the unit in which the file was drawn. A GLB is in metres.
+   - **Up axis** (GLB and STL): **Z up (CAD)** for a CAD file, **Y up (glTF
+     standard)** for a GLB coming from Blender.
 4. Click **Import**.
 
 For a STEP, the text "Converting STEP… Up to 2 minutes; keep this page open"

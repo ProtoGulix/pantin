@@ -65,11 +65,14 @@ seule action. Le résultat est le même qu'aux étapes 1 et 2.
    **Fichier**, **Importer…** fait la même chose.
 2. Choisissez votre fichier. Un petit formulaire apparaît sous la barre d'outils,
    avec le nom du fichier et son format.
-3. Réglez **Unité** et **Axe vertical** :
-   - **Unité** : `m (mètres)`, `mm (millimètres)`, `cm (centimètres)` ou
-     `in (pouces)`. C'est l'unité dans laquelle le fichier a été dessiné.
-   - **Axe vertical** : **Z vers le haut (CAO)** pour un fichier de CAO,
-     **Y vers le haut (standard glTF)** pour un GLB venu de Blender.
+3. Pour un STEP, comme ici, il n'y a rien à régler : l'unité est lue dans le
+   fichier et l'axe Z est vers le haut. Pour les autres formats, le formulaire
+   demande :
+   - **Unité** (STL seulement) : `m (mètres)`, `mm (millimètres)`,
+     `cm (centimètres)` ou `in (pouces)`, l'unité dans laquelle le fichier a
+     été dessiné. Un GLB est en mètres.
+   - **Axe vertical** (GLB et STL) : **Z vers le haut (CAO)** pour un fichier de
+     CAO, **Y vers le haut (standard glTF)** pour un GLB venu de Blender.
 4. Cliquez **Importer**.
 
 Pour un STEP, le texte « Conversion STEP en cours… Jusqu'à 2 minutes ; gardez

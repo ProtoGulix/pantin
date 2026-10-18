@@ -50,7 +50,7 @@ These two cases come from the project's trials, described in generic terms.
 ## Units, up axis and frames
 
 - **Units.** A STEP and a GLB carry their own unit: nothing to choose. For an STL, the form asks for the **Unit** (m, mm, cm or inches): pick the one of your export, otherwise the part appears a thousand times too large or too small.
-- **Up axis.** The form offers **Y up (glTF standard)** or **Z up (CAD)**. For a STEP the option is shown but has **no effect**: a converted STEP is always Z up, like the CAD. For a GLB or an STL, choose the value that matches your export.
+- **Up axis.** The form offers **Y up (glTF standard)** or **Z up (CAD)**. For a STEP the option is not offered: a converted STEP is always Z up, like the CAD. For a GLB or an STL, choose the value that matches your export.
 - **Each assembly keeps its CAD frame** ([ADR 0040](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0040-nested-assemblies-from-step.md), point 4). The origin and axis of a joint are expressed in the frame of the parent assembly. If a cylinder is mounted tilted in the machine, its rod therefore slides along **its own** axis, not along the world axis.
 
 ### Placing the part so that motions follow the CAD axes

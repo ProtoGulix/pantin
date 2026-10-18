@@ -97,7 +97,7 @@ It opens under the toolbar after a file is chosen (**3D file to import**) throug
 | Title **Import into "name"** | Reminds the target Pantin. | Not applicable |
 | File name and format badge (**GLB**, **STL**, **STEP**) | Remind the chosen file. | Not applicable |
 | **Unit** | Length unit of the file: **m (metres)**, **mm (millimetres)**, **cm (centimetres)**, **in (inches)**. Shown only for an STL: the other formats carry their own unit. | During the import |
-| **Up axis** | **Y up (glTF standard)** or **Z up (CAD)**. | During the import |
+| **Up axis** | **Y up (glTF standard)** or **Z up (CAD)**. Shown only for a GLB and an STL: a converted STEP is always Z up. | During the import |
 | **Import** | Starts the import. | An import or a request is in progress |
 | **Cancel** | Abandons the import. | Replaced by the waiting wheel during the import |
 

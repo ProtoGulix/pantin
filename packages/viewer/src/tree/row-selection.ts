@@ -89,7 +89,7 @@ function movingEndIndex(rows: readonly TreeRow[]): number {
 
 /**
  * The sibling row Shift plus an arrow key reaches from the moving end of the
- * selection, skipping the rows unfolded under a sibling; null at the end of
+ * selection, skipping the rows unfolded under a sibling and the rows that cannot be multi-selected; null at the end of
  * the siblings or with nothing selected.
  */
 export function siblingRowId(rows: readonly TreeRow[], step: 1 | -1): string | null {
@@ -104,7 +104,8 @@ export function siblingRowId(rows: readonly TreeRow[], step: 1 | -1): string | n
     if (row === undefined || row.depth < end.depth) {
       return null;
     }
-    if (row.parentId === end.parentId) {
+    // A joint row or other non-selectable row between siblings is stepped over.
+    if (row.parentId === end.parentId && isMultiSelectable(row)) {
       return row.id;
     }
   }

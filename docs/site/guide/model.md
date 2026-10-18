@@ -76,7 +76,7 @@ Un **corps** est un maillage 3D importé. Pantin lit :
 - le **GLB** (glTF) : les noms de noeuds sont conservés ;
 - le **STEP** : converti en maillage par un processus séparé (OpenCascade).
 
-Pour importer, utilisez **Fichier** puis **Importer…**, ou l'action **Importer dans ce Pantin** du menu d'un Pantin. Le formulaire demande l'**Unité** du fichier et son **Axe vertical**, puis **Importer**. La conversion STEP peut prendre jusqu'à 2 minutes : gardez la page ouverte.
+Pour importer, utilisez **Fichier** puis **Importer…**, ou l'action **Importer dans ce Pantin** du menu d'un Pantin. Le formulaire demande l'**Unité** (STL seulement) et l'**Axe vertical** (GLB et STL), puis **Importer**. Un STEP n'a rien à régler : son unité est lue dans le fichier et l'axe Z est vers le haut. La conversion STEP peut prendre jusqu'à 2 minutes : gardez la page ouverte.
 
 Un STEP qui contient des sous-assemblages nommés devient plusieurs corps et plusieurs assemblages. L'import ne crée aucune liaison à l'intérieur d'un assemblage : ses corps suivent l'assemblage. Il crée une liaison fixe par sous-assemblage, entre le groupe parent et le groupe enfant. Un STEP sans sous-assemblage donne un seul assemblage et aucune liaison. Les fichiers GLB et STL ne créent aucune liaison.
 

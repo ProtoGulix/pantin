@@ -97,7 +97,7 @@ Il s'ouvre sous la barre d'outils après le choix d'un fichier (**Fichier 3D à 
 | Titre **Import dans « nom »** | Rappelle le Pantin cible. | Sans objet |
 | Nom du fichier et pastille de format (**GLB**, **STL**, **STEP**) | Rappellent le fichier choisi. | Sans objet |
 | **Unité** | Unité de longueur du fichier : **m (mètres)**, **mm (millimètres)**, **cm (centimètres)**, **in (pouces)**. Affichée seulement pour un STL : les autres formats portent leur propre unité. | Pendant l'import |
-| **Axe vertical** | **Y vers le haut (standard glTF)** ou **Z vers le haut (CAO)**. | Pendant l'import |
+| **Axe vertical** | **Y vers le haut (standard glTF)** ou **Z vers le haut (CAO)**. Affiché seulement pour un GLB et un STL : un STEP converti est toujours en Z vers le haut. | Pendant l'import |
 | **Importer** | Lance l'import. | Un import ou une requête est en cours |
 | **Annuler** | Abandonne l'import. | Remplacé par la roue d'attente pendant l'import |
 

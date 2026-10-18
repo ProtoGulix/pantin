@@ -65,7 +65,7 @@ When the simulation is paused while a PLC bridge is connected, the PLC sees a fr
 
 Tag values are in International System units (metres, radians), not millimetres.
 
-The **Z axis points up**, as in CAD software. The viewer converts to the frame of its 3D engine, so you do not have to deal with it. When you import a 3D file, you give the unit of the file (**mm**, **cm**, **m**, **in**) and its **Up axis** (**Z up (CAD)** or **Y up (glTF standard)**).
+The **Z axis points up**, as in CAD software. The viewer converts to the frame of its 3D engine, so you do not have to deal with it. When you import an STL, you give the unit of the file (**mm**, **cm**, **m**, **in**); for a GLB or an STL, its **Up axis** (**Z up (CAD)** or **Y up (glTF standard)**). A STEP has nothing to set.
 
 ## A Pantin is a folder
 
