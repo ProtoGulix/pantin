@@ -16,6 +16,7 @@ import { renderInspectorIo } from "./inspector-io.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { followLink } from "./row-actions.ts";
 import { numberControl, toggleControl } from "./row-controls.ts";
+import { glyphThenText } from "./state-glyph.ts";
 
 // CODESYS-like two-column grid, as a real table: one <tbody> per group, with
 // a header row whose button folds the group.
@@ -196,11 +197,11 @@ function errorRow(group: PropertyGroup): HTMLElement | null {
     return null;
   }
   return element("tr", {}, [
-    element("td", {
-      className: "property-grid__error",
-      text: group.error,
-      attributes: { colspan: "2", role: "alert" },
-    }),
+    element(
+      "td",
+      { className: "property-grid__error", attributes: { colspan: "2", role: "alert" } },
+      glyphThenText("error", group.error),
+    ),
   ]);
 }
 

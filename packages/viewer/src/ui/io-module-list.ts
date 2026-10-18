@@ -4,6 +4,7 @@ import type { IoModuleItem, IoView } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
 import { ioButton } from "./io-cells.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { glyphThenText } from "./state-glyph.ts";
 import { statusDot } from "./status-dot.ts";
 
 // The module list on the left of the I/O view (ADR 0049 point 11).
@@ -41,10 +42,11 @@ function moduleRow(item: IoModuleItem, translate: Translate, intents: PanelInten
       }),
       item.problemCount === 0
         ? null
-        : element("span", {
-            className: "io-module__problems",
-            text: translate("io.module.problems", { count: item.problemCount }),
-          }),
+        : element(
+            "span",
+            { className: "io-module__problems" },
+            glyphThenText("error", translate("io.module.problems", { count: item.problemCount })),
+          ),
     ],
   );
   choose.addEventListener("click", () => intents.selectIoModule(item.key));

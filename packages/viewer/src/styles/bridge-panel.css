@@ -48,7 +48,9 @@
 
 /* The shortcut of the current layout is a mark, not a disabled button. */
 .bridge-panel__tool[aria-current="true"] {
-  color: var(--brand);
+  color: var(--selection);
+  background: var(--selection-soft);
+  box-shadow: inset 0 -2px 0 var(--selection);
 }
 
 .bridge-panel__state-text {

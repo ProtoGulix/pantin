@@ -154,6 +154,7 @@
 .property-grid__value--editable .text-input.is-invalid {
   color: var(--state-emergency);
   border-color: var(--state-emergency);
+  border-style: dashed;
   background: var(--state-emergency-soft);
 }
 

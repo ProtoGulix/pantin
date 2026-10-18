@@ -1,5 +1,6 @@
 import type { SwitchDiagramModel } from "../sensors/switch-diagram-model.ts";
 import { element } from "./dom.ts";
+import { glyphThenText } from "./state-glyph.ts";
 import { svgElement as sharedSvgElement } from "./svg-dom.ts";
 
 // Draws a switch diagram model (ADR 0026) as inline SVG. Colours are the
@@ -141,10 +142,10 @@ export function renderSwitchDiagram(model: SwitchDiagramModel): HTMLElement {
     svg,
     model.problem === null
       ? null
-      : element("p", {
-          className: "switch-diagram__problem",
-          text: model.problem,
-          attributes: { role: "alert" },
-        }),
+      : element(
+          "p",
+          { className: "switch-diagram__problem", attributes: { role: "alert" } },
+          glyphThenText("error", model.problem),
+        ),
   ]);
 }

@@ -2,6 +2,7 @@ import type { AlignmentStepView, AlignmentView } from "../alignment/alignment-vi
 import type { Translate } from "../i18n/translate.ts";
 import { button, committingTextInput, element, selectInput } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { glyphThenText } from "./state-glyph.ts";
 
 // The alignment block of the "Positionnement" section (ADR 0039 point 4): thin
 // DOM over alignment/alignment-view.ts. Every control has a data-focus-key, so
@@ -16,7 +17,13 @@ function stepRow(
   intents: PanelIntents,
 ): HTMLElement {
   const parts = [
-    element("span", { className: "alignment__step-label", text: step.label }),
+    element(
+      "span",
+      { className: "alignment__step-label" },
+      step.status === "done"
+        ? glyphThenText("check", step.label)
+        : [document.createTextNode(step.label)],
+    ),
     element("span", { className: "alignment__step-detail", text: step.detail }),
   ];
   const className = `alignment__step alignment__step--${step.status}`;

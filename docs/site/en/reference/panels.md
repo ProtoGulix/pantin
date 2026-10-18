@@ -20,7 +20,7 @@ It sits under the menu bar, above the tree. It exists only when a Pantin is open
 | **Frame all** | Places the 3D camera to see all the bodies. | No body, or the 3D view is not displayed (**Diagram** or I/O layout) |
 | **Frame selection** | Places the 3D camera on the item selected in the tree. | No body, no tree node selected, or 3D view not displayed |
 | **Central view**: **3D** / **Diagram** / **3D + Diagram** | Three toggle buttons, only one pressed: chooses what the central area displays. The tooltip gives the full name (**3D only**, **Chain diagram only**, **3D + Diagram**). | Never |
-| Console counter (error and warning icons with two numbers) | Shows the number of errors and warnings of the [console](#the-console). A click opens or closes the console. The button is pressed when the console is open. | Never |
+| Console counter (error and warning icons with two numbers) | Shows the number of errors and warnings of the [console](#the-console). A click opens or closes the console. The button is pressed (blue tint and underline) when the console is open. | Never |
 | Waiting wheel (**Working**) | Indicator, not a button: a request is in progress. | Not applicable |
 
 ::: info The I/O layout
@@ -137,7 +137,7 @@ Under the status line, depending on the context:
 | Area | Content |
 | --- | --- |
 | Note | Reason why the button or the settings are inactive: "Start the core with `--bridge-python <path>` (`pnpm setup:python`)." when the bridge is unavailable, or **A bridge started outside Pantin is connected.** when another bridge already holds the place. |
-| Network error | The core's refusal (non-private address, invalid list...) is shown in red and forces the network settings open. |
+| Network error | The core's refusal (non-private address, invalid list...) is shown in red, led by a cross in an octagon, and forces the network settings open. |
 | Module lines | One line per I/O module: dot, module **key** (`m1`...), `address:port` that the PLC must target, and status as text: **bridge stopped**, **waiting for the PLC** or **PLC connected**. Bridge stopped: the lines come from the I/O list and the address is the one a start would use. Bridge running: they come from what the core reports. |
 | **No module: configure the I/O** | Replaces the lines when the I/O list has no module. |
 | **Any I/O edit stops the bridge.** | Reminder shown while the bridge is running. |

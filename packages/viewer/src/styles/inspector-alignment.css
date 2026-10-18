@@ -55,10 +55,6 @@ button.alignment__step:hover {
   color: var(--text-muted);
 }
 
-.alignment__step--done .alignment__step-detail {
-  color: var(--state-normal);
-}
-
 .alignment__step--current {
   background: var(--selection-soft);
 }

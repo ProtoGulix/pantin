@@ -2,6 +2,7 @@ import type { Translate } from "../i18n/translate.ts";
 import type { IoProblemItem, IoView } from "../io/io-view-model.ts";
 import { button, element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { glyphThenText } from "./state-glyph.ts";
 
 // The problems at the top of the I/O view. One with a cell is a button that
 // leads to it; a whole-file one is text only (ADR 0049 point 11).
@@ -33,7 +34,7 @@ export function drawProblemList(
   }
   const title = translate("io.problems.title", { count: view.problems.length });
   return element("section", { className: "io-problems", attributes: { "aria-label": title } }, [
-    element("h2", { className: "io-view__title", text: title }),
+    element("h2", { className: "io-view__title" }, glyphThenText("error", title)),
     element(
       "ul",
       { className: "io-problems__list" },

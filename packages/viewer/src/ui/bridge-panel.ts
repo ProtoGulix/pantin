@@ -1,9 +1,11 @@
 import { type BridgeModuleLine, type BridgeView, bridgeRedrawKey } from "../bridge/bridge-view.ts";
 import { moduleConnectionTone } from "../bridge/module-connection.ts";
+import { bridgeFailureBlock } from "./bridge-failure.ts";
 import { button, committingTextInput, element, iconButton, selectInput } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import type { IconName } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { glyphThenText } from "./state-glyph.ts";
 import { statusDot } from "./status-dot.ts";
 
 // The bridge block at the bottom of the left side panel (ADR 0050 point 8), so
@@ -149,31 +151,6 @@ function forcedWarningBlock(view: BridgeView, intents: PanelIntents): HTMLElemen
   ]);
 }
 
-function failureBlock(view: BridgeView, onToggle: (open: boolean) => void, logOpen: boolean) {
-  const { failure } = view;
-  if (failure === null) {
-    return null;
-  }
-  const log = element("details", { className: "bridge-panel__log" }, [
-    element("summary", { text: failure.logTitle }),
-    element("pre", { text: failure.log.join("\n") }),
-  ]);
-  log.open = logOpen;
-  log.addEventListener("toggle", () => onToggle(log.open));
-  return element(
-    "div",
-    {
-      className: `bridge-panel__failure${failure.warning ? " is-warning" : ""}`,
-      attributes: { role: "alert" },
-    },
-    [
-      element("strong", { text: failure.headline }),
-      element("p", { className: "bridge-panel__message", text: failure.message }),
-      failure.log.length === 0 ? null : log,
-    ],
-  );
-}
-
 export class BridgePanel {
   readonly element = element("section", { className: "bridge-panel" });
   private shownKey: string | null = null;
@@ -237,17 +214,17 @@ export class BridgePanel {
       this.isNetworkOpen(view) ? this.networkFields(view, intents) : null,
       view.networkError === null
         ? null
-        : element("p", {
-            className: "bridge-panel__error",
-            text: view.networkError,
-            attributes: { role: "alert" },
-          }),
+        : element(
+            "p",
+            { className: "bridge-panel__error", attributes: { role: "alert" } },
+            glyphThenText("error", view.networkError),
+          ),
       modulesBlock(view),
       view.runningHint === null
         ? null
         : element("p", { className: "bridge-panel__hint", text: view.runningHint }),
       forcedWarningBlock(view, intents),
-      failureBlock(view, (open) => (this.logOpen = open), this.logOpen),
+      bridgeFailureBlock(view, (open) => (this.logOpen = open), this.logOpen),
     ];
     return rows.filter((row): row is HTMLElement => row !== null);
   }

@@ -11,6 +11,7 @@ import { glyphOfLevel } from "../theme/state-glyphs.ts";
 import { element } from "./dom.ts";
 import { type IconName, icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { glyphThenText } from "./state-glyph.ts";
 
 // The bridge log window (ADR 0054 point 5), a modal over the central area like the
 // welcome dialog, written in place when its view changes so that a refresh
@@ -146,7 +147,7 @@ export class JournalDialog {
     this.lines.setAttribute("aria-label", view.linesLabel);
     this.filterGroup.setAttribute("aria-label", view.filtersLabel);
     this.drawFilters(view.filters);
-    this.setText(this.errorLine, view.errorText);
+    this.drawError(view.errorText);
     this.setText(this.truncatedLine, view.truncatedText);
     this.setText(this.placeholder, view.placeholder);
     this.copyButton.textContent = view.copyLabel;
@@ -173,6 +174,12 @@ export class JournalDialog {
       created?.setAttribute("aria-pressed", String(filter.pressed));
       created?.replaceChildren(icon(filter.level), `${filter.label} ${filter.count}`);
     }
+  }
+
+  // The error line begins with its glyph: the colour is never the only cue.
+  private drawError(text: string | null): void {
+    this.errorLine.hidden = text === null;
+    this.errorLine.replaceChildren(...(text === null ? [] : glyphThenText("error", text)));
   }
 
   private setText(target: HTMLElement, text: string | null): void {

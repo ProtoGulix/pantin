@@ -20,7 +20,7 @@ Elle se trouve sous la barre de menus, au-dessus de l'arborescence. Elle n'exist
 | **Cadrer tout** | Place la caméra 3D pour voir tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (disposition **Schéma** ou E/S) |
 | **Cadrer la sélection** | Place la caméra 3D sur l'élément sélectionné dans l'arborescence. | Aucun corps, aucun nœud de l'arborescence sélectionné, ou vue 3D non affichée |
 | **Vue centrale** : **3D** / **Schéma** / **3D + Schéma** | Trois boutons à bascule, un seul enfoncé : choisit ce que la zone centrale affiche. L'info-bulle donne le nom complet (**3D seule**, **Schéma des chaînes seul**, **3D + Schéma**). | Jamais |
-| Compteur de la console (icônes erreur et avertissement avec deux nombres) | Affiche le nombre d'erreurs et d'avertissements de la [console](#la-console). Un clic ouvre ou ferme la console. Le bouton est enfoncé quand la console est ouverte. | Jamais |
+| Compteur de la console (icônes erreur et avertissement avec deux nombres) | Affiche le nombre d'erreurs et d'avertissements de la [console](#la-console). Un clic ouvre ou ferme la console. Le bouton est enfoncé (teinte bleue et soulignement) quand la console est ouverte. | Jamais |
 | Roue d'attente (**Traitement en cours**) | Indicateur, pas un bouton : une requête est en cours. | Sans objet |
 
 ::: info La disposition E/S
@@ -137,7 +137,7 @@ Sous la ligne d'état, selon le contexte :
 | Zone | Contenu |
 | --- | --- |
 | Note | Raison pour laquelle le bouton ou les réglages sont inactifs : « Démarrez le cœur avec `--bridge-python <chemin>` (`pnpm setup:python`). » quand le pont est indisponible, ou **Un pont lancé hors de Pantin est connecté.** quand un autre pont tient déjà la place. |
-| Erreur réseau | Le refus du cœur (adresse non privée, liste invalide...) s'affiche en rouge et force l'ouverture des réglages réseau. |
+| Erreur réseau | Le refus du cœur (adresse non privée, liste invalide...) s'affiche en rouge, précédé d'une croix dans un octogone, et force l'ouverture des réglages réseau. |
 | Lignes de modules | Une ligne par module d'E/S : pastille, **clé** du module (`m1`...), adresse `adresse:port` que l'automate doit viser, et statut en texte : **pont arrêté**, **en attente de l'automate** ou **automate connecté**. Pont arrêté : les lignes viennent de la liste d'E/S et l'adresse est celle qu'un démarrage utiliserait. Pont en marche : elles viennent de ce que le cœur rapporte. |
 | **Aucun module : configurez les E/S** | Remplace les lignes quand la liste d'E/S n'a aucun module. |
 | **Toute modification des E/S arrête le pont.** | Rappel affiché pendant que le pont est en marche. |

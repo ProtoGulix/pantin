@@ -195,8 +195,9 @@
 }
 
 .console-counter.is-pressed {
-  background: var(--brand-soft);
-  border-color: var(--border);
+  background: var(--selection-soft);
+  border-color: var(--selection);
+  box-shadow: inset 0 -2px 0 var(--selection);
 }
 
 .console-counter .icon {

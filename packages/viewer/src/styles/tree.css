@@ -45,12 +45,8 @@
 .tree-row__sensor {
   display: inline-flex;
   padding: 0 4px;
-  color: var(--state-normal);
+  color: var(--text-muted);
   cursor: pointer;
-}
-
-.tree-row__sensor {
-  color: var(--sensor-mark);
 }
 
 /* The eye of an assembly, after its key at the end of the row: hides it in

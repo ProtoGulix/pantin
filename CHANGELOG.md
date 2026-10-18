@@ -27,6 +27,15 @@ All notable changes to Pantin. The format follows
   fills (amber, red) with their own text colours, tested at 4.5:1, and an
   outline that stands 3:1 against the panel. The error icon becomes a cross
   in an octagon everywhere.
+- Viewer (ADR 0057, third slice): green now only means on, energised or
+  running (the tree's sensor icon and driven bolt, the info message, a done
+  alignment step and the link drop target become neutral or take the
+  selection colour, with their icon or a dashed stroke); the brand orange
+  only marks Pantin itself (pressed filters, the console counter, the On
+  toggle and the bridge card's current tool take the selection colour);
+  errors in the bridge card, the properties, the I/O view and the journal
+  carry the error glyph, and invalid fields a dashed border. A test lists
+  every use of a state, fill or brand colour with its second cue.
 
 ### Fixed
 

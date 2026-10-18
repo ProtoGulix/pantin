@@ -33,10 +33,6 @@
   --hover: rgb(255 255 255 / 5%);
   /* Same value as the dark scene background in theme/scene-palette.ts. */
   --viewport-background: #262d30;
-  /* Data colour of the sensor marks in the tree. The dark value is the blue of the 3D
-     markers (scene/sensor-markers.ts), which stay the same in both themes; the light
-     value is darker to stay readable on a light ground. */
-  --sensor-mark: #58a6ff;
 }
 
 :root[data-theme="light"] {
@@ -60,7 +56,6 @@
   --hover: rgb(0 0 0 / 6%);
   /* Same value as the light scene background in theme/scene-palette.ts. */
   --viewport-background: #dfe2dd;
-  --sensor-mark: #1f5fa8;
 }
 
 :root {
@@ -135,6 +130,12 @@ body {
 .icon--small {
   width: 12px;
   height: 12px;
+}
+
+/* The glyph that leads a text (ui/state-glyph.ts): off the first letter, on its baseline. */
+.state-glyph {
+  margin-right: 4px;
+  vertical-align: -1px;
 }
 
 .icon__fill {
@@ -234,9 +235,11 @@ body {
   background: var(--hover);
 }
 
+/* A pressed filter or toggle takes the selection role, never the brand (ADR 0057 rule 5). */
 .icon-button[aria-pressed="true"] {
-  color: var(--brand);
-  background: var(--brand-soft);
+  color: var(--selection);
+  background: var(--selection-soft);
+  box-shadow: inset 0 -2px 0 var(--selection);
 }
 
 .icon-button:disabled {

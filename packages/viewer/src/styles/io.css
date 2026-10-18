@@ -99,8 +99,9 @@
   padding: 1px 6px;
 }
 
+/* Removing is an action, not a state: neutral, the word says it. */
 .io-button--danger {
-  color: var(--state-emergency);
+  color: var(--text);
 }
 
 .io-problems {
