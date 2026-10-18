@@ -98,10 +98,11 @@ in the log.
 | A Modbus exception 2 or 3 on the PLC side | Address outside the mapped range, or wrong quantity | Compare the addresses of the CODESYS project with the I/O list |
 | A Modbus exception 11 | Wrong **Unit id** | Align the unit id of the module and the one of the CODESYS channel |
 | The log: "unit 255 ... GATEWAY_NO_RESPONSE (11)" | The **Unit-ID** of the CODESYS Modbus server defaults to 16#FF (255) | Set it to the module's **Unit id** (**Général** tab). See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
+| On each connection: a refused request "ILLEGAL_ADDRESS (2)", then "PLC disconnected … watchdog", in a loop | A command of the **Init serveur Modbus** tab targets a zone the module does not have (seen: function 16 on `m1`); CODESYS stops after that refusal | Empty the **Init serveur Modbus** tab, or make it target a zone of the module. See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
 | In CODESYS, **Valeur actuelle** shows "Pas actualisé (vérifier l'info-bulle)" | The lines are not linked to variables, or unused variables are not refreshed | Link each line to a variable (**ModbusTCPServer Mappage E/S** tab) and set **Toujours actualiser les variables** to "Activé 2 (toujours dans la tâche du cycle de bus)". Offline only |
 
 ::: warning Little verified with CODESYS
-The "unit 255" and "Pas actualisé" rows were seen on a real CODESYS Control Win V3 on 18 October 2026. The other causes come from the code and the decisions of the repository and have not been confirmed with CODESYS (ADR 0045, step 2).
+The "unit 255", "Init serveur Modbus" and "Pas actualisé" rows were seen on a real CODESYS Control Win V3 on 18 October 2026. The other causes come from the code and the decisions of the repository and have not been confirmed with CODESYS (ADR 0045, step 2).
 :::
 
 ## Forced tags

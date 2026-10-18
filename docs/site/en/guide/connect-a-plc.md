@@ -130,6 +130,12 @@ were not seen, so they are not given.
    | Position | Read Input Registers (04) | 0 | 2 |
 
    The **ModbusTCPServer Configuration** tab is only a read-only parameter list.
+
+   Leave the **Init serveur Modbus** tab empty. CODESYS sends its commands
+   once, on each connection, before the channels. If one of them is refused
+   (for example a register write, function 16, on `m1`), CODESYS sends nothing
+   more: the log shows the refused request, then "PLC disconnected …
+   watchdog" and a reconnection that repeats in a loop.
 5. **Link the channels to the variables**, **ModbusTCPServer Mappage E/S** tab:
    double-click the **Variable** column of a line, "…" button, then
    **Application**, **GVL**, the variable (icon "mapper sur la variable
