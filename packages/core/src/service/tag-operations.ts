@@ -19,7 +19,7 @@ import {
   tagValueOf,
 } from "../domain/tags.ts";
 import { ApiError } from "../errors.ts";
-import { recordConsoleEvents } from "./console-record.ts";
+import { recordPlcLinkEvents } from "./console-record.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
 // Writing, forcing and releasing tags (ADR 0012, ADR 0031 point 6, ADR 0045
@@ -116,7 +116,7 @@ export async function writeTag(
   }
   const applied = writeEntry(openPantin, entry, value, source);
   if (!applied) {
-    recordConsoleEvents(context, openPantin, [
+    recordPlcLinkEvents(context, pantinId, openPantin, [
       forcedTagWrittenEvent(tagName, tagValueOf(entry, openPantin), value),
     ]);
   }

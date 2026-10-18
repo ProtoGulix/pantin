@@ -5,6 +5,7 @@ import {
   listenChoicesOf,
   type SupervisedBridgeClaim,
 } from "../domain/bridge-checks.ts";
+import type { BridgeLogLevel } from "../domain/bridge-log-lines.ts";
 import { appendLogLine, bridgeArguments, truncateLogLine } from "../domain/bridge-output.ts";
 import { type BridgeEvent, nextBridgeState } from "../domain/bridge-state.ts";
 import { buildBridgeStatus } from "../domain/bridge-status.ts";
@@ -54,6 +55,9 @@ export type BridgeSupervisor = {
   stop(pantinId: PantinId): BridgeStatus;
   // To call when the bus side of a status may have changed.
   refresh(pantinId: PantinId): void;
+  // Appends a core line to the Pantin's bridge log; ignored when its bridge is not
+  // supervised, since a bridge started elsewhere has no file (ADR 0054 amendment).
+  logCoreEvent(pantinId: PantinId, level: BridgeLogLevel, text: string): void;
   // The bridge log file as text, empty when there is none (ADR 0054).
   readLog(pantinId: PantinId): Promise<string>;
   // Stops every child and waits for them to be gone.
@@ -264,6 +268,12 @@ export function createBridgeSupervisor(options: BridgeSupervisorOptions): Bridge
     start: (pantinId, request) => startBridge(context, pantinId, request),
     stop: (pantinId) => stopBridge(context, pantinId),
     refresh: (pantinId) => refresh(context, pantinId),
+    logCoreEvent: (pantinId, level, text) => {
+      const entry = context.entries.get(pantinId);
+      if (entry !== undefined && isActive(entry)) {
+        options.logFile.coreEvent(pantinId, level, text);
+      }
+    },
     readLog: (pantinId) => options.logFile.read(pantinId),
     close: async () => {
       context.closed = true;

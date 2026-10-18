@@ -15,6 +15,23 @@ All notable changes to Pantin. The format follows
   matching troubleshooting lines. CLAUDE.md records phase 7's CODESYS
   demonstration.
 
+### Changed
+
+- Bridge log (ADR 0054, 2026-10-18 amendment): the core writes the PLC link
+  events of a bridge it started (PLC write ignored on a forced tag, PLC and
+  bridge connected or disconnected) into `bridge.log` at their own level, so
+  an error shows as an error in the Journal window; the bridge no longer
+  echoes the core console on its log. A PLC write ignored on a forced tag
+  names the tag instead of the bus message id.
+
+### Fixed
+
+- Bridge, a request on a zone the module does not map (for example "Read
+  Holding Registers" on a module with no holding register) was answered with
+  a meaningless 0. It is now refused with ILLEGAL_ADDRESS (02) and shows in
+  the bridge log, as ADR 0048 point 3 intended (zones sized to the mapped
+  range).
+
 ## [0.1.0-alpha.2] - 2026-10-17
 
 Second pre-release: the bridge log, the bridge started through the

@@ -26,6 +26,7 @@ import { bridgeOperations } from "./bridge-operations.ts";
 import { busOperations } from "./bus-operations.ts";
 import { clockOperations, toClockState } from "./clock-operations.ts";
 import { readConsole } from "./console-operations.ts";
+import type { BridgeCoreLineWriter } from "./console-record.ts";
 import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { faceOperations } from "./face-operations.ts";
@@ -189,6 +190,7 @@ export type ServiceOptions = {
   newConsoleId?: () => string;
   reportStepError?: (error: unknown) => void;
   onBridgeActivity?: (pantinId: PantinId) => void;
+  writeBridgeCoreLine?: BridgeCoreLineWriter;
 };
 
 export function createServiceContext(
@@ -209,6 +211,7 @@ export function createServiceContext(
     newConsoleId: options.newConsoleId ?? (() => crypto.randomUUID()),
     reportStepError: options.reportStepError ?? (() => undefined),
     onBridgeActivity: options.onBridgeActivity ?? (() => undefined),
+    writeBridgeCoreLine: options.writeBridgeCoreLine ?? (() => undefined),
   };
 }
 

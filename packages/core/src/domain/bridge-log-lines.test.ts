@@ -3,6 +3,7 @@ import {
   classifyBridgeLine,
   consoleMessageOfBridgeLine,
   describeBridgeTransition,
+  describePlcLinkEvent,
   formatBridgeLogLine,
   formatCoreLogLine,
   shouldReachConsole,
@@ -122,6 +123,69 @@ describe("describeBridgeTransition", () => {
         event,
         network,
       ),
+    ).toBeUndefined();
+  });
+});
+
+describe("describePlcLinkEvent", () => {
+  const source = { kind: "pantin" } as const;
+
+  it("writes a forced tag write ignored as an error line with both values", () => {
+    expect(
+      describePlcLinkEvent({
+        code: "forced_tag_written",
+        level: "error",
+        source,
+        params: { tag: "verin1.verin1.coil_14", forcedValue: 0, writtenValue: 1 },
+      }),
+    ).toEqual({
+      level: "error",
+      text: "PLC write ignored on forced tag verin1.verin1.coil_14 (forced 0, PLC wrote 1).",
+    });
+  });
+
+  it("keeps the level of the PLC connection events", () => {
+    expect(
+      describePlcLinkEvent({
+        code: "plc_connected",
+        level: "info",
+        source,
+        params: { module: "m1" },
+      }),
+    ).toEqual({ level: "info", text: "PLC connected to module m1." });
+    expect(
+      describePlcLinkEvent({
+        code: "plc_disconnected",
+        level: "warning",
+        source,
+        params: { module: "m1", reason: "timeout" },
+      }),
+    ).toEqual({
+      level: "warning",
+      text: "PLC disconnected from module m1: no request within its watchdog time.",
+    });
+  });
+});
+
+describe("describePlcLinkEvent, events it leaves out", () => {
+  const source = { kind: "pantin" } as const;
+
+  it("says nothing of bridge_log (it would loop) or bridge_failed (the supervisor logs it)", () => {
+    expect(
+      describePlcLinkEvent({
+        code: "bridge_log",
+        level: "warning",
+        source,
+        params: { message: "x" },
+      }),
+    ).toBeUndefined();
+    expect(
+      describePlcLinkEvent({
+        code: "bridge_failed",
+        level: "error",
+        source,
+        params: { kind: "crashed", message: "x" },
+      }),
     ).toBeUndefined();
   });
 });

@@ -20,7 +20,7 @@ import type { PortStates } from "../domain/simulation-state.ts";
 import type { TagStates } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
-import { recordConsoleEvents } from "./console-record.ts";
+import { type BridgeCoreLineWriter, recordConsoleEvents } from "./console-record.ts";
 import { alignIo } from "./io-alignment.ts";
 import {
   buildPhysicsRuntime,
@@ -192,6 +192,7 @@ export type ServiceContext = {
   reportStepError: (error: unknown) => void;
   // The bridge or a PLC module connected or left (ADR 0050 point 5).
   onBridgeActivity: (pantinId: PantinId) => void;
+  writeBridgeCoreLine: BridgeCoreLineWriter;
 };
 
 export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinResponse {

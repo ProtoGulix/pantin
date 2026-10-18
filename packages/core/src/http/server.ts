@@ -147,7 +147,7 @@ function poseSourceOf(service: PantinService, bridge: BridgeSupervisor): PoseSou
 
 function serviceOptionsOf(
   options: PantinServerOptions,
-  onBridgeActivity: (pantinId: PantinId) => void,
+  bridge: () => BridgeSupervisor,
 ): ServiceOptions {
   return {
     // Without it the service falls back to an inert world: for tests that run
@@ -158,7 +158,8 @@ function serviceOptionsOf(
     ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
     ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
     reportStepError: options.reportError,
-    onBridgeActivity,
+    onBridgeActivity: (pantinId) => bridge().refresh(pantinId),
+    writeBridgeCoreLine: (pantinId, level, text) => bridge().logCoreEvent(pantinId, level, text),
   };
 }
 
@@ -238,7 +239,7 @@ function createParts(options: PantinServerOptions, network: NetworkConfig): Serv
   const service = createPantinService(
     createPantinStore(options.pantinsDirectory),
     createConfiguredStepConverter(options),
-    serviceOptionsOf(options, (pantinId) => bridge.refresh(pantinId)),
+    serviceOptionsOf(options, () => bridge),
   );
   const bridge = bridgeSupervisorOf(options, {
     service,

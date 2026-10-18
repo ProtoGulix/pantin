@@ -10,7 +10,7 @@ import {
 import { mappingIdOf } from "../domain/io-document-text.ts";
 import { describeTags } from "../domain/tags.ts";
 import { toClockState } from "./clock-operations.ts";
-import { recordConsoleEvents } from "./console-record.ts";
+import { recordPlcLinkEvents } from "./console-record.ts";
 import { alignIo } from "./io-alignment.ts";
 import { readIo } from "./io-operations.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
@@ -53,7 +53,7 @@ async function bridgeConnected(context: ServiceContext, pantinId: PantinId): Pro
   if (!openPantin.clock.running) {
     events.push(pausedWithBridgeEvent());
   }
-  recordConsoleEvents(context, openPantin, events);
+  recordPlcLinkEvents(context, pantinId, openPantin, events);
 }
 
 // The bridge's bus connection closed or missed its pongs: the PLC is gone, so
@@ -68,7 +68,7 @@ async function bridgeDisconnected(
   openPantin.bridgeConnected = false;
   openPantin.plcConnectedModules.clear();
   zeroBitCommands(openPantin, tagsToZero);
-  recordConsoleEvents(context, openPantin, [bridgeEvent({ connected: false, reason })]);
+  recordPlcLinkEvents(context, pantinId, openPantin, [bridgeEvent({ connected: false, reason })]);
   context.onBridgeActivity(pantinId);
 }
 
@@ -87,7 +87,7 @@ async function plcModuleStatus(
     openPantin.plcConnectedModules.delete(module);
     zeroBitCommands(openPantin, tagsToZero);
   }
-  recordConsoleEvents(context, openPantin, [plcModuleEvent(module, status)]);
+  recordPlcLinkEvents(context, pantinId, openPantin, [plcModuleEvent(module, status)]);
   context.onBridgeActivity(pantinId);
 }
 
