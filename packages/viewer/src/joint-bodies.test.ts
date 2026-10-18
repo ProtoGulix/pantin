@@ -23,7 +23,7 @@ describe("groupRepresentatives", () => {
     expect(representatives.get("a")).toBe("frame");
   });
 
-  it("falls back to the first body when every body is moved, and has none for an empty group", () => {
+  it("has no stand-in when every body is moved, nor for an empty group", () => {
     const moved = documentOf({
       assemblies: ["a", "b", "empty"],
       bodies: [bodyOf("one", "b"), bodyOf("two", "b")],
@@ -34,7 +34,8 @@ describe("groupRepresentatives", () => {
       ],
     });
     const representatives = groupRepresentatives(moved);
-    expect(representatives.get("b")).toBe("one");
+    // "one" and "two" move inside the group: neither may stand for its frame.
+    expect(representatives.has("b")).toBe(false);
     expect(representatives.has("empty")).toBe(false);
   });
 });

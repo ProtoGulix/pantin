@@ -17,6 +17,8 @@ export type MenuCommand =
   | "cleanOrphans"
   | "close"
   | "newJoint"
+  | "group"
+  | "ungroup"
   | "resetSimulation"
   | "releaseAllTags"
   | "rename"

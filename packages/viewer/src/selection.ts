@@ -17,6 +17,22 @@ export function selectedNodeIdOf(selection: Selection | null): string | null {
   return selection?.kind === "node" ? selection.nodeId : null;
 }
 
+/**
+ * Every selected tree node, the first selected one first. The extra list of the
+ * tree's multi-selection counts only while it starts with the selected node:
+ * any other change of selection has left it behind.
+ */
+export function selectedNodeIdsOf(
+  selection: Selection | null,
+  multiSelectedNodeIds: readonly string[] = [],
+): string[] {
+  const first = selectedNodeIdOf(selection);
+  if (first === null) {
+    return [];
+  }
+  return multiSelectedNodeIds[0] === first ? [...multiSelectedNodeIds] : [first];
+}
+
 /** The selected device, or null when nothing or a tree node is selected. */
 export function selectedDeviceOf(selection: Selection | null): DeviceRef | null {
   return selection === null || selection.kind === "node" ? null : selection;

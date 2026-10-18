@@ -1,5 +1,6 @@
-import type { OrphanMeshList, PantinResponse } from "@pantin/protocol";
-import type { Translate } from "../i18n/translate.ts";
+import type { OrphanMeshList, PantinDocument, PantinResponse } from "@pantin/protocol";
+import type { PendingGroup } from "../grouping/grouping-model.ts";
+import { pluralKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { assemblyDeletionDetails } from "./assembly-deletion-details.ts";
 import { orphanCleanupDetails, orphanCleanupPromptText } from "./orphan-cleanup-details.ts";
@@ -18,7 +19,9 @@ export type PromptAction =
   | "confirmOrphanCleanup"
   | "cancelOrphanCleanup"
   | "confirmReplaceFeed"
-  | "cancelReplaceFeed";
+  | "cancelReplaceFeed"
+  | "confirmGroup"
+  | "cancelGroup";
 
 export interface PromptView {
   text: string;
@@ -26,7 +29,10 @@ export interface PromptView {
   details?: string[];
   // Buttons wait while a request runs, so a choice is never sent twice.
   enabled: boolean;
-  actions: { action: PromptAction; label: string; primary: boolean }[];
+  // `disabled`: this button waits for the question to be answerable (a name typed).
+  actions: { action: PromptAction; label: string; primary: boolean; disabled?: boolean }[];
+  // A text field under the question: the name of the group to make.
+  textField?: { label: string; value: string; focusKey: string };
   // A box under the question: "Also stop the bridge" when closing with unsaved changes.
   checkbox?: { label: string; checked: boolean };
 }
@@ -60,6 +66,42 @@ function orphanCleanupPrompt(
     actions: [
       { action: "confirmOrphanCleanup", label: t("prompt.orphanCleanup.confirm"), primary: true },
       { action: "cancelOrphanCleanup", label: t("prompt.orphanCleanup.cancel"), primary: false },
+    ],
+  };
+}
+
+// "Grouper…" (ADR 0055 point 12): null when the assembly holding the members
+// is gone, since there is nothing left to confirm.
+function groupPrompt(
+  pending: PendingGroup,
+  document: PantinDocument,
+  state: ViewerState,
+  t: Translate,
+): PromptView | null {
+  const holder = document.assemblies.find(({ key }) => key === pending.target.assemblyKey);
+  if (holder === undefined) {
+    return null;
+  }
+  const count = pending.target.bodies.length + pending.target.assemblies.length;
+  return {
+    text: t(pluralKey("prompt.group.text", count, state.language), {
+      count,
+      assembly: holder.name,
+    }),
+    enabled: state.pendingRequestCount === 0,
+    textField: {
+      label: t("prompt.group.nameLabel"),
+      value: pending.name,
+      focusKey: "prompt-group-name",
+    },
+    actions: [
+      {
+        action: "confirmGroup",
+        label: t("prompt.group.confirm"),
+        primary: true,
+        disabled: pending.name.trim() === "",
+      },
+      { action: "cancelGroup", label: t("prompt.group.cancel"), primary: false },
     ],
   };
 }
@@ -106,6 +148,9 @@ export function buildPromptView(state: ViewerState, t: Translate): PromptView | 
   }
   if (state.closePrompt) {
     return closePromptView(state, open, t);
+  }
+  if (state.pendingGroup !== null) {
+    return groupPrompt(state.pendingGroup, open.document, state, t);
   }
   const replacement = state.pendingFeedReplacement;
   if (replacement !== null) {

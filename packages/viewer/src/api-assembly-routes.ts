@@ -10,6 +10,8 @@ import {
   type AssemblyPlacementResponse,
   AssemblyPlacementResponseSchema,
   MoveBodyRequestSchema,
+  type MoveBodyResponse,
+  MoveBodyResponseSchema,
   type PantinResponse,
   PantinResponseSchema,
   type Placement,
@@ -41,7 +43,7 @@ export interface AssemblyRoutes {
   deleteAssemblyWithContents(pantinId: string, key: string): Promise<AssemblyDeletionResponse>;
   renameAssemblyKey(pantinId: string, key: string, newKey: string): Promise<RenamedTagsResponse>;
   renameTagKey(pantinId: string, jointId: string, tagKey: string): Promise<RenamedTagsResponse>;
-  moveBody(pantinId: string, bodyId: string, assembly: string): Promise<RenamedTagsResponse>;
+  moveBody(pantinId: string, bodyId: string, assembly: string): Promise<MoveBodyResponse>;
   // In the frame of the assembly's anchor, SI (ADR 0033 point 8). The answer
   // is only the stored placement and its anchor: read the Pantin again.
   setAssemblyPlacement(
@@ -92,7 +94,7 @@ export function assemblyRoutes(send: SendJson): AssemblyRoutes {
     moveBody: async (pantinId, bodyId, assembly) => {
       const request = validInputOrThrow(MoveBodyRequestSchema, { assembly });
       const url = pantinUrl(pantinId, `/bodies/${encodeURIComponent(bodyId)}/assembly`);
-      return send(url, jsonRequest("PUT", request), RenamedTagsResponseSchema);
+      return send(url, jsonRequest("PUT", request), MoveBodyResponseSchema);
     },
     setAssemblyPlacement: async (pantinId, key, placement) => {
       const request = validInputOrThrow(SetPlacementRequestSchema, placement);

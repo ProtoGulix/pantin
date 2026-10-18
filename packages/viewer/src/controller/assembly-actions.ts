@@ -1,4 +1,4 @@
-import type { RenamedTag, RenamedTagsResponse } from "@pantin/protocol";
+import type { DeletedJoint, RenamedTagsResponse } from "@pantin/protocol";
 import { withAssemblyContentsDeleted } from "../assembly-deletion-state.ts";
 import {
   type AssemblyDisplay,
@@ -7,8 +7,9 @@ import {
   withAssemblyKeyRenamed,
   withAssemblyRemoved,
 } from "../assembly-display.ts";
-import { createTranslator, pluralKey } from "../i18n/translate.ts";
-import { infoMessage } from "../messages.ts";
+import { renamedTagsDetail } from "../grouping/grouping-result.ts";
+import { createTranslator, type Language, pluralKey } from "../i18n/translate.ts";
+import { infoMessage, type PanelMessage } from "../messages.ts";
 import {
   withPreviousPlacementDropped,
   withPreviousPlacementKeyRenamed,
@@ -42,10 +43,6 @@ function sendKeyEdit(store: ViewerStore, target: KeyTarget, value: string) {
   });
 }
 
-function renamedTagsText(renamedTags: readonly RenamedTag[]): string {
-  return renamedTags.map(({ from, to }) => `${from} → ${to}`).join(", ");
-}
-
 // A renamed assembly key renames its tree node: keep it unfolded, selected,
 // hidden or isolated as it was. A moved body may land in a folded assembly: reveal it.
 function stateAfterKeyEdit(
@@ -70,6 +67,28 @@ function stateAfterKeyEdit(
     : store.state;
 }
 
+// A body move may also delete the fixed joints that tied it to its old
+// assembly (ADR 0055 point 11): they are named first, the tags in the detail.
+function keyEditMessage(
+  answer: RenamedTagsResponse & { deletedJoints?: readonly DeletedJoint[] },
+  language: Language,
+): PanelMessage {
+  const translate = createTranslator(language);
+  const count = answer.renamedTags.length;
+  const deleted = answer.deletedJoints ?? [];
+  const detail = renamedTagsDetail(answer.renamedTags);
+  const tagsText = translate(pluralKey("message.tagsRenamed", count, language), { count });
+  if (deleted.length > 0) {
+    const parameters = {
+      names: deleted.map((joint) => joint.name).join(", "),
+      tags: count === 0 ? "" : ` ${tagsText}`,
+      regenerate: count === 0 ? "" : translate("message.group.regenerateGvl"),
+    };
+    return { ...infoMessage("message.bodyMoveDeletedJoints", parameters), detail };
+  }
+  return { ...infoMessage(pluralKey("message.tagsRenamed", count, language), { count }), detail };
+}
+
 export async function commitKeyEdit(
   store: ViewerStore,
   target: KeyTarget,
@@ -80,13 +99,9 @@ export async function commitKeyEdit(
   if (answer === undefined) {
     return;
   }
-  const count = answer.renamedTags.length;
   store.update({
     ...stateAfterKeyEdit(store, before, target, value),
-    message: {
-      ...infoMessage(pluralKey("message.tagsRenamed", count, store.state.language), { count }),
-      detail: count === 0 ? null : renamedTagsText(answer.renamedTags),
-    },
+    message: keyEditMessage(answer, store.state.language),
   });
 }
 

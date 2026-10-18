@@ -232,6 +232,7 @@ describe("joints under their bodies", () => {
       pantinId: "press",
       jointId: "hinge",
       underBodyId: "rail",
+      underGroupKey: null,
     });
   });
 

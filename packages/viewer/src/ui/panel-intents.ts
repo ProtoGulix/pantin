@@ -39,6 +39,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   frameSelection(): void;
   frameNode(nodeId: string): void;
   selectNode(nodeId: string): void;
+  // The tree's multi-selection (ADR 0055 point 12): the first row is the selected one.
+  selectNodes(nodeIds: readonly string[]): void;
   // Selects a drive, an actuator or a sensor, shown in the inspector (ADR 0030).
   selectDevice(device: DeviceRef): void;
   // Selects a node that may sit in a folded branch, unfolding its ancestors.
@@ -58,6 +60,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   runDeviceAction(nodeId: string, action: "edit" | "delete"): void;
   closeContextMenu(): void;
   resolvePrompt(action: PromptAction): void;
+  // The name typed in the "Grouper…" question.
+  editGroupName(name: string): void;
   // The box "Also stop the bridge" of the close prompt.
   setCloseStopsBridge(stops: boolean): void;
 

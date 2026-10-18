@@ -24,7 +24,7 @@ All notable changes to Pantin. The format follows
   opening with poses unchanged; the console's migration line lists the bodies
   whose behaviour changes. A joint between two assemblies must have the group
   as child. The joint form offers "Groupe : <name>" as an end. The examples
-  are written in version 13. Not yet: group rows in the tree.
+  are written in version 13.
 - Core API (ADR 0055, second slice): `POST .../assemblies/:key/groups`
   (Grouper) makes a group of direct bodies and sub-assemblies of an assembly,
   held by a fixed joint, with nothing moving; `POST .../assemblies/:key/ungroup`
@@ -38,6 +38,13 @@ All notable changes to Pantin. The format follows
   instead of one per body). Moving a body to another assembly deletes its fixed joints to
   the old assembly and lists them, and is refused, naming the joint, when the
   two groups are moved by different joints (the body would jump).
+- Viewer (ADR 0055, fourth slice): several rows of the tree can be selected
+  (Ctrl+click, Shift+click, Shift+arrows), bodies and sub-groups of one
+  assembly only; "Grouper…" (asks for a name) and "Dégrouper" in the Édition
+  menu and the tree's context menu. The result message lists the deleted
+  joints and, when tags were renamed, says to regenerate the PLC's GVL. A
+  group row lists the joints that have the group as an end. A body move lists
+  the fixed joints it deleted. The core's refusals are shown word for word.
 
 ## [0.1.0] - 2026-10-18
 

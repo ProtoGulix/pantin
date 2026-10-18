@@ -2,6 +2,7 @@ import { pickedNodeId } from "../assembly-display.ts";
 import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import { isToolOn } from "../gizmo/tool-rules.ts";
+import { withGroupNameEdited } from "../grouping/grouping-state.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { selectedNodeIdOf } from "../selection.ts";
@@ -82,6 +83,7 @@ import {
   openContextMenu,
   runDeviceAction,
   selectRow,
+  selectRows,
   setExpanded,
   startRename,
 } from "./tree-actions.ts";
@@ -115,6 +117,8 @@ function listIntents(store: ViewerStore) {
 function treeIntents(store: ViewerStore) {
   return {
     selectNode: (nodeId: string) => selectRow(store, nodeId),
+    selectNodes: (nodeIds: readonly string[]) => selectRows(store, nodeIds),
+    editGroupName: (name: string) => store.update(withGroupNameEdited(store.state, name)),
     selectDevice: (device: DeviceRef) => selectDevice(store, device),
     revealNode: (nodeId: string) =>
       store.update({ ...withRevealedNode(store.state, nodeId), contextMenu: null }),

@@ -17,8 +17,9 @@ import {
   stateText,
   visibilityEye,
 } from "./tree-row-parts.ts";
+import { extendSelectionByKey, selectWithModifiers } from "./tree-selection-input.ts";
 
-// The tree (role=tree, flat treeitems with aria-level). The container is
+// The tree (role=tree, multiselectable, flat treeitems with aria-level). The container is
 // built once: it keeps keyboard focus, points at the selected row through
 // aria-activedescendant, and handles every pointer event by delegation, so
 // rebuilding rows can never lose a click or a double-click.
@@ -170,7 +171,10 @@ function listenToPointer(tree: HTMLElement, current: Current): void {
       return;
     }
     finishOpenRename(tree);
-    current.intents?.selectNode(hit.row.id);
+    // A right click on a selected row keeps the multi-selection for the menu.
+    if (event.button !== 2 || !hit.row.selected) {
+      selectWithModifiers(current.rows, current.intents, hit.row.id, event);
+    }
   });
   tree.addEventListener("click", (event) => {
     const hit = hitOf(event, current);
@@ -204,7 +208,11 @@ function listenToKeys(tree: HTMLElement, current: Current): void {
     if (intents === null || event.target instanceof HTMLInputElement) {
       return;
     }
-    const selected = current.rows.find((row) => row.selected)?.id ?? null;
+    if (event.shiftKey && extendSelectionByKey(current.rows, intents, event.key)) {
+      event.preventDefault();
+      return;
+    }
+    const selected = current.rows.find((row) => row.active)?.id ?? null;
     const command = commandForKey(current.rows, selected, event.key);
     if (command.type !== "none") {
       event.preventDefault();
@@ -249,7 +257,7 @@ function focusAfterRender(tree: HTMLElement, hadRenameFocus: boolean): void {
 }
 
 function updateActiveDescendant(tree: HTMLElement, rows: readonly TreeRow[]): void {
-  const selectedIndex = rows.findIndex((row) => row.selected);
+  const selectedIndex = rows.findIndex((row) => row.active);
   if (selectedIndex < 0) {
     tree.removeAttribute("aria-activedescendant");
     return;
@@ -259,7 +267,10 @@ function updateActiveDescendant(tree: HTMLElement, rows: readonly TreeRow[]): vo
 }
 
 export function createTreeView(): TreeView {
-  const tree = element("div", { className: "tree", attributes: { role: "tree", tabindex: "0" } });
+  const tree = element("div", {
+    className: "tree",
+    attributes: { role: "tree", tabindex: "0", "aria-multiselectable": "true" },
+  });
   const current: Current = { rows: [], intents: null, elements: new Map() };
   listenToKeys(tree, current);
   listenToPointer(tree, current);

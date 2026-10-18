@@ -112,8 +112,11 @@ describe("PantinApiClient keys", () => {
     ];
     const sent: [string | undefined, unknown][] = [];
     for (const call of calls) {
-      const { fetchFunction, requests } = fakeFetch(jsonResponse(renamed));
-      expect(await call(createPantinApiClient(fetchFunction))).toEqual(renamed);
+      // A body move also answers the joints it deleted; the key routes ignore the field.
+      const { fetchFunction, requests } = fakeFetch(
+        jsonResponse({ ...renamed, deletedJoints: [] }),
+      );
+      expect(await call(createPantinApiClient(fetchFunction))).toMatchObject(renamed);
       sent.push([requests[0]?.url, requests[0]?.init?.body]);
     }
     expect(sent).toEqual([
@@ -212,5 +215,20 @@ describe("PantinApiClient assembly deletion with contents (ADR 0037)", () => {
     ]);
     expect(result.retainedMeshFiles).toEqual(["meshes/rod.glb"]);
     expect(result.deleted.joints[0]?.betweenAssemblies).toBe(false);
+  });
+});
+
+describe("PantinApiClient moveBody deleted joints", () => {
+  it("lists the fixed joints the core deleted", async () => {
+    const deleted = [{ id: "weld", name: "Weld" }];
+    const { fetchFunction } = fakeFetch(jsonResponse({ ...renamed, deletedJoints: deleted }));
+    const moved = await createPantinApiClient(fetchFunction).moveBody("press", "r", "a");
+    expect(moved.deletedJoints).toEqual(deleted);
+  });
+
+  it("refuses a malformed list", async () => {
+    const { fetchFunction } = fakeFetch(jsonResponse({ ...renamed, deletedJoints: [{ id: 3 }] }));
+    const error = await captureError(createPantinApiClient(fetchFunction).moveBody("p", "r", "a"));
+    expect(error.kind).toBe("invalid_response");
   });
 });

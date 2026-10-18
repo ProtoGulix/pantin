@@ -1,8 +1,8 @@
 import { endpointAssemblyIn, type PantinDocument } from "@pantin/protocol";
 import { assemblyChain } from "../assembly-tree.ts";
 import { type DeviceRef, deviceExists } from "../device-selection.ts";
-import { groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
-import { nodeSelection, type Selection } from "../selection.ts";
+import { bodyRoleInJoint, groupRoleInJoint } from "../joint-bodies.ts";
+import { nodeSelection, type Selection, selectedNodeIdOf } from "../selection.ts";
 import {
   assemblyOfDevice,
   DEVICE_FAMILIES,
@@ -23,6 +23,21 @@ import type { TreeViewState } from "./tree-rows.ts";
 
 // Pure transitions of the tree's own state (expansion, selection, rename).
 // Generic over the full state so that this module does not depend on it.
+
+// Listed under a body or a group only while the joint still holds it.
+function jointStillListed(
+  document: PantinDocument,
+  ref: Extract<NodeRef, { kind: "joint" }>,
+): boolean {
+  const joint = document.joints.find((candidate) => candidate.id === ref.jointId);
+  if (joint === undefined) {
+    return false;
+  }
+  if (ref.underGroupKey !== null) {
+    return groupRoleInJoint(joint, ref.underGroupKey) !== null;
+  }
+  return ref.underBodyId === null || bodyRoleInJoint(joint, ref.underBodyId) !== null;
+}
 
 export function nodeExists(source: TreeSource, nodeId: string): boolean {
   const ref = parseNodeId(nodeId);
@@ -55,17 +70,7 @@ export function nodeExists(source: TreeSource, nodeId: string): boolean {
     return deviceExists(source.openPantin.document, { kind: ref.deviceKind, id: ref.id });
   }
   if (ref.kind === "joint") {
-    // Listed under a body only while it still holds that body.
-    const { underBodyId } = ref;
-    const { document } = source.openPantin;
-    const representatives = groupRepresentatives(document);
-    return document.joints.some((joint) => {
-      const ends = jointBodyIds(representatives, joint);
-      return (
-        joint.id === ref.jointId &&
-        (underBodyId === null || ends.parent === underBodyId || ends.child === underBodyId)
-      );
-    });
+    return jointStillListed(source.openPantin.document, ref);
   }
   const body = source.openPantin.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   return ref.kind === "body" ? body !== undefined : body?.source.nodes[ref.index] !== undefined;
@@ -125,6 +130,20 @@ function devicePath(document: PantinDocument, pantinId: string, device: DeviceRe
     : [...assemblyPathTo(document, pantinId, key), familyNodeId(pantinId, key, family)];
 }
 
+// The path to a joint row: under a group, under a body, or in its container.
+function jointAncestors(
+  ref: Extract<NodeRef, { kind: "joint" }>,
+  document: PantinDocument,
+  bodyPath: (bodyId: string) => string[],
+): string[] {
+  if (ref.underGroupKey !== null) {
+    return assemblyPathTo(document, ref.pantinId, ref.underGroupKey);
+  }
+  return ref.underBodyId === null
+    ? jointContainerPath(document, ref.pantinId, ref.jointId)
+    : bodyPath(ref.underBodyId);
+}
+
 /** Nodes to expand so that the node becomes visible, root first. */
 function ancestorsOf(ref: NodeRef, document: PantinDocument): string[] {
   const pantin = pantinNodeId(ref.pantinId);
@@ -144,9 +163,7 @@ function ancestorsOf(ref: NodeRef, document: PantinDocument): string[] {
     case "body":
       return [pantin, ...holdingAssemblies(ref.bodyId)];
     case "joint":
-      return ref.underBodyId === null
-        ? jointContainerPath(document, ref.pantinId, ref.jointId)
-        : bodyPath(ref.underBodyId);
+      return jointAncestors(ref, document, bodyPath);
     case "sourceNode":
       return bodyPath(ref.bodyId);
     case "family":
@@ -175,7 +192,7 @@ export function withSelection<State extends TreeViewState>(
   state: State,
   selection: Selection | null,
 ): State {
-  return { ...state, selection, renamingNodeId: null };
+  return { ...state, selection, multiSelectedNodeIds: [], renamingNodeId: null };
 }
 
 /** The selected tree node or device is still in the open Pantin. */
@@ -190,6 +207,18 @@ export function selectionExists(state: TreeSource & TreeViewState): boolean {
     : deviceExists(document, selection);
 }
 
+/**
+ * The multi-selection after an answer: only the rows that still exist stay,
+ * and fewer than two is no multi-selection (the selection itself remains).
+ */
+export function withMultiSelectionPruned<State extends TreeViewState & TreeSource>(
+  state: State,
+): State {
+  const alive = (state.multiSelectedNodeIds ?? []).filter((nodeId) => nodeExists(state, nodeId));
+  const kept = alive.length > 1 && alive[0] === selectedNodeIdOf(state.selection) ? alive : [];
+  return { ...state, multiSelectedNodeIds: kept };
+}
+
 /** A node whose id changed (a renamed key) keeps its expansion and selection. */
 function withNodeIdChanged<State extends TreeViewState>(
   state: State,
@@ -201,6 +230,7 @@ function withNodeIdChanged<State extends TreeViewState>(
   return {
     ...state,
     expandedNodeIds: new Set([...state.expandedNodeIds].map(rename)),
+    multiSelectedNodeIds: (state.multiSelectedNodeIds ?? []).map(rename),
     selection:
       selection?.kind === "node" ? { kind: "node", nodeId: rename(selection.nodeId) } : selection,
   };
@@ -221,6 +251,7 @@ export function withTreeStateCarried<State extends TreeViewState>(
     ...next,
     expandedNodeIds: before.expandedNodeIds,
     selection: before.selection,
+    multiSelectedNodeIds: before.multiSelectedNodeIds ?? [],
   };
   return withNodeIdChanged(restored, from, to);
 }

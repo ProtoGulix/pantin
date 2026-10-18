@@ -19,6 +19,7 @@ import {
 } from "./assembly-actions.ts";
 import { stopBridge } from "./bridge-actions.ts";
 import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
+import { cancelGroup, confirmGroup } from "./grouping-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { confirmOrphanCleanup } from "./orphan-cleanup-actions.ts";
 import { refreshPantinList, savePantin } from "./pantin-actions.ts";
@@ -151,6 +152,12 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
       return;
     case "cancelReplaceFeed":
       cancelFeedReplacement(store);
+      return;
+    case "confirmGroup":
+      void confirmGroup(store);
+      return;
+    case "cancelGroup":
+      cancelGroup(store);
       return;
   }
 }
