@@ -10,6 +10,8 @@ import {
   type ArrowPlacement,
   type BodyHighlight,
   bodyHighlight,
+  outlineWidthInMeshSpace,
+  overlayAlphaFor,
   placeJointArrow,
 } from "./scene-plan.ts";
 
@@ -37,29 +39,55 @@ export interface BodyHighlights {
 
 // Parent and child match the swatches of the joint form (--joint-parent and
 // --joint-child in base.css); the child is the body that moves, so it takes the
-// selection colour. The parent's violet codes data, not the theme.
-const PARENT_COLOR = Color3.FromHexString("#a371f7");
+// selection colour and an outline, the parent a yellow-orange tint alone: the
+// two stay apart without telling hues.
+interface Tints {
+  selection: Color3;
+  parent: Color3;
+}
 
-function highlightColor(highlight: BodyHighlight, selection: Color3): Color3 {
-  return highlight === "parent" ? PARENT_COLOR : selection;
+function tintsOf(palette: ScenePalette): Tints {
+  return {
+    selection: Color3.FromHexString(palette.selection),
+    parent: Color3.FromHexString(palette.jointParent),
+  };
+}
+
+function highlightColor(highlight: BodyHighlight, tints: Tints): Color3 {
+  return highlight === "parent" ? tints.parent : tints.selection;
 }
 
 /** The latest pose of a body, if the stream gave one (the viewport's interpolator). */
 export type LatestPose = (bodyId: string) => InterpolatedPose | undefined;
 
+function paintBody(loaded: LoadedBody, highlight: BodyHighlight | null, tints: Tints): void {
+  let extent = 0;
+  if (highlight === "child") {
+    const bounds = loaded.node.getHierarchyBoundingVectors(true);
+    extent = bounds.max.subtract(bounds.min).length();
+  }
+  for (const mesh of loaded.meshes) {
+    mesh.renderOverlay = highlight !== null;
+    mesh.overlayColor = highlightColor(highlight ?? "selected", tints);
+    mesh.overlayAlpha = overlayAlphaFor(highlight ?? "selected");
+    mesh.renderOutline = highlight === "child";
+    if (highlight === "child") {
+      mesh.computeWorldMatrix(true);
+      mesh.outlineColor = tints.selection;
+      // Body nodes carry a uniform unit scale; abs guards against a mirrored GLB node.
+      mesh.outlineWidth = outlineWidthInMeshSpace(extent, Math.abs(mesh.absoluteScaling.x));
+    }
+  }
+}
+
 function tintLoadedBodies(
   loadedBodies: ReadonlyMap<string, LoadedBody>,
   selectedBodyIds: ReadonlySet<string>,
   preview: JointPreview | null,
-  selectionColor: Color3,
+  tints: Tints,
 ): void {
   for (const [bodyId, loaded] of loadedBodies) {
-    const highlight = bodyHighlight(bodyId, selectedBodyIds, preview);
-    for (const mesh of loaded.meshes) {
-      mesh.renderOverlay = highlight !== null;
-      mesh.overlayColor = highlightColor(highlight ?? "selected", selectionColor);
-      mesh.overlayAlpha = 0.35;
-    }
+    paintBody(loaded, bodyHighlight(bodyId, selectedBodyIds, preview), tints);
   }
 }
 
@@ -96,19 +124,19 @@ export function createBodyHighlights(
   palette: ScenePalette,
 ): BodyHighlights {
   const arrow = createJointArrow(scene, palette);
-  let selectionColor = Color3.FromHexString(palette.selection);
+  let tints = tintsOf(palette);
   let selectedBodyIds: ReadonlySet<string> = new Set();
   let preview: JointPreview | null = null;
   // The arrow's origin and axis are relative to the parent body's pose: without
   // that pose it would be drawn in a place no body is.
   let parentPosed = false;
 
-  const tintBodies = () => tintLoadedBodies(loadedBodies, selectedBodyIds, preview, selectionColor);
+  const tintBodies = () => tintLoadedBodies(loadedBodies, selectedBodyIds, preview, tints);
   const drawArrow = () => drawJointArrow(arrow, loadedBodies, preview, parentPosed);
 
   return {
     setPalette: (next) => {
-      selectionColor = Color3.FromHexString(next.selection);
+      tints = tintsOf(next);
       arrow.setPalette(next);
       tintBodies();
     },

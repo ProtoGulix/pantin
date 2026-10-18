@@ -97,3 +97,22 @@ state, and states use the IEC 60204-1 colours only.
   be checked in it, by eye and by the screenshots.
 - NOT VERIFIED: the 3D highlight colours' visibility on every kind of
   imported mesh in the light theme.
+
+## Amendment (2026-10-18): colour blind users, joint preview colours
+
+The project owner is colour blind: two states must never be told apart by
+close hues (blue/violet, brown/green, red/orange), and colour is never the
+only cue (point 3). Point 4 changes for the joint preview: the parent body
+is no longer violet #a371f7 but yellow-orange (`#ffe08a` in the dark theme,
+`#c25e00` in the light theme, `--joint-parent` and the scene palette's
+`jointParent`), a tint without outline; the child keeps the selection
+colour and gets an outline whose thickness is the same in metres whatever
+the body's unit. In 3D the tints are overlays on the grey material, at 0.8
+for the parent and 0.5 for the child. Under a Machado 2009 simulation
+(CIE76 ΔE, protanopia / deuteranopia / tritanopia) the pure colours differ
+by 86 / 90 / 50 in the dark theme and 98 / 111 / 85 in the light theme (the
+old pair: 29 / 22 / 35); mixed on the grey material, by 58 / 61 / 36 and
+38 / 45 / 50 (the old pair, mixed: 14 to 32). A test keeps the pure pair at
+45 or more. The joint form swatches follow: a plain disc for the parent, an
+outlined square for the child, next to the words. The other colour codings
+of the viewer are reviewed against the same rule in ADR 0057.

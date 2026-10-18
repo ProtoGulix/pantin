@@ -158,17 +158,23 @@
 
 .body-swatch {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
+  width: 11px;
+  height: 11px;
+  margin: 2px;
   border-radius: 2px;
 }
 
+/* Shapes repeat the 3D view: the parent is a plain disc, the child an outlined square. */
 .body-swatch--parent {
+  border-radius: 50%;
   background: var(--joint-parent);
 }
 
 .body-swatch--child {
   background: var(--joint-child);
+  box-shadow:
+    0 0 0 1px var(--surface-2),
+    0 0 0 2px var(--joint-child);
 }
 
 .inline-form__actions {

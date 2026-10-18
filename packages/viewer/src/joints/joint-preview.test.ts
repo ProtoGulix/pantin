@@ -1,3 +1,4 @@
+import { groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { nodeSelection } from "../selection.ts";
 import { hingeJoint, pantinResponse, railBody, stepBody } from "../test-fixtures.ts";
@@ -26,6 +27,8 @@ describe("jointPreviewOf", () => {
     ).toEqual({
       parentBodyId: "rail",
       childBodyId: "carriage",
+      parentBodyIds: new Set(["rail"]),
+      childBodyIds: new Set(["carriage"]),
       origin: [0.01, 0, 0.02],
       axis: [0, 0, 1],
       driven: false,
@@ -42,6 +45,8 @@ describe("jointPreviewOf", () => {
     expect(jointPreviewOf(state)).toEqual({
       parentBodyId: "rail",
       childBodyId: "carriage",
+      parentBodyIds: new Set(["rail"]),
+      childBodyIds: new Set(["carriage"]),
       origin: [0.25, 0, 0],
       axis: [0, 0, 1],
       driven: false,
@@ -76,5 +81,23 @@ describe("jointPreviewOf under a body placement", () => {
     expect(preview?.origin?.[0]).toBeCloseTo(-0.09, 12);
     expect(preview?.origin?.[2]).toBeCloseTo(0.02, 12);
     expect(preview?.axis).toEqual([0, 0, 1]);
+  });
+});
+
+describe("jointPreviewOf with a group end", () => {
+  it("tints every body that moves with the group, not only its stand-in", () => {
+    const second = { ...stepBody("motor", "N_2"), assembly: "carriage" };
+    const third = { ...stepBody("plate", "N_3"), assembly: "carriage" };
+    const joint = { ...hingeJoint, child: groupEndpoint("carriage") };
+    const state = withOpenPantin(
+      initialViewerState("en"),
+      pantinResponse(false, [railBody, second, third], "press", [joint]),
+    );
+    const preview = jointPreviewOf({
+      ...state,
+      selection: nodeSelection(jointNodeId("press", "hinge")),
+    });
+    expect([...(preview?.childBodyIds ?? [])].sort()).toEqual(["motor", "plate"]);
+    expect(preview?.childBodyId).toBe("motor");
   });
 });

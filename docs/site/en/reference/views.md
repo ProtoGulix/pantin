@@ -80,7 +80,7 @@ The selection is shared between the 3D view, the tree and the diagram: what you 
 | Click in empty space | Deselects. While a placement tool is active, this click is ignored so as not to lose the assembly the tool is working on. |
 | Drag with a camera button | Turns or pans the camera, and never selects. |
 
-A selected body or assembly takes a blue tint (the selection colour). When you select a joint (or fill in its form), its two bodies are tinted: the parent in purple, the child (the body that moves) in blue, like the dots of the [joint form](/en/reference/panels#new-joint). An arrow shows the joint's axis and its positive direction; it is blue for a free joint and green when an actuator moves it.
+A selected body or assembly takes a blue tint (the selection colour). When you select a joint (or fill in its form), its two bodies are tinted: the parent in yellow-orange, the child (the body that moves) in blue with an outline, like the markers (a disc for the parent, an outlined square for the child) of the [joint form](/en/reference/panels#new-joint). An arrow shows the joint's axis and its positive direction; it is blue for a free joint and green when an actuator moves it.
 
 ### Sensors in the view
 

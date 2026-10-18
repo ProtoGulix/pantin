@@ -6,6 +6,17 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Fixed
+
+- Viewer, a selected joint whose end is a group tinted a single body of that
+  group; it now tints every body that moves with the end (the group's
+  bodies with no parent joint, and what hangs from them by fixed joints,
+  sub-assemblies included). Parent and child no longer differ only by close
+  hues (violet and blue, indistinguishable to colour blind users): the parent
+  is yellow-orange, the child keeps the selection colour and gets an outline;
+  the joint form swatches follow (ADR 0053 amendment). The viewer and
+  reviewer agents now check that colour is never the only cue.
+
 ### Added
 
 - ADR 0056, accepted and implemented: **Aligner le repère sur cet axe** in

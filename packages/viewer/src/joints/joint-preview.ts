@@ -1,8 +1,9 @@
-import type { PantinDocument, Vector3 } from "@pantin/protocol";
+import type { JointEndpoint, PantinDocument, Vector3 } from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import type { Vector3Tuple } from "../frames.ts";
-import { endpointBodyId, groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
+import { endpointBodyId, groupRepresentatives } from "../joint-bodies.ts";
 import { inBodyFrame } from "../placement-frame.ts";
+import { rigidBodyIds } from "../rigid-sets.ts";
 import { selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
@@ -26,6 +27,11 @@ import {
 export interface JointPreview {
   parentBodyId: string;
   childBodyId: string;
+  // Every body that moves rigidly with each end, for the tint: a group end is
+  // more than its stand-in body (rigid-sets.ts). The ids above stay the single
+  // body used for poses and for the arrow.
+  parentBodyIds: ReadonlySet<string>;
+  childBodyIds: ReadonlySet<string>;
   // Null while the form holds a value that is not a number: no arrow then.
   origin: Vector3Tuple | null;
   // Null as well for the zero vector, which has no direction.
@@ -57,14 +63,21 @@ function isDriven(state: ViewerState, jointId: string | null): boolean {
 // group is drawn through its root body (joint-bodies.ts).
 function previewOf(
   document: PantinDocument | undefined,
-  joint: { parentBodyId: string; childBodyId: string; driven: boolean },
+  joint: { parent: JointEndpoint; child: JointEndpoint; driven: boolean },
   origin: Vector3 | null,
   axis: Vector3 | null,
 ): JointPreview {
-  const parent = document?.bodies.find((body) => body.id === joint.parentBodyId);
+  const source = document ?? { bodies: [], joints: [] };
+  const representatives = groupRepresentatives(source);
+  const parentBodyId = endpointBodyId(representatives, joint.parent);
+  const parent = document?.bodies.find((body) => body.id === parentBodyId);
   const drawn = inBodyFrame(origin ?? [0, 0, 0], axis ?? [0, 0, 1], parent?.placement);
   return {
-    ...joint,
+    parentBodyId,
+    childBodyId: endpointBodyId(representatives, joint.child),
+    parentBodyIds: rigidBodyIds(source, joint.parent),
+    childBodyIds: rigidBodyIds(source, joint.child),
+    driven: joint.driven,
     origin: origin === null ? null : drawn.origin,
     axis: axis === null ? null : drawn.axis,
   };
@@ -76,16 +89,12 @@ function formPreview(
   driven: boolean,
 ): JointPreview {
   const axis = formVector(form, "axis");
-  const representatives = groupRepresentatives(document ?? { bodies: [], joints: [] });
   return previewOf(
     document,
     {
       driven,
-      parentBodyId: endpointBodyId(
-        representatives,
-        fieldToEndpoint(form.values[FIELD_PARENT] ?? ""),
-      ),
-      childBodyId: endpointBodyId(representatives, fieldToEndpoint(form.values[FIELD_CHILD] ?? "")),
+      parent: fieldToEndpoint(form.values[FIELD_PARENT] ?? ""),
+      child: fieldToEndpoint(form.values[FIELD_CHILD] ?? ""),
     },
     formVector(form, "origin"),
     axis?.some((component) => component !== 0) ? axis : null,
@@ -111,10 +120,9 @@ export function jointPreviewOf(state: ViewerState): JointPreview | null {
   if (document === undefined || joint === undefined) {
     return null;
   }
-  const bodyIds = jointBodyIds(groupRepresentatives(document), joint);
   return previewOf(
     document,
-    { parentBodyId: bodyIds.parent, childBodyId: bodyIds.child, driven: isDriven(state, joint.id) },
+    { parent: joint.parent, child: joint.child, driven: isDriven(state, joint.id) },
     joint.origin,
     joint.axis,
   );

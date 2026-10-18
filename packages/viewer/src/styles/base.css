@@ -24,6 +24,7 @@
   --brand: #e3631c;
   --brand-text: #1a1e20;
   --selection: #7fa8ec;
+  --joint-parent: #ffe08a;
   --state-abnormal: #e8b923;
   --state-emergency: #f48a82;
   /* Text on a state colour used as a fill (the log level badges). */
@@ -51,6 +52,7 @@
   --brand: #b54a12;
   --brand-text: #ffffff;
   --selection: #1d3f8c;
+  --joint-parent: #c25e00;
   --state-abnormal: #7a5800;
   --state-emergency: #b3261e;
   --on-state: #ffffff;
@@ -69,9 +71,9 @@
   --related-bar: color-mix(in srgb, var(--selection) 55%, transparent);
   --state-abnormal-soft: color-mix(in srgb, var(--state-abnormal) 14%, transparent);
   --state-emergency-soft: color-mix(in srgb, var(--state-emergency) 12%, transparent);
-  /* Bodies of a previewed joint, the same colours as in the 3D view (scene/body-highlights.ts).
-     The parent's violet codes data, not the theme; the child, which moves, is the selection. */
-  --joint-parent: #a371f7;
+  /* Bodies of a previewed joint, as in the 3D view (scene/body-highlights.ts): the child, which
+     moves, is the selection blue and outlined; the parent is yellow-orange (set per theme above),
+     never close in hue to the child. */
   --joint-child: var(--selection);
   --focus-ring: 0 0 0 1px var(--selection);
   --row-height: 22px;
