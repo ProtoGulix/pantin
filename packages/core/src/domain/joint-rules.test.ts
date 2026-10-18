@@ -1,4 +1,5 @@
 import {
+  bodyEndpoint,
   type CreateJointRequest,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
@@ -42,7 +43,14 @@ const EMPTY: PantinDocument = {
 };
 
 function link(parent: string, child: string, name = "Link"): CreateJointRequest {
-  return { type: "fixed", name, parent, child, origin: [0, 0, 0], axis: [0, 0, 1] };
+  return {
+    type: "fixed",
+    name,
+    parent: bodyEndpoint(parent),
+    child: bodyEndpoint(child),
+    origin: [0, 0, 0],
+    axis: [0, 0, 1],
+  };
 }
 
 function withLinks(...links: [string, string][]): PantinDocument {
@@ -63,8 +71,8 @@ describe("addJointToDocument", () => {
   });
 
   it.each<[string, PantinDocument, CreateJointRequest, RegExp]>([
-    ["an unknown parent", EMPTY, link("zz", "b"), /parent body "zz" does not exist/],
-    ["an unknown child", EMPTY, link("a", "zz"), /child body "zz" does not exist/],
+    ["an unknown parent", EMPTY, link("zz", "b"), /unknown body "zz"/],
+    ["an unknown child", EMPTY, link("a", "zz"), /unknown body "zz"/],
     ["a self link", EMPTY, link("a", "a"), /cannot link body "a" to itself/],
     [
       "a second parent",
@@ -72,8 +80,8 @@ describe("addJointToDocument", () => {
       link("c", "b"),
       /already has the parent joint "link"/,
     ],
-    ["a direct cycle", withLinks(["a", "b"]), link("b", "a"), /would make a cycle/],
-    ["a longer cycle", withLinks(["a", "b"], ["b", "c"]), link("c", "a"), /would make a cycle/],
+    ["a direct cycle", withLinks(["a", "b"]), link("b", "a"), /form a cycle/],
+    ["a longer cycle", withLinks(["a", "b"], ["b", "c"]), link("c", "a"), /form a cycle/],
   ])("refuses %s", (_case, document, request, message) => {
     expect(() => addJointToDocument(document, request, NO_POSITIONS)).toThrow(message);
   });
@@ -109,7 +117,7 @@ describe("updateJointInDocument", () => {
 
   it.each<[string, string, CreateJointRequest, RegExp]>([
     ["an unknown joint", "ghost", link("a", "b"), /no joint "ghost"/],
-    ["a cycle", "link", link("c", "b"), /would make a cycle/],
+    ["a cycle", "link", link("c", "b"), /form a cycle/],
     ["a child that already has a parent", "link", link("a", "c"), /already has the parent joint/],
   ])("refuses %s", (_label, jointId, request, message) => {
     expect(() => updateJointInDocument(chain, jointId, request, NO_POSITIONS)).toThrow(message);

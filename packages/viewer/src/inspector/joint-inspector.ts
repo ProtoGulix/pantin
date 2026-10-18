@@ -1,5 +1,10 @@
 import { ACTUATOR_LABELS } from "@pantin/actuator-types/labels";
-import { JOINT_COORDINATE_UNITS, type Joint, jointTagName } from "@pantin/protocol";
+import {
+  endpointAssemblyIn,
+  JOINT_COORDINATE_UNITS,
+  type Joint,
+  jointTagName,
+} from "@pantin/protocol";
 import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import { quantityUnitLabel } from "../drives/parameter-units.ts";
@@ -24,7 +29,7 @@ function positionRows(joint: Joint, context: InspectorContext): PropertyRow[] {
   if (unit === null) {
     return [];
   }
-  const assembly = pantin.document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
+  const assembly = endpointAssemblyIn(joint.child, pantin.document.bodies) ?? "";
   const label = withUnit(t("inspector.position"), quantityUnitLabel("position", unit, t));
   const rows = [
     liveRow("position", label, {

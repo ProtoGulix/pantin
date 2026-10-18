@@ -1,4 +1,5 @@
 import { JOINT_COORDINATE_UNITS, type PantinDocument } from "@pantin/protocol";
+import { endpointBodyId, groupRepresentatives } from "../joint-bodies.ts";
 
 // Who is linked to whom in the chains of ADR 0029: a drive feeds actuators, an
 // actuator moves joints, a sensor watches a joint. Read from the document
@@ -45,10 +46,11 @@ function buildChainLinks(document: PantinDocument): ChainLinks {
       children.set(from, [...(children.get(from) ?? []), to]);
     }
   };
+  const representatives = groupRepresentatives(document);
   const movable = new Map(
     document.joints
       .filter((joint) => JOINT_COORDINATE_UNITS[joint.type] !== null)
-      .map((joint) => [joint.id, joint.child]),
+      .map((joint) => [joint.id, endpointBodyId(representatives, joint.child)]),
   );
   for (const actuator of document.actuators) {
     if (actuator.feed !== undefined) {

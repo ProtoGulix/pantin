@@ -1,4 +1,6 @@
 import {
+  bodyEndpoint,
+  groupEndpoint,
   PantinResponseSchema,
   type PoseResponse,
   PoseResponseSchema,
@@ -75,8 +77,8 @@ export async function startConveyorServer(paused = true): Promise<ConveyorServer
   await send("POST", `${LINE}/joints`, {
     type: "continuous",
     name: "Drum",
-    parent: "frame",
-    child: "roller",
+    parent: bodyEndpoint("frame"),
+    child: groupEndpoint("roller"),
     origin: [0, 0, 0],
     axis: [0, 1, 0],
   });

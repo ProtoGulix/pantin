@@ -1,4 +1,4 @@
-import { JOINT_PARAMETERS } from "@pantin/protocol";
+import { bodyEndpoint, JOINT_PARAMETERS } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { jointFormFor } from "../joints/joint-edit-form.ts";
@@ -26,12 +26,14 @@ describe("buildJointFormView", () => {
     expect(buildJointFormView(opened, translate)).toBeNull();
   });
 
-  it("offers every joint type of the protocol and the bodies of the Pantin", () => {
+  it("offers every joint type of the protocol and the bodies and groups of the Pantin", () => {
     const view = buildJointFormView(stateWith(JOINT_TYPES[0] ?? "fixed"), translate);
     expect(view?.typeOptions.map((option) => option.value)).toEqual([...JOINT_TYPES]);
     expect(view?.bodyOptions).toEqual([
       { value: "rail", label: "Linear rail" },
       { value: "carriage", label: "N_1" },
+      // The assemblies follow, as groups a joint can hang (ADR 0055).
+      { value: "assembly:main", label: "Group: main" },
     ]);
   });
 
@@ -86,7 +88,10 @@ describe("buildJointFormView, axis buttons and frame (ADR 0041, 0042)", () => {
   it("offers Reverse always, and the face pick on a stored joint that moves", () => {
     expect(buildJointFormView(stateWith("prismatic"), translate)?.axis.fromFace).toBeNull();
     const opened = withOpenPantin(initialViewerState("en"), pantinResponse(false, bodies));
-    const stored = { ...opened, jointForm: jointFormFor({ ...slideJoint, parent: "rail" }) };
+    const stored = {
+      ...opened,
+      jointForm: jointFormFor({ ...slideJoint, parent: bodyEndpoint("rail") }),
+    };
     const view = buildJointFormView(stored, translate);
     expect(view?.axis.invertLabel).toBe("Reverse the axis");
     expect(view?.axis.fromFace).toEqual({ label: "Take the axis from a face", waiting: false });

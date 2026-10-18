@@ -36,6 +36,20 @@ function connectionLossText(
     : t("console.code.bridge_disconnected", { reason });
 }
 
+// The bodies that now follow their group are the detail of the line (ADR 0055 point 9).
+function migratedWording(
+  params: { from: number; to: number; followers?: string | undefined },
+  t: Translate,
+): ConsoleWording {
+  return {
+    text: t("console.code.migrated", { from: params.from, to: params.to }),
+    detail:
+      params.followers === undefined
+        ? null
+        : t("console.code.migrated.followers", { bodies: params.followers }),
+  };
+}
+
 export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWording {
   switch (entry.code) {
     case "forced_tag_written":
@@ -57,7 +71,7 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
         detail: null,
       };
     case "migrated":
-      return { text: t("console.code.migrated", entry.params), detail: null };
+      return migratedWording(entry.params, t);
     case "clock_paused":
     case "clock_resumed":
     case "clock_paused_with_bridge":

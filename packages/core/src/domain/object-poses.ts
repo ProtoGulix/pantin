@@ -1,8 +1,8 @@
 import type { BodyPose, ObjectPose, PantinDocument } from "@pantin/protocol";
 import { bodyPoseTransforms, type Framed, framedWorldPose } from "./framed-world-pose.ts";
+import type { Displacements } from "./kinematics.ts";
 import { computePosedAssemblyFrames } from "./posed-assembly-frames.ts";
 import { quantised } from "./product-poses.ts";
-import type { RigidTransform } from "./rigid-transform.ts";
 
 // World poses of the phase 6 objects as the pose response lists them (ADR 0043
 // point 12), resolved by the same frame rule the physics step uses
@@ -31,7 +31,7 @@ function listedObjects(document: PantinDocument): Listed[] {
 export function toObjectPoses(
   document: PantinDocument,
   bodies: readonly BodyPose[],
-  displacements: ReadonlyMap<string, RigidTransform>,
+  displacements: Displacements,
 ): ObjectPose[] {
   const objects = listedObjects(document);
   if (objects.length === 0) {

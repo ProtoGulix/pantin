@@ -1,4 +1,5 @@
 import type { Joint } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   absorber,
@@ -16,7 +17,11 @@ import { deleteAssembly } from "./assembly-edits.ts";
 
 // Deleting an assembly that holds phase 6 objects (ADR 0043, ADR 0037).
 
-const drum: Joint = { ...drumJoint(), parent: "frame", child: "carriage" };
+const drum: Joint = {
+  ...drumJoint(),
+  parent: bodyEndpoint("frame"),
+  child: bodyEndpoint("carriage"),
+};
 const withObjects = () =>
   documentOf([drum], undefined, undefined, {
     belts: [belt({ assembly: "chape", drumJoint: "drum" })],

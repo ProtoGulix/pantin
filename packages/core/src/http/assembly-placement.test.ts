@@ -1,5 +1,7 @@
 import {
   AssemblyPlacementResponseSchema,
+  bodyEndpoint,
+  groupEndpoint,
   JointResponseSchema,
   PoseResponseSchema,
 } from "@pantin/protocol";
@@ -32,8 +34,8 @@ beforeEach(async () => {
   const joint = await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Axe X",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.8],

@@ -19,9 +19,12 @@ export const ParamsSchemas = {
   step_error: z.object({ detail: z.string().max(300) }),
   diagnostic: z.object({ diagnostic: z.enum(DRIVE_DIAGNOSTICS) }),
   fault: z.object({ fault: z.enum(["unresponsive", "jammed"]) }),
+  // ADR 0055 point 9: `followers` lists, cut to keep entries small, the bodies
+  // that never moved and now follow their group; absent when there are none.
   migrated: z.object({
     from: z.number().int().positive(),
     to: z.number().int().positive(),
+    followers: z.string().max(200).optional(),
   }),
   clock: z.object({}),
   // ADR 0035 point 2: the converter could not prove the face map of this

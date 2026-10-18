@@ -1,6 +1,7 @@
 import type { ConsoleSource, PantinDocument } from "@pantin/protocol";
 import { type DeviceRef, deviceName } from "../device-selection.ts";
 import type { Translate } from "../i18n/translate.ts";
+import { endpointBodyId, groupRepresentatives } from "../joint-bodies.ts";
 import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
 
 // The source of a console line (ADR 0031 point 2): what it is called in the
@@ -53,7 +54,14 @@ export function consoleSourceTarget(
     const joint = document.joints.find((candidate) => candidate.id === source.id);
     return joint === undefined
       ? null
-      : { kind: "node", nodeId: jointNodeId(pantinId, joint.id, joint.child) };
+      : {
+          kind: "node",
+          nodeId: jointNodeId(
+            pantinId,
+            joint.id,
+            endpointBodyId(groupRepresentatives(document), joint.child),
+          ),
+        };
   }
   if (source.kind === "body") {
     return elementName(document, source) === undefined

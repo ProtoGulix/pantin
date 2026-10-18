@@ -1,5 +1,6 @@
 import type { AssemblyDeletion, AssemblyDeletionResponse } from "@pantin/protocol";
 import { withAssemblyRemoved } from "./assembly-display.ts";
+import { fieldToEndpoint } from "./joints/joint-endpoint-field.ts";
 import { FIELD_CHILD, FIELD_PARENT } from "./joints/joint-form.ts";
 import { infoMessage } from "./messages.ts";
 import { withPreviousPlacementDropped } from "./previous-placement.ts";
@@ -29,6 +30,16 @@ function alignmentOutlives(state: ViewerState, deleted: AssemblyDeletion): boole
   );
 }
 
+// A joint form end is a body id or a group, both of which may be among the deleted.
+function endpointIsDeleted(
+  fieldValue: string,
+  bodyIds: ReadonlySet<string>,
+  assemblyKeys: ReadonlySet<string>,
+): boolean {
+  const endpoint = fieldToEndpoint(fieldValue);
+  return endpoint.kind === "body" ? bodyIds.has(endpoint.id) : assemblyKeys.has(endpoint.key);
+}
+
 // A form whose target went, or that was creating something in the assembly
 // or between its bodies, would only be refused by the core: close it.
 function withFormsClosed(state: ViewerState, deleted: AssemblyDeletion): ViewerState {
@@ -41,8 +52,8 @@ function withFormsClosed(state: ViewerState, deleted: AssemblyDeletion): ViewerS
   const jointGone =
     jointForm !== null &&
     (ids(deleted.joints).has(jointForm.jointId ?? "") ||
-      bodies.has(jointForm.values[FIELD_PARENT] ?? "") ||
-      bodies.has(jointForm.values[FIELD_CHILD] ?? ""));
+      endpointIsDeleted(jointForm.values[FIELD_PARENT] ?? "", bodies, keys) ||
+      endpointIsDeleted(jointForm.values[FIELD_CHILD] ?? "", bodies, keys));
   return {
     ...state,
     jointForm: jointGone ? null : jointForm,

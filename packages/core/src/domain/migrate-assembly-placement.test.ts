@@ -55,7 +55,14 @@ describe("migration of assemblies to version 10", () => {
     expect(document.assemblies.map((assembly) => assembly.placement)).toEqual(
       Array(3).fill({ translation: [0, 0, 0], rotation: [0, 0, 0, 1] }),
     );
-    expect(document.joints).toEqual(joints);
+    // Version 13 (ADR 0055): the ends are endpoints; the child of a joint
+    // between assemblies is its group.
+    expect(document.joints.map(({ parent, child }) => ({ parent, child }))).toEqual([
+      { parent: { kind: "body", id: "a0" }, child: { kind: "body", id: "a1" } },
+      { parent: { kind: "body", id: "a1" }, child: { kind: "assembly", key: "b" } },
+      { parent: { kind: "body", id: "b0" }, child: { kind: "assembly", key: "c" } },
+    ]);
+    expect(document.joints.map(({ id }) => id)).toEqual(joints.map(({ id }) => id));
   });
 
   it("gives the same poses as one assembly holding every body, bit for bit", () => {

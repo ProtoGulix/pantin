@@ -99,7 +99,13 @@ export function serializePantinDocument(document: PantinDocument): string {
 // `location` names the file in error messages, so the user knows what to fix.
 export type DocumentReading =
   // migratedFrom: the version on disk when older than the current one.
-  | { kind: "valid"; document: PantinDocument; migratedFrom: number | null }
+  | {
+      kind: "valid";
+      document: PantinDocument;
+      migratedFrom: number | null;
+      // Bodies that now follow their group because of the migration (ADR 0055 point 9).
+      bodiesFollowingGroup: string[];
+    }
   | { kind: "invalidJson"; reason: string }
   // One sentence per broken rule, prefixed by where it is.
   | { kind: "invalid"; problems: string[] };
@@ -119,11 +125,20 @@ export function readPantinDocument(text: string, location: string): DocumentRead
   } catch (error) {
     return { kind: "invalidJson", reason: error instanceof Error ? error.message : String(error) };
   }
-  const result = PantinDocumentSchema.safeParse(migratePantinDocument(json, location));
+  const bodiesFollowingGroup: string[] = [];
+  const migrated = migratePantinDocument(json, location, (notice) => {
+    bodiesFollowingGroup.push(...notice.bodies);
+  });
+  const result = PantinDocumentSchema.safeParse(migrated);
   if (!result.success) {
     return { kind: "invalid", problems: result.error.issues.map((issue) => formatIssues([issue])) };
   }
-  return { kind: "valid", document: result.data, migratedFrom: versionOf(json) };
+  return {
+    kind: "valid",
+    document: result.data,
+    migratedFrom: versionOf(json),
+    bodiesFollowingGroup,
+  };
 }
 
 export type ValidReading = Extract<DocumentReading, { kind: "valid" }>;

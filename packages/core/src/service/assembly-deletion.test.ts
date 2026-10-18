@@ -2,6 +2,7 @@ import { access, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Body, CreateJointRequest } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { createPantinStore, type PantinStore } from "../store/pantin-store.ts";
@@ -38,8 +39,8 @@ afterEach(async () => {
 const AXIS: CreateJointRequest = {
   type: "prismatic",
   name: "Axe X",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: groupEndpoint("carriage"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
   limits: [0, 1],
@@ -238,7 +239,7 @@ async function addCarriageContents(context: ServiceContext): Promise<void> {
   // A joint of "rail" moved by an actuator of "carriage": it must stop.
   await importStl(context, "stop.stl");
   await assemblyOperations(context).moveBody("axis", "stop", "rail");
-  await createJoint(context, "axis", { ...AXIS, name: "Stop", child: "stop" });
+  await createJoint(context, "axis", { ...AXIS, name: "Stop", child: bodyEndpoint("stop") });
   await actuatorOperations(context).createActuator("axis", {
     name: "Pusher",
     assembly: "carriage",

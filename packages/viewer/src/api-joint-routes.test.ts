@@ -1,4 +1,9 @@
-import { type Joint, PANTIN_SCHEMA_VERSION, type PoseResponse } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  type Joint,
+  PANTIN_SCHEMA_VERSION,
+  type PoseResponse,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createPantinApiClient } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
@@ -8,8 +13,8 @@ const slide: Joint = {
   tagKey: "slide",
   name: "Slide",
   type: "prismatic",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: bodyEndpoint("carriage"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
   limits: [0, 0.1],

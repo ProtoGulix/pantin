@@ -1,4 +1,5 @@
 import type { Joint } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { hingeJoint, railBody, stepBody, weldJoint } from "../test-fixtures.ts";
 import { buildJointEditRequest, jointFormFor, jointFormSubmission } from "./joint-edit-form.ts";
@@ -39,8 +40,8 @@ describe("buildJointEditRequest", () => {
       tagKey: "screw",
       name: "Screw",
       type: "helical",
-      parent: "rail",
-      child: "carriage",
+      parent: bodyEndpoint("rail"),
+      child: bodyEndpoint("carriage"),
       limits: [0.0011111, 0.05],
       origin: [0.0123456, 0, 0],
       axis: [0.6, 0.8, 0],

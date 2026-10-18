@@ -62,6 +62,18 @@ export function descendantAssemblies(document: PantinDocument, key: string): Ass
   return document.assemblies.filter((assembly) => found.has(assembly.key));
 }
 
+// A joint touches the set through a body of it or through a group of it
+// (ADR 0055 point 11), as parent or as child.
+function touchesAssemblies(
+  joint: Joint,
+  keys: ReadonlySet<string>,
+  bodyIds: ReadonlySet<string>,
+): boolean {
+  return [joint.parent, joint.child].some((endpoint) =>
+    endpoint.kind === "body" ? bodyIds.has(endpoint.id) : keys.has(endpoint.key),
+  );
+}
+
 /** What a set of assemblies holds, taken as one (ADR 0040 point 8). */
 export function contentsOfAssemblies(
   document: PantinDocument,
@@ -71,9 +83,7 @@ export function contentsOfAssemblies(
   const bodyIds = new Set(bodies.map(({ id }) => id));
   return {
     bodies,
-    joints: document.joints.filter(
-      (joint) => bodyIds.has(joint.parent) || bodyIds.has(joint.child),
-    ),
+    joints: document.joints.filter((joint) => touchesAssemblies(joint, keys, bodyIds)),
     drives: document.drives.filter((drive) => keys.has(drive.assembly)),
     actuators: document.actuators.filter((actuator) => keys.has(actuator.assembly)),
     sensors: document.sensors.filter((sensor) => keys.has(sensor.assembly)),

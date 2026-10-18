@@ -1,4 +1,5 @@
 import type { Assembly, Body, Joint } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   ABOUT_DIAGONAL,
@@ -20,19 +21,22 @@ const ASSEMBLIES: Assembly[] = [
   assembly("o", ABOUT_X),
   assembly("n", ABOUT_DIAGONAL),
 ];
-const SLIDE = joint({
-  id: "slide",
-  type: "prismatic",
-  parent: "p-body",
-  child: "b",
-  axis: [1, 0, 0],
-  limits: [0, 1],
+// A joint from the body "b" to the group of assembly "p": moving b changes
+// the assembly that anchors p, whose pose must not change.
+const TURN = joint({
+  id: "turn",
+  parent: bodyEndpoint("b"),
+  child: groupEndpoint("p"),
+  origin: [0.2, 0.1, 0],
+  axis: [0, 1, 0],
 });
-const TURN = joint({ id: "turn", parent: "b", child: "c", origin: [0.2, 0.1, 0], axis: [0, 1, 0] });
 
 type Scenario = { name: string; bodies: Body[]; joints: Joint[] };
 
 // `b` always moves from "o" to "n". Bodies are listed so that b comes first.
+// A body that has a joint with a body of its assembly cannot move alone
+// (ADR 0055 point 3), and an unjointed body takes the displacement of its new
+// group, so only the unjointed and the group-parenting cases keep their pose.
 const SCENARIOS: Scenario[] = [
   {
     name: "a free body into a world-anchored assembly whose body is listed after it",
@@ -40,37 +44,21 @@ const SCENARIOS: Scenario[] = [
     joints: [],
   },
   {
-    name: "a body with its parent in a third assembly, becoming the anchoring child of n",
-    bodies: [body("b", "o", ABOUT_X), body("y", "n"), body("p-body", "p")],
-    joints: [SLIDE],
-  },
-  {
-    name: "a body under a body of a third assembly, with a sibling left in o",
-    bodies: [body("b", "o"), body("o-body", "o", ABOUT_Z), body("y", "n"), body("p-body", "p")],
-    joints: [SLIDE],
-  },
-  {
-    name: "a body that is the parent of the anchoring child of n (revolute)",
-    bodies: [body("b", "o", ABOUT_Z), body("c", "n", ABOUT_DIAGONAL)],
+    name: "the parent of another assembly's group, moving under another anchor",
+    bodies: [body("b", "o", ABOUT_Z), body("y", "n"), body("p-body", "p", ABOUT_X)],
     joints: [TURN],
   },
   {
-    name: "a body with a child in o and a parent in p, rotated placements",
-    bodies: [body("b", "o", ABOUT_DIAGONAL), body("c", "o"), body("p-body", "p", ABOUT_X)],
-    joints: [SLIDE, TURN],
+    name: "the parent of a group, rotated placements everywhere",
+    bodies: [body("b", "o", ABOUT_DIAGONAL), body("y", "n", ABOUT_X), body("p-body", "p")],
+    joints: [TURN],
   },
 ];
 
 const POSITION_SETS = [
   new Map<string, number>(),
-  new Map([
-    ["slide", 0.3],
-    ["turn", 0.8],
-  ]),
-  new Map([
-    ["slide", 0.9],
-    ["turn", -1.7],
-  ]),
+  new Map([["turn", 0.8]]),
+  new Map([["turn", -1.7]]),
 ];
 
 describe("moveBody keeps every displayed pose", () => {

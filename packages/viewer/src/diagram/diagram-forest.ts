@@ -1,4 +1,4 @@
-import { JOINT_COORDINATE_UNITS, type PantinDocument } from "@pantin/protocol";
+import { endpointAssemblyIn, JOINT_COORDINATE_UNITS, type PantinDocument } from "@pantin/protocol";
 import type { Language } from "../i18n/translate.ts";
 import {
   actuatorSockets,
@@ -125,17 +125,16 @@ function actuatorNodes(document: PantinDocument, language: Language): Map<string
 }
 
 function movableJointNodes(document: PantinDocument): Map<string, ForestNode> {
-  const bodies = new Map(document.bodies.map((body) => [body.id, body]));
   const nodes = document.joints
     .filter((joint) => JOINT_COORDINATE_UNITS[joint.type] !== null)
     .map((joint) => {
-      // A joint has no assembly of its own: it is its child body's (ADR 0019).
+      // A joint has no assembly of its own: it is the one its child moves (ADR 0019).
       const node = makeNode({
         kind: "joint",
         elementId: joint.id,
         label: joint.name,
         elementType: joint.type,
-        assembly: bodies.get(joint.child)?.assembly,
+        assembly: endpointAssemblyIn(joint.child, document.bodies),
         sockets: jointSockets(),
       });
       return [joint.id, node] as const;

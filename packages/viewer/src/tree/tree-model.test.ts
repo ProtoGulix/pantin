@@ -1,4 +1,5 @@
 import type { Assembly } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
 import { nodeSelection, selectedNodeIdOf } from "../selection.ts";
@@ -111,19 +112,23 @@ const gripper: Assembly = {
   placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
 };
 
-describe("joints in assemblies", () => {
-  const carriage = stepBody("carriage", "Carriage");
-  const withJoints = buildTree(
-    sourceOf({
-      openPantin: pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]),
-    }),
-    translate,
-  );
-  const tool = { ...stepBody("tool", "Tool"), assembly: "gripper" };
-  const between = pantinResponse(false, [railBody, carriage, tool], "press", [
-    { ...hingeJoint, parent: "carriage", child: "tool" },
-  ]);
+const carriage = stepBody("carriage", "Carriage");
+const withJoints = buildTree(
+  sourceOf({
+    openPantin: pantinResponse(false, [railBody, carriage], "press", [hingeJoint, slideJoint]),
+  }),
+  translate,
+);
+const tool = { ...stepBody("tool", "Tool"), assembly: "gripper" };
+const between = pantinResponse(false, [railBody, carriage, tool], "press", [
+  {
+    ...hingeJoint,
+    parent: bodyEndpoint("carriage"),
+    child: bodyEndpoint("tool"),
+  },
+]);
 
+describe("joints in assemblies", () => {
   it("lists the joints of one assembly under it, after its bodies", () => {
     const main = findNode(withJoints, assemblyNodeId("press", "main"));
     expect(main).toMatchObject({ kind: "assembly", icon: "assembly", renamable: true });
@@ -145,7 +150,9 @@ describe("joints in assemblies", () => {
       renamable: false,
     });
   });
+});
 
+describe("joints between assemblies", () => {
   it("puts a joint whose bodies are in two assemblies in the folder", () => {
     const openPantin = {
       ...between,

@@ -1,4 +1,4 @@
-import type { Joint, PantinDocument } from "@pantin/protocol";
+import { isBodyEndpoint, type Joint, type PantinDocument } from "@pantin/protocol";
 import {
   anchorSignature,
   computeWorldPlacements,
@@ -49,7 +49,7 @@ export function reframeMovedBody(
     : { ...rest, placement: toPlacement(placement) };
   // Frames of the joints of the body follow its mesh: B' ∘ B⁻¹ = W(N)⁻¹ ∘ W(O).
   const reframe = (joint: Joint): Joint =>
-    joint.parent === bodyId
+    isBodyEndpoint(joint.parent, bodyId)
       ? {
           ...joint,
           origin: [...apply(frameChange, joint.origin)],

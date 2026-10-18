@@ -1,4 +1,11 @@
-import type { Assembly, Body, Joint, PantinDocument } from "@pantin/protocol";
+import {
+  type Assembly,
+  type Body,
+  endpointAssembly,
+  endpointKey,
+  type Joint,
+  type PantinDocument,
+} from "@pantin/protocol";
 import {
   compose,
   IDENTITY_TRANSFORM,
@@ -12,8 +19,9 @@ import {
 // holds schemas only, hence the derivation lives here, where the core reuses
 // it for poses and for the edits that keep the world pose.
 
-// An assembly is anchored by the joint between assemblies whose child body it
-// holds; the anchor is the assembly of that joint's parent body.
+// An assembly is anchored by the joint between assemblies whose child is that
+// assembly as a group (ADR 0055); the anchor is the assembly of that joint's
+// parent, a group or the assembly of a body.
 type AssemblyAnchor = { assembly: string; joint: Joint };
 
 type AnchorSource = { bodies: readonly Body[]; joints: readonly Joint[] };
@@ -23,8 +31,8 @@ export function deriveAssemblyAnchors(document: AnchorSource): Map<string, Assem
   const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
   const anchors = new Map<string, AssemblyAnchor>();
   for (const joint of document.joints) {
-    const parentAssembly = assemblyOf.get(joint.parent);
-    const childAssembly = assemblyOf.get(joint.child);
+    const parentAssembly = endpointAssembly(joint.parent, assemblyOf);
+    const childAssembly = endpointAssembly(joint.child, assemblyOf);
     if (
       parentAssembly !== undefined &&
       childAssembly !== undefined &&
@@ -76,7 +84,7 @@ export function anchorSignature(
   const anchor = anchors.get(key);
   return anchor === undefined
     ? ""
-    : `${anchor.joint.parent}|${anchor.joint.child}|${anchor.assembly}`;
+    : `${endpointKey(anchor.joint.parent)}|${endpointKey(anchor.joint.child)}|${anchor.assembly}`;
 }
 
 // The key of the assembly that `key` is anchored to; undefined: the world.

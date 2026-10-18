@@ -1,6 +1,7 @@
-import type { PantinDocument } from "@pantin/protocol";
+import { endpointAssemblyIn, type PantinDocument } from "@pantin/protocol";
 import { assemblyChain } from "../assembly-tree.ts";
 import { type DeviceRef, deviceExists } from "../device-selection.ts";
+import { groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
 import { nodeSelection, type Selection } from "../selection.ts";
 import {
   assemblyOfDevice,
@@ -56,20 +57,18 @@ export function nodeExists(source: TreeSource, nodeId: string): boolean {
   if (ref.kind === "joint") {
     // Listed under a body only while it still holds that body.
     const { underBodyId } = ref;
-    return source.openPantin.document.joints.some(
-      (joint) =>
+    const { document } = source.openPantin;
+    const representatives = groupRepresentatives(document);
+    return document.joints.some((joint) => {
+      const ends = jointBodyIds(representatives, joint);
+      return (
         joint.id === ref.jointId &&
-        (underBodyId === null || joint.parent === underBodyId || joint.child === underBodyId),
-    );
+        (underBodyId === null || ends.parent === underBodyId || ends.child === underBodyId)
+      );
+    });
   }
   const body = source.openPantin.document.bodies.find((candidate) => candidate.id === ref.bodyId);
   return ref.kind === "body" ? body !== undefined : body?.source.nodes[ref.index] !== undefined;
-}
-
-// The node of a body's assembly; the Pantin's when the body is unknown.
-function assemblyNodeOf(document: PantinDocument, pantinId: string, bodyId: string): string {
-  const key = document.bodies.find((body) => body.id === bodyId)?.assembly;
-  return key === undefined ? pantinNodeId(pantinId) : assemblyNodeId(pantinId, key);
 }
 
 // The assembly nodes holding an assembly, top level first, itself excluded.
@@ -91,10 +90,10 @@ function assemblyPathOf(document: PantinDocument, pantinId: string, bodyId: stri
 // in the "between assemblies" folder (tree-model.ts).
 function jointContainerOf(document: PantinDocument, pantinId: string, jointId: string): string {
   const joint = document.joints.find((candidate) => candidate.id === jointId);
-  const parent = joint && document.bodies.find((body) => body.id === joint.parent)?.assembly;
-  const child = joint && document.bodies.find((body) => body.id === joint.child)?.assembly;
-  return joint !== undefined && parent === child
-    ? assemblyNodeOf(document, pantinId, joint.child)
+  const parent = joint && endpointAssemblyIn(joint.parent, document.bodies);
+  const child = joint && endpointAssemblyIn(joint.child, document.bodies);
+  return joint !== undefined && child !== undefined && parent === child
+    ? assemblyNodeId(pantinId, child)
     : folderNodeId(pantinId, "betweenAssemblies");
 }
 

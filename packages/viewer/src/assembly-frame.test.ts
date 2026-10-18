@@ -1,4 +1,5 @@
 import type { Joint, Placement } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   assemblyFrameTargetOf,
@@ -84,8 +85,8 @@ describe("assemblyFrameTargetOf", () => {
     const slider: Joint = {
       ...hingeJoint,
       id: "slide",
-      parent: "rail",
-      child: "carriage",
+      parent: bodyEndpoint("rail"),
+      child: bodyEndpoint("carriage"),
       type: "prismatic",
       limits: [0, 0.2],
     };
@@ -93,7 +94,12 @@ describe("assemblyFrameTargetOf", () => {
       initialViewerState("en"),
       pantinResponse(false, [railBody, stepBody("carriage", "N_1")], "press", [
         slider,
-        { ...hingeJoint, id: "next", parent: "carriage", child: "tip" },
+        {
+          ...hingeJoint,
+          id: "next",
+          parent: bodyEndpoint("carriage"),
+          child: bodyEndpoint("tip"),
+        },
       ]),
     );
     const target = assemblyFrameTargetOf({
@@ -137,8 +143,8 @@ describe("frameTargetOfAssembly", () => {
     const slider: Joint = {
       ...hingeJoint,
       id: "slide",
-      parent: "rod",
-      child: "cyl",
+      parent: bodyEndpoint("rod"),
+      child: bodyEndpoint("cyl"),
       type: "prismatic",
       limits: [0, 0.2],
     };
@@ -152,17 +158,16 @@ describe("frameTargetOfAssembly", () => {
     );
   });
 
-  it("prefers the anchor child over a jointless body listed before it", () => {
-    // "free" has no joint and stays at W; "rail" rides the joint from "lone".
+  it("takes the first body no joint moves, also when a joint moves the group (ADR 0055)", () => {
+    // Every jointless body follows the group, so "free" carries the posed frame.
     const inOrder = [{ ...stepBody("free", "N_9"), assembly: "main" }, ...bodies];
-    const between = { ...hingeJoint, parent: "lone", child: "rail" };
-    expect(frameTargetOfAssembly({ bodies: inOrder, joints: [between] }, "main")?.bodyId).toBe(
-      "rail",
+    const anchored = {
+      ...hingeJoint,
+      parent: bodyEndpoint("lone"),
+      child: { kind: "assembly" as const, key: "main" },
+    };
+    expect(frameTargetOfAssembly({ bodies: inOrder, joints: [anchored] }, "main")?.bodyId).toBe(
+      "free",
     );
-  });
-
-  it("keeps a body whose incoming joint comes from another assembly", () => {
-    const between = { ...hingeJoint, parent: "lone", child: "rail" };
-    expect(frameTargetOfAssembly({ bodies, joints: [between] }, "main")?.bodyId).toBe("rail");
   });
 });

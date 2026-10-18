@@ -1,3 +1,4 @@
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { jointOf } from "../diagram/diagram-fixtures.ts";
 import { restorableOf } from "../previous-placement.ts";
@@ -27,7 +28,11 @@ describe("alignment and the previous placement", () => {
     await applyAlignment(store);
     expect(joints).toHaveLength(1);
     // The core now answers with the joint that anchors "block" to "a".
-    const joint = { ...jointOf("link", "block", "fixed"), parent: "frame" };
+    const joint = {
+      ...jointOf("link", "block", "fixed"),
+      parent: bodyEndpoint("frame"),
+      child: { kind: "assembly", key: "block" },
+    };
     const linked = { ...PANTIN, document: { ...PANTIN.document, joints: [joint] } };
     store.state = withOpenPantin(store.state, linked as typeof PANTIN);
     expect(restorableOf(store.state, "block").kind).toBe("anchorChanged");

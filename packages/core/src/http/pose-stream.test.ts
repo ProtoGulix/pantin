@@ -1,4 +1,4 @@
-import { ApiErrorResponseSchema } from "@pantin/protocol";
+import { ApiErrorResponseSchema, bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { createManualTimer, type ManualTimer } from "../test-support/manual-timer.ts";
@@ -41,8 +41,8 @@ beforeEach(async () => {
   await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Stroke",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],

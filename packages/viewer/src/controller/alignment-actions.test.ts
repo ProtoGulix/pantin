@@ -1,3 +1,4 @@
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { selectedNodeIdOf } from "../selection.ts";
 import { withNode } from "../test-fixtures.ts";
@@ -132,12 +133,18 @@ describe("applying an alignment", () => {
     expect(store.state.message?.key).toBe("alignment.done");
   });
 
-  it("creates the fixed joint from the target to the moving body when asked", async () => {
+  it("creates the fixed joint from the target body to the moving group when asked", async () => {
     const { store, joints } = alignmentStore(true);
     await pickBoth(store);
     setAlignmentFixedJoint(store, true);
     await applyAlignment(store);
-    expect(joints).toMatchObject([{ type: "fixed", parent: "frame", child: "block" }]);
+    expect(joints).toMatchObject([
+      {
+        type: "fixed",
+        parent: bodyEndpoint("frame"),
+        child: groupEndpoint("block"),
+      },
+    ]);
     // Linked: the alignment holds wherever the target goes.
     expect(store.state.message?.key).toBe("alignment.done");
   });

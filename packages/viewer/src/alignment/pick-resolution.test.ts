@@ -9,7 +9,13 @@ import { resolveAlignmentPick, type ViewportPick } from "./pick-resolution.ts";
 const DOCUMENT = documentOf({
   assemblies: ["a", "block", "hanger"],
   bodies: [bodyOf("block", "block"), bodyOf("hanger", "hanger")],
-  joints: [{ ...jointOf("hang", "hanger", "fixed"), parent: "block" }],
+  joints: [
+    {
+      ...jointOf("hang", "hanger", "fixed"),
+      parent: { kind: "body", id: "block" },
+      child: { kind: "assembly", key: "hanger" },
+    },
+  ],
 });
 
 const FACE_FILE: FaceFile = {

@@ -1,4 +1,10 @@
-import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  isBodyEndpoint,
+  type Joint,
+  PANTIN_SCHEMA_VERSION,
+  type PantinDocument,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { expectPoint } from "../test-support/expect-point.ts";
 import { computePoses, currentJointPosition } from "./kinematics.ts";
@@ -45,8 +51,8 @@ const prismatic: Joint = {
   tagKey: "slide",
   type: "prismatic",
   name: "Slide",
-  parent: "base",
-  child: "arm",
+  parent: bodyEndpoint("base"),
+  child: bodyEndpoint("arm"),
   origin: [0, 0, 0],
   axis: [2, 0, 0],
   limits: [0, 0.8],
@@ -57,8 +63,8 @@ const revolute: Joint = {
   tagKey: "hinge",
   type: "revolute",
   name: "Hinge",
-  parent: "base",
-  child: "arm",
+  parent: bodyEndpoint("base"),
+  child: bodyEndpoint("arm"),
   origin: [1, 0, 0],
   axis: [0, 0, 1],
   limits: [-Math.PI, Math.PI],
@@ -86,8 +92,8 @@ describe("currentJointPosition", () => {
   it("clamps the default position when the limits exclude 0", () => {
     const raised: Joint = { ...prismatic, limits: [0.1, 0.2] };
     expect(currentJointPosition(raised, new Map())).toBe(0.1);
-    const carriage = computePoses(documentWith([raised]), new Map()).find(
-      (pose) => pose.bodyId === raised.child,
+    const carriage = computePoses(documentWith([raised]), new Map()).find((pose) =>
+      isBodyEndpoint(raised.child, pose.bodyId),
     );
     expectPoint(carriage?.translation ?? [0, 0, 0], [0.1, 0, 0]);
   });
@@ -119,8 +125,8 @@ describe("computePoses on chains", () => {
     const slider: Joint = {
       ...prismatic,
       id: "slide",
-      parent: "arm",
-      child: "slider",
+      parent: bodyEndpoint("arm"),
+      child: bodyEndpoint("slider"),
       axis: [1, 0, 0],
     };
     const document = documentWith([revolute, slider]);
@@ -137,8 +143,8 @@ describe("computePoses on chains", () => {
     const slider: Joint = {
       ...prismatic,
       id: "slide",
-      parent: "arm",
-      child: "slider",
+      parent: bodyEndpoint("arm"),
+      child: bodyEndpoint("slider"),
       axis: [1, 0, 0],
     };
     const positions: [string, number][] = [

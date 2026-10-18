@@ -1,5 +1,6 @@
 import {
   type Body,
+  bodyEndpoint,
   type CreateJointRequest,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
@@ -42,8 +43,8 @@ function documentWith(bodies: Body[]): PantinDocument {
 const FIXED_REQUEST: CreateJointRequest = {
   type: "fixed",
   name: "joint",
-  parent: "",
-  child: "",
+  parent: bodyEndpoint(""),
+  child: bodyEndpoint(""),
   origin: [0, 0, 0],
   axis: [0, 0, 1],
 };
@@ -68,8 +69,8 @@ describe("addFixedJoints", () => {
         tagKey: "carriage",
         type: "fixed",
         name: "Carriage",
-        parent: "rail",
-        child: "carriage",
+        parent: bodyEndpoint("rail"),
+        child: bodyEndpoint("carriage"),
         origin: [0, 0, 0],
         axis: [0, 0, 1],
       },
@@ -78,8 +79,8 @@ describe("addFixedJoints", () => {
         tagKey: "stop",
         type: "fixed",
         name: "Stop",
-        parent: "rail",
-        child: "stop",
+        parent: bodyEndpoint("rail"),
+        child: bodyEndpoint("stop"),
         origin: [0, 0, 0],
         axis: [0, 0, 1],
       },
@@ -90,7 +91,12 @@ describe("addFixedJoints", () => {
   it("keeps joint ids unique against the joints already in the document", () => {
     const earlier = [body("frame"), body("plate")];
     const imported = [body("rail"), body("plate-2", "plate")];
-    const link = { ...FIXED_REQUEST, name: "plate", parent: "frame", child: "plate" };
+    const link = {
+      ...FIXED_REQUEST,
+      name: "plate",
+      parent: bodyEndpoint("frame"),
+      child: bodyEndpoint("plate"),
+    };
     const withEarlierJoint = addJointToDocument(
       documentWith([...earlier, ...imported]),
       link,

@@ -1,4 +1,11 @@
-import type { Assembly, Body, Joint, PantinResponse } from "@pantin/protocol";
+import {
+  type Assembly,
+  type Body,
+  endpointAssemblyIn,
+  type Joint,
+  type JointEndpoint,
+  type PantinResponse,
+} from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import {
   type AssemblyDisplay,
@@ -7,6 +14,7 @@ import {
 } from "../assembly-display.ts";
 import { childAssemblies } from "../assembly-tree.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
+import { groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
 import { familyFolders } from "./device-nodes.ts";
@@ -56,11 +64,13 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
 // The joints holding a body, listed under it before the CAD nodes; the
 // detail says whether the body is the joint's parent or its child.
 function bodyJointChildren(pantin: PantinResponse, body: Body, translate: Translate): TreeNode[] {
+  const representatives = groupRepresentatives(pantin.document);
   return pantin.document.joints.flatMap((joint): TreeNode[] => {
-    if (joint.parent !== body.id && joint.child !== body.id) {
+    const ends = jointBodyIds(representatives, joint);
+    if (ends.parent !== body.id && ends.child !== body.id) {
       return [];
     }
-    const role = joint.child === body.id ? "tree.jointRole.child" : "tree.jointRole.parent";
+    const role = ends.child === body.id ? "tree.jointRole.child" : "tree.jointRole.parent";
     return [
       {
         ...jointNode(pantin, joint, translate),
@@ -123,8 +133,8 @@ function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): 
 
 // A joint is internal when both its bodies share an assembly (ADR 0019
 // point 4): it is listed under that assembly, the others in one folder.
-function assemblyOf(pantin: PantinResponse, bodyId: string): string | undefined {
-  return pantin.document.bodies.find((body) => body.id === bodyId)?.assembly;
+function assemblyOf(pantin: PantinResponse, endpoint: JointEndpoint): string | undefined {
+  return endpointAssemblyIn(endpoint, pantin.document.bodies);
 }
 
 function isInternal(pantin: PantinResponse, joint: Joint): boolean {

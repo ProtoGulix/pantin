@@ -1,5 +1,6 @@
 import {
   type Body,
+  bodyEndpoint,
   type Joint,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
@@ -33,8 +34,8 @@ function rod(id: string, parent: string, child: string, tagKey = "tige"): Joint 
     tagKey,
     name: "Tige",
     type: "prismatic",
-    parent,
-    child,
+    parent: bodyEndpoint(parent),
+    child: bodyEndpoint(child),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],
@@ -118,8 +119,8 @@ describe("renameTagKey", () => {
       tagKey: "tige",
       name: "Tige",
       type: "fixed",
-      parent: "body-1",
-      child: "rod-1",
+      parent: bodyEndpoint("body-1"),
+      child: bodyEndpoint("rod-1"),
       origin: [0, 0, 0],
       axis: [0, 0, 1],
     };
@@ -149,19 +150,21 @@ describe("renameTagKey", () => {
 });
 
 describe("moveBody", () => {
-  it("moves the body with its parent joint, whose tags follow", () => {
+  it("moves a body that no joint holds", () => {
     const withSpare = createAssembly(PRESS, "Spare").document;
-    const after = moveBody(withSpare, "rod-1", "spare");
-    expect(renamedTags(withSpare, after)).toEqual([
-      { from: "id1s0400125e-0.tige.setpoint", to: "spare.tige.setpoint" },
-      { from: "id1s0400125e-0.tige.position", to: "spare.tige.position" },
-    ]);
+    const withStray = { ...withSpare, bodies: [...withSpare.bodies, body("stray", "spare")] };
+    const after = moveBody(withStray, "stray", "id1s0400125e-0");
+    expect(after.bodies.find((candidate) => candidate.id === "stray")?.assembly).toBe(
+      "id1s0400125e-0",
+    );
   });
 
-  it("refuses a move that would give two joints the same tag key there", () => {
-    expect(() => moveBody(PRESS, "rod-1", "id1s0400125e-0-2")).toThrow(
-      /Tag key "tige" of joint "tige" is already used by joint "tige-2".*Rename one of the tag keys first/,
+  it("refuses to take a joint's body away from the assembly of its other end, naming the joint", () => {
+    const withSpare = createAssembly(PRESS, "Spare").document;
+    expect(() => moveBody(withSpare, "rod-1", "spare")).toThrow(
+      /Joint "tige" .*of another assembly.*must be a group/,
     );
+    expect(() => moveBody(withSpare, "body-1", "spare")).toThrow(/Joint "tige" /);
   });
 
   it("refuses an unknown body or assembly", () => {

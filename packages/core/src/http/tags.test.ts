@@ -1,5 +1,7 @@
 import {
   ApiErrorResponseSchema,
+  bodyEndpoint,
+  groupEndpoint,
   PoseResponseSchema,
   TagListResponseSchema,
   TagResponseSchema,
@@ -33,8 +35,8 @@ beforeEach(async () => {
   await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Stroke",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],
@@ -120,8 +122,8 @@ describe("helical joint through tags (ADR 0013)", () => {
     const created = await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
       type: "helical",
       name: "Screw",
-      parent: "rail",
-      child: "nut",
+      parent: bodyEndpoint("rail"),
+      child: groupEndpoint("nut"),
       origin: [0, 0, 0],
       axis: [0, 0, 1],
       limits: [0, 0.1],

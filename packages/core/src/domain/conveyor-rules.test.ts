@@ -1,4 +1,5 @@
 import type { CreateJointRequest, PantinDocument } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   absorber,
@@ -53,7 +54,7 @@ describe("bodies used as a frame", () => {
       'cannot move to assembly "line"',
       'belt "feed"',
     );
-    const moved = moveBody(conveyorDocument(), "frame", "line");
+    const moved = moveBody(conveyorDocument({ joints: [] }), "frame", "line");
     expect(moved.bodies.find((candidate) => candidate.id === "frame")?.assembly).toBe("line");
   });
 });
@@ -75,8 +76,8 @@ describe("the drum joint", () => {
     const retyped: CreateJointRequest = {
       name: "drum",
       type: "fixed",
-      parent: "frame",
-      child: "roller",
+      parent: bodyEndpoint("frame"),
+      child: bodyEndpoint("roller"),
       origin: [0, 0, 0],
       axis: [0, 1, 0],
     };
@@ -91,8 +92,8 @@ describe("the drum joint", () => {
     const renamed: CreateJointRequest = {
       name: "Drum, renamed",
       type: "continuous",
-      parent: "frame",
-      child: "roller",
+      parent: bodyEndpoint("frame"),
+      child: bodyEndpoint("roller"),
       origin: [0, 0, 0],
       axis: [0, 1, 0],
     };

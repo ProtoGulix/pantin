@@ -1,5 +1,6 @@
 import type { Assembly, Body, PantinResponse } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
@@ -88,15 +89,17 @@ function bodyJointRows(body: Body, pantin: PantinResponse, t: Translate): Proper
   const { bodies, joints } = pantin.document;
   const bodyName = (bodyId: string) =>
     bodies.find((candidate) => candidate.id === bodyId)?.name ?? bodyId;
+  const representatives = groupRepresentatives(pantin.document);
   const rows = joints.flatMap((joint): PropertyRow[] => {
-    if (joint.child !== body.id && joint.parent !== body.id) {
+    const ends = jointBodyIds(representatives, joint);
+    if (ends.child !== body.id && ends.parent !== body.id) {
       return [];
     }
     // A joint linking the body to itself reads as "child of", like the 3D tint.
-    const isChild = joint.child === body.id;
+    const isChild = ends.child === body.id;
     const role = t(isChild ? "properties.jointRole.childOf" : "properties.jointRole.parentOf", {
       type: t(jointTypeLabelKey(joint.type)),
-      body: bodyName(isChild ? joint.parent : joint.child),
+      body: bodyName(isChild ? ends.parent : ends.child),
     });
     return [linkRow(`joint-${joint.id}`, joint.name, role, jointNodeId(pantin.id, joint.id))];
   });

@@ -1,4 +1,4 @@
-import type { PantinId, PantinResponse } from "@pantin/protocol";
+import { isBodyEndpoint, type PantinId, type PantinResponse } from "@pantin/protocol";
 import { refuseBodyUsedAsFrame } from "../domain/conveyor-rules.ts";
 import { ioTextOf } from "../domain/io-document-text.ts";
 import { findBody, removeBodies, serializePantinDocument } from "../domain/pantin-document.ts";
@@ -192,7 +192,8 @@ export async function deleteBody(
     throw new ApiError("not_found", `Pantin "${pantinId}" has no body "${bodyId}".`);
   }
   const joint = openPantin.document.joints.find(
-    (candidate) => candidate.parent === bodyId || candidate.child === bodyId,
+    (candidate) =>
+      isBodyEndpoint(candidate.parent, bodyId) || isBodyEndpoint(candidate.child, bodyId),
   );
   if (joint !== undefined) {
     throw new ApiError(

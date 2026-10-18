@@ -1,9 +1,9 @@
-import type { PantinDocument } from "@pantin/protocol";
+import { endpointAssembly, type PantinDocument } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { makeUniqueId } from "./ids.ts";
 
-// Who uses each tag key of an assembly: joints through their child body's
-// assembly (ADR 0019), drives, sensors, emitters and presence sensors through their own
+// Who uses each tag key of an assembly: joints through the assembly their child
+// moves (ADR 0019, ADR 0055), drives, sensors, emitters and presence sensors through their own
 // (ADR 0022, 0023, 0043).
 // A key names one owner only, since "<assembly>.<tagKey>" prefixes its tags.
 
@@ -24,7 +24,7 @@ export function tagKeyOwners(
   const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
   const owners = new Map<string, string>();
   for (const joint of document.joints) {
-    if (joint.id !== except.jointId && assemblyOf.get(joint.child) === assembly) {
+    if (joint.id !== except.jointId && endpointAssembly(joint.child, assemblyOf) === assembly) {
       owners.set(joint.tagKey, `joint "${joint.id}"`);
     }
   }

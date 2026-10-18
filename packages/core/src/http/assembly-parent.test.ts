@@ -1,6 +1,8 @@
 import {
   AssemblyDeletionResponseSchema,
   AssemblyDeletionSchema,
+  bodyEndpoint,
+  groupEndpoint,
   PantinResponseSchema,
   RenamedTagsResponseSchema,
 } from "@pantin/protocol";
@@ -32,8 +34,8 @@ beforeEach(async () => {
   await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Axe X",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.8],

@@ -1,4 +1,5 @@
 import type { Joint } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
 import { PantinApiError } from "../api-transport.ts";
 import { isPickingAxis } from "../joints/axis-pick.ts";
@@ -19,8 +20,8 @@ const JOINT: Joint = {
   tagKey: "rod",
   name: "Rod",
   type: "prismatic",
-  parent: "frame",
-  child: "block",
+  parent: bodyEndpoint("frame"),
+  child: bodyEndpoint("block"),
   origin: [0, 0, 0],
   axis: [0, 0, 1],
   limits: [0, 0.1],

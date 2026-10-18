@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { createPantinDocument, serializePantinDocument } from "../domain/pantin-document.ts";
 import type { PantinServerOptions, RunningPantinServer } from "../http/server.ts";
@@ -49,8 +50,8 @@ export async function startBusAxis(
   await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Stroke",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],

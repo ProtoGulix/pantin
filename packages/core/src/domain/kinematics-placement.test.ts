@@ -1,6 +1,8 @@
 import {
   type Assembly,
   type Body,
+  bodyEndpoint,
+  endpointKey,
   type Joint,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
@@ -79,13 +81,13 @@ function poseOf(document: PantinDocument, positions: [string, number][], bodyId:
 
 // The computation as it was before ADR 0033, to prove nothing moves bit for bit.
 function legacyPoses(document: PantinDocument, positions: ReadonlyMap<string, number>) {
-  const parentJointOf = new Map(document.joints.map((item) => [item.child, item]));
+  const parentJointOf = new Map(document.joints.map((item) => [endpointKey(item.child), item]));
   const poseOfBody = (id: string): RigidTransform => {
-    const parentJoint = parentJointOf.get(id);
+    const parentJoint = parentJointOf.get(endpointKey(bodyEndpoint(id)));
     return parentJoint === undefined
       ? IDENTITY_TRANSFORM
       : compose(
-          poseOfBody(parentJoint.parent),
+          poseOfBody(parentJoint.parent.kind === "body" ? parentJoint.parent.id : ""),
           jointMotion(parentJoint, currentJointPosition(parentJoint, positions)),
         );
   };
@@ -103,24 +105,24 @@ describe("computePoses with identity placements", () => {
       [
         joint({
           id: "hinge",
-          parent: "base",
-          child: "arm",
+          parent: bodyEndpoint("base"),
+          child: bodyEndpoint("arm"),
           origin: [1, 0.3, -0.2],
           axis: [1, 2, 3],
         }),
         joint({
           id: "slide",
           type: "prismatic",
-          parent: "arm",
-          child: "slider",
+          parent: bodyEndpoint("arm"),
+          child: bodyEndpoint("slider"),
           axis: [0.3, -1, 0.2],
           limits: [-1, 1],
         }),
         joint({
           id: "thread",
           type: "helical",
-          parent: "slider",
-          child: "screw",
+          parent: bodyEndpoint("slider"),
+          child: bodyEndpoint("screw"),
           origin: [0.1, 0.2, 0.3],
           axis: [0, 1, 1],
           limits: [-9, 9],
@@ -137,27 +139,38 @@ describe("computePoses with identity placements", () => {
   });
 });
 
-describe("computePoses with a placed assembly", () => {
-  const placed = assembly("p", { translation: [0, 0, 5], rotation: QUARTER_ABOUT_X });
-  // Anchored by the fixed joint "mount", which hangs from the moving arm of p.
-  const anchored = assembly("q", { translation: [0, 0, 1], rotation: QUARTER_ABOUT_Z });
-  const document = documentOf(
-    [placed, anchored],
-    [body("p0", "p"), body("p1", "p"), body("q0", "q"), body("q1", "q")],
-    [
-      joint({ id: "hinge", parent: "p0", child: "p1", origin: [1, 0, 0], axis: [0, 0, 1] }),
-      joint({ id: "mount", type: "fixed", parent: "p1", child: "q0" }),
-      joint({
-        id: "slide",
-        type: "prismatic",
-        parent: "q0",
-        child: "q1",
-        axis: [1, 0, 0],
-        limits: [0, 1],
-      }),
-    ],
-  );
+const placed = assembly("p", { translation: [0, 0, 5], rotation: QUARTER_ABOUT_X });
+// Anchored by the fixed joint "mount", which hangs from the moving arm of p.
+const anchored = assembly("q", { translation: [0, 0, 1], rotation: QUARTER_ABOUT_Z });
+const document = documentOf(
+  [placed, anchored],
+  [body("p0", "p"), body("p1", "p"), body("q0", "q"), body("q1", "q")],
+  [
+    joint({
+      id: "hinge",
+      parent: bodyEndpoint("p0"),
+      child: bodyEndpoint("p1"),
+      origin: [1, 0, 0],
+      axis: [0, 0, 1],
+    }),
+    joint({
+      id: "mount",
+      type: "fixed",
+      parent: bodyEndpoint("p1"),
+      child: bodyEndpoint("q0"),
+    }),
+    joint({
+      id: "slide",
+      type: "prismatic",
+      parent: bodyEndpoint("q0"),
+      child: bodyEndpoint("q1"),
+      axis: [1, 0, 0],
+      limits: [0, 1],
+    }),
+  ],
+);
 
+describe("computePoses with a placed assembly", () => {
   it("turns a revolute joint about its moved axis", () => {
     // Local axis z becomes world -y; the pivot (1, 0, 0) becomes (1, 0, 5).
     // The point (2, 0, 0) of p1 starts at (2, 0, 5) and ends at (1, 0, 6).
@@ -176,7 +189,9 @@ describe("computePoses with a placed assembly", () => {
     const worlds = computeWorldPlacements(document);
     expectPoint(worlds.get("q")?.translation ?? [9, 9, 9], [0, -1, 5]);
   });
+});
 
+describe("computePoses with anchored assemblies", () => {
   it("moves anchored assemblies, their bodies and their joint axes, with the anchor", () => {
     const moved = documentOf(
       [{ ...placed, placement: { ...placed.placement, translation: [0, 0, 15] } }, anchored],

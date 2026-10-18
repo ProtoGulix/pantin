@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { groupRepresentatives } from "./joint-bodies.ts";
 import { jointPreviewOf } from "./joints/joint-preview.ts";
 import { composeTransforms, invertTransform, type RigidTransform } from "./rigid-transform.ts";
 import { selectedNodeIdOf } from "./selection.ts";
@@ -38,36 +39,19 @@ export function displayedAssemblyFrame(
 }
 
 /**
- * The root body of an assembly: the child of the joint that anchors it to
- * another assembly when there is one, since its pose . B^-1 is exactly the
- * posed frame the core places phase 6 objects in (ADR 0043 point 1); otherwise
- * the first body, in document order, not moved by an internal joint. Null when
- * the assembly has no body (no frame to read).
+ * The root body of an assembly: the first body, in document order, that no
+ * joint moves. It follows the group (ADR 0055), so its pose . B^-1 is exactly
+ * the posed frame the core places phase 6 objects in (ADR 0043 point 1). Null
+ * when the assembly has no body (no frame to read).
  */
 export function frameTargetOfAssembly(
   document: Pick<PantinDocument, "bodies" | "joints">,
   assemblyKey: string,
 ): AssemblyFrameTarget | null {
-  const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
-  // Bodies moved by a joint from a body of their own assembly.
-  const moved = new Set(
-    document.joints
-      .filter((joint) => assemblyOf.get(joint.parent) === assemblyKey)
-      .map((joint) => joint.child),
-  );
-  const anchorChild = document.joints.find((joint) => {
-    const parentAssembly = assemblyOf.get(joint.parent);
-    return (
-      assemblyOf.get(joint.child) === assemblyKey &&
-      parentAssembly !== undefined &&
-      parentAssembly !== assemblyKey
-    );
-  })?.child;
-  const body =
-    document.bodies.find((candidate) => candidate.id === anchorChild) ??
-    document.bodies.find(
-      (candidate) => candidate.assembly === assemblyKey && !moved.has(candidate.id),
-    );
+  // The first body with no parent joint follows the group, so its pose
+  // carries the posed frame of the assembly (joint-bodies.ts).
+  const bodyId = groupRepresentatives(document).get(assemblyKey);
+  const body = document.bodies.find((candidate) => candidate.id === bodyId);
   return body === undefined
     ? null
     : { assemblyKey, bodyId: body.id, bodyPlacement: body.placement };

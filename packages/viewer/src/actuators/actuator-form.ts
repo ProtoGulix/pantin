@@ -4,6 +4,7 @@ import {
   type ActuatorType,
   type CreateActuatorRequest,
   CreateActuatorRequestSchema,
+  endpointAssemblyIn,
   JOINT_COORDINATE_UNITS,
   type PantinDocument,
 } from "@pantin/protocol";
@@ -198,7 +199,7 @@ export function actuatorFormForJoint(
   if (actuator !== undefined) {
     return actuatorFormFor(actuator, document);
   }
-  const assembly = document.bodies.find((body) => body.id === joint.child)?.assembly;
+  const assembly = endpointAssemblyIn(joint.child, document.bodies);
   const initial = initialActuatorForm(document);
   return {
     ...initial,

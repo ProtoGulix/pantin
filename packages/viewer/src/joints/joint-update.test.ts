@@ -26,8 +26,21 @@ describe("buildJointUpdate", () => {
 
   it("renames and rebinds bodies, keeping everything else as stored", () => {
     expect(requestOf(hingeJoint, "name", "Elbow")).toEqual({ ...hingeRequest, name: "Elbow" });
-    expect(requestOf(hingeJoint, "child", "arm")).toEqual({ ...hingeRequest, child: "arm" });
-    expect(requestOf(hingeJoint, "parent", "base")).toEqual({ ...hingeRequest, parent: "base" });
+    expect(requestOf(hingeJoint, "child", "arm")).toEqual({
+      ...hingeRequest,
+      child: { kind: "body", id: "arm" },
+    });
+    expect(requestOf(hingeJoint, "parent", "base")).toEqual({
+      ...hingeRequest,
+      parent: { kind: "body", id: "base" },
+    });
+  });
+
+  it("rebinds an end to a group written as assembly:<key> (ADR 0055)", () => {
+    expect(requestOf(hingeJoint, "child", "assembly:arm")).toEqual({
+      ...hingeRequest,
+      child: { kind: "assembly", key: "arm" },
+    });
   });
 
   it("converts an origin component from millimetres to metres", () => {

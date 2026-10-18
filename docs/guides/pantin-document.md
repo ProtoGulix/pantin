@@ -25,10 +25,14 @@ array is required and may be empty. Ids are unique within their array.
   `.glb` or `.stl`),
   with the `source` it was imported from, and the `assembly` it is in. An
   optional `placement` is relative to the assembly frame.
-- `joints`: link a `parent` body to a `child` body, with an `origin`, an
-  `axis` and, by type, `limits`. Types: `fixed`, `prismatic`, `revolute`,
-  `continuous`, `helical` (`protocol/src/joint.ts`, ADR 0011). A joint has no
-  `assembly` field: it belongs to the assembly of its child body.
+- `joints`: link a `parent` end to a `child` end, with an `origin`, an
+  `axis` and, by type, `limits`. An end is `{ "kind": "body", "id" }` or
+  `{ "kind": "assembly", "key" }`, a group: an assembly moved as one rigid
+  piece (ADR 0055). Between two assemblies the child is a group; inside one
+  assembly it is a body. A body with no parent joint moves with its group.
+  Types: `fixed`, `prismatic`, `revolute`, `continuous`, `helical`
+  (`protocol/src/joint.ts`, ADR 0011). A joint has no `assembly` field: it
+  belongs to the assembly its child moves.
 - `drives`: what the PLC commands, such as a valve or a contactor (ADR 0022).
   A drive has tags and moves nothing itself; its output ports feed actuators.
 - `actuators`: a cylinder or a motor (ADR 0028). It has no tag. It reads the
@@ -58,7 +62,8 @@ it under that assembly (ADR 0047 point 1). In the document:
   an `assembly` field (`pantin.ts`, `drive.ts`, `actuator.ts`, `sensor.ts`,
   `pantin-conveyors.ts`, all in `packages/protocol/src`).
 - A joint is the one exception: it has no `assembly` field. Its tags use the
-  assembly of its child body, and the tree lists it under the bodies it links.
+  assembly its child moves (the group itself, or the assembly of a child body),
+  and the tree lists it under the bodies it links.
   A joint between bodies of two assemblies is also listed in the folder of
   joints between assemblies, at Pantin level (ADR 0047 point 2).
 - An assembly with a `parent` is shown inside that parent.
@@ -73,7 +78,7 @@ An arrow reads "names one of". Every name is an id or a key.
 
     assembly --parent--> assembly
     body ------assembly--> assembly
-    joint -----parent, child--> body
+    joint -----parent, child--> body or assembly (group)
     drive -----assembly--> assembly
     actuator --assembly--> assembly
              --feed.drive, feed.ports--> drive and its output ports
@@ -110,7 +115,7 @@ use nobody types them: the core derives them.
 
 | Owner | Assembly it uses | Members |
 | --- | --- | --- |
-| joint | that of its child body | `position`, and `setpoint` while no actuator moves it |
+| joint | the one its child moves (a group child: its own key) | `position`, and `setpoint` while no actuator moves it |
 | drive | its own | those of its type, such as `run` |
 | sensor | its own | those of its type, such as `state` or `count` |
 | emitter | its own | `spawn` |
@@ -160,8 +165,11 @@ therefore pass an editor's schema
 check and still be refused by `pantin validate`. The entry point is the last
 `superRefine` in `pantin.ts`; each family has its own module.
 
-- `jointTreeIssues` (`pantin.ts`): joints form a forest of bodies. Known
-  bodies, no self link, at most one parent joint per body, no cycle.
+- `jointTreeIssues` (`pantin-joint-tree.ts`, ADR 0055): known ends, no self
+  link, a body child between assemblies refused (it must be a group), a group
+  never hung from itself or one of its bodies, at most one parent joint per
+  body, no cycle of bodies. Cycles through groups are the loops of anchors
+  below. The core runs the same function on the document an edit would make.
 - Duplicate ids in `bodies` and `joints` (`pantin.ts`); in the other arrays,
   in each module below.
 - `pantin-assemblies.ts`: unique assembly keys; every body in a known
@@ -280,7 +288,7 @@ photoelectric cell. The chain is a contactor, an AC motor, a continuous joint
   "joints": [
     {
       "id": "drum-turn", "tagKey": "drum_turn", "type": "continuous", "name": "Drum turn",
-      "parent": "frame", "child": "drum", "origin": [0, 0, 0], "axis": [0, 1, 0]
+      "parent": { "kind": "body", "id": "frame" }, "child": { "kind": "body", "id": "drum" }, "origin": [0, 0, 0], "axis": [0, 1, 0]
     }
   ],
   "drives": [

@@ -1,4 +1,5 @@
 import type { Joint } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { expectPoint } from "../../test-support/expect-point.ts";
 import { PRISMATIC_BEHAVIOUR } from "./prismatic.ts";
@@ -8,8 +9,8 @@ const slide: Extract<Joint, { type: "prismatic" }> = {
   tagKey: "slide",
   type: "prismatic",
   name: "Slide",
-  parent: "base",
-  child: "arm",
+  parent: bodyEndpoint("base"),
+  child: bodyEndpoint("arm"),
   origin: [0, 0, 0],
   axis: [2, 0, 0],
   limits: [0, 0.8],

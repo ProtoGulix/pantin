@@ -1,10 +1,17 @@
-import type { Body, PantinDocument } from "@pantin/protocol";
+import {
+  type Body,
+  bodyEndpoint,
+  endpointAssembly,
+  endpointKey,
+  type JointEndpoint,
+  type PantinDocument,
+} from "@pantin/protocol";
 import {
   anchorSignature,
   computeWorldPlacements,
   deriveAssemblyAnchors,
 } from "./assembly-anchors.ts";
-import { computeDisplacements, computePoses } from "./kinematics.ts";
+import { computeDisplacements, computePoses, endpointDisplacement } from "./kinematics.ts";
 import {
   compose,
   IDENTITY_TRANSFORM,
@@ -47,7 +54,10 @@ function keyBody(
   document: PantinDocument,
 ): Body | undefined {
   const inAssembly = document.bodies.filter((body) => body.assembly === key);
-  const preferred = [newAnchors.get(key), oldAnchors.get(key)].map((anchor) => anchor?.joint.child);
+  // An anchor whose child is a group names no body: any body of the assembly will do.
+  const preferred = [newAnchors.get(key), oldAnchors.get(key)].map((anchor) =>
+    anchor?.joint.child.kind === "body" ? anchor.joint.child.id : undefined,
+  );
   for (const childId of preferred) {
     const body = inAssembly.find((candidate) => candidate.id === childId);
     if (body !== undefined) {
@@ -73,15 +83,20 @@ function anchorDepth(anchors: Anchors, key: string): number {
 }
 
 // The topmost ancestor of `body` along joints whose parent is also in the
-// assembly `key`: below it, every joint of the chain turns about W(key).
-function topAncestorInAssembly(document: PantinDocument, key: string, body: Body): string {
+// assembly `key` (the group itself included): below it, every joint of the
+// chain turns about W(key).
+function topAncestorInAssembly(document: PantinDocument, key: string, body: Body): JointEndpoint {
   const assemblyOf = new Map(
     document.bodies.map((candidate) => [candidate.id, candidate.assembly]),
   );
-  const parentJointOf = new Map(document.joints.map((joint) => [joint.child, joint]));
-  let top = body.id;
-  for (let joint = parentJointOf.get(top); joint !== undefined; joint = parentJointOf.get(top)) {
-    if (assemblyOf.get(joint.parent) !== key) {
+  const parentJointOf = new Map(document.joints.map((joint) => [endpointKey(joint.child), joint]));
+  let top = bodyEndpoint(body.id);
+  for (
+    let joint = parentJointOf.get(endpointKey(top));
+    joint !== undefined;
+    joint = parentJointOf.get(endpointKey(top))
+  ) {
+    if (endpointAssembly(joint.parent, assemblyOf) !== key) {
       break;
     }
     top = joint.parent;
@@ -109,8 +124,7 @@ export function placementGivingPose(
 ): RigidTransform {
   const neutral = withPlacement(document, key, IDENTITY_TRANSFORM);
   const displacements = computeDisplacements(neutral, positions);
-  const displacementOf = (bodyId: string) => displacements.get(bodyId) ?? IDENTITY_TRANSFORM;
-  const top = displacementOf(topAncestorInAssembly(document, key, body));
+  const top = endpointDisplacement(displacements, topAncestorInAssembly(document, key, body));
   const anchor = deriveAssemblyAnchors(document).get(key);
   const anchorWorld =
     anchor === undefined
@@ -118,7 +132,7 @@ export function placementGivingPose(
       : (computeWorldPlacements(neutral).get(anchor.assembly) ?? IDENTITY_TRANSFORM);
   const inside = compose(
     compose(inverse(anchorWorld), inverse(top)),
-    compose(displacementOf(body.id), anchorWorld),
+    compose(endpointDisplacement(displacements, bodyEndpoint(body.id)), anchorWorld),
   );
   const target = compose(
     pose,

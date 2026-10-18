@@ -93,7 +93,15 @@ export async function readFolderDocument(folder: string): Promise<FolderDocument
     reading.migratedFrom === null
       ? []
       : [`Schema version ${reading.migratedFrom} on disk: the core migrates it on open.`];
+  if (reading.bodiesFollowingGroup.length > 0) {
+    notes.push(followingGroupNote(reading.bodiesFollowingGroup));
+  }
   return { document: reading.document, notes };
+}
+
+// ADR 0055 point 9: the only change of behaviour of the migration to version 13.
+function followingGroupNote(bodyIds: readonly string[]): string {
+  return `Bodies with no parent joint in an anchored assembly now follow their assembly when it moves: ${bodyIds.join(", ")}.`;
 }
 
 // io.json, when the folder has it (ADR 0049 point 9). Problems print as

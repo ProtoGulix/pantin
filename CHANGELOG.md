@@ -16,6 +16,17 @@ All notable changes to Pantin. The format follows
   joints and multi-selection in 3D. Decision only: the implementation
   follows.
 
+### Changed
+
+- `pantin.json` schema 13 (ADR 0055, first slice): a joint's parent and child
+  are each a body or an assembly used as a group, and a body with no parent
+  joint now moves with its group. Version 12 documents are migrated on
+  opening with poses unchanged; the console's migration line lists the bodies
+  whose behaviour changes. A joint between two assemblies must have the group
+  as child. The joint form offers "Groupe : <name>" as an end. The examples
+  are written in version 13. Not yet: Grouper and Dégrouper, the import
+  without inner fixed joints, group rows in the tree.
+
 ## [0.1.0] - 2026-10-18
 
 First release. A real CODESYS program drives a simulated machine in closed

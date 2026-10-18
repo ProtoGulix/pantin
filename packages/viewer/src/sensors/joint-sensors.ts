@@ -1,4 +1,9 @@
-import type { CreateSensorRequest, PantinDocument, Sensor } from "@pantin/protocol";
+import {
+  type CreateSensorRequest,
+  endpointAssemblyIn,
+  type PantinDocument,
+  type Sensor,
+} from "@pantin/protocol";
 import { movableJoints } from "../actuators/actuator-joints.ts";
 import { coordinateLimits } from "../joints/joint-parameters.ts";
 import { initialSensorForm, type SensorFormState } from "./sensor-form.ts";
@@ -17,7 +22,7 @@ export function sensorsOfJoint(document: PantinDocument, jointId: string): Senso
 
 function childAssembly(document: PantinDocument, jointId: string): string | undefined {
   const joint = document.joints.find((candidate) => candidate.id === jointId);
-  return document.bodies.find((body) => body.id === joint?.child)?.assembly;
+  return joint === undefined ? undefined : endpointAssemblyIn(joint.child, document.bodies);
 }
 
 /** A new sensor watching the joint, named after it, in its child's assembly; null if it cannot move. */

@@ -1,4 +1,11 @@
-import { PANTIN_SCHEMA_VERSION, type PantinDocument, PantinDocumentSchema } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  isBodyEndpoint,
+  type JointEndpoint,
+  PANTIN_SCHEMA_VERSION,
+  type PantinDocument,
+  PantinDocumentSchema,
+} from "@pantin/protocol";
 
 // Small documents for the layout tests. They go through the protocol schema,
 // so a fixture that breaks a document rule fails here, not silently.
@@ -20,8 +27,8 @@ export function jointOf(id: string, child: string, type = "prismatic") {
     tagKey: id,
     name: id,
     type,
-    parent: "frame",
-    child,
+    parent: bodyEndpoint("frame"),
+    child: bodyEndpoint(child),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     ...limits,
@@ -84,13 +91,13 @@ function withAssemblyFrames(parts: Parts, rootAssembly: string) {
   );
   const frames = new Set<string>();
   const joints = (parts.joints ?? []).map((joint) => {
-    const { parent, child } = joint as { parent: string; child: string };
-    const assembly = assemblyOf.get(child);
-    if (parent !== "frame" || assembly === undefined || assembly === rootAssembly) {
+    const { parent, child } = joint as { parent: JointEndpoint; child: JointEndpoint };
+    const assembly = child.kind === "body" ? assemblyOf.get(child.id) : undefined;
+    if (!isBodyEndpoint(parent, "frame") || assembly === undefined || assembly === rootAssembly) {
       return joint;
     }
     frames.add(assembly);
-    return { ...joint, parent: `frame-${assembly}` };
+    return { ...joint, parent: bodyEndpoint(`frame-${assembly}`) };
   });
   return { joints, frames: [...frames].map((assembly) => bodyOf(`frame-${assembly}`, assembly)) };
 }

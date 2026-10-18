@@ -1,4 +1,5 @@
 import type { Joint } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { expectPoint } from "../../test-support/expect-point.ts";
 import { apply } from "../rigid-transform.ts";
@@ -10,8 +11,8 @@ const screw: Extract<Joint, { type: "helical" }> = {
   tagKey: "screw",
   type: "helical",
   name: "Screw",
-  parent: "frame",
-  child: "nut",
+  parent: bodyEndpoint("frame"),
+  child: bodyEndpoint("nut"),
   origin: [1, 0, 0],
   axis: [0, 0, 3],
   limits: [0, 0.1],

@@ -1,4 +1,4 @@
-import { PantinResponseSchema } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint, PantinResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
@@ -145,8 +145,8 @@ describe("validation of values", () => {
     await line.send("POST", `${LINE}/joints`, {
       type: "revolute",
       name: "Hinge",
-      parent: "frame",
-      child: "roller",
+      parent: bodyEndpoint("frame"),
+      child: groupEndpoint("roller"),
       origin: [0, 0, 0],
       axis: [0, 0, 1],
       limits: [0, 1],
@@ -225,8 +225,8 @@ describe("refusals reachable over HTTP", () => {
     const refused = await line.send("PATCH", `${LINE}/joints/drum`, {
       type: "revolute",
       name: "Drum",
-      parent: "frame",
-      child: "roller",
+      parent: bodyEndpoint("frame"),
+      child: groupEndpoint("roller"),
       origin: [0, 0, 0],
       axis: [0, 1, 0],
       limits: [-1, 1],

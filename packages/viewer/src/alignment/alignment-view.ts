@@ -72,11 +72,11 @@ function fixedJointOf(document: PantinDocument, session: AlignmentSession, t: Tr
   if (link === null) {
     return { checked: session.fixedJoint, enabled: true, note: null };
   }
-  const joint = document.joints.find((candidate) => candidate.child === link.childBodyId);
+  const joint = document.joints.find((candidate) => candidate.id === link.jointId);
   return {
     checked: false,
     enabled: false,
-    note: t("alignment.fixedJointTaken", { joint: joint?.name ?? link.childBodyId }),
+    note: t("alignment.fixedJointTaken", { joint: joint?.name ?? link.jointId }),
   };
 }
 

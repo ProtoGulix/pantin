@@ -1,4 +1,4 @@
-import type { Joint, PantinDocument } from "@pantin/protocol";
+import { endpointAssembly, type Joint, type PantinDocument } from "@pantin/protocol";
 
 // Refusals of ADR 0033 point 2: an assembly with a second anchor, or anchors
 // that close a loop. Checked on the document an edit would produce, before
@@ -16,8 +16,8 @@ function jointsBetweenAssemblies(
   const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
   const links: { joint: Joint; from: string; to: string }[] = [];
   for (const joint of document.joints) {
-    const from = assemblyOf.get(joint.parent);
-    const to = assemblyOf.get(joint.child);
+    const from = endpointAssembly(joint.parent, assemblyOf);
+    const to = endpointAssembly(joint.child, assemblyOf);
     if (from !== undefined && to !== undefined && from !== to) {
       links.push({ joint, from, to });
     }

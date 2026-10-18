@@ -62,7 +62,10 @@ describe("initialJointForm", () => {
   });
 
   it("reuses the only body for both ends", () => {
-    expect(initialJointForm([railBody]).values).toMatchObject({ parent: "rail", child: "rail" });
+    expect(initialJointForm([railBody]).values).toMatchObject({
+      parent: "rail",
+      child: "rail",
+    });
   });
 });
 

@@ -1,89 +1,17 @@
-import {
-  type Body,
-  type Joint,
-  PANTIN_SCHEMA_VERSION,
-  type PantinDocument,
-  PantinDocumentSchema,
-  type SourceNode,
-} from "@pantin/protocol";
+import { isBodyEndpoint, type Joint, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { newAssemblyTree } from "./assemblies.ts";
-import { type AssemblyLocation, applyImportFrames, planImportFrames } from "./assembly-frames.ts";
-import { addFixedJoints } from "./import-joints.ts";
-import { computePoses } from "./kinematics.ts";
-import { addAssembly, addBodies, replaceJoint } from "./pantin-document.ts";
-import { axisAngleRotation } from "./rigid-transform.ts";
-import { type ChainComponent, planStepTree } from "./step-assembly-tree.ts";
-
-function part(...chain: string[]): ChainComponent {
-  const nodes: SourceNode[] = chain.map((link) => {
-    const [name = "", path = ""] = link.split("@");
-    return { name, path: path === "" ? [] : path.split(".").map(Number) };
-  });
-  return { nodes };
-}
-
-const QUARTER_TURN = axisAngleRotation([0, 0, 1], Math.PI / 2);
-const NO_LOCATIONS: AssemblyLocation[] = [];
-
-// The whole import pipeline, as import-operations.ts runs it.
-function importDocument(components: ChainComponent[], locations: AssemblyLocation[]) {
-  const empty: PantinDocument = PantinDocumentSchema.parse({
-    schema_version: PANTIN_SCHEMA_VERSION,
-    name: "T",
-    assemblies: [],
-    bodies: [],
-    joints: [],
-    drives: [],
-    actuators: [],
-    sensors: [],
-    belts: [],
-    guides: [],
-    emitters: [],
-    absorbers: [],
-    presenceSensors: [],
-  });
-  const plan = planStepTree(components, "file");
-  const assemblies = newAssemblyTree(empty, plan.assemblies);
-  const bodies: Body[] = components.map((component, index) => ({
-    id: `b${index}`,
-    name: `b${index}`,
-    assembly:
-      assemblies[plan.assemblies.findIndex((assembly) => assembly.components.includes(index))]
-        ?.key ?? "",
-    source: {
-      fileName: "f.step",
-      format: "step",
-      unit: "m",
-      upAxis: "z",
-      nodes: [...component.nodes],
-    },
-    mesh: `meshes/b${index}.glb`,
-  }));
-  const withAll = addBodies(assemblies.reduce(addAssembly, empty), bodies);
-  const links = plan.links.flatMap(({ parent, child }) => {
-    const [p, c] = [bodies[parent], bodies[child]];
-    return p === undefined || c === undefined ? [] : [{ parent: p, child: c }];
-  });
-  const withJoints = addFixedJoints(withAll, links);
-  const frames = planImportFrames(plan.assemblies, plan.links, locations);
-  return applyImportFrames(withJoints.document, assemblies, bodies, frames);
-}
-
-const MACHINE = [
-  part("M@0", "plate@0.0"),
-  part("M@0", "Sub@0.1", "a@0.1.0"),
-  part("M@0", "Sub@0.1", "b@0.1.1"),
-];
-const SUB_LOCATION: AssemblyLocation = {
-  path: [0, 1],
-  translation: [1, 2, 0],
-  rotation: [...QUARTER_TURN],
-};
-const MACHINE_LOCATIONS: AssemblyLocation[] = [
-  { path: [0], translation: [0.5, 0, 0], rotation: [0, 0, 0, 1] },
+import {
+  importDocument,
+  MACHINE,
+  MACHINE_LOCATIONS,
+  NO_LOCATIONS,
+  part,
+  QUARTER_TURN,
   SUB_LOCATION,
-];
+} from "../test-support/import-pipeline.ts";
+import type { AssemblyLocation } from "./assembly-frames.ts";
+import { computePoses } from "./kinematics.ts";
+import { replaceJoint } from "./pantin-document.ts";
 
 function poseOf(document: PantinDocument, bodyId: string, positions = new Map<string, number>()) {
   const pose = computePoses(document, positions).find((candidate) => candidate.bodyId === bodyId);
@@ -155,7 +83,7 @@ describe("planImportFrames anchors and joints", () => {
 
   it("moves a prismatic joint along the world Y in a sub-assembly turned about Z", () => {
     const { document } = importDocument(MACHINE, MACHINE_LOCATIONS);
-    const fixed = document.joints.find((joint) => joint.child === "b2");
+    const fixed = document.joints.find((joint) => isBodyEndpoint(joint.child, "b2"));
     if (fixed === undefined) {
       throw new Error("No joint to b2");
     }

@@ -89,7 +89,13 @@ describe("importBodies rollback", () => {
       STEP_BYTES,
     );
     expect(bodies).toHaveLength(2);
-    expect(joints).toMatchObject([{ type: "fixed", parent: bodies[0]?.id, child: bodies[1]?.id }]);
+    expect(joints).toMatchObject([
+      {
+        type: "fixed",
+        parent: { kind: "body", id: bodies[0]?.id },
+        child: { kind: "body", id: bodies[1]?.id },
+      },
+    ]);
     expect((await service.getPantin("axis")).document.joints).toEqual(joints);
   });
 });
@@ -197,9 +203,16 @@ describe("importBodies nested assemblies (ADR 0040)", () => {
       ["sub", "m"],
     ]);
     expect(bodies.map((body) => body.assembly)).toEqual(["m", "sub", "sub"]);
+    // The joint between assemblies hangs the group "sub" (ADR 0055 point 3).
     expect(joints.map(({ parent, child }) => [parent, child])).toEqual([
-      ["plate", "a"],
-      ["a", "b"],
+      [
+        { kind: "body", id: "plate" },
+        { kind: "assembly", key: "sub" },
+      ],
+      [
+        { kind: "body", id: "a" },
+        { kind: "body", id: "b" },
+      ],
     ]);
     expect((await service.getPantin("axis")).document.assemblies).toEqual(assemblies);
   });

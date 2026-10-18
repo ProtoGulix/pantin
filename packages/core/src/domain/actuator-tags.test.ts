@@ -1,5 +1,5 @@
 import type { Joint, PantinDocument } from "@pantin/protocol";
-import { PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
+import { bodyEndpoint, PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { NO_POSITIONS } from "../test-support/no-positions.ts";
 import { deleteJointFromDocument } from "./joint-rules.ts";
@@ -31,8 +31,8 @@ function slide(id: string, child: string): Joint {
     tagKey: id,
     name: id,
     type: "prismatic",
-    parent: "frame",
-    child,
+    parent: bodyEndpoint("frame"),
+    child: bodyEndpoint(child),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],

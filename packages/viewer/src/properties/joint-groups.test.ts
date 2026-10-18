@@ -192,7 +192,7 @@ describe("joint edit targets", () => {
     ]);
   });
 
-  it("edits the bodies with a select over the Pantin's bodies", () => {
+  it("edits the ends with a select over the Pantin's bodies and groups", () => {
     const parent = rowsOf("hinge").find((r) => r.id === "parent");
     expect(parent?.edit).toEqual({
       input: "select",
@@ -201,6 +201,7 @@ describe("joint edit targets", () => {
       options: [
         { value: "rail", label: "Rail" },
         { value: "carriage", label: "Carriage" },
+        { value: "assembly:main", label: "Groupe : main" },
       ],
     });
     expect(rowsOf("hinge").find((r) => r.id === "name")?.edit?.input).toBe("text");

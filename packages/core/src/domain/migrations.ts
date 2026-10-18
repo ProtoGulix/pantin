@@ -3,6 +3,7 @@ import { ApiError } from "../errors.ts";
 import { isJsonObject, type JsonObject } from "./json-object.ts";
 import { migrateV9ToV10 } from "./migrate-assembly-placement.ts";
 import { migrateV8ToV9 } from "./migrate-drives-actuators.ts";
+import { bodiesNowFollowingTheirGroup, migrateV12ToV13 } from "./migrate-rigid-groups.ts";
 import { migrateV7ToV8 } from "./migrate-switch-sides.ts";
 
 // Migrations of pantin.json between schema versions (CLAUDE.md 11.2,
@@ -85,10 +86,22 @@ const MIGRATION_STEPS: ReadonlyMap<number, (document: JsonObject) => JsonObject>
   [9, migrateV9ToV10],
   [10, migrateV10ToV11],
   [11, migrateV11ToV12],
+  [12, migrateV12ToV13],
 ]);
 
+// What a migration changes beyond the shape of the file, for the user to hear
+// about. `bodiesFollowingGroup`: bodies that never moved and now follow their
+// group (version 13, ADR 0055 point 9).
+export type MigrationNotice = { kind: "bodiesFollowingGroup"; bodies: string[] };
+
+function ignoreNotice(): void {}
+
 // Brings a parsed pantin.json to the current version; validation comes after.
-export function migratePantinDocument(json: unknown, location: string): unknown {
+export function migratePantinDocument(
+  json: unknown,
+  location: string,
+  report: (notice: MigrationNotice) => void = ignoreNotice,
+): unknown {
   if (!isJsonObject(json) || !Number.isInteger(json.schema_version)) {
     // Left to the schema, which explains what is missing.
     return json;
@@ -108,6 +121,12 @@ export function migratePantinDocument(json: unknown, location: string): unknown 
         "conflict",
         `${location} has schema_version ${version}, which no migration handles. Restore a supported file.`,
       );
+    }
+    if (version === 12) {
+      const bodies = bodiesNowFollowingTheirGroup(document);
+      if (bodies.length > 0) {
+        report({ kind: "bodiesFollowingGroup", bodies });
+      }
     }
     document = step(document);
     version = Number(document.schema_version);

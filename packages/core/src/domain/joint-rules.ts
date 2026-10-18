@@ -1,7 +1,12 @@
 import {
   type CreateJointRequest,
+  endpointAssembly,
+  endpointAssemblyIn,
   JOINT_COORDINATE_UNITS,
   type Joint,
+  type JointEndpoint,
+  type JointTreeIssueKind,
+  jointTreeIssues,
   type PantinDocument,
   PantinDocumentSchema,
 } from "@pantin/protocol";
@@ -30,37 +35,22 @@ function refuseAnchorConflict(next: PantinDocument, jointId: string): void {
   }
 }
 
-function isAncestor(document: PantinDocument, candidate: string, bodyId: string): boolean {
-  const parentOf = new Map(document.joints.map((joint) => [joint.child, joint.parent]));
-  for (let current = parentOf.get(bodyId); current !== undefined; current = parentOf.get(current)) {
-    if (current === candidate) {
-      return true;
-    }
-  }
-  return false;
-}
+// ADR 0011 point 3 and ADR 0055 points 3 and 4, on the document the edit would
+// produce. The two placement rules of ADR 0055 are conflicts with what the
+// document holds, the others bad requests. The message names the joint.
+const PLACEMENT_RULE_KINDS: ReadonlySet<JointTreeIssueKind> = new Set([
+  "group_in_itself",
+  "body_child_between_assemblies",
+]);
 
-function linkProblem(document: PantinDocument, request: CreateJointRequest): string | undefined {
-  const bodyIds = new Set(document.bodies.map((body) => body.id));
-  for (const [role, bodyId] of [
-    ["parent", request.parent],
-    ["child", request.child],
-  ] as const) {
-    if (!bodyIds.has(bodyId)) {
-      return `The ${role} body "${bodyId}" does not exist in this Pantin. Pick one of its bodies.`;
-    }
+function refuseLinkProblem(next: PantinDocument): void {
+  const [issue] = jointTreeIssues(next);
+  if (issue !== undefined) {
+    throw new ApiError(
+      PLACEMENT_RULE_KINDS.has(issue.kind) ? "conflict" : "invalid_request",
+      issue.message,
+    );
   }
-  if (request.parent === request.child) {
-    return `A joint cannot link body "${request.child}" to itself. Pick two different bodies.`;
-  }
-  const existing = document.joints.find((joint) => joint.child === request.child);
-  if (existing !== undefined) {
-    return `Body "${request.child}" already has the parent joint "${existing.id}"; a body has at most one. Delete that joint first.`;
-  }
-  if (isAncestor(document, request.child, request.parent)) {
-    return `Body "${request.child}" already drives "${request.parent}" through other joints; linking them back would make a cycle.`;
-  }
-  return undefined;
 }
 
 function validatedJoint(document: PantinDocument, id: string, context: string) {
@@ -73,11 +63,11 @@ function validatedJoint(document: PantinDocument, id: string, context: string) {
   return { document: updated, joint: stored };
 }
 
-// Tag keys already used by the joints whose child body is in the same
-// assembly as `childId` (ADR 0019): a tag key is unique there only.
-function tagKeysNextTo(document: PantinDocument, childId: string): Set<string> {
-  const assembly = document.bodies.find((body) => body.id === childId)?.assembly;
-  return new Set(tagKeyOwners(document, assembly).keys());
+// Tag keys already used in the assembly that `child` moves (ADR 0019): a tag
+// key is unique there only. The assembly of a group child is the group itself.
+function tagKeysNextTo(document: PantinDocument, child: JointEndpoint): Set<string> {
+  const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
+  return new Set(tagKeyOwners(document, endpointAssembly(child, assemblyOf)).keys());
 }
 
 export function addJointToDocument(
@@ -85,16 +75,13 @@ export function addJointToDocument(
   request: CreateJointRequest,
   positions: ReadonlyMap<string, number>,
 ): { document: PantinDocument; joint: Joint } {
-  const problem = linkProblem(document, request);
-  if (problem !== undefined) {
-    throw new ApiError("invalid_request", problem);
-  }
   const takenIds = new Set(document.joints.map((joint) => joint.id));
   const baseKey = slugifyDisplayName(request.name, "joint");
   const id = makeUniqueId(baseKey, takenIds);
   const tagKey = makeUniqueId(baseKey, tagKeysNextTo(document, request.child));
   const joint: Joint = { id, tagKey, ...request };
   const added = addJoint(document, joint);
+  refuseLinkProblem(added);
   refuseAnchorConflict(added, id);
   return validatedJoint(
     keepDisplayedPose(document, added, positions),
@@ -117,21 +104,18 @@ export function updateJointInDocument(
   }
   // Checked against the other joints only: the joint may keep its own link.
   const others = removeJoint(document, jointId);
-  const problem = linkProblem(others, request);
-  if (problem !== undefined) {
-    throw new ApiError("invalid_request", problem);
-  }
   if (request.type !== "continuous") {
     refuseDrumJointLoss(document, jointId, `become a ${request.type} joint`);
   }
   const joint: Joint = { id: jointId, tagKey: existing.tagKey, ...request };
   const replaced = replaceJoint(document, joint);
+  refuseLinkProblem(replaced);
   refuseAnchorConflict(replaced, jointId);
   // A new child in another assembly may already use this tag key there.
   if (tagKeysNextTo(others, request.child).has(existing.tagKey)) {
     throw new ApiError(
       "invalid_request",
-      `Tag key "${existing.tagKey}" of joint "${jointId}" is already used in the assembly of body "${request.child}". Rename one of the tag keys first.`,
+      `Tag key "${existing.tagKey}" of joint "${jointId}" is already used in assembly "${endpointAssemblyIn(request.child, document.bodies)}". Rename one of the tag keys first.`,
     );
   }
   if (JOINT_COORDINATE_UNITS[request.type] === null) {

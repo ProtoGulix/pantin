@@ -1,4 +1,10 @@
-import { JOINT_COORDINATE_UNITS, type Joint, JointSchema, type JointType } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  JOINT_COORDINATE_UNITS,
+  type Joint,
+  JointSchema,
+  type JointType,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { apply, IDENTITY_TRANSFORM, type Vector3 } from "../rigid-transform.ts";
 import { clampJointPosition, isMovableJoint, jointMotion } from "./registry.ts";
@@ -8,8 +14,8 @@ import { clampJointPosition, isMovableJoint, jointMotion } from "./registry.ts";
 
 const shared: Pick<Joint, "name" | "parent" | "child" | "origin" | "axis"> = {
   name: "Example",
-  parent: "base",
-  child: "arm",
+  parent: bodyEndpoint("base"),
+  child: bodyEndpoint("arm"),
   origin: [0.1, -0.2, 0.3],
   axis: [0, 0, 2],
 };

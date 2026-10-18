@@ -1,4 +1,5 @@
 import type { Placement } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { expectPoint } from "../test-support/expect-point.ts";
 import { assembly, body, documentOf, joint } from "../test-support/placed-fixtures.ts";
@@ -23,8 +24,8 @@ function chain() {
       joint({
         id: "lift",
         type: "prismatic",
-        parent: "base",
-        child: "lift",
+        parent: bodyEndpoint("base"),
+        child: groupEndpoint("lift"),
         origin: [0, 0, 0],
         axis: [1, 0, 0],
         limits: [-1, 1],
@@ -32,8 +33,8 @@ function chain() {
       joint({
         id: "slide",
         type: "prismatic",
-        parent: "lift",
-        child: "tool",
+        parent: bodyEndpoint("lift"),
+        child: groupEndpoint("tool"),
         origin: [0, 0, 0],
         axis: [0, 1, 0],
         limits: [-1, 1],

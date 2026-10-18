@@ -1,11 +1,14 @@
 import {
+  endpointAssemblyIn,
   JOINT_COORDINATE_UNITS,
   type Joint,
+  type JointEndpoint,
   jointTagName,
   type PantinResponse,
 } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
 import { AXIS_DIRECTIONS, axisChoiceOf } from "../joints/axis-choice.ts";
+import { endpointName, endpointOptions, endpointToField } from "../joints/joint-endpoint-field.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
@@ -26,7 +29,7 @@ import { type GroupDraft, type PropertyRow, type RowEditor, row } from "./proper
 
 type Vector = "origin" | "axis";
 
-function jointRows(joint: Joint, pantin: PantinResponse) {
+function jointRows(joint: Joint, pantin: PantinResponse, t: Translate) {
   const textEditor = (fieldId: string): RowEditor => ({
     input: "text",
     target: { kind: "jointField", pantinId: pantin.id, jointId: joint.id, fieldId },
@@ -41,14 +44,11 @@ function jointRows(joint: Joint, pantin: PantinResponse) {
     options,
     selected,
   });
-  const bodyEditor = (fieldId: string, selected: string): RowEditor =>
-    selectEditor(
-      fieldId,
-      pantin.document.bodies.map((body) => ({ value: body.id, label: body.name })),
-      selected,
-    );
-  const bodyName = (bodyId: string) =>
-    pantin.document.bodies.find((body) => body.id === bodyId)?.name ?? bodyId;
+  const groupLabel = (name: string) => t("joint.endpoint.group", { name });
+  const endpointEditor = (fieldId: string, selected: JointEndpoint): RowEditor =>
+    selectEditor(fieldId, endpointOptions(pantin.document, groupLabel), endpointToField(selected));
+  const endpointLabel = (endpoint: JointEndpoint) =>
+    endpointName(pantin.document, endpoint, groupLabel);
 
   const vectorRows = (vector: Vector, title: string, convert: (n: number) => number) =>
     joint[vector].flatMap((component, index): PropertyRow[] => {
@@ -60,7 +60,7 @@ function jointRows(joint: Joint, pantin: PantinResponse) {
       const label = title.replace("{axis}", axis.toUpperCase());
       return [row(fieldId, label, formatDisplayNumber(convert(component)), textEditor(fieldId))];
     });
-  return { textEditor, selectEditor, bodyEditor, bodyName, vectorRows };
+  return { textEditor, selectEditor, endpointEditor, endpointLabel, vectorRows };
 }
 
 // The axis as in the creation form: X, Y or Z of the parent body and a sense.
@@ -108,7 +108,7 @@ function axisRows(
 // The tag key names the joint's tags inside its child's assembly (ADR 0019).
 // A fixed joint has no tag yet, but keeps its key for when it becomes movable.
 function tagRows(joint: Joint, pantin: PantinResponse, t: Translate): PropertyRow[] {
-  const assembly = pantin.document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
+  const assembly = endpointAssemblyIn(joint.child, pantin.document.bodies) ?? "";
   const setpoint = jointTagName(assembly, joint.tagKey, "setpoint");
   const position = jointTagName(assembly, joint.tagKey, "position");
   const tags =
@@ -128,8 +128,8 @@ export function jointGroups(
   customAxis: boolean,
   t: Translate,
 ): GroupDraft[] {
-  const rows = jointRows(joint, pantin);
-  const { textEditor, bodyEditor, bodyName, vectorRows } = rows;
+  const rows = jointRows(joint, pantin, t);
+  const { textEditor, endpointEditor, endpointLabel, vectorRows } = rows;
   const groups: GroupDraft[] = [
     {
       id: "general",
@@ -146,14 +146,14 @@ export function jointGroups(
         row(
           "parent",
           t("properties.parent"),
-          bodyName(joint.parent),
-          bodyEditor(FIELD_PARENT, joint.parent),
+          endpointLabel(joint.parent),
+          endpointEditor(FIELD_PARENT, joint.parent),
         ),
         row(
           "child",
           t("properties.child"),
-          bodyName(joint.child),
-          bodyEditor(FIELD_CHILD, joint.child),
+          endpointLabel(joint.child),
+          endpointEditor(FIELD_CHILD, joint.child),
         ),
       ],
     },

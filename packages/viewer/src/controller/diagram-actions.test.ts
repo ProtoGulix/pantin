@@ -66,7 +66,7 @@ describe("the diagram state", () => {
     selectDiagramNode(store, `joint:${slideJoint.id}`);
     expect(selectedDeviceOf(store.state.selection)).toBeNull();
     expect(selectedNodeIdOf(store.state.selection)).toBe(
-      jointNodeId(pantin.id, slideJoint.id, slideJoint.child),
+      jointNodeId(pantin.id, slideJoint.id, "carriage"),
     );
   });
 });

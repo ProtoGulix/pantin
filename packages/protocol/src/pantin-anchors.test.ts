@@ -23,14 +23,15 @@ function body(id: string, assemblyKey: string) {
   };
 }
 
-function fixedJoint(id: string, parent: string, child: string) {
+// The child of a joint between assemblies is a group (ADR 0055 point 3).
+function fixedJoint(id: string, parent: string, child: string, childIsGroup = false) {
   return {
     id,
     tagKey: id,
     name: id,
     type: "fixed",
-    parent,
-    child,
+    parent: { kind: "body", id: parent },
+    child: childIsGroup ? { kind: "assembly", key: child } : { kind: "body", id: child },
     origin: [0, 0, 0],
     axis: [0, 0, 1],
   };
@@ -69,21 +70,21 @@ describe("anchors of assemblies", () => {
   it("accepts a chain of anchors and joints inside an assembly", () => {
     const joints = [
       fixedJoint("in-a", "a0", "a1"),
-      fixedJoint("a-b", "a1", "b0"),
-      fixedJoint("b-c", "b1", "c0"),
+      fixedJoint("a-b", "a1", "b", true),
+      fixedJoint("b-c", "b1", "c", true),
     ];
     expect(issuesOf(documentOf(joints))).toEqual([]);
   });
 
   it("refuses an assembly anchored twice, naming both joints", () => {
-    const joints = [fixedJoint("first", "a0", "b0"), fixedJoint("second", "c0", "b1")];
+    const joints = [fixedJoint("first", "a0", "b", true), fixedJoint("second", "c0", "b", true)];
     expect(issuesOf(documentOf(joints))).toEqual([
       'Assembly "b" is anchored twice: by joint "first" and joint "second".',
     ]);
   });
 
   it("refuses a loop of anchors, naming the joints of the loop", () => {
-    const joints = [fixedJoint("a-b", "a0", "b0"), fixedJoint("b-a", "b1", "a1")];
+    const joints = [fixedJoint("a-b", "a0", "b", true), fixedJoint("b-a", "b1", "a", true)];
     const issues = issuesOf(documentOf(joints));
     expect(issues).toHaveLength(1);
     expect(issues[0]).toContain('"a-b"');

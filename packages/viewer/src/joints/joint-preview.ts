@@ -1,11 +1,13 @@
 import type { PantinDocument, Vector3 } from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import type { Vector3Tuple } from "../frames.ts";
+import { endpointBodyId, groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
 import { inBodyFrame } from "../placement-frame.ts";
 import { selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
+import { fieldToEndpoint } from "./joint-endpoint-field.ts";
 import {
   FIELD_CHILD,
   FIELD_PARENT,
@@ -51,7 +53,8 @@ function isDriven(state: ViewerState, jointId: string | null): boolean {
   );
 }
 
-// Origin and axis arrive in the frame of the parent body's assembly (ADR 0033).
+// Origin and axis arrive in the frame of the parent's assembly (ADR 0033); a
+// group is drawn through its root body (joint-bodies.ts).
 function previewOf(
   document: PantinDocument | undefined,
   joint: { parentBodyId: string; childBodyId: string; driven: boolean },
@@ -73,12 +76,16 @@ function formPreview(
   driven: boolean,
 ): JointPreview {
   const axis = formVector(form, "axis");
+  const representatives = groupRepresentatives(document ?? { bodies: [], joints: [] });
   return previewOf(
     document,
     {
       driven,
-      parentBodyId: form.values[FIELD_PARENT] ?? "",
-      childBodyId: form.values[FIELD_CHILD] ?? "",
+      parentBodyId: endpointBodyId(
+        representatives,
+        fieldToEndpoint(form.values[FIELD_PARENT] ?? ""),
+      ),
+      childBodyId: endpointBodyId(representatives, fieldToEndpoint(form.values[FIELD_CHILD] ?? "")),
     },
     formVector(form, "origin"),
     axis?.some((component) => component !== 0) ? axis : null,
@@ -94,18 +101,21 @@ export function jointPreviewOf(state: ViewerState): JointPreview | null {
       isDriven(state, state.jointForm.jointId),
     );
   }
+  const document = state.openPantin?.document;
   const nodeId = selectedNodeIdOf(state.selection);
   const ref = nodeId === null ? null : parseNodeId(nodeId);
   const joint =
     ref?.kind === "joint"
-      ? state.openPantin?.document.joints.find((candidate) => candidate.id === ref.jointId)
+      ? document?.joints.find((candidate) => candidate.id === ref.jointId)
       : undefined;
-  return joint === undefined
-    ? null
-    : previewOf(
-        state.openPantin?.document,
-        { parentBodyId: joint.parent, childBodyId: joint.child, driven: isDriven(state, joint.id) },
-        joint.origin,
-        joint.axis,
-      );
+  if (document === undefined || joint === undefined) {
+    return null;
+  }
+  const bodyIds = jointBodyIds(groupRepresentatives(document), joint);
+  return previewOf(
+    document,
+    { parentBodyId: bodyIds.parent, childBodyId: bodyIds.child, driven: isDriven(state, joint.id) },
+    joint.origin,
+    joint.axis,
+  );
 }

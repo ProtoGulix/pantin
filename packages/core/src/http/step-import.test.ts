@@ -1,6 +1,6 @@
 import { access, mkdir, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { ImportBodiesResponseSchema } from "@pantin/protocol";
+import { bodyEndpoint, ImportBodiesResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   type FakeConverterBehaviour,
@@ -101,8 +101,8 @@ describe("STEP import success", () => {
         tagKey: "carriage-3630-00",
         type: "fixed",
         name: "Carriage 3630.00",
-        parent: "carriage-3630-00",
-        child: "carriage-3630-00-2",
+        parent: bodyEndpoint("carriage-3630-00"),
+        child: bodyEndpoint("carriage-3630-00-2"),
         origin: [0, 0, 0],
         axis: [0, 0, 1],
       },
@@ -147,7 +147,7 @@ describe("STEP face files (ADR 0035)", () => {
         {
           code: "face_file_missing",
           level: "warning",
-          source: { kind: "body", id: "carriage-3630-00-2" },
+          source: bodyEndpoint("carriage-3630-00-2"),
         },
       ],
     });
