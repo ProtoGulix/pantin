@@ -131,11 +131,12 @@ de menus ci-dessous sont ceux de l'interface française, tels qu'ils s'affichent
    L'onglet **ModbusTCPServer Configuration** est une simple liste de
    paramètres en lecture seule.
 
-   Laissez l'onglet **Init serveur Modbus** vide. CODESYS y envoie ses
-   commandes une fois, à chaque connexion, avant les canaux. Si l'une d'elles
-   est refusée (par exemple une écriture de registre, fonction 16, sur `m1`),
-   CODESYS n'envoie plus rien : le journal montre la requête refusée, puis
-   « PLC disconnected … watchdog » et une reconnexion qui recommence en boucle.
+   Laissez l'onglet **Init serveur Modbus** vide. Vu le 18 octobre 2026 : une
+   commande de cet onglet (une écriture de registre, fonction 16, sur `m1`)
+   partait en premier à chaque connexion ; le pont l'a refusée, et CODESYS n'a
+   plus rien envoyé ensuite. Le journal montrait la requête refusée, puis
+   « PLC disconnected … watchdog », et une reconnexion qui recommençait en
+   boucle.
 5. **Reliez les canaux aux variables**, onglet **ModbusTCPServer Mappage E/S** :
    double-cliquez la colonne **Variable** d'une ligne, bouton « … », puis
    **Application**, **GVL**, la variable (icône « mapper sur la variable
