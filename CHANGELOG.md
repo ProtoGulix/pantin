@@ -15,6 +15,7 @@ All notable changes to Pantin. The format follows
   backlog notes for splitting a GLB by nodes, removing redundant fixed
   joints and multi-selection in 3D. Decision only: the implementation
   follows.
+- User guide (French and English): a concepts section (body, assembly, group, the rule "a body with no parent joint moves with its group"), procedures to make and dissolve a group, tree multi-selection, the Grouper and Dégrouper entries, and the refusals in the troubleshooting page. The tutorial now groups the rod and turns the fixed joint into a slider. No new screenshot yet.
 
 ### Changed
 

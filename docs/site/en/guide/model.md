@@ -10,13 +10,63 @@ The general principle: a machine is a tree of **bodies** linked by **joints**. A
     └──────────tags────────── sensor <───────────┘
 ```
 
-## Assemblies
+## Concepts: body, assembly, group
 
-An **assembly** groups bodies, as in a CAD assembly. It has a name and a **key**, which is used as the prefix of the tags of its elements. An assembly can contain another one. This structure moves nothing: it is used to organise and name.
+Three words come back everywhere in Pantin. Read this section before the procedures.
 
-In the tree, the menu of the Pantin offers **New assembly**. The menu of an assembly offers **New joint…**, **Hide in the 3D view**, **Isolate in the 3D view** and **Show every assembly**.
+| Word | What it is | What it does |
+| --- | --- | --- |
+| **Body** | One 3D mesh file (a GLB, an STL, or one component of a STEP). | Pantin never splits or merges it: one file, one body. A body has no tag. |
+| **Assembly** | A node of the structure tree, as in a CAD assembly. | It organises bodies and other assemblies. It has a name and a **key**, which is the prefix of tags. |
+| **Group** | An assembly used as an end of a joint. | It forms **one rigid piece**: all its bodies move together. |
 
-Every element (drive, sensor, belt...) belongs to an assembly. The assembly provides the prefix of its tags.
+A group is not another kind of object: it is an assembly that a joint uses. The word "group" says what it does; the word "assembly" says where it is filed.
+
+### The central rule
+
+**A body with no parent joint moves with its group.**
+
+In an assembly, a body that is the child of no joint therefore stays stuck to its assembly. When a joint moves the assembly, all these bodies follow, without linking them one by one. A body that has a parent joint moves relative to its parent, as before.
+
+Second rule: **the structure tree never carries motion, only joints do.** Filing an assembly inside another does not make it follow the other. For a sub-assembly to follow its parent, or slide relative to it, there must be a joint between the two.
+
+### An example: the cylinder
+
+```
+Pantin
+└── assembly "verin1"                 filing, tag prefix
+    ├── body "corps"                  no parent joint: follows "verin1"
+    └── group "Tige"                  sub-assembly, rigid
+        ├── body "tige"               no parent joint: follows "Tige"
+        └── body "chariot"            no parent joint: follows "Tige"
+
+Joint "Tige":  verin1 ──slider──> Tige
+```
+
+A single joint slides the rod and the carriage together. No joint links them to each other.
+
+### What a joint can link
+
+Each end of a joint (parent, child) is a **body** or a **group**. In the joint form, the list offers bodies and **Group: name** entries.
+
+| Case | Rule |
+| --- | --- |
+| Between two assemblies | The child is a **group**. A body child is refused: the message proposes its group. The parent is a group or a body. |
+| Inside one assembly | The child is a **body**. The parent is another body of the same assembly, or the group itself (a ring turning in its bearing). |
+| Single parent | A body or a group has at most one joint bringing it to its parent. |
+| No loop | Joints never form a loop. A group cannot have one of its own bodies as its parent. |
+
+The origin and the axis of a joint are expressed in the frame of the parent's assembly (the group itself when the parent is a group). The tags of a joint take the key of the assembly it moves: for a child group, the key of the group.
+
+### Why it is organised this way
+
+Before, the import joined each body of an assembly to a "handle" body by a fixed joint: a star of joints, noise in the tree, and a handle picked arbitrarily. Now:
+
+- an import creates no joint inside an assembly, only one fixed joint per sub-assembly, from the parent group to the child group;
+- to animate a sub-assembly, you turn that single fixed joint into a slider or a pivot;
+- when the import does not split enough (a STEP with no sub-assembly), you make the group yourself: see [Make a group](#make-a-group).
+
+The menu of an assembly in the tree offers **New joint…**, **Hide in the 3D view**, **Isolate in the 3D view** and **Show every assembly**. The menu of the Pantin offers **New assembly**. Every element (drive, sensor, belt...) belongs to an assembly, which provides the prefix of its tags.
 
 ## Bodies
 
@@ -28,17 +78,17 @@ A **body** is an imported 3D mesh. Pantin reads:
 
 To import, use **File** then **Import…**, or the **Import into this Pantin** action of the menu of a Pantin. The form asks for the **Unit** of the file and its **Up axis**, then **Import**. STEP conversion can take up to 2 minutes: keep the page open.
 
-A STEP that contains a named assembly can become several bodies and several assemblies.
+A STEP that contains named sub-assemblies becomes several bodies and several assemblies. The import creates no joint inside an assembly: its bodies follow the assembly. It creates one fixed joint per sub-assembly, between the parent group and the child group. A STEP with no sub-assembly gives a single assembly and no joint. GLB and STL files create no joint.
 
 ::: warning Not verified
 The full path from ZW3D to glTF with the right pivots has not been validated on a real part. For an export from ZW3D, prefer STEP, and check the placement of the bodies after the import.
 :::
 
-A body has no tag: it is moved by the joints.
+A body has no tag: it is moved by the joints, or by its group (see [the central rule](#the-central-rule)).
 
 ## Joints
 
-A **joint** links a **Parent body** to a **Child body**. It has an **origin**, an **axis** (frame of the parent body, Z up) and, depending on its type, limits. Create it with **Edit** then **New joint…** or from the menu of an assembly in the tree.
+A **joint** links a **Parent body** to a **Child body**, which can be bodies or groups (see [What a joint can link](#what-a-joint-can-link)). It has an **origin**, an **axis** (frame of the parent's assembly, Z up) and, depending on its type, limits. Create it with **Edit** then **New joint…** or from the menu of an assembly in the tree.
 
 | Type in the interface | Motion | Own settings |
 | --- | --- | --- |
@@ -52,11 +102,63 @@ The coordinate of a joint is in metres (prismatic, helical) or in radians (pivot
 
 The **Take the axis from a face** button places the axis from a face you click in the 3D view. **Reverse the axis** changes the positive direction.
 
-A body has at most one joint bringing it to its parent, and joints never form a loop.
+A body or a group has at most one joint bringing it to its parent, and joints never form a loop.
+
+### Make a group
+
+Make a group when the import did not separate what moves: a STEP with no sub-assembly puts all bodies in a single assembly, with no joint. The **Group…** command creates a sub-assembly with the chosen bodies and a fixed joint that links it to the original assembly.
+
+1. In the tree, click the first body. Add the others with <kbd>Ctrl</kbd>+click (adds or removes a row), <kbd>Shift</kbd>+click (the range up to the clicked row) or <kbd>Shift</kbd>+arrows. Only bodies and sub-groups of **one assembly** can be selected together.
+2. Choose **Edit** then **Group…**, or **Group…** in the context menu of a selected row.
+3. A line appears under the tree: `Group N items of assembly "X": what should the group be called?`. Type the name in the **Group name** field, then click **Group** (or **Cancel**).
+4. The message `Group "name" created.` appears.
+
+Nothing moves on screen: the group is attached to the assembly by a **Fixed** joint of the same name. Turning this joint into a **Prismatic (slider)** or a **Revolute (limited pivot)** makes the whole group move.
+
+The message can add two sentences:
+
+- **Joints deleted: …**: fixed joints made useless between the bodies of the group and the rest of the assembly were removed;
+- **Tags were renamed: regenerate the PLC's GVL.**: the joints of the moved bodies take the prefix of the new group, so their tags change. `io.json` follows; you must however **export the GVL again** (see [The I/O list](#the-i-o-list-io-json)) and reload it in the PLC program.
+
+**Group…** is offered only if the selection is made of bodies and sub-groups of one assembly, itself filed in a Pantin.
+
+The core refuses, without changing anything, when the group would move a body against its will. Its message is shown word for word. Frequent cases:
+
+| Situation | What to do |
+| --- | --- |
+| A body of the group hangs, by a moving joint, from a body of the assembly that is not in the group: the group would take it along. | Add the parent body to the group, or delete the joint. |
+| A body of the group is linked by a joint to a body that is not in the group: the group would leave it behind. | Add that body to the group, or delete the joint. |
+| A joint to delete is used by a drive, an actuator, a sensor or a belt. | Remove that element first, then try again. |
+
+### Ungroup a group
+
+**Ungroup** dissolves a group into the assembly where it is filed: its bodies and sub-groups move into that assembly, without moving on screen.
+
+1. Select the row of the group (an assembly filed inside another assembly).
+2. Choose **Edit** then **Ungroup**, or **Ungroup** in its context menu.
+3. The message `Group "name" dissolved.` appears, with the same optional sentences as for **Group…** (joints deleted, GVL to regenerate).
+
+A top-level assembly cannot be ungrouped: there is no assembly to pour it into.
+
+The core refuses as long as the bodies of the group would stop following it. Frequent cases:
+
+| Situation | What to do |
+| --- | --- |
+| A slider or a pivot moves the group: its bodies would no longer follow. | Make that joint **Fixed**, or delete it, then ungroup. |
+| The group is held by a joint to an assembly other than the one it would dissolve into. | Delete that joint or change its parent. |
+| The group does not move, but the assembly it would dissolve into is moved by a joint: its bodies would start following it. | Ungroup when that assembly does not move, or first hold the group with a fixed joint to it. |
+| The group hangs from something that moves inside the destination assembly. | First change the parent of that joint. |
+| A tag key of an element of the group already exists in the destination assembly (the message proposes a free key). | Rename one of the two keys. |
+
+Group then ungroup does not guarantee the original document. What is guaranteed: nothing moves on screen. The fixed joints that were deleted are not restored, identifiers or tag keys may differ, and a moving joint that hung from a rigid body may come back attached to the parent group rather than that body. To undo, discard the unsaved changes.
+
+### Move a body to another assembly
+
+Dragging a body onto another assembly (or choosing the **Assembly** in the inspector) moves it. Its fixed joints to the old assembly are deleted and listed in the message. The core refuses the move if the body, its old group and its new group are not moved by the same joint (or by none): then move the whole group, or use **Group…**. The core also refuses when a moving joint links the body to the old assembly (`Joint "…" (…) links … and moves. Delete it or make it a group joint first, then move the body.`), or when the body would "jump" when the groups move (`Body "…" would jump when the groups move: … Move it to an assembly that moves with "…".`). The fixed joints to delete must not be used by another element.
 
 ### Tags of a joint
 
-The tags of a joint use the assembly of its child body.
+The tags of a joint use the assembly it moves: that of its child body, or the child group itself.
 
 | Tag | Direction | When |
 | --- | --- | --- |

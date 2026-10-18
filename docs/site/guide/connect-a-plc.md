@@ -90,7 +90,9 @@ leur valeur. La console écrit « Automate déconnecté du module m1 » avec la 
 Ce réglage a été **vérifié le 18 octobre 2026** sur un CODESYS Control Win V3
 x64 réel (IDE en interface française, version non relevée), avec l'exemple
 `examples/plc-cylinder` : module `m1`, `192.168.1.161:1502`, unité 1. Les noms
-de menus ci-dessous sont ceux de l'interface française, tels qu'ils s'affichent.
+de variables ci-dessous sont ceux de cet exemple, pas ceux d'un Pantin construit
+avec le [tutoriel](/guide/tutorial) (leurs tags commencent par `tige`). Les noms
+de menus sont ceux de l'interface française, tels qu'ils s'affichent.
 
 1. **Générez la GVL** et importez-la dans le projet CODESYS :
    - depuis le viewer : vue **E/S**, bouton **Exporter la GVL** ;

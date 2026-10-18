@@ -48,7 +48,11 @@ Le Pantin contient ses assemblages, puis un dossier **Liaisons entre assemblages
 | Marque rond à droite | Sur un capteur : plein quand son tag d'état est à 1 (**Activé**), vide à 0 (**Désactivé**). Lue sur les tags, jamais calculée par le viewer. |
 | Ligne teintée « liée » | Quand un élément de la chaîne d'action est sélectionné, les liaisons qu'il déplace ou surveille sont teintées. |
 
-Glisser un corps sur un assemblage (ou sur un corps de cet assemblage) le déplace dans cet assemblage. La même opération existe au clavier avec la liste **Assemblage** de l'inspecteur.
+Glisser un corps sur un assemblage (ou sur un corps de cet assemblage) le déplace dans cet assemblage. La même opération existe au clavier avec la liste **Assemblage** de l'inspecteur. Ses liaisons fixes avec l'ancien assemblage sont supprimées et listées dans le message. Le cœur refuse le déplacement quand le corps, son ancien groupe et son nouveau groupe ne sont pas déplacés par la même liaison (ou par aucune) ; son message s'affiche tel quel.
+
+**Sélection multiple.** <kbd>Ctrl</kbd>+clic ajoute ou retire une ligne, <kbd>Maj</kbd>+clic prend une plage, <kbd>Maj</kbd>+flèches l'étend. Seules les lignes de corps et de groupe (un assemblage rangé dans un autre) d'un même assemblage se sélectionnent ensemble. Les autres commandes agissent sur la première ligne sélectionnée. La vue 3D reste en sélection simple.
+
+**Lignes de groupe.** Un groupe est une ligne d'assemblage. Comme un corps, il liste d'abord les liaisons dont il est l'extrémité, avec « parent » ou « enfant ». Voir [Les concepts](/guide/model#les-concepts-corps-assemblage-groupe).
 
 ::: info Texte des lecteurs d'écran
 Les icônes ne portent pas de texte : chaque ligne a aussi un texte caché qui dit son type et son état (par exemple « déplacée par Vérin 1 », « surveillée par Fin de course haute », « masqué »).
@@ -67,6 +71,8 @@ Clic droit sur une ligne (ou touche **Menu**). L'entrée se propose seulement qu
 | **Importer dans ce Pantin** | Pantin | Ouvre le sélecteur de fichiers. |
 | **Nouvel assemblage** | Pantin | Crée un assemblage vide (nom par défaut **Nouvel assemblage**). |
 | **Nouvelle liaison…** | Assemblage, dossier **Liaisons entre assemblages** | Ouvre le [formulaire de liaison](#nouvelle-liaison). |
+| **Grouper…** | Corps, assemblage | Ouvre la [ligne de nom du groupe](#grouper) pour les lignes sélectionnées. Proposée seulement si la sélection est faite de corps et de sous-groupes d'un même assemblage. |
+| **Dégrouper** | Assemblage rangé dans un autre | Dissout le groupe dans son assemblage. Voir [Défaire un groupe](/guide/model#defaire-un-groupe). |
 | **Changer le type…** | Liaison | Ouvre le formulaire de la liaison, prérempli. |
 | **Ajouter un actionneur…** / **Modifier son actionneur…** | Liaison mobile | Ouvre le formulaire d'actionneur pour cette liaison. L'entrée dit **Modifier** si la liaison a déjà un actionneur. Absente sur une liaison fixe. |
 | **Ajouter un capteur…** | Liaison mobile | Ouvre le formulaire de capteur pour cette liaison. |
@@ -358,14 +364,26 @@ Titre **Nouvelle liaison dans « nom du Pantin »**, ou **Modifier la liaison «
 | --- | --- |
 | **Type** | **Fixe**, **Glissière**, **Pivot limité**, **Pivot continu**, **Hélicoïdale (vis et écrou)**. Les lignes de paramètres en dessous changent avec le type. |
 | **Nom** | Nom de la liaison. |
-| **Corps parent**, **Corps enfant** | Listes des corps. Une pastille de couleur rappelle la teinte du corps dans la vue 3D. |
+| **Corps parent**, **Corps enfant** | Listes des corps, et des groupes (entrées **Groupe : nom**). Entre deux assemblages, l'enfant doit être un groupe ; le cœur décide et refuse avec sa phrase. Une pastille de couleur rappelle la teinte du corps dans la vue 3D. |
 | **Axe (repère de « assemblage »)** | Boutons radio **X**, **Y**, **Z**, **Autre**. Avec **Autre**, trois champs de composantes apparaissent ; sinon la case **Sens inversé** apparaît. |
 | **Prendre l'axe sur une face** | Attend un clic sur une face de la vue 3D, qui remplit l'origine et l'axe (texte **Cliquez une face dans la vue 3D (Échap : annuler)**). Présent seulement quand le formulaire modifie une liaison existante mobile. |
 | **Inverser l'axe** | Inverse le sens de l'axe sans rien envoyer. |
 | **Origine (repère de « assemblage »)** | Trois champs en mm. |
 | Paramètres du type | **Limites** (**basse** et **haute**, en mm ou degrés selon le type), **Pas (course par tour)** pour l'hélicoïdale. |
 
-Une phrase rappelle que l'axe est pris dans le repère du corps parent, Z vers le haut, et que la flèche de la vue 3D montre le sens positif de la course.
+Une phrase rappelle que l'axe est pris dans le repère de l'assemblage du parent (le groupe lui-même quand le parent est un groupe), Z vers le haut, et que la flèche de la vue 3D montre le sens positif de la course.
+
+### Grouper
+
+Après **Grouper…**, une ligne s'ouvre sous l'arborescence : « Grouper N éléments de l'assemblage « X » : quel nom donner au groupe ? » (« Grouper 1 élément… » pour un seul).
+
+| Contrôle | Ce qu'il fait |
+| --- | --- |
+| **Nom du groupe** | Nom du futur groupe (assemblage et liaison fixe du même nom). **Entrée** valide. |
+| **Grouper** | Crée le groupe. Message : « Groupe « nom » créé. », suivi de **Liaisons supprimées : …** et de **Des tags ont été renommés : régénérez la GVL de l'automate.** quand c'est le cas. |
+| **Annuler** | Referme la ligne sans rien envoyer. |
+
+Si le cœur refuse, sa phrase s'affiche telle quelle et rien n'a changé. Voir [Faire un groupe](/guide/model#faire-un-groupe).
 
 ### Nouveau préactionneur
 

@@ -89,7 +89,9 @@ writes "PLC disconnected from module m1" with the reason.
 
 This setup was **verified on 18 October 2026** on a real CODESYS Control Win V3
 x64 (IDE with the French interface, version not recorded), with the example
-`examples/plc-cylinder`: module `m1`, `192.168.1.161:1502`, unit 1. The menu
+`examples/plc-cylinder`: module `m1`, `192.168.1.161:1502`, unit 1. The variable
+names below are those of this example, not of a Pantin built with the
+[tutorial](/en/guide/tutorial) (its tags start with `tige`). The menu
 names below are those of the French interface, as displayed; the English labels
 were not seen, so they are not given.
 

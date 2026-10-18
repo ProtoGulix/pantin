@@ -48,7 +48,11 @@ The Pantin contains its assemblies, then a **Joints between assemblies** folder 
 | Round mark on the right | On a sensor: filled when its state tag is 1 (**On**), empty at 0 (**Off**). Read from the tags, never computed by the viewer. |
 | Tinted "linked" row | When an element of the action chain is selected, the joints it moves or watches are tinted. |
 
-Dragging a body onto an assembly (or onto a body of that assembly) moves it into that assembly. The same operation exists on the keyboard with the **Assembly** list of the inspector.
+Dragging a body onto an assembly (or onto a body of that assembly) moves it into that assembly. The same operation exists on the keyboard with the **Assembly** list of the inspector. Its fixed joints to the old assembly are deleted and listed in the message. The core refuses the move when the body, its old group and its new group are not moved by the same joint (or by none); its message is shown word for word.
+
+**Multi-selection.** <kbd>Ctrl</kbd>+click adds or removes a row, <kbd>Shift</kbd>+click takes a range, <kbd>Shift</kbd>+arrows extends it. Only body and group rows (an assembly filed inside another) of one assembly can be selected together. Other commands act on the first selected row. The 3D view stays single-selection.
+
+**Group rows.** A group is an assembly row. Like a body, it first lists the joints it is an end of, with "parent" or "child". See [Concepts](/en/guide/model#concepts-body-assembly-group).
 
 ::: info Screen reader text
 The icons carry no text: each row also has a hidden text that gives its type and state (for example "moved by Actuator 1", "watched by Upper limit switch", "hidden").
@@ -67,6 +71,8 @@ Right-click on a row (or the **Menu** key). An entry is offered only when it mak
 | **Import into this Pantin** | Pantin | Opens the file picker. |
 | **New assembly** | Pantin | Creates an empty assembly (default name **New assembly**). |
 | **New joint…** | Assembly, **Joints between assemblies** folder | Opens the [joint form](#new-joint). |
+| **Group…** | Body, assembly | Opens the [group name line](#group) for the selected rows. Offered only if the selection is made of bodies and sub-groups of one assembly. |
+| **Ungroup** | Assembly filed inside another | Dissolves the group into its assembly. See [Ungroup a group](/en/guide/model#ungroup-a-group). |
 | **Change type…** | Joint | Opens the joint form, pre-filled. |
 | **Add an actuator…** / **Edit its actuator…** | Moving joint | Opens the actuator form for this joint. The entry says **Edit** if the joint already has an actuator. Absent on a fixed joint. |
 | **Add a sensor…** | Moving joint | Opens the sensor form for this joint. |
@@ -358,14 +364,26 @@ Title **New joint in "Pantin name"**, or **Change joint "name"**. **Enter** vali
 | --- | --- |
 | **Type** | **Fixed**, **Prismatic (slider)**, **Revolute (limited pivot)**, **Continuous (unlimited pivot)**, **Helical (screw and nut)**. The parameter rows below change with the type. |
 | **Name** | Name of the joint. |
-| **Parent body**, **Child body** | Lists of the bodies. A colour dot reminds the body's tint in the 3D view. |
+| **Parent body**, **Child body** | Lists of the bodies, and of the groups (**Group: name** entries). Between two assemblies the child must be a group; the core decides and refuses with its sentence. A colour dot reminds the body's tint in the 3D view. |
 | **Axis (frame of "assembly")** | Radio buttons **X**, **Y**, **Z**, **Other**. With **Other**, three component fields appear; otherwise the **Reversed** checkbox appears. |
 | **Take the axis from a face** | Waits for a click on a face of the 3D view, which fills the origin and the axis (text **Click a face in the 3D view (Esc: cancel)**). Present only when the form edits an existing moving joint. |
 | **Reverse the axis** | Reverses the direction of the axis without sending anything. |
 | **Origin (frame of "assembly")** | Three fields in mm. |
 | Type parameters | **Limits** (**lower** and **upper**, in mm or degrees depending on the type), **Pitch (travel per turn)** for the helical joint. |
 
-A sentence reminds that the axis is taken in the parent body's frame, Z up, and that the arrow in the 3D view shows the positive direction of travel.
+A sentence reminds that the axis is taken in the frame of the parent's assembly (the group itself when the parent is a group), Z up, and that the arrow in the 3D view shows the positive direction of travel.
+
+### Group
+
+After **Group…**, a line opens under the tree: `Group N items of assembly "X": what should the group be called?` (`Group 1 item…` for a single one).
+
+| Control | What it does |
+| --- | --- |
+| **Group name** | Name of the future group (an assembly and a fixed joint of the same name). **Enter** validates. |
+| **Group** | Creates the group. Message: `Group "name" created.`, followed by **Joints deleted: …** and **Tags were renamed: regenerate the PLC's GVL.** when they apply. |
+| **Cancel** | Closes the line without sending anything. |
+
+If the core refuses, its sentence is shown word for word and nothing changed. See [Make a group](/en/guide/model#make-a-group).
 
 ### New drive
 

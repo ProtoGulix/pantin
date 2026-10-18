@@ -12,9 +12,12 @@ actionneur, capteur, tag) sont expliquées dans
 d'abord si ces mots sont nouveaux.
 
 ::: tip Pour comparer
-Le dossier `examples/plc-cylinder` contient le résultat final. Copiez-le dans le
-dossier des Pantins du cœur pour l'ouvrir dans le viewer et comparer avec votre
-travail.
+Le dossier `examples/plc-cylinder` montre une machine voisine, mais il garde
+l'ancienne organisation : une liaison fixe interne `ecrou`, la glissière `verin`
+à l'intérieur de l'assemblage `verin1`, et des tags en `verin1.*`. Un Pantin
+construit avec ce tutoriel a des tags légèrement différents (voir l'étape 4).
+Copiez l'exemple dans le dossier des Pantins du cœur pour l'ouvrir et comparer
+la machine, pas les noms de tags.
 :::
 
 ## Ce qu'il vous faut
@@ -77,23 +80,24 @@ cette page ouverte » s'affiche. La conversion se fait dans un processus sépar�
 Le découpage est automatique, vous ne choisissez pas de nœuds :
 
 - GLB et STL : un fichier donne un corps.
-- STEP : un composant de l'assemblage donne un corps. Les composants sont reliés
-  par des liaisons fixes, créées pour vous, et rangés dans un assemblage. Un
-  message vous indique le nombre de corps importés.
+- STEP : un composant de l'assemblage donne un corps. Les corps sont rangés dans
+  un assemblage, **sans aucune liaison** : un corps sans liaison parente bouge
+  avec son assemblage (voir [Les concepts](/guide/model#les-concepts-corps-assemblage-groupe)).
+  Un STEP qui contient des sous-assemblages nommés donne en plus une liaison fixe
+  par sous-assemblage. Un message vous indique le nombre de corps importés.
 
 Pour l'exemple, l'import crée trois corps (`ID1S0400125E_0_1`, `_0_2` et
-`ID1S040CF-16040_3`) et deux liaisons fixes, du premier corps vers chacun des
-deux autres.
+`ID1S040CF-16040_3`) dans un seul assemblage, et aucune liaison.
 
 ::: warning Ce que l'interface ne propose pas
 Le viewer ne permet pas, aujourd'hui, de choisir quels nœuds du fichier
-deviennent des corps, ni de fusionner ou de scinder des corps après l'import.
-Si le découpage ne vous convient pas, retouchez le fichier dans votre CAO et
-réimportez-le.
+deviennent des corps, ni de fusionner ou de scinder des corps. Un fichier GLB reste
+un seul corps. Pour regrouper des corps qui bougent ensemble, utilisez **Grouper…**
+(étape 4).
 :::
 
-Le panneau de gauche affiche l'arborescence : le Pantin, son assemblage, les
-corps et les liaisons. Cliquez un corps pour le sélectionner et voir ses
+Le panneau de gauche affiche l'arborescence : le Pantin, son assemblage et ses
+corps. Cliquez un corps pour le sélectionner et voir ses
 propriétés dans l'inspecteur à droite.
 
 ## 3. Nommer l'assemblage et ses tags
@@ -110,30 +114,51 @@ l'élément : `verin1.verin1.coil_14` se lit « assemblage `verin1`, préactionn
 Changer le nom affiché (**Édition**, **Renommer**, ou F2) ne change pas la clé.
 Les tags suivent la clé.
 
-## 4. Placer la liaison du vérin
+## 4. Grouper la tige et placer la liaison du vérin
 
-L'import n'a créé que des liaisons **Fixe** : le premier composant est la racine,
-et chaque autre composant est l'enfant d'une liaison fixe dont la racine est le
-parent (ADR 0017, ADR 0040 point 3). Un corps n'a qu'une seule liaison parent. Pour que la tige
-glisse, il faut donc **transformer** la liaison fixe qui l'a pour enfant en
-**Glissière**, et non en créer une seconde.
+Après l'import, aucune liaison n'existe : les trois corps suivent l'assemblage.
+Pour que la tige glisse, il faut d'abord dire quels corps bougent ensemble : la
+tige (`ID1S0400125E_0_2`) et le chariot (`ID1S040CF-16040_3`). Le corps du vérin
+(`ID1S0400125E_0_1`) reste fixe. C'est le rôle d'un **groupe**.
 
-1. Dans l'arborescence, faites un clic droit sur la liaison dont l'enfant est la
-   tige (`ID1S0400125E_0_2` dans l'exemple), puis choisissez **Changer le
-   type…**.
+### Grouper la tige et le chariot
+
+1. Dans l'arborescence, dépliez l'assemblage et cliquez `ID1S0400125E_0_2`, puis
+   <kbd>Ctrl</kbd>+clic sur `ID1S040CF-16040_3`.
+2. Choisissez **Édition**, **Grouper…**.
+3. La ligne « Grouper 2 éléments de l'assemblage « … » : quel nom donner au
+   groupe ? » apparaît sous l'arborescence. Tapez `Tige` dans **Nom du groupe**,
+   puis cliquez **Grouper**.
+4. Le message « Groupe « Tige » créé. » s'affiche. Rien ne bouge : le groupe
+   `Tige` est un sous-assemblage, relié à l'assemblage par une liaison **Fixe**
+   nommée `Tige`.
+
+La procédure complète, les refus possibles et **Dégrouper** sont dans
+[Le modèle d'un Pantin](/guide/model#faire-un-groupe).
+
+### Transformer la liaison fixe en glissière
+
+Le groupe est déjà relié à l'assemblage : il ne faut pas créer une seconde
+liaison, mais **transformer** celle-là en **Glissière**.
+
+1. Dans l'arborescence, faites un clic droit sur la liaison `Tige` (dossier
+   **Liaisons entre assemblages**), puis choisissez **Changer le type…**.
 2. Dans le formulaire **Modifier la liaison « … »**, choisissez **Glissière** dans
    **Type**, puis remplissez :
 
 | Champ | Valeur pour l'exemple |
 | --- | --- |
 | **Nom** | `verin` |
-| **Corps parent** | le corps du vérin (`ID1S0400125E_0_1`) |
-| **Corps enfant** | la tige (`ID1S0400125E_0_2`) |
+| **Corps parent** | déjà rempli : l'assemblage du vérin (entrée **Groupe : …**). Ne le changez pas. |
+| **Corps enfant** | déjà rempli : le groupe (entrée **Groupe : Tige**). Ne le changez pas. |
 | **Origine** | 0, 0, 0 (en mm, dans le repère de l'assemblage) |
 | **Axe** | X, avec **Sens inversé** : l'axe de l'exemple est (-1, 0, 0) |
 | **Limites** : **basse** / **haute** | 0 et 125 (mm) |
 
-3. Cliquez **Appliquer**.
+3. Cliquez **Appliquer**. Modifier la liaison ne change pas sa clé de tag.
+4. Dans l'arborescence, sélectionnez la liaison `verin`. Dans l'inspecteur, groupe
+   **Général**, changez la **Clé de tag** (elle vaut `tige`, d'après le nom du
+   groupe) en `verin`. Elle donne le milieu des tags de la liaison.
 
 Quelques aides pour l'axe :
 
@@ -141,15 +166,23 @@ Quelques aides pour l'axe :
   vue 3D. Échap annule.
 - **Inverser l'axe** retourne le sens. La flèche dans la vue 3D montre le sens
   positif de la course : la tige doit sortir dans le sens positif.
-- L'axe est exprimé dans le repère du corps parent, Z vers le haut.
+- L'axe est exprimé dans le repère de l'assemblage du parent (le groupe lui-même quand le parent est un groupe), Z vers le haut.
 
 Vérifiez le résultat avec le curseur **Position de « verin »** : faites-le
-glisser, la tige doit se déplacer entre 0 et 125 mm sans sortir du corps.
+glisser, la tige **et** le chariot doivent se déplacer ensemble entre 0 et
+125 mm sans sortir du corps.
 
-Pour créer une liaison entre deux corps qui n'ont pas encore de parent, un clic
-droit sur l'assemblage puis **Nouvelle liaison…** (ou **Édition**, **Nouvelle
+Les tags de cette liaison commencent par la clé de l'assemblage qu'elle déplace,
+ici le groupe : `tige.verin.setpoint` (tant qu'aucun actionneur ne la déplace) et
+`tige.verin.position`. Ils ne commencent pas par `verin1`. Les capteurs de la
+liaison (étape 8) sont rangés dans le même assemblage : `tige.verin-min.state` et
+`tige.verin-max.state`. Le distributeur de l'étape 5 garde `verin1.verin1.coil_14`
+et `verin1.verin1.coil_12`.
+
+Pour créer une liaison entre deux éléments qui n'ont pas encore de parent, un
+clic droit sur l'assemblage puis **Nouvelle liaison…** (ou **Édition**, **Nouvelle
 liaison…**) ouvre le formulaire **Nouvelle liaison dans « … »**, avec les mêmes
-champs. Si le corps enfant a déjà un parent, le cœur refuse : « Body ... already
+champs. Si l'enfant a déjà un parent, le cœur refuse : « Body ... already
 has the parent joint ... Delete that joint first ». Supprimez alors l'ancienne
 liaison (clic droit, **Supprimer**).
 
@@ -157,17 +190,14 @@ Si la position du modèle n'est pas bonne, l'inspecteur propose des outils de
 **Positionnement** : **Déplacer (G)**, **Tourner (R)** et **Aligner (A)**. Ils
 sont hors du sujet de ce tutoriel.
 
-::: tip La liaison `ecrou`
-Dans l'exemple, le chariot (`ID1S040CF-16040_3`) est l'enfant de la tige par une
-liaison fixe `ecrou`, pour qu'il suive la tige. Après un import, le chariot a pour
-parent la racine : pour reproduire l'exemple, modifiez sa liaison (**Corps
-parent** : la tige).
-:::
-
 ::: warning Non vérifié
-Cette page n'a pas rejoué dans le viewer le changement de **Corps parent** d'une
-liaison existante ni le passage de **Fixe** à **Glissière** sur l'exemple
-complet. Si le formulaire refuse, supprimez la liaison et recréez-la.
+Le début a été rejoué dans le viewer (import du STEP, sélection avec
+<kbd>Ctrl</kbd>+clic, **Grouper…**, message « Groupe « Tige » créé. », liaison
+fixe `Tige`, rien ne bouge). Le reste n'a pas été rejoué : passage de **Fixe** à
+**Glissière**, **Clé de tag**, préactionneur, actionneur, capteurs et tags. Les
+libellés et les messages viennent du code. Le nom exact de la liaison et la clé du groupe
+sont ceux que le viewer propose : lisez-les dans l'arborescence. Si le formulaire
+refuse, lisez le message du cœur, il dit quoi corriger.
 :::
 
 ## 5. Ajouter le préactionneur : le distributeur
@@ -290,7 +320,7 @@ d'un autre type, prenez ceux du formulaire. Un schéma coté du capteur et de sa
 zone de détection s'affiche pour les fins de course.
 
 Chaque capteur ajoute un tag de retour `state`, par exemple
-`verin1.verin-min.state`.
+`tige.verin-min.state`.
 
 Pensez à enregistrer : **Fichier**, **Enregistrer** (Ctrl+S), ou le bouton
 **Enregistrer** de la barre d'outils. Les modifications non enregistrées sont
@@ -373,15 +403,15 @@ le viewer, jamais à la main.
    **Chien de garde (ms)**.
 6. Enregistrez le Pantin (Ctrl+S).
 
-Le résultat doit ressembler à ceci :
+Pour un Pantin construit avec ce tutoriel, le résultat doit ressembler à ceci :
 
 | Tag | Zone | Adresse | Variable CODESYS |
 | --- | --- | --- | --- |
 | `verin1.verin1.coil_14` | coil | 0 | `verin1_verin1_coil_14` |
 | `verin1.verin1.coil_12` | coil | 1 | `verin1_verin1_coil_12` |
-| `verin1.verin-min.state` | discrete input | 0 | `verin1_verin_min_state` |
-| `verin1.verin-max.state` | discrete input | 1 | `verin1_verin_max_state` |
-| `verin1.verin.position` | input register | 0 (REAL, 2 registres) | `verin1_verin_position` |
+| `tige.verin-min.state` | discrete input | 0 | `tige_verin_min_state` |
+| `tige.verin-max.state` | discrete input | 1 | `tige_verin_max_state` |
+| `tige.verin.position` | input register | 0 (REAL, 2 registres) | `tige_verin_position` |
 
 Chaque ligne de **Voies** porte un **Tag**, une **Variable**, une **Zone**, une
 **Adresse**, un **Type** et un **Commentaire**. Les problèmes (tag affecté deux

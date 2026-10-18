@@ -42,6 +42,28 @@ temps de simulation.
 Pendant une conversion STEP, la page doit rester ouverte : « Conversion STEP en
 cours… Jusqu'à 2 minutes ».
 
+## Groupes et liaisons
+
+Le cœur refuse sans rien changer, et le viewer affiche sa phrase telle quelle (en anglais). Le nom de la liaison ou du corps en cause y figure. Les cas sont expliqués dans [Faire un groupe](/guide/model#faire-un-groupe) et [Défaire un groupe](/guide/model#defaire-un-groupe).
+
+| Ce que vous voyez | Cause | Que faire |
+| --- | --- | --- |
+| **Grouper…** ou **Dégrouper** est grisé | La sélection n'est pas faite de corps et de sous-groupes d'un même assemblage ; ou la ligne n'est pas un assemblage rangé dans un autre | Resélectionnez avec <kbd>Ctrl</kbd>+clic ou <kbd>Maj</kbd>+clic des lignes sous le même assemblage |
+| `Joint "…" hangs body "…" from …, which moves inside "…" and is not part of the group…` | Un corps du groupe est suspendu à un corps mobile qui n'est pas dans le groupe | Ajoutez ce corps au groupe, ou supprimez la liaison |
+| `Joint "…" links body "…", which is in the group, to body "…", which is not…` | Une liaison relie un corps du groupe à un corps resté dehors | Ajoutez le second corps au groupe, ou supprimez la liaison |
+| `Group "…" is moved by joint "…" … its bodies would stop following it` (**Dégrouper**) | Une glissière ou un pivot déplace le groupe | Rendez cette liaison **Fixe** ou supprimez-la, puis dégroupez |
+| Un refus qui nomme un préactionneur, un actionneur, un capteur ou une bande | La liaison à supprimer est utilisée par cet élément | Retirez d'abord l'élément |
+| `Tag key "…" … is already used by …` | Deux clés de tag se heurteraient dans l'assemblage d'arrivée | Renommez l'une des clés (la phrase en propose une libre) |
+| `Assembly "…" is at the top of the structure tree…` | **Dégrouper** sur un assemblage de premier niveau | Rien à faire : il n'y a pas où le verser |
+| `Group "…" is not moved by any joint, but assembly "…" is moved by joint "…": its bodies would start following …` (**Dégrouper**) | Le groupe ne bouge pas, mais l'assemblage où il se dissoudrait est déplacé par une liaison : ses corps se mettraient à le suivre | Dégroupez quand cet assemblage ne bouge pas, ou tenez d'abord le groupe par une liaison fixe vers lui |
+| `Group "…" hangs from … by joint "…", which moves inside "…": its bodies would stop following it` (**Dégrouper**) | Le groupe est suspendu à quelque chose qui bouge dans l'assemblage d'arrivée | Changez d'abord le parent de cette liaison |
+| `Joint "…" (…) links … and moves. Delete it or make it a group joint first, then move the body.` | En déplaçant un corps vers un autre assemblage : une liaison mobile le relie à l'ancien assemblage | Supprimez-la, ou faites-en une liaison de groupe, puis déplacez le corps |
+| `Body "…" would jump when the groups move: … Move it to an assembly that moves with "…".` | Le corps sauterait quand les groupes bougent : l'ancien et le nouvel assemblage ne sont pas déplacés par la même liaison | Déplacez-le vers un assemblage qui bouge avec l'ancien, ou déplacez le groupe entier |
+| Refus au déplacement d'un corps vers un autre assemblage | Le corps et ses deux groupes ne sont pas déplacés par la même liaison | Déplacez le groupe entier, ou utilisez **Grouper…** |
+| Liaison entre assemblages refusée : l'enfant est un corps | Entre deux assemblages, l'enfant doit être un groupe | Choisissez l'entrée **Groupe : nom** comme **Corps enfant** |
+| Après **Grouper…**, le programme de l'automate ne trouve plus ses variables | Des tags ont été renommés (« régénérez la GVL de l'automate ») | **Exporter la GVL** à nouveau, puis recharger dans le programme |
+| Un corps bouge maintenant avec son groupe, alors qu'il restait fixe | Pantin ancien (schéma 12) migré à l'ouverture : un corps sans liaison parente suit désormais son groupe. La **Console** liste ces corps (« Les corps sans liaison parente suivent maintenant leur groupe quand il bouge : … ») | Vérifiez la scène. Pour qu'il reste immobile, déplacez-le dans un assemblage qui ne bouge pas (voir [Déplacer un corps](/guide/model#deplacer-un-corps-dans-un-autre-assemblage)), ou mettez-le à part dans un groupe (non vérifié dans le viewer) |
+
 ## Le pont automate
 
 Le bloc **Pont automate**, en bas du panneau de gauche, montre l'état et, en cas

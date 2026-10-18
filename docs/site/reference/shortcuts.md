@@ -62,6 +62,9 @@ Les flèches agissent quand l'arborescence a le focus ; l'élément sélectionn�
 | <kbd>F2</kbd> | Renomme la ligne (si elle est renommable). |
 | <kbd>Menu</kbd> (touche contextuelle) | Ouvre le menu contextuel de la ligne. |
 | Clic | Sélectionne la ligne (la sélection se fait dès l'appui). |
+| <kbd>Ctrl</kbd>+clic (ou <kbd>Cmd</kbd>+clic) | Ajoute la ligne à la sélection, ou l'en retire. La dernière ligne sélectionnée ne se retire pas. Réservé aux lignes de corps et de groupe d'un même assemblage ; ailleurs, c'est un clic simple. |
+| <kbd>Maj</kbd>+clic | Sélectionne la plage entre la première ligne sélectionnée et la ligne cliquée (mêmes lignes que ci-dessus). |
+| <kbd>Maj</kbd>+<kbd>↓</kbd> / <kbd>Maj</kbd>+<kbd>↑</kbd> | Étend la sélection à la ligne suivante ou précédente, dans les mêmes limites. |
 | Clic sur le chevron | Déplie ou replie la ligne. |
 | Clic sur l'oeil | Masque ou affiche l'assemblage dans la vue 3D. |
 | Clic sur l'icône d'actionneur d'une liaison | Ouvre le formulaire de son actionneur. |

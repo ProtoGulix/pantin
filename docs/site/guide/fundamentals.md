@@ -122,7 +122,7 @@ L'écran d'**Accueil** vous propose de créer un Pantin (**Pantin vide** ou **De
 
 ## Et ensuite
 
-- Comprendre chaque élément d'une machine : [Le modèle d'un Pantin](/guide/model).
+- Comprendre chaque élément d'une machine (corps, assemblage, groupe, liaisons) : [Le modèle d'un Pantin](/guide/model).
 - Construire un premier exemple pas à pas : [Tutoriel](/guide/tutorial).
 - Relier un automate : [Connecter un automate](/guide/connect-a-plc).
 - Quelque chose ne marche pas : [Dépannage](/guide/troubleshooting).

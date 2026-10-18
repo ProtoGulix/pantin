@@ -62,6 +62,9 @@ The arrows act when the tree has focus; the selected item follows the focus.
 | <kbd>F2</kbd> | Renames the row (if it is renamable). |
 | <kbd>Menu</kbd> (context key) | Opens the row's context menu. |
 | Click | Selects the row (the selection is made on press). |
+| <kbd>Ctrl</kbd>+click (or <kbd>Cmd</kbd>+click) | Adds the row to the selection, or removes it. The last selected row cannot be removed. Reserved for body and group rows of one assembly; elsewhere it is a plain click. |
+| <kbd>Shift</kbd>+click | Selects the range between the first selected row and the clicked row (same rows as above). |
+| <kbd>Shift</kbd>+<kbd>↓</kbd> / <kbd>Shift</kbd>+<kbd>↑</kbd> | Extends the selection to the next or previous row, within the same limits. |
 | Click on the chevron | Unfolds or folds the row. |
 | Click on the eye | Hides or shows the assembly in the 3D view. |
 | Click on a joint's actuator icon | Opens the form of its actuator. |

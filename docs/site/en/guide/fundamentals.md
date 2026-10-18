@@ -122,7 +122,7 @@ The **Home** screen offers you to create a Pantin (**Empty Pantin** or **From a 
 
 ## What next
 
-- Understand each element of a machine: [The model of a Pantin](/en/guide/model).
+- Understand each element of a machine (bodies, assemblies, groups, joints): [The model of a Pantin](/en/guide/model).
 - Build a first example step by step: [Tutorial](/en/guide/tutorial).
 - Link a PLC: [Connect a PLC](/en/guide/connect-a-plc).
 - Something does not work: [Troubleshooting](/en/guide/troubleshooting).

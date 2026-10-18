@@ -43,6 +43,28 @@ time.
 During a STEP conversion, the page must stay open: "Converting STEP… Up to 2
 minutes".
 
+## Groups and joints
+
+The core refuses without changing anything, and the viewer shows its sentence word for word (in English). The name of the joint or body involved is in it. The cases are explained in [Make a group](/en/guide/model#make-a-group) and [Ungroup a group](/en/guide/model#ungroup-a-group).
+
+| What you see | Cause | What to do |
+| --- | --- | --- |
+| **Group…** or **Ungroup** is greyed out | The selection is not made of bodies and sub-groups of one assembly; or the row is not an assembly filed inside another | Select again, with <kbd>Ctrl</kbd>+click or <kbd>Shift</kbd>+click, rows under the same assembly |
+| `Joint "…" hangs body "…" from …, which moves inside "…" and is not part of the group…` | A body of the group hangs from a moving body that is not in the group | Add that body to the group, or delete the joint |
+| `Joint "…" links body "…", which is in the group, to body "…", which is not…` | A joint links a body of the group to a body left outside | Add the second body to the group, or delete the joint |
+| `Group "…" is moved by joint "…" … its bodies would stop following it` (**Ungroup**) | A slider or a pivot moves the group | Make that joint **Fixed** or delete it, then ungroup |
+| A refusal that names a drive, an actuator, a sensor or a belt | The joint to delete is used by that element | Remove the element first |
+| `Tag key "…" … is already used by …` | Two tag keys would clash in the destination assembly | Rename one of the keys (the sentence proposes a free one) |
+| `Assembly "…" is at the top of the structure tree…` | **Ungroup** on a top-level assembly | Nothing to do: there is nowhere to pour it |
+| `Group "…" is not moved by any joint, but assembly "…" is moved by joint "…": its bodies would start following …` (**Ungroup**) | The group does not move, but the assembly it would dissolve into is moved by a joint: its bodies would start following it | Ungroup when that assembly does not move, or first hold the group with a fixed joint to it |
+| `Group "…" hangs from … by joint "…", which moves inside "…": its bodies would stop following it` (**Ungroup**) | The group hangs from something that moves inside the destination assembly | First change the parent of that joint |
+| `Joint "…" (…) links … and moves. Delete it or make it a group joint first, then move the body.` | When moving a body to another assembly: a moving joint links it to the old assembly | Delete it, or make it a group joint, then move the body |
+| `Body "…" would jump when the groups move: … Move it to an assembly that moves with "…".` | The body would jump when the groups move: the old and new assemblies are not moved by the same joint | Move it to an assembly that moves with the old one, or move the whole group |
+| Refusal when moving a body to another assembly | The body and its two groups are not moved by the same joint | Move the whole group, or use **Group…** |
+| Joint between assemblies refused: the child is a body | Between two assemblies the child must be a group | Pick the **Group: name** entry as **Child body** |
+| After **Group…**, the PLC program no longer finds its variables | Tags were renamed ("regenerate the PLC's GVL") | **Export GVL** again, then reload it in the program |
+| A body now moves with its group although it used to stay still | An old Pantin (schema 12) migrated on opening: a body with no parent joint now follows its group. The **Console** lists these bodies ("Bodies with no parent joint now follow their group when it moves: …") | Check the scene. For it to stay still, move it into an assembly that does not move (see [Move a body](/en/guide/model#move-a-body-to-another-assembly)), or put it apart in a group (not verified in the viewer) |
+
 ## The PLC bridge
 
 The **PLC bridge** block, at the bottom of the left panel, shows the state and,
