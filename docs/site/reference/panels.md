@@ -20,7 +20,6 @@ Elle se trouve sous la barre de menus, au-dessus de l'arborescence. Elle n'exist
 | **Cadrer tout** | Place la caméra 3D pour voir tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (disposition **Schéma** ou E/S) |
 | **Cadrer la sélection** | Place la caméra 3D sur l'élément sélectionné dans l'arborescence. | Aucun corps, aucun nœud de l'arborescence sélectionné, ou vue 3D non affichée |
 | **Vue centrale** : **3D** / **Schéma** / **3D + Schéma** | Trois boutons à bascule, un seul enfoncé : choisit ce que la zone centrale affiche. L'info-bulle donne le nom complet (**3D seule**, **Schéma des chaînes seul**, **3D + Schéma**). | Jamais |
-| Compteur de la console (icônes erreur et avertissement avec deux nombres) | Affiche le nombre d'erreurs et d'avertissements de la [console](#la-console). Un clic ouvre ou ferme la console. Le bouton est enfoncé (teinte bleue et soulignement) quand la console est ouverte. | Jamais |
 | Roue d'attente (**Traitement en cours**) | Indicateur, pas un bouton : une requête est en cours. | Sans objet |
 
 ::: info La disposition E/S
@@ -523,7 +522,9 @@ Seule la première requête refusée identique est notée par connexion ; le tot
 
 ## La console
 
-La console est un panneau sous la zone centrale. Le compteur de la barre d'outils l'ouvre et la ferme, comme **F8**. Une poignée au-dessus d'elle permet de changer sa hauteur (**Redimensionner la console**) ; un double-clic sur la poignée rétablit la hauteur d'origine. La hauteur est gardée dans le navigateur.
+La console est un panneau sous la zone centrale. Une poignée au-dessus de la console permet de changer sa hauteur (**Redimensionner la console**) ; un double-clic sur la poignée rétablit la hauteur d'origine. La hauteur est gardée dans le navigateur.
+
+Tout en bas de la zone centrale, une fine barre toujours visible porte le compteur de la console (icônes erreur et avertissement avec deux nombres, hors de la barre d'outils) : un clic ouvre ou ferme la console, comme **F8**. Le bouton est enfoncé (teinte bleue et soulignement) quand la console est ouverte.
 
 | Contrôle | Ce qu'il fait | Grisé quand |
 | --- | --- | --- |

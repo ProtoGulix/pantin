@@ -20,7 +20,6 @@ It sits under the menu bar, above the tree. It exists only when a Pantin is open
 | **Frame all** | Places the 3D camera to see all the bodies. | No body, or the 3D view is not displayed (**Diagram** or I/O layout) |
 | **Frame selection** | Places the 3D camera on the item selected in the tree. | No body, no tree node selected, or 3D view not displayed |
 | **Central view**: **3D** / **Diagram** / **3D + Diagram** | Three toggle buttons, only one pressed: chooses what the central area displays. The tooltip gives the full name (**3D only**, **Chain diagram only**, **3D + Diagram**). | Never |
-| Console counter (error and warning icons with two numbers) | Shows the number of errors and warnings of the [console](#the-console). A click opens or closes the console. The button is pressed (blue tint and underline) when the console is open. | Never |
 | Waiting wheel (**Working**) | Indicator, not a button: a request is in progress. | Not applicable |
 
 ::: info The I/O layout
@@ -523,7 +522,9 @@ Only the first identical refused request is recorded per connection; the total i
 
 ## The console
 
-The console is a panel under the central area. The toolbar counter opens and closes it, like **F8**. A handle above it lets you change its height (**Resize the console**); a double-click on the handle restores the original height. The height is kept in the browser.
+The console is a panel under the central area. A handle above the console lets you change its height (**Resize the console**); a double-click on the handle restores the original height. The height is kept in the browser.
+
+At the very bottom of the central area, a thin always-visible bar holds the console counter (error and warning icons with two numbers, outside the toolbar): a click opens or closes the console, like **F8**. The button is pressed (blue tint and underline) when the console is open.
 
 | Control | What it does | Greyed out when |
 | --- | --- | --- |

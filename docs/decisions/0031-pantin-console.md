@@ -113,3 +113,11 @@ reads tags through REST meanwhile).
   restart of the core, and a wider folding when several sources flicker
   in the same step (their entries interleave, so point 3 does not fold
   them; to measure in phase 7).
+
+## Amendment (2026-10-18): the counter leaves the toolbar (ADR 0057)
+
+Point 5: the counter of errors and warnings no longer sits in the toolbar.
+It sits in a thin bar under the console, always visible while a Pantin is
+open, so that its error and warning glyphs never share a row with the
+brand-orange view switch (ADR 0057 rule 5, user's choice on 2026-10-18).
+Its behaviour is unchanged: a click opens or closes the console, like F8.

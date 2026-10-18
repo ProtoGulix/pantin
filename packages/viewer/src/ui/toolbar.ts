@@ -1,6 +1,5 @@
 import type { CentralLayout } from "../central-layout.ts";
 import type { PanelView } from "../view-model.ts";
-import { createConsoleCounter } from "./console-counter.ts";
 import { element, iconButton } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
@@ -105,7 +104,6 @@ export function renderToolbar(
     [
       ...editButtons(view, intents, callbacks),
       element("span", { className: "toolbar__spacer" }),
-      view.console === null ? null : createConsoleCounter(view.console, intents.toggleConsole),
       busyIndicator(view),
     ],
   );

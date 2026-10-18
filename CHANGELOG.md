@@ -48,6 +48,10 @@ All notable changes to Pantin. The format follows
   its own dash and width, with per-theme colours away from the state hues
   and the brand; conveyor volumes are greys of different lightness, the
   emitter marked "+" and the absorber "−".
+- Viewer, the console's error and warning counters leave the toolbar for a
+  thin bar under the console, always visible while a Pantin is open, so
+  they never sit beside the brand-orange view switch (ADR 0057 rule 5);
+  clicking them still opens the console (F8 unchanged).
 - Documentation (ADR 0057, last slice): a reference page "Lire les couleurs et
   les repères" / "Reading colours and cues" lists every coding with its
   non-colour cue first; the screenshots are regenerated with the new look.

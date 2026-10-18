@@ -15,7 +15,7 @@ This page describes the areas of the viewer window, from top to bottom and from 
 |   assemblies,      |  3D, Diagram, 3D + Diagram or I/O   |           |
 |   bodies, joints,  |                                     |           |
 |   elements)        |-------------------------------------|           |
-|--------------------| Console                             |           |
+|--------------------| Console + counter bar               |           |
 | PLC bridge         |                                     |           |
 +--------------------+-------------------------------------+-----------+
 ```
@@ -55,7 +55,7 @@ At the top of the central area, it controls the simulation time: pause and resum
 
 ## The console
 
-Under the central view, it is shown and hidden with **View** then **Console**, or with <kbd>F8</kbd>. It lists the messages of the Pantin, with filters by level and a clear button. Its top edge is a splitter: drag it to change its height. See [Panels and buttons](/en/reference/panels).
+Under the central view, it is shown and hidden with **View** then **Console**, or with <kbd>F8</kbd>. It lists the messages of the Pantin, with filters by level and a clear button. Its top edge is a splitter: drag it to change its height. The error and warning counter is in a thin bar under the central area, never in the toolbar. See [Panels and buttons](/en/reference/panels).
 
 ## The question line and the message line
 

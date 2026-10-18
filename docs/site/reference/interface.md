@@ -15,7 +15,7 @@ Cette page décrit les zones de la fenêtre du viewer, de haut en bas et de gauc
 |   assemblages,     |  3D, Schéma, 3D + Schéma ou E/S     |           |
 |   corps, liaisons, |                                     |           |
 |   éléments)        |-------------------------------------|           |
-|--------------------| Console                             |           |
+|--------------------| Console + barre compteur            |           |
 | Pont automate      |                                     |           |
 +--------------------+-------------------------------------+-----------+
 ```
@@ -55,7 +55,7 @@ En haut de la zone centrale, elle pilote le temps de la simulation : pause et re
 
 ## La console
 
-Sous la vue centrale, elle s'affiche et se masque avec **Affichage** puis **Console**, ou avec <kbd>F8</kbd>. Elle liste les messages du Pantin, avec des filtres par niveau et un bouton d'effacement. Son bord supérieur est un séparateur : tirez-le pour changer sa hauteur. Voir [Panneaux et boutons](/reference/panels).
+Sous la vue centrale, elle s'affiche et se masque avec **Affichage** puis **Console**, ou avec <kbd>F8</kbd>. Elle liste les messages du Pantin, avec des filtres par niveau et un bouton d'effacement. Son bord supérieur est un séparateur : tirez-le pour changer sa hauteur. Le compteur d'erreurs et d'avertissements est dans une fine barre sous la zone centrale, jamais dans la barre d'outils. Voir [Panneaux et boutons](/reference/panels).
 
 ## La ligne de question et la ligne de message
 

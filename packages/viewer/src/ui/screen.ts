@@ -8,6 +8,7 @@ import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { ThemeName } from "../theme/theme.ts";
 import type { PanelView } from "../view-model.ts";
 import { CentralArea } from "./central-area.ts";
+import { ConsoleBar } from "./console-bar.ts";
 import { ConsolePanel } from "./console-panel.ts";
 import { DiagramView } from "./diagram-view.ts";
 import { Inspector } from "./inspector.ts";
@@ -54,12 +55,12 @@ export interface Screen {
   setTheme(theme: ThemeName): void;
 }
 
-// Its counter sits in the toolbar of the side panel, which is redrawn: looked up when needed.
-function createConsolePanel(sidePanel: HTMLElement): ConsolePanel {
+// Its counter sits in a bar under it, outside the toolbar (ADR 0057 rule 5).
+function createConsolePanel(): ConsolePanel {
   return new ConsolePanel(
     requireElement("#console", HTMLElement),
     requireElement(".central", HTMLElement),
-    () => sidePanel.querySelector<HTMLElement>(".console-counter"),
+    new ConsoleBar(requireElement("#console-bar", HTMLElement)),
   );
 }
 
@@ -109,7 +110,7 @@ export function createScreen(): Screen {
   const diagram = createDiagramView();
   const ioPanel = createIoPanel();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
-  const consolePanel = createConsolePanel(panel);
+  const consolePanel = createConsolePanel();
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const viewCube = new ViewCube(requireElement("#view-cube", HTMLElement), canvas);
