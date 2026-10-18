@@ -96,10 +96,11 @@ journal.
 | Une valeur flottante (la position) est absurde | Mauvais **Ordre des mots** | Passez le module de **Mot faible en premier** à **Mot fort en premier**, ou l'inverse |
 | Une exception Modbus 2 ou 3 côté automate | Adresse hors de la plage mappée, ou quantité fausse | Comparez les adresses du projet CODESYS avec la liste d'E/S |
 | Une exception Modbus 11 | Mauvaise **Adresse d'unité** | Alignez l'adresse d'unité du module et celle du canal CODESYS |
+| Le journal : « unit 255 ... GATEWAY_NO_RESPONSE (11) » | L'**Unit-ID** du serveur Modbus CODESYS vaut par défaut 16#FF (255) | Réglez-le sur l'**Adresse d'unité** du module (onglet **Général**). Voir [Connecter un automate](/guide/connect-a-plc#configurer-l-automate-codesys) |
+| Dans CODESYS, **Valeur actuelle** affiche « Pas actualisé (vérifier l'info-bulle) » | Les lignes ne sont pas reliées à des variables, ou les variables inutilisées ne sont pas actualisées | Reliez chaque ligne à une variable (onglet **ModbusTCPServer Mappage E/S**) et réglez **Toujours actualiser les variables** sur « Activé 2 (toujours dans la tâche du cycle de bus) ». Hors ligne seulement |
 
-::: warning Non vérifié avec CODESYS
-Ces causes viennent du code et des décisions du dépôt. Aucune n'a été confirmée
-avec un vrai CODESYS Control Win V3 (ADR 0045, étape 2).
+::: warning Peu vérifié avec CODESYS
+Les lignes « unit 255 » et « Pas actualisé » ont été vues sur un CODESYS Control Win V3 réel le 18 octobre 2026. Les autres causes viennent du code et des décisions du dépôt et n'ont pas été confirmées avec CODESYS (ADR 0045, étape 2).
 :::
 
 ## Tags forcés

@@ -6,6 +6,15 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Added
+
+- User guide, Connect a PLC: the CODESYS setup verified on 2026-10-18 with a
+  real CODESYS Control Win V3 x64 driving `examples/plc-cylinder` both ways
+  (Unit-ID, one server channel per zone, I/O mapping to the GVL, "always
+  update variables", a REAL read as two words through a union), and the
+  matching troubleshooting lines. CLAUDE.md records phase 7's CODESYS
+  demonstration.
+
 ## [0.1.0-alpha.2] - 2026-10-17
 
 Second pre-release: the bridge log, the bridge started through the

@@ -429,10 +429,8 @@ bridge log give the cause: see [Troubleshooting](/en/guide/troubleshooting).
 To test the loop without CODESYS, any Modbus TCP client will do: write coil 0 of
 `127.0.0.1:1502`, unit 1, the cylinder extends, then read discrete input 1.
 
-::: warning Not yet demonstrated with CODESYS
-A real CODESYS program driving this scene has not been demonstrated yet. The
-closed loop is tested automatically with a test Modbus client (ADR 0045,
-`packages/bridge/tests/test_closed_loop.py`).
+::: warning Verified on one case with CODESYS
+A real CODESYS Control Win V3 x64 drove this scene (`plc-cylinder`) on 18 October 2026: see the [setup](/en/guide/connect-a-plc#configure-the-plc-codesys). Other versions and WAGO targets are not verified. The closed loop is also tested automatically with a test Modbus client (ADR 0045, `packages/bridge/tests/test_closed_loop.py`).
 :::
 
 ## Next

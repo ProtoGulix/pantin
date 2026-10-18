@@ -449,10 +449,8 @@ Pour tester la boucle sans CODESYS, n'importe quel client Modbus TCP convient :
 écrivez le coil 0 de `127.0.0.1:1502`, unité 1, le vérin sort, puis lisez
 l'entrée discrète 1.
 
-::: warning Pas encore démontré avec CODESYS
-Un vrai programme CODESYS pilotant cette scène n'a pas encore été démontré. La
-boucle fermée est testée automatiquement avec un client Modbus de test (ADR 0045,
-`packages/bridge/tests/test_closed_loop.py`).
+::: warning Vérifié sur un cas avec CODESYS
+Un CODESYS Control Win V3 x64 réel a piloté cette scène (`plc-cylinder`) le 18 octobre 2026 : voir le [réglage](/guide/connect-a-plc#configurer-l-automate-codesys). Les autres versions et les cibles WAGO ne sont pas vérifiées. La boucle fermée est aussi testée automatiquement avec un client Modbus de test (ADR 0045, `packages/bridge/tests/test_closed_loop.py`).
 :::
 
 ## Ensuite

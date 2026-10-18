@@ -97,10 +97,11 @@ in the log.
 | A float value (the position) is absurd | Wrong **Word order** | Switch the module from **Low word first** to **High word first**, or the other way round |
 | A Modbus exception 2 or 3 on the PLC side | Address outside the mapped range, or wrong quantity | Compare the addresses of the CODESYS project with the I/O list |
 | A Modbus exception 11 | Wrong **Unit id** | Align the unit id of the module and the one of the CODESYS channel |
+| The log: "unit 255 ... GATEWAY_NO_RESPONSE (11)" | The **Unit-ID** of the CODESYS Modbus server defaults to 16#FF (255) | Set it to the module's **Unit id** (**Général** tab). See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
+| In CODESYS, **Valeur actuelle** shows "Pas actualisé (vérifier l'info-bulle)" | The lines are not linked to variables, or unused variables are not refreshed | Link each line to a variable (**ModbusTCPServer Mappage E/S** tab) and set **Toujours actualiser les variables** to "Activé 2 (toujours dans la tâche du cycle de bus)". Offline only |
 
-::: warning Not verified with CODESYS
-These causes come from the code and the decisions of the repository. None has
-been confirmed with a real CODESYS Control Win V3 (ADR 0045, step 2).
+::: warning Little verified with CODESYS
+The "unit 255" and "Pas actualisé" rows were seen on a real CODESYS Control Win V3 on 18 October 2026. The other causes come from the code and the decisions of the repository and have not been confirmed with CODESYS (ADR 0045, step 2).
 :::
 
 ## Forced tags

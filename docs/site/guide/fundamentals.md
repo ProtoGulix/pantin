@@ -17,8 +17,8 @@ La boucle fermée, c'est ceci :
 
 Vous importez vos propres modèles 3D, vous les animez, puis vous reliez les tags de la machine à votre automate.
 
-::: warning Non vérifié
-Le pont vers l'automate est testé en boucle fermée avec un client Modbus de test qui joue l'automate. Un vrai programme CODESYS (SoftPLC Control Win V3, cibles WAGO) qui pilote une scène reste **à démontrer** : il n'y avait pas de machine virtuelle CODESYS disponible lors de l'écriture de cette page. Voir [Connecter un automate](/guide/connect-a-plc).
+::: warning Vérifié sur un cas
+Le pont est testé en boucle fermée avec un client Modbus de test. Un CODESYS Control Win V3 x64 réel a piloté l'exemple `plc-cylinder` le 18 octobre 2026 ([réglage](/guide/connect-a-plc#configurer-l-automate-codesys)). Les autres versions de CODESYS et les cibles WAGO ne sont pas vérifiées.
 :::
 
 ## Les trois processus
