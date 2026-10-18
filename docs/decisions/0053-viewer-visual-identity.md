@@ -116,3 +116,12 @@ old pair: 29 / 22 / 35); mixed on the grey material, by 58 / 61 / 36 and
 45 or more. The joint form swatches follow: a plain disc for the parent, an
 outlined square for the child, next to the words. The other colour codings
 of the viewer are reviewed against the same rule in ADR 0057.
+
+## Amendment (2026-10-18): colour-blind safe coding (ADR 0057)
+
+ADR 0057, accepted by the user, amends points 2, 3, 4, 5 and 7: state fill
+tokens with their own text colours, green reserved for on, energised,
+running, the brand orange never beside a state glyph, data colours grouped in
+one module with per-theme values, an outline on every selected body, and a
+colour pair test. The identity itself (brand, logo, themes, existing token
+values) is unchanged. Details: ADR 0057.

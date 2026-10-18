@@ -6,6 +6,14 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Added
+
+- ADR 0057, accepted, and spike 0010 (ISA-101 and colour blindness): colour
+  is never the only cue, every pair of codings stays apart under protanopia,
+  deuteranopia and tritanopia (tested), one meaning per colour everywhere,
+  the brand orange only for Pantin itself, with the visual identity of
+  ADR 0053 unchanged. Decision only: the viewer slices follow.
+
 ### Fixed
 
 - Viewer, a selected joint whose end is a group tinted a single body of that
