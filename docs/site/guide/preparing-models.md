@@ -57,6 +57,21 @@ Ces deux cas sont tirés des essais du projet, décrits de façon générique.
 
 Dessinez les mouvements le long des axes de la CAO quand c'est possible : un mouvement aligné sur X, Y ou Z se lit et se règle facilement. Pour les autres cas, le bouton **Prendre l'axe sur une face** de la liaison lit l'axe d'une face cylindrique ou plane de la 3D ([ADR 0041](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0041-joint-axis-from-a-picked-face.md)). Il n'est proposé que pour une liaison déjà enregistrée dont le type bouge (pas **Fixe**) ; voir [Panneaux et boutons](/reference/panels). Il marche pour les corps issus d'un STEP, qui portent des fichiers de faces ; pour un STL ou un GLB, il ne donne que la normale du triangle visé.
 
+### Aligner le repère de chaque sous-assemblage mobile sur son mouvement
+
+Dans votre logiciel de CAO, orientez le repère de chaque sous-assemblage **mobile** selon son mouvement : un axe le long des rails d'une glissière, ou le long de l'axe d'un pivot.
+
+Pourquoi : chaque assemblage garde son repère de CAO, et l'origine et l'axe d'une liaison sont exprimés dans le repère de l'assemblage parent ([ADR 0040](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0040-nested-assemblies-from-step.md), point 4 ; [ADR 0033](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0033-assembly-placement.md), [ADR 0055](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0055-assemblies-as-rigid-groups.md)). Le trièdre affiché dans le viewer est ce repère, et l'axe par défaut d'une liaison est son axe `[0, 0, 1]`. Avec un repère aligné, l'axe par défaut, le gizmo **Repère local de l'assemblage** et les limites se lisent directement. Sinon, il faut saisir l'axe à la main ou le prendre sur une face, et ses nombres sont difficiles à lire.
+
+Exemple : un chariot sur des glissières inclinées à 70°, dont le repère de sous-assemblage n'est pas incliné. L'axe de la glissière devient quelque chose comme `[0.94, 0, 0.34]` au lieu de `[0, 0, 1]`. Ce cas a été rencontré sur une machine réelle.
+
+Si vous ne pouvez pas modifier le fichier de CAO :
+
+1. Transformez la liaison fixe en **Glissière** et enregistrez-la.
+2. Cliquez sur **Prendre l'axe sur une face**, puis sur une face cylindrique de la tige ou sur une face plane du rail.
+
+Ce bouton n'est proposé que pour une liaison enregistrée dont le type bouge ; voir [Panneaux et boutons](/reference/panels). Une commande pour réorienter le repère d'un groupe sans déplacer ses corps est à l'étude (sans promesse ni date).
+
 ## Pièces achetées
 
 Un roulement, un vérin ou un moteur du commerce arrive souvent en STEP avec des dizaines de pièces internes. **Laissez-le tel quel, en sous-assemblage** : il devient un groupe rigide, sans liaison à créer à l'intérieur. Le roulement d'une vingtaine de pièces d'un essai donne un assemblage et une seule liaison fixe vers son parent. Si ces pièces internes vous gênent dans l'arborescence, c'est un point de confort connu, pas un défaut du modèle.
@@ -92,6 +107,7 @@ Les procédures, les refus possibles et les captures d'écran sont dans [Grouper
 3. Les noms d'assemblages et de pièces sont courts, parlants et sans doublon.
 4. Le modèle contient des solides (pas seulement des surfaces), sans instance mise à l'échelle ni en miroir (les pièces symétriques sont de vraies pièces).
 5. Les mouvements suivent si possible les axes de la CAO.
+   Le repère de chaque sous-assemblage mobile est aligné sur son mouvement (un axe le long des rails ou de l'axe du pivot).
 6. Format : STEP de préférence. Pour un GLB ou un STL, une pièce mobile par fichier, et notez l'unité et l'axe vertical.
 7. Un GLB ou un STL est un seul corps : séparez en fichiers ce qui doit bouger séparément.
 

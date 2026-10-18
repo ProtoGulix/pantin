@@ -8,6 +8,10 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- ADR 0056, accepted: one command aligns the frame of a joint's parent
+  assembly, and of the group it moves, on the joint's axis, without moving
+  anything, so that a slider on inclined rails reads [0, 0, 1]. Decision
+  only: the implementation follows.
 - ADR 0055, accepted: an assembly used as a joint endpoint is a rigid group
   whose bodies move together, and the user cuts an assembly into groups by
   hand (Grouper, Dégrouper). Amendments to ADR 0011, 0017, 0033, 0040 and
@@ -22,6 +26,9 @@ All notable changes to Pantin. The format follows
   sub-assembly per kinematic group), the model page split into concepts,
   group procedures, drives/actuators/sensors, conveying, and tags/I/O, and a
   new "group-prompt" screenshot.
+- User guide (French and English), "Preparing 3D models": best practice to align
+  the frame of each moving sub-assembly with its motion in the CAD software,
+  the workaround when the file cannot change, and a checklist line.
 
 ### Changed
 

@@ -57,6 +57,21 @@ These two cases come from the project's trials, described in generic terms.
 
 Draw motions along the CAD axes when you can: a motion aligned on X, Y or Z is easy to read and set. For the other cases, the joint's **Take the axis from a face** button reads the axis of a cylindrical or plane face of the 3D view ([ADR 0041](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0041-joint-axis-from-a-picked-face.md)). It is offered only for an already saved joint whose type moves (not **Fixed**); see [Panels and buttons](/en/reference/panels). It works for bodies coming from a STEP, which carry face files; for an STL or a GLB it only gives the normal of the triangle you aim at.
 
+### Align the frame of each moving sub-assembly with its motion
+
+In your CAD software, orient the frame of each **moving** sub-assembly along its motion: one axis along the rails of a slide, or along the axis of a pivot.
+
+Why: each assembly keeps its CAD frame, and the origin and axis of a joint are expressed in the frame of the parent assembly ([ADR 0040](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0040-nested-assemblies-from-step.md), point 4; [ADR 0033](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0033-assembly-placement.md), [ADR 0055](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0055-assemblies-as-rigid-groups.md)). The trihedron shown in the viewer is that frame, and the default axis of a joint is its `[0, 0, 1]` axis. With an aligned frame, the default axis, the **Assembly's own axes** gizmo and the limits read directly. Otherwise you must type the axis by hand or pick it on a face, and its numbers are hard to read.
+
+Example: a carriage on slides tilted at 70°, whose sub-assembly frame is not tilted. The slide axis becomes something like `[0.94, 0, 0.34]` instead of `[0, 0, 1]`. This case was met on a real machine.
+
+If you cannot change the CAD file:
+
+1. Turn the fixed joint into **Prismatic (slider)** and save it.
+2. Click **Take the axis from a face**, then click a cylindrical face of the rod or a plane face of the rail.
+
+This button is offered only for a saved joint whose type moves; see [Panels and buttons](/en/reference/panels). A command to reorient a group's frame without moving its bodies is being designed (no promise, no date).
+
 ## Bought parts
 
 A bearing, cylinder or motor from a catalogue often arrives as a STEP with dozens of inner parts. **Leave it as is, as a sub-assembly**: it becomes a rigid group, with no joint to create inside. The bearing of about twenty parts in one trial gives one assembly and a single fixed joint to its parent. If those inner parts clutter the tree, that is a known comfort point, not a flaw of the model.
@@ -92,6 +107,7 @@ The procedures, the possible refusals and the screenshots are in [Group, ungroup
 3. Assembly and part names are short, meaningful and without duplicates.
 4. The model contains solids (not only surfaces), with no scaled or mirrored instance (symmetric parts are real parts).
 5. Motions follow the CAD axes when possible.
+   The frame of each moving sub-assembly is aligned with its motion (one axis along the rails or the pivot axis).
 6. Format: STEP preferably. For a GLB or an STL, one moving part per file, and note the unit and the up axis.
 7. A GLB or an STL is a single body: split into files what must move separately.
 
