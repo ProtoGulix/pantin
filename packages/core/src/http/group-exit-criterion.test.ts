@@ -72,6 +72,8 @@ function distance([x, y, z]: readonly number[], [a, b, c]: readonly number[]): n
 
 describe("phase 8 exit criterion, slice 2", () => {
   it("animates the grouped bodies together and nothing else", async () => {
+    // An import makes no joint inside an assembly (ADR 0055 point 10): nothing to delete.
+    expect((await documentOf(machine.server)).joints).toEqual([]);
     const before = await translationsOf(machine.server);
     await makeSlideWithCylinder();
     expect((await tagNamesOf(machine.server)).filter((name) => name.startsWith("slide."))).toEqual(

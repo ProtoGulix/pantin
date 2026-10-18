@@ -18,12 +18,12 @@ import { sendJsonRequest, sendRaw } from "../test-support/test-server.ts";
 
 // Grouper and Dégrouper over HTTP (ADR 0055 points 6 to 8). The imported
 // machine holds "plate", "rod" and "tip" in "machine"; "rod" and "tip" are
-// fixed to "plate".
+// fixed to "plate" by joints added after the import, since an import makes none.
 
 let machine: GroupedMachine;
 
 beforeEach(async () => {
-  machine = await startGroupedMachine();
+  machine = await startGroupedMachine(true);
 });
 
 afterEach(async () => {

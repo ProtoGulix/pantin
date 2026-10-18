@@ -1,5 +1,6 @@
 import {
   type AssemblyPlacementResponse,
+  type MoveBodyResponse,
   type PantinDocument,
   PantinDocumentSchema,
   type PantinId,
@@ -11,16 +12,17 @@ import { anchorOfAssembly } from "../domain/assembly-anchors.ts";
 import {
   createAssembly,
   deleteAssembly,
-  moveBody,
   renameAssembly,
   renameAssemblyKey,
   renameTagKey,
   setAssemblyParent,
   setAssemblyPlacement,
 } from "../domain/assembly-edits.ts";
+import { moveBody } from "../domain/move-body.ts";
 import { renamedTags } from "../domain/tags.ts";
 import { parseWithSchema } from "../domain/validation.ts";
 import { deleteAssemblyWithContentsOf, previewAssemblyDeletion } from "./assembly-deletion.ts";
+import { forgetJointRuntimeState } from "./joint-operations.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
@@ -80,6 +82,27 @@ async function editWithTags(
   return { pantin: response, renamedTags: renamedTags(before, after) };
 }
 
+async function moveBodyOf(
+  context: ServiceContext,
+  pantinId: PantinId,
+  bodyId: string,
+  assembly: string,
+): Promise<MoveBodyResponse> {
+  const { outcome, openPantin, before, after, response } = await applyOutcomeEdit(
+    context,
+    pantinId,
+    (document) => moveBody(document, bodyId, assembly),
+  );
+  for (const { id } of outcome.deletedJoints) {
+    forgetJointRuntimeState(openPantin, id);
+  }
+  return {
+    pantin: response,
+    deletedJoints: outcome.deletedJoints.map(({ id, name }) => ({ id, name })),
+    renamedTags: renamedTags(before, after),
+  };
+}
+
 async function placeAssembly(
   context: ServiceContext,
   pantinId: PantinId,
@@ -118,6 +141,6 @@ export function assemblyOperations(context: ServiceContext) {
     setAssemblyPlacement: (pantinId: PantinId, key: string, placement: Placement) =>
       placeAssembly(context, pantinId, key, placement),
     moveBody: (pantinId: PantinId, bodyId: string, assembly: string) =>
-      editWithTags(context, pantinId, (document) => moveBody(document, bodyId, assembly)),
+      moveBodyOf(context, pantinId, bodyId, assembly),
   };
 }

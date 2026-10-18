@@ -45,7 +45,10 @@ import { TagNameSchema } from "./tag.ts";
 //   PUT    /api/pantins/:pantinId/joints/:jointId/tag-key  RenameTagKeyRequest
 //          -> RenamedTagsResponse
 //   PUT    /api/pantins/:pantinId/bodies/:bodyId/assembly  MoveBodyRequest
-//          -> RenamedTagsResponse
+//          -> MoveBodyResponse (a RenamedTagsResponse that also lists the fixed
+//          joints to the old assembly it deleted, ADR 0055 point 11; 409 when
+//          a moving or referenced joint, or a group that moves otherwise,
+//          is in the way)
 //   POST   /api/pantins/:pantinId/assemblies/:assemblyKey/groups  GroupBodiesRequest
 //          -> 201 GroupBodiesResponse (ADR 0055 point 6: one atomic command that
 //          makes a group of direct bodies and sub-assemblies of that assembly;
@@ -110,6 +113,13 @@ export type GroupBodiesRequest = z.infer<typeof GroupBodiesRequestSchema>;
 // joint inside what is now rigid).
 export const DeletedJointSchema = z.object({ id: JointIdSchema, name: DisplayNameSchema });
 export type DeletedJoint = z.infer<typeof DeletedJointSchema>;
+
+// Moving a body to another assembly (ADR 0055 point 11) deletes its fixed
+// joints to the old assembly, which the answer lists.
+export const MoveBodyResponseSchema = RenamedTagsResponseSchema.extend({
+  deletedJoints: z.array(DeletedJointSchema),
+});
+export type MoveBodyResponse = z.infer<typeof MoveBodyResponseSchema>;
 
 export const GroupBodiesResponseSchema = RenamedTagsResponseSchema.extend({
   group: z.object({ key: KeySchema, name: DisplayNameSchema }),

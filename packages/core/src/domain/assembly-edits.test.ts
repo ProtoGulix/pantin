@@ -1,6 +1,7 @@
 import {
   type Body,
   bodyEndpoint,
+  groupEndpoint,
   type Joint,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
@@ -9,7 +10,6 @@ import { describe, expect, it } from "vitest";
 import {
   createAssembly,
   deleteAssembly,
-  moveBody,
   renameAssembly,
   renameAssemblyKey,
   renameTagKey,
@@ -93,6 +93,21 @@ describe("renameAssemblyKey", () => {
     ]);
   });
 
+  it("rewrites the group endpoints of the joints that use the key (ADR 0055 point 11)", () => {
+    const mount: Joint = {
+      ...rod("mount", "body-1", "rod-1", "mount"),
+      type: "fixed",
+      parent: groupEndpoint("id1s0400125e-0"),
+      child: groupEndpoint("id1s0400125e-0-2"),
+    };
+    const grouped: PantinDocument = { ...PRESS, joints: [mount] };
+    const after = renameAssemblyKey(grouped, "id1s0400125e-0", "verin_pince");
+    expect(after.joints[0]?.parent).toEqual(groupEndpoint("verin_pince"));
+    expect(after.joints[0]?.child).toEqual(groupEndpoint("id1s0400125e-0-2"));
+    const renamedChild = renameAssemblyKey(grouped, "id1s0400125e-0-2", "second");
+    expect(renamedChild.joints[0]?.child).toEqual(groupEndpoint("second"));
+  });
+
   it("refuses a key taken by another assembly, naming a free one", () => {
     expect(() => renameAssemblyKey(PRESS, "id1s0400125e-0", "id1s0400125e-0-2")).toThrow(
       'Key "id1s0400125e-0-2" is already used by assembly "ID1S0400125E_0". "id1s0400125e-0-2-2" is free.',
@@ -146,30 +161,6 @@ describe("renameTagKey", () => {
       joints: [...PRESS.joints, rod("stop", "body-1", "stop-1", "tige-2")],
     };
     expect(() => renameTagKey(ownKey, "stop", "tige")).toThrow('"tige-3" is free.');
-  });
-});
-
-describe("moveBody", () => {
-  it("moves a body that no joint holds", () => {
-    const withSpare = createAssembly(PRESS, "Spare").document;
-    const withStray = { ...withSpare, bodies: [...withSpare.bodies, body("stray", "spare")] };
-    const after = moveBody(withStray, "stray", "id1s0400125e-0");
-    expect(after.bodies.find((candidate) => candidate.id === "stray")?.assembly).toBe(
-      "id1s0400125e-0",
-    );
-  });
-
-  it("refuses to take a joint's body away from the assembly of its other end, naming the joint", () => {
-    const withSpare = createAssembly(PRESS, "Spare").document;
-    expect(() => moveBody(withSpare, "rod-1", "spare")).toThrow(
-      /Joint "tige" .*of another assembly.*must be a group/,
-    );
-    expect(() => moveBody(withSpare, "body-1", "spare")).toThrow(/Joint "tige" /);
-  });
-
-  it("refuses an unknown body or assembly", () => {
-    expect(() => moveBody(PRESS, "ghost", "id1s0400125e-0")).toThrow('no body "ghost"');
-    expect(() => moveBody(PRESS, "rod-1", "ghost")).toThrow('no assembly "ghost"');
   });
 });
 

@@ -11,9 +11,10 @@ import {
 } from "../test-support/conveyor-fixtures.ts";
 import { expectConflict } from "../test-support/expect-conflict.ts";
 import { NO_POSITIONS } from "../test-support/no-positions.ts";
-import { moveBody, renameAssemblyKey } from "./assembly-edits.ts";
+import { renameAssemblyKey } from "./assembly-edits.ts";
 import { framedUsersOfBody, refuseBodyUsedAsFrame } from "./conveyor-rules.ts";
 import { deleteJointFromDocument, updateJointInDocument } from "./joint-rules.ts";
+import { moveBody } from "./move-body.ts";
 import { tagKeyOwners } from "./tag-keys.ts";
 
 // What phase 6 objects forbid to bodies and joints (ADR 0043 point 12).
@@ -54,7 +55,7 @@ describe("bodies used as a frame", () => {
       'cannot move to assembly "line"',
       'belt "feed"',
     );
-    const moved = moveBody(conveyorDocument({ joints: [] }), "frame", "line");
+    const moved = moveBody(conveyorDocument({ joints: [] }), "frame", "line").document;
     expect(moved.bodies.find((candidate) => candidate.id === "frame")?.assembly).toBe("line");
   });
 });

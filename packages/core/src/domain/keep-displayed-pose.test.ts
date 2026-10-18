@@ -8,13 +8,13 @@ import {
   expectSamePoses,
   joint,
 } from "../test-support/placed-fixtures.ts";
-import { moveBody } from "./assembly-edits.ts";
 import {
   addJointToDocument,
   deleteJointFromDocument,
   updateJointInDocument,
 } from "./joint-rules.ts";
 import { computePoses } from "./kinematics.ts";
+import { moveBody } from "./move-body.ts";
 
 // Edits keep the displayed pose, displacements included (ADR 0033 points 6
 // and 7). Every assembly and the moved body carry a rotated, translated

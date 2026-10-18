@@ -1,4 +1,4 @@
-import { isBodyEndpoint, type Joint, type PantinDocument } from "@pantin/protocol";
+import { bodyEndpoint, type Joint, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   importDocument,
@@ -11,7 +11,6 @@ import {
 } from "../test-support/import-pipeline.ts";
 import type { AssemblyLocation } from "./assembly-frames.ts";
 import { computePoses } from "./kinematics.ts";
-import { replaceJoint } from "./pantin-document.ts";
 
 function poseOf(document: PantinDocument, bodyId: string, positions = new Map<string, number>()) {
   const pose = computePoses(document, positions).find((candidate) => candidate.bodyId === bodyId);
@@ -83,12 +82,20 @@ describe("planImportFrames anchors and joints", () => {
 
   it("moves a prismatic joint along the world Y in a sub-assembly turned about Z", () => {
     const { document } = importDocument(MACHINE, MACHINE_LOCATIONS);
-    const fixed = document.joints.find((joint) => isBodyEndpoint(joint.child, "b2"));
-    if (fixed === undefined) {
-      throw new Error("No joint to b2");
-    }
-    const slide: Joint = { ...fixed, type: "prismatic", axis: [1, 0, 0], limits: [0, 1] };
-    const moved = replaceJoint(document, slide);
+    // b2 slides along the X of its own assembly, which is turned about Z: the
+    // axis reads in the frame of the parent body's assembly (ADR 0033 point 3).
+    const slide: Joint = {
+      id: "slide",
+      tagKey: "slide",
+      type: "prismatic",
+      name: "Slide",
+      parent: bodyEndpoint("b1"),
+      child: bodyEndpoint("b2"),
+      origin: [0, 0, 0],
+      axis: [1, 0, 0],
+      limits: [0, 1],
+    };
+    const moved = { ...document, joints: [...document.joints, slide] };
     const pose = poseOf(moved, "b2", new Map([[slide.id, 0.5]]));
     expectClose(pose.translation, [0, 0.5, 0]);
     expectClose(pose.rotation, [0, 0, 0, 1]);

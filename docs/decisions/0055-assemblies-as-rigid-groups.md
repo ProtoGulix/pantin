@@ -262,3 +262,17 @@ NOT VERIFIED:
   and was re-pointed to G comes back with group A as parent, not the
   original body. The pose is the same; the document differs in that parent
   and in the deleted fixed joints.
+
+## Amendment (2026-10-18): moving a body between groups (slice 3)
+
+Point 11, moving a body to another assembly: a constant placement cannot
+keep the pose of a body at every joint position when its old and new groups
+are moved by different joints. The move is therefore allowed only when the
+body, its old group and its new group are moved by the same joint, or by
+none; otherwise it is refused (`conflict`), naming the joint, and the user
+moves the whole group or uses Grouper. The fixed joints that join the body
+to the old assembly, as parent or as child, are deleted and listed in the
+response (`MoveBodyResponse` = renamed tags plus `deletedJoints`).
+
+Checked with the real converter on 2026-10-18: `Translateur SCIE.step`
+imports as 51 bodies, 10 assemblies and 9 fixed joints, all between groups.

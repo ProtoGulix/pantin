@@ -24,8 +24,7 @@ All notable changes to Pantin. The format follows
   opening with poses unchanged; the console's migration line lists the bodies
   whose behaviour changes. A joint between two assemblies must have the group
   as child. The joint form offers "Groupe : <name>" as an end. The examples
-  are written in version 13. Not yet: the import without inner fixed joints,
-  group rows in the tree.
+  are written in version 13. Not yet: group rows in the tree.
 - Core API (ADR 0055, second slice): `POST .../assemblies/:key/groups`
   (Grouper) makes a group of direct bodies and sub-assemblies of an assembly,
   held by a fixed joint, with nothing moving; `POST .../assemblies/:key/ungroup`
@@ -33,6 +32,12 @@ All notable changes to Pantin. The format follows
   answer the deleted joints and the renamed tags (io.json follows), and
   refuse, naming the joint or the item, any change that would move a body or
   orphan a drive, an actuator, a sensor or a belt. No viewer command yet.
+- Import (ADR 0055, third slice): no fixed joint inside an assembly any more,
+  its bodies follow it; one fixed joint per sub-assembly, between groups,
+  along the same anchor tree as before (`Translateur SCIE.step`: 9 joints
+  instead of one per body). Moving a body to another assembly deletes its fixed joints to
+  the old assembly and lists them, and is refused, naming the joint, when the
+  two groups are moved by different joints (the body would jump).
 
 ## [0.1.0] - 2026-10-18
 

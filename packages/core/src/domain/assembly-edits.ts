@@ -1,14 +1,11 @@
 import {
   type Assembly,
   endpointAssemblyIn,
-  isBodyEndpoint,
   type JointEndpoint,
-  jointTreeIssues,
   type PantinDocument,
   type Placement,
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
-import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { newAssembly } from "./assemblies.ts";
 import {
   contentsOfAssembly,
@@ -16,8 +13,6 @@ import {
   describeContents,
   findAssembly,
 } from "./assembly-contents.ts";
-import { refuseBodyUsedAsFrame } from "./conveyor-rules.ts";
-import { reframeMovedBody } from "./move-body-frames.ts";
 import { toPlacement, unitTransform } from "./rigid-transform.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
 
@@ -174,46 +169,6 @@ export function renameTagKey(
     ...document,
     joints: document.joints.map((item) => (item.id === jointId ? { ...item, tagKey } : item)),
   };
-}
-
-// An unjointed body follows its group, so moving it to a group that another
-// joint moves differently changes its displayed pose at q != 0: only world
-// placements are kept (reframeMovedBody). Keeping the pose at every position is
-// ADR 0055 point 11 (edits of slice 3).
-//
-// A body keeps no joint with a body of its old assembly: the child of a joint
-// between assemblies must be a group (ADR 0055 point 3), so a body that has a
-// parent joint, or is the parent of an internal one, cannot move on its own
-// and the answer names the joint. Deleting its fixed joints is a later slice.
-export function moveBody(
-  document: PantinDocument,
-  bodyId: string,
-  assembly: string,
-): PantinDocument {
-  findAssembly(document, assembly);
-  const movedBody = document.bodies.find((body) => body.id === bodyId);
-  if (movedBody === undefined) {
-    throw new ApiError("not_found", `This Pantin has no body "${bodyId}".`);
-  }
-  // Objects follow a body of their own assembly only (ADR 0043 point 2).
-  if (movedBody.assembly !== assembly) {
-    refuseBodyUsedAsFrame(document, bodyId, `move to assembly "${assembly}"`);
-  }
-  const bodies = document.bodies.map((body) => (body.id === bodyId ? { ...body, assembly } : body));
-  const moved = { ...document, bodies };
-  // The move may turn joints of the body into joints between assemblies.
-  const touching = document.joints.filter(
-    (joint) => isBodyEndpoint(joint.parent, bodyId) || isBodyEndpoint(joint.child, bodyId),
-  );
-  const [treeIssue] = jointTreeIssues(moved);
-  if (treeIssue !== undefined) {
-    throw new ApiError("conflict", treeIssue.message);
-  }
-  const conflict = findAnchorConflict(moved, new Set(touching.map(({ id }) => id)));
-  if (conflict !== undefined) {
-    throw new ApiError("conflict", conflict);
-  }
-  return reframeMovedBody(document, moved, bodyId);
 }
 
 // The placement comes from the schema (finite, quaternion within tolerance)

@@ -137,20 +137,16 @@ describe("assemblies", () => {
     expect(refused.body).toContain("contents=delete");
   });
 
-  it("keeps the tags of a joint whose child is the group, whichever body moves", async () => {
+  it("refuses to take the only body of a moving group away from it, naming the joint", async () => {
+    // The body would stop following its group (ADR 0055 point 11).
     const response = await sendJsonRequest(
       server,
       "PUT",
       "/api/pantins/axis/bodies/carriage/assembly",
-      {
-        assembly: "rail",
-      },
+      { assembly: "rail" },
     );
-    const { pantin, renamedTags } = RenamedTagsResponseSchema.parse(response.json);
-    expect(pantin.document.bodies.map((body) => body.assembly)).toEqual(["rail", "rail"]);
-    // The joint moves the group "carriage", not a body: its tags keep that key.
-    expect(renamedTags).toEqual([]);
-    expect(pantin.document.joints.map((joint) => joint.child)).toEqual([groupEndpoint("carriage")]);
+    expect(response.status).toBe(409);
+    expect(response.body).toContain('joint \\"axe-x\\" moves \\"carriage\\"');
   });
 });
 
@@ -211,13 +207,11 @@ describe("anchor refusals (ADR 0033 point 2)", () => {
   });
 
   it("answers 409 when a joint would close a loop of anchors", async () => {
-    await importChape();
-    await sendJsonRequest(server, "PUT", BODY_ASSEMBLY, { assembly: "carriage" });
     const response = await sendJsonRequest(
       server,
       "POST",
       "/api/pantins/axis/joints",
-      fixedJoint("Back", "chape", "rail"),
+      fixedJoint("Back", "carriage", "rail"),
     );
     expect(response.status).toBe(409);
     expect(response.body).toContain("loop");

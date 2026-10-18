@@ -1,5 +1,6 @@
 import {
   endpointKey,
+  groupEndpoint,
   type Joint,
   type JointEndpoint,
   jointTreeIssues,
@@ -46,6 +47,37 @@ export function isRigidWithAssembly(
       return false;
     }
     current = joint.parent;
+  }
+}
+
+/**
+ * The joint that moves `endpoint`, looking through fixed joints and through
+ * the group of a body with no parent joint (ADR 0055 point 2); undefined when
+ * nothing moves it. Two endpoints with the same answer are displaced
+ * identically at every joint position.
+ */
+export function movingJointOf(
+  document: PantinDocument,
+  endpoint: JointEndpoint,
+): Joint | undefined {
+  let current = endpoint;
+  for (;;) {
+    const joint = parentJointOf(document, current);
+    if (joint !== undefined) {
+      if (joint.type !== "fixed") {
+        return joint;
+      }
+      current = joint.parent;
+    } else if (current.kind === "body") {
+      const bodyId = current.id;
+      const owner = document.bodies.find((candidate) => candidate.id === bodyId);
+      if (owner === undefined) {
+        return undefined;
+      }
+      current = groupEndpoint(owner.assembly);
+    } else {
+      return undefined;
+    }
   }
 }
 

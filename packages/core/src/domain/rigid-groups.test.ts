@@ -11,8 +11,8 @@ import {
   joint,
 } from "../test-support/placed-fixtures.ts";
 import { computeWorldPlacements, deriveAssemblyAnchors } from "./assembly-anchors.ts";
-import { moveBody } from "./assembly-edits.ts";
 import { computeDisplacements, computePoses, endpointDisplacement } from "./kinematics.ts";
+import { moveBody } from "./move-body.ts";
 import { computePosedAssemblyFrames } from "./posed-assembly-frames.ts";
 import {
   apply,
@@ -195,14 +195,28 @@ describe("moving a body with no parent joint to another group", () => {
     ];
   };
 
-  // Current behaviour, until ADR 0055 point 11 (edits, slice 3) defines it: the
-  // body keeps its world placement at rest, then follows its NEW group.
-  it("keeps its pose at rest and takes the displacement of the new group", () => {
-    const before = document();
-    const after = moveBody(before, "xa", "z");
-    expectPoint(translationOf(after, 0), translationOf(before, 0));
-    // It followed the slider in x; in z, which nothing moves, it stays.
+  // ADR 0055 point 11: the body follows its new group, so the move would make it
+  // jump when the slider moves; it is refused instead (the safest answer).
+  it("is refused while the new group is displaced differently, naming the joint", () => {
+    expect(() => moveBody(document(), "xa", "z")).toThrow(
+      'joint "slide" moves "x", assembly "z" never moves',
+    );
+  });
+
+  it("keeps its pose at every position when the new group moves with the old one", () => {
+    const before = {
+      ...document(),
+      assemblies: [...document().assemblies, assembly("w", ABOUT_X)],
+      joints: [
+        SLIDE,
+        RING,
+        joint({ id: "to-w", type: "fixed", parent: groupEndpoint("x"), child: groupEndpoint("w") }),
+      ],
+    };
+    const after = moveBody(before, "xa", "w").document;
+    for (const q of [0, 0.3]) {
+      expectPoint(translationOf(after, q), translationOf(before, q));
+    }
     expect(translationOf(before, 0.3)).not.toEqual(translationOf(before, 0));
-    expectPoint(translationOf(after, 0.3), translationOf(after, 0));
   });
 });

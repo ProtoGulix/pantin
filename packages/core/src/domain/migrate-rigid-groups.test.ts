@@ -213,7 +213,7 @@ describe("poses before and after the migration", () => {
       // `placement` is typed apart.
       document.bodies as unknown as ReturnType<typeof body>[],
       document.joints.map((link) => {
-        const parent = link.parent.kind === "body" ? link.parent.id : "";
+        const parent = link.parent.kind === "body" ? link.parent.id : handleOf(link.parent.key);
         const child = link.child.kind === "body" ? link.child.id : handleOf(link.child.key);
         return joint(link.id, link.child.kind === "assembly" ? "revolute" : "fixed", parent, child);
       }),

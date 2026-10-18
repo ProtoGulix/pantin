@@ -11,7 +11,7 @@ import {
   expectSamePoses,
   joint,
 } from "../test-support/placed-fixtures.ts";
-import { moveBody } from "./assembly-edits.ts";
+import { moveBody } from "./move-body.ts";
 
 // Moving a body changes no displayed pose at any joint position (ADR 0033
 // point 7): world placements are kept and the frames rewritten around them.
@@ -64,7 +64,7 @@ const POSITION_SETS = [
 describe("moveBody keeps every displayed pose", () => {
   it.each(SCENARIOS)("$name", ({ bodies, joints }) => {
     const before = documentOf(joints, bodies, ASSEMBLIES);
-    const moved = moveBody(before, "b", "n");
+    const moved = moveBody(before, "b", "n").document;
     expect(moved.bodies.find((item) => item.id === "b")?.assembly).toBe("n");
     for (const positions of POSITION_SETS) {
       expectSamePoses(moved, before, positions);
