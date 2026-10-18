@@ -88,6 +88,10 @@ describe("buildIoView connections", () => {
     const state = withMapping(NO_IO_STATE, PRESS, mapping);
     const running = buildIoView(state, names, false, RUNNING_STATUS);
     expect(running.modules.map((module) => module.connection)).toEqual(["connected", "waiting"]);
+    expect(running.modules.map((module) => module.statusKey)).toEqual([
+      "bridge.module.connected",
+      "bridge.module.waiting",
+    ]);
   });
 });
 
@@ -96,7 +100,11 @@ describe("buildIoView", () => {
   const view = buildIoView(state, names);
 
   it("lists modules with channel and problem counts, the first selected", () => {
-    const stopped = { connection: "stopped", problemCount: 1 } as const;
+    const stopped = {
+      connection: "stopped",
+      statusKey: "bridge.module.stopped",
+      problemCount: 1,
+    } as const;
     expect(view.modules).toEqual([
       { ...stopped, key: "m1", port: 1502, channelCount: 2, selected: true },
       { ...stopped, key: "m2", port: 1503, channelCount: 1, selected: false },

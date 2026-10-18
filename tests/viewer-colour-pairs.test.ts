@@ -21,6 +21,8 @@ interface ColourPair {
   minDifference: number;
   /** Required when minDifference is below 40: what tells the two apart instead of colour. */
   secondCue?: string;
+  /** Set for fills: their outline, not the fill, must stand out from the panel surfaces. */
+  filledBadge?: boolean;
 }
 
 const RULE_DIFFERENCE = 40;
@@ -49,6 +51,45 @@ function axesPairs(theme: ThemeName): ColourPair[] {
   ];
 }
 
+const BASE_CSS = readFileSync(
+  new URL("../packages/viewer/src/styles/base.css", import.meta.url),
+  "utf8",
+);
+
+function fillToken(name: string): string {
+  const match = new RegExp(`--fill-${name}:\\s*(#[0-9a-fA-F]{6});`).exec(BASE_CSS);
+  if (match?.[1] === undefined) {
+    throw new Error(`--fill-${name} must be a #rrggbb value in base.css.`);
+  }
+  return match[1];
+}
+
+// ADR 0057 rule 6: the IEC fills are the same in both themes. They are badges on panel
+// surfaces, not on the scene ground: their outline (--fill-outline) must reach 3:1 there.
+function fillPairs(): ColourPair[] {
+  return [
+    {
+      name: "fills abnormal and emergency",
+      first: fillToken("abnormal"),
+      second: fillToken("emergency"),
+      minDifference: RULE_DIFFERENCE,
+      filledBadge: true,
+    },
+  ];
+}
+
+function themeToken(theme: ThemeName, name: string): string {
+  const start = BASE_CSS.indexOf(`:root[data-theme="${theme}"] {`);
+  const block = BASE_CSS.slice(start, BASE_CSS.indexOf("}", start));
+  const match = new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6});`).exec(block);
+  if (match?.[1] === undefined) {
+    throw new Error(`--${name} must be a #rrggbb value in the ${theme} theme of base.css.`);
+  }
+  return match[1];
+}
+
+const PANEL_SURFACES = ["surface-0", "surface-1", "surface-2"];
+
 function registeredPairs(theme: ThemeName): ColourPair[] {
   const scene = SCENE_PALETTES[theme];
   return [
@@ -59,6 +100,7 @@ function registeredPairs(theme: ThemeName): ColourPair[] {
       minDifference: 45,
     },
     ...axesPairs(theme),
+    ...fillPairs(),
   ];
 }
 
@@ -84,15 +126,30 @@ describe.each(["light", "dark"] as const)("the data colour pairs of the %s theme
   );
 
   it.each(
-    pairs.flatMap(
-      (pair) =>
-        [
-          [pair.name, pair.first],
-          [pair.name, pair.second],
-        ] as const,
-    ),
+    pairs
+      .filter((pair) => pair.filledBadge !== true)
+      .flatMap(
+        (pair) =>
+          [
+            [pair.name, pair.first],
+            [pair.name, pair.second],
+          ] as const,
+      ),
   )("stands out from the ground: %s, %s", (_name, colour) => {
     expect(contrast(colour, ground)).toBeGreaterThanOrEqual(GROUND_RATIO);
+  });
+});
+
+describe.each(["light", "dark"] as const)("the filled badges of the %s theme", (theme) => {
+  const outline = themeToken(theme, "fill-outline");
+  const fills = fillPairs().flatMap((pair) => [pair.first, pair.second]);
+
+  it.each(PANEL_SURFACES)("outline stands out from --%s", (surface) => {
+    expect(contrast(outline, themeToken(theme, surface))).toBeGreaterThanOrEqual(GROUND_RATIO);
+  });
+
+  it.each(fills)("fill %s has an outline apart from the fill itself", (fill) => {
+    expect(contrast(outline, fill)).toBeGreaterThan(1);
   });
 });
 

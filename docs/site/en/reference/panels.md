@@ -111,7 +111,7 @@ During the import, the form shows **Importing…**. For a STEP: **Converting STE
 
 The card is at the very bottom of the left panel. It is visible in all central layouts. It appears as soon as the core answers about the bridge state.
 
-The status line shows a coloured dot and the state text, followed by a clickable pill that tells the network mode.
+The status line shows a dot (a 12 px glyph: check, ring, half-filled ring or cross in an octagon, besides the colour) and the state text, followed by a clickable pill that tells the network mode.
 
 | State | Dot | Action button |
 | --- | --- | --- |
@@ -495,7 +495,7 @@ The console also warns when the simulation is paused while a PLC bridge is conne
 
 The card's **Log** button opens a **PLC bridge log** window. It shows the end of the bridge log file (see [The log file](#the-log-file)) as columns (**Log lines**), scrolled to the bottom. While it is open, it refreshes on every new bridge state.
 
-Each entry shows: the local time `HH:MM:SS.mmm` (the full date is in the tooltip); a source badge, **Core** or **Bridge**; a level badge, **Info**, **Warn.** (amber fill) or **Error** (red fill); the message (the Python logger name is only in the tooltip, the bridge's own timestamp is hidden). Continuation lines of an entry (a traceback, for instance) are indented under it. Warning and error rows are tinted, with a bar on the left.
+Each entry shows: the local time `HH:MM:SS.mmm` (the full date is in the tooltip); a source badge, **Core** or **Bridge**; a level badge with its glyph, **Info**, **Warn.** (triangle, amber fill) or **Error** (cross in an octagon, red fill); the message (the Python logger name is only in the tooltip, the bridge's own timestamp is hidden). Continuation lines of an entry (a traceback, for instance) are indented under it. Warning and error rows are tinted, with a bar on the left.
 
 Three toggles, in the **Levels shown** group, filter by level: **Error**, **Warning**, **Info**, each with its entry count. As in the console, the choice is kept while the page stays open. When no entry matches: **No entry for the levels shown.**
 

@@ -20,6 +20,8 @@ type ToolIcon =
   | "eye"
   | "eye-off"
   | "state-mark"
+  | "state-idle"
+  | "state-busy"
   | "bolt"
   | "sensor"
   | "play"
@@ -92,7 +94,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   "frame-all": CORNERS,
   "frame-selection": `${CORNERS} M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z`,
   chevron: "M6 3.5 10.5 8 6 12.5",
-  error: `${CIRCLE} M8 4.5v4 M8 10.8v.7`,
+  // A cross in an octagon: the emergency stop sign (IEC 60204-1), shared by every error.
+  error: "M5.3 1.8h5.4l3.5 3.5v5.4l-3.5 3.5H5.3l-3.5-3.5V5.3Z M5.8 5.8l4.4 4.4 M10.2 5.8l-4.4 4.4",
   warning: "M8 2 14.5 13.5h-13Z M8 6.5v3.5 M8 11.6v.6",
   info: `${CIRCLE} M8 7.2v4 M8 4.8v.7`,
   close: "M4 4l8 8 M12 4l-8 8",
@@ -142,9 +145,18 @@ const PATHS: Readonly<Record<IconName, string>> = {
   delete: "M2.5 4h11 M6 4V2.5h4V4 M4 4l.7 9.5h6.6L12 4 M6.8 6.5v5 M9.2 6.5v5",
   // A disc: the stylesheet fills it when the sensor is on, and leaves a ring when it is off.
   "state-mark": "M12 8A4 4 0 1 1 4 8a4 4 0 0 1 8 0Z",
+  // A ring: nothing happens (idle, off). A half-filled ring: something is under way (busy);
+  // its left half disc is a second, filled path (FILLED_PATHS).
+  "state-idle": "M13.5 8A5.5 5.5 0 1 1 2.5 8a5.5 5.5 0 0 1 11 0Z",
+  "state-busy": "M13.5 8A5.5 5.5 0 1 1 2.5 8a5.5 5.5 0 0 1 11 0Z",
   eye: "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z",
   "eye-off":
     "M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z M10 8a2 2 0 1 1-4 0a2 2 0 1 1 4 0Z M2.5 13.5l11-11",
+};
+
+// Parts drawn filled with the text colour, over the outline of the same icon.
+const FILLED_PATHS: Readonly<Partial<Record<IconName, string>>> = {
+  "state-busy": "M8 2.5a5.5 5.5 0 0 0 0 11Z",
 };
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
@@ -158,5 +170,12 @@ export function icon(name: IconName, className = "icon"): SVGSVGElement {
   const path = document.createElementNS(SVG_NAMESPACE, "path");
   path.setAttribute("d", PATHS[name]);
   svg.append(path);
+  const filled = FILLED_PATHS[name];
+  if (filled !== undefined) {
+    const fill = document.createElementNS(SVG_NAMESPACE, "path");
+    fill.setAttribute("d", filled);
+    fill.setAttribute("class", "icon__fill");
+    svg.append(fill);
+  }
   return svg;
 }

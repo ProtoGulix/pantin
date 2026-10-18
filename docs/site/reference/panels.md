@@ -111,7 +111,7 @@ Pendant l'import, le formulaire affiche **Import en cours…**. Pour un STEP : *
 
 La carte est tout en bas du panneau de gauche. Elle est visible dans toutes les dispositions centrales. Elle apparaît dès que le cœur répond sur l'état du pont.
 
-La ligne d'état affiche une pastille de couleur et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
+La ligne d'état affiche une pastille (un pictogramme de 12 px : coche, anneau, anneau à moitié plein ou croix dans un octogone, en plus de la couleur) et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
 
 | État | Pastille | Bouton d'action |
 | --- | --- | --- |
@@ -495,7 +495,7 @@ La console prévient aussi quand la simulation est en pause alors qu'un pont aut
 
 Le bouton **Journal** de la carte ouvre une fenêtre **Journal du pont automate**. Elle montre la fin du fichier de journal du pont (voir [Le fichier de journal](#le-fichier-de-journal)) sous forme de colonnes (**Lignes du journal**), calées en bas. Tant qu'elle est ouverte, elle se met à jour à chaque nouvel état du pont.
 
-Chaque entrée affiche : l'heure locale `HH:MM:SS.mmm` (la date complète est dans l'info-bulle) ; un badge de source, **Cœur** ou **Pont** ; un badge de niveau, **Info**, **Avert.** (fond ambre) ou **Erreur** (fond rouge) ; le message (le nom du logger Python n'est que dans l'info-bulle, l'horodatage propre au pont est masqué). Les lignes de suite d'une entrée (une trace d'erreur, par exemple) sont indentées sous elle. Les lignes d'avertissement et d'erreur sont teintées, avec une barre à gauche.
+Chaque entrée affiche : l'heure locale `HH:MM:SS.mmm` (la date complète est dans l'info-bulle) ; un badge de source, **Cœur** ou **Pont** ; un badge de niveau avec son pictogramme, **Info**, **Avert.** (triangle, fond ambre) ou **Erreur** (croix dans un octogone, fond rouge) ; le message (le nom du logger Python n'est que dans l'info-bulle, l'horodatage propre au pont est masqué). Les lignes de suite d'une entrée (une trace d'erreur, par exemple) sont indentées sous elle. Les lignes d'avertissement et d'erreur sont teintées, avec une barre à gauche.
 
 Trois bascules, groupe **Niveaux affichés**, filtrent par niveau : **Erreur**, **Avertissement**, **Info**, chacune avec son nombre d'entrées. Comme dans la console, le choix est conservé tant que la page reste ouverte. Quand aucune entrée ne correspond : **Aucune entrée pour les niveaux affichés.**
 

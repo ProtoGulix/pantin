@@ -178,3 +178,15 @@ registered in the test with its measured floor and its second cue (the
 letters), so that the waiver is visible and cannot widen silently. Rule 1
 (colour is never the only cue) is unchanged and carries the meaning in every
 case.
+
+## Amendment (2026-10-18): glyphs and filled badges, found in slice 2
+
+- Rule 4: the busy glyph is a ring whose left half is filled, not a half
+  ring: at 12 px a half ring was barely different from the idle ring.
+- Rule 6 and rule 2: a filled state badge sits on a panel surface, not on
+  the scene ground. Measured on those surfaces, the fills alone do not reach
+  3:1 (amber 1.45 to 1.72 in the light theme, red 1.83 to 2.37 and green
+  2.36 to 3.06 in the dark theme). The user chose (2026-10-18) to give every
+  filled badge an outline that reaches 3:1 against the surfaces it sits on,
+  fills unchanged; the test checks the outline, and the text on the fill
+  keeps 4.5:1. The normal fill is added with the first screen that uses it.

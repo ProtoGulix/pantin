@@ -90,27 +90,24 @@
   box-shadow: var(--focus-ring);
 }
 
-/* One dot colour per status: the text next to it says the same. */
+/* One glyph and one colour per status (ADR 0057 rule 4): the text next to it says the same. */
 .status-dot {
-  display: inline-block;
+  display: inline-flex;
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  background: var(--text-faint);
-  border-radius: 50%;
+  color: var(--text-faint);
 }
 
 .status-dot.is-ok {
-  background: var(--state-normal);
+  color: var(--state-normal);
 }
 
 .status-dot.is-busy {
   /* Starting or stopping is a transition, not an abnormal condition (ADR 0053 point 3). */
-  background: var(--selection);
+  color: var(--selection);
 }
 
 .status-dot.is-error {
-  background: var(--state-emergency);
+  color: var(--state-emergency);
 }
 
 .bridge-panel__notice,

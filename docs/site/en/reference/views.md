@@ -278,7 +278,7 @@ Under the button, **Problems (n)** lists everything the core finds to complain a
 
 The left column, **Modules**, lists the modules. Each row is a toggle button (the chosen module is pressed) that shows:
 
-- a connection dot and its text: **bridge stopped**, **waiting for the PLC** or **PLC connected**;
+- a connection dot (glyph) and its text, written on the module row: **bridge stopped**, **waiting for the PLC** or **PLC connected**;
 - the module's key and its port (`m1`, `:1502`);
 - the number of channels (**n channels**) and, if there are any, of problems (**n problems**).
 

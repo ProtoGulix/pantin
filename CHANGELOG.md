@@ -19,6 +19,14 @@ All notable changes to Pantin. The format follows
   frame trihedrons and the view cube, red, green and blue with distinct
   lightness; a test checks the registered colour pairs under colour-blindness
   simulations and that no literal colour is left in the 3D code.
+- Viewer (ADR 0057, second slice): every state has a glyph next to its
+  colour (check, warning triangle, cross in an octagon, ring for idle,
+  half-filled ring for busy) on the bridge status, the module lines, the I/O
+  module list, whose rows now write the status word instead of a tooltip,
+  and the journal badges; the journal's warning and error badges use IEC
+  fills (amber, red) with their own text colours, tested at 4.5:1, and an
+  outline that stands 3:1 against the panel. The error icon becomes a cross
+  in an octagon everywhere.
 
 ### Fixed
 

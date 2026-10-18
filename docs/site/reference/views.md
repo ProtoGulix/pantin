@@ -278,7 +278,7 @@ Sous le bouton, **Problèmes (n)** liste tout ce que le cœur trouve à redire. 
 
 La colonne de gauche, **Modules**, liste les modules. Chaque ligne est un bouton à bascule (le module choisi est enfoncé) qui montre :
 
-- une pastille de connexion et son texte : **pont arrêté**, **en attente de l'automate** ou **automate connecté** ;
+- une pastille de connexion (pictogramme) et son texte, écrit sur la ligne du module : **pont arrêté**, **en attente de l'automate** ou **automate connecté** ;
 - la clé du module et son port (`m1`, `:1502`) ;
 - le nombre de voies (**n voies**) et, s'il y en a, de problèmes (**n problèmes**).
 

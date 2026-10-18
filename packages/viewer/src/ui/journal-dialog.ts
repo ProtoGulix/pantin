@@ -7,8 +7,9 @@ import {
 } from "../bridge/bridge-journal.ts";
 import type { JournalLevel } from "../bridge/bridge-log-parser.ts";
 import { nextFocusIndex } from "../panel/welcome-model.ts";
+import { glyphOfLevel } from "../theme/state-glyphs.ts";
 import { element } from "./dom.ts";
-import { icon } from "./icons.ts";
+import { type IconName, icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 
 // The bridge log window (ADR 0054 point 5), a modal over the central area like the
@@ -19,11 +20,15 @@ const FOCUSABLE = "button:not([disabled]), a[href], [tabindex='0']";
 const FEEDBACK_MILLISECONDS = 1500;
 
 // An entry with no source (a line found before any entry) keeps an empty cell.
-function badge(kind: string, value: string, label: string): HTMLElement {
-  return element("span", {
+function badge(kind: string, value: string, label: string, glyph?: IconName): HTMLElement {
+  const created = element("span", {
     className: label === "" ? "" : `journal__badge journal__badge--${kind}-${value}`,
-    text: label,
   });
+  if (glyph !== undefined) {
+    created.append(icon(glyph, "icon icon--small"));
+  }
+  created.append(label);
+  return created;
 }
 
 // The level and the source are words in a badge: colour is never the only cue.
@@ -42,7 +47,7 @@ function entryItem(entry: JournalEntryView): HTMLElement {
       attributes: { title: entry.timeTitle },
     }),
     badge("source", entry.source ?? "", entry.sourceLabel),
-    badge("level", entry.level, entry.levelLabel),
+    badge("level", entry.level, entry.levelLabel, glyphOfLevel(entry.level)),
     element("div", { className: "journal__body" }, [message, ...continuation]),
   ]);
 }

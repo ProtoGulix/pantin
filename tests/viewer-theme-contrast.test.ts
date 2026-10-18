@@ -37,6 +37,19 @@ function tokensOf(theme: ThemeName): Map<string, string> {
   return tokens;
 }
 
+// The IEC fills are the same in both themes, so they sit in the generic :root block.
+function fillTokens(): Map<string, string> {
+  const start = BASE_CSS.indexOf(":root {");
+  const end = BASE_CSS.indexOf("}", start);
+  const tokens = new Map<string, string>();
+  for (const [, name, value] of BASE_CSS.slice(start, end).matchAll(/--([\w-]+):\s*([^;]+);/g)) {
+    if (name !== undefined && value !== undefined) {
+      tokens.set(name, value.trim());
+    }
+  }
+  return tokens;
+}
+
 function token(tokens: Map<string, string>, name: string): string {
   const value = tokens.get(name);
   if (value === undefined || !/^#[0-9a-f]{6}$/i.test(value)) {
@@ -94,8 +107,11 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
     );
   });
 
-  it.each(["state-abnormal", "state-emergency"])("gives the text on a --%s fill 4.5:1", (state) => {
-    expect(contrast(token(tokens, "on-state"), token(tokens, state))).toBeGreaterThanOrEqual(4.5);
+  it.each(["abnormal", "emergency"])("gives the text on the --fill-%s 4.5:1", (state) => {
+    const fills = fillTokens();
+    expect(
+      contrast(token(fills, `on-fill-${state}`), token(fills, `fill-${state}`)),
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
   // The journal's warning and error rows (journal.css) lay a tint over --surface-0.

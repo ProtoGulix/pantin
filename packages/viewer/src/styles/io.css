@@ -150,8 +150,14 @@
   cursor: pointer;
 }
 
-.io-module .status-dot {
-  align-self: center;
+.io-module__connection {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.io-module__status {
+  color: var(--text-muted);
 }
 
 .io-module:hover {
