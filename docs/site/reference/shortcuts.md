@@ -1,14 +1,14 @@
 # Raccourcis clavier et souris
 
-Cette page liste tous les gestes au clavier et à la souris que le code du viewer traite, groupés par zone. Les entrées de menu sont décrites dans [Menus](/reference/menus).
+Les gestes au clavier et à la souris, groupés par zone. Les entrées de menu sont dans [Menus](/reference/menus).
 
 ::: info Ctrl ou Cmd
-Partout où le viewer lit un raccourci Ctrl, la touche <kbd>Cmd</kbd> (macOS) fonctionne aussi. Font exception la navigation de la caméra et le glisser du manipulateur, qui testent seulement <kbd>Ctrl</kbd> (voir plus bas).
+Sur macOS, <kbd>Cmd</kbd> remplace <kbd>Ctrl</kbd> dans les raccourcis. Exceptions : la navigation de la caméra et le glisser du manipulateur n'acceptent que <kbd>Ctrl</kbd>.
 :::
 
 ## Global (fenêtre entière)
 
-Ces raccourcis sont ceux des menus. Un raccourci avec <kbd>Alt</kbd> en plus n'est jamais reconnu. <kbd>Maj</kbd> n'est pas testé : <kbd>Maj</kbd>+<kbd>G</kbd> agit comme <kbd>G</kbd>.
+Ces raccourcis sont ceux des menus. <kbd>Alt</kbd> en plus les désactive ; <kbd>Maj</kbd> est ignoré (<kbd>Maj</kbd>+<kbd>G</kbd> agit comme <kbd>G</kbd>).
 
 | Geste | Effet | Condition |
 |---|---|---|
@@ -26,13 +26,20 @@ Ces raccourcis sont ceux des menus. Un raccourci avec <kbd>Alt</kbd> en plus n'e
 | <kbd>Échap</kbd> | Termine l'outil de placement en cours (manipulateur, alignement, choix d'axe) | Voir la chaîne d'Échap ci-dessous. |
 | <kbd>Espace</kbd> ou <kbd>Maj</kbd>+<kbd>Espace</kbd> | Ouvre la liste des vues standard à l'emplacement du pointeur | Voir « Vue 3D ». |
 
-Dans un champ de saisie (texte, nombre, liste), aucun de ces raccourcis ne s'exécute : les touches gardent leur sens normal. Une exception côté navigateur : <kbd>Ctrl</kbd>+<kbd>S</kbd> et <kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>7</kbd> sont toujours interceptés, même grisés ou dans un champ, pour que le navigateur n'enregistre pas la page ni ne change d'onglet. Dans un champ, ils n'exécutent alors rien.
+Dans un champ de saisie, ces raccourcis ne s'exécutent pas : les touches gardent leur sens normal. <kbd>Ctrl</kbd>+<kbd>S</kbd> et <kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>7</kbd> restent interceptés, même grisés, pour que le navigateur n'enregistre pas la page ni ne change d'onglet.
 
-Les raccourcis à touche simple (<kbd>F2</kbd>, <kbd>Suppr</kbd>, <kbd>G</kbd>...) cèdent le pas à un composant qui a déjà traité la touche (arborescence, menus, diagramme, console).
+Les raccourcis à touche simple (<kbd>F2</kbd>, <kbd>Suppr</kbd>, <kbd>G</kbd>...) cèdent la place à un composant qui a déjà traité la touche (arborescence, menus, schéma, console).
 
 ### Chaîne d'Échap
 
-<kbd>Échap</kbd> agit sur le composant le plus proche, dans cet ordre : un glisser du manipulateur de placement (il revient à la position de départ ; cet écouteur est posé sur le document, en phase de capture, donc il passe avant tout le reste), un câblage en cours dans le schéma (il est abandonné ; l'outil de placement actif reste en place, le <kbd>Échap</kbd> suivant le termine ; cet écouteur est aussi sur le document, en phase de capture), un champ de saisie (il restaure sa valeur), une question de confirmation (elle choisit l'annulation), un menu ou un menu contextuel (il se ferme), puis l'outil de placement actif (manipulateur, alignement, choix d'axe). <kbd>Échap</kbd> ne termine l'outil ni quand un menu contextuel est ouvert, ni quand un champ a le focus.
+<kbd>Échap</kbd> agit sur le premier cas de cette liste :
+
+1. un glisser du manipulateur : l'assemblage revient à sa position de départ ;
+2. un câblage en cours dans le schéma : il est abandonné (l'outil de placement reste actif) ;
+3. un champ de saisie : il restaure sa valeur ;
+4. une question de confirmation : elle choisit l'annulation ;
+5. un menu ou un menu contextuel : il se ferme ;
+6. l'outil de placement actif (manipulateur, alignement, choix d'axe) : il se termine.
 
 ## Barre de menus
 
@@ -62,6 +69,9 @@ Les flèches agissent quand l'arborescence a le focus ; l'élément sélectionn�
 | <kbd>F2</kbd> | Renomme la ligne (si elle est renommable). |
 | <kbd>Menu</kbd> (touche contextuelle) | Ouvre le menu contextuel de la ligne. |
 | Clic | Sélectionne la ligne (la sélection se fait dès l'appui). |
+| <kbd>Ctrl</kbd>+clic (ou <kbd>Cmd</kbd>+clic) | Ajoute la ligne à la sélection, ou l'en retire. La dernière ligne sélectionnée ne se retire pas. Réservé aux lignes de corps et de groupe d'un même assemblage ; ailleurs, c'est un clic simple. |
+| <kbd>Maj</kbd>+clic | Sélectionne la plage entre la première ligne sélectionnée et la ligne cliquée (mêmes lignes que ci-dessus). |
+| <kbd>Maj</kbd>+<kbd>↓</kbd> / <kbd>Maj</kbd>+<kbd>↑</kbd> | Étend la sélection à la ligne suivante ou précédente, dans les mêmes limites. |
 | Clic sur le chevron | Déplie ou replie la ligne. |
 | Clic sur l'oeil | Masque ou affiche l'assemblage dans la vue 3D. |
 | Clic sur l'icône d'actionneur d'une liaison | Ouvre le formulaire de son actionneur. |
@@ -84,13 +94,13 @@ Ces trois listes se commandent de la même façon.
 | Clic sur une entrée | L'exécute. |
 | Clic ailleurs | Ferme le menu. |
 
-Le menu contextuel de l'arborescence s'ouvre avec le focus sur sa première entrée quand on l'ouvre au clavier. Il est placé au pointeur et gardé à l'intérieur de la fenêtre. Le menu du schéma ferme aussi avec <kbd>Tab</kbd>.
+Ouvert au clavier, le menu de l'arborescence a le focus sur sa première entrée. Le menu du schéma se ferme aussi avec <kbd>Tab</kbd>.
 
 ## Vue 3D et navigation de la caméra
 
 ### Souris
 
-Le bouton gauche n'a pas de rôle de caméra : un clic sélectionne, et glisser dans le vide ne fait rien. Un « clic » est un appui sans déplacement, donc faire tourner la caméra ne sélectionne jamais. Le menu **Affichage** choisit la configuration.
+Le bouton gauche ne pilote pas la caméra : un clic sélectionne, glisser dans le vide ne fait rien. Le menu **Affichage** choisit la configuration.
 
 | Geste | Souris : SolidWorks | Souris : ZW3D |
 |---|---|---|
@@ -100,17 +110,11 @@ Le bouton gauche n'a pas de rôle de caméra : un clic sélectionne, et glisser 
 | Bouton droit, glisser | Aucun effet de caméra | Tourne la caméra |
 | Molette | Zoom autour du curseur | Zoom autour du curseur |
 
-Précisions :
-
-- Avec **Souris : ZW3D**, seul le bouton du milieu seul et le bouton droit sont affectés ; les modificateurs ne changent rien.
-- Pour le sens de la molette, avec **Souris : SolidWorks** pousser la molette vers l'avant dézoome ; avec **Souris : ZW3D** c'est l'inverse. **Inverser le sens de la molette** (menu **Affichage**) retourne le sens dans les deux cas.
-- Le menu contextuel du navigateur est supprimé sur la vue 3D, pour que le bouton droit serve à la caméra.
-- La rotation se fait autour du point d'un corps sous le curseur au moment de l'appui, s'il y en a un.
+- Avec **Souris : ZW3D**, seuls le bouton du milieu seul et le bouton droit comptent ; les touches <kbd>Ctrl</kbd> et <kbd>Maj</kbd> ne changent rien.
+- Avec **Souris : SolidWorks**, pousser la molette vers l'avant dézoome ; avec **Souris : ZW3D**, c'est l'inverse. **Inverser le sens de la molette** (menu **Affichage**) retourne le sens dans les deux cas.
+- Le menu contextuel du navigateur est supprimé sur la vue 3D : le bouton droit sert à la caméra.
+- La rotation se fait autour du point du corps sous le curseur, s'il y en a un.
 - Un appui sur la vue interrompt une animation de vue en cours.
-
-::: warning Non vérifié
-Le sens de la molette de ZW3D n'est pas vérifié (spike 0007) : c'est celui de Babylon.js qui est utilisé.
-:::
 
 ### Sélection
 
@@ -124,7 +128,7 @@ Le sens de la molette de ZW3D n'est pas vérifié (spike 0007) : c'est celui de 
 
 ### Clavier (la vue 3D a le focus)
 
-Les flèches ne pilotent la caméra que quand la vue 3D a le focus (un clic dessus le lui donne), pour que les flèches continuent de servir dans l'arborescence et les champs.
+Les flèches pilotent la caméra quand la vue 3D a le focus (un clic dessus le lui donne).
 
 | Geste | Effet |
 |---|---|
@@ -135,7 +139,7 @@ Les flèches ne pilotent la caméra que quand la vue 3D a le focus (un clic dess
 | <kbd>Espace</kbd> ou <kbd>Maj</kbd>+<kbd>Espace</kbd> | Ouvre la liste des vues standard au pointeur (**Face** ... **Isométrique**). N'agit que si rien de particulier n'a le focus (page ou vue 3D), sans <kbd>Ctrl</kbd>, <kbd>Alt</kbd> ni <kbd>Cmd</kbd>, hors champ de saisie, avec un Pantin ouvert et la vue 3D affichée. |
 | <kbd>↓</kbd> / <kbd>↑</kbd>, <kbd>Échap</kbd> dans cette liste | Entrée suivante ou précédente ; fermeture. |
 
-<kbd>Alt</kbd> et <kbd>Cmd</kbd> désactivent ces touches de flèches.
+<kbd>Alt</kbd> et <kbd>Cmd</kbd> désactivent ces flèches.
 
 ### Cube des vues
 
@@ -157,7 +161,7 @@ Le manipulateur (flèches et arcs sur l'assemblage) s'active avec <kbd>G</kbd> (
 
 ## Schéma des chaînes
 
-Le schéma est navigable entièrement au clavier : un seul élément du schéma est un arrêt de tabulation à la fois, et les flèches déplacent le focus. Les touches ci-dessous ne sont traitées que sans <kbd>Ctrl</kbd>, <kbd>Alt</kbd> ni <kbd>Cmd</kbd>.
+Le schéma se parcourt entièrement au clavier : un seul élément est un arrêt de tabulation, les flèches déplacent le focus. Ces touches n'agissent que sans <kbd>Ctrl</kbd>, <kbd>Alt</kbd> ni <kbd>Cmd</kbd>.
 
 | Geste | Effet |
 |---|---|
@@ -181,7 +185,7 @@ Le schéma est navigable entièrement au clavier : un seul élément du schéma 
 | Glisser de l'extrémité source d'un lien vers une cible | Crée le lien. Les cibles possibles s'éclairent, les autres s'estompent. Un appui qui bouge de moins de 4 pixels reste un clic. |
 | <kbd>Échap</kbd> pendant le glisser | Abandonne le câblage. |
 
-Une touche du schéma que rien n'a traitée n'arrive pas aux raccourcis de la fenêtre : <kbd>Suppr</kbd> affiche l'aide ci-dessus et <kbd>F2</kbd> est ignoré, pour ne pas agir sur la sélection à la place de l'élément qui a le focus.
+Dans le schéma, <kbd>Suppr</kbd> et <kbd>F2</kbd> n'agissent jamais sur la sélection de la fenêtre : <kbd>Suppr</kbd> affiche un message d'aide, <kbd>F2</kbd> est ignoré.
 
 ### Champ de valeur d'une commande numérique
 
@@ -204,7 +208,7 @@ Dans ce champ, les touches ne sont pas des raccourcis de la fenêtre ni du sché
 | <kbd>Entrée</kbd> dans un champ de valeur d'un tag de l'inspecteur | Envoie la valeur. |
 | <kbd>Entrée</kbd> / <kbd>Échap</kbd> dans un champ du formulaire de liaison | Valide / annule le formulaire. |
 
-Tous ces champs arrêtent la propagation des touches : les raccourcis de la fenêtre ne se déclenchent pas pendant la saisie.
+Pendant la saisie, les raccourcis de la fenêtre ne se déclenchent pas.
 
 ## Séparateurs
 
@@ -272,6 +276,6 @@ La fenêtre est modale : le focus reste dedans.
 | Curseur d'une liaison (inspecteur) | Un glisser envoie la position à la liaison ; pendant le glisser, le flux de la simulation ne ramène pas le curseur en arrière. |
 | Clic sur une case ou un bouton à bascule d'une ligne de l'inspecteur | Force le bit ou bascule le défaut. |
 
-::: warning Non vérifié
-Les formulaires du panneau (actionneur, capteur, bande, module d'E/S, pont) n'ont pas été relus ligne à ligne pour leurs touches propres ; ceux de la liaison et des lignes de propriétés sont couverts ci-dessus.
+::: warning Limites connues
+Le sens de la molette du préréglage **Souris : ZW3D** est celui de Babylon.js, il n'a pas été comparé au logiciel d'origine. Les touches propres aux formulaires d'actionneur, de capteur, de bande, de module d'E/S et du pont ne sont pas toutes listées ici.
 :::

@@ -192,3 +192,14 @@ user's earlier files (cylinder, gripper) had a single level.
   10 assemblies expected); one ZW3D file with sub-assemblies; time of an
   import of a few hundred bodies, since each joint creation validates the
   whole document (ADR 0017 consequences).
+
+## Amendment (2026-10-18): point 3 superseded by ADR 0055
+
+Point 3 is superseded. Inside an assembly there is no fixed joint any more:
+its bodies follow it as a group. Each child assembly is joined to its parent
+by one fixed joint from the parent group to the child group, so a bearing of
+20 bodies has 0 joints of its own and 1 to its parent. The anchor tree is
+still the STEP tree, and points 1, 2 and 4 to the end still hold.
+
+Point 5 reads, for a joint whose child is a group: the tag prefix is the key
+of that group (ADR 0055 point 3). For a body child it is unchanged.

@@ -7,6 +7,7 @@ import {
 } from "@pantin/protocol";
 import { switchZonesOf } from "@pantin/sensor-types/zones";
 import type { Vector3Tuple } from "../frames.ts";
+import { groupRepresentatives, jointBodyIds } from "../joint-bodies.ts";
 import { strokeOf } from "../joints/joint-parameters.ts";
 import { inBodyFrame } from "../placement-frame.ts";
 
@@ -44,13 +45,14 @@ function markerOf(document: PantinDocument, sensor: Sensor): SensorMarker | null
   // The drawn zone of a switch (ADR 0025); none for another type.
   const range = switchZonesOf(sensor, strokeOf(joint))?.shown ?? null;
   // Seen from the parent body's file frame, since the marker follows its pose.
-  const parent = document.bodies.find((body) => body.id === joint.parent);
+  const bodyIds = jointBodyIds(groupRepresentatives(document), joint);
+  const parent = document.bodies.find((body) => body.id === bodyIds.parent);
   const frame = inBodyFrame(joint.origin, joint.axis, parent?.placement);
   const bit = SENSOR_TAGS[sensor.type].find((tag) => tag.type === "bit");
   return {
     sensorId: sensor.id,
-    parentBodyId: joint.parent,
-    childBodyId: joint.child,
+    parentBodyId: bodyIds.parent,
+    childBodyId: bodyIds.child,
     origin: frame.origin,
     axis: frame.axis,
     shape:

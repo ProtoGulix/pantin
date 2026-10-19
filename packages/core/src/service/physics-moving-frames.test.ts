@@ -1,4 +1,5 @@
 import type { Placement } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { belt, emitter, guide } from "../test-support/conveyor-fixtures.ts";
 import { type Bench, benchesClosedAfterEach } from "../test-support/physics-bench.ts";
@@ -24,8 +25,8 @@ function liftLine() {
       joint({
         id: "lift",
         type: "prismatic",
-        parent: "base",
-        child: "deck",
+        parent: bodyEndpoint("base"),
+        child: groupEndpoint("carrier"),
         origin: [0, 0, 0],
         axis: [0, 0, 1],
         limits: [0, 0.5],
@@ -33,8 +34,8 @@ function liftLine() {
       joint({
         id: "drum",
         type: "continuous",
-        parent: "deck",
-        child: "roller",
+        parent: bodyEndpoint("deck"),
+        child: bodyEndpoint("roller"),
         origin: [0, 0, 0],
         axis: [0, 1, 0],
       }),

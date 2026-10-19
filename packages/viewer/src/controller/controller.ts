@@ -2,6 +2,7 @@ import { pickedNodeId } from "../assembly-display.ts";
 import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import { isToolOn } from "../gizmo/tool-rules.ts";
+import { withGroupNameEdited } from "../grouping/grouping-state.ts";
 import { isLanguage } from "../i18n/translate.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
 import { selectedNodeIdOf } from "../selection.ts";
@@ -15,7 +16,9 @@ import { parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
 import type { WelcomeTab } from "../viewer-state.ts";
+import { closeAbout } from "./about-actions.ts";
 import { actuatorIntents } from "./actuator-intents.ts";
+import { alignFramesOnJointAxis } from "./align-frames-actions.ts";
 import {
   applyAlignment,
   chooseAlignmentKind,
@@ -82,6 +85,7 @@ import {
   openContextMenu,
   runDeviceAction,
   selectRow,
+  selectRows,
   setExpanded,
   startRename,
 } from "./tree-actions.ts";
@@ -107,6 +111,7 @@ function listIntents(store: ViewerStore) {
     createPantin: (name: string) => void createPantin(store, name),
     createPantinFromFile: (file: File) => void createPantinFromFile(store, file),
     hideWelcome: () => store.update(withWelcomeHidden(store.state)),
+    closeAbout: () => closeAbout(store),
     selectWelcomeTab: (tab: WelcomeTab) => store.update(withWelcomeTab(store.state, tab)),
     setWelcomeFilter: (text: string) => store.update(withWelcomeFilter(store.state, text)),
   };
@@ -115,6 +120,8 @@ function listIntents(store: ViewerStore) {
 function treeIntents(store: ViewerStore) {
   return {
     selectNode: (nodeId: string) => selectRow(store, nodeId),
+    selectNodes: (nodeIds: readonly string[]) => selectRows(store, nodeIds),
+    editGroupName: (name: string) => store.update(withGroupNameEdited(store.state, name)),
     selectDevice: (device: DeviceRef) => selectDevice(store, device),
     revealNode: (nodeId: string) =>
       store.update({ ...withRevealedNode(store.state, nodeId), contextMenu: null }),
@@ -184,6 +191,7 @@ function jointIntents(store: ViewerStore) {
     submitJointForm: () => void submitJointForm(store),
     cancelJointForm: () => cancelJointForm(store),
     pickJointAxisOnFace: () => startAxisPick(store),
+    alignFramesOnJointAxis: () => void alignFramesOnJointAxis(store),
     moveJoint: (pantinId: string, jointId: string, position: number) =>
       moveJoint(store, pantinId, jointId, position),
   };

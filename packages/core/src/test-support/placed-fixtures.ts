@@ -6,9 +6,8 @@ import {
   type PantinDocument,
   type Placement,
 } from "@pantin/protocol";
-import { expect } from "vitest";
 import { computePoses } from "../domain/kinematics.ts";
-import { expectPoint } from "./expect-point.ts";
+import { expectPoint, expectSameRotation } from "./expect-point.ts";
 
 // Documents with rotated, translated placements, so that a wrong frame shows,
 // and the check that two documents display the same poses.
@@ -100,11 +99,6 @@ export function expectSamePoses(
       continue;
     }
     expectPoint(pose.translation, reference.translation);
-    // q and -q are the same rotation: the unit quaternions agree when |q . r| = 1.
-    const dot = pose.rotation.reduce(
-      (sum, value, index) => sum + value * (reference.rotation[index] ?? 0),
-      0,
-    );
-    expect(Math.abs(dot)).toBeCloseTo(1, 12);
+    expectSameRotation(pose.rotation, reference.rotation);
   }
 }

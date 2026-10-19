@@ -23,6 +23,7 @@ import { type ClockRoutes, clockRoutes } from "./api-clock-routes.ts";
 import { type ConsoleRoutes, consoleRoutes } from "./api-console-routes.ts";
 import { type ConveyorRoutes, conveyorRoutes } from "./api-conveyor-routes.ts";
 import { type DriveRoutes, driveRoutes } from "./api-drive-routes.ts";
+import { type GroupRoutes, groupRoutes } from "./api-group-routes.ts";
 import { type IoRoutes, ioRoutes } from "./api-io-routes.ts";
 import { type JointRoutes, jointRoutes } from "./api-joint-routes.ts";
 import { type OrphanMeshRoutes, orphanMeshRoutes } from "./api-orphan-mesh-routes.ts";
@@ -38,6 +39,7 @@ import {
   sendRequest,
   validInputOrThrow,
 } from "./api-transport.ts";
+import { type VersionRoutes, versionRoutes } from "./api-version-routes.ts";
 
 // The viewer's only door to the core (CLAUDE.md section 3.4). Every response
 // is validated against the protocol schemas: the network is never trusted.
@@ -45,6 +47,7 @@ import {
 export interface PantinApiClient
   extends JointRoutes,
     AssemblyRoutes,
+    GroupRoutes,
     DriveRoutes,
     ActuatorRoutes,
     SensorRoutes,
@@ -53,7 +56,8 @@ export interface PantinApiClient
     ClockRoutes,
     BridgeRoutes,
     IoRoutes,
-    OrphanMeshRoutes {
+    OrphanMeshRoutes,
+    VersionRoutes {
   listPantins(): Promise<PantinSummary[]>;
   createPantin(name: string): Promise<PantinResponse>;
   getPantin(pantinId: string): Promise<PantinResponse>;
@@ -190,6 +194,7 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...bodyRoutes(send, fetchFunction),
     ...jointRoutes(send),
     ...assemblyRoutes(send),
+    ...groupRoutes(send),
     ...driveRoutes(send),
     ...actuatorRoutes(send),
     ...sensorRoutes(send),
@@ -199,5 +204,6 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...bridgeRoutes(send, fetchFunction),
     ...ioRoutes(send, fetchFunction),
     ...orphanMeshRoutes(send),
+    ...versionRoutes(send),
   };
 }

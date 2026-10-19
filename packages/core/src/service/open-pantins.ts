@@ -3,7 +3,7 @@ import type { PantinDocument, PantinId, PantinResponse } from "@pantin/protocol"
 import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
-import { allClearedEvents, migratedEvent } from "../domain/console-events.ts";
+import { allClearedEvents, migrationEvents } from "../domain/console-events.ts";
 import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
 import {
   type IoReading,
@@ -276,17 +276,15 @@ async function readPantinFromDisk(
   pantinId: PantinId,
 ): Promise<OpenPantin> {
   // Compared in canonical form, so a hand formatted file is not "unsaved".
-  const { document, migratedFrom } = await readSavedReading(context, pantinId);
+  const reading = await readSavedReading(context, pantinId);
   const io = await readIoReading(context, pantinId);
   const openPantin = newOpenPantin(
-    document,
+    reading.document,
     context.newConsoleId(),
     context.physics.createWorld,
     io,
   );
-  if (migratedFrom !== null) {
-    recordConsoleEvents(context, openPantin, [migratedEvent(migratedFrom)]);
-  }
+  recordConsoleEvents(context, openPantin, migrationEvents(reading));
   return openPantin;
 }
 

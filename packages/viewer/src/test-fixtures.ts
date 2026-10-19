@@ -1,5 +1,6 @@
 import {
   type Body,
+  bodyEndpoint,
   type Joint,
   PANTIN_SCHEMA_VERSION,
   type PantinResponse,
@@ -89,8 +90,8 @@ export const pantinSummaries: PantinSummary[] = [
 ];
 
 const placement = {
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: bodyEndpoint("carriage"),
   origin: [0.01, 0, 0.02] as [number, number, number],
   axis: [0, 0, 1] as [number, number, number],
 };

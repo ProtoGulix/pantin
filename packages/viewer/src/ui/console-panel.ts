@@ -4,7 +4,7 @@ import type { Translate } from "../i18n/translate.ts";
 import { CONSOLE_HEIGHT_DEFAULT, clampConsoleHeight, parseStoredNumber } from "../layout-sizes.ts";
 import { listCommandForKey } from "../panel/list-navigation.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./browser-storage.ts";
-import { showConsoleCounter } from "./console-counter.ts";
+import type { ConsoleBar } from "./console-bar.ts";
 import { unhandledKeyInDiagram } from "./diagram-key-policy.ts";
 import { element, iconButton } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
@@ -112,7 +112,7 @@ export class ConsolePanel {
   private readonly host: HTMLElement;
   private readonly area: HTMLElement;
   private readonly splitter: HTMLElement;
-  private readonly counterButton: () => HTMLElement | null;
+  private readonly bar: ConsoleBar;
   private readonly headHost = element("div");
   private readonly list = element("div", {
     className: "console__list",
@@ -132,10 +132,10 @@ export class ConsolePanel {
 
   // `area` is the column holding the central view and the console: its height
   // bounds the console's.
-  // `counterButton` is the toolbar counter: it takes the focus back when the panel closes
-  // under it, and is updated with the lines.
-  constructor(host: HTMLElement, area: HTMLElement, counterButton: () => HTMLElement | null) {
-    this.counterButton = counterButton;
+  // `bar` holds the counter under the console: it takes the focus back when the panel
+  // closes, and is updated with the lines.
+  constructor(host: HTMLElement, area: HTMLElement, bar: ConsoleBar) {
+    this.bar = bar;
     this.host = host;
     this.area = area;
     this.splitter = createSplitter({
@@ -163,16 +163,13 @@ export class ConsolePanel {
   showLive(view: ConsoleView | null): void {
     if (this.translate !== null && this.intents !== null) {
       this.render(view, this.translate, this.intents);
-      const counter = this.counterButton();
-      if (counter !== null && view !== null) {
-        showConsoleCounter(counter, view);
-      }
     }
   }
 
   render(view: ConsoleView | null, t: Translate, intents: PanelIntents): void {
     this.intents = intents;
     this.translate = t;
+    this.bar.show(view, () => intents.toggleConsole());
     const hadFocus = this.host.contains(document.activeElement);
     this.host.hidden = view?.open !== true;
     this.splitter.setAttribute("aria-label", t("splitter.console"));
@@ -181,7 +178,7 @@ export class ConsolePanel {
     if (view === null || !view.open) {
       // Hidden elements drop the focus to the page: give it back to the counter.
       if (hadFocus) {
-        this.counterButton()?.focus();
+        this.bar.focusCounter();
       }
       return;
     }

@@ -1,4 +1,5 @@
 import type { Joint } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { expectPoint } from "../../test-support/expect-point.ts";
 import { apply } from "../rigid-transform.ts";
@@ -9,8 +10,8 @@ const hinge: Extract<Joint, { type: "revolute" }> = {
   tagKey: "hinge",
   type: "revolute",
   name: "Hinge",
-  parent: "base",
-  child: "arm",
+  parent: bodyEndpoint("base"),
+  child: bodyEndpoint("arm"),
   origin: [1, 0, 0],
   axis: [0, 0, 1],
   limits: [-Math.PI, Math.PI],

@@ -21,6 +21,17 @@
   border-top: 1px solid var(--border);
 }
 
+/* Always visible under the central area, away from the toolbar's brand-coloured view switch. */
+.console-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+}
+
+.console-bar[hidden],
 .console[hidden] {
   display: none;
 }
@@ -174,7 +185,7 @@
   color: var(--text-muted);
 }
 
-/* Toolbar counter: icons and numbers, so colour is never the only cue. */
+/* Console bar counter: icons and numbers, so colour is never the only cue. */
 .console-counter {
   display: flex;
   flex-shrink: 0;
@@ -195,8 +206,9 @@
 }
 
 .console-counter.is-pressed {
-  background: var(--brand-soft);
-  border-color: var(--border);
+  background: var(--selection-soft);
+  border-color: var(--selection);
+  box-shadow: inset 0 -2px 0 var(--selection);
 }
 
 .console-counter .icon {

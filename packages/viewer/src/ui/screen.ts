@@ -5,8 +5,11 @@ import { effectiveLayout } from "../central-layout.ts";
 import type { ClockView } from "../clock/clock-model.ts";
 import type { ConsoleView } from "../console/console-view.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
+import type { ThemeName } from "../theme/theme.ts";
 import type { PanelView } from "../view-model.ts";
+import { AboutDialog } from "./about-dialog.ts";
 import { CentralArea } from "./central-area.ts";
+import { ConsoleBar } from "./console-bar.ts";
 import { ConsolePanel } from "./console-panel.ts";
 import { DiagramView } from "./diagram-view.ts";
 import { Inspector } from "./inspector.ts";
@@ -49,14 +52,16 @@ export interface Screen {
   showBridge(view: BridgeView | null, intents: PanelIntents): void;
   showBridgeJournal(view: JournalView | null, intents: PanelIntents): void;
   showCameraOrientation(alpha: number, beta: number): void;
+  /** The theme changed: what the screen draws as data colours follows. */
+  setTheme(theme: ThemeName): void;
 }
 
-// Its counter sits in the toolbar of the side panel, which is redrawn: looked up when needed.
-function createConsolePanel(sidePanel: HTMLElement): ConsolePanel {
+// Its counter sits in a bar under it, outside the toolbar (ADR 0057 rule 5).
+function createConsolePanel(): ConsolePanel {
   return new ConsolePanel(
     requireElement("#console", HTMLElement),
     requireElement(".central", HTMLElement),
-    () => sidePanel.querySelector<HTMLElement>(".console-counter"),
+    new ConsoleBar(requireElement("#console-bar", HTMLElement)),
   );
 }
 
@@ -88,20 +93,26 @@ function writePageTexts(
   hint.textContent = view.viewportHint;
 }
 
+// Entering the edit mode puts the keyboard in the tree, the view mode in the canvas.
+function createWelcomeDialog(sidePanel: SidePanel, canvas: HTMLCanvasElement): WelcomeDialog {
+  return new WelcomeDialog(requireElement("#welcome", HTMLElement), (mode) =>
+    mode === "edit" ? sidePanel.focusTree() : canvas.focus(),
+  );
+}
+
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
 export function createScreen(): Screen {
   const panel = requireElement("#side-panel", HTMLElement);
   const canvas = requireElement("#viewport-canvas", HTMLCanvasElement);
   const hint = requireElement("#viewport-hint", HTMLElement);
   const sidePanel = new SidePanel(panel, requireElement(".layout", HTMLElement));
-  const welcome = new WelcomeDialog(requireElement("#welcome", HTMLElement), (mode) =>
-    mode === "edit" ? sidePanel.focusTree() : canvas.focus(),
-  );
+  const welcome = createWelcomeDialog(sidePanel, canvas);
   const journal = new JournalDialog(requireElement("#journal", HTMLElement));
+  const about = new AboutDialog(requireElement("#about", HTMLElement));
   const diagram = createDiagramView();
   const ioPanel = createIoPanel();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
-  const consolePanel = createConsolePanel(panel);
+  const consolePanel = createConsolePanel();
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const viewCube = new ViewCube(requireElement("#view-cube", HTMLElement), canvas);
@@ -119,6 +130,7 @@ export function createScreen(): Screen {
       ioPanel.render(view.io, view.translate, view.language, intents);
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
+      about.render(view.about, intents);
       viewCube.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },
@@ -131,5 +143,6 @@ export function createScreen(): Screen {
     showBridge: (view, intents) => sidePanel.showBridge(view, intents),
     showBridgeJournal: (view, intents) => journal.render(view, intents),
     showCameraOrientation: (alpha, beta) => viewCube.showOrientation(alpha, beta),
+    setTheme: (theme) => viewCube.setTheme(theme),
   };
 }

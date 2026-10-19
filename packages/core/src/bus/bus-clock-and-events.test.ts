@@ -1,3 +1,4 @@
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import { type BusAxis, COIL_EXTEND, startBusAxis } from "../test-support/bus-axis.ts";
@@ -190,8 +191,8 @@ describe("io_changed", () => {
     await sendJsonRequest(axis.server, "POST", "/api/pantins/axis/joints", {
       type: "prismatic",
       name: "Stroke",
-      parent: "rail",
-      child: "carriage",
+      parent: bodyEndpoint("rail"),
+      child: groupEndpoint("carriage"),
       origin: [0, 0, 0],
       axis: [1, 0, 0],
       limits: [0, 0.1],

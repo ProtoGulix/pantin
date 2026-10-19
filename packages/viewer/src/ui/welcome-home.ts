@@ -1,5 +1,6 @@
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
+import { REPOSITORY_URL } from "../links.ts";
 import type { RecentCardView, WelcomeView } from "../panel/welcome-model.ts";
 import { committingTextInput, element, iconButton } from "./dom.ts";
 import { icon } from "./icons.ts";
@@ -15,11 +16,10 @@ export interface WelcomeHome {
   render(view: WelcomeView, translate: Translate, intents: PanelIntents): void;
 }
 
-const REPOSITORY = "https://github.com/ProtoGulix/pantin";
 const LINKS: readonly { label: MessageKey; href: string }[] = [
-  { label: "welcome.link.repository", href: REPOSITORY },
-  { label: "welcome.link.guides", href: `${REPOSITORY}/tree/master/docs/guides` },
-  { label: "welcome.link.decisions", href: `${REPOSITORY}/tree/master/docs/decisions` },
+  { label: "welcome.link.repository", href: REPOSITORY_URL },
+  { label: "welcome.link.guides", href: `${REPOSITORY_URL}/tree/master/docs/guides` },
+  { label: "welcome.link.decisions", href: `${REPOSITORY_URL}/tree/master/docs/decisions` },
 ];
 
 function sectionTitle(): HTMLElement {

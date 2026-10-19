@@ -1,7 +1,7 @@
 import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
 import { ConsoleEventSchema, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { diagnosticEvents, faultEvent, migratedEvent, stepErrorEvent } from "./console-events.ts";
+import { diagnosticEvents, faultEvent, migrationEvents, stepErrorEvent } from "./console-events.ts";
 import { createPantinDocument } from "./pantin-document.ts";
 
 const CONFLICT: DriveDiagnostic = "conflicting_commands";
@@ -45,12 +45,34 @@ describe("diagnosticEvents", () => {
   });
 });
 
+describe("migrationEvents", () => {
+  it("says nothing for a current document", () => {
+    expect(migrationEvents({ migratedFrom: null, bodiesFollowingGroup: [] })).toEqual([]);
+  });
+
+  it("lists the bodies that now follow their group, cut to a bounded text", () => {
+    const [event] = migrationEvents({
+      migratedFrom: 12,
+      bodiesFollowingGroup: ["handle", "plate"],
+    });
+    expect(event).toMatchObject({
+      code: "migrated",
+      params: { from: 12, followers: "handle, plate" },
+    });
+    const [long] = migrationEvents({
+      migratedFrom: 12,
+      bodiesFollowingGroup: Array.from({ length: 80 }, (_, at) => `body-number-${at}`),
+    });
+    expect(ConsoleEventSchema.safeParse(long).success).toBe(true);
+  });
+});
+
 describe("the other events", () => {
   it("builds events that the protocol accepts", () => {
     const events = [
       faultEvent({ kind: "joint", id: "stroke" }, "jammed", true),
       faultEvent({ kind: "drive", id: "valve" }, "unresponsive", false),
-      migratedEvent(3),
+      ...migrationEvents({ migratedFrom: 3, bodiesFollowingGroup: ["a", "b"] }),
       stepErrorEvent(new Error("boom")),
     ];
     for (const event of events) {

@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { TagListResponseSchema } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint, TagListResponseSchema } from "@pantin/protocol";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
 import type { RunningPantinServer } from "../http/server.ts";
 import { createManualTimer, type ManualTimer } from "./manual-timer.ts";
@@ -109,8 +109,8 @@ async function buildChainOverRest(server: RunningPantinServer, chain: AxisChain)
   await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Stroke",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],

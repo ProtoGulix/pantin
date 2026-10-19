@@ -108,3 +108,8 @@
   align-items: center;
   margin-top: 4px;
 }
+
+.prompt-line__field {
+  flex: 1;
+  min-width: 0;
+}

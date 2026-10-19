@@ -30,6 +30,8 @@ import type { BridgeCoreLineWriter } from "./console-record.ts";
 import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { faceOperations } from "./face-operations.ts";
+import { frameOperations } from "./frame-operations.ts";
+import { groupOperations } from "./group-operations.ts";
 import { importBodies } from "./import-operations.ts";
 import { ioEditOperations } from "./io-operations.ts";
 import {
@@ -170,6 +172,8 @@ function simulationPeeks(context: ServiceContext) {
 function documentObjectOperations(context: ServiceContext) {
   return {
     ...assemblyOperations(context),
+    ...groupOperations(context),
+    ...frameOperations(context),
     ...driveOperations(context),
     ...actuatorOperations(context),
     ...sensorOperations(context),

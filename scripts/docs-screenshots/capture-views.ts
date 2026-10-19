@@ -9,6 +9,21 @@ export async function captureOverview(session: Session): Promise<void> {
   await saveShot(session, "overview");
 }
 
+/**
+ * The home page shows the same screen in both themes: the viewer follows the browser's scheme.
+ * The scheme is put back afterwards, so that the later pictures keep the context's own one.
+ */
+export async function captureHome(
+  session: Session,
+  contextScheme: "light" | "dark",
+): Promise<void> {
+  for (const scheme of ["light", "dark"] as const) {
+    await session.page.emulateMedia({ colorScheme: scheme });
+    await saveShot(session, `home-${scheme}`);
+  }
+  await session.page.emulateMedia({ colorScheme: contextScheme });
+}
+
 export async function captureTransportBar(session: Session, shotName: string): Promise<void> {
   const bar = session.page.getByRole("group", { name: session.label("clock.label") });
   const region = await regionAround(bar, { left: 8, top: 8, right: 0, bottom: 8 });

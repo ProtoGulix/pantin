@@ -134,3 +134,11 @@ bringing assemblies forward from phases 8 and 9.
 - ADR 0012 links here ("Partly superseded by").
 - Key renames and body moves rename tags; the PLC mapping (phase 7) will
   subscribe by tag name and must show such renames.
+
+## Amendment (2026-10-18): moving a body to another assembly (ADR 0055)
+
+Point 9 changes: the body's parent joint no longer simply follows it. Its
+fixed joints to the old assembly are deleted and listed in the response; a
+moving joint, or a joint that a drive, an actuator, a sensor or a belt
+references, makes the move refused, naming that joint. Tag renames are
+answered as before. Details: ADR 0055 point 11.

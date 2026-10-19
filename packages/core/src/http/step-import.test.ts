@@ -1,6 +1,6 @@
 import { access, mkdir, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { ImportBodiesResponseSchema } from "@pantin/protocol";
+import { bodyEndpoint, ImportBodiesResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   type FakeConverterBehaviour,
@@ -95,18 +95,8 @@ describe("STEP import success", () => {
       mesh: "meshes/carriage-3630-00.glb",
     });
     expect(bodies[1]?.source.nodes).toEqual(TWO_COMPONENTS.components[1]?.nodes);
-    expect(joints).toEqual([
-      {
-        id: "carriage-3630-00",
-        tagKey: "carriage-3630-00",
-        type: "fixed",
-        name: "Carriage 3630.00",
-        parent: "carriage-3630-00",
-        child: "carriage-3630-00-2",
-        origin: [0, 0, 0],
-        axis: [0, 0, 1],
-      },
-    ]);
+    // Both components share one assembly, so they follow it: no joint (ADR 0055 point 10).
+    expect(joints).toEqual([]);
     expect((await readdir(meshesDirectory())).sort()).toEqual([
       "carriage-3630-00-2.glb",
       "carriage-3630-00.faces.json",
@@ -147,7 +137,7 @@ describe("STEP face files (ADR 0035)", () => {
         {
           code: "face_file_missing",
           level: "warning",
-          source: { kind: "body", id: "carriage-3630-00-2" },
+          source: bodyEndpoint("carriage-3630-00-2"),
         },
       ],
     });

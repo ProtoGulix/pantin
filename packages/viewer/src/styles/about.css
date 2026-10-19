@@ -1,0 +1,65 @@
+/* The About window (ADR 0058), over the central area. Tokens in base.css. */
+.about {
+  width: 440px;
+}
+
+.about__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.about__identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The brand colour stands for Pantin itself, here its symbol and name. */
+.about__symbol {
+  width: 32px;
+  height: 32px;
+  color: var(--brand);
+}
+
+.about__name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.about__list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0;
+}
+
+.about__term {
+  color: var(--text-muted);
+}
+
+.about__value {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Outlined and led by a triangle: the amber is a second cue, not the only one. */
+.about__mismatch {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px;
+  color: var(--state-abnormal);
+  background: var(--state-abnormal-soft);
+  border: 1px solid var(--state-abnormal);
+  border-radius: 4px;
+}
+
+.about__mismatch[hidden] {
+  display: none;
+}

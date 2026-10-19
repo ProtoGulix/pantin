@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { documentOf, joint } from "../test-support/placed-fixtures.ts";
 import { setAssemblyPlacement } from "./assembly-edits.ts";
@@ -13,14 +14,24 @@ import { axisAngleRotation, compose, type RigidTransform, toPlacement } from "./
 const SLIDE = joint({
   id: "slide",
   type: "prismatic",
-  parent: "frame",
-  child: "carriage",
+  parent: bodyEndpoint("frame"),
+  child: bodyEndpoint("carriage"),
   axis: [1, 0, 0],
   limits: [0, 1],
 });
-const MOUNT = joint({ id: "mount", type: "fixed", parent: "carriage", child: "clevis" });
+const MOUNT = joint({
+  id: "mount",
+  type: "fixed",
+  parent: bodyEndpoint("carriage"),
+  child: groupEndpoint("chape"),
+});
 // Inside the "chape" assembly: the rod turns on the clevis.
-const ROD_TURN = joint({ id: "rod-turn", parent: "clevis", child: "rod", origin: [0.2, 0, 0.1] });
+const ROD_TURN = joint({
+  id: "rod-turn",
+  parent: bodyEndpoint("clevis"),
+  child: bodyEndpoint("rod"),
+  origin: [0.2, 0, 0.1],
+});
 
 const POSITIONS = new Map([
   ["slide", 0.3],

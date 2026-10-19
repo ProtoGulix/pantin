@@ -1,4 +1,6 @@
 import {
+  bodyEndpoint,
+  groupEndpoint,
   PantinResponseSchema,
   RenamedTagsResponseSchema,
   TagListResponseSchema,
@@ -30,8 +32,8 @@ beforeEach(async () => {
   await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
     type: "prismatic",
     name: "Axe X",
-    parent: "rail",
-    child: "carriage",
+    parent: bodyEndpoint("rail"),
+    child: groupEndpoint("carriage"),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.8],
@@ -135,21 +137,16 @@ describe("assemblies", () => {
     expect(refused.body).toContain("contents=delete");
   });
 
-  it("moves a body with its parent joint, whose tags follow", async () => {
+  it("refuses to take the only body of a moving group away from it, naming the joint", async () => {
+    // The body would stop following its group (ADR 0055 point 11).
     const response = await sendJsonRequest(
       server,
       "PUT",
       "/api/pantins/axis/bodies/carriage/assembly",
-      {
-        assembly: "rail",
-      },
+      { assembly: "rail" },
     );
-    const { pantin, renamedTags } = RenamedTagsResponseSchema.parse(response.json);
-    expect(pantin.document.bodies.map((body) => body.assembly)).toEqual(["rail", "rail"]);
-    expect(renamedTags.map((tag) => tag.to)).toEqual([
-      "rail.axe-x.setpoint",
-      "rail.axe-x.position",
-    ]);
+    expect(response.status).toBe(409);
+    expect(response.body).toContain('joint \\"axe-x\\" moves \\"carriage\\"');
   });
 });
 
@@ -179,8 +176,16 @@ describe("unknown targets and no-op changes", () => {
 // The fixture already holds the joint "axe-x" from rail to carriage.
 const BODY_ASSEMBLY = "/api/pantins/axis/bodies/chape/assembly";
 
-function fixedJoint(name: string, parent: string, child: string) {
-  return { type: "fixed", name, parent, child, origin: [0, 0, 0], axis: [0, 0, 1] };
+// The child is the group of the assembly that hangs from the parent (ADR 0055).
+function fixedJoint(name: string, parent: string, childAssembly: string) {
+  return {
+    type: "fixed",
+    name,
+    parent: bodyEndpoint(parent),
+    child: groupEndpoint(childAssembly),
+    origin: [0, 0, 0],
+    axis: [0, 0, 1],
+  };
 }
 
 async function importChape(): Promise<void> {
@@ -195,20 +200,18 @@ describe("anchor refusals (ADR 0033 point 2)", () => {
       server,
       "POST",
       "/api/pantins/axis/joints",
-      fixedJoint("Second", "rail", "chape"),
+      fixedJoint("Second", "rail", "carriage"),
     );
     expect(response.status).toBe(409);
     expect(response.body).toContain('already anchored by joint \\"axe-x\\"');
   });
 
   it("answers 409 when a joint would close a loop of anchors", async () => {
-    await importChape();
-    await sendJsonRequest(server, "PUT", BODY_ASSEMBLY, { assembly: "carriage" });
     const response = await sendJsonRequest(
       server,
       "POST",
       "/api/pantins/axis/joints",
-      fixedJoint("Back", "chape", "rail"),
+      fixedJoint("Back", "carriage", "rail"),
     );
     expect(response.status).toBe(409);
     expect(response.body).toContain("loop");

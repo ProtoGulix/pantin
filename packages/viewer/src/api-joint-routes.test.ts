@@ -1,4 +1,9 @@
-import { type Joint, PANTIN_SCHEMA_VERSION, type PoseResponse } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  type Joint,
+  PANTIN_SCHEMA_VERSION,
+  type PoseResponse,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createPantinApiClient } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
@@ -8,8 +13,8 @@ const slide: Joint = {
   tagKey: "slide",
   name: "Slide",
   type: "prismatic",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: bodyEndpoint("carriage"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
   limits: [0, 0.1],
@@ -153,5 +158,36 @@ describe("PantinApiClient updateJoint", () => {
     expect(requests[0]?.url).toBe("/api/pantins/press/joints/slide/axis-from-face");
     expect(requests[0]?.init?.method).toBe("POST");
     expect(JSON.parse(String(requests[0]?.init?.body))).toEqual(request);
+  });
+});
+
+describe("PantinApiClient alignFrames", () => {
+  it("aligns the frames with a bodiless POST and validates the answer", async () => {
+    const pantin = {
+      id: "press",
+      unsavedChanges: true,
+      document: {
+        schema_version: PANTIN_SCHEMA_VERSION,
+        name: "Press",
+        assemblies: [],
+        bodies: [],
+        joints: [],
+        drives: [],
+        actuators: [],
+        sensors: [],
+        ...NO_PHASE_6,
+      },
+    };
+    const answer = {
+      pantin,
+      reframedAssemblies: ["main", "arm"],
+      rewrittenJoints: [{ id: "slide", name: "Slide" }],
+    };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const result = await createPantinApiClient(fetchFunction).alignFrames("press", "slide");
+    expect(result).toEqual(answer);
+    expect(requests[0]?.url).toBe("/api/pantins/press/joints/slide/align-frames");
+    expect(requests[0]?.init?.method).toBe("POST");
+    expect(requests[0]?.init?.body).toBeUndefined();
   });
 });

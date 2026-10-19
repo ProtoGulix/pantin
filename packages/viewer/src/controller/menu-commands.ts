@@ -4,6 +4,7 @@ import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { isThemeChoice } from "../theme/theme.ts";
+import { openAbout, openDocumentation } from "./about-actions.ts";
 import { deleteActuator } from "./actuator-actions.ts";
 import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
@@ -12,6 +13,7 @@ import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
 import { releaseAllTags } from "./drive-commands.ts";
 import { toggleGizmo, toggleGizmoSpace } from "./gizmo-actions.ts";
+import { requestGroup, ungroupSelection } from "./grouping-actions.ts";
 import { openJointForm } from "./joint-actions.ts";
 import {
   setArrowStep,
@@ -130,11 +132,24 @@ function runPositioningCommand(
   }
 }
 
-function runSelectionCommand(store: ViewerStore, command: "rename" | "delete"): void {
-  if (command === "rename") {
-    renameSelection(store);
-  } else {
-    deleteSelection(store);
+// The commands that act on the selected row or rows.
+function runSelectionCommand(
+  store: ViewerStore,
+  command: "rename" | "delete" | "group" | "ungroup",
+): void {
+  switch (command) {
+    case "rename":
+      renameSelection(store);
+      return;
+    case "delete":
+      deleteSelection(store);
+      return;
+    case "group":
+      requestGroup(store);
+      return;
+    case "ungroup":
+      void ungroupSelection(store);
+      return;
   }
 }
 
@@ -159,6 +174,12 @@ export function runMenuCommand(
     case "open":
       openFromMenu(store);
       return;
+    case "documentation":
+      openDocumentation(store);
+      return;
+    case "about":
+      void openAbout(store);
+      return;
     case "close":
       requestClose(store);
       return;
@@ -180,13 +201,13 @@ export function runMenuCommand(
       openJointForm(store);
       return;
     case "resetSimulation":
-      void resetSimulation(store);
-      return;
     case "releaseAllTags":
-      void releaseAllTags(store);
+      void (command === "resetSimulation" ? resetSimulation(store) : releaseAllTags(store));
       return;
     case "rename":
     case "delete":
+    case "group":
+    case "ungroup":
       runSelectionCommand(store, command);
       return;
     default:

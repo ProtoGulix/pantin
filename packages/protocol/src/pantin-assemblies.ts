@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { endpointAssembly, type JointEndpoint } from "./joint-endpoint.ts";
 
 // Document rules of assemblies (ADR 0019): unique keys, every body in a known
 // assembly, and tag prefixes `<assembly>.<tagKey>` unique among joints (in
@@ -14,7 +15,7 @@ import type { z } from "zod";
 type DocumentShape = {
   assemblies: readonly { key: string; parent?: string | undefined }[];
   bodies: readonly { id: string; assembly: string }[];
-  joints: readonly { id: string; parent: string; child: string; tagKey: string }[];
+  joints: readonly { id: string; parent: JointEndpoint; child: JointEndpoint; tagKey: string }[];
   drives: readonly { id: string; assembly: string; tagKey: string }[];
   sensors: readonly { id: string; assembly: string; tagKey: string }[];
   emitters: readonly { id: string; assembly: string; tagKey: string }[];
@@ -49,14 +50,15 @@ export function assemblyIssues(document: DocumentShape, context: z.RefinementCtx
 
 type Anchor = { assembly: string; jointId: string };
 
-// A joint to an unknown body is reported by the joint tree rules, so it is
-// skipped here.
+// A joint to an unknown body or group is reported by the joint tree rules, so
+// it is skipped here. The anchored assembly is the one of the child, a group
+// for any joint the tree rules accept (ADR 0055).
 function anchorIssues(document: DocumentShape, context: z.RefinementCtx): void {
   const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
   const anchorOf = new Map<string, Anchor>();
   for (const [index, joint] of document.joints.entries()) {
-    const parentAssembly = assemblyOf.get(joint.parent);
-    const childAssembly = assemblyOf.get(joint.child);
+    const parentAssembly = endpointAssembly(joint.parent, assemblyOf);
+    const childAssembly = endpointAssembly(joint.child, assemblyOf);
     if (
       parentAssembly === undefined ||
       childAssembly === undefined ||
@@ -107,7 +109,7 @@ function tagKeyIssues(document: DocumentShape, context: z.RefinementCtx): void {
   const assemblyOf = new Map(document.bodies.map((body) => [body.id, body.assembly]));
   const seen = new Set<string>();
   for (const [index, joint] of document.joints.entries()) {
-    const assembly = assemblyOf.get(joint.child);
+    const assembly = endpointAssembly(joint.child, assemblyOf);
     // A joint to an unknown body is reported by the joint tree rules.
     if (assembly === undefined) {
       continue;

@@ -9,6 +9,7 @@ import {
 } from "@pantin/protocol";
 import { coordinateFromDisplay, millimetresToMetres } from "../units.ts";
 import { type AxisDirection, axisChoiceOf, axisVectorOf } from "./axis-choice.ts";
+import { fieldToEndpoint } from "./joint-endpoint-field.ts";
 import { JOINT_TYPES } from "./joint-labels.ts";
 
 // The state of the joint form and the building of its request, as pure
@@ -200,8 +201,8 @@ export function buildJointRequest(form: JointFormState): JointRequestResult {
   const parsed = CreateJointRequestSchema.safeParse({
     type: form.type,
     name: form.values[FIELD_NAME] ?? "",
-    parent: form.values[FIELD_PARENT] ?? "",
-    child: form.values[FIELD_CHILD] ?? "",
+    parent: fieldToEndpoint(form.values[FIELD_PARENT] ?? ""),
+    child: fieldToEndpoint(form.values[FIELD_CHILD] ?? ""),
     origin: readVector(form, "origin", millimetresToMetres),
     axis: readVector(form, "axis", (component) => component),
     ...parameterFields(form),

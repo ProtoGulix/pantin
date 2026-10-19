@@ -11,9 +11,11 @@ are explained in [the fundamentals](/en/guide/fundamentals) and [the model](/en/
 Read them first if these words are new to you.
 
 ::: tip To compare
-The `examples/plc-cylinder` folder contains the final result. Copy it into the
-Pantins folder of the core to open it in the viewer and compare it with your
-work.
+The `examples/plc-cylinder` folder contains a similar machine, organised
+differently: an inner fixed joint `ecrou`, the `verin` slider inside the
+`verin1` assembly, and `verin1.*` tags. A Pantin built with this tutorial has
+slightly different tags (see step 4). Copy the example into the Pantins folder
+of the core to open it and compare the machine, not the tag names.
 :::
 
 ## What you need
@@ -61,11 +63,12 @@ action. The result is the same as with steps 1 and 2.
    same thing.
 2. Choose your file. A small form appears under the toolbar, with the name of
    the file and its format.
-3. Set **Unit** and **Up axis**:
-   - **Unit**: `m (metres)`, `mm (millimetres)`, `cm (centimetres)` or
-     `in (inches)`. This is the unit in which the file was drawn.
-   - **Up axis**: **Z up (CAD)** for a CAD file, **Y up (glTF standard)** for a
-     GLB coming from Blender.
+3. For a STEP, as here, there is nothing to set: the unit is read from the
+   file and Z is up. For the other formats the form asks for:
+   - **Unit** (STL only): `m (metres)`, `mm (millimetres)`, `cm (centimetres)`
+     or `in (inches)`, the unit in which the file was drawn. A GLB is in metres.
+   - **Up axis** (GLB and STL): **Z up (CAD)** for a CAD file, **Y up (glTF
+     standard)** for a GLB coming from Blender.
 4. Click **Import**.
 
 For a STEP, the text "Converting STEP… Up to 2 minutes; keep this page open"
@@ -76,22 +79,23 @@ appears. The conversion runs in a separate process.
 The split is automatic, you do not choose nodes:
 
 - GLB and STL: one file gives one body.
-- STEP: one component of the assembly gives one body. The components are linked
-  by fixed joints, created for you, and placed in an assembly. A message tells
-  you how many bodies were imported.
+- STEP: one component of the assembly gives one body. The bodies are placed in
+  an assembly, **with no joint at all**: a body with no parent joint moves with
+  its assembly (see [Concepts](/en/guide/model#concepts-body-assembly-group)).
+  A STEP that contains named sub-assemblies also gives one fixed joint per
+  sub-assembly. A message tells you how many bodies were imported.
 
 For the example, the import creates three bodies (`ID1S0400125E_0_1`, `_0_2` and
-`ID1S040CF-16040_3`) and two fixed joints, from the first body to each of the
-other two.
+`ID1S040CF-16040_3`) in a single assembly, and no joint.
 
-::: warning What the interface does not offer
-Today the viewer does not let you choose which nodes of the file become bodies,
-nor merge or split bodies after the import. If the split does not suit you,
-edit the file in your CAD and import it again.
+::: tip Choosing the bodies
+The viewer does not let you choose which nodes of the file become bodies, nor
+merge or split bodies. A GLB file stays one body. To gather bodies that move
+together, use **Group…** (step 4).
 :::
 
-The left panel shows the tree: the Pantin, its assembly, the bodies and the
-joints. Click a body to select it and see its properties in the inspector on the
+The left panel shows the tree: the Pantin, its assembly and its
+bodies. Click a body to select it and see its properties in the inspector on the
 right.
 
 ## 3. Name the assembly and its tags
@@ -107,29 +111,49 @@ The PLC tags start with an assembly key, then the key of the element:
 Changing the displayed name (**Edit**, **Rename**, or F2) does not change the
 key. The tags follow the key.
 
-## 4. Place the cylinder joint
+## 4. Group the rod and place the cylinder joint
 
-The import only created **Fixed** joints: the first component is the root, and
-each other component is the child of a fixed joint whose parent is the root
-(ADR 0017, ADR 0040 point 3). A body has only one parent joint. For the rod to
-slide, you must therefore **transform** the fixed joint that has it as a child
-into a **Prismatic (slider)**, and not create a second one.
+After the import, no joint exists: the three bodies follow the assembly. For the
+rod to slide, you must first say which bodies move together: the rod
+(`ID1S0400125E_0_2`) and the carriage (`ID1S040CF-16040_3`). The cylinder body
+(`ID1S0400125E_0_1`) stays fixed. That is the job of a **group**.
 
-1. In the tree, right-click the joint whose child is the rod
-   (`ID1S0400125E_0_2` in the example), then choose **Change type…**.
+### Group the rod and the carriage
+
+1. In the tree, unfold the assembly and click `ID1S0400125E_0_2`, then
+   <kbd>Ctrl</kbd>+click `ID1S040CF-16040_3`.
+2. Choose **Edit**, **Group…**.
+3. The line `Group 2 items of assembly "…": what should the group be called?`
+   appears under the tree. Type `Tige` in **Group name**, then click **Group**.
+4. The message `Group "Tige" created.` appears. Nothing moves: the group `Tige`
+   is a sub-assembly, linked to the assembly by a **Fixed** joint named `Tige`.
+
+The full procedure, the possible refusals and **Ungroup** are in
+[Group, ungroup, move a body](/en/guide/groups#make-a-group).
+
+### Turn the fixed joint into a slider
+
+The group is already linked to the assembly: you must not create a second joint,
+but **transform** this one into a **Prismatic (slider)**.
+
+1. In the tree, right-click the joint `Tige` (**Joints between assemblies**
+   folder), then choose **Change type…**.
 2. In the **Change joint "…"** form, choose **Prismatic (slider)** in
    **Type**, then fill in:
 
 | Field | Value for the example |
 | --- | --- |
 | **Name** | `verin` |
-| **Parent body** | the cylinder body (`ID1S0400125E_0_1`) |
-| **Child body** | the rod (`ID1S0400125E_0_2`) |
+| **Parent body** | already filled: the cylinder's assembly (a **Group: …** entry). Do not change it. |
+| **Child body** | already filled: the group (the **Group: Tige** entry). Do not change it. |
 | **Origin** | 0, 0, 0 (in mm, in the frame of the assembly) |
 | **Axis** | X, with **Reversed**: the axis of the example is (-1, 0, 0) |
 | **Limits**: **lower** / **upper** | 0 and 125 (mm) |
 
-3. Click **Apply**.
+3. Click **Apply**. Editing the joint does not change its tag key.
+4. In the tree, select the `verin` joint. In the inspector, **General** group,
+   change the **Tag key** (it is `tige`, from the group's name) to `verin`. It
+   gives the middle part of the joint's tags.
 
 A few hints for the axis:
 
@@ -137,33 +161,27 @@ A few hints for the axis:
   Esc cancels.
 - **Reverse the axis** flips the direction. The arrow in the 3D view shows the
   positive direction of travel: the rod must extend in the positive direction.
-- The axis is expressed in the frame of the parent body, Z up.
+- The axis is expressed in the frame of the parent's assembly (the group itself when the parent is a group), Z up.
 
-Check the result with the **Position of "verin"** slider: drag it, the rod must
-move between 0 and 125 mm without leaving the body.
+Check the result with the **Position of "verin"** slider: drag it, the rod **and**
+the carriage must move together between 0 and 125 mm without leaving the body.
 
-To create a joint between two bodies that have no parent yet, right-click the
+The tags of this joint start with the key of the assembly it moves, here the
+group: `tige.verin.setpoint` (while no actuator moves it) and
+`tige.verin.position`. They do not start with `verin1`. The sensors of the joint
+(step 8) are filed in the same assembly: `tige.verin-min.state` and
+`tige.verin-max.state`. The valve of step 5 keeps `verin1.verin1.coil_14` and
+`verin1.verin1.coil_12`.
+
+To create a joint between two elements that have no parent yet, right-click the
 assembly then **New joint…** (or **Edit**, **New joint…**) to open the **New
-joint in "…"** form, with the same fields. If the child body already has a
-parent, the core refuses: "Body ... already has the parent joint ... Delete
-that joint first". Then delete the old joint (right-click, **Delete**).
+joint in "…"** form, with the same fields. If the child already has a parent,
+the core refuses: "Body ... already has the parent joint ... Delete that joint
+first". Then delete the old joint (right-click, **Delete**).
 
 If the position of the model is not right, the inspector offers **Positioning**
 tools: **Move (G)**, **Rotate (R)** and **Align (A)**. They are outside the
 scope of this tutorial.
-
-::: tip The `ecrou` joint
-In the example, the carriage (`ID1S040CF-16040_3`) is the child of the rod
-through a fixed joint `ecrou`, so that it follows the rod. After an import, the
-carriage has the root as its parent: to reproduce the example, edit its joint
-(**Parent body**: the rod).
-:::
-
-::: warning Not verified
-This page has not replayed in the viewer the change of **Parent body** of an
-existing joint, nor the change from **Fixed** to **Prismatic (slider)** on the
-full example. If the form refuses, delete the joint and create it again.
-:::
 
 ## 5. Add the drive: the valve
 
@@ -277,7 +295,7 @@ type, use those of the form. A dimensioned drawing of the sensor and its
 detection zone is shown for the limit switches.
 
 Each sensor adds a `state` feedback tag, for example
-`verin1.verin-min.state`.
+`tige.verin-min.state`.
 
 Remember to save: **File**, **Save** (Ctrl+S), or the **Save** button of the
 toolbar. Unsaved changes are flagged by **Unsaved changes**.
@@ -356,15 +374,15 @@ never by hand.
    **Word order** (**Low word first** by default) and **Watchdog (ms)**.
 6. Save the Pantin (Ctrl+S).
 
-The result should look like this:
+For a Pantin built with this tutorial, the result should look like this:
 
 | Tag | Zone | Address | CODESYS variable |
 | --- | --- | --- | --- |
 | `verin1.verin1.coil_14` | coil | 0 | `verin1_verin1_coil_14` |
 | `verin1.verin1.coil_12` | coil | 1 | `verin1_verin1_coil_12` |
-| `verin1.verin-min.state` | discrete input | 0 | `verin1_verin_min_state` |
-| `verin1.verin-max.state` | discrete input | 1 | `verin1_verin_max_state` |
-| `verin1.verin.position` | input register | 0 (REAL, 2 registers) | `verin1_verin_position` |
+| `tige.verin-min.state` | discrete input | 0 | `tige_verin_min_state` |
+| `tige.verin-max.state` | discrete input | 1 | `tige_verin_max_state` |
+| `tige.verin.position` | input register | 0 (REAL, 2 registers) | `tige_verin_position` |
 
 Each line of **Channels** has a **Tag**, a **Variable**, a **Zone**, an
 **Address**, a **Type** and a **Comment**. Problems (a tag mapped twice,
@@ -429,12 +447,13 @@ bridge log give the cause: see [Troubleshooting](/en/guide/troubleshooting).
 To test the loop without CODESYS, any Modbus TCP client will do: write coil 0 of
 `127.0.0.1:1502`, unit 1, the cylinder extends, then read discrete input 1.
 
-::: warning Verified on one case with CODESYS
-A real CODESYS Control Win V3 x64 drove this scene (`plc-cylinder`) on 18 October 2026: see the [setup](/en/guide/connect-a-plc#configure-the-plc-codesys). Other versions and WAGO targets are not verified. The closed loop is also tested automatically with a test Modbus client (ADR 0045, `packages/bridge/tests/test_closed_loop.py`).
-:::
-
 ## Next
 
 - [Connect a PLC](/en/guide/connect-a-plc): CODESYS settings, local or private
   network, security.
 - [Troubleshooting](/en/guide/troubleshooting): the error messages and what to do.
+
+::: warning Known limits
+- The labels and messages of this tutorial come from the code. The exact name of the joint and the key of the group are those the viewer proposes: read them in the tree. If a form refuses, read the core's message: it says what to fix.
+- A real CODESYS Control Win V3 x64 drove this scene (`plc-cylinder`): see the [setup](/en/guide/connect-a-plc#configure-the-plc-codesys). Other versions and WAGO targets have not been tried.
+:::

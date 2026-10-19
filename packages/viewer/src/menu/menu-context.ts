@@ -4,9 +4,10 @@ import type { DeviceKind } from "../device-selection.ts";
 import type { GizmoSpace } from "../gizmo/gizmo-space.ts";
 import { canUseGizmo } from "../gizmo/gizmo-spec.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
+import { groupingTargetOf, ungroupTargetOf } from "../grouping/grouping-model.ts";
 import type { Language } from "../i18n/translate.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
-import type { Selection } from "../selection.ts";
+import { type Selection, selectedNodeIdOf, selectedNodeIdsOf } from "../selection.ts";
 import type { ThemeChoice } from "../theme/theme.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -19,6 +20,9 @@ export interface MenuContext {
   importing: boolean;
   hasBodies: boolean;
   selectedKind: NodeRef["kind"] | DeviceKind | null;
+  // The selected rows can be grouped, or the selected group dissolved (ADR 0055 point 12).
+  canGroup: boolean;
+  canUngroup: boolean;
   language: Language;
   themeChoice: ThemeChoice;
   inspectorOpen: boolean;
@@ -43,8 +47,21 @@ function selectedKindOf(selection: Selection | null): MenuContext["selectedKind"
   return selection.kind === "node" ? (parseNodeId(selection.nodeId)?.kind ?? null) : selection.kind;
 }
 
+function groupingAvailability(state: ViewerState): Pick<MenuContext, "canGroup" | "canUngroup"> {
+  const open = state.openPantin;
+  if (open === null) {
+    return { canGroup: false, canUngroup: false };
+  }
+  const nodeIds = selectedNodeIdsOf(state.selection, state.multiSelectedNodeIds);
+  return {
+    canGroup: groupingTargetOf(open.document, open.id, nodeIds) !== null,
+    canUngroup: ungroupTargetOf(open.document, open.id, selectedNodeIdOf(state.selection)) !== null,
+  };
+}
+
 export function menuContext(state: ViewerState): MenuContext {
   return {
+    ...groupingAvailability(state),
     editing: state.openPantin !== null,
     busy: state.pendingRequestCount > 0,
     unsavedChanges: state.openPantin?.unsavedChanges ?? false,

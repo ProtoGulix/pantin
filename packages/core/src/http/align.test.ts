@@ -1,4 +1,9 @@
-import { AlignResponseSchema, PoseResponseSchema } from "@pantin/protocol";
+import {
+  AlignResponseSchema,
+  bodyEndpoint,
+  groupEndpoint,
+  PoseResponseSchema,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { apply } from "../domain/rigid-transform.ts";
 import {
@@ -68,8 +73,8 @@ describe("POST .../align on a target moved by a joint", () => {
     const joint = await sendJsonRequest(server(), "POST", "/api/pantins/bench/joints", {
       type: "prismatic",
       name: "Slide",
-      parent: "base",
-      child: "carriage",
+      parent: bodyEndpoint("base"),
+      child: groupEndpoint("carriage"),
       origin: [0, 0, 0],
       axis: [1, 0, 0],
       limits: [0, 0.5],
@@ -93,8 +98,8 @@ describe("POST .../align with anchored assemblies", () => {
     const response = await sendJsonRequest(server(), "POST", "/api/pantins/bench/joints", {
       type: "fixed",
       name: `${parent} ${child}`,
-      parent,
-      child,
+      parent: bodyEndpoint(parent),
+      child: groupEndpoint(child),
       origin: [0, 0, 0],
       axis: [0, 0, 1],
     });

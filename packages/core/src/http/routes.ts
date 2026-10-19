@@ -23,6 +23,7 @@ import { sendJson } from "./responses.ts";
 import { bodyIdOf, pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
 import { SENSOR_ROUTES } from "./sensor-routes.ts";
 import { TAG_ROUTES } from "./tag-routes.ts";
+import { VERSION_ROUTES } from "./version-routes.ts";
 
 const MESH_CONTENT_TYPES: Readonly<Record<string, string>> = {
   glb: "model/gltf-binary",
@@ -178,6 +179,7 @@ export const ROUTES: readonly Route[] = [
   ...TAG_ROUTES,
   ...IO_ROUTES,
   ...BRIDGE_ROUTES,
+  ...VERSION_ROUTES,
 ];
 
 export function methodNotAllowed(method: string, allowedMethods: string[]): ApiError {

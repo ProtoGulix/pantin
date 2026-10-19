@@ -72,7 +72,9 @@ describe("buildAlignmentView", () => {
     expect(viewOf(state)?.clockNote).toBeNull();
     expect(viewOf(state, true)?.clockNote).toContain("Simulation en marche");
   });
+});
 
+describe("buildAlignmentView parameters and joint", () => {
   it("shows only the parameters of the kind", () => {
     const pivot = withKind(newAlignmentSession("bench", "block"), "axis_around_pivot");
     const view = viewOf({ ...opened(), alignment: pivot });
@@ -86,7 +88,12 @@ describe("buildAlignmentView", () => {
 
   it("turns the fixed joint off for an assembly that already hangs from another", () => {
     const anchored = opened([
-      { ...jointOf("hold", "block", "fixed"), parent: "post", name: "Maintien" },
+      {
+        ...jointOf("hold", "block", "fixed"),
+        parent: { kind: "body", id: "post" },
+        child: { kind: "assembly", key: "block" },
+        name: "Maintien",
+      },
     ]);
     const view = viewOf({ ...anchored, alignment: newAlignmentSession("bench", "block") });
     expect(view?.fixedJoint).toEqual({

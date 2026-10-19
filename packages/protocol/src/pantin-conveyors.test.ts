@@ -18,15 +18,16 @@ function body(id: string, assembly: string) {
   };
 }
 
-function joint(id: string, child: string, type: string) {
+// A joint to another assembly has that assembly, as a group, for child (ADR 0055).
+function joint(id: string, child: string, type: string, childIsGroup = false) {
   const limits = type === "prismatic" ? { limits: [0, 0.1] } : {};
   return {
     id,
     tagKey: id,
     name: id,
     type,
-    parent: "frame",
-    child,
+    parent: { kind: "body", id: "frame" },
+    child: childIsGroup ? { kind: "assembly", key: child } : { kind: "body", id: child },
     origin: [0, 0, 0],
     axis: [0, 1, 0],
     ...limits,
@@ -76,7 +77,7 @@ const conveyor = {
     { key: "other", name: "Other", placement },
   ],
   bodies: [body("frame", "line"), body("roller", "line"), body("foreign", "other")],
-  joints: [joint("drum", "roller", "continuous"), joint("slide", "foreign", "prismatic")],
+  joints: [joint("drum", "roller", "continuous"), joint("slide", "other", "prismatic", true)],
   drives: [],
   actuators: [],
   sensors: [],
@@ -93,8 +94,8 @@ function issuesOf(document: unknown): string[] {
 }
 
 describe("PantinDocumentSchema phase 6 objects", () => {
-  it("is version 12 and accepts one object of each kind", () => {
-    expect(PANTIN_SCHEMA_VERSION).toBe(12);
+  it("is version 13 and accepts one object of each kind", () => {
+    expect(PANTIN_SCHEMA_VERSION).toBe(13);
     expect(issuesOf(conveyor)).toEqual([]);
   });
 });

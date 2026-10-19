@@ -101,7 +101,15 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
     drawn.group.addEventListener("click", () => intents.selectDiagramNode(nodeId));
   }
   const drawnEdges = diagram.edges.map(
-    (edge) => [edge.id, drawEdge(edge, edgeDescription(diagram, edge, t))] as const,
+    (edge) =>
+      [
+        edge.id,
+        drawEdge(
+          edge,
+          edgeDescription(diagram, edge, t),
+          t(`diagram.edge.abbreviation.${edge.kind}`),
+        ),
+      ] as const,
   );
   const svg = svgElement(
     "svg",
@@ -119,7 +127,7 @@ export function drawDiagram(model: ShownModel, intents: PanelIntents): DrawnDiag
     [
       ...diagram.bands.map((band) => drawBand(band, diagram.width, t, intents)),
       // Wires under the nodes.
-      ...drawnEdges.map(([, drawn]) => drawn.wire),
+      ...drawnEdges.flatMap(([, drawn]) => [drawn.wire, drawn.label]),
       ...drawnEdges.map(([, drawn]) => drawn.hit),
       ...[...drawnNodes.values()].map((drawn) => drawn.group),
     ],

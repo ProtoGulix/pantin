@@ -21,6 +21,9 @@ function runAction(
     intents.createAssembly(nodeId);
   } else if (action === "newJoint") {
     intents.openJointForm();
+  } else if (action === "group" || action === "ungroup") {
+    intents.closeContextMenu();
+    intents.runMenuCommand(action);
   } else if (action === "changeJointType") {
     intents.openJointEditForm(nodeId);
   } else if (action === "actuateJoint") {

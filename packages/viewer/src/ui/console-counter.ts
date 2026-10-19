@@ -2,8 +2,8 @@ import type { ConsoleView } from "../console/console-view.ts";
 import { element } from "./dom.ts";
 import { icon } from "./icons.ts";
 
-// The toolbar's counter of console errors and warnings (ADR 0031 point 5). The
-// button is drawn with the toolbar, and its numbers are rewritten in place when
+// The console bar's counter of console errors and warnings (ADR 0031 point 5). The
+// button is drawn once, and its numbers are rewritten in place when
 // new lines come, which is several times a second while a source flickers.
 
 const COUNTER_CLASS = "console-counter";

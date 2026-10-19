@@ -1,4 +1,4 @@
-import { PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
+import { bodyEndpoint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { stepSensors } from "./sensor-step.ts";
 
@@ -33,8 +33,8 @@ const DOCUMENT: PantinDocument = {
       tagKey: "stroke",
       name: "Stroke",
       type: "prismatic",
-      parent: "rail",
-      child: "carriage",
+      parent: bodyEndpoint("rail"),
+      child: bodyEndpoint("carriage"),
       origin: [0, 0, 0],
       axis: [1, 0, 0],
       limits: [0, 0.1],

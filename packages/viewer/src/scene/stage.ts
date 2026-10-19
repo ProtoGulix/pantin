@@ -11,7 +11,9 @@ import { CreateLineSystem } from "@babylonjs/core/Meshes/Builders/linesBuilder.j
 import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { coreToBabylonPosition, type Vector3Tuple } from "../frames.ts";
+import { type AxisColours, DATA_COLOURS } from "../theme/data-palette.ts";
 import type { ScenePalette } from "../theme/scene-palette.ts";
+import { createAxisLabel } from "./axis-label.ts";
 import { chooseGridStep } from "./scene-plan.ts";
 
 // The fixed decor of the viewport: background, lights, ground, grid and the
@@ -21,11 +23,6 @@ import { chooseGridStep } from "./scene-plan.ts";
 // The look is a product studio: a seamless background that follows the theme, soft light from
 // above, and a ground that shows nothing but the soft shadow of the bodies,
 // so they seem to rest on an endless floor.
-
-// The axes code the core's X, Y and Z (data, not theme): they keep their colours in both themes.
-const AXIS_X_COLOR = Color4.FromHexString("#e5534bff");
-const AXIS_Y_COLOR = Color4.FromHexString("#57ab5aff");
-const AXIS_Z_COLOR = Color4.FromHexString("#539bf5ff");
 
 export interface Stage {
   shadowGenerator: ShadowGenerator;
@@ -44,8 +41,8 @@ function setUpLighting(scene: Scene): ShadowGenerator {
   // A white sky and a light floor bounce: shaded sides stay light grey, never black.
   const sky = new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
   sky.intensity = 0.8;
-  sky.diffuse = Color3.White();
-  sky.groundColor = Color3.FromHexString("#8c8c8c");
+  sky.diffuse = Color3.FromHexString(DATA_COLOURS.skyLight);
+  sky.groundColor = Color3.FromHexString(DATA_COLOURS.skyGround);
 
   // Nearly overhead, so the shadow sits under the bodies like on a studio floor.
   const sun = new DirectionalLight("sun", new Vector3(-0.15, -1, 0.1), scene);
@@ -115,7 +112,7 @@ function createGroundMesh(
   ground.receiveShadows = true;
   const material = new BackgroundMaterial("ground-material", scene);
   material.shadowOnly = true;
-  material.primaryColor = Color3.Black();
+  material.primaryColor = Color3.FromHexString(DATA_COLOURS.shadowOnly);
   material.alpha = 0.45;
   // Pushed back in depth so the grid lines drawn on it never flicker.
   material.zOffset = 2;
@@ -123,16 +120,27 @@ function createGroundMesh(
   return ground;
 }
 
-// Core X, Y and Z from the world origin, in red, green and blue.
-function createCoreAxes(scene: Scene, length: number): Mesh[] {
-  const axes: readonly { end: Vector3Tuple; color: Color4 }[] = [
-    { end: [length, 0, 0], color: AXIS_X_COLOR },
-    { end: [0, length, 0], color: AXIS_Y_COLOR },
-    { end: [0, 0, length], color: AXIS_Z_COLOR },
-  ];
-  return axes.map(({ end, color }, index) =>
-    uniformLines(scene, `core-axis-${index}`, [[toBabylon([0, 0, 0]), toBabylon(end)]], color),
-  );
+// Core X, Y and Z from the world origin, in red, green and blue, each with its
+// letter just past the tip: red and green are not told apart by colour alone.
+function createCoreAxes(scene: Scene, length: number, colours: AxisColours): Mesh[] {
+  const tipScale = 1.1;
+  const axes = [
+    { letter: "X", hex: colours.x, end: [length, 0, 0] },
+    { letter: "Y", hex: colours.y, end: [0, length, 0] },
+    { letter: "Z", hex: colours.z, end: [0, 0, length] },
+  ] as const;
+  return axes.flatMap(({ letter, hex, end }) => {
+    const line = uniformLines(
+      scene,
+      `core-axis-${letter}`,
+      [[toBabylon([0, 0, 0]), toBabylon(end)]],
+      hexToColor4(hex),
+    );
+    const label = createAxisLabel(scene, `core-axis-label-${letter}`, letter, hex, length * 0.14);
+    label.position = toBabylon([end[0] * tipScale, end[1] * tipScale, end[2] * tipScale]);
+    label.isPickable = false;
+    return [line, label];
+  });
 }
 
 interface DecorFit {
@@ -150,7 +158,7 @@ function buildDecor(scene: Scene, fit: DecorFit, palette: ScenePalette): Mesh[] 
     createGroundMesh(scene, centre, halfSize, floorZ),
     uniformLines(scene, "grid-minor", minor, hexToColor4(palette.gridMinor)),
     uniformLines(scene, "grid-major", major, hexToColor4(palette.gridMajor)),
-    ...createCoreAxes(scene, step * 3),
+    ...createCoreAxes(scene, step * 3, palette.axes),
   ];
 }
 

@@ -62,3 +62,18 @@ export function describeFailure(error: unknown): PanelMessage {
     error instanceof Error ? error.message : String(error),
   );
 }
+
+/**
+ * The core words its refusals of a command (grouping, frame alignment) as final sentences naming the
+ * joint, body or item in the way: they are shown as they are, not behind the
+ * generic text of the error code. Any other failure keeps its usual message.
+ */
+export function coreRefusalMessage(error: unknown): PanelMessage {
+  const refused =
+    error instanceof PantinApiError &&
+    error.kind === "api" &&
+    (error.code === "conflict" || error.code === "not_found" || error.code === "invalid_request");
+  return refused
+    ? errorMessage("message.coreRefused", { reason: error.message })
+    : describeFailure(error);
+}

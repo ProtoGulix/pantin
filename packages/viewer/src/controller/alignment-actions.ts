@@ -2,7 +2,9 @@ import {
   ALIGNMENT_KINDS,
   type AlignRequest,
   type AlignResponse,
+  bodyEndpoint,
   type FaceFile,
+  groupEndpoint,
 } from "@pantin/protocol";
 import { ALIGNMENT_KIND_ORDER, PICK_REFUSAL_MESSAGES } from "../alignment/alignment-labels.ts";
 import {
@@ -190,8 +192,9 @@ async function alignThenLink(store: ViewerStore, session: AlignmentSession, requ
           moving: name(moving),
           target: name(target),
         }),
-        parent: target,
-        child: moving,
+        parent: bodyEndpoint(target),
+        // The moved assembly hangs from the target as a whole (ADR 0055 point 3).
+        child: groupEndpoint(session.assemblyKey),
         origin: [0, 0, 0],
         axis: [0, 0, 1],
       });

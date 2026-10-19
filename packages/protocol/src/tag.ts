@@ -11,7 +11,8 @@ import { KEY_PATTERN_SOURCE } from "./ids.ts";
 // core derives them from the joints (ADR 0019 point 6):
 // "<assemblyKey>.<tagKey>.setpoint" (command) and
 // "<assemblyKey>.<tagKey>.position" (feedback), in SI units, where the
-// assembly is the one of the joint's child body.
+// assembly is the one its child moves: the group itself for a group child, the
+// assembly of the body otherwise (ADR 0055).
 //
 //   GET    /api/pantins/:pantinId/tags                      -> TagListResponse
 //   PUT    /api/pantins/:pantinId/tags/:tagName  WriteTagRequest -> TagResponse

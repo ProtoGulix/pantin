@@ -1,4 +1,4 @@
-import { JointAxisFromFaceResponseSchema } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint, JointAxisFromFaceResponseSchema } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { expectPoint, useAlignmentBench } from "../test-support/alignment-bench.ts";
 import { buildSampleGlb } from "../test-support/mesh-fixtures.ts";
@@ -17,8 +17,8 @@ async function slideFromBaseToBlock(): Promise<void> {
   const created = await sendJsonRequest(server(), "POST", "/api/pantins/bench/joints", {
     type: "prismatic",
     name: "Slide",
-    parent: "base",
-    child: "block",
+    parent: bodyEndpoint("base"),
+    child: groupEndpoint("block"),
     origin: [0, 0, 0],
     axis: [0, 0, 1],
     limits: [0, 0.5],

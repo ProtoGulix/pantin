@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { COLOUR_BLIND_MATRICES, contrast, simulatedDifference } from "./colour-maths.ts";
 
 // ADR 0053 point 7: the tokens of base.css, read as the browser reads them,
 // reach WCAG 2 AA (4.5:1) for text on the three grounds.
@@ -36,21 +37,17 @@ function tokensOf(theme: ThemeName): Map<string, string> {
   return tokens;
 }
 
-function channelLuminance(channel: number): number {
-  const unit = channel / 255;
-  return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
-}
-
-function luminance(hex: string): number {
-  const [red, green, blue] = [1, 3, 5].map((offset) =>
-    channelLuminance(Number.parseInt(hex.slice(offset, offset + 2), 16)),
-  );
-  return 0.2126 * (red ?? 0) + 0.7152 * (green ?? 0) + 0.0722 * (blue ?? 0);
-}
-
-function contrast(foreground: string, background: string): number {
-  const [lighter, darker] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
-  return ((lighter ?? 0) + 0.05) / ((darker ?? 0) + 0.05);
+// The IEC fills are the same in both themes, so they sit in the generic :root block.
+function fillTokens(): Map<string, string> {
+  const start = BASE_CSS.indexOf(":root {");
+  const end = BASE_CSS.indexOf("}", start);
+  const tokens = new Map<string, string>();
+  for (const [, name, value] of BASE_CSS.slice(start, end).matchAll(/--([\w-]+):\s*([^;]+);/g)) {
+    if (name !== undefined && value !== undefined) {
+      tokens.set(name, value.trim());
+    }
+  }
+  return tokens;
 }
 
 function token(tokens: Map<string, string>, name: string): string {
@@ -110,8 +107,11 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
     );
   });
 
-  it.each(["state-abnormal", "state-emergency"])("gives the text on a --%s fill 4.5:1", (state) => {
-    expect(contrast(token(tokens, "on-state"), token(tokens, state))).toBeGreaterThanOrEqual(4.5);
+  it.each(["abnormal", "emergency"])("gives the text on the --fill-%s 4.5:1", (state) => {
+    const fills = fillTokens();
+    expect(
+      contrast(token(fills, `on-fill-${state}`), token(fills, `fill-${state}`)),
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
   // The journal's warning and error rows (journal.css) lay a tint over --surface-0.
@@ -129,6 +129,21 @@ describe.each(["light", "dark"] as const)("the %s theme", (theme) => {
     const sceneColor = (name: string) => new RegExp(`${name}: "(#[0-9a-f]{6})"`).exec(block)?.[1];
     expect(sceneColor("background")).toBe(token(tokens, "viewport-background"));
     expect(sceneColor("selection")).toBe(token(tokens, "selection"));
-    expect(sceneColor("drivenJoint")).toBe(token(tokens, "state-normal"));
+    expect(sceneColor("signalOn")).toBe(token(tokens, "state-normal"));
+    expect(sceneColor("jointParent")).toBe(token(tokens, "joint-parent"));
   });
+
+  // The joint preview's parent and child (the selection blue) must stay apart
+  // for colour-blind users: Machado 2009 simulations at full severity.
+  it.each(Object.keys(COLOUR_BLIND_MATRICES))(
+    "keeps --joint-parent apart from --selection under %s vision",
+    (vision) => {
+      const difference = simulatedDifference(
+        token(tokens, "joint-parent"),
+        token(tokens, "selection"),
+        vision,
+      );
+      expect(difference).toBeGreaterThanOrEqual(45);
+    },
+  );
 });

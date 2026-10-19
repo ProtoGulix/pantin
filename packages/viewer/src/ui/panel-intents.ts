@@ -29,6 +29,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   // Creates a Pantin named after the file, then starts importing it.
   createPantinFromFile(file: File): void;
   hideWelcome(): void;
+  // The About window of the Help menu (ADR 0058).
+  closeAbout(): void;
   selectWelcomeTab(tab: WelcomeTab): void;
   setWelcomeFilter(text: string): void;
 
@@ -39,6 +41,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   frameSelection(): void;
   frameNode(nodeId: string): void;
   selectNode(nodeId: string): void;
+  // The tree's multi-selection (ADR 0055 point 12): the first row is the selected one.
+  selectNodes(nodeIds: readonly string[]): void;
   // Selects a drive, an actuator or a sensor, shown in the inspector (ADR 0030).
   selectDevice(device: DeviceRef): void;
   // Selects a node that may sit in a folded branch, unfolding its ancestors.
@@ -58,6 +62,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   runDeviceAction(nodeId: string, action: "edit" | "delete"): void;
   closeContextMenu(): void;
   resolvePrompt(action: PromptAction): void;
+  // The name typed in the "Grouper…" question.
+  editGroupName(name: string): void;
   // The box "Also stop the bridge" of the close prompt.
   setCloseStopsBridge(stops: boolean): void;
 
@@ -160,6 +166,7 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   cancelJointForm(): void;
   // ADR 0041: wait for a click on a face, which fills the origin and the axis.
   pickJointAxisOnFace(): void;
+  alignFramesOnJointAxis(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;
 
   // The chain diagram (ADR 0029): the central layout, a band folded,

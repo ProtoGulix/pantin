@@ -58,3 +58,13 @@ frames would be error prone to type by hand. The user approved this model on
 - Joint creation and deletion go through the core; a later visual
   picking of points and faces fills the same fields.
 - Every published schema change now has a version step and a migration.
+
+## Amendment (2026-10-18): a joint endpoint can be a group (ADR 0055)
+
+Point 3 changes. A joint links a parent to a child that are each a body or
+an assembly used as a group (`{ kind: "body", id } | { kind: "assembly",
+key }`). A body without a parent joint no longer stays fixed: it follows
+its assembly, which moves when a joint moves it as a group. The forest of
+point 3 becomes a forest of links (bodies and groups), still with at most
+one parent joint per link and no cycle. Schema 13. Details, rules and
+migration: ADR 0055.

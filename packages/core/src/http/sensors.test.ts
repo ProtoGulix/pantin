@@ -1,4 +1,6 @@
 import {
+  bodyEndpoint,
+  groupEndpoint,
   PantinResponseSchema,
   RenamedTagsResponseSchema,
   SensorResponseSchema,
@@ -212,8 +214,8 @@ describe("sensor guards", () => {
     const refused = await sendJsonRequest(axis.server, "PATCH", "/api/pantins/axis/joints/stroke", {
       type: "fixed",
       name: "Stroke",
-      parent: "rail",
-      child: "carriage",
+      parent: bodyEndpoint("rail"),
+      child: groupEndpoint("carriage"),
       origin: [0, 0, 0],
       axis: [1, 0, 0],
     });

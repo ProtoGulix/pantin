@@ -1,6 +1,8 @@
 import {
   type Body,
+  bodyEndpoint,
   type CreateJointRequest,
+  groupEndpoint,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
 } from "@pantin/protocol";
@@ -55,8 +57,8 @@ function rod(parent: string, child: string, name = "Tige"): CreateJointRequest {
   return {
     type: "prismatic",
     name,
-    parent,
-    child,
+    parent: bodyEndpoint(parent),
+    child: bodyEndpoint(child),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],
@@ -97,7 +99,12 @@ describe("joint tag keys", () => {
     const both = addJointToDocument(withFirstRod, rod("body-2", "rod-2"), NO_POSITIONS).document;
     // "tige-2" keeps its tag key "tige", already used in the assembly of body-1.
     expect(() =>
-      updateJointInDocument(both, "tige-2", rod("rod-2", "body-1"), NO_POSITIONS),
-    ).toThrow('Tag key "tige" of joint "tige-2" is already used in the assembly of body "body-1".');
+      updateJointInDocument(
+        both,
+        "tige-2",
+        { ...rod("rod-2", "body-1"), child: groupEndpoint("pince") },
+        NO_POSITIONS,
+      ),
+    ).toThrow('Tag key "tige" of joint "tige-2" is already used in assembly "pince".');
   });
 });

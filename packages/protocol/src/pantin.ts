@@ -14,6 +14,7 @@ import {
   PresenceSensorSchema,
 } from "./pantin-conveyors.ts";
 import { driveIssues } from "./pantin-drives.ts";
+import { jointTreeIssues } from "./pantin-joint-tree.ts";
 import { sensorIssues } from "./pantin-sensors.ts";
 import { PlacementSchema } from "./placement.ts";
 import { SensorSchema } from "./sensor.ts";
@@ -28,8 +29,9 @@ import { SensorSchema } from "./sensor.ts";
 // actuators apart from drives, which no longer list joints (ADR 0028), version
 // 10 a placement per assembly (ADR 0033), version 11 an optional parent per
 // assembly (ADR 0040), version 12 belts, guides, emitters, absorbers and
-// presence sensors (ADR 0043). The core migrates older documents on read.
-export const PANTIN_SCHEMA_VERSION = 12;
+// presence sensors (ADR 0043), version 13 joint endpoints that are bodies or
+// groups (ADR 0055). The core migrates older documents on read.
+export const PANTIN_SCHEMA_VERSION = 13;
 
 export const PANTIN_DOCUMENT_FILE_NAME = "pantin.json";
 export const PANTIN_MESHES_DIRECTORY_NAME = "meshes";
@@ -58,11 +60,12 @@ export const SourceNodeSchema = z.object({
 export type SourceNode = z.infer<typeof SourceNodeSchema>;
 
 // A group of bodies, as in a CAD assembly or a bill of materials (ADR 0019).
-// Its key prefixes the tags of the joints whose child body it holds, and
-// changes only when explicitly renamed. Its placement is a rigid transform
-// from the frame of its files to the frame of its anchor, which is the world
-// or the assembly of the parent body of the joint between assemblies that
-// reaches it. The anchor is derived from the joints, never stored (ADR 0033).
+// Its key prefixes the tags of the joints whose child it is (as a group) or
+// holds (a body), and changes only when explicitly renamed. Its placement is a
+// rigid transform from the frame of its files to the frame of its anchor,
+// which is the world or the assembly of the parent end of the joint between
+// assemblies that has it for child (ADR 0055). The anchor is derived from the
+// joints, never stored (ADR 0033).
 // `parent` is the key of the assembly that contains this one, absent at top
 // level. It is product structure only, independent of the anchors (ADR 0040).
 export const AssemblySchema = z.object({
@@ -133,7 +136,13 @@ export const PantinDocumentSchema = z
     presenceSensors: z.array(PresenceSensorSchema),
   })
   .superRefine((document, context) => {
-    jointTreeIssues(document, context);
+    for (const { jointIndex, message } of jointTreeIssues(document)) {
+      context.addIssue({
+        code: "custom",
+        path: jointIndex === null ? ["joints"] : ["joints", jointIndex],
+        message,
+      });
+    }
     assemblyIssues(document, context);
     driveIssues(document, context);
     actuatorIssues(document, context);
@@ -141,63 +150,3 @@ export const PantinDocumentSchema = z
     conveyorIssues(document, context);
   });
 export type PantinDocument = z.infer<typeof PantinDocumentSchema>;
-
-// Joints must form a forest of bodies: known bodies, no self link, at most
-// one parent joint per body, no cycle. Otherwise the pose is undefined.
-function jointTreeIssues(
-  document: {
-    bodies: readonly { id: string }[];
-    joints: readonly { parent: string; child: string }[];
-  },
-  context: z.RefinementCtx,
-): void {
-  const bodyIds = new Set(document.bodies.map((body) => body.id));
-  const parentOf = new Map<string, string>();
-  for (const [index, joint] of document.joints.entries()) {
-    const issue = jointLinkIssue(joint, bodyIds, parentOf);
-    if (issue !== undefined) {
-      context.addIssue({ code: "custom", path: ["joints", index], message: issue });
-    }
-    parentOf.set(joint.child, joint.parent);
-  }
-  for (const bodyId of parentOf.keys()) {
-    if (hasCycleFrom(bodyId, parentOf)) {
-      context.addIssue({
-        code: "custom",
-        path: ["joints"],
-        message: `The joints form a cycle through body "${bodyId}".`,
-      });
-      return;
-    }
-  }
-}
-
-function jointLinkIssue(
-  joint: { parent: string; child: string },
-  bodyIds: ReadonlySet<string>,
-  parentOf: ReadonlyMap<string, string>,
-): string | undefined {
-  if (!bodyIds.has(joint.parent) || !bodyIds.has(joint.child)) {
-    return `Joint between "${joint.parent}" and "${joint.child}" references an unknown body.`;
-  }
-  if (joint.parent === joint.child) {
-    return `A joint cannot link body "${joint.child}" to itself.`;
-  }
-  if (parentOf.has(joint.child)) {
-    return `Body "${joint.child}" already has a parent joint; a body has at most one.`;
-  }
-  return undefined;
-}
-
-function hasCycleFrom(start: string, parentOf: ReadonlyMap<string, string>): boolean {
-  const visited = new Set<string>();
-  let current: string | undefined = start;
-  while (current !== undefined) {
-    if (visited.has(current)) {
-      return true;
-    }
-    visited.add(current);
-    current = parentOf.get(current);
-  }
-  return false;
-}

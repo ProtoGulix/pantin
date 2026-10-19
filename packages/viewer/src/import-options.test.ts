@@ -44,12 +44,11 @@ describe("import options", () => {
     });
   });
 
-  it("defaults a STEP to Z up and never sends a unit: STEP declares its own", () => {
+  it("sends neither unit nor up axis for a STEP: it declares its unit and is always Z up", () => {
     const pendingImport = createPendingImport("assembly.step");
     expect(pendingImport).toMatchObject({ format: "step", upAxis: "z" });
     expect(pendingImport && buildImportQuery({ ...pendingImport, unit: "mm" })).toEqual({
       fileName: "assembly.step",
-      upAxis: "z",
     });
   });
 

@@ -1,4 +1,4 @@
-import type { Body } from "@pantin/protocol";
+import type { AlignmentSide, Body } from "@pantin/protocol";
 import { coreToBabylonPosition, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { JointPreview } from "../joints/joint-preview.ts";
 
@@ -142,8 +142,9 @@ export function placeJointArrow(
 export type BodyHighlight = "selected" | "parent" | "child";
 
 /**
- * A previewed joint replaces the selection: its bodies are what matters then.
- * When a joint links a body to itself, the child wins.
+ * A previewed joint replaces the selection: its bodies are what matters then,
+ * all those that move with each end (a group is more than one body).
+ * When a body is in both sets, the child wins.
  */
 export function bodyHighlight(
   bodyId: string,
@@ -153,8 +154,65 @@ export function bodyHighlight(
   if (preview === null) {
     return selectedBodyIds.has(bodyId) ? "selected" : null;
   }
-  if (bodyId === preview.childBodyId) {
+  if (preview.childBodyIds.has(bodyId)) {
     return "child";
   }
-  return bodyId === preview.parentBodyId ? "parent" : null;
+  return preview.parentBodyIds.has(bodyId) ? "parent" : null;
+}
+
+// Overlay opacity per role. The parent is tinted more strongly than the child
+// so the pair stays apart once mixed with a grey material (the child has its
+// outline as a second cue).
+const SELECTED_OVERLAY_ALPHA = 0.35;
+const CHILD_OVERLAY_ALPHA = 0.5;
+const PARENT_OVERLAY_ALPHA = 0.8;
+
+export function overlayAlphaFor(highlight: BodyHighlight): number {
+  if (highlight === "parent") {
+    return PARENT_OVERLAY_ALPHA;
+  }
+  return highlight === "child" ? CHILD_OVERLAY_ALPHA : SELECTED_OVERLAY_ALPHA;
+}
+
+/**
+ * Every selected body is outlined (ADR 0057, amending ADR 0053 point 5), and
+ * so is a joint's child. A joint's parent is a tint alone, the other cue
+ * telling the pair apart.
+ */
+export function isOutlined(highlight: BodyHighlight): boolean {
+  return highlight !== "parent";
+}
+
+export interface FaceSideLook {
+  /** A key of the scene palette: the theme's colour for this side. */
+  colour: "selection" | "jointParent";
+  outlined: boolean;
+}
+
+/**
+ * The faces of an alignment read like a joint's two bodies: the moving side
+ * takes the selection blue and an outline, the target the joint parent's
+ * yellow-orange as a tint alone (ADR 0057).
+ */
+export function faceSideLook(side: AlignmentSide): FaceSideLook {
+  return side === "moving"
+    ? { colour: "selection", outlined: true }
+    : { colour: "jointParent", outlined: false };
+}
+
+const OUTLINE_SHARE_OF_EXTENT = 0.015;
+const OUTLINE_MIN_METRES = 0.0015;
+const OUTLINE_MAX_METRES = 0.02;
+
+/**
+ * Babylon offsets an outline in mesh space, before the node's scale (0.001 for
+ * a millimetre body), so a thickness in metres is divided by the world scale.
+ * The thickness follows the body's size, within a visible range.
+ */
+export function outlineWidthInMeshSpace(extentMetres: number, worldScale: number): number {
+  const thickness = Math.min(
+    Math.max(extentMetres * OUTLINE_SHARE_OF_EXTENT, OUTLINE_MIN_METRES),
+    OUTLINE_MAX_METRES,
+  );
+  return worldScale > 0 ? thickness / worldScale : thickness;
 }

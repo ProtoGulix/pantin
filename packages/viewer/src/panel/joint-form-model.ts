@@ -1,7 +1,14 @@
-import { JOINT_COORDINATE_UNITS, JOINT_PARAMETERS, type JointType } from "@pantin/protocol";
+import {
+  endpointAssemblyIn,
+  JOINT_COORDINATE_UNITS,
+  JOINT_PARAMETERS,
+  type JointType,
+} from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { type AlignFramesButtonView, alignFramesButtonOf } from "../joints/align-frames.ts";
 import { AXIS_DIRECTIONS, type AxisChoice } from "../joints/axis-choice.ts";
 import { canPickAxis, isPickingAxis } from "../joints/axis-pick.ts";
+import { endpointOptions, fieldToEndpoint } from "../joints/joint-endpoint-field.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
@@ -46,12 +53,14 @@ export interface JointFormView {
   childFieldId: string;
   parent: string;
   child: string;
-  // Body id to body name.
+  // Body id (or `assembly:<key>` for a group) to name.
   bodyOptions: readonly { value: string; label: string }[];
   origin: JointFormRowView;
   axis: JointFormAxisView;
   // The type's parameters, from JOINT_PARAMETERS.
   rows: JointFormRowView[];
+  // ADR 0056: a command of the stored joint, null on a new or fixed joint.
+  alignFrames: AlignFramesButtonView | null;
   canSubmit: boolean;
 }
 
@@ -162,9 +171,13 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
     return null;
   }
   const creating = form.jointId === null;
-  const parentBody = open.document.bodies.find((body) => body.id === form.values[FIELD_PARENT]);
-  const assembly = open.document.assemblies.find((item) => item.key === parentBody?.assembly);
-  const assemblyName = assembly?.name ?? parentBody?.assembly ?? "";
+  // The frame of origin and axis: the assembly of the parent body, or the parent group itself.
+  const parentAssembly = endpointAssemblyIn(
+    fieldToEndpoint(form.values[FIELD_PARENT] ?? ""),
+    open.document.bodies,
+  );
+  const assembly = open.document.assemblies.find((item) => item.key === parentAssembly);
+  const assemblyName = assembly?.name ?? parentAssembly ?? "";
   return {
     // The name typed in the form: the joint may have been deleted meanwhile.
     title: creating
@@ -179,10 +192,11 @@ export function buildJointFormView(state: ViewerState, t: Translate): JointFormV
     childFieldId: FIELD_CHILD,
     parent: form.values[FIELD_PARENT] ?? "",
     child: form.values[FIELD_CHILD] ?? "",
-    bodyOptions: open.document.bodies.map((body) => ({ value: body.id, label: body.name })),
+    bodyOptions: endpointOptions(open.document, (name) => t("joint.endpoint.group", { name })),
     origin: vectorRow("origin", form, displayUnitLabel("mm", t), t, assemblyName),
     axis: axisView(form, t, assemblyName, isPickingAxis(state)),
     rows: parameterRows(form, t),
+    alignFrames: alignFramesButtonOf(form, open.document.joints, t, state.pendingRequestCount > 0),
     canSubmit: state.pendingRequestCount === 0,
   };
 }

@@ -1,4 +1,4 @@
-import { JointResponseSchema } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint, JointResponseSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildAsciiStl } from "../test-support/mesh-fixtures.ts";
 import {
@@ -34,8 +34,8 @@ afterEach(async () => {
 const PRISMATIC = {
   type: "prismatic",
   name: "Axe X",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: groupEndpoint("carriage"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
   limits: [0, 0.8],

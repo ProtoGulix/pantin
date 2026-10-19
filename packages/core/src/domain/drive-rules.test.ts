@@ -1,4 +1,5 @@
 import {
+  bodyEndpoint,
   type CreateDriveRequest,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
@@ -47,8 +48,8 @@ const PRESS: PantinDocument = {
       tagKey: "tige",
       name: "Tige",
       type: "prismatic",
-      parent: "frame",
-      child: "rod",
+      parent: bodyEndpoint("frame"),
+      child: bodyEndpoint("rod"),
       origin: [0, 0, 0],
       axis: [1, 0, 0],
       limits: [0, 0.1],

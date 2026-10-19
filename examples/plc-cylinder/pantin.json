@@ -1,5 +1,5 @@
 {
-  "schema_version": 12,
+  "schema_version": 13,
   "name": "plc-cylinder",
   "assemblies": [
     {
@@ -85,8 +85,14 @@
       "tagKey": "ecrou",
       "type": "fixed",
       "name": "ecrou",
-      "parent": "id1s0400125e-0-2",
-      "child": "id1s040cf-16040-3",
+      "parent": {
+        "kind": "body",
+        "id": "id1s0400125e-0-2"
+      },
+      "child": {
+        "kind": "body",
+        "id": "id1s040cf-16040-3"
+      },
       "origin": [0, 0, 0],
       "axis": [0, 0, 1]
     },
@@ -95,8 +101,14 @@
       "tagKey": "verin",
       "type": "prismatic",
       "name": "verin",
-      "parent": "id1s0400125e-0-1",
-      "child": "id1s0400125e-0-2",
+      "parent": {
+        "kind": "body",
+        "id": "id1s0400125e-0-1"
+      },
+      "child": {
+        "kind": "body",
+        "id": "id1s0400125e-0-2"
+      },
       "origin": [0, 0, 0],
       "axis": [-1, 0, 0],
       "limits": [0, 0.125]

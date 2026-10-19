@@ -41,6 +41,40 @@ describe("validatePantinFolder", () => {
     expect(await validatePantinFolder(EXAMPLE)).toEqual({ problems: [], notes: [] });
   });
 
+  it("migrates a version 12 folder and names the bodies that now follow their group", async () => {
+    // Version 12 (ADR 0055 point 9): "carriage" is anchored by the joint from
+    // "rail", and "idler", in its assembly, had no parent joint, so it never moved.
+    await cp(join(copy, "meshes", "carriage.stl"), join(copy, "meshes", "idler.stl"));
+    await editDocument((document) => {
+      const [rail, carriage] = list(document.bodies);
+      const [axis] = list(document.assemblies);
+      return {
+        ...document,
+        schema_version: 12,
+        assemblies: [axis, { ...axis, key: "tool", name: "Tool" }],
+        bodies: [
+          rail,
+          { ...carriage, assembly: "tool" },
+          { ...carriage, id: "idler", name: "Idler", assembly: "tool", mesh: "meshes/idler.stl" },
+        ],
+        joints: list(document.joints).map((joint) => ({
+          ...joint,
+          parent: "rail",
+          child: "carriage",
+        })),
+      };
+    });
+    expect(await validatePantinFolder(copy)).toEqual({
+      problems: [],
+      notes: [
+        "Schema version 12 on disk: the core migrates it on open.",
+        "Bodies with no parent joint in an anchored assembly now follow their assembly when it moves: idler.",
+      ],
+    });
+  });
+});
+
+describe("validatePantinFolder refusals", () => {
   it("names a missing mesh file", async () => {
     await rm(join(copy, "meshes", "carriage.stl"));
     expect((await validatePantinFolder(copy)).problems).toEqual([
@@ -61,7 +95,7 @@ describe("validatePantinFolder", () => {
   it("gives one line per broken rule, with where it is", async () => {
     await editDocument((document) => ({
       ...document,
-      joints: [{ ...list(document.joints)[0], child: "ghost" }],
+      joints: [{ ...list(document.joints)[0], child: { kind: "body", id: "ghost" } }],
       bodies: list(document.bodies).map((body) => ({ ...body, assembly: "lost" })),
     }));
     const { problems } = await validatePantinFolder(copy);

@@ -1,4 +1,9 @@
-import { type Joint, PANTIN_SCHEMA_VERSION, type PantinDocument } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  type Joint,
+  PANTIN_SCHEMA_VERSION,
+  type PantinDocument,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
 import { emitter, photoelectricCell } from "../test-support/conveyor-fixtures.ts";
@@ -11,8 +16,8 @@ const stroke: Joint = {
   tagKey: "stroke",
   name: "Stroke",
   type: "prismatic",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: bodyEndpoint("carriage"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
   limits: [0, 0.1],
@@ -23,8 +28,8 @@ const clamp: Joint = {
   tagKey: "clamp",
   name: "Clamp",
   type: "fixed",
-  parent: "carriage",
-  child: "tool",
+  parent: bodyEndpoint("carriage"),
+  child: bodyEndpoint("tool"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
 };

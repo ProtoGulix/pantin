@@ -1,4 +1,11 @@
-import type { Assembly, Body, Joint, PantinResponse } from "@pantin/protocol";
+import {
+  type Assembly,
+  type Body,
+  endpointAssemblyIn,
+  type Joint,
+  type JointEndpoint,
+  type PantinResponse,
+} from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import {
   type AssemblyDisplay,
@@ -7,6 +14,7 @@ import {
 } from "../assembly-display.ts";
 import { childAssemblies } from "../assembly-tree.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
+import { bodyRoleInJoint, groupRoleInJoint, type JointEndRole } from "../joint-bodies.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
 import { familyFolders } from "./device-nodes.ts";
@@ -15,6 +23,7 @@ import {
   assemblyNodeId,
   bodyNodeId,
   folderNodeId,
+  groupJointNodeId,
   jointNodeId,
   pantinNodeId,
   sourceNodeNodeId,
@@ -53,22 +62,62 @@ function sourceNodeChildren(pantinId: string, body: Body, translate: Translate):
   }));
 }
 
-// The joints holding a body, listed under it before the CAD nodes; the
-// detail says whether the body is the joint's parent or its child.
-function bodyJointChildren(pantin: PantinResponse, body: Body, translate: Translate): TreeNode[] {
+// The joints holding a body or a group, listed under it before the other
+// children; the detail says whether it is the joint's parent or its child.
+// By the joint's own ends: a group is never listed through a stand-in body.
+function endJointChildren(
+  pantin: PantinResponse,
+  roleOf: (joint: Joint) => JointEndRole | null,
+  nodeIdOf: (joint: Joint) => string,
+  translate: Translate,
+): TreeNode[] {
   return pantin.document.joints.flatMap((joint): TreeNode[] => {
-    if (joint.parent !== body.id && joint.child !== body.id) {
+    const role = roleOf(joint);
+    if (role === null) {
       return [];
     }
-    const role = joint.child === body.id ? "tree.jointRole.child" : "tree.jointRole.parent";
     return [
       {
         ...jointNode(pantin, joint, translate),
-        id: jointNodeId(pantin.id, joint.id, body.id),
-        detail: translate(role, { type: translate(jointTypeLabelKey(joint.type)) }),
+        id: nodeIdOf(joint),
+        detail: translate(`tree.jointRole.${role}`, {
+          type: translate(jointTypeLabelKey(joint.type)),
+        }),
       },
     ];
   });
+}
+
+function bodyJointChildren(pantin: PantinResponse, body: Body, translate: Translate): TreeNode[] {
+  return endJointChildren(
+    pantin,
+    (joint) => bodyRoleInJoint(joint, body.id),
+    (joint) => jointNodeId(pantin.id, joint.id, body.id),
+    translate,
+  );
+}
+
+// The joints listed in the assembly's own list of internal joints (below).
+function isListedInAssembly(pantin: PantinResponse, joint: Joint, key: string): boolean {
+  return isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === key;
+}
+
+// A joint between the group and one of its own bodies is already in that list:
+// it is not listed a second time.
+function groupJointChildren(
+  pantin: PantinResponse,
+  assembly: Assembly,
+  translate: Translate,
+): TreeNode[] {
+  return endJointChildren(
+    pantin,
+    (joint) =>
+      isListedInAssembly(pantin, joint, assembly.key)
+        ? null
+        : groupRoleInJoint(joint, assembly.key),
+    (joint) => groupJointNodeId(pantin.id, joint.id, assembly.key),
+    translate,
+  );
 }
 
 function bodyNode(pantin: PantinResponse, body: Body, translate: Translate): TreeNode {
@@ -123,8 +172,8 @@ function jointNode(pantin: PantinResponse, joint: Joint, translate: Translate): 
 
 // A joint is internal when both its bodies share an assembly (ADR 0019
 // point 4): it is listed under that assembly, the others in one folder.
-function assemblyOf(pantin: PantinResponse, bodyId: string): string | undefined {
-  return pantin.document.bodies.find((body) => body.id === bodyId)?.assembly;
+function assemblyOf(pantin: PantinResponse, endpoint: JointEndpoint): string | undefined {
+  return endpointAssemblyIn(endpoint, pantin.document.bodies);
 }
 
 function isInternal(pantin: PantinResponse, joint: Joint): boolean {
@@ -141,8 +190,8 @@ function assemblyNode(
 ): TreeNode {
   const bodies = pantin.document.bodies.filter((body) => body.assembly === assembly.key);
   const hidden = isAssemblyHidden(display, assembly.key, pantin.document.assemblies);
-  const joints = pantin.document.joints.filter(
-    (joint) => isInternal(pantin, joint) && assemblyOf(pantin, joint.child) === assembly.key,
+  const joints = pantin.document.joints.filter((joint) =>
+    isListedInAssembly(pantin, joint, assembly.key),
   );
   return {
     id: assemblyNodeId(pantin.id, assembly.key),
@@ -164,6 +213,7 @@ function assemblyNode(
       ...childAssemblies(pantin.document.assemblies, assembly.key).map((child) =>
         assemblyNode(pantin, child, display, translate, language, tagValues),
       ),
+      ...groupJointChildren(pantin, assembly, translate),
       ...bodies.map((body) => bodyNode(pantin, body, translate)),
       ...joints.map((joint) => jointNode(pantin, joint, translate)),
       ...familyFolders(pantin, assembly.key, language, translate, tagValues),

@@ -7,6 +7,7 @@ import {
 } from "@pantin/protocol";
 import { coordinateToDisplay, formatDisplayNumber, metresToMillimetres } from "../units.ts";
 import { axisChoiceOf } from "./axis-choice.ts";
+import { endpointToField } from "./joint-endpoint-field.ts";
 import {
   buildJointRequest,
   FIELD_CHILD,
@@ -43,8 +44,8 @@ function parameterTexts(joint: Joint): Record<string, string> {
 export function jointFormFor(joint: Joint): JointFormState {
   const values: Record<string, string> = {
     [FIELD_NAME]: joint.name,
-    [FIELD_PARENT]: joint.parent,
-    [FIELD_CHILD]: joint.child,
+    [FIELD_PARENT]: endpointToField(joint.parent),
+    [FIELD_CHILD]: endpointToField(joint.child),
     ...parameterTexts(joint),
   };
   for (const [index, axis] of VECTOR_AXES.entries()) {

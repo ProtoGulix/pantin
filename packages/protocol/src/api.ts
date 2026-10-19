@@ -55,6 +55,11 @@ import { ProductMaterialSchema } from "./pantin-conveyors.ts";
 //          JointAxisFromFaceRequest -> JointAxisFromFaceResponse
 //          (ADR 0041: origin and axis of a picked face in the frame of the
 //          joint's parent assembly; stores nothing, contract in joint-axis-api.ts)
+//   POST   /api/pantins/:pantinId/joints/:jointId/align-frames, no body
+//          -> AlignFramesResponse (ADR 0056: reorients the frames of the
+//          parent's assembly and of a group child on the joint axis, nothing
+//          moves; 404 unknown joint, 409 fixed joint; contract in
+//          joint-axis-api.ts)
 //   GET    /api/pantins/:pantinId/pose                -> PoseResponse
 //   PUT    /api/pantins/:pantinId/joints/:jointId/position
 //          SetJointPositionRequest                    -> PoseResponse

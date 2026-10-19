@@ -1,3 +1,4 @@
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { displayedAssemblyFrame } from "../assembly-frame.ts";
 import { composeTransforms, IDENTITY_TRANSFORM, type RigidTransform } from "../rigid-transform.ts";
@@ -139,7 +140,7 @@ describe("gizmoTargetOf", () => {
       { id: "pa", assembly: "a" },
       { id: "cx", assembly: "x", placement: rigid([0, 0, 0.1]) },
     ],
-    joints: [{ parent: "pa", child: "cx" }],
+    joints: [{ parent: bodyEndpoint("pa"), child: bodyEndpoint("cx") }],
   };
 
   // Cast: the fixture holds only the fields the lookup reads.

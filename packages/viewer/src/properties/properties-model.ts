@@ -1,5 +1,7 @@
 import type { Assembly, Body, PantinResponse } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
+import { bodyRoleInJoint } from "../joint-bodies.ts";
+import { endpointName } from "../joints/joint-endpoint-field.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode, type TreeSource } from "../tree/tree-model.ts";
@@ -85,20 +87,19 @@ function sourceNodeRows(body: Body, t: Translate): PropertyRow[] {
 
 // Every joint that holds the body, as parent or as child; a click selects it.
 function bodyJointRows(body: Body, pantin: PantinResponse, t: Translate): PropertyRow[] {
-  const { bodies, joints } = pantin.document;
-  const bodyName = (bodyId: string) =>
-    bodies.find((candidate) => candidate.id === bodyId)?.name ?? bodyId;
-  const rows = joints.flatMap((joint): PropertyRow[] => {
-    if (joint.child !== body.id && joint.parent !== body.id) {
+  const rows = pantin.document.joints.flatMap((joint): PropertyRow[] => {
+    const role = bodyRoleInJoint(joint, body.id);
+    if (role === null) {
       return [];
     }
     // A joint linking the body to itself reads as "child of", like the 3D tint.
-    const isChild = joint.child === body.id;
-    const role = t(isChild ? "properties.jointRole.childOf" : "properties.jointRole.parentOf", {
+    const isChild = role === "child";
+    const other = isChild ? joint.parent : joint.child;
+    const roleText = t(isChild ? "properties.jointRole.childOf" : "properties.jointRole.parentOf", {
       type: t(jointTypeLabelKey(joint.type)),
-      body: bodyName(isChild ? joint.parent : joint.child),
+      body: endpointName(pantin.document, other, (name) => t("joint.endpoint.group", { name })),
     });
-    return [linkRow(`joint-${joint.id}`, joint.name, role, jointNodeId(pantin.id, joint.id))];
+    return [linkRow(`joint-${joint.id}`, joint.name, roleText, jointNodeId(pantin.id, joint.id))];
   });
   return rows.length > 0 ? rows : [{ ...row("none", t("properties.noJoint"), ""), muted: true }];
 }

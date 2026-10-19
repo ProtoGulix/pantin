@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { DEVICE_KINDS } from "../device-selection.ts";
-import { assemblyNodeId, deviceRowId, FAMILY_KEYS, familyNodeId, parseNodeId } from "./node-ids.ts";
+import {
+  assemblyNodeId,
+  deviceRowId,
+  FAMILY_KEYS,
+  familyNodeId,
+  groupJointNodeId,
+  jointNodeId,
+  parseNodeId,
+} from "./node-ids.ts";
 
 describe("family and device ids (ADR 0047)", () => {
   it("round-trips a family folder", () => {
@@ -33,6 +41,22 @@ describe("family and device ids (ADR 0047)", () => {
     expect(parseNodeId("device:press:robot:r1")).toBeNull();
     expect(parseNodeId("device:press:drive")).toBeNull();
     expect(parseNodeId("device:press:drive:d1:extra")).toBeNull();
+  });
+
+  it("tells a joint listed under a group from one listed under a body", () => {
+    const underGroup = parseNodeId(groupJointNodeId("press", "hinge", "rod"));
+    expect(underGroup).toEqual({
+      kind: "joint",
+      pantinId: "press",
+      jointId: "hinge",
+      underBodyId: null,
+      underGroupKey: "rod",
+    });
+    expect(parseNodeId(jointNodeId("press", "hinge", "rod"))).toMatchObject({
+      underBodyId: "rod",
+      underGroupKey: null,
+    });
+    expect(parseNodeId("joint:press:hinge:~")).toBeNull();
   });
 
   it("keeps the ids of the other nodes", () => {

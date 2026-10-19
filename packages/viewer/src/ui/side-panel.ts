@@ -99,7 +99,10 @@ export class SidePanel {
     this.promptHost.replaceChildren(...(prompt === null ? [] : [prompt]));
     // A new question takes the keyboard, so Enter or Escape answer it at once.
     if (prompt !== null && !this.hadPrompt) {
-      prompt.querySelector<HTMLButtonElement>(".button--primary")?.focus();
+      // A question with a field starts in it, to type the name at once.
+      prompt
+        .querySelector<HTMLElement>(".prompt-line__field, .button--primary:not(:disabled)")
+        ?.focus();
     }
     this.hadPrompt = prompt !== null;
   }

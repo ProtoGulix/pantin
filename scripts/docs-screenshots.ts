@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { type Browser, chromium, type Page } from "playwright-core";
 import { captureBridgeCard } from "./docs-screenshots/capture-bridge.ts";
 import {
+  captureGroupPrompt,
   captureImportForm,
   captureJointInspector,
   captureNewActuatorForm,
@@ -19,6 +20,7 @@ import {
 import {
   captureDiagram,
   captureForcedTag,
+  captureHome,
   captureIoView,
   captureOverview,
   captureTransportBar,
@@ -36,6 +38,7 @@ const LANGUAGES: readonly { language: Language; locale: string }[] = [
   { language: "en", locale: "en-GB" },
 ];
 const ACTION_TIMEOUT_MS = 60_000;
+const CONTEXT_COLOUR_SCHEME = "dark";
 // chromium.executablePath() is not used: it points at the full Chromium of the installed
 // Playwright version (chromium-1248 here), which this machine's cache does not hold; only the
 // headless shell is installed, and its revision must be kept in step with the cache by hand.
@@ -73,7 +76,7 @@ async function captureLanguage(
     locale: entry.locale,
     // The viewer follows the browser's scheme by default (ADR 0053): pinned, the pictures do not
     // depend on the machine that takes them.
-    colorScheme: "dark",
+    colorScheme: CONTEXT_COLOUR_SCHEME,
   });
   // A missing element should fail the run quickly, with a readable message.
   context.setDefaultTimeout(ACTION_TIMEOUT_MS);
@@ -91,6 +94,7 @@ async function captureLanguage(
     await saveShot(session, "welcome", session.page.getByRole("dialog"));
     await openExample(session);
     await captureOverview(session);
+    await captureHome(session, CONTEXT_COLOUR_SCHEME);
     await captureViewCube(session);
     // Software WebGL renders the 3D view at about one frame per second, and every screenshot and
     // click waits for frames. The 3D view stops rendering when hidden, so the diagram layout
@@ -99,6 +103,7 @@ async function captureLanguage(
     await captureTransportBar(session, "transport-bar");
     await captureImportForm(session, REPOSITORY_ROOT);
     await captureTreeContextMenu(session);
+    await captureGroupPrompt(session);
     await captureJointInspector(session);
     await captureNewDriveForm(session);
     await captureNewActuatorForm(session);

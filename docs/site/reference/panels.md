@@ -1,11 +1,11 @@
 # Panneaux et boutons
 
-Cette page liste chaque bouton, champ et commande des panneaux du viewer, zone par zone. Pour chaque contrôle : son **libellé** tel que l'interface l'affiche, ce qu'il fait, et quand il est grisé.
+Chaque bouton, champ et commande des panneaux, zone par zone : son **libellé**, ce qu'il fait, et quand il est grisé.
 
 Les menus (**Fichier**, **Édition**, **Affichage**) sont décrits dans [Menus](/reference/menus). Les combinaisons de touches et de souris sont dans [Raccourcis clavier et souris](/reference/shortcuts). La disposition générale de l'écran est dans [L'écran](/reference/interface). Les trois vues centrales (3D, Schéma, E/S) sont dans [Vues centrales](/reference/views).
 
 ::: tip Lire les tableaux
-« Grisé » veut dire que le bouton est visible mais inactif. Quand un bouton est grisé pour une raison précise, l'info-bulle (au survol) donne souvent cette raison. Un champ « validé en le quittant » envoie sa valeur quand vous appuyez sur **Entrée** ou que vous cliquez ailleurs.
+« Grisé » : le bouton est visible mais inactif, et son info-bulle donne souvent la raison. Un champ « validé en le quittant » envoie sa valeur avec **Entrée** ou un clic ailleurs.
 :::
 
 ## La barre d'outils
@@ -20,7 +20,6 @@ Elle se trouve sous la barre de menus, au-dessus de l'arborescence. Elle n'exist
 | **Cadrer tout** | Place la caméra 3D pour voir tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (disposition **Schéma** ou E/S) |
 | **Cadrer la sélection** | Place la caméra 3D sur l'élément sélectionné dans l'arborescence. | Aucun corps, aucun nœud de l'arborescence sélectionné, ou vue 3D non affichée |
 | **Vue centrale** : **3D** / **Schéma** / **3D + Schéma** | Trois boutons à bascule, un seul enfoncé : choisit ce que la zone centrale affiche. L'info-bulle donne le nom complet (**3D seule**, **Schéma des chaînes seul**, **3D + Schéma**). | Jamais |
-| Compteur de la console (icônes erreur et avertissement avec deux nombres) | Affiche le nombre d'erreurs et d'avertissements de la [console](#la-console). Un clic ouvre ou ferme la console. Le bouton est enfoncé quand la console est ouverte. | Jamais |
 | Roue d'attente (**Traitement en cours**) | Indicateur, pas un bouton : une requête est en cours. | Sans objet |
 
 ::: info La disposition E/S
@@ -48,7 +47,11 @@ Le Pantin contient ses assemblages, puis un dossier **Liaisons entre assemblages
 | Marque rond à droite | Sur un capteur : plein quand son tag d'état est à 1 (**Activé**), vide à 0 (**Désactivé**). Lue sur les tags, jamais calculée par le viewer. |
 | Ligne teintée « liée » | Quand un élément de la chaîne d'action est sélectionné, les liaisons qu'il déplace ou surveille sont teintées. |
 
-Glisser un corps sur un assemblage (ou sur un corps de cet assemblage) le déplace dans cet assemblage. La même opération existe au clavier avec la liste **Assemblage** de l'inspecteur.
+Glisser un corps sur un assemblage (ou sur un corps de cet assemblage) le déplace dans cet assemblage. La même opération existe au clavier avec la liste **Assemblage** de l'inspecteur. Ses liaisons fixes avec l'ancien assemblage sont supprimées et listées dans le message. Le cœur refuse le déplacement quand le corps, son ancien groupe et son nouveau groupe ne sont pas déplacés par la même liaison (ou par aucune) ; son message s'affiche tel quel.
+
+**Sélection multiple.** <kbd>Ctrl</kbd>+clic ajoute ou retire une ligne, <kbd>Maj</kbd>+clic prend une plage, <kbd>Maj</kbd>+flèches l'étend. Seules les lignes de corps et de groupe (un assemblage rangé dans un autre) d'un même assemblage se sélectionnent ensemble. Les autres commandes agissent sur la première ligne sélectionnée. La vue 3D reste en sélection simple.
+
+**Lignes de groupe.** Un groupe est une ligne d'assemblage. Comme un corps, il liste d'abord les liaisons dont il est l'extrémité, avec « parent » ou « enfant ». Voir [Les concepts](/guide/model#les-concepts-corps-assemblage-groupe).
 
 ::: info Texte des lecteurs d'écran
 Les icônes ne portent pas de texte : chaque ligne a aussi un texte caché qui dit son type et son état (par exemple « déplacée par Vérin 1 », « surveillée par Fin de course haute », « masqué »).
@@ -67,6 +70,8 @@ Clic droit sur une ligne (ou touche **Menu**). L'entrée se propose seulement qu
 | **Importer dans ce Pantin** | Pantin | Ouvre le sélecteur de fichiers. |
 | **Nouvel assemblage** | Pantin | Crée un assemblage vide (nom par défaut **Nouvel assemblage**). |
 | **Nouvelle liaison…** | Assemblage, dossier **Liaisons entre assemblages** | Ouvre le [formulaire de liaison](#nouvelle-liaison). |
+| **Grouper…** | Corps, assemblage | Ouvre la [ligne de nom du groupe](#grouper) pour les lignes sélectionnées. Proposée seulement si la sélection est faite de corps et de sous-groupes d'un même assemblage. |
+| **Dégrouper** | Assemblage rangé dans un autre | Dissout le groupe dans son assemblage. Voir [Défaire un groupe](/guide/groups#defaire-un-groupe). |
 | **Changer le type…** | Liaison | Ouvre le formulaire de la liaison, prérempli. |
 | **Ajouter un actionneur…** / **Modifier son actionneur…** | Liaison mobile | Ouvre le formulaire d'actionneur pour cette liaison. L'entrée dit **Modifier** si la liaison a déjà un actionneur. Absente sur une liaison fixe. |
 | **Ajouter un capteur…** | Liaison mobile | Ouvre le formulaire de capteur pour cette liaison. |
@@ -91,7 +96,7 @@ Il s'ouvre sous la barre d'outils après le choix d'un fichier (**Fichier 3D à 
 | Titre **Import dans « nom »** | Rappelle le Pantin cible. | Sans objet |
 | Nom du fichier et pastille de format (**GLB**, **STL**, **STEP**) | Rappellent le fichier choisi. | Sans objet |
 | **Unité** | Unité de longueur du fichier : **m (mètres)**, **mm (millimètres)**, **cm (centimètres)**, **in (pouces)**. Affichée seulement pour un STL : les autres formats portent leur propre unité. | Pendant l'import |
-| **Axe vertical** | **Y vers le haut (standard glTF)** ou **Z vers le haut (CAO)**. | Pendant l'import |
+| **Axe vertical** | **Y vers le haut (standard glTF)** ou **Z vers le haut (CAO)**. Affiché seulement pour un GLB et un STL : un STEP converti est toujours en Z vers le haut. | Pendant l'import |
 | **Importer** | Lance l'import. | Un import ou une requête est en cours |
 | **Annuler** | Abandonne l'import. | Remplacé par la roue d'attente pendant l'import |
 
@@ -103,9 +108,9 @@ Pendant l'import, le formulaire affiche **Import en cours…**. Pour un STEP : *
 
 ![La carte Pont automate, pont en marche](/screenshots/fr/bridge-running.webp)
 
-La carte est tout en bas du panneau de gauche. Elle est visible dans toutes les dispositions centrales. Elle apparaît dès que le cœur répond sur l'état du pont.
+La carte est en bas du panneau de gauche, visible dans toutes les dispositions.
 
-La ligne d'état affiche une pastille de couleur et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
+La ligne d'état affiche une pastille (coche, anneau, anneau à moitié plein ou croix dans un octogone, en plus de la couleur) et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
 
 | État | Pastille | Bouton d'action |
 | --- | --- | --- |
@@ -131,7 +136,7 @@ Sous la ligne d'état, selon le contexte :
 | Zone | Contenu |
 | --- | --- |
 | Note | Raison pour laquelle le bouton ou les réglages sont inactifs : « Démarrez le cœur avec `--bridge-python <chemin>` (`pnpm setup:python`). » quand le pont est indisponible, ou **Un pont lancé hors de Pantin est connecté.** quand un autre pont tient déjà la place. |
-| Erreur réseau | Le refus du cœur (adresse non privée, liste invalide...) s'affiche en rouge et force l'ouverture des réglages réseau. |
+| Erreur réseau | Le refus du cœur (adresse non privée, liste invalide...) s'affiche en rouge, précédé d'une croix dans un octogone, et force l'ouverture des réglages réseau. |
 | Lignes de modules | Une ligne par module d'E/S : pastille, **clé** du module (`m1`...), adresse `adresse:port` que l'automate doit viser, et statut en texte : **pont arrêté**, **en attente de l'automate** ou **automate connecté**. Pont arrêté : les lignes viennent de la liste d'E/S et l'adresse est celle qu'un démarrage utiliserait. Pont en marche : elles viennent de ce que le cœur rapporte. |
 | **Aucun module : configurez les E/S** | Remplace les lignes quand la liste d'E/S n'a aucun module. |
 | **Toute modification des E/S arrête le pont.** | Rappel affiché pendant que le pont est en marche. |
@@ -153,7 +158,7 @@ Une confirmation s'affiche en ligne, au-dessus de la ligne de message, à la pla
 | **Supprimer la liaison « nom » ?** | **Supprimer**, **Annuler** |
 | **Supprimer l'assemblage « nom » et tout son contenu ?** | **Supprimer**, **Annuler**. Une liste dit ce qui disparaît : corps, liaisons de l'assemblage, liaisons avec d'autres assemblages, préactionneurs, actionneurs, capteurs, sous-ensembles, tags supprimés et tags ajoutés, et les assemblages qui perdent leur rattachement. |
 | **Supprimer n fichier(s) orphelin(s) du dossier meshes ?** (menu **Fichier**, **Nettoyer les fichiers orphelins…**) | **Supprimer**, **Annuler**. La liste donne les fichiers et leur taille. |
-| **Remplacer l'alimentation de ... par une alimentation depuis ... ?** (nouveau lien dans le schéma) | **Remplacer**, **Annuler** |
+| **Remplacer l'alimentation de ... par une alimentation depuis ... ?** (lien tracé dans le schéma) | **Remplacer**, **Annuler** |
 
 La suppression d'un préactionneur, d'un actionneur, d'un capteur ou d'un objet de convoyage ne demande aucune confirmation.
 
@@ -358,14 +363,27 @@ Titre **Nouvelle liaison dans « nom du Pantin »**, ou **Modifier la liaison «
 | --- | --- |
 | **Type** | **Fixe**, **Glissière**, **Pivot limité**, **Pivot continu**, **Hélicoïdale (vis et écrou)**. Les lignes de paramètres en dessous changent avec le type. |
 | **Nom** | Nom de la liaison. |
-| **Corps parent**, **Corps enfant** | Listes des corps. Une pastille de couleur rappelle la teinte du corps dans la vue 3D. |
+| **Corps parent**, **Corps enfant** | Listes des corps, et des groupes (entrées **Groupe : nom**). Entre deux assemblages, l'enfant doit être un groupe ; le cœur décide et refuse avec sa phrase. Une pastille de couleur rappelle la teinte du corps dans la vue 3D. |
 | **Axe (repère de « assemblage »)** | Boutons radio **X**, **Y**, **Z**, **Autre**. Avec **Autre**, trois champs de composantes apparaissent ; sinon la case **Sens inversé** apparaît. |
 | **Prendre l'axe sur une face** | Attend un clic sur une face de la vue 3D, qui remplit l'origine et l'axe (texte **Cliquez une face dans la vue 3D (Échap : annuler)**). Présent seulement quand le formulaire modifie une liaison existante mobile. |
+| **Aligner le repère sur cet axe** | Tourne le repère de l'assemblage du parent (et du groupe que la liaison déplace) pour que cet axe se lise [0, 0, 1] ; rien ne bouge. Présent seulement pour une liaison déjà créée dont le type bouge, absent pour une liaison fixe ; grisé tant que le formulaire a des modifications non appliquées et pendant une requête (**Appliquez d'abord les modifications de la liaison : l'alignement utilise l'axe enregistré.**). Le message nomme les assemblages tournés et les liaisons réécrites (**Repère aligné sur l'axe : …** ou **Repères alignés sur l'axe : …**, puis **Liaisons réécrites : …**), ou **Les repères sont déjà alignés sur cet axe, rien n'a changé.** |
 | **Inverser l'axe** | Inverse le sens de l'axe sans rien envoyer. |
 | **Origine (repère de « assemblage »)** | Trois champs en mm. |
 | Paramètres du type | **Limites** (**basse** et **haute**, en mm ou degrés selon le type), **Pas (course par tour)** pour l'hélicoïdale. |
 
-Une phrase rappelle que l'axe est pris dans le repère du corps parent, Z vers le haut, et que la flèche de la vue 3D montre le sens positif de la course.
+Une phrase rappelle que l'axe est pris dans le repère de l'assemblage du parent (le groupe lui-même quand le parent est un groupe), Z vers le haut, et que la flèche de la vue 3D montre le sens positif de la course.
+
+### Grouper
+
+Après **Grouper…**, une ligne s'ouvre sous l'arborescence : « Grouper N éléments de l'assemblage « X » : quel nom donner au groupe ? » (« Grouper 1 élément… » pour un seul).
+
+| Contrôle | Ce qu'il fait |
+| --- | --- |
+| **Nom du groupe** | Nom du futur groupe (assemblage et liaison fixe du même nom). **Entrée** valide. |
+| **Grouper** | Crée le groupe. Message : « Groupe « nom » créé. », suivi de **Liaisons supprimées : …** et de **Des tags ont été renommés : régénérez la GVL de l'automate.** quand c'est le cas. |
+| **Annuler** | Referme la ligne sans rien envoyer. |
+
+Si le cœur refuse, sa phrase s'affiche telle quelle et rien n'a changé. Voir [Faire un groupe](/guide/groups#faire-un-groupe).
 
 ### Nouveau préactionneur
 
@@ -476,7 +494,7 @@ La console prévient aussi quand la simulation est en pause alors qu'un pont aut
 
 Le bouton **Journal** de la carte ouvre une fenêtre **Journal du pont automate**. Elle montre la fin du fichier de journal du pont (voir [Le fichier de journal](#le-fichier-de-journal)) sous forme de colonnes (**Lignes du journal**), calées en bas. Tant qu'elle est ouverte, elle se met à jour à chaque nouvel état du pont.
 
-Chaque entrée affiche : l'heure locale `HH:MM:SS.mmm` (la date complète est dans l'info-bulle) ; un badge de source, **Cœur** ou **Pont** ; un badge de niveau, **Info**, **Avert.** (fond ambre) ou **Erreur** (fond rouge) ; le message (le nom du logger Python n'est que dans l'info-bulle, l'horodatage propre au pont est masqué). Les lignes de suite d'une entrée (une trace d'erreur, par exemple) sont indentées sous elle. Les lignes d'avertissement et d'erreur sont teintées, avec une barre à gauche.
+Chaque entrée affiche : l'heure locale `HH:MM:SS.mmm` (la date complète est dans l'info-bulle) ; un badge de source, **Cœur** ou **Pont** ; un badge de niveau avec son pictogramme, **Info**, **Avert.** (triangle, fond ambre) ou **Erreur** (croix dans un octogone, fond rouge) ; le message (le nom du logger Python n'est que dans l'info-bulle, l'horodatage propre au pont est masqué). Les lignes de suite d'une entrée (une trace d'erreur, par exemple) sont indentées sous elle. Les lignes d'avertissement et d'erreur sont teintées, avec une barre à gauche.
 
 Trois bascules, groupe **Niveaux affichés**, filtrent par niveau : **Erreur**, **Avertissement**, **Info**, chacune avec son nombre d'entrées. Comme dans la console, le choix est conservé tant que la page reste ouverte. Quand aucune entrée ne correspond : **Aucune entrée pour les niveaux affichés.**
 
@@ -504,7 +522,9 @@ Seule la première requête refusée identique est notée par connexion ; le tot
 
 ## La console
 
-La console est un panneau sous la zone centrale. Le compteur de la barre d'outils l'ouvre et la ferme, comme **F8**. Une poignée au-dessus d'elle permet de changer sa hauteur (**Redimensionner la console**) ; un double-clic sur la poignée rétablit la hauteur d'origine. La hauteur est gardée dans le navigateur.
+La console est un panneau sous la zone centrale. Une poignée au-dessus de la console permet de changer sa hauteur (**Redimensionner la console**) ; un double-clic sur la poignée rétablit la hauteur d'origine. La hauteur est gardée dans le navigateur.
+
+Tout en bas de la zone centrale, une fine barre toujours visible porte le compteur de la console (icônes erreur et avertissement avec deux nombres, hors de la barre d'outils) : un clic ouvre ou ferme la console, comme **F8**. Le bouton est enfoncé (teinte bleue et soulignement) quand la console est ouverte.
 
 | Contrôle | Ce qu'il fait | Grisé quand |
 | --- | --- | --- |
@@ -544,6 +564,19 @@ Elle s'affiche quand aucun Pantin n'est ouvert. C'est une fenêtre modale au-des
 
 Les erreurs de la fenêtre (fichier non pris en charge, cœur injoignable...) s'affichent dans la ligne de message de la fenêtre.
 
-::: warning Non vérifié
-Le style exact des pastilles de couleur (pont, modules) est défini par la feuille de style ; cette page décrit ce que le texte et la structure disent, pas les teintes.
-:::
+En bas de la fenêtre, une ligne **Pantin** suivie du numéro indique la version du viewer.
+
+## La fenêtre À propos
+
+Elle s'ouvre par **Aide**, **À propos de Pantin…**. C'est une fenêtre modale au-dessus de la vue centrale. <kbd>Échap</kbd> ou la croix **Fermer la fenêtre À propos** la ferme.
+
+| Ligne | Ce qu'elle montre |
+| --- | --- |
+| **Version du viewer** | La version du viewer chargé dans le navigateur. |
+| **Version du cœur** | La version du cœur, lue à chaque ouverture de la fenêtre : **Lecture en cours…** pendant la lecture, **Cœur injoignable** si le cœur ne répond pas. |
+| **Licence** | Apache 2.0. |
+| **Guide de l'utilisateur**, **Dépôt du projet** | Liens, ouverts dans un nouvel onglet. |
+
+Un numéro comme `0.2.0` est une version publiée. Un numéro comme `0.2.0+8b4e4c4` est un état du code construit après la version 0.2.0 ; ce qui suit le `+` est le commit.
+
+Si le viewer et le cœur n'ont pas le même numéro, un message précédé d'un triangle d'avertissement l'indique : le navigateur a gardé un ancien viewer après une mise à jour du cœur. Rechargez la page avec <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>R</kbd>. Voir [Dépannage](/guide/troubleshooting#le-viewer-et-le-cœur).

@@ -1,5 +1,5 @@
 {
-  "schema_version": 12,
+  "schema_version": 13,
   "name": "Axis",
   "assemblies": [
     {
@@ -45,8 +45,14 @@
       "tagKey": "stroke",
       "type": "prismatic",
       "name": "Stroke",
-      "parent": "rail",
-      "child": "carriage",
+      "parent": {
+        "kind": "body",
+        "id": "rail"
+      },
+      "child": {
+        "kind": "body",
+        "id": "carriage"
+      },
       "origin": [0, 0, 0.02],
       "axis": [1, 0, 0],
       "limits": [0, 0.34]

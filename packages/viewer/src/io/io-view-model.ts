@@ -4,7 +4,12 @@ import type {
   IoMappingModule,
   IoProblemCode,
 } from "@pantin/protocol";
-import { type ModuleConnection, moduleConnection } from "../bridge/module-connection.ts";
+import {
+  MODULE_CONNECTION_KEYS,
+  type ModuleConnection,
+  moduleConnection,
+} from "../bridge/module-connection.ts";
+import type { MessageKey } from "../i18n/translate.ts";
 import { type IoGvlExport, ioGvlExportOf } from "./io-gvl-export.ts";
 import {
   cellIdOf,
@@ -50,6 +55,8 @@ export interface IoModuleItem {
   selected: boolean;
   // From the bridge status: the list shows it as a dot.
   connection: ModuleConnection;
+  // The status word written next to the glyph: a tooltip alone is not a cue.
+  statusKey: MessageKey;
 }
 
 export interface IoChannelRow {
@@ -162,6 +169,24 @@ function problemItems(state: IoState): IoProblemItem[] {
   });
 }
 
+function moduleItemOf(
+  module: IoMappingModule,
+  problemCount: number,
+  selected: boolean,
+  bridgeStatus: BridgeStatus | null,
+): IoModuleItem {
+  const connection = moduleConnection(bridgeStatus, module.key);
+  return {
+    key: module.key,
+    port: module.port,
+    channelCount: module.channels.length,
+    problemCount,
+    selected,
+    connection,
+    statusKey: MODULE_CONNECTION_KEYS[connection],
+  };
+}
+
 export function buildIoView(
   state: IoState,
   assemblyNames: ReadonlyMap<string, string>,
@@ -179,14 +204,9 @@ export function buildIoView(
     gvl: ioGvlExportOf(state),
     outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
-    modules: (mapping?.modules ?? []).map((module, index) => ({
-      key: module.key,
-      port: module.port,
-      channelCount: module.channels.length,
-      problemCount: counts.get(index) ?? 0,
-      selected: module.key === key,
-      connection: moduleConnection(bridgeStatus, module.key),
-    })),
+    modules: (mapping?.modules ?? []).map((module, index) =>
+      moduleItemOf(module, counts.get(index) ?? 0, module.key === key, bridgeStatus),
+    ),
     selected: selectedModuleOf(state),
     unmapped: groupUnmappedTags(mapping?.unmappedTags ?? [], assemblyNames),
     targetModuleKey: key,

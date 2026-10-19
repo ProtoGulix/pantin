@@ -1,6 +1,11 @@
-import type { Assembly, PantinDocument, Placement } from "@pantin/protocol";
+import {
+  type Assembly,
+  endpointAssemblyIn,
+  type JointEndpoint,
+  type PantinDocument,
+  type Placement,
+} from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
-import { findAnchorConflict } from "./anchor-conflicts.ts";
 import { newAssembly } from "./assemblies.ts";
 import {
   contentsOfAssembly,
@@ -8,10 +13,12 @@ import {
   describeContents,
   findAssembly,
 } from "./assembly-contents.ts";
-import { refuseBodyUsedAsFrame } from "./conveyor-rules.ts";
-import { reframeMovedBody } from "./move-body-frames.ts";
 import { toPlacement, unitTransform } from "./rigid-transform.ts";
 import { keyTaken, tagKeyOwners } from "./tag-keys.ts";
+
+function rekeyEndpoint(endpoint: JointEndpoint, rekey: (key: string) => string): JointEndpoint {
+  return endpoint.kind === "assembly" ? { kind: "assembly", key: rekey(endpoint.key) } : endpoint;
+}
 
 // Edits of assemblies and keys (ADR 0019 points 8 to 10), as pure functions.
 // Assembly and joint keys change only here, drive keys in drive-rules.ts and
@@ -86,6 +93,12 @@ export function renameAssemblyKey(
       ...(assembly.parent === undefined ? {} : { parent: rekey(assembly.parent) }),
     })),
     bodies: document.bodies.map((body) => ({ ...body, assembly: rekey(body.assembly) })),
+    // A group endpoint names its assembly by key (ADR 0055 point 11).
+    joints: document.joints.map((joint) => ({
+      ...joint,
+      parent: rekeyEndpoint(joint.parent, rekey),
+      child: rekeyEndpoint(joint.child, rekey),
+    })),
     drives: document.drives.map((drive) => ({ ...drive, assembly: rekey(drive.assembly) })),
     actuators: document.actuators.map((actuator) => ({
       ...actuator,
@@ -144,7 +157,7 @@ export function renameTagKey(
   if (joint === undefined) {
     throw new ApiError("not_found", `This Pantin has no joint "${jointId}".`);
   }
-  const assembly = document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
+  const assembly = endpointAssemblyIn(joint.child, document.bodies) ?? "";
   const taken = tagKeyOwners(document, assembly, { jointId });
   const owner = taken.get(tagKey);
   if (owner !== undefined) {
@@ -156,46 +169,6 @@ export function renameTagKey(
     ...document,
     joints: document.joints.map((item) => (item.id === jointId ? { ...item, tagKey } : item)),
   };
-}
-
-// The joint whose child is the body moves with it; its tag key must be free
-// there (ADR 0019 point 9: no automatic suffix, it would bring back "tige-2").
-export function moveBody(
-  document: PantinDocument,
-  bodyId: string,
-  assembly: string,
-): PantinDocument {
-  findAssembly(document, assembly);
-  const movedBody = document.bodies.find((body) => body.id === bodyId);
-  if (movedBody === undefined) {
-    throw new ApiError("not_found", `This Pantin has no body "${bodyId}".`);
-  }
-  // Objects follow a body of their own assembly only (ADR 0043 point 2).
-  if (movedBody.assembly !== assembly) {
-    refuseBodyUsedAsFrame(document, bodyId, `move to assembly "${assembly}"`);
-  }
-  const parentJoint = document.joints.find((joint) => joint.child === bodyId);
-  const owner =
-    parentJoint === undefined
-      ? undefined
-      : tagKeyOwners(document, assembly, { jointId: parentJoint.id }).get(parentJoint.tagKey);
-  if (parentJoint !== undefined && owner !== undefined) {
-    throw new ApiError(
-      "conflict",
-      `Tag key "${parentJoint.tagKey}" of joint "${parentJoint.id}" is already used by ${owner} in assembly "${assembly}". Rename one of the tag keys first.`,
-    );
-  }
-  const bodies = document.bodies.map((body) => (body.id === bodyId ? { ...body, assembly } : body));
-  const moved = { ...document, bodies };
-  // The move may turn joints of the body into joints between assemblies.
-  const touching = document.joints.filter(
-    (joint) => joint.parent === bodyId || joint.child === bodyId,
-  );
-  const conflict = findAnchorConflict(moved, new Set(touching.map(({ id }) => id)));
-  if (conflict !== undefined) {
-    throw new ApiError("conflict", conflict);
-  }
-  return reframeMovedBody(document, moved, bodyId);
 }
 
 // The placement comes from the schema (finite, quaternion within tolerance)

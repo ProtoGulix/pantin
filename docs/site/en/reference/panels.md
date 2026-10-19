@@ -1,11 +1,11 @@
 # Panels and buttons
 
-This page lists every button, field and control of the viewer's panels, area by area. For each control: its **label** as the interface shows it, what it does, and when it is greyed out.
+Every button, field and control of the panels, area by area: its **label**, what it does, and when it is greyed out.
 
 The menus (**File**, **Edit**, **View**) are described in [Menus](/en/reference/menus). Key and mouse combinations are in [Keyboard and mouse shortcuts](/en/reference/shortcuts). The general layout of the screen is in [The screen](/en/reference/interface). The three central views (3D, Diagram, I/O) are in [Central views](/en/reference/views).
 
 ::: tip Reading the tables
-"Greyed out" means the button is visible but inactive. When a button is greyed out for a specific reason, the tooltip (on hover) often gives that reason. A field that is "validated on leaving" sends its value when you press **Enter** or click elsewhere.
+"Greyed out": the button is visible but inactive, and its tooltip often gives the reason. A field "validated on leaving" sends its value with **Enter** or a click elsewhere.
 :::
 
 ## The toolbar
@@ -20,7 +20,6 @@ It sits under the menu bar, above the tree. It exists only when a Pantin is open
 | **Frame all** | Places the 3D camera to see all the bodies. | No body, or the 3D view is not displayed (**Diagram** or I/O layout) |
 | **Frame selection** | Places the 3D camera on the item selected in the tree. | No body, no tree node selected, or 3D view not displayed |
 | **Central view**: **3D** / **Diagram** / **3D + Diagram** | Three toggle buttons, only one pressed: chooses what the central area displays. The tooltip gives the full name (**3D only**, **Chain diagram only**, **3D + Diagram**). | Never |
-| Console counter (error and warning icons with two numbers) | Shows the number of errors and warnings of the [console](#the-console). A click opens or closes the console. The button is pressed when the console is open. | Never |
 | Waiting wheel (**Working**) | Indicator, not a button: a request is in progress. | Not applicable |
 
 ::: info The I/O layout
@@ -48,7 +47,11 @@ The Pantin contains its assemblies, then a **Joints between assemblies** folder 
 | Round mark on the right | On a sensor: filled when its state tag is 1 (**On**), empty at 0 (**Off**). Read from the tags, never computed by the viewer. |
 | Tinted "linked" row | When an element of the action chain is selected, the joints it moves or watches are tinted. |
 
-Dragging a body onto an assembly (or onto a body of that assembly) moves it into that assembly. The same operation exists on the keyboard with the **Assembly** list of the inspector.
+Dragging a body onto an assembly (or onto a body of that assembly) moves it into that assembly. The same operation exists on the keyboard with the **Assembly** list of the inspector. Its fixed joints to the old assembly are deleted and listed in the message. The core refuses the move when the body, its old group and its new group are not moved by the same joint (or by none); its message is shown word for word.
+
+**Multi-selection.** <kbd>Ctrl</kbd>+click adds or removes a row, <kbd>Shift</kbd>+click takes a range, <kbd>Shift</kbd>+arrows extends it. Only body and group rows (an assembly filed inside another) of one assembly can be selected together. Other commands act on the first selected row. The 3D view stays single-selection.
+
+**Group rows.** A group is an assembly row. Like a body, it first lists the joints it is an end of, with "parent" or "child". See [Concepts](/en/guide/model#concepts-body-assembly-group).
 
 ::: info Screen reader text
 The icons carry no text: each row also has a hidden text that gives its type and state (for example "moved by Actuator 1", "watched by Upper limit switch", "hidden").
@@ -67,6 +70,8 @@ Right-click on a row (or the **Menu** key). An entry is offered only when it mak
 | **Import into this Pantin** | Pantin | Opens the file picker. |
 | **New assembly** | Pantin | Creates an empty assembly (default name **New assembly**). |
 | **New joint…** | Assembly, **Joints between assemblies** folder | Opens the [joint form](#new-joint). |
+| **Group…** | Body, assembly | Opens the [group name line](#group) for the selected rows. Offered only if the selection is made of bodies and sub-groups of one assembly. |
+| **Ungroup** | Assembly filed inside another | Dissolves the group into its assembly. See [Ungroup a group](/en/guide/groups#ungroup-a-group). |
 | **Change type…** | Joint | Opens the joint form, pre-filled. |
 | **Add an actuator…** / **Edit its actuator…** | Moving joint | Opens the actuator form for this joint. The entry says **Edit** if the joint already has an actuator. Absent on a fixed joint. |
 | **Add a sensor…** | Moving joint | Opens the sensor form for this joint. |
@@ -91,7 +96,7 @@ It opens under the toolbar after a file is chosen (**3D file to import**) throug
 | Title **Import into "name"** | Reminds the target Pantin. | Not applicable |
 | File name and format badge (**GLB**, **STL**, **STEP**) | Remind the chosen file. | Not applicable |
 | **Unit** | Length unit of the file: **m (metres)**, **mm (millimetres)**, **cm (centimetres)**, **in (inches)**. Shown only for an STL: the other formats carry their own unit. | During the import |
-| **Up axis** | **Y up (glTF standard)** or **Z up (CAD)**. | During the import |
+| **Up axis** | **Y up (glTF standard)** or **Z up (CAD)**. Shown only for a GLB and an STL: a converted STEP is always Z up. | During the import |
 | **Import** | Starts the import. | An import or a request is in progress |
 | **Cancel** | Abandons the import. | Replaced by the waiting wheel during the import |
 
@@ -103,9 +108,9 @@ During the import, the form shows **Importing…**. For a STEP: **Converting STE
 
 ![The PLC bridge card, bridge running](/screenshots/en/bridge-running.webp)
 
-The card is at the very bottom of the left panel. It is visible in all central layouts. It appears as soon as the core answers about the bridge state.
+The card is at the bottom of the left panel, visible in all layouts.
 
-The status line shows a coloured dot and the state text, followed by a clickable pill that tells the network mode.
+The status line shows a dot (check, ring, half-filled ring or cross in an octagon, besides the colour) and the state text, followed by a clickable pill that tells the network mode.
 
 | State | Dot | Action button |
 | --- | --- | --- |
@@ -131,7 +136,7 @@ Under the status line, depending on the context:
 | Area | Content |
 | --- | --- |
 | Note | Reason why the button or the settings are inactive: "Start the core with `--bridge-python <path>` (`pnpm setup:python`)." when the bridge is unavailable, or **A bridge started outside Pantin is connected.** when another bridge already holds the place. |
-| Network error | The core's refusal (non-private address, invalid list...) is shown in red and forces the network settings open. |
+| Network error | The core's refusal (non-private address, invalid list...) is shown in red, led by a cross in an octagon, and forces the network settings open. |
 | Module lines | One line per I/O module: dot, module **key** (`m1`...), `address:port` that the PLC must target, and status as text: **bridge stopped**, **waiting for the PLC** or **PLC connected**. Bridge stopped: the lines come from the I/O list and the address is the one a start would use. Bridge running: they come from what the core reports. |
 | **No module: configure the I/O** | Replaces the lines when the I/O list has no module. |
 | **Any I/O edit stops the bridge.** | Reminder shown while the bridge is running. |
@@ -153,7 +158,7 @@ A confirmation is shown inline, above the message line, in place of a dialog. It
 | **Delete joint "name"?** | **Delete**, **Cancel** |
 | **Delete assembly "name" and all its contents?** | **Delete**, **Cancel**. A list says what disappears: bodies, joints of the assembly, joints with other assemblies, drives, actuators, sensors, sub-assemblies, removed tags and added tags, and the assemblies that lose their attachment. |
 | **Delete n orphan file(s) from the meshes folder?** (**File** menu, **Clean up orphan files…**) | **Delete**, **Cancel**. The list gives the files and their size. |
-| **Replace the feed of ... by one from ...?** (new link in the diagram) | **Replace**, **Cancel** |
+| **Replace the feed of ... by one from ...?** (link drawn in the diagram) | **Replace**, **Cancel** |
 
 Deleting a drive, an actuator, a sensor or a conveying object asks for no confirmation.
 
@@ -358,14 +363,27 @@ Title **New joint in "Pantin name"**, or **Change joint "name"**. **Enter** vali
 | --- | --- |
 | **Type** | **Fixed**, **Prismatic (slider)**, **Revolute (limited pivot)**, **Continuous (unlimited pivot)**, **Helical (screw and nut)**. The parameter rows below change with the type. |
 | **Name** | Name of the joint. |
-| **Parent body**, **Child body** | Lists of the bodies. A colour dot reminds the body's tint in the 3D view. |
+| **Parent body**, **Child body** | Lists of the bodies, and of the groups (**Group: name** entries). Between two assemblies the child must be a group; the core decides and refuses with its sentence. A colour dot reminds the body's tint in the 3D view. |
 | **Axis (frame of "assembly")** | Radio buttons **X**, **Y**, **Z**, **Other**. With **Other**, three component fields appear; otherwise the **Reversed** checkbox appears. |
 | **Take the axis from a face** | Waits for a click on a face of the 3D view, which fills the origin and the axis (text **Click a face in the 3D view (Esc: cancel)**). Present only when the form edits an existing moving joint. |
+| **Align the frame on this axis** | Turns the frame of the parent's assembly (and of the group the joint moves) so that this axis reads [0, 0, 1]; nothing moves. Present only for a joint already created whose type moves, absent for a fixed joint; disabled while the form has changes not applied and during a request (**Apply the joint's changes first: the alignment uses the stored axis.**). The message names the turned assemblies and the rewritten joints (**Frame aligned on the axis: …** or **Frames aligned on the axis: …**, then **Joints rewritten: …**), or **The frames are already aligned on this axis, nothing changed.** |
 | **Reverse the axis** | Reverses the direction of the axis without sending anything. |
 | **Origin (frame of "assembly")** | Three fields in mm. |
 | Type parameters | **Limits** (**lower** and **upper**, in mm or degrees depending on the type), **Pitch (travel per turn)** for the helical joint. |
 
-A sentence reminds that the axis is taken in the parent body's frame, Z up, and that the arrow in the 3D view shows the positive direction of travel.
+A sentence reminds that the axis is taken in the frame of the parent's assembly (the group itself when the parent is a group), Z up, and that the arrow in the 3D view shows the positive direction of travel.
+
+### Group
+
+After **Group…**, a line opens under the tree: `Group N items of assembly "X": what should the group be called?` (`Group 1 item…` for a single one).
+
+| Control | What it does |
+| --- | --- |
+| **Group name** | Name of the future group (an assembly and a fixed joint of the same name). **Enter** validates. |
+| **Group** | Creates the group. Message: `Group "name" created.`, followed by **Joints deleted: …** and **Tags were renamed: regenerate the PLC's GVL.** when they apply. |
+| **Cancel** | Closes the line without sending anything. |
+
+If the core refuses, its sentence is shown word for word and nothing changed. See [Make a group](/en/guide/groups#make-a-group).
 
 ### New drive
 
@@ -476,7 +494,7 @@ The console also warns when the simulation is paused while a PLC bridge is conne
 
 The card's **Log** button opens a **PLC bridge log** window. It shows the end of the bridge log file (see [The log file](#the-log-file)) as columns (**Log lines**), scrolled to the bottom. While it is open, it refreshes on every new bridge state.
 
-Each entry shows: the local time `HH:MM:SS.mmm` (the full date is in the tooltip); a source badge, **Core** or **Bridge**; a level badge, **Info**, **Warn.** (amber fill) or **Error** (red fill); the message (the Python logger name is only in the tooltip, the bridge's own timestamp is hidden). Continuation lines of an entry (a traceback, for instance) are indented under it. Warning and error rows are tinted, with a bar on the left.
+Each entry shows: the local time `HH:MM:SS.mmm` (the full date is in the tooltip); a source badge, **Core** or **Bridge**; a level badge with its glyph, **Info**, **Warn.** (triangle, amber fill) or **Error** (cross in an octagon, red fill); the message (the Python logger name is only in the tooltip, the bridge's own timestamp is hidden). Continuation lines of an entry (a traceback, for instance) are indented under it. Warning and error rows are tinted, with a bar on the left.
 
 Three toggles, in the **Levels shown** group, filter by level: **Error**, **Warning**, **Info**, each with its entry count. As in the console, the choice is kept while the page stays open. When no entry matches: **No entry for the levels shown.**
 
@@ -504,7 +522,9 @@ Only the first identical refused request is recorded per connection; the total i
 
 ## The console
 
-The console is a panel under the central area. The toolbar counter opens and closes it, like **F8**. A handle above it lets you change its height (**Resize the console**); a double-click on the handle restores the original height. The height is kept in the browser.
+The console is a panel under the central area. A handle above the console lets you change its height (**Resize the console**); a double-click on the handle restores the original height. The height is kept in the browser.
+
+At the very bottom of the central area, a thin always-visible bar holds the console counter (error and warning icons with two numbers, outside the toolbar): a click opens or closes the console, like **F8**. The button is pressed (blue tint and underline) when the console is open.
 
 | Control | What it does | Greyed out when |
 | --- | --- | --- |
@@ -544,6 +564,19 @@ It is displayed when no Pantin is open. It is a modal window above the empty 3D 
 
 The window's errors (unsupported file, unreachable core...) are shown in the window's message line.
 
-::: warning Not verified
-The exact style of the coloured dots (bridge, modules) is defined by the stylesheet; this page describes what the text and the structure say, not the tints.
-:::
+At the bottom of the window, a **Pantin** line followed by the number shows the viewer version.
+
+## The About window
+
+It opens with **Help**, **About Pantin…**. It is a modal window above the central area. <kbd>Esc</kbd> or the **Close the About window** cross closes it.
+
+| Line | What it shows |
+| --- | --- |
+| **Viewer version** | The version of the viewer loaded in the browser. |
+| **Core version** | The version of the core, read each time the window opens: **Reading…** while it is read, **Core unreachable** if the core does not answer. |
+| **Licence** | Apache 2.0. |
+| **User guide**, **Project repository** | Links, opened in a new tab. |
+
+A number such as `0.2.0` is a released version. A number such as `0.2.0+8b4e4c4` is a state of the code built after version 0.2.0; what follows the `+` is the commit.
+
+If the viewer and the core do not have the same number, a message preceded by a warning triangle says so: the browser kept an old viewer after the core was updated. Reload the page with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>. See [Troubleshooting](/en/guide/troubleshooting#the-viewer-and-the-core).

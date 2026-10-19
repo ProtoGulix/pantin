@@ -191,6 +191,23 @@ describe("consoleWording", () => {
   });
 });
 
+describe("the migration to version 13", () => {
+  const followers = entryOf(30, {
+    code: "migrated",
+    level: "info",
+    source: { kind: "pantin" },
+    params: { from: 12, to: 13, followers: "x-free, y-free" },
+  });
+
+  it("lists the bodies that now follow their group, as the detail of the line", () => {
+    expect(consoleWording(followers, createTranslator("en")).detail).toBe(
+      "Bodies with no parent joint now follow their group when it moves: x-free, y-free.",
+    );
+    expect(consoleWording(followers, createTranslator("fr")).detail).toContain("x-free, y-free");
+    expect(consoleWording(entries.migrated, createTranslator("en")).detail).toBeNull();
+  });
+});
+
 describe("clockTime", () => {
   it("shows the wall clock in local time, with two digits", () => {
     expect(clockTime(new Date(2026, 9, 1, 7, 5, 9).toISOString())).toBe("07:05:09");

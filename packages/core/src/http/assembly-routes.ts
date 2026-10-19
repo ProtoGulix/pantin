@@ -2,6 +2,7 @@ import {
   AlignRequestSchema,
   AssemblyDeletionQuerySchema,
   CreateAssemblyRequestSchema,
+  GroupBodiesRequestSchema,
   MoveBodyRequestSchema,
   RenameKeyRequestSchema,
   RenameRequestSchema,
@@ -188,6 +189,28 @@ export const ASSEMBLY_ROUTES: readonly Route[] = [
       );
       const pantinId = pantinIdOf(context);
       const answer = await context.service.moveBody(pantinId, bodyIdOf(context), assembly);
+      sendJson(context.response, 200, answer);
+    },
+  },
+  {
+    method: "POST",
+    pattern: [...ASSEMBLY, "groups"],
+    handle: async (context) => {
+      const request = parseWithSchema(
+        GroupBodiesRequestSchema,
+        await readJsonBody(context.request),
+        "The grouping",
+      );
+      const pantinId = pantinIdOf(context);
+      const answer = await context.service.groupBodies(pantinId, assemblyKeyOf(context), request);
+      sendJson(context.response, 201, answer);
+    },
+  },
+  {
+    method: "POST",
+    pattern: [...ASSEMBLY, "ungroup"],
+    handle: async (context) => {
+      const answer = await context.service.ungroup(pantinIdOf(context), assemblyKeyOf(context));
       sendJson(context.response, 200, answer);
     },
   },

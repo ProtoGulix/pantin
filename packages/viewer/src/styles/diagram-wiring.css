@@ -89,6 +89,7 @@
 .diagram-port.is-lit .diagram-socket {
   fill: var(--state-normal);
   stroke: var(--state-normal);
+  stroke-width: 3;
 }
 
 /* Links are thin: a wide invisible path over each is what the pointer hits. */
@@ -110,14 +111,15 @@
   cursor: pointer;
 }
 
+/* A delete button is an action, not a state: neutral, its cross is the cue. */
 .diagram-edge-remove circle {
   fill: var(--surface-3);
-  stroke: var(--state-emergency);
+  stroke: var(--text-muted);
 }
 
 .diagram-edge-remove path {
   fill: none;
-  stroke: var(--state-emergency);
+  stroke: var(--text-muted);
   stroke-linecap: round;
   stroke-width: 1.6;
 }
@@ -149,16 +151,18 @@
   pointer-events: none;
 }
 
+/* A link target is interface attention: the selection role, and a thicker dashed stroke. */
 .diagram--linking .is-link-target .diagram-socket {
-  fill: var(--state-normal);
-  stroke: var(--state-normal);
+  fill: var(--selection);
+  stroke: var(--selection);
   stroke-width: 7;
   stroke-opacity: 0.35;
 }
 
 .diagram--linking .diagram-node.is-link-target > .diagram-node__box {
-  stroke: var(--state-normal);
-  stroke-width: 2;
+  stroke: var(--selection);
+  stroke-dasharray: 6 3;
+  stroke-width: 3;
 }
 
 .diagram--linking .is-link-hover .diagram-socket,
@@ -195,4 +199,5 @@
 
 .diagram-value-input .text-input.is-invalid {
   border-color: var(--state-emergency);
+  border-style: dashed;
 }

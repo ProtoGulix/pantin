@@ -1,6 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { JointResponseSchema, PANTIN_SCHEMA_VERSION, PoseResponseSchema } from "@pantin/protocol";
+import {
+  bodyEndpoint,
+  groupEndpoint,
+  JointResponseSchema,
+  PoseResponseSchema,
+} from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildAsciiStl } from "../test-support/mesh-fixtures.ts";
 import {
@@ -41,8 +44,8 @@ async function startServer(): Promise<RunningPantinServer> {
 const PRISMATIC = {
   type: "prismatic",
   name: "Axe X",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: groupEndpoint("carriage"),
   origin: [0, 0, 0],
   axis: [1, 0, 0],
   limits: [0, 0.8],
@@ -141,8 +144,8 @@ describe("revolute joint", () => {
 
 describe("joint errors", () => {
   it.each([
-    [{ ...PRISMATIC, parent: "nope" }, /parent body "nope" does not exist/],
-    [{ ...PRISMATIC, child: "rail" }, /cannot link body "rail" to itself/],
+    [{ ...PRISMATIC, parent: bodyEndpoint("nope") }, /unknown body "nope"/],
+    [{ ...PRISMATIC, child: bodyEndpoint("rail") }, /cannot link body "rail" to itself/],
     [{ ...PRISMATIC, limits: [1, 0] }, /lower limit/],
     [{ ...PRISMATIC, axis: [0, 0, 0] }, /zero vector/],
     [{ ...PRISMATIC, type: "spherical" }, /type/],
@@ -160,11 +163,28 @@ describe("joint errors", () => {
       ...PRISMATIC,
       name: "Other",
     });
-    expect(second.body).toContain("already has the parent joint");
-    const back = { ...PRISMATIC, name: "Back", parent: "carriage", child: "rail" };
+    // The child is the group "carriage": it can have one anchor only (ADR 0033 point 2).
+    expect(second.body).toContain("already anchored by joint");
+    const back = {
+      ...PRISMATIC,
+      name: "Back",
+      parent: bodyEndpoint("carriage"),
+      child: groupEndpoint("rail"),
+    };
     expect(
       (await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", back)).body,
-    ).toContain("cycle");
+    ).toContain("loop");
+  });
+});
+
+describe("joint errors on the ends", () => {
+  it("answers 409 for a body child in another assembly, proposing its group (ADR 0055)", async () => {
+    const refused = await sendJsonRequest(server, "POST", "/api/pantins/axis/joints", {
+      ...PRISMATIC,
+      child: bodyEndpoint("carriage"),
+    });
+    expect(refused.status).toBe(409);
+    expect(refused.body).toContain('use group \\"carriage\\" as the child');
   });
 
   it("answers 404 for unknown joints and 400 for invalid ids", async () => {
@@ -206,55 +226,6 @@ describe("joints in the document lifecycle", () => {
     expect(discarded.json).toMatchObject({ unsavedChanges: false, document: { joints: [] } });
     const pose = await sendRaw(server, "GET", "/api/pantins/axis/pose");
     expect(PoseResponseSchema.parse(pose.json).jointPositions).toEqual([]);
-  });
-});
-
-const NO_PHASE_6 = { belts: [], guides: [], emitters: [], absorbers: [], presenceSensors: [] };
-
-describe("schema version 1 on disk", () => {
-  it("opens a version 1 pantin.json and saves it in the current version", async () => {
-    const folder = join(workspace.pantinsDirectory, "legacy");
-    await mkdir(join(folder, "meshes"), { recursive: true });
-    await writeFile(
-      join(folder, "pantin.json"),
-      JSON.stringify({ schema_version: 1, name: "Legacy", bodies: [] }),
-    );
-    const opened = await sendRaw(server, "GET", "/api/pantins/legacy");
-    expect(opened.json).toMatchObject({
-      unsavedChanges: false,
-      document: { schema_version: PANTIN_SCHEMA_VERSION, joints: [] },
-    });
-    await sendRaw(server, "POST", "/api/pantins/legacy/save");
-    const onDisk: unknown = JSON.parse(await readFile(join(folder, "pantin.json"), "utf8"));
-    expect(onDisk).toEqual({
-      schema_version: PANTIN_SCHEMA_VERSION,
-      name: "Legacy",
-      assemblies: [
-        {
-          key: "main",
-          name: "main",
-          placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
-        },
-      ],
-      bodies: [],
-      joints: [],
-      drives: [],
-      actuators: [],
-      sensors: [],
-      ...NO_PHASE_6,
-    });
-  });
-
-  it("answers 409 for a newer schema version", async () => {
-    const folder = join(workspace.pantinsDirectory, "future");
-    await mkdir(folder);
-    await writeFile(
-      join(folder, "pantin.json"),
-      JSON.stringify({ schema_version: PANTIN_SCHEMA_VERSION + 1, name: "F", bodies: [] }),
-    );
-    const response = await sendRaw(server, "GET", "/api/pantins/future");
-    expect(response.status).toBe(409);
-    expect(response.body).toContain("newer than this core supports");
   });
 });
 

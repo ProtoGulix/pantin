@@ -2,6 +2,7 @@ import {
   DRIVE_TAGS,
   type Drive,
   type DriveTag,
+  endpointAssemblyIn,
   JOINT_COORDINATE_UNITS,
   type JointCoordinateUnit,
   jointTagName,
@@ -42,7 +43,7 @@ export function driveTagUnit(document: PantinDocument, name: string): JointCoord
 /** The same for the setpoint of a joint, in the unit of its coordinate; null for another name. */
 function jointSetpointUnit(document: PantinDocument, name: string): JointCoordinateUnit | null {
   for (const joint of document.joints) {
-    const assembly = document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
+    const assembly = endpointAssemblyIn(joint.child, document.bodies) ?? "";
     if (jointTagName(assembly, joint.tagKey, "setpoint") === name) {
       return JOINT_COORDINATE_UNITS[joint.type];
     }

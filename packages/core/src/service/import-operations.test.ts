@@ -80,7 +80,7 @@ describe("importBodies rollback", () => {
     expect(await readdir(join(pantinsDirectory, "axis", "meshes"))).toEqual([]);
   });
 
-  it("imports both components, the second fixed to the first, when every write succeeds", async () => {
+  it("imports both components of one assembly with no joint when every write succeeds", async () => {
     const service = createPantinService(createPantinStore(pantinsDirectory), twoComponents);
     await service.createPantin("Axis");
     const { bodies, joints } = await service.importBodies(
@@ -89,8 +89,8 @@ describe("importBodies rollback", () => {
       STEP_BYTES,
     );
     expect(bodies).toHaveLength(2);
-    expect(joints).toMatchObject([{ type: "fixed", parent: bodies[0]?.id, child: bodies[1]?.id }]);
-    expect((await service.getPantin("axis")).document.joints).toEqual(joints);
+    expect(joints).toEqual([]);
+    expect((await service.getPantin("axis")).document.joints).toEqual([]);
   });
 });
 
@@ -109,9 +109,9 @@ describe("importBodies joints (ADR 0017)", () => {
 
   it("makes a joint deletion wait until the import that created the joint settles", async () => {
     const held = storeHoldingMeshWrites(pantinsDirectory, false);
-    const service = createPantinService(held.store, twoComponents);
+    const service = createPantinService(held.store, nestedMachine);
     await service.createPantin("Axis");
-    const importing = service.importBodies("axis", { fileName: "axis.step" }, STEP_BYTES);
+    const importing = service.importBodies("axis", { fileName: "m.step" }, STEP_BYTES);
     await held.meshWriteStarted;
     const [joint] = (await service.getPantin("axis")).document.joints;
     let deleted = false;
@@ -197,9 +197,13 @@ describe("importBodies nested assemblies (ADR 0040)", () => {
       ["sub", "m"],
     ]);
     expect(bodies.map((body) => body.assembly)).toEqual(["m", "sub", "sub"]);
+    // One joint per child assembly, group to group; "a" and "b" follow "sub"
+    // (ADR 0055 point 10).
     expect(joints.map(({ parent, child }) => [parent, child])).toEqual([
-      ["plate", "a"],
-      ["a", "b"],
+      [
+        { kind: "assembly", key: "m" },
+        { kind: "assembly", key: "sub" },
+      ],
     ]);
     expect((await service.getPantin("axis")).document.assemblies).toEqual(assemblies);
   });

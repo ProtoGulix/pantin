@@ -1,4 +1,5 @@
 import type { Assembly, Body, FaceFile, Joint, PantinDocument, Placement } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
 import { expectPoint } from "../test-support/expect-point.ts";
@@ -64,20 +65,38 @@ describe("jointAxisOfFace", () => {
         assembly("world", { translation: [0, 0, 0], rotation: [0, 0, 0, 1] }),
       ],
       [body("rod", "sub"), body("slider", "world")],
-      [joint({ id: "j", type: "prismatic", parent: "rod", child: "slider", limits: [0, 1] })],
+      [
+        joint({
+          id: "j",
+          type: "prismatic",
+          parent: bodyEndpoint("rod"),
+          child: groupEndpoint("world"),
+          limits: [0, 1],
+        }),
+      ],
     );
     const hit = apply(unitTransform(ABOUT_Y_70), [0.3, 0.25, 0.05]);
     const answer = run(document, ROD_FACES, { bodyId: "rod", faceIndex: 0, hitPoint: hit });
     expect(answer.axis).toEqual([1, 0, 0]);
     expectPoint(answer.origin, [0.3, 0.2, 0]);
   });
+});
 
+describe("jointAxisOfFace across assemblies", () => {
   it("converts a pick on a body of another assembly into the parent assembly frame", () => {
     const identity: Placement = { translation: [0, 0, 0], rotation: [0, 0, 0, 1] };
     const document = documentWith(
       [assembly("main", identity), assembly("sub", QUARTER_ABOUT_Z), assembly("tool", identity)],
       [body("frame", "main"), body("rod", "sub"), body("slider", "tool")],
-      [joint({ id: "j", type: "prismatic", parent: "rod", child: "slider", limits: [0, 1] })],
+      [
+        joint({
+          id: "j",
+          type: "prismatic",
+          parent: bodyEndpoint("rod"),
+          child: groupEndpoint("tool"),
+          limits: [0, 1],
+        }),
+      ],
     );
     const bore = faces({
       kind: "cylinder",
@@ -102,7 +121,15 @@ describe("jointAxisOfFace on a STEP body", () => {
     const document = documentWith(
       [assembly("sub", ABOUT_Y_70), assembly("tool", IDENTITY_PLACEMENT)],
       [body("rod", "sub", placement), body("slider", "tool")],
-      [joint({ id: "j", type: "prismatic", parent: "rod", child: "slider", limits: [0, 1] })],
+      [
+        joint({
+          id: "j",
+          type: "prismatic",
+          parent: bodyEndpoint("rod"),
+          child: groupEndpoint("tool"),
+          limits: [0, 1],
+        }),
+      ],
     );
     // Face geometry in the mesh file frame, which the body placement turns
     // back: the cylinder axis there is R * [1, 0, 0].
@@ -120,12 +147,49 @@ describe("jointAxisOfFace on a STEP body", () => {
   });
 });
 
+describe("jointAxisOfFace with a group as the parent (ADR 0041, ADR 0055)", () => {
+  it("answers in the frame of the group, as for a body of it that nothing displaces", () => {
+    const bodies = [body("rod", "sub"), body("slider", "sub")];
+    const assemblies = [assembly("sub", ABOUT_Y_70)];
+    const slide = (parent: ReturnType<typeof bodyEndpoint> | ReturnType<typeof groupEndpoint>) =>
+      joint({
+        id: "j",
+        type: "prismatic",
+        parent,
+        child: bodyEndpoint("slider"),
+        limits: [0, 1],
+      });
+    const hit = apply(unitTransform(ABOUT_Y_70), [0.3, 0.25, 0.05]);
+    const pick = { bodyId: "rod", faceIndex: 0, hitPoint: hit };
+    const fromBody = run(
+      documentWith(assemblies, bodies, [slide(bodyEndpoint("rod"))]),
+      ROD_FACES,
+      pick,
+    );
+    const fromGroup = run(
+      documentWith(assemblies, bodies, [slide(groupEndpoint("sub"))]),
+      ROD_FACES,
+      pick,
+    );
+    expect(fromGroup).toEqual(fromBody);
+    expect(fromGroup.axis).toEqual([1, 0, 0]);
+  });
+});
+
 describe("jointAxisOfFace on planes", () => {
   it("takes the outward normal of a plane and the hit point projected on it", () => {
     const document = documentWith(
       [assembly("sub", QUARTER_ABOUT_Z)],
       [body("rod", "sub"), body("slider", "sub")],
-      [joint({ id: "j", type: "prismatic", parent: "rod", child: "slider", limits: [0, 1] })],
+      [
+        joint({
+          id: "j",
+          type: "prismatic",
+          parent: bodyEndpoint("rod"),
+          child: bodyEndpoint("slider"),
+          limits: [0, 1],
+        }),
+      ],
     );
     const hit = apply(unitTransform(QUARTER_ABOUT_Z), [0.05, 0.07, 0.3]);
     const answer = run(document, ROD_FACES, { bodyId: "rod", faceIndex: 1, hitPoint: hit });
@@ -143,12 +207,18 @@ describe("jointAxisOfFace with joints", () => {
         joint({
           id: "slide",
           type: "prismatic",
-          parent: "base",
-          child: "rod",
+          parent: bodyEndpoint("base"),
+          child: bodyEndpoint("rod"),
           axis: [1, 0, 0],
           limits: [0, 1],
         }),
-        joint({ id: "j", type: "prismatic", parent: "rod", child: "tip", limits: [0, 1] }),
+        joint({
+          id: "j",
+          type: "prismatic",
+          parent: bodyEndpoint("rod"),
+          child: bodyEndpoint("tip"),
+          limits: [0, 1],
+        }),
       ],
     );
     const positions = new Map([["slide", 0.2]]);
@@ -171,7 +241,15 @@ describe("jointAxisOfFace refusals", () => {
     const document = documentWith(
       [assembly("sub", ABOUT_Y_70)],
       [body("rod", "sub"), body("slider", "sub")],
-      [joint({ id: "j", type: "prismatic", parent: "rod", child: "slider", limits: [0, 1] })],
+      [
+        joint({
+          id: "j",
+          type: "prismatic",
+          parent: bodyEndpoint("rod"),
+          child: bodyEndpoint("slider"),
+          limits: [0, 1],
+        }),
+      ],
     );
     const pick = (faceIndex: number) => ({
       bodyId: "rod",

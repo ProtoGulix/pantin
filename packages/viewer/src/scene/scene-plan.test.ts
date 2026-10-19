@@ -5,9 +5,13 @@ import {
   bodyHighlight,
   bodyRenderKey,
   chooseGridStep,
+  faceSideLook,
   floorHeight,
   frameBounds,
   isCurrentLoad,
+  isOutlined,
+  outlineWidthInMeshSpace,
+  overlayAlphaFor,
   placeJointArrow,
   planSceneSync,
 } from "./scene-plan.ts";
@@ -160,6 +164,8 @@ describe("bodyHighlight", () => {
   const preview = {
     parentBodyId: "rail",
     childBodyId: "carriage",
+    parentBodyIds: new Set(["rail", "base"]),
+    childBodyIds: new Set(["carriage", "motor"]),
     origin: null,
     axis: null,
     driven: false,
@@ -173,10 +179,57 @@ describe("bodyHighlight", () => {
   it("tints the previewed joint's bodies instead of the selection", () => {
     expect(bodyHighlight("rail", new Set(["base"]), preview)).toBe("parent");
     expect(bodyHighlight("carriage", new Set(["base"]), preview)).toBe("child");
-    expect(bodyHighlight("base", new Set(["base"]), preview)).toBeNull();
+    expect(bodyHighlight("motor", new Set(), preview)).toBe("child");
+    expect(bodyHighlight("base", new Set(["base"]), preview)).toBe("parent");
+    expect(bodyHighlight("other", new Set(["other"]), preview)).toBeNull();
   });
 
-  it("lets the child win when a joint links a body to itself", () => {
-    expect(bodyHighlight("rail", new Set(), { ...preview, childBodyId: "rail" })).toBe("child");
+  it("lets the child win when a joint holds a body at both ends", () => {
+    expect(bodyHighlight("rail", new Set(), { ...preview, childBodyIds: new Set(["rail"]) })).toBe(
+      "child",
+    );
+  });
+});
+
+describe("outlineWidthInMeshSpace", () => {
+  it("gives the same thickness in metres whatever the body's unit scale", () => {
+    const millimetres = outlineWidthInMeshSpace(0.4, 0.001) * 0.001;
+    const metres = outlineWidthInMeshSpace(0.4, 1);
+    expect(millimetres).toBeCloseTo(metres);
+  });
+
+  it("follows the body's size within a visible range", () => {
+    expect(outlineWidthInMeshSpace(0.4, 1)).toBeCloseTo(0.006);
+    expect(outlineWidthInMeshSpace(0.001, 1)).toBe(0.0015);
+    expect(outlineWidthInMeshSpace(50, 1)).toBe(0.02);
+  });
+
+  it("falls back to the raw thickness without a usable scale", () => {
+    expect(outlineWidthInMeshSpace(0.4, 0)).toBeCloseTo(0.006);
+  });
+});
+
+describe("overlayAlphaFor", () => {
+  it("tints the parent more strongly than the child, and the child more than a selection", () => {
+    expect(overlayAlphaFor("parent")).toBeGreaterThan(overlayAlphaFor("child"));
+    expect(overlayAlphaFor("child")).toBeGreaterThan(overlayAlphaFor("selected"));
+  });
+});
+
+describe("isOutlined", () => {
+  it("outlines a selected body and a joint's child, not a joint's parent", () => {
+    expect(isOutlined("selected")).toBe(true);
+    expect(isOutlined("child")).toBe(true);
+    expect(isOutlined("parent")).toBe(false);
+  });
+});
+
+describe("faceSideLook", () => {
+  it("tints the moving face with the selection and outlines it", () => {
+    expect(faceSideLook("moving")).toEqual({ colour: "selection", outlined: true });
+  });
+
+  it("tints the target face with the joint parent colour and no outline", () => {
+    expect(faceSideLook("target")).toEqual({ colour: "jointParent", outlined: false });
   });
 });

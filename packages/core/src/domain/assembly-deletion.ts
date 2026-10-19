@@ -1,6 +1,7 @@
 import {
   type Assembly,
   type AssemblyDeletion,
+  endpointAssembly,
   type Joint,
   type PantinDocument,
   PantinDocumentSchema,
@@ -145,7 +146,8 @@ function describeDeletion(
   const keys = new Set([key, ...descendants.map((item) => item.key)]);
   const assemblyOfBody = new Map(document.bodies.map((item) => [item.id, item.assembly]));
   const betweenAssemblies = (joint: Joint) =>
-    assemblyOfBody.get(joint.parent) !== assemblyOfBody.get(joint.child);
+    endpointAssembly(joint.parent, assemblyOfBody) !==
+    endpointAssembly(joint.child, assemblyOfBody);
   // Outside the deleted set, anchored into it: now to the world (ADR 0037 point 2).
   const anchors = deriveAssemblyAnchors(document);
   const reanchored = document.assemblies.filter((candidate) => {

@@ -1,5 +1,6 @@
 import {
   type Body,
+  groupEndpoint,
   PANTIN_SCHEMA_VERSION,
   PantinDocumentSchema,
   type SourceNode,
@@ -168,6 +169,10 @@ describe("an imported tree as a document", () => {
     expect(PantinDocumentSchema.safeParse(document).success).toBe(true);
     expect(assemblies.map((assembly) => assembly.key)).toEqual(["m-2", "a", "b", "b-2"]);
     expect(assemblies.map((assembly) => assembly.parent)).toEqual([undefined, "m-2", "m-2", "b"]);
-    expect(joints).toHaveLength(3);
+    // One joint per child assembly: B hangs from A (the handle of M is a1), "b-2" from B.
+    expect(joints.map(({ parent, child }) => [parent, child])).toEqual([
+      [groupEndpoint("a"), groupEndpoint("b")],
+      [groupEndpoint("b"), groupEndpoint("b-2")],
+    ]);
   });
 });

@@ -1,11 +1,14 @@
-import type { PantinDocument, Vector3 } from "@pantin/protocol";
+import type { JointEndpoint, PantinDocument, Vector3 } from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
 import type { Vector3Tuple } from "../frames.ts";
+import { endpointBodyId, groupRepresentatives } from "../joint-bodies.ts";
 import { inBodyFrame } from "../placement-frame.ts";
+import { rigidBodyIds } from "../rigid-sets.ts";
 import { selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { millimetresToMetres } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
+import { fieldToEndpoint } from "./joint-endpoint-field.ts";
 import {
   FIELD_CHILD,
   FIELD_PARENT,
@@ -24,6 +27,11 @@ import {
 export interface JointPreview {
   parentBodyId: string;
   childBodyId: string;
+  // Every body that moves rigidly with each end, for the tint: a group end is
+  // more than its stand-in body (rigid-sets.ts). The ids above stay the single
+  // body used for poses and for the arrow.
+  parentBodyIds: ReadonlySet<string>;
+  childBodyIds: ReadonlySet<string>;
   // Null while the form holds a value that is not a number: no arrow then.
   origin: Vector3Tuple | null;
   // Null as well for the zero vector, which has no direction.
@@ -51,17 +59,25 @@ function isDriven(state: ViewerState, jointId: string | null): boolean {
   );
 }
 
-// Origin and axis arrive in the frame of the parent body's assembly (ADR 0033).
+// Origin and axis arrive in the frame of the parent's assembly (ADR 0033); a
+// group is drawn through its root body (joint-bodies.ts).
 function previewOf(
   document: PantinDocument | undefined,
-  joint: { parentBodyId: string; childBodyId: string; driven: boolean },
+  joint: { parent: JointEndpoint; child: JointEndpoint; driven: boolean },
   origin: Vector3 | null,
   axis: Vector3 | null,
 ): JointPreview {
-  const parent = document?.bodies.find((body) => body.id === joint.parentBodyId);
+  const source = document ?? { bodies: [], joints: [] };
+  const representatives = groupRepresentatives(source);
+  const parentBodyId = endpointBodyId(representatives, joint.parent);
+  const parent = document?.bodies.find((body) => body.id === parentBodyId);
   const drawn = inBodyFrame(origin ?? [0, 0, 0], axis ?? [0, 0, 1], parent?.placement);
   return {
-    ...joint,
+    parentBodyId,
+    childBodyId: endpointBodyId(representatives, joint.child),
+    parentBodyIds: rigidBodyIds(source, joint.parent),
+    childBodyIds: rigidBodyIds(source, joint.child),
+    driven: joint.driven,
     origin: origin === null ? null : drawn.origin,
     axis: axis === null ? null : drawn.axis,
   };
@@ -77,8 +93,8 @@ function formPreview(
     document,
     {
       driven,
-      parentBodyId: form.values[FIELD_PARENT] ?? "",
-      childBodyId: form.values[FIELD_CHILD] ?? "",
+      parent: fieldToEndpoint(form.values[FIELD_PARENT] ?? ""),
+      child: fieldToEndpoint(form.values[FIELD_CHILD] ?? ""),
     },
     formVector(form, "origin"),
     axis?.some((component) => component !== 0) ? axis : null,
@@ -94,18 +110,20 @@ export function jointPreviewOf(state: ViewerState): JointPreview | null {
       isDriven(state, state.jointForm.jointId),
     );
   }
+  const document = state.openPantin?.document;
   const nodeId = selectedNodeIdOf(state.selection);
   const ref = nodeId === null ? null : parseNodeId(nodeId);
   const joint =
     ref?.kind === "joint"
-      ? state.openPantin?.document.joints.find((candidate) => candidate.id === ref.jointId)
+      ? document?.joints.find((candidate) => candidate.id === ref.jointId)
       : undefined;
-  return joint === undefined
-    ? null
-    : previewOf(
-        state.openPantin?.document,
-        { parentBodyId: joint.parent, childBodyId: joint.child, driven: isDriven(state, joint.id) },
-        joint.origin,
-        joint.axis,
-      );
+  if (document === undefined || joint === undefined) {
+    return null;
+  }
+  return previewOf(
+    document,
+    { parent: joint.parent, child: joint.child, driven: isDriven(state, joint.id) },
+    joint.origin,
+    joint.axis,
+  );
 }

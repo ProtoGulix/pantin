@@ -259,3 +259,15 @@
 }
 
 /* The list rows, hidden Open button included, come from list-and-prompt.css. */
+
+/* The build version (ADR 0058), small and muted: it is there for a bug report, not for reading. */
+.welcome__version {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  text-align: right;
+  border-top: 1px solid var(--border);
+}

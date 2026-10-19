@@ -53,13 +53,35 @@ export function faultEvent(
   };
 }
 
-export function migratedEvent(from: number): ConsoleEvent {
-  return {
-    code: "migrated",
-    level: "info",
-    source: { kind: "pantin" },
-    params: { from, to: PANTIN_SCHEMA_VERSION },
-  };
+const MAX_LISTED_CHARACTERS = 200;
+
+function listedBodies(bodyIds: readonly string[]): string {
+  const list = bodyIds.join(", ");
+  return list.length <= MAX_LISTED_CHARACTERS
+    ? list
+    : `${list.slice(0, MAX_LISTED_CHARACTERS - 3)}...`;
+}
+
+// What opening a migrated document tells the user; nothing when it was current.
+// `bodiesFollowingGroup`: bodies that now follow their group (ADR 0055 point 9).
+export function migrationEvents(reading: {
+  migratedFrom: number | null;
+  bodiesFollowingGroup: readonly string[];
+}): ConsoleEvent[] {
+  if (reading.migratedFrom === null) {
+    return [];
+  }
+  const { bodiesFollowingGroup } = reading;
+  const followers =
+    bodiesFollowingGroup.length === 0 ? {} : { followers: listedBodies(bodiesFollowingGroup) };
+  return [
+    {
+      code: "migrated",
+      level: "info",
+      source: { kind: "pantin" },
+      params: { from: reading.migratedFrom, to: PANTIN_SCHEMA_VERSION, ...followers },
+    },
+  ];
 }
 
 // ADR 0045 point 12: a pause while a bridge is connected is a warning, since

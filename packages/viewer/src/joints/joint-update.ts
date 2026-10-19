@@ -6,6 +6,7 @@ import {
 } from "@pantin/protocol";
 import { coordinateFromDisplay, millimetresToMetres } from "../units.ts";
 import { axisChoiceOf, axisVectorOf, parseAxisDirection, reversedAxis } from "./axis-choice.ts";
+import { fieldToEndpoint } from "./joint-endpoint-field.ts";
 import {
   FIELD_CHILD,
   FIELD_NAME,
@@ -97,7 +98,7 @@ function parameterReplacement(joint: Joint, fieldId: string, text: string): Repl
 
 function replacementFor(joint: Joint, fieldId: string, text: string): Replacement | null {
   if (fieldId === FIELD_NAME || fieldId === FIELD_PARENT || fieldId === FIELD_CHILD) {
-    return { [fieldId]: text };
+    return { [fieldId]: fieldId === FIELD_NAME ? text : fieldToEndpoint(text) };
   }
   return (
     vectorReplacement(joint, fieldId, text) ??

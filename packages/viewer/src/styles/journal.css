@@ -58,6 +58,10 @@
 }
 
 .journal__badge {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
   padding: 0 4px;
   font-size: 11px;
   line-height: 16px;
@@ -74,15 +78,15 @@
 }
 
 .journal__badge--level-warning {
-  color: var(--on-state);
-  background: var(--state-abnormal);
-  border-color: var(--state-abnormal);
+  color: var(--on-fill-abnormal);
+  background: var(--fill-abnormal);
+  border-color: var(--fill-outline);
 }
 
 .journal__badge--level-error {
-  color: var(--on-state);
-  background: var(--state-emergency);
-  border-color: var(--state-emergency);
+  color: var(--on-fill-emergency);
+  background: var(--fill-emergency);
+  border-color: var(--fill-outline);
 }
 
 .journal__message,

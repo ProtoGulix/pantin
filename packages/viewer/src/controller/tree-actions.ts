@@ -6,6 +6,7 @@ import {
   sameSelection,
   selectedDeviceOf,
   selectedNodeIdOf,
+  selectedNodeIdsOf,
 } from "../selection.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { withExpanded, withSelection } from "../tree/tree-state.ts";
@@ -34,8 +35,31 @@ export function selectRow(store: ViewerStore, nodeId: string): void {
   }
 }
 
-/** Opens the menu of a row, and selects what the row stands for. */
+/**
+ * Ctrl or Shift on rows (ADR 0055 point 12): the first row is the selection,
+ * the others come with it. One row is a plain selection.
+ */
+export function selectRows(store: ViewerStore, nodeIds: readonly string[]): void {
+  const [first] = nodeIds;
+  if (first === undefined) {
+    return;
+  }
+  store.update({
+    ...withSelection(store.state, selectionOfRow(first)),
+    multiSelectedNodeIds: nodeIds.length > 1 ? [...nodeIds] : [],
+    contextMenu: null,
+  });
+}
+
+/**
+ * Opens the menu of a row, and selects what the row stands for. A row of the
+ * multi-selection keeps it: the menu then acts on all the selected rows.
+ */
 export function openContextMenu(store: ViewerStore, nodeId: string, x: number, y: number): void {
+  if (selectedNodeIdsOf(store.state.selection, store.state.multiSelectedNodeIds).includes(nodeId)) {
+    store.update({ ...store.state, contextMenu: { nodeId, x, y } });
+    return;
+  }
   const selection = selectionOfRow(nodeId);
   store.update({
     ...withSelection(store.state, selection),

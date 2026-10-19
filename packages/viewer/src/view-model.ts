@@ -8,6 +8,7 @@ import { buildInspectorView, type InspectorView } from "./inspector/inspector-mo
 import { buildIoView, type IoView } from "./io/io-view-model.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
+import { type AboutView, buildAboutView } from "./panel/about-model.ts";
 import { buildContextMenuView, type ContextMenuView } from "./panel/context-menu-model.ts";
 import { buildImportFormView, type ImportFormView } from "./panel/import-form-model.ts";
 import { buildPromptView, type PromptView } from "./panel/prompt-model.ts";
@@ -57,6 +58,8 @@ export interface PanelView {
   toolbar: ToolbarView;
   // List view only: the welcome dialog (ADR 0027).
   welcome: WelcomeView;
+  // The About window of the Help menu (ADR 0058).
+  about: AboutView;
   // Edit view only.
   treeRows: TreeRow[];
   importForm: ImportFormView | null;
@@ -143,6 +146,7 @@ export function buildPanelView(
     menus: buildMenuBar(state, translate),
     toolbar: buildToolbarView(state),
     welcome: buildWelcomeView(state, translate),
+    about: buildAboutView(state.about, state.language, translate),
     treeRows: flattenTree(
       buildTree({ ...state, tagValues }, translate),
       state,

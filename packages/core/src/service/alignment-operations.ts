@@ -127,7 +127,8 @@ function isTargetDisplaced(
   const displacements = computeDisplacements(document, positions);
   return picks.some(
     ({ pick, role }) =>
-      role.side === "target" && isDisplaced(displacements.get(pick.body) ?? IDENTITY_TRANSFORM),
+      role.side === "target" &&
+      isDisplaced(displacements.bodies.get(pick.body) ?? IDENTITY_TRANSFORM),
   );
 }
 

@@ -4,7 +4,7 @@ import type { ImportBodyQuery, LengthUnit, SourceFormat, UpAxis } from "@pantin/
 export interface PendingImport {
   fileName: string;
   format: SourceFormat;
-  // Only sent for STL; kept for every format so the form state stays simple.
+  // The unit is only sent for STL, the up axis for GLB and STL; kept for every format so the form state stays simple.
   unit: LengthUnit;
   upAxis: UpAxis;
 }
@@ -53,12 +53,20 @@ export function createPendingImport(fileName: string): PendingImport | null {
   return format === null ? null : { fileName, format, ...DEFAULTS[format] };
 }
 
+/** Whether the user must pick the up axis: not for STEP, always converted Z up (ADR 0009). */
+export function importNeedsUpAxis(pendingImport: PendingImport): boolean {
+  return pendingImport.format !== "step";
+}
+
 /** Whether the user must pick a unit: only STL, which carries none. */
 export function importNeedsUnit(pendingImport: PendingImport): boolean {
   return pendingImport.format === "stl";
 }
 
 export function buildImportQuery(pendingImport: PendingImport): ImportBodyQuery {
-  const query: ImportBodyQuery = { fileName: pendingImport.fileName, upAxis: pendingImport.upAxis };
-  return importNeedsUnit(pendingImport) ? { ...query, unit: pendingImport.unit } : query;
+  const query: ImportBodyQuery = { fileName: pendingImport.fileName };
+  const withUnit = importNeedsUnit(pendingImport) ? { ...query, unit: pendingImport.unit } : query;
+  return importNeedsUpAxis(pendingImport)
+    ? { ...withUnit, upAxis: pendingImport.upAxis }
+    : withUnit;
 }

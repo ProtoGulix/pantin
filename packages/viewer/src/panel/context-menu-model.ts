@@ -2,6 +2,8 @@ import { actuatorOfJoint, movableJoints } from "../actuators/actuator-joints.ts"
 import type { AssemblyDisplay } from "../assembly-display.ts";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { ownerOfDevice } from "../io/io-owner.ts";
+import { menuContext } from "../menu/menu-context.ts";
+import { selectedNodeIdOf } from "../selection.ts";
 import { endSwitchRequests } from "../sensors/joint-sensors.ts";
 import { type NodeRef, parseNodeId } from "../tree/node-ids.ts";
 import { buildTree, findNode } from "../tree/tree-model.ts";
@@ -15,6 +17,8 @@ export type ContextAction =
   | "importInto"
   | "newAssembly"
   | "newJoint"
+  | "group"
+  | "ungroup"
   | "changeJointType"
   | "actuateJoint"
   | "addJointSensor"
@@ -56,8 +60,12 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
   if (ref.kind === "assembly" || ref.kind === "folder") {
     entries.push("newJoint");
   }
+  if (ref.kind === "body" || ref.kind === "assembly") {
+    // Offered when the selected rows can be grouped, or the group dissolved (isOffered).
+    entries.push("group");
+  }
   if (ref.kind === "assembly") {
-    entries.push("toggleAssemblyHidden", "toggleAssemblyIsolated");
+    entries.push("ungroup", "toggleAssemblyHidden", "toggleAssemblyIsolated");
   }
   if (ref.kind === "joint") {
     entries.push("changeJointType", "actuateJoint", "addJointSensor", "addEndSwitches");
@@ -74,6 +82,8 @@ const CONTEXT_LABELS = {
   importInto: "menu.importInto",
   newAssembly: "menu.newAssembly",
   newJoint: "menu.newJoint",
+  group: "menu.group",
+  ungroup: "menu.ungroup",
   changeJointType: "menu.changeJointType",
   actuateJoint: "menu.addJointActuator",
   addJointSensor: "menu.addJointSensor",
@@ -95,6 +105,9 @@ function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boo
     // Only an element that can own tags has something to show there.
     return ref.kind === "device" && ownerOfDevice({ kind: ref.deviceKind, id: ref.id }) !== null;
   }
+  if (action === "group" || action === "ungroup") {
+    return isGroupingOffered(action, state);
+  }
   if (!JOINT_WIRING.includes(action) || ref.kind !== "joint") {
     return true;
   }
@@ -105,6 +118,16 @@ function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boo
   return action === "addEndSwitches"
     ? endSwitchRequests(document, ref.jointId).length > 0
     : movableJoints(document).some((joint) => joint.id === ref.jointId);
+}
+
+// The context menu acts on the selection: a right click keeps it when the row
+// is part of it, and selects the row otherwise. Dégrouper acts on the first
+// selected row only, so it is offered on that row.
+function isGroupingOffered(action: "group" | "ungroup", state: ViewerState): boolean {
+  const context = menuContext(state);
+  return action === "group"
+    ? context.canGroup
+    : context.canUngroup && selectedNodeIdOf(state.selection) === state.contextMenu?.nodeId;
 }
 
 function isActuated(ref: NodeRef, state: ViewerState): boolean {

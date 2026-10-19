@@ -1,11 +1,11 @@
 # Menus
 
-La barre de menus contient trois menus : **Fichier**, **Édition** et **Affichage**. Cette page liste chaque entrée dans l'ordre où elle apparaît. Les séparateurs sont indiqués par une ligne « séparateur ».
+La barre de menus contient quatre menus : **Fichier**, **Édition**, **Affichage** et **Aide**. Chaque entrée, dans l'ordre où elle apparaît ; un séparateur est une ligne « séparateur ».
 
-Une entrée grisée ne fait rien quand on clique dessus, et son raccourci non plus. Une entrée à case (•) est cochable : la puce montre l'état actuel. Voir [Raccourcis](/reference/shortcuts) pour la navigation au clavier dans les menus.
+Une entrée grisée ne fait rien, ni son raccourci. Une entrée à case (•) est cochable : la puce montre l'état. Voir [Raccourcis](/reference/shortcuts) pour la navigation au clavier dans les menus.
 
 ::: info Ctrl ou Cmd
-Les raccourcis avec Ctrl s'affichent en « Ctrl+... » dans les menus, mais le viewer accepte aussi la touche <kbd>Cmd</kbd> (macOS) à la place.
+Les menus affichent « Ctrl+... » ; sur macOS, <kbd>Cmd</kbd> convient aussi.
 :::
 
 Termes utilisés dans la colonne « Grisé quand » :
@@ -30,6 +30,8 @@ Termes utilisés dans la colonne « Grisé quand » :
 | Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
 |---|---|---|---|
 | **Nouvelle liaison…** | | Ouvre le formulaire de création d'une liaison. | Pas de Pantin ouvert, aucun corps dans le Pantin, ou traitement en cours. |
+| **Grouper…** | | Crée un groupe avec les corps et sous-groupes sélectionnés dans l'arborescence : une ligne demande le nom du groupe. Voir [Faire un groupe](/guide/groups#faire-un-groupe). | La sélection n'est pas faite de corps et de sous-groupes d'un même assemblage, ou traitement en cours. |
+| **Dégrouper** | | Dissout le groupe sélectionné dans l'assemblage où il est rangé. Voir [Défaire un groupe](/guide/groups#defaire-un-groupe). | La ligne sélectionnée n'est pas un assemblage rangé dans un autre assemblage, ou traitement en cours. |
 | **Remise à zéro de la simulation** | | Remet la simulation à son état initial. | Pas de Pantin ouvert ou traitement en cours. |
 | **Relâcher tous les tags forcés** | | Relâche tous les tags forcés depuis le viewer. Sans effet si aucun tag n'est forcé. | Pas de Pantin ouvert ou traitement en cours. |
 | séparateur | | | |
@@ -83,6 +85,13 @@ Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [P
 
 Les réglages de souris sont détaillés dans [Raccourcis](/reference/shortcuts#vue-3d-et-navigation-de-la-camera).
 
+## Aide
+
+| Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
+|---|---|---|---|
+| **Documentation** | | Ouvre ce guide dans un nouvel onglet, dans la langue du viewer. | Jamais. |
+| **À propos de Pantin…** | | Ouvre la fenêtre **À propos de Pantin**. Voir [Panneaux et boutons](/reference/panels#la-fenetre-a-propos). | Jamais. |
+
 ## Menu contextuel de l'arborescence
 
 Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du clavier, ouvre le menu de cette ligne. Son titre est « Actions sur « nom » ». Les entrées dépendent du type de ligne :
@@ -90,15 +99,16 @@ Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du c
 | Type de ligne | Entrées, dans l'ordre |
 |---|---|
 | Pantin | **Renommer**, **Cadrer la vue sur l'élément**, **Importer dans ce Pantin**, **Nouvel assemblage** |
-| Assemblage | **Renommer**, **Cadrer la vue sur l'élément**, **Nouvelle liaison…**, **Masquer dans la vue 3D** (devient **Afficher dans la vue 3D** s'il est masqué), **Isoler dans la vue 3D** (devient **Afficher tous les assemblages** s'il est isolé), **Supprimer** |
+| Assemblage | **Renommer**, **Cadrer la vue sur l'élément**, **Nouvelle liaison…**, **Grouper…** (si la sélection s'y prête), **Dégrouper** (assemblage rangé dans un autre), **Masquer dans la vue 3D** (devient **Afficher dans la vue 3D** s'il est masqué), **Isoler dans la vue 3D** (devient **Afficher tous les assemblages** s'il est isolé), **Supprimer** |
 | Dossier « Liaisons entre assemblages » | **Cadrer la vue sur l'élément**, **Nouvelle liaison…** |
-| Corps | **Renommer**, **Cadrer la vue sur l'élément**, **Supprimer** |
+| Corps | **Renommer**, **Cadrer la vue sur l'élément**, **Grouper…** (si la sélection s'y prête), **Supprimer** |
 | Liaison | **Cadrer la vue sur l'élément**, **Changer le type…**, **Ajouter un actionneur…** (devient **Modifier son actionneur…** si elle en a un), **Ajouter un capteur…**, **Ajouter les fins de course**, **Supprimer** |
 | Élément de la chaîne d'action (préactionneur, actionneur, capteur, bande...) | **Modifier**, **Afficher dans E/S**, **Supprimer** |
 | Autres lignes (noeud du fichier source, famille d'éléments) | **Cadrer la vue sur l'élément** |
 
-Précisions, d'après le code :
+Précisions :
 
+- **Grouper…** est proposé sur une ligne de corps ou d'assemblage quand la sélection (une ou plusieurs lignes d'un même assemblage) peut être groupée. **Dégrouper** n'est proposé que sur la première ligne sélectionnée.
 - **Renommer** n'est proposé que pour une ligne renommable (Pantin, assemblage, corps).
 - Sur une liaison fixe, les entrées **Ajouter un actionneur…**, **Ajouter un capteur…** et **Ajouter les fins de course** ne sont pas proposées. **Ajouter les fins de course** n'est pas non plus proposée sur une liaison sans limites (pivot continu).
 - **Afficher dans E/S** n'est proposée que pour un élément qui peut posséder des tags.

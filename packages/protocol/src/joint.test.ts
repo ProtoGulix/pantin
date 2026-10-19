@@ -1,3 +1,4 @@
+import { bodyEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { CreateJointRequestSchema, JOINT_PARAMETERS, JointSchema } from "./joint.ts";
 import { PANTIN_SCHEMA_VERSION, PantinDocumentSchema } from "./pantin.ts";
@@ -17,8 +18,8 @@ const slide = {
   tagKey: "stroke",
   name: "Stroke",
   type: "prismatic",
-  parent: "rail",
-  child: "carriage",
+  parent: bodyEndpoint("rail"),
+  child: bodyEndpoint("carriage"),
   origin: [-0.4, 0, 0.02],
   axis: [1, 0, 0],
   limits: [0, 0.8],
@@ -86,8 +87,8 @@ describe("PantinDocumentSchema joints", () => {
       id: "tool-mount",
       tagKey: "tool-mount",
       type: "fixed",
-      parent: "carriage",
-      child: "tool",
+      parent: bodyEndpoint("carriage"),
+      child: bodyEndpoint("tool"),
     };
     expect(PantinDocumentSchema.safeParse(documentWith([slide, tool])).success).toBe(true);
   });
@@ -96,7 +97,18 @@ describe("PantinDocumentSchema joints", () => {
     ["an unknown body", [{ ...slide, child: "ghost" }]],
     ["a body linked to itself", [{ ...slide, child: "rail" }]],
     ["two parents for one body", [slide, { ...slide, id: "second", parent: "tool" }]],
-    ["a cycle", [slide, { ...slide, id: "back", parent: "carriage", child: "rail" }]],
+    [
+      "a cycle",
+      [
+        slide,
+        {
+          ...slide,
+          id: "back",
+          parent: bodyEndpoint("carriage"),
+          child: bodyEndpoint("rail"),
+        },
+      ],
+    ],
     ["two joints with the same id", [slide, { ...slide, child: "tool" }]],
   ])("rejects %s", (_label, joints) => {
     expect(PantinDocumentSchema.safeParse(documentWith(joints)).success).toBe(false);

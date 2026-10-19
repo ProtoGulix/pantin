@@ -19,23 +19,20 @@
   --surface-3: #3a4347;
   --border: #3e474b;
   --text: #eceee8;
+  /* Outline of a filled state badge: 3:1 against the panel surfaces whatever the fill (ADR 0057). */
+  --fill-outline: #eceee8;
   --text-muted: #b9bec5;
   --text-faint: #a0a7ad;
   --brand: #e3631c;
   --brand-text: #1a1e20;
   --selection: #7fa8ec;
+  --joint-parent: #ffe08a;
   --state-abnormal: #e8b923;
   --state-emergency: #f48a82;
-  /* Text on a state colour used as a fill (the log level badges). */
-  --on-state: #1a1e20;
   --state-normal: #5cb87a;
   --hover: rgb(255 255 255 / 5%);
   /* Same value as the dark scene background in theme/scene-palette.ts. */
   --viewport-background: #262d30;
-  /* Data colour of the sensor marks in the tree. The dark value is the blue of the 3D
-     markers (scene/sensor-markers.ts), which stay the same in both themes; the light
-     value is darker to stay readable on a light ground. */
-  --sensor-mark: #58a6ff;
 }
 
 :root[data-theme="light"] {
@@ -46,19 +43,19 @@
   --surface-3: #ffffff;
   --border: #c2c7c2;
   --text: #1a1e20;
+  --fill-outline: #1a1e20;
   --text-muted: #4a5254;
   --text-faint: #5a6264;
   --brand: #b54a12;
   --brand-text: #ffffff;
   --selection: #1d3f8c;
+  --joint-parent: #c25e00;
   --state-abnormal: #7a5800;
   --state-emergency: #b3261e;
-  --on-state: #ffffff;
   --state-normal: #2a6e3f;
   --hover: rgb(0 0 0 / 6%);
   /* Same value as the light scene background in theme/scene-palette.ts. */
   --viewport-background: #dfe2dd;
-  --sensor-mark: #1f5fa8;
 }
 
 :root {
@@ -67,11 +64,16 @@
   --selection-soft: color-mix(in srgb, var(--selection) 14%, transparent);
   --related-fill: color-mix(in srgb, var(--selection) 6%, transparent);
   --related-bar: color-mix(in srgb, var(--selection) 55%, transparent);
+  /* IEC 60204-1 fills, the same in both themes, each with its own text colour (ADR 0057 rule 6). */
+  --fill-abnormal: #f2b10a;
+  --on-fill-abnormal: #1a1e20;
+  --fill-emergency: #b3261e;
+  --on-fill-emergency: #ffffff;
   --state-abnormal-soft: color-mix(in srgb, var(--state-abnormal) 14%, transparent);
   --state-emergency-soft: color-mix(in srgb, var(--state-emergency) 12%, transparent);
-  /* Bodies of a previewed joint, the same colours as in the 3D view (scene/body-highlights.ts).
-     The parent's violet codes data, not the theme; the child, which moves, is the selection. */
-  --joint-parent: #a371f7;
+  /* Bodies of a previewed joint, as in the 3D view (scene/body-highlights.ts): the child, which
+     moves, is the selection blue and outlined; the parent is yellow-orange (set per theme above),
+     never close in hue to the child. */
   --joint-child: var(--selection);
   --focus-ring: 0 0 0 1px var(--selection);
   --row-height: 22px;
@@ -122,6 +124,22 @@ body {
   stroke-width: 1.2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* The 12 px state glyph, next to a state colour (ADR 0057 rule 4). */
+.icon--small {
+  width: 12px;
+  height: 12px;
+}
+
+/* The glyph that leads a text (ui/state-glyph.ts): off the first letter, on its baseline. */
+.state-glyph {
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.icon__fill {
+  fill: currentColor;
 }
 
 .icon--rotated {
@@ -217,9 +235,11 @@ body {
   background: var(--hover);
 }
 
+/* A pressed filter or toggle takes the selection role, never the brand (ADR 0057 rule 5). */
 .icon-button[aria-pressed="true"] {
-  color: var(--brand);
-  background: var(--brand-soft);
+  color: var(--selection);
+  background: var(--selection-soft);
+  box-shadow: inset 0 -2px 0 var(--selection);
 }
 
 .icon-button:disabled {

@@ -1,4 +1,12 @@
-import type { Actuator, Drive, PantinDocument, Sensor } from "@pantin/protocol";
+import {
+  type Actuator,
+  bodyEndpoint,
+  type Drive,
+  groupEndpoint,
+  type JointEndpoint,
+  type PantinDocument,
+  type Sensor,
+} from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
 import { NO_POSITIONS } from "../test-support/no-positions.ts";
@@ -18,34 +26,22 @@ import { createAssembly, deleteAssembly } from "./assembly-edits.ts";
 // ADR 0037: deleting an assembly with its contents. The default fixture has
 // "main" (frame, carriage), "chape" (clevis, rod), "tail" (pin) and "other".
 
-const SLIDE = joint({
-  id: "slide",
-  type: "prismatic",
-  parent: "frame",
-  child: "carriage",
-  axis: [1, 0, 0],
-  limits: [0, 1],
-});
+const slideJoint = (id: string, parent: JointEndpoint, child: JointEndpoint) =>
+  joint({ id, type: "prismatic", parent, child, axis: [1, 0, 0], limits: [0, 1] });
+const fixedJoint = (id: string, parent: JointEndpoint, child: JointEndpoint) =>
+  joint({ id, type: "fixed", parent, child });
+const SLIDE = slideJoint("slide", bodyEndpoint("frame"), bodyEndpoint("carriage"));
 // Between assemblies: the chape hangs from the carriage, 0.3 m along its axis.
-const MOUNT_SLIDE = joint({
-  id: "mount",
-  type: "prismatic",
-  parent: "carriage",
-  child: "clevis",
-  axis: [1, 0, 0],
-  limits: [0, 1],
+const MOUNT_SLIDE = slideJoint("mount", bodyEndpoint("carriage"), groupEndpoint("chape"));
+const MOUNT_FIXED = fixedJoint("mount", bodyEndpoint("carriage"), groupEndpoint("chape"));
+const HINGE = joint({
+  id: "hinge",
+  parent: bodyEndpoint("clevis"),
+  child: groupEndpoint("tail"),
+  origin: [0.2, 0, 0.1],
 });
-const MOUNT_FIXED = joint({ id: "mount", type: "fixed", parent: "carriage", child: "clevis" });
-const HINGE = joint({ id: "hinge", parent: "clevis", child: "pin", origin: [0.2, 0, 0.1] });
-const ROD_MOUNT = joint({ id: "rod-mount", type: "fixed", parent: "clevis", child: "rod" });
-const ROD_SLIDE = joint({
-  id: "rod-slide",
-  type: "prismatic",
-  parent: "clevis",
-  child: "rod",
-  axis: [1, 0, 0],
-  limits: [0, 1],
-});
+const ROD_MOUNT = fixedJoint("rod-mount", bodyEndpoint("clevis"), bodyEndpoint("rod"));
+const ROD_SLIDE = slideJoint("rod-slide", bodyEndpoint("clevis"), bodyEndpoint("rod"));
 const POSITIONS = new Map([
   ["slide", 0.2],
   ["mount", 0.3],
@@ -105,8 +101,18 @@ describe("removal of the assembly and its joints", () => {
   it("removes the 3 bodies and 2 fixed joints of a STEP import, and leaves the others as they were", () => {
     const before = documentOf(
       [
-        joint({ id: "weld-1", type: "fixed", parent: "a", child: "b" }),
-        joint({ id: "weld-2", type: "fixed", parent: "a", child: "c" }),
+        joint({
+          id: "weld-1",
+          type: "fixed",
+          parent: bodyEndpoint("a"),
+          child: bodyEndpoint("b"),
+        }),
+        joint({
+          id: "weld-2",
+          type: "fixed",
+          parent: bodyEndpoint("a"),
+          child: bodyEndpoint("c"),
+        }),
       ],
       [body("a", "step"), body("b", "step"), body("c", "step"), body("o", "other", ABOUT_X)],
       [assembly("step", ABOUT_X), assembly("other", ABOUT_DIAGONAL)],

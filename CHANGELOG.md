@@ -6,6 +6,161 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.2.0] - 2026-10-19
+
+Rigid groups: an assembly targeted by a joint moves as one piece, and an
+assembly is split into groups by hand (Group, Ungroup) when the STEP import
+did not do it; a frame can be aligned on a joint axis without moving
+anything. Colour is never the only cue: every state carries a glyph, the
+colours stay apart for colour-blind users, with the visual identity kept.
+The user guide is rewritten in plain language with a guide to preparing 3D
+models, and the version now shows in the viewer (Help, About Pantin), the
+core API and the guide header. Pantins saved by 0.1.0 are migrated on
+opening.
+
+### Added
+
+- Core (ADR 0058): `GET /api/version` answers the build version, `0.2.0` on a
+  release and `0.2.0+8b4e4c4` after it, validated by a protocol schema; one
+  function computes it from the package version and git, for the core, the
+  viewer build and the guide.
+- Viewer (ADR 0058): a Help menu with Documentation (the user guide, in the
+  language of the viewer) and About Pantin, whose window shows the viewer and
+  core versions, the licence and the links to the guide and the repository;
+  when the two versions differ it says so with a warning triangle and asks
+  for a page reload (a stale cached viewer). The welcome window shows the
+  version in its footer.
+- User guide (ADR 0058): the build version in the header of both languages,
+  as a menu leading to the CHANGELOG and the GitHub releases; the Help menu,
+  the About window and the version in the welcome window documented, and a
+  troubleshooting row for a viewer and a core of different versions.
+- ADR 0057, accepted, and spike 0010 (ISA-101 and colour blindness): colour
+  is never the only cue, every pair of codings stays apart under protanopia,
+  deuteranopia and tritanopia (tested), one meaning per colour everywhere,
+  the brand orange only for Pantin itself, with the visual identity of
+  ADR 0053 unchanged. Decision only: the viewer slices follow.
+- Viewer (ADR 0057, first slice): the data colours of the 3D view (axes,
+  sensor markers, light beams, conveyor volumes, face target, view cube) live
+  in one module; the X/Y/Z axes use one set per theme for the stage, the
+  frame trihedrons and the view cube, red, green and blue with distinct
+  lightness; a test checks the registered colour pairs under colour-blindness
+  simulations and that no literal colour is left in the 3D code.
+- Viewer (ADR 0057, second slice): every state has a glyph next to its
+  colour (check, warning triangle, cross in an octagon, ring for idle,
+  half-filled ring for busy) on the bridge status, the module lines, the I/O
+  module list, whose rows now write the status word instead of a tooltip,
+  and the journal badges; the journal's warning and error badges use IEC
+  fills (amber, red) with their own text colours, tested at 4.5:1, and an
+  outline that stands 3:1 against the panel. The error icon becomes a cross
+  in an octagon everywhere.
+- Viewer (ADR 0057, third slice): green now only means on, energised or
+  running (the tree's sensor icon and driven bolt, the info message, a done
+  alignment step and the link drop target become neutral or take the
+  selection colour, with their icon or a dashed stroke); the brand orange
+  only marks Pantin itself (pressed filters, the console counter, the On
+  toggle and the bridge card's current tool take the selection colour);
+  errors in the bridge card, the properties, the I/O view and the journal
+  carry the error glyph, and invalid fields a dashed border. A test lists
+  every use of a state, fill or brand colour with its second cue.
+- Viewer (ADR 0057, fourth and fifth slices): a driven joint's arrow keeps
+  the free joint's blue and gets a collar at its base; a face alignment's
+  target takes the joint parent's yellow-orange, the moving face keeps the
+  selection colour with an outline; every selected body gets an outline;
+  sensor markers and light beams code "signal on" by thickness and opacity
+  (on: green, thick, opaque; off: neutral, thin, translucent), so beams are
+  no longer red.
+- Viewer (ADR 0057, seventh slice): each wire of the chain diagram carries
+  its energy's abbreviation (PNEU, CA/AC, ASS/SERVO, MÉC/MECH, OBS) beside
+  its own dash and width, with per-theme colours away from the state hues
+  and the brand; conveyor volumes are greys of different lightness, the
+  emitter marked "+" and the absorber "−".
+- Viewer, the console's error and warning counters leave the toolbar for a
+  thin bar under the console, always visible while a Pantin is open, so
+  they never sit beside the brand-orange view switch (ADR 0057 rule 5);
+  clicking them still opens the console (F8 unchanged).
+- Documentation (ADR 0057, last slice): a reference page "Lire les couleurs et
+  les repères" / "Reading colours and cues" lists every coding with its
+  non-colour cue first; the screenshots are regenerated with the new look.
+
+### Changed
+
+- User guide (French and English): a plain-language pass. Every page now
+  describes what Pantin does today, without history, decision or test
+  references; the caveats that change what the user does sit in a "Known
+  limits" box at the end of the page. The colours page is a legend. New home
+  page with three entries by goal, five strengths and a viewer screenshot in
+  both themes; a new "For contributors" page links the architecture
+  decisions and spike reports.
+
+### Fixed
+
+- Viewer, a selected joint whose end is a group tinted a single body of that
+  group; it now tints every body that moves with the end (the group's
+  bodies with no parent joint, and what hangs from them by fixed joints,
+  sub-assemblies included). Parent and child no longer differ only by close
+  hues (violet and blue, indistinguishable to colour blind users): the parent
+  is yellow-orange, the child keeps the selection colour and gets an outline;
+  the joint form swatches follow (ADR 0053 amendment). The viewer and
+  reviewer agents now check that colour is never the only cue.
+
+### Added
+
+- ADR 0056, accepted and implemented: **Aligner le repère sur cet axe** in
+  the joint form turns the frame of a joint's parent assembly, and of the
+  group it moves, on the joint's axis, without moving anything, so that a
+  slider on inclined rails reads [0, 0, 1]. User guide (French and English)
+  updated: model, preparing models, panels reference.
+- ADR 0055, accepted: an assembly used as a joint endpoint is a rigid group
+  whose bodies move together, and the user cuts an assembly into groups by
+  hand (Grouper, Dégrouper). Amendments to ADR 0011, 0017, 0033, 0040 and
+  0041; CLAUDE.md section 5 states the body, assembly and group concepts;
+  backlog notes for splitting a GLB by nodes, removing redundant fixed
+  joints and multi-selection in 3D. Decision only: the implementation
+  follows.
+- User guide (French and English): a concepts section (body, assembly, group, the rule "a body with no parent joint moves with its group"), procedures to make and dissolve a group, tree multi-selection, the Grouper and Dégrouper entries, and the refusals in the troubleshooting page. The tutorial now groups the rod and turns the fixed joint into a slider. No new screenshot yet.
+- User guide (French and English) restructured in sections (Démarrer,
+  Préparer ses modèles 3D, Construire un Pantin, Connecter un automate,
+  Dépannage): a new page on preparing CAD files before import (one
+  sub-assembly per kinematic group), the model page split into concepts,
+  group procedures, drives/actuators/sensors, conveying, and tags/I/O, and a
+  new "group-prompt" screenshot.
+- User guide (French and English), "Preparing 3D models": best practice to align
+  the frame of each moving sub-assembly with its motion in the CAD software,
+  the workaround when the file cannot change, and a checklist line.
+
+### Changed
+
+- `pantin.json` schema 13 (ADR 0055, first slice): a joint's parent and child
+  are each a body or an assembly used as a group, and a body with no parent
+  joint now moves with its group. Version 12 documents are migrated on
+  opening with poses unchanged; the console's migration line lists the bodies
+  whose behaviour changes. A joint between two assemblies must have the group
+  as child. The joint form offers "Groupe : <name>" as an end. The examples
+  are written in version 13.
+- Core API (ADR 0055, second slice): `POST .../assemblies/:key/groups`
+  (Grouper) makes a group of direct bodies and sub-assemblies of an assembly,
+  held by a fixed joint, with nothing moving; `POST .../assemblies/:key/ungroup`
+  (Dégrouper) dissolves a group into its parent assembly. Both are atomic,
+  answer the deleted joints and the renamed tags (io.json follows), and
+  refuse, naming the joint or the item, any change that would move a body or
+  orphan a drive, an actuator, a sensor or a belt. No viewer command yet.
+- Import (ADR 0055, third slice): no fixed joint inside an assembly any more,
+  its bodies follow it; one fixed joint per sub-assembly, between groups,
+  along the same anchor tree as before (`Translateur SCIE.step`: 9 joints
+  instead of one per body). Moving a body to another assembly deletes its fixed joints to
+  the old assembly and lists them, and is refused, naming the joint, when the
+  two groups are moved by different joints (the body would jump).
+- Viewer (ADR 0055, fourth slice): several rows of the tree can be selected
+  (Ctrl+click, Shift+click, Shift+arrows), bodies and sub-groups of one
+  assembly only; "Grouper…" (asks for a name) and "Dégrouper" in the Édition
+  menu and the tree's context menu. The result message lists the deleted
+  joints and, when tags were renamed, says to regenerate the PLC's GVL. A
+  group row lists the joints that have the group as an end. A body move lists
+  the fixed joints it deleted. The core's refusals are shown word for word.
+- Viewer, the import form no longer offers the up axis for a STEP file, which
+  the core always converts Z up (the choice had no effect); Shift+arrows in
+  the tree step over joint rows instead of selecting them.
+
 ## [0.1.0] - 2026-10-18
 
 First release. A real CODESYS program drives a simulated machine in closed
@@ -395,6 +550,7 @@ become bodies (phase 8), and phase 9 (packs, several instances).
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
 
+[0.2.0]: https://github.com/ProtoGulix/pantin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0
 [0.1.0-alpha.2]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1

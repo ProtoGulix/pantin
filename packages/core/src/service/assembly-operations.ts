@@ -1,5 +1,6 @@
 import {
   type AssemblyPlacementResponse,
+  type MoveBodyResponse,
   type PantinDocument,
   PantinDocumentSchema,
   type PantinId,
@@ -11,16 +12,17 @@ import { anchorOfAssembly } from "../domain/assembly-anchors.ts";
 import {
   createAssembly,
   deleteAssembly,
-  moveBody,
   renameAssembly,
   renameAssemblyKey,
   renameTagKey,
   setAssemblyParent,
   setAssemblyPlacement,
 } from "../domain/assembly-edits.ts";
+import { moveBody } from "../domain/move-body.ts";
 import { renamedTags } from "../domain/tags.ts";
 import { parseWithSchema } from "../domain/validation.ts";
 import { deleteAssemblyWithContentsOf, previewAssemblyDeletion } from "./assembly-deletion.ts";
+import { forgetJointRuntimeState } from "./joint-operations.ts";
 import { waitForImports } from "./mesh-lifecycle.ts";
 import { loadPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
@@ -29,13 +31,37 @@ import { loadPantin, type ServiceContext, toResponse } from "./open-pantins.ts";
 
 type Edit = (document: PantinDocument) => PantinDocument;
 
-async function applyEdit(context: ServiceContext, pantinId: PantinId, edit: Edit) {
+// An edit that answers more than the document (the group it made, the joints
+// it deleted): `outcome` carries that, `document` is the one to store.
+export async function applyOutcomeEdit<Outcome extends { document: PantinDocument }>(
+  context: ServiceContext,
+  pantinId: PantinId,
+  edit: (document: PantinDocument) => Outcome,
+) {
   const openPantin = await loadPantin(context, pantinId);
   // An import in flight rolls back its assembly by key: let it settle first.
   await waitForImports(openPantin);
   const before = openPantin.document;
-  openPantin.document = parseWithSchema(PantinDocumentSchema, edit(before), "The changed Pantin");
-  return { before, after: openPantin.document, response: toResponse(pantinId, openPantin) };
+  const outcome = edit(before);
+  openPantin.document = parseWithSchema(
+    PantinDocumentSchema,
+    outcome.document,
+    "The changed Pantin",
+  );
+  return {
+    outcome,
+    openPantin,
+    before,
+    after: openPantin.document,
+    response: toResponse(pantinId, openPantin),
+  };
+}
+
+async function applyEdit(context: ServiceContext, pantinId: PantinId, edit: Edit) {
+  const { before, after, response } = await applyOutcomeEdit(context, pantinId, (document) => ({
+    document: edit(document),
+  }));
+  return { before, after, response };
 }
 
 async function editPantin(
@@ -54,6 +80,27 @@ async function editWithTags(
 ): Promise<RenamedTagsResponse> {
   const { before, after, response } = await applyEdit(context, pantinId, edit);
   return { pantin: response, renamedTags: renamedTags(before, after) };
+}
+
+async function moveBodyOf(
+  context: ServiceContext,
+  pantinId: PantinId,
+  bodyId: string,
+  assembly: string,
+): Promise<MoveBodyResponse> {
+  const { outcome, openPantin, before, after, response } = await applyOutcomeEdit(
+    context,
+    pantinId,
+    (document) => moveBody(document, bodyId, assembly),
+  );
+  for (const { id } of outcome.deletedJoints) {
+    forgetJointRuntimeState(openPantin, id);
+  }
+  return {
+    pantin: response,
+    deletedJoints: outcome.deletedJoints.map(({ id, name }) => ({ id, name })),
+    renamedTags: renamedTags(before, after),
+  };
 }
 
 async function placeAssembly(
@@ -94,6 +141,6 @@ export function assemblyOperations(context: ServiceContext) {
     setAssemblyPlacement: (pantinId: PantinId, key: string, placement: Placement) =>
       placeAssembly(context, pantinId, key, placement),
     moveBody: (pantinId: PantinId, bodyId: string, assembly: string) =>
-      editWithTags(context, pantinId, (document) => moveBody(document, bodyId, assembly)),
+      moveBodyOf(context, pantinId, bodyId, assembly),
   };
 }

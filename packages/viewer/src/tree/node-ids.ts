@@ -16,9 +16,16 @@ export type NodeRef =
   | { kind: "folder"; pantinId: string; folder: FolderKey }
   | { kind: "assembly"; pantinId: string; key: string }
   | { kind: "body"; pantinId: string; bodyId: string }
-  // underBodyId: the body under which the joint is listed as well, or null
-  // for its entry in the joints folder. Both nodes stand for the same joint.
-  | { kind: "joint"; pantinId: string; jointId: string; underBodyId: string | null }
+  // underBodyId or underGroupKey: the body or the group (an assembly used as a
+  // joint end, ADR 0055) under which the joint is listed as well; both null for
+  // its entry in the joints folder. All these nodes stand for the same joint.
+  | {
+      kind: "joint";
+      pantinId: string;
+      jointId: string;
+      underBodyId: string | null;
+      underGroupKey: string | null;
+    }
   | { kind: "sourceNode"; pantinId: string; bodyId: string; index: number }
   | { kind: "family"; pantinId: string; assemblyKey: string; family: FamilyKey }
   // A drive, an actuator, a sensor or a phase 6 object (ADR 0047 point 4).
@@ -53,6 +60,14 @@ export function jointNodeId(
     : `joint:${pantinId}:${jointId}:${underBodyId}`;
 }
 
+// "~" is in no id or key, so a group's entry never reads as a body's.
+const GROUP_MARK = "~";
+
+/** The entry of a joint under a group row. */
+export function groupJointNodeId(pantinId: string, jointId: string, groupKey: string): string {
+  return `joint:${pantinId}:${jointId}:${GROUP_MARK}${groupKey}`;
+}
+
 export function sourceNodeNodeId(pantinId: string, bodyId: string, index: number): string {
   return `source:${pantinId}:${bodyId}:${index}`;
 }
@@ -75,6 +90,20 @@ function parseFamily(pantinId: string, assemblyKey: string, family: string): Nod
   return known === undefined ? null : { kind: "family", pantinId, assemblyKey, family: known };
 }
 
+function jointRef(pantinId: string, jointId: string, third: string | undefined): NodeRef | null {
+  if (third === GROUP_MARK) {
+    return null;
+  }
+  const groupKey = third?.startsWith(GROUP_MARK) ? third.slice(GROUP_MARK.length) : null;
+  return {
+    kind: "joint",
+    pantinId,
+    jointId,
+    underBodyId: groupKey === null ? (third ?? null) : null,
+    underGroupKey: groupKey,
+  };
+}
+
 export function parseNodeId(nodeId: string): NodeRef | null {
   const [kind, pantinId, second, third, ...rest] = nodeId.split(":");
   if (pantinId === undefined || pantinId === "" || rest.length > 0) {
@@ -93,7 +122,7 @@ export function parseNodeId(nodeId: string): NodeRef | null {
     return { kind, pantinId, bodyId: second };
   }
   if (kind === "joint" && second && third !== "") {
-    return { kind, pantinId, jointId: second, underBodyId: third ?? null };
+    return jointRef(pantinId, second, third);
   }
   if (kind === "source" && second && third !== undefined && /^\d+$/.test(third)) {
     return { kind: "sourceNode", pantinId, bodyId: second, index: Number(third) };

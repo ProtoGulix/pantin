@@ -1,4 +1,6 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
+import { readBuildVersion } from "../core/src/build-version.ts";
 
 // Local only (ADR 0004): the dev server listens on 127.0.0.1, and /api is
 // forwarded to the core, which also listens on 127.0.0.1 only.
@@ -6,6 +8,10 @@ const coreProxy = { "/api": "http://127.0.0.1:4800" };
 
 // biome-ignore lint/style/noDefaultExport: Vite only discovers its configuration through a default export.
 export default defineConfig({
+  // The build version of ADR 0058, read once here: the viewer has no other way to know it.
+  define: {
+    __PANTIN_VERSION__: JSON.stringify(readBuildVersion(resolve(import.meta.dirname, "../.."))),
+  },
   server: {
     host: "127.0.0.1",
     port: 5173,

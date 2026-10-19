@@ -1,8 +1,14 @@
-import type { FaceFile, Joint, JointAxisFromFaceResponse, PantinDocument } from "@pantin/protocol";
+import {
+  endpointAssemblyIn,
+  type FaceFile,
+  type Joint,
+  type JointAxisFromFaceResponse,
+  type PantinDocument,
+} from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { projectOnAxis, projectOnPlane } from "./alignment-picks.ts";
 import { computeWorldPlacements } from "./assembly-anchors.ts";
-import { computeDisplacements, computePoses } from "./kinematics.ts";
+import { computeDisplacements, computePoses, endpointDisplacement } from "./kinematics.ts";
 import {
   apply,
   compose,
@@ -71,20 +77,24 @@ function faceAxisInPantin(
 }
 
 /**
- * The transform from the frame of the joint (its parent body's assembly,
- * carried by the parent's displacement, as in kinematics.ts) to the Pantin
- * frame as displayed.
+ * The transform from the frame of the joint (its parent's assembly: the
+ * group itself or the assembly of the body, carried by the parent's
+ * displacement, as in kinematics.ts) to the Pantin frame as displayed.
  */
 function jointFrame(
   document: PantinDocument,
   joint: Joint,
   positions: ReadonlyMap<string, number>,
 ): RigidTransform {
-  const parent = document.bodies.find((body) => body.id === joint.parent);
+  const assembly = endpointAssemblyIn(joint.parent, document.bodies);
   const world =
-    (parent && computeWorldPlacements(document).get(parent.assembly)) ?? IDENTITY_TRANSFORM;
-  const displacement = computeDisplacements(document, positions).get(joint.parent);
-  return compose(displacement ?? IDENTITY_TRANSFORM, world);
+    (assembly === undefined ? undefined : computeWorldPlacements(document).get(assembly)) ??
+    IDENTITY_TRANSFORM;
+  const displacement = endpointDisplacement(
+    computeDisplacements(document, positions),
+    joint.parent,
+  );
+  return compose(displacement, world);
 }
 
 function axisInJointFrame(

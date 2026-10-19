@@ -9,6 +9,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
 import { coreDisplacementToBabylon, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
+import { type SignalColours, signalColourFor, signalLookFor } from "../theme/signal-look.ts";
 import type { LatestPose } from "./body-highlights.ts";
 import type { LoadedBody } from "./body-loader.ts";
 import { arcAboutAxis, placeAlongAxis } from "./sensor-marker-plan.ts";
@@ -17,10 +18,10 @@ import { arcAboutAxis, placeAlongAxis } from "./sensor-marker-plan.ts";
 // axis over a switch's range, an arc for a pivot, a ring for any other type.
 // Each hangs from a node that takes its joint's parent body displacement, and
 // is drawn over the bodies (rendering group 1), like the joint arrow. A marker
-// lights up when its bit tag reads 1: the viewer never computes the state.
+// lights up when its bit tag reads 1: the viewer never computes the state. On
+// it is the signal-on colour, thick and opaque; off, a neutral, thin and
+// translucent (ADR 0057 rule 3), so the colour is not the only cue.
 
-const ON_COLOR = Color3.FromHexString("#58a6ff");
-const OFF_COLOR = Color3.FromHexString("#6e7681");
 const OVERLAY_GROUP = 1;
 // Sizes follow the child body, so that markers read at any scale.
 const THICKNESS_SHARE = 0.04;
@@ -35,6 +36,8 @@ export interface SensorMarkers {
   /** Tag values from the core, by tag name. */
   setStates(values: ReadonlyMap<string, number>): void;
   setHidden(bodyIds: ReadonlySet<string>): void;
+  /** The theme changed: the markers take its signal-on and signal-off colours. */
+  setColours(colours: SignalColours): void;
   followPose(bodyId: string, translation: Vector3Tuple, rotation: QuaternionTuple): void;
   /** Poses were forgotten: markers are hidden until their parent body has a pose again. */
   forgetPoses(): void;
@@ -44,13 +47,46 @@ interface Drawn {
   marker: SensorMarker;
   node: TransformNode;
   meshes: Mesh[];
+  /** The state it was drawn in: the thickness follows it. */
+  on: boolean;
+  /** Its child body's size, kept so that a flip does not measure the body again. */
+  extent: number;
 }
 
-function material(scene: Scene, name: string, color: Color3): StandardMaterial {
-  const created = new StandardMaterial(name, scene);
+function applyLook(material: StandardMaterial, on: boolean, colours: SignalColours): void {
+  material.emissiveColor = Color3.FromHexString(signalColourFor(on, colours));
+  material.alpha = signalLookFor(on).alpha;
+}
+
+function material(scene: Scene, on: boolean, colours: SignalColours): StandardMaterial {
+  const created = new StandardMaterial(on ? "sensor-on-material" : "sensor-off-material", scene);
   created.disableLighting = true;
-  created.emissiveColor = color;
+  applyLook(created, on, colours);
   return created;
+}
+
+interface SignalMaterials {
+  on: StandardMaterial;
+  off: StandardMaterial;
+  setColours(colours: SignalColours): void;
+}
+
+function signalMaterials(scene: Scene, colours: SignalColours): SignalMaterials {
+  const on = material(scene, true, colours);
+  const off = material(scene, false, colours);
+  return {
+    on,
+    off,
+    setColours: (next) => {
+      applyLook(on, true, next);
+      applyLook(off, false, next);
+    },
+  };
+}
+
+// A marker without a bit is always lit; the same rule as the tree's disc.
+function isMarkerOn(marker: SensorMarker, values: ReadonlyMap<string, number>): boolean {
+  return marker.stateTag === null || (values.get(marker.stateTag) ?? 0) >= 0.5;
 }
 
 function placed(node: TransformNode, start: Vector3Tuple, rotation: QuaternionTuple) {
@@ -59,8 +95,14 @@ function placed(node: TransformNode, start: Vector3Tuple, rotation: QuaternionTu
 }
 
 // The meshes of one marker, under its node, in the parent body's reference frame.
-function markerMeshes(scene: Scene, marker: SensorMarker, node: TransformNode, extent: number) {
-  const thickness = Math.max(extent * THICKNESS_SHARE, 0.002);
+function markerMeshes(
+  scene: Scene,
+  marker: SensorMarker,
+  node: TransformNode,
+  extent: number,
+  on: boolean,
+) {
+  const thickness = Math.max(extent * THICKNESS_SHARE, 0.002) * signalLookFor(on).thicknessScale;
   const { origin, axis, shape } = marker;
   if (shape.kind === "segment") {
     const placement = placeAlongAxis(origin, axis, shape.from, shape.to);
@@ -139,48 +181,71 @@ function extentOf(loadedBodies: ReadonlyMap<string, LoadedBody>, bodyId: string)
   return Number.isFinite(extent) && extent > 0 ? extent : DEFAULT_EXTENT;
 }
 
-// Lit on a bit reading 1 (or always, without a bit), hidden with the child body.
-function paintMarkers(
-  drawn: readonly Drawn[],
-  values: ReadonlyMap<string, number>,
-  hidden: ReadonlySet<string>,
-  materials: { on: StandardMaterial; off: StandardMaterial },
-): void {
-  for (const { marker, meshes, node } of drawn) {
-    const on = marker.stateTag === null || (values.get(marker.stateTag) ?? 0) >= 0.5;
-    for (const mesh of meshes) {
-      mesh.material = on ? materials.on : materials.off;
-    }
-    node.setEnabled(!hidden.has(marker.childBodyId));
-  }
-}
-
 function drawMarker(
   scene: Scene,
   marker: SensorMarker,
   root: TransformNode,
   extent: number,
+  on: boolean,
 ): Drawn {
   const node = new TransformNode(`sensor-${marker.sensorId}`, scene);
   node.parent = root;
-  const meshes = markerMeshes(scene, marker, node, extent);
+  const meshes = markerMeshes(scene, marker, node, extent, on);
   for (const mesh of meshes) {
     mesh.parent = node;
     mesh.isPickable = false;
     mesh.renderingGroupId = OVERLAY_GROUP;
   }
-  return { marker, node, meshes };
+  return { marker, node, meshes, on, extent };
+}
+
+function drawOnRoots(
+  scene: Scene,
+  loadedBodies: ReadonlyMap<string, LoadedBody>,
+  roots: ReturnType<typeof poseRoots>,
+  marker: SensorMarker,
+  on: boolean,
+  knownExtent?: number,
+): Drawn {
+  const root = roots.rootOf(marker.parentBodyId);
+  const extent = knownExtent ?? extentOf(loadedBodies, marker.childBodyId);
+  return drawMarker(scene, marker, root, extent, on);
+}
+
+interface PaintInputs {
+  values: ReadonlyMap<string, number>;
+  hidden: ReadonlySet<string>;
+  materials: SignalMaterials;
+}
+
+// A marker whose state changed is drawn again: its thickness is its geometry.
+// A marker hides with its child body.
+function repaintMarkers(
+  drawn: readonly Drawn[],
+  { values, hidden, materials }: PaintInputs,
+  drawOne: (marker: SensorMarker, knownExtent?: number) => Drawn,
+): Drawn[] {
+  return drawn.map((entry) => {
+    const redrawn =
+      isMarkerOn(entry.marker, values) === entry.on ? entry : drawOne(entry.marker, entry.extent);
+    if (redrawn !== entry) {
+      entry.node.dispose(false, false);
+    }
+    for (const mesh of redrawn.meshes) {
+      mesh.material = redrawn.on ? materials.on : materials.off;
+    }
+    redrawn.node.setEnabled(!hidden.has(redrawn.marker.childBodyId));
+    return redrawn;
+  });
 }
 
 export function createSensorMarkers(
   scene: Scene,
   loadedBodies: ReadonlyMap<string, LoadedBody>,
   latestPose: LatestPose,
+  initialColours: SignalColours,
 ): SensorMarkers {
-  const materials = {
-    on: material(scene, "sensor-on-material", ON_COLOR),
-    off: material(scene, "sensor-off-material", OFF_COLOR),
-  };
+  const materials = signalMaterials(scene, initialColours);
   const roots = poseRoots(scene, latestPose);
   let markers: readonly SensorMarker[] = [];
   let shownKey: string | null = null;
@@ -188,20 +253,17 @@ export function createSensorMarkers(
   let values: ReadonlyMap<string, number> = new Map();
   let hidden: ReadonlySet<string> = new Set();
 
-  const paint = () => paintMarkers(drawn, values, hidden, materials);
+  const drawOne = (marker: SensorMarker, knownExtent?: number) =>
+    drawOnRoots(scene, loadedBodies, roots, marker, isMarkerOn(marker, values), knownExtent);
+  const paint = () => {
+    drawn = repaintMarkers(drawn, { values, hidden, materials }, drawOne);
+  };
   const build = () => {
     for (const { node } of drawn) {
       node.dispose(false, false);
     }
     roots.keepOnly(new Set(markers.map((marker) => marker.parentBodyId)));
-    drawn = markers.map((marker) =>
-      drawMarker(
-        scene,
-        marker,
-        roots.rootOf(marker.parentBodyId),
-        extentOf(loadedBodies, marker.childBodyId),
-      ),
-    );
+    drawn = markers.map((marker) => drawOne(marker));
     paint();
   };
 
@@ -225,6 +287,7 @@ export function createSensorMarkers(
       hidden = bodyIds;
       paint();
     },
+    setColours: materials.setColours,
     followPose: roots.follow,
     forgetPoses: roots.forget,
   };

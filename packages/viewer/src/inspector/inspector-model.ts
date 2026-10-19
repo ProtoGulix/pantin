@@ -12,7 +12,8 @@ import { GROUP_TITLES } from "../properties/group-titles.ts";
 import { type LiveSource, liveKey, type PropertyGroup } from "../properties/property-rows.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
-import type { InspectorFocusRequest, ViewerState } from "../viewer-state.ts";
+import type { ViewerState } from "../viewer-state.ts";
+import type { InspectorFocusRequest } from "../viewer-state-parts.ts";
 import { actuatorGroups } from "./actuator-inspector.ts";
 import { conveyorInspectorContent } from "./conveyor-inspector.ts";
 import {

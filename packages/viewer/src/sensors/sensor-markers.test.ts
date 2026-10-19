@@ -30,8 +30,8 @@ describe("sensorMarkersOf", () => {
     const [max, open] = sensorMarkersOf(document);
     expect(max).toEqual({
       sensorId: "max",
-      parentBodyId: slideJoint.parent,
-      childBodyId: slideJoint.child,
+      parentBodyId: "rail",
+      childBodyId: "carriage",
       origin: slideJoint.origin,
       axis: slideJoint.axis,
       shape: { kind: "segment", from: 0.098, to: 0.1 },

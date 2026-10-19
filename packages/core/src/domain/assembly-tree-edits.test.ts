@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
 import { NO_POSITIONS } from "../test-support/no-positions.ts";
@@ -38,9 +39,23 @@ const BODIES = [
   body("o", "other", ABOUT_X),
 ];
 const JOINTS = [
-  joint({ id: "slide", type: "fixed", parent: "frame", child: "carriage" }),
-  joint({ id: "mount", type: "fixed", parent: "carriage", child: "clevis" }),
-  joint({ id: "hinge", parent: "clevis", child: "pin" }),
+  joint({
+    id: "slide",
+    type: "fixed",
+    parent: bodyEndpoint("frame"),
+    child: bodyEndpoint("carriage"),
+  }),
+  joint({
+    id: "mount",
+    type: "fixed",
+    parent: bodyEndpoint("carriage"),
+    child: groupEndpoint("chape"),
+  }),
+  joint({
+    id: "hinge",
+    parent: bodyEndpoint("clevis"),
+    child: groupEndpoint("tail"),
+  }),
 ];
 const tree = (extra = JOINTS): PantinDocument => documentOf(extra, BODIES, TREE);
 
@@ -122,7 +137,12 @@ describe("deletion with contents of a subtree (ADR 0040 point 8)", () => {
   });
 
   it("re-anchors an outside assembly anchored to a descendant, keeping its pose", () => {
-    const ext = joint({ id: "ext", type: "fixed", parent: "pin", child: "o" });
+    const ext = joint({
+      id: "ext",
+      type: "fixed",
+      parent: bodyEndpoint("pin"),
+      child: groupEndpoint("other"),
+    });
     const before = tree([...JOINTS, ext]);
     const { document, deletion } = deleteAssemblyWithContents(before, "chape", NO_POSITIONS);
     expect(deletion.reanchoredAssemblies).toEqual([{ key: "other", name: "other" }]);

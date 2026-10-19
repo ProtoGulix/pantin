@@ -3,7 +3,6 @@ import { EMPTY_CLIENT_CONSOLE } from "./console/console-list.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
 import { withImportStarted } from "./import-state.ts";
 import { errorMessage } from "./messages.ts";
-import { contextEntries } from "./panel/context-menu-model.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { withRevealedDevice } from "./tree/tree-state.ts";
@@ -64,51 +63,6 @@ describe("toolbar", () => {
   });
 });
 
-describe("context menu", () => {
-  it("offers import and a new assembly only on a Pantin, rename only when possible", () => {
-    const pantinId = "press";
-    expect(contextEntries({ kind: "pantin", pantinId }, true)).toEqual([
-      "rename",
-      "frame",
-      "importInto",
-      "newAssembly",
-    ]);
-    expect(contextEntries({ kind: "body", pantinId, bodyId: "rail" }, true)).toEqual([
-      "rename",
-      "frame",
-      "delete",
-    ]);
-    expect(
-      contextEntries({ kind: "sourceNode", pantinId, bodyId: "rail", index: 0 }, false),
-    ).toEqual(["frame"]);
-  });
-
-  it("offers a new joint on assemblies and the folder, a type change and deletion on a joint", () => {
-    const pantinId = "press";
-    expect(
-      contextEntries({ kind: "folder", pantinId, folder: "betweenAssemblies" }, false),
-    ).toEqual(["frame", "newJoint"]);
-    expect(contextEntries({ kind: "assembly", pantinId, key: "main" }, true)).toEqual([
-      "rename",
-      "frame",
-      "newJoint",
-      "toggleAssemblyHidden",
-      "toggleAssemblyIsolated",
-      "delete",
-    ]);
-    expect(
-      contextEntries({ kind: "joint", pantinId, jointId: "hinge", underBodyId: null }, false),
-    ).toEqual([
-      "frame",
-      "changeJointType",
-      "actuateJoint",
-      "addJointSensor",
-      "addEndSwitches",
-      "delete",
-    ]);
-  });
-});
-
 describe("context menu labels", () => {
   it("is translated and titled with the node name", () => {
     const state = {
@@ -146,6 +100,7 @@ describe("import form", () => {
     const form = buildPanelView(withStep(opened(false))).importForm;
     expect(form).toMatchObject({
       showUnit: false,
+      showUpAxis: false,
       formatLabel: "STEP",
       title: "Import dans « Press »",
     });
@@ -181,6 +136,7 @@ describe("message line and language", () => {
 
   it("has no properties of its own: the left column is the tree and its notifications", () => {
     expect(Object.keys(buildPanelView(opened(false))).sort()).toEqual([
+      "about",
       "console",
       "contextMenu",
       "importForm",
@@ -232,6 +188,7 @@ describe("list and edit views", () => {
       "Fichier",
       "Édition",
       "Affichage",
+      "Aide",
     ]);
   });
 });

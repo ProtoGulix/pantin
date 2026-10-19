@@ -1,20 +1,20 @@
 import type {
-  AssemblyDeletion,
   FaultsResponse,
   OrphanMeshList,
   PantinResponse,
   PantinSummary,
 } from "@pantin/protocol";
+import { type AboutState, CLOSED_ABOUT } from "./about-state.ts";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
 import type { ConveyorFormState } from "./conveyors/conveyor-form.ts";
-import type { Endpoint, ReplacedFeed } from "./diagram/diagram-wiring.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
 import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
 import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
+import type { PendingGroup } from "./grouping/grouping-model.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import { type IoState, NO_IO_STATE } from "./io/io-state.ts";
@@ -33,33 +33,18 @@ import { nodeSelection, type Selection } from "./selection.ts";
 import type { SensorFormState } from "./sensors/sensor-form.ts";
 import type { ThemeChoice } from "./theme/theme.ts";
 import { assemblyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
-import { selectionExists } from "./tree/tree-state.ts";
+import { selectionExists, withMultiSelectionPruned } from "./tree/tree-state.ts";
+import type {
+  ContextMenuState,
+  InspectorFocusRequest,
+  PendingAssemblyDeletion,
+  PendingDiagramLink,
+} from "./viewer-state-parts.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
 // truth: this is only the last answer it gave, plus purely local UI state.
 
 export type WelcomeTab = "home" | "all";
-
-interface ContextMenuState {
-  nodeId: string;
-  // Viewport coordinates of the pointer, in CSS pixels.
-  x: number;
-  y: number;
-}
-
-// A link drawn in the diagram that replaces a whole feed, waiting for the
-// user to confirm (ADR 0029 point 6). The endpoints are kept, not the edit:
-// the edit is rebuilt from the document as it is when the user answers.
-interface PendingDiagramLink {
-  from: Endpoint;
-  to: Endpoint;
-  replaced: ReplacedFeed;
-}
-
-interface PendingAssemblyDeletion {
-  key: string;
-  contents: AssemblyDeletion;
-}
 
 export interface ViewerState {
   language: Language;
@@ -69,6 +54,9 @@ export interface ViewerState {
   openPantin: PantinResponse | null;
   expandedNodeIds: ReadonlySet<string>;
   selection: Selection | null;
+  // The tree's multi-selection (ADR 0055 point 12): empty, or the selected node
+  // first, then the others. Display state, never saved.
+  multiSelectedNodeIds: readonly string[];
   renamingNodeId: string | null;
   collapsedPropertyGroups: ReadonlySet<string>;
   // Joints whose axis the user chose to type as components in the properties
@@ -90,6 +78,8 @@ export interface ViewerState {
   welcomeHidden: boolean;
   welcomeTab: WelcomeTab;
   welcomeFilter: string;
+  // The About window of the Help menu (ADR 0058).
+  about: AboutState;
   // Edit view: closing with unsaved changes waits for the user's choice.
   closePrompt: boolean;
   // The close prompt also says that the PLC bridge keeps running (ADR 0050 point 7).
@@ -103,6 +93,8 @@ export interface ViewerState {
   // Same for an assembly with its contents (ADR 0037): the core's preview,
   // shown in the prompt and kept to name what the user agreed to remove.
   pendingDeleteAssembly: PendingAssemblyDeletion | null;
+  // "Grouper…" waiting for the group's name (ADR 0055 point 12).
+  pendingGroup: PendingGroup | null;
   // The orphan mesh files the core listed (ADR 0038), waiting for the user to confirm.
   pendingOrphanCleanup: OrphanMeshList | null;
   // The open "New joint" form, or null.
@@ -154,11 +146,6 @@ export interface ViewerState {
   navigation: NavigationSettings;
 }
 
-export interface InspectorFocusRequest {
-  key: string;
-  serial: number;
-}
-
 // Faults are runtime state of the core, cleared when a Pantin opens.
 const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 
@@ -188,6 +175,8 @@ const NO_TOOL_STATE = {
   placementInvalid: null,
 } as const;
 
+const NO_ABOUT = { about: CLOSED_ABOUT } as const;
+
 export function initialViewerState(
   language: Language,
   centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
@@ -203,6 +192,7 @@ export function initialViewerState(
     openPantin: null,
     expandedNodeIds: new Set(),
     selection: null,
+    multiSelectedNodeIds: [],
     renamingNodeId: null,
     ...preferencesState(inspector),
     customAxisJointIds: new Set(),
@@ -216,10 +206,12 @@ export function initialViewerState(
     welcomeHidden: false,
     welcomeTab: "home",
     welcomeFilter: "",
+    ...NO_ABOUT,
     ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
+    pendingGroup: null,
     pendingOrphanCleanup: null,
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
@@ -252,6 +244,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
       folderNodeId(openPantin.id, "betweenAssemblies"),
     ]),
     selection: nodeSelection(pantinNodeId(openPantin.id)),
+    multiSelectedNodeIds: [],
     renamingNodeId: null,
     contextMenu: null,
     pendingImport: null,
@@ -260,6 +253,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
+    pendingGroup: null,
     pendingOrphanCleanup: null,
     jointForm: null,
     customAxisJointIds: new Set(),
@@ -290,8 +284,12 @@ export function withOpenPantin(state: ViewerState, openPantin: PantinResponse): 
   }
   const next: ViewerState = { ...state, openPantin };
   return selectionExists(next)
-    ? next
-    : { ...next, selection: nodeSelection(pantinNodeId(openPantin.id)) };
+    ? withMultiSelectionPruned(next)
+    : {
+        ...next,
+        selection: nodeSelection(pantinNodeId(openPantin.id)),
+        multiSelectedNodeIds: [],
+      };
 }
 
 export function withRequestStarted(state: ViewerState): ViewerState {

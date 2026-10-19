@@ -11,14 +11,20 @@
   stroke-width: 1;
 }
 
+/* Two zones, two cues beside the colour: the hold zone is dashed and faint, the on zone solid. */
 .switch-diagram__hold {
   fill: var(--state-normal);
   fill-opacity: 0.3;
+  stroke: var(--state-normal);
+  stroke-dasharray: 3 2;
+  stroke-width: 1;
 }
 
 .switch-diagram__on {
   fill: var(--state-normal);
   fill-opacity: 0.75;
+  stroke: var(--state-normal);
+  stroke-width: 2;
 }
 
 .switch-diagram__zone-arrow {
@@ -39,6 +45,7 @@
 .switch-diagram__symbol--refused {
   fill: var(--state-emergency);
   stroke: var(--state-emergency);
+  stroke-dasharray: 3 2;
 }
 
 .switch-diagram__extension {

@@ -1,8 +1,8 @@
 # The model of a Pantin
 
-This page describes each element of a Pantin machine: what it is, what you set in the viewer, and the **tags** it produces for the PLC. Names in **bold** are those of the interface.
+This page defines the basic notions of a Pantin machine: body, assembly, group and joint. The procedures and the other elements have their own page, listed at the end. Names in **bold** are those of the interface.
 
-The general principle: a machine is a tree of **bodies** linked by **joints**. An **action chain** (drive then actuator) moves the joints. **Sensors** read the result. The PLC only talks to the tags.
+A machine is a tree of **bodies** linked by **joints**. An **action chain** (drive, then actuator) moves the joints. **Sensors** read the result. The PLC only talks to the tags.
 
 ```
    PLC ──tags──> drive ──ports──> actuator ──> joint ──> body
@@ -10,13 +10,65 @@ The general principle: a machine is a tree of **bodies** linked by **joints**. A
     └──────────tags────────── sensor <───────────┘
 ```
 
-## Assemblies
+## Concepts: body, assembly, group
 
-An **assembly** groups bodies, as in a CAD assembly. It has a name and a **key**, which is used as the prefix of the tags of its elements. An assembly can contain another one. This structure moves nothing: it is used to organise and name.
+These three words come back everywhere in Pantin.
 
-In the tree, the menu of the Pantin offers **New assembly**. The menu of an assembly offers **New joint…**, **Hide in the 3D view**, **Isolate in the 3D view** and **Show every assembly**.
+| Word | What it is | What it does |
+| --- | --- | --- |
+| **Body** | One 3D mesh: a GLB file, an STL file, or one part of a STEP. | Pantin never splits or merges it: one file, one body. A body has no tag. |
+| **Assembly** | A node of the structure tree, like a CAD assembly. | It organises bodies and other assemblies. It has a name and a **key**, which is the prefix of tags. |
+| **Group** | An assembly that serves as an end of a joint. | It forms **one rigid piece**: all its bodies move together. |
 
-Every element (drive, sensor, belt...) belongs to an assembly. The assembly provides the prefix of its tags.
+A group is not another kind of object: it is an assembly used in a joint. The word "group" says what the assembly does; the word "assembly" says where it is filed.
+
+### The central rule
+
+**A body with no parent joint moves with its group.**
+
+A body that is the child of no joint stays stuck to its assembly. When a joint moves the assembly, all these bodies follow, without linking them one by one.
+
+A body that has a parent joint moves relative to its parent.
+
+Second rule: **the structure tree never carries motion, only joints do.** Filing an assembly inside another does not make it follow the other. For a sub-assembly to follow its parent, or slide relative to it, there must be a joint between the two.
+
+### An example: the cylinder
+
+```
+Pantin
+└── assembly "verin1"                 filing, tag prefix
+    ├── body "corps"                  no parent joint: follows "verin1"
+    └── group "Tige"                  sub-assembly, rigid
+        ├── body "tige"               no parent joint: follows "Tige"
+        └── body "chariot"            no parent joint: follows "Tige"
+
+Joint "Tige":  verin1 ──slider──> Tige
+```
+
+A single joint slides the rod and the carriage together. No joint links them to each other.
+
+### What a joint can link
+
+Each end of a joint (parent, child) is a **body** or a **group**. In the joint form, the list offers bodies and **Group: name** entries.
+
+| Case | Rule |
+| --- | --- |
+| Between two assemblies | The child is a **group**. A body child is refused: the message proposes its group. The parent is a group or a body. |
+| Inside one assembly | The child is a **body**. The parent is another body of the same assembly, or the group itself (a ring turning in its bearing). |
+| Single parent | A body or a group has at most one joint bringing it to its parent. |
+| No loop | Joints never form a loop. A group cannot have one of its own bodies as its parent. |
+
+The origin and the axis of a joint are expressed in the frame of the parent's assembly (the group itself when the parent is a group). The tags of a joint take the key of the assembly it moves: for a child group, the key of the group.
+
+### Why it is organised this way
+
+The bodies of an assembly follow the assembly: there is no joint to create between them. This avoids a star of fixed joints around an arbitrarily chosen body.
+
+- An import creates no joint inside an assembly. It creates one fixed joint per sub-assembly, from the parent group to the child group.
+- To animate a sub-assembly, you turn that fixed joint into a slider or a pivot.
+- When the import does not split enough (a STEP with no sub-assembly), you make the group yourself: see [Make a group](/en/guide/groups#make-a-group).
+
+The menu of an assembly in the tree offers **New joint…**, **Hide in the 3D view**, **Isolate in the 3D view** and **Show every assembly**. The menu of the Pantin offers **New assembly**. Every element (drive, sensor, belt...) belongs to an assembly, which provides the prefix of its tags.
 
 ## Bodies
 
@@ -26,19 +78,21 @@ A **body** is an imported 3D mesh. Pantin reads:
 - **GLB** (glTF): node names are kept;
 - **STEP**: converted to a mesh by a separate process (OpenCascade).
 
-To import, use **File** then **Import…**, or the **Import into this Pantin** action of the menu of a Pantin. The form asks for the **Unit** of the file and its **Up axis**, then **Import**. STEP conversion can take up to 2 minutes: keep the page open.
+To import, use **File** then **Import…**, or the **Import into this Pantin** action of the menu of a Pantin. The form asks for the **Unit** (STL only) and the **Up axis** (GLB and STL), then **Import**. A STEP has nothing to set: its unit is read from the file and Z is up. STEP conversion can take up to 2 minutes: keep the page open.
 
-A STEP that contains a named assembly can become several bodies and several assemblies.
+What each format gives:
 
-::: warning Not verified
-The full path from ZW3D to glTF with the right pivots has not been validated on a real part. For an export from ZW3D, prefer STEP, and check the placement of the bodies after the import.
-:::
+- A STEP with named sub-assemblies gives several bodies and several assemblies, with one fixed joint per sub-assembly.
+- A STEP with no sub-assembly gives a single assembly and no joint.
+- A GLB or an STL gives one body and no joint.
 
-A body has no tag: it is moved by the joints.
+To prepare your files before the import, see [Preparing your CAD files](/en/guide/preparing-models).
+
+A body has no tag: it is moved by the joints, or by its group (see [the central rule](#the-central-rule)).
 
 ## Joints
 
-A **joint** links a **Parent body** to a **Child body**. It has an **origin**, an **axis** (frame of the parent body, Z up) and, depending on its type, limits. Create it with **Edit** then **New joint…** or from the menu of an assembly in the tree.
+A **joint** links a **Parent body** to a **Child body**, which can be bodies or groups (see [What a joint can link](#what-a-joint-can-link)). It has an **origin**, an **axis** (frame of the parent's assembly, Z up) and, depending on its type, limits. Create it with **Edit** then **New joint…**, or from the menu of an assembly in the tree.
 
 | Type in the interface | Motion | Own settings |
 | --- | --- | --- |
@@ -50,159 +104,47 @@ A **joint** links a **Parent body** to a **Child body**. It has an **origin**, a
 
 The coordinate of a joint is in metres (prismatic, helical) or in radians (pivots). In the interface, you read it in millimetres and degrees.
 
-The **Take the axis from a face** button places the axis from a face you click in the 3D view. **Reverse the axis** changes the positive direction.
+The **Take the axis from a face** button places the axis from a face you click in the 3D view. **Reverse the axis** changes the positive direction. The first is offered only for a saved joint whose type moves (see [Panels and buttons](/en/reference/panels)).
 
-A body has at most one joint bringing it to its parent, and joints never form a loop.
+### In which frame a joint is read
+
+A joint's origin and axis are read in the frame of its **parent's** assembly (the group itself when the parent is a group). This is not the frame of the group it moves.
+
+The trihedron shown in the 3D view when a joint is selected is that frame. Turning the frame of the moved group therefore never changes the numbers of its joint.
+
+A tilted axis (rails at 70°, for example) reads `[0, 0, 1]` after **Align the frame on this axis**, without moving anything:
+
+- The command is in the joint form. It is offered only for a joint already created whose type moves, never for a **Fixed** joint.
+- It is disabled while the form has changes not applied. Click **Apply** first: it uses the axis stored in the document.
+- It turns the frame of the parent's assembly and that of the group the joint moves. No body moves.
+- The message names the turned assemblies and the joints whose numbers changed. The other joints of the same parent are rewritten too, since they are read in the same frame.
+- When nothing changed, the message is **The frames are already aligned on this axis, nothing changed.**
+
+With a large parent the list can be long: group the rails first to get a small parent (see [Group](/en/guide/groups)). The steps for tilted slides are in [Preparing your CAD files](/en/guide/preparing-models#align-the-frame-of-each-moving-sub-assembly-with-its-motion).
 
 ### Tags of a joint
 
-The tags of a joint use the assembly of its child body.
+The tags of a joint use the assembly it moves: that of its child body, or the child group itself.
 
 | Tag | Direction | When |
 | --- | --- | --- |
 | `position` | feedback | always, for a moving joint |
 | `setpoint` | command | as long as no actuator moves the joint |
 
-As soon as an actuator moves a joint, the actuator commands it: the `setpoint` tag no longer exists.
+As soon as an actuator moves a joint, the actuator commands it: the `setpoint` tag does not exist.
 
 ### Preview by slider
 
 Each moving joint has a slider (**Position of "name"**) to move it by hand and check the stops.
 
-## The action chain
+## What next
 
-Neither the drive nor the actuator is a 3D part. Together, they turn a PLC command into motion.
-
-### Drives
-
-The **drive** is the device the PLC commands: valve, contactor, variable speed drive. It carries the command and feedback tags. It moves nothing itself: its output **ports** feed actuators.
-
-Create it with **New drive** (**Drives** section): you give a **Name**, a **Type** and the assembly where its tags are created (**Tags in assembly**).
-
-| Type | Tags produced (direction seen from the PLC) | Output ports |
-| --- | --- | --- |
-| **Valve 3/2, single solenoid** | `coil_12` (command, bit) | Port 2 |
-| **Double valve 3/2** | `coil_14`, `coil_12` (command, bit) | Ports 2 and 4 |
-| **Valve 5/2, single solenoid** | `coil_14` (command, bit) | Ports 2 and 4 |
-| **Valve 5/2, double solenoid** | `coil_14`, `coil_12` (command, bit) | Ports 2 and 4 |
-| **Valve 5/3, closed centre** | `coil_14`, `coil_12` (command, bit) | Ports 2 and 4 |
-| **Valve 5/3, exhaust centre** | `coil_14`, `coil_12` (command, bit) | Ports 2 and 4 |
-| **Valve 5/3, pressure centre** | `coil_14`, `coil_12` (command, bit) | Ports 2 and 4 |
-| **Contactor** | `run` (command, bit) | Output |
-| **Reversing contactor** | `forward`, `reverse` (command, bit) | Output |
-| **Variable speed drive, on/off** | `run`, `reverse` (command, bit); `speed` (feedback, float) | Output |
-| **Variable speed drive, analog** | `speed_setpoint` (command); `speed` (feedback) | Output |
-| **Servo drive** | `setpoint` (command, position); `position` (feedback) | Output |
-
-Ports are typed: pneumatic, power or servo. An actuator can only be connected to ports of the right type.
-
-If two contradictory commands are active (both coils of a 5/3 valve, forward and reverse of a reversing contactor), the inspector reports it in **Diagnostics**. It is not a tag.
-
-### Actuators
-
-The **actuator** reads the ports of a drive and moves one or more joints. It has **no tags**. Create it with **New actuator**: choose the **Drive that feeds it** and the **Joints it moves**.
-
-| Type | Inputs | Settings |
-| --- | --- | --- |
-| **Single-acting cylinder** | **Cap chamber (extends)** | **Extend speed**, **Return speed** |
-| **Double-acting cylinder** | **Cap chamber (extends)**, **Rod chamber (retracts)** | **Extend speed**, **Retract speed** |
-| **AC motor** | **Power input** | **Nominal speed** |
-| **Servo motor** | **Servo input** | none |
-
-A joint is moved by a single actuator. An actuator moves moving joints, all in the same unit (metres or radians). The application refuses a drive that cannot feed all the inputs of the actuator.
-
-A menu on a joint also offers **Add an actuator…**.
-
-## Sensors
-
-A **sensor** watches a joint (**Watched joint**) and gives its state to the PLC through its tags. It simulates no physics. Create it with **New sensor**, or from the menu of a joint with **Add a sensor…** or **Add end-of-stroke switches**.
-
-| Type | Tag (feedback) |
-| --- | --- |
-| **Ideal switch** | `state` (bit) |
-| **Mechanical limit switch** | `state` (bit) |
-| **Cylinder sensor (magnetic)** | `state` (bit) |
-| **Inductive sensor (axial)** | `state` (bit) |
-| **Encoder** | `count` (integer, pulse count) |
-
-The switches offer, among others, the **Normally closed** option, which inverts the contact. The inductive sensor takes the **Target material** into account for its real range.
-
-## Products, conveying and presence sensors
-
-Conveying objects are created from the **Conveying** family of the tree (**New belt**, **New guide**, **New emitter**, **New absorber**, **New presence sensor**). They first ask for an assembly.
-
-| Object | Role |
-| --- | --- |
-| **Belt** | straight conveyor surface (**Length** by **Width**), driven by a **Drum (continuous joint)** of a given **Drum radius** |
-| **Guide** | box that products do not cross (side rail, stop) |
-| **Emitter** | creates a box (**Mass**, **Material**) when the `spawn` tag goes to 1 |
-| **Absorber** | destroys the products whose centre enters its volume |
-| **Presence sensor** | detects products with a ray, instead of watching a joint |
-
-The product is never saved: it only exists while the core is running. The **Create a product** button of the emitter writes 1 then 0 on its `spawn` tag.
-
-The chain of a belt is: a drive (for example a **Contactor**) feeds an actuator (for example an **AC motor**), which moves the joint of the drum, which the belt names.
-
-| Tag | Owner | Direction |
-| --- | --- | --- |
-| `spawn` | emitter | command (bit) |
-| `state` | presence sensor | feedback (bit) |
-
-The **Photoelectric cell** has two modes, **Diffuse** and **Through-beam**, a **Range**, **Normally closed**, and two delays (**On delay**, **Off delay**). It casts its ray along the Z axis of its frame.
-
-Belts, guides and absorbers have no tags.
+- [Group, ungroup, move a body](/en/guide/groups): the structure procedures.
+- [Drives, actuators and sensors](/en/guide/action-chain): the chain that animates the joints.
+- [Products and conveying](/en/guide/conveying): belts, emitters, presence sensors.
+- [Tags, faults and the I/O list](/en/guide/tags): what the PLC sees.
+- [Tutorial](/en/guide/tutorial): all of it, step by step.
 
 ::: warning Known limits
-Only the straight belt is verified. Curved conveyors, rollers, transfers between belts and long simulations are **not** verified. Products are boxes.
+The full path from a CAD software to glTF, with the right pivots, has not been tried on a real part. From a CAD software, prefer STEP and check the placement of the bodies after the import.
 :::
-
-## Tags
-
-A tag has a name of the form:
-
-```
-assembly.key.member
-```
-
-For example `pince.valve.coil_14`. The key comes from the name of the element. It only changes if you rename it yourself: renaming an element therefore never breaks the PLC program.
-
-Each tag has:
-
-- a **type**: bit, integer or float (a bit only accepts 0 or 1);
-- a **direction seen from the PLC**: **command** (the PLC writes) or **feedback** (the PLC reads). A feedback cannot be written.
-
-In the inspector, the tags of an element are grouped into **Commands** and **Feedback**. A command that is written takes effect at the next step (1/120 s).
-
-### Force and release a tag
-
-When you write a command from the viewer (**Send** button), the tag is **forced**: a **forced** badge appears. While it is forced, the PLC's writes to this tag are ignored, and the **Console** notes it.
-
-To give control back to the PLC, use **Release** on the tag, or **Release all** or **Release all forced tags** (**Edit** menu). A released tag takes the last value written by the PLC, if it wrote one.
-
-::: tip
-Forcing is for testing without a PLC: you command the machine by hand, like a maintenance operator.
-:::
-
-## Injectable faults
-
-Two faults let you test how the PLC reacts. You set them in the **Faults** group of the inspector.
-
-- **Not responding**: the drive ignores commands.
-- **Jammed**: the joint no longer moves. The fault is carried by the joint, not by the actuator.
-
-Faults and products are cleared by **Reset the simulation** (**Edit** menu). Unsaved changes and the clock stay.
-
-## The I/O list (io.json)
-
-The `io.json` file links tags to PLC variables and to Modbus addresses. It **never defines** a tag: tags come from the Pantin. It only contains:
-
-- Modbus **modules**, each with its **Key**, its **Port**, its **Unit id**, its **Word order** and its **Watchdog (ms)**;
-- **channels**: a **Tag**, a **Variable**, a **Zone**, an **Address** and a **Type**.
-
-Open the **I/O alone** view (**View** menu). If the Pantin has no list yet, **Create the mapping**. You can **Add a module**, **Map** the **Unmapped tags** to a module, **Reassign** or **Remove** a channel. Problems appear in **Problems**.
-
-**Export GVL** downloads the matching CODESYS global variable list. If a tag is renamed, its channel follows; the name of the variable never changes.
-
-What comes next, to actually connect the PLC, is in [Connect a PLC](/en/guide/connect-a-plc). The details of the format are in [ADR 0049](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0049-one-io-json-edited-from-the-viewer.md).
-
-To try all this step by step, follow the [Tutorial](/en/guide/tutorial).

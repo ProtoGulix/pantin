@@ -1,6 +1,8 @@
 import {
   type Body,
+  bodyEndpoint,
   type CreateJointRequest,
+  groupEndpoint,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
 } from "@pantin/protocol";
@@ -9,23 +11,26 @@ import { NO_POSITIONS } from "../test-support/no-positions.ts";
 import { addFixedJoints } from "./import-joints.ts";
 import { addJointToDocument } from "./joint-rules.ts";
 
-function body(id: string, name = id): Body {
+function body(id: string, name = id, assembly = "main"): Body {
   return {
     id,
     name,
-    assembly: "main",
+    assembly,
     source: { fileName: "rail.step", format: "step", unit: "m", upAxis: "z", nodes: [] },
     mesh: `meshes/${id}.glb`,
   };
 }
 
 function documentWith(bodies: Body[]): PantinDocument {
+  const keys = [...new Set(bodies.map(({ assembly }) => assembly))];
   return {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Test",
-    assemblies: [
-      { key: "main", name: "main", placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] } },
-    ],
+    assemblies: keys.map((key) => ({
+      key,
+      name: key,
+      placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    })),
     bodies,
     joints: [],
     drives: [],
@@ -42,8 +47,8 @@ function documentWith(bodies: Body[]): PantinDocument {
 const FIXED_REQUEST: CreateJointRequest = {
   type: "fixed",
   name: "joint",
-  parent: "",
-  child: "",
+  parent: bodyEndpoint(""),
+  child: bodyEndpoint(""),
   origin: [0, 0, 0],
   axis: [0, 0, 1],
 };
@@ -59,8 +64,14 @@ describe("addFixedJoints", () => {
     expect(addFixedJoints(document, [])).toEqual({ document, joints: [] });
   });
 
-  it("adds one fixed joint per link, here every other body a child of the first one, named after the child", () => {
-    const bodies = [body("rail", "Rail"), body("carriage", "Carriage"), body("stop", "Stop")];
+  it("adds no joint between bodies of one assembly: they follow it", () => {
+    const bodies = [body("rail"), body("carriage"), body("stop")];
+    const document = documentWith(bodies);
+    expect(addFixedJoints(document, star(bodies))).toEqual({ document, joints: [] });
+  });
+
+  it("adds one fixed joint per child assembly, from group to group, named after the child body", () => {
+    const bodies = [body("rail", "Rail"), body("carriage", "Carriage", "sub")];
     const { document, joints } = addFixedJoints(documentWith(bodies), star(bodies));
     expect(joints).toEqual([
       {
@@ -68,18 +79,8 @@ describe("addFixedJoints", () => {
         tagKey: "carriage",
         type: "fixed",
         name: "Carriage",
-        parent: "rail",
-        child: "carriage",
-        origin: [0, 0, 0],
-        axis: [0, 0, 1],
-      },
-      {
-        id: "stop",
-        tagKey: "stop",
-        type: "fixed",
-        name: "Stop",
-        parent: "rail",
-        child: "stop",
+        parent: groupEndpoint("main"),
+        child: groupEndpoint("sub"),
         origin: [0, 0, 0],
         axis: [0, 0, 1],
       },
@@ -89,8 +90,13 @@ describe("addFixedJoints", () => {
 
   it("keeps joint ids unique against the joints already in the document", () => {
     const earlier = [body("frame"), body("plate")];
-    const imported = [body("rail"), body("plate-2", "plate")];
-    const link = { ...FIXED_REQUEST, name: "plate", parent: "frame", child: "plate" };
+    const imported = [body("rail"), body("plate-2", "plate", "sub")];
+    const link = {
+      ...FIXED_REQUEST,
+      name: "plate",
+      parent: bodyEndpoint("frame"),
+      child: bodyEndpoint("plate"),
+    };
     const withEarlierJoint = addJointToDocument(
       documentWith([...earlier, ...imported]),
       link,

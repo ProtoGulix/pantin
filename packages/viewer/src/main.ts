@@ -93,7 +93,10 @@ interface LateBindings {
 }
 
 // The stored choice is applied to the page at once; the 3D view follows when it exists.
-function createTheme(late: LateBindings): { controller: ThemeController; choice: ThemeChoice } {
+function createTheme(
+  late: LateBindings,
+  screen: Screen,
+): { controller: ThemeController; choice: ThemeChoice } {
   const choice = parseStoredTheme(readStoredText(STORAGE_KEYS.theme));
   const controller = createThemeController(
     document.documentElement,
@@ -101,6 +104,7 @@ function createTheme(late: LateBindings): { controller: ThemeController; choice:
     choice,
     (theme) => {
       late.theme = theme;
+      screen.setTheme(theme);
       late.viewport?.setScenePalette(SCENE_PALETTES[theme]);
     },
   );
@@ -145,6 +149,7 @@ function createPorts(
       return late.store;
     }),
     saveTextFile: saveTextAsDownload,
+    openLink: (url) => void window.open(url, "_blank", "noopener,noreferrer"),
     storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     applyTheme: (choice) => {
       writeStoredText(STORAGE_KEYS.theme, choice);
@@ -164,7 +169,7 @@ function createPorts(
 function createStore(screen: Screen, api: PantinApiClient): ViewerStore {
   const language = chooseLanguage(navigator.languages, readStoredText(STORAGE_KEYS.language));
   const late: LateBindings = { viewport: null, intents: null, store: null, theme: "dark" };
-  const theme = createTheme(late);
+  const theme = createTheme(late, screen);
   const store = new ViewerStore(
     createPorts(screen, api, late, theme.controller),
     language,

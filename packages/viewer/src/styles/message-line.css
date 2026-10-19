@@ -21,7 +21,7 @@
 }
 
 .message-line--info .message-line__level {
-  color: var(--state-normal);
+  color: var(--text-muted);
 }
 
 .message-line__body {

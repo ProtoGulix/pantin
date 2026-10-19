@@ -34,7 +34,10 @@ const pantin = {
 // The same Pantin where a fixed joint now anchors "block" to "a".
 const anchored = {
   ...pantin,
-  document: { ...pantin.document, joints: [jointOf("link", "block", "fixed")] },
+  document: {
+    ...pantin.document,
+    joints: [{ ...jointOf("link", "block", "fixed"), child: { kind: "assembly", key: "block" } }],
+  },
 } as typeof pantin;
 const answer = { placement: start, anchor: { kind: "world" as const } };
 const t = createTranslator("fr");

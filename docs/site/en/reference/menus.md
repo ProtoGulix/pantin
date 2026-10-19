@@ -1,11 +1,11 @@
 # Menus
 
-The menu bar contains three menus: **File**, **Edit** and **View**. This page lists every entry in the order in which it appears. Separators are shown as a "separator" line.
+The menu bar contains four menus: **File**, **Edit**, **View** and **Help**. Every entry, in the order in which it appears; a separator is a "separator" line.
 
-A greyed-out entry does nothing when you click it, and neither does its shortcut. An entry with a box (•) can be ticked: the bullet shows the current state. See [Shortcuts](/en/reference/shortcuts) for keyboard navigation in the menus.
+A greyed-out entry does nothing, nor does its shortcut. An entry with a box (•) can be ticked: the bullet shows the state. See [Shortcuts](/en/reference/shortcuts) for keyboard navigation in the menus.
 
 ::: info Ctrl or Cmd
-Shortcuts with Ctrl are displayed as "Ctrl+..." in the menus, but the viewer also accepts the <kbd>Cmd</kbd> key (macOS) instead.
+The menus show "Ctrl+..."; on macOS, <kbd>Cmd</kbd> works too.
 :::
 
 Terms used in the "Greyed out when" column:
@@ -30,6 +30,8 @@ Terms used in the "Greyed out when" column:
 | Entry | Shortcut | What it does | Greyed out when |
 |---|---|---|---|
 | **New joint…** | | Opens the joint creation form. | No Pantin open, no body in the Pantin, or working. |
+| **Group…** | | Creates a group with the bodies and sub-groups selected in the tree: a line asks for the name of the group. See [Make a group](/en/guide/groups#make-a-group). | The selection is not made of bodies and sub-groups of one assembly, or working. |
+| **Ungroup** | | Dissolves the selected group into the assembly where it is filed. See [Ungroup a group](/en/guide/groups#ungroup-a-group). | The selected row is not an assembly filed inside another assembly, or working. |
 | **Reset the simulation** | | Puts the simulation back to its initial state. | No Pantin open or working. |
 | **Release all forced tags** | | Releases all the tags forced from the viewer. No effect if no tag is forced. | No Pantin open or working. |
 | separator | | | |
@@ -83,6 +85,13 @@ The **Move**, **Rotate** and **Align…** tools are detailed in [Panels and butt
 
 The mouse settings are detailed in [Shortcuts](/en/reference/shortcuts#_3d-view-and-camera-navigation).
 
+## Help
+
+| Entry | Shortcut | What it does | Greyed when |
+|---|---|---|---|
+| **Documentation** | | Opens this guide in a new tab, in the viewer's language. | Never. |
+| **About Pantin…** | | Opens the **About Pantin** window. See [Panels and buttons](/en/reference/panels#the-about-window). | Never. |
+
 ## Tree context menu
 
 A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, opens the menu of that row. Its title is `Actions on "name"`. The entries depend on the row type:
@@ -90,15 +99,16 @@ A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, 
 | Row type | Entries, in order |
 |---|---|
 | Pantin | **Rename**, **Frame the view on this item**, **Import into this Pantin**, **New assembly** |
-| Assembly | **Rename**, **Frame the view on this item**, **New joint…**, **Hide in the 3D view** (becomes **Show in the 3D view** if it is hidden), **Isolate in the 3D view** (becomes **Show every assembly** if it is isolated), **Delete** |
+| Assembly | **Rename**, **Frame the view on this item**, **New joint…**, **Group…** (if the selection allows it), **Ungroup** (assembly filed inside another), **Hide in the 3D view** (becomes **Show in the 3D view** if it is hidden), **Isolate in the 3D view** (becomes **Show every assembly** if it is isolated), **Delete** |
 | "Joints between assemblies" folder | **Frame the view on this item**, **New joint…** |
-| Body | **Rename**, **Frame the view on this item**, **Delete** |
+| Body | **Rename**, **Frame the view on this item**, **Group…** (if the selection allows it), **Delete** |
 | Joint | **Frame the view on this item**, **Change type…**, **Add an actuator…** (becomes **Edit its actuator…** if it has one), **Add a sensor…**, **Add end-of-stroke switches**, **Delete** |
 | Element of the action chain (drive, actuator, sensor, belt...) | **Edit**, **Show in I/O**, **Delete** |
 | Other rows (source file node, element family) | **Frame the view on this item** |
 
-Details, from the code:
+Details:
 
+- **Group…** is offered on a body or assembly row when the selection (one or several rows of one assembly) can be grouped. **Ungroup** is offered only on the first selected row.
 - **Rename** is offered only for a renamable row (Pantin, assembly, body).
 - On a fixed joint, the entries **Add an actuator…**, **Add a sensor…** and **Add end-of-stroke switches** are not offered. **Add end-of-stroke switches** is not offered either on a joint without limits (continuous pivot).
 - **Show in I/O** is offered only for an element that can own tags.

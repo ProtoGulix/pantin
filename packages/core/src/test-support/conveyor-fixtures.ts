@@ -8,6 +8,7 @@ import type {
   Placement,
   PresenceSensor,
 } from "@pantin/protocol";
+import { bodyEndpoint } from "@pantin/protocol";
 import { assembly, body, documentOf } from "./placed-fixtures.ts";
 
 // Phase 6 objects (ADR 0043) in the default document of placed-fixtures.ts,
@@ -87,8 +88,8 @@ export function drumJoint(): Joint {
     tagKey: "drum",
     name: "drum",
     type: "continuous",
-    parent: "frame",
-    child: "roller",
+    parent: bodyEndpoint("frame"),
+    child: bodyEndpoint("roller"),
     origin: [0, 0, 0],
     axis: [0, 1, 0],
   };

@@ -49,7 +49,14 @@ describe("migratePantinDocument", () => {
     const v3 = { ...V1_DOCUMENT, schema_version: 3, joints: [joint] };
     expect(migratePantinDocument(v3, "p")).toEqual({
       ...CURRENT_OF_V1,
-      joints: [{ ...joint, tagKey: "stroke" }],
+      joints: [
+        {
+          ...joint,
+          tagKey: "stroke",
+          parent: { kind: "body", id: "rail" },
+          child: { kind: "body", id: "tool" },
+        },
+      ],
       drives: [],
       actuators: [],
       sensors: [],
@@ -117,7 +124,16 @@ describe("migratePantinDocument to version 12 (ADR 0043)", () => {
       Reflect.deleteProperty(v11, name);
     }
     const migrated = migratePantinDocument(v11, "p");
-    expect(migrated).toEqual({ ...v11, schema_version: 12, ...emptyPhase6Arrays() });
+    expect(migrated).toEqual({
+      ...v11,
+      schema_version: PANTIN_SCHEMA_VERSION,
+      joints: v11.joints.map((joint) => ({
+        ...joint,
+        parent: { kind: "body", id: "rail" },
+        child: { kind: "body", id: "tool" },
+      })),
+      ...emptyPhase6Arrays(),
+    });
   });
 
   it("reads a version 11 file as a valid document", () => {
@@ -126,7 +142,11 @@ describe("migratePantinDocument to version 12 (ADR 0043)", () => {
       Reflect.deleteProperty(v11, name);
     }
     const document = parsePantinDocument(JSON.stringify(v11), "axis/pantin.json");
-    expect(document).toMatchObject({ schema_version: 12, belts: [], presenceSensors: [] });
+    expect(document).toMatchObject({
+      schema_version: PANTIN_SCHEMA_VERSION,
+      belts: [],
+      presenceSensors: [],
+    });
   });
 });
 

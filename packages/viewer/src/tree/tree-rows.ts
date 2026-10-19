@@ -1,4 +1,9 @@
-import { type Selection, selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
+import {
+  type Selection,
+  selectedDeviceOf,
+  selectedNodeIdOf,
+  selectedNodeIdsOf,
+} from "../selection.ts";
 import { parseNodeId } from "./node-ids.ts";
 import type { TreeIcon, TreeNode } from "./tree-node.ts";
 
@@ -23,6 +28,9 @@ export interface TreeRow {
   expandable: boolean;
   expanded: boolean;
   selected: boolean;
+  // The first selected row: the one every command other than the grouping ones
+  // acts on, and the keyboard's (ADR 0055 point 12).
+  active: boolean;
   // A joint the selected device drives or watches (ADR 0030 point 1).
   related: boolean;
   renaming: boolean;
@@ -33,6 +41,9 @@ export interface TreeRow {
 export interface TreeViewState {
   expandedNodeIds: ReadonlySet<string>;
   selection: Selection | null;
+  // The tree's multi-selection (ADR 0055 point 12): empty, or the selected node
+  // first, then the others.
+  multiSelectedNodeIds?: readonly string[];
   renamingNodeId: string | null;
 }
 
@@ -51,7 +62,7 @@ function isRelatedJoint(nodeId: string, relatedJointIds: ReadonlySet<string>): b
 // A device is selected by its own value, not by a node id: its row is the
 // selected one (ADR 0047 point 4). The tree shows one Pantin, so the kind and
 // the id are enough.
-function isSelectedRow(nodeId: string, selection: Selection | null): boolean {
+function isActiveRow(nodeId: string, selection: Selection | null): boolean {
   if (nodeId === selectedNodeIdOf(selection)) {
     return true;
   }
@@ -67,9 +78,11 @@ export function flattenTree(
   relatedJointIds: ReadonlySet<string> = NO_JOINTS,
 ): TreeRow[] {
   const rows: TreeRow[] = [];
+  const selectedIds = new Set(selectedNodeIdsOf(view.selection, view.multiSelectedNodeIds));
   const visit = (siblings: readonly TreeNode[], depth: number, parentId: string | null) => {
     siblings.forEach((node, index) => {
       const expanded = isExpandable(node) && view.expandedNodeIds.has(node.id);
+      const active = isActiveRow(node.id, view.selection);
       rows.push({
         id: node.id,
         kind: node.kind,
@@ -87,7 +100,8 @@ export function flattenTree(
         parentId,
         expandable: isExpandable(node),
         expanded,
-        selected: isSelectedRow(node.id, view.selection),
+        selected: active || selectedIds.has(node.id),
+        active,
         related: isRelatedJoint(node.id, relatedJointIds),
         renaming: node.id === view.renamingNodeId,
         positionInSet: index + 1,

@@ -118,6 +118,17 @@ function axisButtons(axis: JointFormAxisView, intents: PanelIntents): HTMLElemen
   ]);
 }
 
+// ADR 0056: disabled while the form differs from the stored joint, with the reason as tooltip.
+function alignFramesRow(
+  align: NonNullable<JointFormView["alignFrames"]>,
+  intents: PanelIntents,
+): HTMLElement {
+  const alignButton = button(align.label, "button", intents.alignFramesOnJointAxis);
+  alignButton.title = align.tooltip;
+  alignButton.disabled = align.disabled;
+  return element("div", { className: "inline-form__actions" }, [alignButton]);
+}
+
 function axisFields(axis: JointFormAxisView, intents: PanelIntents): HTMLElement[] {
   return [
     axisDirectionField(axis, intents),
@@ -173,6 +184,7 @@ export function renderJointForm(
       ...axisFields(view.axis, intents),
       numberRow(view.origin, intents),
       ...view.rows.map((row) => numberRow(row, intents)),
+      ...(view.alignFrames === null ? [] : [alignFramesRow(view.alignFrames, intents)]),
       element("div", { className: "inline-form__actions" }, [
         button(translate("joint.form.cancel"), "button", intents.cancelJointForm),
         create,

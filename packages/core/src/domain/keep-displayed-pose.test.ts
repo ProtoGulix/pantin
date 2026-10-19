@@ -1,4 +1,5 @@
 import type { CreateJointRequest } from "@pantin/protocol";
+import { bodyEndpoint, groupEndpoint } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   ABOUT_DIAGONAL,
@@ -7,13 +8,13 @@ import {
   expectSamePoses,
   joint,
 } from "../test-support/placed-fixtures.ts";
-import { moveBody } from "./assembly-edits.ts";
 import {
   addJointToDocument,
   deleteJointFromDocument,
   updateJointInDocument,
 } from "./joint-rules.ts";
 import { computePoses } from "./kinematics.ts";
+import { moveBody } from "./move-body.ts";
 
 // Edits keep the displayed pose, displacements included (ADR 0033 points 6
 // and 7). Every assembly and the moved body carry a rotated, translated
@@ -22,8 +23,8 @@ import { computePoses } from "./kinematics.ts";
 const SLIDE = joint({
   id: "slide",
   type: "prismatic",
-  parent: "frame",
-  child: "carriage",
+  parent: bodyEndpoint("frame"),
+  child: bodyEndpoint("carriage"),
   axis: [1, 0, 0],
   limits: [0, 1],
 });
@@ -32,14 +33,24 @@ const SLIDE = joint({
 const CLEVIS_ON_CARRIAGE = joint({
   id: "mount",
   type: "fixed",
-  parent: "carriage",
-  child: "clevis",
+  parent: bodyEndpoint("carriage"),
+  child: groupEndpoint("chape"),
 });
-const PIN_ON_CLEVIS = joint({ id: "hinge", parent: "clevis", child: "pin", origin: [0.2, 0, 0.1] });
+const PIN_ON_CLEVIS = joint({
+  id: "hinge",
+  parent: bodyEndpoint("clevis"),
+  child: groupEndpoint("tail"),
+  origin: [0.2, 0, 0.1],
+});
 
 // Bodies of the clevis subtree keep their pose; a body of the assembly outside
 // it may shift (keep-displayed-pose.ts), so the fixtures hang the rod on it.
-const ROD_ON_CLEVIS = joint({ id: "rod-mount", type: "fixed", parent: "clevis", child: "rod" });
+const ROD_ON_CLEVIS = joint({
+  id: "rod-mount",
+  type: "fixed",
+  parent: bodyEndpoint("clevis"),
+  child: bodyEndpoint("rod"),
+});
 
 const POSITIONS = new Map([
   ["slide", 0.3],
@@ -50,8 +61,8 @@ const DEFAULT_JOINTS = [SLIDE, PIN_ON_CLEVIS, ROD_ON_CLEVIS];
 const REQUEST_MOUNT: CreateJointRequest = {
   type: "fixed",
   name: "mount",
-  parent: "carriage",
-  child: "clevis",
+  parent: bodyEndpoint("carriage"),
+  child: groupEndpoint("chape"),
   origin: [0.1, 0.2, 0.3],
   axis: [0, 0, 1],
 };
@@ -80,7 +91,7 @@ describe("joints between assemblies keep the displayed pose", () => {
     const { document } = updateJointInDocument(
       before,
       "mount",
-      { ...REQUEST_MOUNT, parent: "frame" },
+      { ...REQUEST_MOUNT, parent: bodyEndpoint("frame") },
       POSITIONS,
     );
     expectSamePoses(document, before, POSITIONS);
@@ -98,7 +109,11 @@ describe("a joint edit at rest", () => {
 
 describe("a plain joint edit", () => {
   it("a plain origin edit still moves the child", () => {
-    const hinge = joint({ id: "mount", parent: "carriage", child: "clevis" });
+    const hinge = joint({
+      id: "mount",
+      parent: bodyEndpoint("carriage"),
+      child: groupEndpoint("chape"),
+    });
     const before = documentOf([SLIDE, hinge]);
     const positions = new Map([["mount", 0.5]]);
     const { document } = updateJointInDocument(
@@ -107,8 +122,8 @@ describe("a plain joint edit", () => {
       {
         type: "revolute",
         name: "mount",
-        parent: "carriage",
-        child: "clevis",
+        parent: bodyEndpoint("carriage"),
+        child: groupEndpoint("chape"),
         origin: [0.5, 0.2, 0.3],
         axis: [0, 0, 1],
         limits: [-Math.PI, Math.PI],
@@ -129,7 +144,12 @@ describe("a plain joint edit", () => {
 describe("anchor refusals", () => {
   it("names the joint already anchoring the assembly", () => {
     const before = documentOf([SLIDE, CLEVIS_ON_CARRIAGE]);
-    const second = { ...REQUEST_MOUNT, name: "other", parent: "frame", child: "rod" };
+    const second = {
+      ...REQUEST_MOUNT,
+      name: "other",
+      parent: bodyEndpoint("frame"),
+      child: groupEndpoint("chape"),
+    };
     expect(() => addJointToDocument(before, second, POSITIONS)).toThrow(
       'Assembly "chape" is already anchored by joint "mount" (to assembly "main"). Delete or change that joint first.',
     );
@@ -137,23 +157,20 @@ describe("anchor refusals", () => {
 
   it("refuses a loop of anchors on update and on body move", () => {
     const before = documentOf([SLIDE, CLEVIS_ON_CARRIAGE]);
-    const back = { ...REQUEST_MOUNT, name: "back", parent: "rod", child: "frame" };
+    const back = {
+      ...REQUEST_MOUNT,
+      name: "back",
+      parent: bodyEndpoint("rod"),
+      child: groupEndpoint("main"),
+    };
     expect(() => addJointToDocument(before, back, POSITIONS)).toThrow("loop");
-    const apart = documentOf([
+    // other <- chape <- main <- tail: no loop until "pin" leaves "tail" for "other".
+    const chain = documentOf([
       SLIDE,
-      joint({ id: "j", type: "fixed", parent: "rod", child: "frame" }),
+      CLEVIS_ON_CARRIAGE,
+      joint({ id: "j", type: "fixed", parent: bodyEndpoint("rod"), child: groupEndpoint("other") }),
+      joint({ id: "k", type: "fixed", parent: bodyEndpoint("pin"), child: groupEndpoint("main") }),
     ]);
-    expect(() => moveBody(apart, "frame", "chape")).not.toThrow();
-    expect(() =>
-      moveBody(
-        documentOf([
-          SLIDE,
-          CLEVIS_ON_CARRIAGE,
-          joint({ id: "j", type: "fixed", parent: "rod", child: "pin" }),
-        ]),
-        "pin",
-        "main",
-      ),
-    ).toThrow("already anchored");
+    expect(() => moveBody(chain, "pin", "other")).toThrow("loop");
   });
 });

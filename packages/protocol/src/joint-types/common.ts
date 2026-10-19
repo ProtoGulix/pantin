@@ -1,10 +1,12 @@
 import { z } from "zod";
-import { BodyIdSchema, DisplayNameSchema } from "../ids.ts";
+import { DisplayNameSchema } from "../ids.ts";
+import { JointEndpointSchema } from "../joint-endpoint.ts";
 
 // What every joint type shares (ADR 0011, ADR 0013). A joint links a parent
-// body to a child body. Its origin and axis are expressed in the Pantin frame
-// (Z up, metres) in the reference configuration, i.e. with every body where
-// it was imported. Coordinate 0 of a joint is that reference configuration.
+// endpoint (a body or a group, ADR 0055) to a child endpoint. Its origin and
+// axis are expressed in the Pantin frame (Z up, metres) in the reference
+// configuration, i.e. with every body where it was imported. Coordinate 0 of
+// a joint is that reference configuration.
 
 export const Vector3Schema = z
   .tuple([z.number(), z.number(), z.number()])
@@ -27,8 +29,8 @@ export const LimitsSchema = z
 
 export const jointFields = {
   name: DisplayNameSchema,
-  parent: BodyIdSchema,
-  child: BodyIdSchema,
+  parent: JointEndpointSchema,
+  child: JointEndpointSchema,
   origin: Vector3Schema,
   axis: AxisSchema,
 };

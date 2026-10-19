@@ -2,6 +2,7 @@ import {
   DRIVE_TAGS,
   type Drive,
   type Emitter,
+  endpointAssemblyIn,
   type Joint,
   type PantinDocument,
   PRESENCE_SENSOR_TAGS,
@@ -35,10 +36,10 @@ export function movedJointIds(document: PantinDocument): Set<string> {
   return new Set(document.actuators.flatMap((actuator) => actuator.joints));
 }
 
-// A validated document always has the child and its assembly, so the empty
-// fallback is never used.
+// A validated document always has the child and its assembly (the child
+// itself for a group), so the empty fallback is never used.
 export function jointAssembly(document: PantinDocument, joint: Joint): string {
-  return document.bodies.find((body) => body.id === joint.child)?.assembly ?? "";
+  return endpointAssemblyIn(joint.child, document.bodies) ?? "";
 }
 
 function jointEntries(document: PantinDocument, joint: Joint, moved: boolean): TagEntry[] {

@@ -1,5 +1,5 @@
 import type { Actuator, Drive, Joint, PantinDocument } from "@pantin/protocol";
-import { PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
+import { bodyEndpoint, PANTIN_SCHEMA_VERSION } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { STEP_SECONDS } from "./fixed-step.ts";
 import type { SimulationState } from "./simulation-state.ts";
@@ -29,8 +29,8 @@ function slide(id: string, child: string): Joint {
     tagKey: id,
     name: id,
     type: "prismatic",
-    parent: "frame",
-    child,
+    parent: bodyEndpoint("frame"),
+    child: bodyEndpoint(child),
     origin: [0, 0, 0],
     axis: [1, 0, 0],
     limits: [0, 0.1],

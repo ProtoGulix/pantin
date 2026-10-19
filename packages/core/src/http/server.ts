@@ -30,6 +30,7 @@ import {
   startSimulationLoop,
 } from "../service/simulation-loop.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
+import { listen } from "./listen.ts";
 import {
   createPoseStreamRegistry,
   type PoseSource,
@@ -47,6 +48,8 @@ export type PantinServerOptions = {
   // Built viewer to serve next to /api (ADR 0008).
   viewerDirectory?: string;
   maxImportBytes?: number;
+  // The core's build version (ADR 0058), read once by main.ts and served on /api/version.
+  buildVersion: string;
   // Python interpreter of the STEP converter's environment (ADR 0009); without
   // it, STEP imports answer conversion_unavailable.
   stepConverterPython?: string;
@@ -122,16 +125,6 @@ function createConfiguredStepConverter(options: PantinServerOptions): StepConver
     spawn,
     reportDetail: (detail) => options.reportError(new Error(detail)),
     ...(options.stepConverterLimits === undefined ? {} : { limits: options.stepConverterLimits }),
-  });
-}
-
-function listen(server: Server, port: number, address: string): Promise<void> {
-  return new Promise((resolveListen, rejectListen) => {
-    server.once("error", rejectListen);
-    server.listen(port, address, () => {
-      server.off("error", rejectListen);
-      resolveListen();
-    });
   });
 }
 
@@ -258,6 +251,7 @@ function createParts(options: PantinServerOptions, network: NetworkConfig): Serv
       bridge,
       network,
       maxImportBytes: options.maxImportBytes ?? MAX_IMPORT_BYTES,
+      buildVersion: options.buildVersion,
       viewerDirectory: options.viewerDirectory,
       reportError: options.reportError,
     }),

@@ -15,3 +15,5 @@ and 2026-10-16:
   unused locale keys.
 - The viewer cannot choose which nodes of an imported file become bodies, nor
   merge or split bodies after import (CLAUDE.md phase 8, "choix des noeuds").
+  Decided by ADR 0055 (2026-10-18): grouping by hand instead of merging;
+  splitting a GLB by nodes is `glb-split-by-nodes.md`.
