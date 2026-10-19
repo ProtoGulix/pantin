@@ -801,5 +801,19 @@
   "diagram.forcedTitle": "Forcé : {tag}",
   "diagram.menu.release": "Relâcher",
   "diagram.menu.releaseTitle": "Tag forcé",
-  "bridge.forced": "{count} tag(s) forcé(s) : l'automate ne peut pas les écrire"
+  "bridge.forced": "{count} tag(s) forcé(s) : l'automate ne peut pas les écrire",
+  "menubar.help": "Aide",
+  "menubar.help.documentation": "Documentation",
+  "menubar.help.about": "À propos de Pantin…",
+  "about.title": "À propos de Pantin",
+  "about.close": "Fermer la fenêtre À propos",
+  "about.viewer": "Version du viewer",
+  "about.core": "Version du cœur",
+  "about.core.loading": "Lecture en cours…",
+  "about.core.unreachable": "Cœur injoignable",
+  "about.licence": "Licence",
+  "about.mismatch": "Le viewer ({viewer}) et le cœur ({core}) ne sont pas de la même version : rechargez la page (Ctrl+Maj+R).",
+  "about.link.guide": "Guide de l'utilisateur",
+  "about.link.repository": "Dépôt du projet",
+  "welcome.version": "Pantin {version}"
 }

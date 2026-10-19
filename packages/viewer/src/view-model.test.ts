@@ -136,6 +136,7 @@ describe("message line and language", () => {
 
   it("has no properties of its own: the left column is the tree and its notifications", () => {
     expect(Object.keys(buildPanelView(opened(false))).sort()).toEqual([
+      "about",
       "console",
       "contextMenu",
       "importForm",
@@ -187,6 +188,7 @@ describe("list and edit views", () => {
       "Fichier",
       "Édition",
       "Affichage",
+      "Aide",
     ]);
   });
 });

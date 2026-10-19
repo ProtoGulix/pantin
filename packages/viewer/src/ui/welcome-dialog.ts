@@ -36,6 +36,7 @@ export class WelcomeDialog {
     attributes: { type: "search", spellcheck: "false", autocomplete: "off" },
   });
   private readonly emptyText = element("p", { className: "pane-empty" });
+  private readonly versionLine = element("p", { className: "welcome__version" });
   private readonly messageHost = element("div", { className: "message-host" });
   private readonly dialog: HTMLElement;
   private intents: PanelIntents | null = null;
@@ -74,6 +75,7 @@ export class WelcomeDialog {
         this.panel("home", [this.home.element]),
         this.panel("all", [this.filter, this.list.element, this.emptyText]),
         this.messageHost,
+        this.versionLine,
       ],
     );
     overlay.replaceChildren(this.dialog);
@@ -99,6 +101,7 @@ export class WelcomeDialog {
       const panel = this.panels.get(tab);
       panel?.toggleAttribute("hidden", !selected);
     }
+    this.versionLine.textContent = welcome.versionText;
     this.home.render(welcome, translate, intents);
     this.renderAll(view, intents);
     const message = renderMessageLine(view.message, translate, intents);

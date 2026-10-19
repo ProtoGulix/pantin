@@ -7,6 +7,7 @@ import type { ConsoleView } from "../console/console-view.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { ThemeName } from "../theme/theme.ts";
 import type { PanelView } from "../view-model.ts";
+import { AboutDialog } from "./about-dialog.ts";
 import { CentralArea } from "./central-area.ts";
 import { ConsoleBar } from "./console-bar.ts";
 import { ConsolePanel } from "./console-panel.ts";
@@ -107,6 +108,7 @@ export function createScreen(): Screen {
   const sidePanel = new SidePanel(panel, requireElement(".layout", HTMLElement));
   const welcome = createWelcomeDialog(sidePanel, canvas);
   const journal = new JournalDialog(requireElement("#journal", HTMLElement));
+  const about = new AboutDialog(requireElement("#about", HTMLElement));
   const diagram = createDiagramView();
   const ioPanel = createIoPanel();
   const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
@@ -128,6 +130,7 @@ export function createScreen(): Screen {
       ioPanel.render(view.io, view.translate, view.language, intents);
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
+      about.render(view.about, intents);
       viewCube.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },

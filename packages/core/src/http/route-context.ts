@@ -24,6 +24,7 @@ export type RouteContext = {
   poseStreams: PoseStreamRegistry;
   bridge: BridgeSupervisor;
   maxImportBytes: number;
+  buildVersion: string;
   request: IncomingMessage;
   response: ServerResponse;
   parameters: Record<string, string>;

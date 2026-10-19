@@ -1,6 +1,6 @@
 # Menus
 
-The menu bar contains three menus: **File**, **Edit** and **View**. Every entry, in the order in which it appears; a separator is a "separator" line.
+The menu bar contains four menus: **File**, **Edit**, **View** and **Help**. Every entry, in the order in which it appears; a separator is a "separator" line.
 
 A greyed-out entry does nothing, nor does its shortcut. An entry with a box (•) can be ticked: the bullet shows the state. See [Shortcuts](/en/reference/shortcuts) for keyboard navigation in the menus.
 
@@ -84,6 +84,13 @@ The **Move**, **Rotate** and **Align…** tools are detailed in [Panels and butt
 | **Theme: Dark** (box) | | Forces the dark theme. | Never. |
 
 The mouse settings are detailed in [Shortcuts](/en/reference/shortcuts#_3d-view-and-camera-navigation).
+
+## Help
+
+| Entry | Shortcut | What it does | Greyed when |
+|---|---|---|---|
+| **Documentation** | | Opens this guide in a new tab, in the viewer's language. | Never. |
+| **About Pantin…** | | Opens the **About Pantin** window. See [Panels and buttons](/en/reference/panels#the-about-window). | Never. |
 
 ## Tree context menu
 

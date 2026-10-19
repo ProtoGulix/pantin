@@ -16,6 +16,7 @@ import { parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode, withSelection } from "../tree/tree-state.ts";
 import type { PanelIntents } from "../ui/panel-intents.ts";
 import type { WelcomeTab } from "../viewer-state.ts";
+import { closeAbout } from "./about-actions.ts";
 import { actuatorIntents } from "./actuator-intents.ts";
 import { alignFramesOnJointAxis } from "./align-frames-actions.ts";
 import {
@@ -110,6 +111,7 @@ function listIntents(store: ViewerStore) {
     createPantin: (name: string) => void createPantin(store, name),
     createPantinFromFile: (file: File) => void createPantinFromFile(store, file),
     hideWelcome: () => store.update(withWelcomeHidden(store.state)),
+    closeAbout: () => closeAbout(store),
     selectWelcomeTab: (tab: WelcomeTab) => store.update(withWelcomeTab(store.state, tab)),
     setWelcomeFilter: (text: string) => store.update(withWelcomeFilter(store.state, text)),
   };

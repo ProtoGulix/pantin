@@ -21,6 +21,7 @@ temps de simulation.
 | « La vue 3D ne peut pas démarrer : le navigateur refuse WebGL » | WebGL est désactivé | Activez l'accélération matérielle du navigateur, puis redémarrez-le. Les panneaux restent utilisables |
 | « Le flux de poses s'est arrêté : le cœur l'a refusé ou ne répond plus » | Le flux de positions est fermé, par exemple parce que beaucoup d'onglets sont ouverts sur le même cœur | Fermez un onglet, puis rouvrez le Pantin |
 | « Le flux de poses a envoyé des données non conformes au protocole » | Le flux ne respecte pas le protocole attendu, par exemple avec un viewer et un cœur de versions différentes | Reconstruisez le viewer et relancez le cœur (`pnpm serve` fait les deux) |
+| La fenêtre **À propos** signale que le viewer et le cœur ne sont pas de la même version | Le navigateur a gardé un ancien viewer après une mise à jour du cœur | Rechargez la page avec <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>R</kbd> |
 | « Élément introuvable ; la liste a peut-être changé. Rechargez la page. » | Un élément a été supprimé entre-temps, par exemple depuis un autre onglet | Rechargez la page |
 | « Conflit : la demande est incompatible avec l'état actuel du Pantin… » | Nom déjà pris, corps encore utilisé par une liaison, préactionneur encore utilisé par un actionneur | Lisez le message complet, puis détachez ou supprimez d'abord l'élément qui bloque |
 | « Erreur interne du cœur ; consultez son journal. » | Une erreur inattendue dans le cœur | Regardez la sortie du terminal où tourne le cœur |

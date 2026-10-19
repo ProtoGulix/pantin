@@ -563,3 +563,20 @@ It is displayed when no Pantin is open. It is a modal window above the empty 3D 
 | Empty texts | **No Pantin yet. Create one from the Home tab.**; **No Pantin matches the filter.** |
 
 The window's errors (unsupported file, unreachable core...) are shown in the window's message line.
+
+At the bottom of the window, a **Pantin** line followed by the number shows the viewer version.
+
+## The About window
+
+It opens with **Help**, **About Pantin…**. It is a modal window above the central area. <kbd>Esc</kbd> or the **Close the About window** cross closes it.
+
+| Line | What it shows |
+| --- | --- |
+| **Viewer version** | The version of the viewer loaded in the browser. |
+| **Core version** | The version of the core, read each time the window opens: **Reading…** while it is read, **Core unreachable** if the core does not answer. |
+| **Licence** | Apache 2.0. |
+| **User guide**, **Project repository** | Links, opened in a new tab. |
+
+A number such as `0.2.0` is a released version. A number such as `0.2.0+8b4e4c4` is a state of the code built after version 0.2.0; what follows the `+` is the commit.
+
+If the viewer and the core do not have the same number, a message preceded by a warning triangle says so: the browser kept an old viewer after the core was updated. Reload the page with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>. See [Troubleshooting](/en/guide/troubleshooting#the-viewer-and-the-core).

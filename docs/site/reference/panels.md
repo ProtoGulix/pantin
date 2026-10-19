@@ -563,3 +563,20 @@ Elle s'affiche quand aucun Pantin n'est ouvert. C'est une fenêtre modale au-des
 | Textes vides | **Aucun Pantin. Créez-en un depuis l'onglet Accueil.** ; **Aucun Pantin ne correspond au filtre.** |
 
 Les erreurs de la fenêtre (fichier non pris en charge, cœur injoignable...) s'affichent dans la ligne de message de la fenêtre.
+
+En bas de la fenêtre, une ligne **Pantin** suivie du numéro indique la version du viewer.
+
+## La fenêtre À propos
+
+Elle s'ouvre par **Aide**, **À propos de Pantin…**. C'est une fenêtre modale au-dessus de la vue centrale. <kbd>Échap</kbd> ou la croix **Fermer la fenêtre À propos** la ferme.
+
+| Ligne | Ce qu'elle montre |
+| --- | --- |
+| **Version du viewer** | La version du viewer chargé dans le navigateur. |
+| **Version du cœur** | La version du cœur, lue à chaque ouverture de la fenêtre : **Lecture en cours…** pendant la lecture, **Cœur injoignable** si le cœur ne répond pas. |
+| **Licence** | Apache 2.0. |
+| **Guide de l'utilisateur**, **Dépôt du projet** | Liens, ouverts dans un nouvel onglet. |
+
+Un numéro comme `0.2.0` est une version publiée. Un numéro comme `0.2.0+8b4e4c4` est un état du code construit après la version 0.2.0 ; ce qui suit le `+` est le commit.
+
+Si le viewer et le cœur n'ont pas le même numéro, un message précédé d'un triangle d'avertissement l'indique : le navigateur a gardé un ancien viewer après une mise à jour du cœur. Rechargez la page avec <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>R</kbd>. Voir [Dépannage](/guide/troubleshooting#le-viewer-et-le-cœur).

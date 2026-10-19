@@ -29,6 +29,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   // Creates a Pantin named after the file, then starts importing it.
   createPantinFromFile(file: File): void;
   hideWelcome(): void;
+  // The About window of the Help menu (ADR 0058).
+  closeAbout(): void;
   selectWelcomeTab(tab: WelcomeTab): void;
   setWelcomeFilter(text: string): void;
 

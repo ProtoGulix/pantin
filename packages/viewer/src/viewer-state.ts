@@ -4,6 +4,7 @@ import type {
   PantinResponse,
   PantinSummary,
 } from "@pantin/protocol";
+import { type AboutState, CLOSED_ABOUT } from "./about-state.ts";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
@@ -77,6 +78,8 @@ export interface ViewerState {
   welcomeHidden: boolean;
   welcomeTab: WelcomeTab;
   welcomeFilter: string;
+  // The About window of the Help menu (ADR 0058).
+  about: AboutState;
   // Edit view: closing with unsaved changes waits for the user's choice.
   closePrompt: boolean;
   // The close prompt also says that the PLC bridge keeps running (ADR 0050 point 7).
@@ -172,6 +175,8 @@ const NO_TOOL_STATE = {
   placementInvalid: null,
 } as const;
 
+const NO_ABOUT = { about: CLOSED_ABOUT } as const;
+
 export function initialViewerState(
   language: Language,
   centralLayout: CentralLayout = DEFAULT_CENTRAL_LAYOUT,
@@ -201,6 +206,7 @@ export function initialViewerState(
     welcomeHidden: false,
     welcomeTab: "home",
     welcomeFilter: "",
+    ...NO_ABOUT,
     ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,

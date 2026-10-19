@@ -112,6 +112,8 @@ pnpm serve
 
 Le cœur affiche une ligne du type `Pantin core (local mode) on http://127.0.0.1:4800`. Ouvrez cette adresse dans votre navigateur. Le port par défaut est **4800** ; l'option `--port` en choisit un autre.
 
+Pour connaître la version utilisée, ouvrez **Aide**, **À propos de Pantin…** : la fenêtre donne la version du viewer et celle du cœur. La version du guide est affichée dans son en-tête, avec un lien vers l'historique des changements.
+
 L'écran d'**Accueil** propose de créer un Pantin (**Pantin vide** ou **Depuis un fichier 3D**) ou d'en ouvrir un existant.
 
 ## Et ensuite

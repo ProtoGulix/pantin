@@ -24,7 +24,7 @@ Les séparateurs entre la colonne de gauche, la zone centrale et l'inspecteur se
 
 ## La barre de menus
 
-Elle occupe le haut de la fenêtre et contient trois menus : **Fichier**, **Édition** et **Affichage**. Un menu s'ouvre au clic et se parcourt aux flèches. Les raccourcis courants y sont affichés. Voir [Menus](/reference/menus).
+Elle occupe le haut de la fenêtre et contient quatre menus : **Fichier**, **Édition**, **Affichage** et **Aide**. Un menu s'ouvre au clic et se parcourt aux flèches. Les raccourcis courants y sont affichés. Voir [Menus](/reference/menus).
 
 ## La barre d'outils
 
@@ -70,4 +70,4 @@ Tant qu'aucun Pantin n'est ouvert, une fenêtre modale **Bienvenue — Pantin** 
 - **Accueil** : créer un Pantin (**Pantin vide** ou **Depuis un fichier 3D**), la liste des **Récents**, les **Ressources** et les **Raccourcis clavier** du menu ;
 - **Tous les Pantins** : la liste complète, avec un champ de filtre par nom ou identifiant, et un bouton d'ouverture par ligne.
 
-Elle se ferme par son bouton ou par <kbd>Échap</kbd>. **Fichier** puis **Accueil** la rouvre, sur le dernier onglet utilisé (**Accueil** par défaut). **Fichier** puis **Ouvrir…** ferme le Pantin ouvert s'il y en a un, et la fenêtre s'ouvre alors sur le dernier onglet utilisé ; sans Pantin ouvert, elle s'ouvre sur **Tous les Pantins**. Voir [Panneaux et boutons](/reference/panels).
+Son pied de page indique la version du viewer (**Pantin** suivi du numéro). Elle se ferme par son bouton ou par <kbd>Échap</kbd>. **Fichier** puis **Accueil** la rouvre, sur le dernier onglet utilisé (**Accueil** par défaut). **Fichier** puis **Ouvrir…** ferme le Pantin ouvert s'il y en a un, et la fenêtre s'ouvre alors sur le dernier onglet utilisé ; sans Pantin ouvert, elle s'ouvre sur **Tous les Pantins**. Voir [Panneaux et boutons](/reference/panels).

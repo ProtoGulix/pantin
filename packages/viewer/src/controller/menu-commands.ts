@@ -4,6 +4,7 @@ import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
 import { withWelcomeShown } from "../session-state.ts";
 import { isThemeChoice } from "../theme/theme.ts";
+import { openAbout, openDocumentation } from "./about-actions.ts";
 import { deleteActuator } from "./actuator-actions.ts";
 import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
@@ -172,6 +173,12 @@ export function runMenuCommand(
       return;
     case "open":
       openFromMenu(store);
+      return;
+    case "documentation":
+      openDocumentation(store);
+      return;
+    case "about":
+      void openAbout(store);
       return;
     case "close":
       requestClose(store);

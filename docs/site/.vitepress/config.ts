@@ -1,7 +1,15 @@
 import { defineConfig } from "vitepress";
+import { readBuildVersion } from "../../../packages/core/src/build-version.ts";
 
 // The user documentation (ADR 0051): French at the root, English under /en/,
 // served under /docs/ of pantin.frezille.fr so that the root stays free.
+
+// The build version of the repository (ADR 0058), shown in the header of both
+// languages as a menu leading to the change history.
+const repositoryRoot = new URL("../../../", import.meta.url).pathname;
+const versionText = `v${readBuildVersion(repositoryRoot)}`;
+const changelogLink = "https://github.com/ProtoGulix/pantin/blob/develop/CHANGELOG.md";
+const releasesLink = "https://github.com/ProtoGulix/pantin/releases";
 
 const frenchGuide = [
   {
@@ -104,6 +112,13 @@ export default defineConfig({
         nav: [
           { text: "Guide", link: "/guide/fundamentals" },
           { text: "Référence", link: "/reference/interface" },
+          {
+            text: versionText,
+            items: [
+              { text: "Historique des changements (CHANGELOG)", link: changelogLink },
+              { text: "Versions publiées (GitHub)", link: releasesLink },
+            ],
+          },
         ],
         sidebar: [
           ...frenchGuide,
@@ -130,6 +145,13 @@ export default defineConfig({
         nav: [
           { text: "Guide", link: "/en/guide/fundamentals" },
           { text: "Reference", link: "/en/reference/interface" },
+          {
+            text: versionText,
+            items: [
+              { text: "Change history (CHANGELOG)", link: changelogLink },
+              { text: "Published releases (GitHub)", link: releasesLink },
+            ],
+          },
         ],
         sidebar: [
           ...englishGuide,

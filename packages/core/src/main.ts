@@ -2,11 +2,14 @@ import { mkdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { readBuildVersion } from "./build-version.ts";
 import { defaultPantinsDirectory } from "./domain/default-directories.ts";
 import { type RunningPantinServer, StartupRefusedError, startPantinServer } from "./http/server.ts";
 import { createPhysicsWorldFactory, loadRapier } from "./physics/rapier-world.ts";
 
 const DEFAULT_PORT = 4800;
+// This file is packages/core/src/main.ts.
+const REPOSITORY_ROOT = resolve(import.meta.dirname, "..", "..", "..");
 const USAGE = [
   "Usage: node packages/core/src/main.ts [--pantins-dir <path>] [--port <0-65535>]",
   "  [--listen <127.0.0.1 or one private address>] [--allow <ip or cidr>]... [--viewer-dir <path>]",
@@ -157,6 +160,7 @@ async function main(): Promise<void> {
   const running = await startPantinServer({
     pantinsDirectory,
     port,
+    buildVersion: readBuildVersion(REPOSITORY_ROOT),
     ...(values.listen === undefined ? {} : { listen: values.listen }),
     allow: values.allow ?? [],
     physicsWorldFactory,

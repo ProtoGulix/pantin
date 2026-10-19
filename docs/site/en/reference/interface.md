@@ -24,7 +24,7 @@ The splitters between the left column, the central area and the inspector move w
 
 ## The menu bar
 
-It occupies the top of the window and contains three menus: **File**, **Edit** and **View**. A menu opens on click and is navigated with the arrows. Common shortcuts are displayed in it. See [Menus](/en/reference/menus).
+It occupies the top of the window and contains four menus: **File**, **Edit**, **View** and **Help**. A menu opens on click and is navigated with the arrows. Common shortcuts are displayed in it. See [Menus](/en/reference/menus).
 
 ## The toolbar
 
@@ -70,4 +70,4 @@ As long as no Pantin is open, a modal window **Welcome — Pantin** is displayed
 - **Home**: create a Pantin (**Empty Pantin** or **From a 3D file**), the **Recent** list, the **Resources** and the **Keyboard shortcuts** of the menu;
 - **All Pantins**: the full list, with a filter field by name or identifier, and one open button per row.
 
-It closes with its button or with <kbd>Esc</kbd>. **File** then **Welcome** reopens it on the last tab used (**Home** by default). **File** then **Open…** closes the open Pantin, if there is one, and the window then opens on the last tab used; with no Pantin open, it opens on **All Pantins**. See [Panels and buttons](/en/reference/panels).
+Its footer shows the viewer version (**Pantin** followed by the number). It closes with its button or with <kbd>Esc</kbd>. **File** then **Welcome** reopens it on the last tab used (**Home** by default). **File** then **Open…** closes the open Pantin, if there is one, and the window then opens on the last tab used; with no Pantin open, it opens on **All Pantins**. See [Panels and buttons](/en/reference/panels).

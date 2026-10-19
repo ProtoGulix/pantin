@@ -34,6 +34,8 @@ export type MenuCommand =
   | "gizmoRotate"
   | "gizmoSpace"
   | "align"
+  | "documentation"
+  | "about"
   | "toggleInspector"
   | "toggleConsole"
   | "cycleLayout"
@@ -41,7 +43,7 @@ export type MenuCommand =
   | `language:${Language}`
   | `theme:${ThemeChoice}`;
 
-export type MenuId = "file" | "edit" | "view";
+export type MenuId = "file" | "edit" | "view" | "help";
 
 export interface Shortcut {
   key: string;

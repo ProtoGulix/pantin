@@ -801,5 +801,19 @@
   "diagram.forcedTitle": "Forced: {tag}",
   "diagram.menu.release": "Release",
   "diagram.menu.releaseTitle": "Forced tag",
-  "bridge.forced": "{count} forced tag(s): the PLC cannot write them"
+  "bridge.forced": "{count} forced tag(s): the PLC cannot write them",
+  "menubar.help": "Help",
+  "menubar.help.documentation": "Documentation",
+  "menubar.help.about": "About Pantin…",
+  "about.title": "About Pantin",
+  "about.close": "Close the About window",
+  "about.viewer": "Viewer version",
+  "about.core": "Core version",
+  "about.core.loading": "Reading…",
+  "about.core.unreachable": "Core unreachable",
+  "about.licence": "Licence",
+  "about.mismatch": "The viewer ({viewer}) and the core ({core}) are not the same version: reload the page (Ctrl+Shift+R).",
+  "about.link.guide": "User guide",
+  "about.link.repository": "Project repository",
+  "welcome.version": "Pantin {version}"
 }

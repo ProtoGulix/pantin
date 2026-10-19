@@ -112,6 +112,8 @@ pnpm serve
 
 The core prints a line like `Pantin core (local mode) on http://127.0.0.1:4800`. Open this address in your browser. The default port is **4800**; the `--port` option chooses another one.
 
+To know which version you run, open **Help**, **About Pantin…**: the window gives the viewer version and the core version. The version of the guide is shown in its header, with a link to the change history.
+
 The **Home** screen offers to create a Pantin (**Empty Pantin** or **From a 3D file**) or to open an existing one.
 
 ## What next

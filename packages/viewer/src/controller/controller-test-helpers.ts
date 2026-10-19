@@ -47,6 +47,7 @@ export function testStore(
       viewport: () => silent<Viewport>(viewport),
       poseStream: { follow: () => undefined },
       saveTextFile: () => undefined,
+      openLink: () => undefined,
       storeLanguage: () => undefined,
       applyTheme: () => undefined,
       showConsoleLive: () => undefined,

@@ -122,6 +122,14 @@ const MENUS: readonly MenuDefinition[] = [
       ...THEME_CHOICES.map(themeItem),
     ],
   },
+  {
+    id: "help",
+    labelKey: "menubar.help",
+    entries: [
+      item("documentation", "menubar.help.documentation", () => true),
+      item("about", "menubar.help.about", () => true),
+    ],
+  },
 ];
 
 export type MenuEntryView =

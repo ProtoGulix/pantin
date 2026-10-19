@@ -22,6 +22,7 @@ time.
 | "The 3D view cannot start: the browser refuses WebGL" | WebGL is disabled | Turn on the hardware acceleration of the browser, then restart it. The panels stay usable |
 | "The pose stream stopped: the core refused it or no longer answers" | The position stream is closed, for example because many tabs are open on the same core | Close a tab, then reopen the Pantin |
 | "The pose stream sent data that does not match the protocol" | The stream does not follow the expected protocol, for example with a viewer and a core of different versions | Rebuild the viewer and restart the core (`pnpm serve` does both) |
+| The **About** window says the viewer and the core are not the same version | The browser kept an old viewer after the core was updated | Reload the page with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> |
 | "Item not found; the list may have changed. Reload the page." | An item was deleted in the meantime, for example from another tab | Reload the page |
 | "Conflict: the request clashes with the current state of the Pantin…" | Name already used, body still used by a joint, drive still feeding an actuator | Read the full message, then detach or delete the blocking element first |
 | "Internal core error; see its log." | An unexpected error in the core | Look at the output of the terminal where the core runs |

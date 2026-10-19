@@ -54,6 +54,8 @@ export interface StorePorts {
   poseStream: PoseStreamClient;
   // Hands a generated text file to the browser as a download.
   saveTextFile(fileName: string, text: string): void;
+  // Opens a page outside the viewer in a new tab (the Help menu).
+  openLink(url: string): void;
   storeLanguage(language: Language): void;
   // Remembers the theme choice and applies it to the page and the 3D view (ADR 0053).
   applyTheme(choice: ThemeChoice): void;

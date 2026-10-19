@@ -149,6 +149,7 @@ function createPorts(
       return late.store;
     }),
     saveTextFile: saveTextAsDownload,
+    openLink: (url) => void window.open(url, "_blank", "noopener,noreferrer"),
     storeLanguage: (chosen) => writeStoredText(STORAGE_KEYS.language, chosen),
     applyTheme: (choice) => {
       writeStoredText(STORAGE_KEYS.theme, choice);

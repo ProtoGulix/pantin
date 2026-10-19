@@ -9,6 +9,10 @@ import { reservedUsesOf, UnsupportedCssError } from "./css-colour-uses.ts";
 const STYLES = new URL("../packages/viewer/src/styles/", import.meta.url);
 
 const ALLOWLIST: Readonly<Record<string, string>> = {
+  "about.css :: .about__mismatch":
+    "warning glyph in front of the sentence, which names both versions, and a 1 px outline",
+  "about.css :: .about__name": "brand: Pantin's own name, written out in the text",
+  "about.css :: .about__symbol": "brand: Pantin's own symbol, beside its name in text",
   "base.css :: .button--primary":
     "brand: Pantin's own primary action, with its text label (rule 5)",
   "bridge-panel.css :: .bridge-panel__error": "error glyph in front of the sentence (rule 4)",

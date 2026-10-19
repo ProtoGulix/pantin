@@ -8,6 +8,20 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Core (ADR 0058): `GET /api/version` answers the build version, `0.2.0` on a
+  release and `0.2.0+8b4e4c4` after it, validated by a protocol schema; one
+  function computes it from the package version and git, for the core, the
+  viewer build and the guide.
+- Viewer (ADR 0058): a Help menu with Documentation (the user guide, in the
+  language of the viewer) and About Pantin, whose window shows the viewer and
+  core versions, the licence and the links to the guide and the repository;
+  when the two versions differ it says so with a warning triangle and asks
+  for a page reload (a stale cached viewer). The welcome window shows the
+  version in its footer.
+- User guide (ADR 0058): the build version in the header of both languages,
+  as a menu leading to the CHANGELOG and the GitHub releases; the Help menu,
+  the About window and the version in the welcome window documented, and a
+  troubleshooting row for a viewer and a core of different versions.
 - ADR 0057, accepted, and spike 0010 (ISA-101 and colour blindness): colour
   is never the only cue, every pair of codings stays apart under protanopia,
   deuteranopia and tritanopia (tested), one meaning per colour everywhere,

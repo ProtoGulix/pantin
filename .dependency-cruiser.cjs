@@ -1,13 +1,21 @@
 // Enforces the package boundaries of CLAUDE.md section 4: core and viewer only talk through
 // the tag bus and the API, never through imports. The bridge is Python (ADR 0045): it has
 // no TypeScript to cruise, and its only link to the protocol is the shared fixtures.
+// The one crossing: the viewer's build config loads core's build-version module. It is build
+// tooling run by Node, never part of the bundle (ADR 0058 point 2).
+const VITE_CONFIG = "^packages/viewer/vite\\.config\\.ts$";
+const BUILD_VERSION_MODULE = "^packages/core/src/build-version\\.ts$";
+
 const isolatedPackages = ["core", "viewer"];
 
 const isolationRules = isolatedPackages.map((packageName) => ({
   name: `${packageName}-is-isolated`,
   comment: `${packageName} must not import core or viewer: use the tag bus or the API.`,
   severity: "error",
-  from: { path: `^packages/${packageName}/` },
+  from: {
+    path: `^packages/${packageName}/`,
+    pathNot: packageName === "viewer" ? VITE_CONFIG : undefined,
+  },
   to: {
     path: `^packages/(${isolatedPackages.join("|")})/|^@pantin/(${isolatedPackages.join("|")})$`,
     pathNot: `^packages/${packageName}/`,
@@ -17,6 +25,14 @@ const isolationRules = isolatedPackages.map((packageName) => ({
 module.exports = {
   forbidden: [
     ...isolationRules,
+    {
+      name: "viewer-config-imports-only-build-version",
+      comment:
+        "The viewer's vite.config.ts may import core's build-version module and nothing else of core.",
+      severity: "error",
+      from: { path: VITE_CONFIG },
+      to: { path: "^packages/core/|^@pantin/core$", pathNot: BUILD_VERSION_MODULE },
+    },
     {
       name: "protocol-has-no-workspace-dependency",
       comment:

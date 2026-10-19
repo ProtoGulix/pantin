@@ -20,6 +20,7 @@ export type RequestHandlerOptions = {
   bridge: BridgeSupervisor;
   network: NetworkConfig;
   maxImportBytes: number;
+  buildVersion: string;
   viewerDirectory: string | undefined;
   // Receives unexpected errors (the client only gets a generic message).
   reportError: (error: unknown) => void;

@@ -39,6 +39,7 @@ import {
   sendRequest,
   validInputOrThrow,
 } from "./api-transport.ts";
+import { type VersionRoutes, versionRoutes } from "./api-version-routes.ts";
 
 // The viewer's only door to the core (CLAUDE.md section 3.4). Every response
 // is validated against the protocol schemas: the network is never trusted.
@@ -55,7 +56,8 @@ export interface PantinApiClient
     ClockRoutes,
     BridgeRoutes,
     IoRoutes,
-    OrphanMeshRoutes {
+    OrphanMeshRoutes,
+    VersionRoutes {
   listPantins(): Promise<PantinSummary[]>;
   createPantin(name: string): Promise<PantinResponse>;
   getPantin(pantinId: string): Promise<PantinResponse>;
@@ -202,5 +204,6 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...bridgeRoutes(send, fetchFunction),
     ...ioRoutes(send, fetchFunction),
     ...orphanMeshRoutes(send),
+    ...versionRoutes(send),
   };
 }

@@ -54,6 +54,8 @@ const LIST_VIEW_COMMANDS = [
   "theme:system",
   "theme:light",
   "theme:dark",
+  "documentation",
+  "about",
 ];
 
 describe("menu bar model", () => {

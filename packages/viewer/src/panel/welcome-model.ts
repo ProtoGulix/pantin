@@ -1,4 +1,5 @@
 import type { PantinSummary } from "@pantin/protocol";
+import { VIEWER_VERSION } from "../build-version.ts";
 import { diagramShortcuts } from "../diagram/diagram-texts.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { listShortcuts, type ShortcutListing } from "../menu/menu-model.ts";
@@ -35,6 +36,8 @@ export interface WelcomeView {
   // Why "All Pantins" shows nothing, or null when it shows rows.
   emptyText: string | null;
   shortcuts: ShortcutListing[];
+  // "Pantin 0.2.0+8b4e4c4", for the footer (ADR 0058).
+  versionText: string;
 }
 
 /** Date and short time in the viewer's language; empty if the core sent nothing valid. */
@@ -148,5 +151,6 @@ export function buildWelcomeView(state: ViewerState, t: Translate): WelcomeView 
     filter: state.welcomeFilter,
     emptyText: visible ? emptyText(state, rows, t) : null,
     shortcuts: [...listShortcuts(t), ...diagramShortcuts(t)],
+    versionText: t("welcome.version", { version: VIEWER_VERSION }),
   };
 }

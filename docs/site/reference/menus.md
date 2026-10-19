@@ -1,6 +1,6 @@
 # Menus
 
-La barre de menus contient trois menus : **Fichier**, **Édition** et **Affichage**. Chaque entrée, dans l'ordre où elle apparaît ; un séparateur est une ligne « séparateur ».
+La barre de menus contient quatre menus : **Fichier**, **Édition**, **Affichage** et **Aide**. Chaque entrée, dans l'ordre où elle apparaît ; un séparateur est une ligne « séparateur ».
 
 Une entrée grisée ne fait rien, ni son raccourci. Une entrée à case (•) est cochable : la puce montre l'état. Voir [Raccourcis](/reference/shortcuts) pour la navigation au clavier dans les menus.
 
@@ -84,6 +84,13 @@ Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [P
 | **Thème : Sombre** (case) | | Force le thème sombre. | Jamais. |
 
 Les réglages de souris sont détaillés dans [Raccourcis](/reference/shortcuts#vue-3d-et-navigation-de-la-camera).
+
+## Aide
+
+| Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
+|---|---|---|---|
+| **Documentation** | | Ouvre ce guide dans un nouvel onglet, dans la langue du viewer. | Jamais. |
+| **À propos de Pantin…** | | Ouvre la fenêtre **À propos de Pantin**. Voir [Panneaux et boutons](/reference/panels#la-fenetre-a-propos). | Jamais. |
 
 ## Menu contextuel de l'arborescence
 

@@ -40,6 +40,7 @@ export function startTestServer(
   return startPantinServer({
     pantinsDirectory,
     port: 0,
+    buildVersion: "0.0.0-test",
     reportError: (error: unknown) => {
       throw new Error(`Unexpected server error in test: ${String(error)}`);
     },
