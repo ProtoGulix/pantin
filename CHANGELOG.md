@@ -56,6 +56,16 @@ All notable changes to Pantin. The format follows
   les repères" / "Reading colours and cues" lists every coding with its
   non-colour cue first; the screenshots are regenerated with the new look.
 
+### Changed
+
+- User guide (French and English): a plain-language pass. Every page now
+  describes what Pantin does today, without history, decision or test
+  references; the caveats that change what the user does sit in a "Known
+  limits" box at the end of the page. The colours page is a legend. New home
+  page with three entries by goal, five strengths and a viewer screenshot in
+  both themes; a new "For contributors" page links the architecture
+  decisions and spike reports.
+
 ### Fixed
 
 - Viewer, a selected joint whose end is a group tinted a single body of that

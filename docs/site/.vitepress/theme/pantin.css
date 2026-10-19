@@ -91,3 +91,22 @@
 .vp-doc .custom-block {
   border-radius: 4px;
 }
+
+/* The home page shows one picture per theme; the other one is hidden. */
+.home-shot {
+  display: block;
+  width: 100%;
+  max-width: 1152px;
+  margin: 0 auto;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+}
+
+.dark .home-shot--light,
+html:not(.dark) .home-shot--dark {
+  display: none;
+}
+
+.home-shot-wrapper {
+  padding: 0 24px 48px;
+}

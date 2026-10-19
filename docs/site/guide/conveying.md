@@ -28,5 +28,5 @@ La **Cellule photoélectrique** a deux modes, **Réflex** et **Barrage**, une **
 Les bandes, guides et absorbeurs n'ont pas de tag.
 
 ::: warning Limites connues
-Seule la bande droite est vérifiée. Les convoyeurs courbes, les rouleaux, les transferts entre bandes et les longues simulations ne sont **pas** vérifiés. Les produits sont des boîtes.
+Seule la bande droite est prise en charge. Les convoyeurs courbes, les rouleaux et les transferts entre bandes ne sont pas proposés. Les produits sont des boîtes.
 :::

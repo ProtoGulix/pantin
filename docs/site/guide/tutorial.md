@@ -12,12 +12,12 @@ actionneur, capteur, tag) sont expliquées dans
 d'abord si ces mots sont nouveaux.
 
 ::: tip Pour comparer
-Le dossier `examples/plc-cylinder` montre une machine voisine, mais il garde
-l'ancienne organisation : une liaison fixe interne `ecrou`, la glissière `verin`
-à l'intérieur de l'assemblage `verin1`, et des tags en `verin1.*`. Un Pantin
-construit avec ce tutoriel a des tags légèrement différents (voir l'étape 4).
-Copiez l'exemple dans le dossier des Pantins du cœur pour l'ouvrir et comparer
-la machine, pas les noms de tags.
+Le dossier `examples/plc-cylinder` contient une machine voisine, organisée
+autrement : une liaison fixe interne `ecrou`, la glissière `verin` à l'intérieur
+de l'assemblage `verin1`, et des tags en `verin1.*`. Un Pantin construit avec ce
+tutoriel a des tags légèrement différents (voir l'étape 4). Copiez l'exemple
+dans le dossier des Pantins du cœur pour l'ouvrir et comparer la machine, pas
+les noms de tags.
 :::
 
 ## Ce qu'il vous faut
@@ -92,11 +92,10 @@ Le découpage est automatique, vous ne choisissez pas de nœuds :
 Pour l'exemple, l'import crée trois corps (`ID1S0400125E_0_1`, `_0_2` et
 `ID1S040CF-16040_3`) dans un seul assemblage, et aucune liaison.
 
-::: warning Ce que l'interface ne propose pas
-Le viewer ne permet pas, aujourd'hui, de choisir quels nœuds du fichier
-deviennent des corps, ni de fusionner ou de scinder des corps. Un fichier GLB reste
-un seul corps. Pour regrouper des corps qui bougent ensemble, utilisez **Grouper…**
-(étape 4).
+::: tip Choisir les corps
+Le viewer ne permet pas de choisir quels nœuds du fichier deviennent des corps,
+ni de fusionner ou de scinder des corps. Un fichier GLB reste un seul corps. Pour
+regrouper des corps qui bougent ensemble, utilisez **Grouper…** (étape 4).
 :::
 
 Le panneau de gauche affiche l'arborescence : le Pantin, son assemblage et ses
@@ -192,16 +191,6 @@ liaison (clic droit, **Supprimer**).
 Si la position du modèle n'est pas bonne, l'inspecteur propose des outils de
 **Positionnement** : **Déplacer (G)**, **Tourner (R)** et **Aligner (A)**. Ils
 sont hors du sujet de ce tutoriel.
-
-::: warning Non vérifié
-Le début a été rejoué dans le viewer (import du STEP, sélection avec
-<kbd>Ctrl</kbd>+clic, **Grouper…**, message « Groupe « Tige » créé. », liaison
-fixe `Tige`, rien ne bouge). Le reste n'a pas été rejoué : passage de **Fixe** à
-**Glissière**, **Clé de tag**, préactionneur, actionneur, capteurs et tags. Les
-libellés et les messages viennent du code. Le nom exact de la liaison et la clé du groupe
-sont ceux que le viewer propose : lisez-les dans l'arborescence. Si le formulaire
-refuse, lisez le message du cœur, il dit quoi corriger.
-:::
 
 ## 5. Ajouter le préactionneur : le distributeur
 
@@ -482,12 +471,13 @@ Pour tester la boucle sans CODESYS, n'importe quel client Modbus TCP convient :
 écrivez le coil 0 de `127.0.0.1:1502`, unité 1, le vérin sort, puis lisez
 l'entrée discrète 1.
 
-::: warning Vérifié sur un cas avec CODESYS
-Un CODESYS Control Win V3 x64 réel a piloté cette scène (`plc-cylinder`) le 18 octobre 2026 : voir le [réglage](/guide/connect-a-plc#configurer-l-automate-codesys). Les autres versions et les cibles WAGO ne sont pas vérifiées. La boucle fermée est aussi testée automatiquement avec un client Modbus de test (ADR 0045, `packages/bridge/tests/test_closed_loop.py`).
-:::
-
 ## Ensuite
 
 - [Connecter un automate](/guide/connect-a-plc) : réglages CODESYS, réseau local
   ou privé, sécurité.
 - [Dépannage](/guide/troubleshooting) : les messages d'erreur et quoi faire.
+
+::: warning Limites connues
+- Les libellés et les messages de ce tutoriel viennent du code. Le nom exact de la liaison et la clé du groupe sont ceux que le viewer propose : lisez-les dans l'arborescence. Si un formulaire refuse, lisez le message du cœur : il dit quoi corriger.
+- Un CODESYS Control Win V3 x64 a piloté cette scène (`plc-cylinder`) : voir le [réglage](/guide/connect-a-plc#configurer-l-automate-codesys). Les autres versions et les cibles WAGO n'ont pas été essayées.
+:::

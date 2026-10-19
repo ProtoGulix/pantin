@@ -1,8 +1,8 @@
 # Préactionneurs, actionneurs et capteurs
 
-Cette page décrit la chaîne qui anime les liaisons : un **préactionneur** reçoit les commandes de l'automate, un **actionneur** déplace les liaisons, un **capteur** en lit le résultat. Ni l'un ni l'autre n'est une pièce 3D. Les liaisons sont dans [Le modèle d'un Pantin](/guide/model#les-liaisons).
+Cette page décrit la chaîne qui anime les liaisons : un **préactionneur** reçoit les commandes de l'automate, un **actionneur** déplace les liaisons, un **capteur** en lit le résultat. Les liaisons sont dans [Le modèle d'un Pantin](/guide/model#les-liaisons).
 
-Ni le préactionneur ni l'actionneur n'est une pièce 3D. Ensemble, ils transforment une commande de l'automate en mouvement.
+Le préactionneur et l'actionneur ne sont pas des pièces 3D. Ensemble, ils transforment une commande de l'automate en mouvement.
 
 ## Les préactionneurs
 

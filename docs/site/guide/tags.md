@@ -47,6 +47,6 @@ Ouvrez la vue **E/S seules** (menu **Affichage**). Si le Pantin n'a pas encore d
 
 **Exporter la GVL** télécharge la liste de variables globales CODESYS correspondante. Si un tag est renommé, sa voie suit ; le nom de la variable ne change jamais.
 
-La suite, pour brancher réellement l'automate, est dans [Connecter un automate](/guide/connect-a-plc). Le détail du format est dans [ADR 0049](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0049-one-io-json-edited-from-the-viewer.md).
+La suite, pour brancher réellement l'automate, est dans [Connecter un automate](/guide/connect-a-plc).
 
 Pour manipuler tout cela pas à pas, suivez le [Tutoriel](/guide/tutorial).

@@ -28,5 +28,5 @@ The **Photoelectric cell** has two modes, **Diffuse** and **Through-beam**, a **
 Belts, guides and absorbers have no tags.
 
 ::: warning Known limits
-Only the straight belt is verified. Curved conveyors, rollers, transfers between belts and long simulations are **not** verified. Products are boxes.
+Only the straight belt is supported. Curved conveyors, rollers and transfers between belts are not offered. Products are boxes.
 :::

@@ -47,6 +47,6 @@ Open the **I/O alone** view (**View** menu). If the Pantin has no list yet, **Cr
 
 **Export GVL** downloads the matching CODESYS global variable list. If a tag is renamed, its channel follows; the name of the variable never changes.
 
-What comes next, to actually connect the PLC, is in [Connect a PLC](/en/guide/connect-a-plc). The details of the format are in [ADR 0049](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0049-one-io-json-edited-from-the-viewer.md).
+What comes next, to actually connect the PLC, is in [Connect a PLC](/en/guide/connect-a-plc).
 
 To try all this step by step, follow the [Tutorial](/en/guide/tutorial).

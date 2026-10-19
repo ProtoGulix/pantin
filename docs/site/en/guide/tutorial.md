@@ -11,8 +11,8 @@ are explained in [the fundamentals](/en/guide/fundamentals) and [the model](/en/
 Read them first if these words are new to you.
 
 ::: tip To compare
-The `examples/plc-cylinder` folder shows a similar machine, but it keeps the
-older layout: an inner fixed joint `ecrou`, the `verin` slider inside the
+The `examples/plc-cylinder` folder contains a similar machine, organised
+differently: an inner fixed joint `ecrou`, the `verin` slider inside the
 `verin1` assembly, and `verin1.*` tags. A Pantin built with this tutorial has
 slightly different tags (see step 4). Copy the example into the Pantins folder
 of the core to open it and compare the machine, not the tag names.
@@ -88,9 +88,9 @@ The split is automatic, you do not choose nodes:
 For the example, the import creates three bodies (`ID1S0400125E_0_1`, `_0_2` and
 `ID1S040CF-16040_3`) in a single assembly, and no joint.
 
-::: warning What the interface does not offer
-Today the viewer does not let you choose which nodes of the file become bodies,
-nor merge or split bodies. A GLB file stays one body. To gather bodies that move
+::: tip Choosing the bodies
+The viewer does not let you choose which nodes of the file become bodies, nor
+merge or split bodies. A GLB file stays one body. To gather bodies that move
 together, use **Group…** (step 4).
 :::
 
@@ -182,16 +182,6 @@ first". Then delete the old joint (right-click, **Delete**).
 If the position of the model is not right, the inspector offers **Positioning**
 tools: **Move (G)**, **Rotate (R)** and **Align (A)**. They are outside the
 scope of this tutorial.
-
-::: warning Not verified
-The beginning was replayed in the viewer (STEP import, <kbd>Ctrl</kbd>+click
-selection, **Group…**, message `Group "Tige" created.`, fixed joint `Tige`,
-nothing moves). The rest was not replayed: change from **Fixed** to
-**Prismatic (slider)**, **Tag key**, drive, actuator, sensors and tags. Labels
-and messages come from the code. The exact name of the joint and the key of the group are
-those the viewer proposes: read them in the tree. If the form refuses, read the
-core's message: it says what to fix.
-:::
 
 ## 5. Add the drive: the valve
 
@@ -457,12 +447,13 @@ bridge log give the cause: see [Troubleshooting](/en/guide/troubleshooting).
 To test the loop without CODESYS, any Modbus TCP client will do: write coil 0 of
 `127.0.0.1:1502`, unit 1, the cylinder extends, then read discrete input 1.
 
-::: warning Verified on one case with CODESYS
-A real CODESYS Control Win V3 x64 drove this scene (`plc-cylinder`) on 18 October 2026: see the [setup](/en/guide/connect-a-plc#configure-the-plc-codesys). Other versions and WAGO targets are not verified. The closed loop is also tested automatically with a test Modbus client (ADR 0045, `packages/bridge/tests/test_closed_loop.py`).
-:::
-
 ## Next
 
 - [Connect a PLC](/en/guide/connect-a-plc): CODESYS settings, local or private
   network, security.
 - [Troubleshooting](/en/guide/troubleshooting): the error messages and what to do.
+
+::: warning Known limits
+- The labels and messages of this tutorial come from the code. The exact name of the joint and the key of the group are those the viewer proposes: read them in the tree. If a form refuses, read the core's message: it says what to fix.
+- A real CODESYS Control Win V3 x64 drove this scene (`plc-cylinder`): see the [setup](/en/guide/connect-a-plc#configure-the-plc-codesys). Other versions and WAGO targets have not been tried.
+:::

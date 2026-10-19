@@ -14,13 +14,13 @@ temps de simulation.
 | --- | --- | --- |
 | « Impossible de joindre le cœur Pantin. Est-il lancé sur 127.0.0.1:4800 ? » | Le cœur n'est pas démarré, ou écoute ailleurs | Lancez `pnpm serve`. Avec `--port` ou `--listen`, ouvrez le viewer à l'adresse affichée au démarrage (« Pantin core (local mode) on http://... ») |
 | Le cœur s'arrête au démarrage avec une erreur `EADDRINUSE` | Le port 4800 est déjà pris, par un autre cœur par exemple | Fermez l'autre programme, ou lancez le cœur avec `--port <autre numéro>` |
-| Le cœur refuse de démarrer : `Refusing to listen on "…"` | L'adresse `--listen` est publique, générique (`0.0.0.0`, `::`), de lien local, ou un nom d'hôte | Utilisez `127.0.0.1` (défaut) ou **une** adresse privée de la machine, par exemple `192.168.1.20` (ADR 0004). `--allow` prend une IP ou un CIDR |
+| Le cœur refuse de démarrer : `Refusing to listen on "…"` | L'adresse `--listen` est publique, générique (`0.0.0.0`, `::`), de lien local, ou un nom d'hôte | Utilisez `127.0.0.1` (défaut) ou **une** adresse privée de la machine, par exemple `192.168.1.20`. `--allow` prend une IP ou un CIDR |
 | `Invalid --allow "…"` | Une entrée n'est ni une IP ni un CIDR | Écrivez `192.168.1.10` ou `192.168.1.0/24` |
 | `--bridge-python "…" is not a file` au démarrage | Le chemin donné n'existe pas | Créez l'environnement avec `pnpm setup:python`, puis relancez avec `pnpm serve` |
 | Une ligne `Rejected connection from …` dans la sortie du cœur | Une source hors des plages privées, ou hors de la liste `--allow`, a été fermée à l'acceptation | Normal si la source est inconnue. Sinon, ajoutez son adresse à `--allow` |
 | « La vue 3D ne peut pas démarrer : le navigateur refuse WebGL » | WebGL est désactivé | Activez l'accélération matérielle du navigateur, puis redémarrez-le. Les panneaux restent utilisables |
 | « Le flux de poses s'est arrêté : le cœur l'a refusé ou ne répond plus » | Le flux de positions est fermé, par exemple parce que beaucoup d'onglets sont ouverts sur le même cœur | Fermez un onglet, puis rouvrez le Pantin |
-| « Le flux de poses a envoyé des données non conformes au protocole » | Le flux ne respecte pas le protocole attendu, par exemple avec un viewer et un cœur de versions différentes (cause probable, non vérifiée) | Reconstruisez le viewer et relancez le cœur (`pnpm serve` fait les deux) |
+| « Le flux de poses a envoyé des données non conformes au protocole » | Le flux ne respecte pas le protocole attendu, par exemple avec un viewer et un cœur de versions différentes | Reconstruisez le viewer et relancez le cœur (`pnpm serve` fait les deux) |
 | « Élément introuvable ; la liste a peut-être changé. Rechargez la page. » | Un élément a été supprimé entre-temps, par exemple depuis un autre onglet | Rechargez la page |
 | « Conflit : la demande est incompatible avec l'état actuel du Pantin… » | Nom déjà pris, corps encore utilisé par une liaison, préactionneur encore utilisé par un actionneur | Lisez le message complet, puis détachez ou supprimez d'abord l'élément qui bloque |
 | « Erreur interne du cœur ; consultez son journal. » | Une erreur inattendue dans le cœur | Regardez la sortie du terminal où tourne le cœur |
@@ -63,7 +63,7 @@ Le cœur refuse sans rien changer, et le viewer affiche sa phrase telle quelle (
 | Refus au déplacement d'un corps vers un autre assemblage | Le corps et ses deux groupes ne sont pas déplacés par la même liaison | Déplacez le groupe entier, ou utilisez **Grouper…** |
 | Liaison entre assemblages refusée : l'enfant est un corps | Entre deux assemblages, l'enfant doit être un groupe | Choisissez l'entrée **Groupe : nom** comme **Corps enfant** |
 | Après **Grouper…**, le programme de l'automate ne trouve plus ses variables | Des tags ont été renommés (« régénérez la GVL de l'automate ») | **Exporter la GVL** à nouveau, puis recharger dans le programme |
-| Un corps bouge maintenant avec son groupe, alors qu'il restait fixe | Pantin ancien (schéma 12) migré à l'ouverture : un corps sans liaison parente suit désormais son groupe. La **Console** liste ces corps (« Les corps sans liaison parente suivent maintenant leur groupe quand il bouge : … ») | Vérifiez la scène. Pour qu'il reste immobile, déplacez-le dans un assemblage qui ne bouge pas (voir [Déplacer un corps](/guide/groups#deplacer-un-corps-dans-un-autre-assemblage)), ou mettez-le à part dans un groupe (non vérifié dans le viewer) |
+| Un corps bouge avec son groupe alors qu'il devrait rester fixe, ou la **Console** affiche « Les corps sans liaison parente suivent maintenant leur groupe quand il bouge : … » à l'ouverture | Un corps sans liaison parente suit son groupe ; ce message liste les corps concernés dans un Pantin enregistré par une version antérieure | Déplacez-le dans un assemblage qui ne bouge pas (voir [Déplacer un corps](/guide/groups#deplacer-un-corps-dans-un-autre-assemblage)) |
 
 ## Le pont automate
 
@@ -120,12 +120,8 @@ journal.
 | Une exception Modbus 2 ou 3 côté automate | Adresse hors de la plage mappée, ou quantité fausse | Comparez les adresses du projet CODESYS avec la liste d'E/S |
 | Une exception Modbus 11 | Mauvaise **Adresse d'unité** | Alignez l'adresse d'unité du module et celle du canal CODESYS |
 | Le journal : « unit 255 ... GATEWAY_NO_RESPONSE (11) » | L'**Unit-ID** du serveur Modbus CODESYS vaut par défaut 16#FF (255) | Réglez-le sur l'**Adresse d'unité** du module (onglet **Général**). Voir [Connecter un automate](/guide/connect-a-plc#configurer-l-automate-codesys) |
-| À chaque connexion : une requête refusée « ILLEGAL_ADDRESS (2) », puis « PLC disconnected … watchdog », en boucle | Une commande de l'onglet **Init serveur Modbus** vise une zone que le module n'a pas (vu : fonction 16 sur `m1`) ; CODESYS s'arrête après ce refus | Videz l'onglet **Init serveur Modbus**, ou faites-le viser une zone du module. Voir [Connecter un automate](/guide/connect-a-plc#configurer-l-automate-codesys) |
+| À chaque connexion : une requête refusée « ILLEGAL_ADDRESS (2) », puis « PLC disconnected … watchdog », en boucle | Une commande de l'onglet **Init serveur Modbus** vise une zone que le module n'a pas (par exemple la fonction 16 sur `m1`) ; CODESYS s'arrête après ce refus | Videz l'onglet **Init serveur Modbus**, ou faites-le viser une zone du module. Voir [Connecter un automate](/guide/connect-a-plc#configurer-l-automate-codesys) |
 | Dans CODESYS, **Valeur actuelle** affiche « Pas actualisé (vérifier l'info-bulle) » | Les lignes ne sont pas reliées à des variables, ou les variables inutilisées ne sont pas actualisées | Reliez chaque ligne à une variable (onglet **ModbusTCPServer Mappage E/S**) et réglez **Toujours actualiser les variables** sur « Activé 2 (toujours dans la tâche du cycle de bus) ». Hors ligne seulement |
-
-::: warning Peu vérifié avec CODESYS
-Les lignes « unit 255 », « Init serveur Modbus » et « Pas actualisé » ont été vues sur un CODESYS Control Win V3 réel le 18 octobre 2026. Les autres causes viennent du code et des décisions du dépôt et n'ont pas été confirmées avec CODESYS (ADR 0045, étape 2).
-:::
 
 ## Tags forcés
 
@@ -164,8 +160,4 @@ mène à chaque problème.
 
 ## Toujours bloqué ?
 
-Les ADR du dépôt expliquent les choix derrière ces comportements, notamment
-[0045](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0045-plc-bridge-tag-bus-io-mapping-and-modbus-slave.md),
-[0046](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0046-security-of-the-plc-bridge.md)
-et
-[0050](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0050-bridge-started-from-the-viewer.md).
+Ouvrez la **Console** et, pour le pont, le **Journal du pont** : ils donnent la cause dans la plupart des cas. Pour signaler un problème, joignez-y votre Pantin. Les choix de conception sont expliqués dans la page [Pour les contributeurs](/contributing).

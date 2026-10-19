@@ -1,11 +1,11 @@
 # Menus
 
-La barre de menus contient trois menus : **Fichier**, **Édition** et **Affichage**. Cette page liste chaque entrée dans l'ordre où elle apparaît. Les séparateurs sont indiqués par une ligne « séparateur ».
+La barre de menus contient trois menus : **Fichier**, **Édition** et **Affichage**. Chaque entrée, dans l'ordre où elle apparaît ; un séparateur est une ligne « séparateur ».
 
-Une entrée grisée ne fait rien quand on clique dessus, et son raccourci non plus. Une entrée à case (•) est cochable : la puce montre l'état actuel. Voir [Raccourcis](/reference/shortcuts) pour la navigation au clavier dans les menus.
+Une entrée grisée ne fait rien, ni son raccourci. Une entrée à case (•) est cochable : la puce montre l'état. Voir [Raccourcis](/reference/shortcuts) pour la navigation au clavier dans les menus.
 
 ::: info Ctrl ou Cmd
-Les raccourcis avec Ctrl s'affichent en « Ctrl+... » dans les menus, mais le viewer accepte aussi la touche <kbd>Cmd</kbd> (macOS) à la place.
+Les menus affichent « Ctrl+... » ; sur macOS, <kbd>Cmd</kbd> convient aussi.
 :::
 
 Termes utilisés dans la colonne « Grisé quand » :
@@ -99,7 +99,7 @@ Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du c
 | Élément de la chaîne d'action (préactionneur, actionneur, capteur, bande...) | **Modifier**, **Afficher dans E/S**, **Supprimer** |
 | Autres lignes (noeud du fichier source, famille d'éléments) | **Cadrer la vue sur l'élément** |
 
-Précisions, d'après le code :
+Précisions :
 
 - **Grouper…** est proposé sur une ligne de corps ou d'assemblage quand la sélection (une ou plusieurs lignes d'un même assemblage) peut être groupée. **Dégrouper** n'est proposé que sur la première ligne sélectionnée.
 - **Renommer** n'est proposé que pour une ligne renommable (Pantin, assemblage, corps).

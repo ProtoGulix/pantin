@@ -1,6 +1,6 @@
 # L'écran
 
-Cette page décrit les zones de la fenêtre du viewer, de haut en bas et de gauche à droite. Chaque zone renvoie vers la page qui la détaille. Les noms en **gras** sont ceux de l'interface.
+Les zones de la fenêtre, de haut en bas et de gauche à droite. Les noms en **gras** sont ceux de l'interface.
 
 ![Le viewer avec l'exemple plc-cylinder ouvert : arborescence à gauche, vue 3D et schéma au centre, inspecteur à droite](/screenshots/fr/overview.webp)
 
@@ -24,7 +24,7 @@ Les séparateurs entre la colonne de gauche, la zone centrale et l'inspecteur se
 
 ## La barre de menus
 
-Elle occupe le haut de la fenêtre et contient trois menus : **Fichier**, **Édition** et **Affichage**. Un menu s'ouvre au clic, et les flèches du clavier le parcourent. Les raccourcis les plus courants y sont affichés. Voir [Menus](/reference/menus).
+Elle occupe le haut de la fenêtre et contient trois menus : **Fichier**, **Édition** et **Affichage**. Un menu s'ouvre au clic et se parcourt aux flèches. Les raccourcis courants y sont affichés. Voir [Menus](/reference/menus).
 
 ## La barre d'outils
 
@@ -32,7 +32,7 @@ Elle est en haut de la colonne de gauche, quand un Pantin est ouvert. Elle réun
 
 ## Le panneau latéral gauche
 
-Il n'existe que lorsqu'un Pantin est ouvert. De haut en bas, il contient la barre d'outils, le formulaire d'import (le seul formulaire de ce panneau), l'**arborescence des Pantins**, puis en bas la carte **Pont automate**. En dessous apparaissent, quand il y en a, la question de confirmation et la ligne de message. Les autres formulaires (liaison, actionneur, capteur...) s'ouvrent dans l'inspecteur.
+Il n'existe que lorsqu'un Pantin est ouvert. De haut en bas : la barre d'outils, le formulaire d'import, l'**arborescence des Pantins**, la carte **Pont automate**, puis la question de confirmation et la ligne de message quand il y en a. Les autres formulaires (liaison, actionneur, capteur...) s'ouvrent dans l'inspecteur.
 
 - L'arborescence liste le Pantin, ses assemblages, ses corps, ses liaisons et les éléments de la chaîne d'action. Un clic droit ouvre le menu de l'élément (voir [Menus](/reference/menus#menu-contextuel-de-l-arborescence)).
 - La carte **Pont automate** montre l'état du pont Modbus et de ses modules. Voir [Connecter un automate](/guide/connect-a-plc).

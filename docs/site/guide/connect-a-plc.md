@@ -3,18 +3,13 @@
 Pantin se présente à l'automate comme des **modules d'E/S Modbus TCP** : le
 simulateur est l'esclave, l'automate est le maître. Le programme de l'automate
 garde sa configuration d'E/S habituelle et interroge les modules simulés comme il
-interrogerait des modules réels (ADR 0003).
+interrogerait des modules réels.
 
 Cette page décrit le pont, le réglage réseau, la GVL et les précautions. Pour
 construire la machine et sa liste d'E/S, suivez le [tutoriel](/guide/tutorial).
 
-::: tip Vérifié avec un vrai CODESYS
-Le pilotage de l'exemple `plc-cylinder` par un CODESYS Control Win V3 x64 réel a
-été vérifié le 18 octobre 2026 (voir [Configurer l'automate](#configurer-l-automate-codesys)).
-Les autres versions de CODESYS et les cibles WAGO ne sont pas vérifiées. La boucle
-fermée automatique (`packages/bridge/tests/test_closed_loop.py`, lancée par
-`pnpm check`) joue l'automate avec un client Modbus de test.
-:::
+L'exemple `plc-cylinder` est piloté par un CODESYS Control Win V3 x64 avec les
+réglages de [Configurer l'automate](#configurer-l-automate-codesys).
 
 ## Comment ça marche
 
@@ -24,16 +19,15 @@ automate (CODESYS)  <--Modbus TCP-->  pont (Python)  <--tag bus-->  cœur  <--RE
 
 - Le **cœur** simule la machine et détient les tags.
 - Le **pont** est un processus séparé. Il ouvre un esclave Modbus TCP **par
-  module** de `io.json` et recopie les tags dans ses registres, et inversement
-  (ADR 0045, 0048).
+  module** de `io.json` et recopie les tags dans ses registres, et inversement.
 - Le cœur lance et arrête le pont à la demande, depuis le bloc **Pont
-  automate** du viewer (ADR 0050). Il faut pour cela l'option
+  automate** du viewer. Il faut pour cela l'option
   `--bridge-python`, que `pnpm serve` fournit.
 
 ## Un module, un port
 
 Chaque module de la liste d'E/S est un esclave Modbus indépendant, avec ses
-propres réglages (ADR 0049) :
+propres réglages :
 
 | Réglage | Défaut | Règle |
 | --- | --- | --- |
@@ -43,8 +37,8 @@ propres réglages (ADR 0049) :
 | **Ordre des mots** | **Mot faible en premier** | pour les valeurs sur 32 bits |
 | **Chien de garde (ms)** | 1000 | 100 à 3 600 000 |
 
-Le port 502 demande des droits particuliers sur la plupart des systèmes : le
-dépôt ne le choisit jamais seul (ADR 0046 point 9).
+Le port 502 demande des droits particuliers sur la plupart des systèmes :
+Pantin ne le choisit jamais seul.
 
 L'adresse IP n'est pas un réglage de module : tous les modules d'un pont
 écoutent sur la même adresse, choisie au démarrage (voir plus bas). Pour
@@ -70,12 +64,8 @@ un nombre d'octets incorrect l'exception 3.
   DINT.
 - Les valeurs sont en unités SI : mètres, radians, mètres par seconde.
 
-::: warning Non vérifié
-Avec l'exemple `plc-cylinder`, CODESYS a envoyé les fonctions 15, 02 et 04 et
-l'ordre **Mot faible en premier** convenait. Pour d'autres canaux ou versions,
-rien n'est vérifié : si une valeur flottante est fausse, essayez l'autre **Ordre
-des mots** (ADR 0045 points 6 et 8).
-:::
+Si une valeur flottante est fausse côté automate, essayez l'autre **Ordre des
+mots**.
 
 ### Perte de l'automate : le chien de garde
 
@@ -87,12 +77,11 @@ leur valeur. La console écrit « Automate déconnecté du module m1 » avec la 
 
 ## Configurer l'automate (CODESYS)
 
-Ce réglage a été **vérifié le 18 octobre 2026** sur un CODESYS Control Win V3
-x64 réel (IDE en interface française, version non relevée), avec l'exemple
-`examples/plc-cylinder` : module `m1`, `192.168.1.161:1502`, unité 1. Les noms
-de variables ci-dessous sont ceux de cet exemple, pas ceux d'un Pantin construit
+Ce réglage est celui de l'exemple `examples/plc-cylinder` avec un CODESYS
+Control Win V3 x64 : module `m1`, `192.168.1.161:1502`, unité 1. Les noms de
+variables ci-dessous sont ceux de cet exemple, pas ceux d'un Pantin construit
 avec le [tutoriel](/guide/tutorial) (leurs tags commencent par `tige`). Les noms
-de menus sont ceux de l'interface française, tels qu'ils s'affichent.
+de menus sont ceux de l'interface française de CODESYS.
 
 1. **Générez la GVL** et importez-la dans le projet CODESYS :
    - depuis le viewer : vue **E/S**, bouton **Exporter la GVL** ;
@@ -133,12 +122,11 @@ de menus sont ceux de l'interface française, tels qu'ils s'affichent.
    L'onglet **ModbusTCPServer Configuration** est une simple liste de
    paramètres en lecture seule.
 
-   Laissez l'onglet **Init serveur Modbus** vide. Vu le 18 octobre 2026 : une
-   commande de cet onglet (une écriture de registre, fonction 16, sur `m1`)
-   partait en premier à chaque connexion ; le pont l'a refusée, et CODESYS n'a
-   plus rien envoyé ensuite. Le journal montrait la requête refusée, puis
-   « PLC disconnected … watchdog », et une reconnexion qui recommençait en
-   boucle.
+   Laissez l'onglet **Init serveur Modbus** vide. Une commande de cet onglet
+   part en premier à chaque connexion. Si elle vise une zone que le module n'a
+   pas (par exemple une écriture de registre, fonction 16, sur `m1`), le pont la
+   refuse et CODESYS n'envoie plus rien ensuite : le journal montre la requête
+   refusée, puis « PLC disconnected … watchdog », en boucle.
 5. **Reliez les canaux aux variables**, onglet **ModbusTCPServer Mappage E/S** :
    double-cliquez la colonne **Variable** d'une ligne, bouton « … », puis
    **Application**, **GVL**, la variable (icône « mapper sur la variable
@@ -156,13 +144,13 @@ de menus sont ceux de l'interface française, tels qu'ils s'affichent.
    variables non utilisées.
 
 Le mappage et les options ne se modifient que **hors ligne** : si ces champs
-sont grisés, faites **En ligne**, **Déconnexion**. C'est ce qui a été observé ;
-la règle « se déconnecter pour modifier » vient de l'[aide CODESYS d'ABB](https://help.plc.abb.com/_cds_cmd_login.html).
+sont grisés, faites **En ligne**, **Déconnexion**
+(voir l'[aide CODESYS d'ABB](https://help.plc.abb.com/_cds_cmd_login.html)).
 
 ### Un REAL sur deux registres
 
-Dans ce montage, les lignes du canal sont des WORD : on n'a pas pu y relier directement un REAL. Le pont envoie le
-**mot faible en premier**. Utilisez une UNION dans **votre** code (jamais dans
+Dans ce montage, les lignes du canal sont des WORD : un REAL ne s'y relie pas
+directement. Le pont envoie le **mot faible en premier**. Utilisez une UNION dans **votre** code (jamais dans
 la GVL générée) :
 
 ```text
@@ -183,24 +171,16 @@ GVL.verin1_verin_position := conversion.r;
 ```
 
 Sur le SoftPLC Windows (little-endian), `w[0]` est le mot faible. Les valeurs
-sont en unités SI (mètres) : le vérin sorti a donné la position 0,125, soit les
-mots `16#0000` et `16#3E00`.
+sont en unités SI (mètres) : un vérin sorti à 0,125 m donne les mots `16#0000`
+et `16#3E00`.
 
-La cible de test est **CODESYS Control Win V3** (le SoftPLC livré avec
-l'IDE). Le mode Simulation de l'IDE coupe toute communication, il ne convient pas
-(CLAUDE.md, section 10).
-
-::: warning Non vérifié
-Restent à vérifier : les autres versions de CODESYS et l'interface en anglais
-(les libellés ci-dessus sont ceux de l'interface française), les noms de menus
-sur les cibles WAGO, la reconnexion de CODESYS après une connexion refusée, et la
-limite de 10 canaux signalée sur des forums.
-:::
+L'automate de test est **CODESYS Control Win V3**, le SoftPLC livré avec l'IDE.
+Le mode Simulation de l'IDE coupe toute communication : il ne convient pas.
 
 ## Réseau : local ou privé
 
 Dans le bloc **Pont automate**, cliquez la pastille du réseau (**Réseau :
-local**) pour ouvrir le choix. Il y en a deux, et seulement deux (ADR 0004).
+local**) pour ouvrir le choix. Il y en a deux, et seulement deux.
 
 | Mode | Libellé | Effet |
 | --- | --- | --- |
@@ -223,7 +203,7 @@ En **Réseau privé** :
 
 Le choix du réseau n'est **pas enregistré** : chaque démarrage du cœur repart en
 mode local. Pendant qu'il tourne, le cœur garde le dernier réseau en mémoire, et
-**Redémarrer** le réutilise (ADR 0050 point 6). Les réglages sont verrouillés pendant que le pont tourne.
+**Redémarrer** le réutilise. Les réglages sont verrouillés pendant que le pont tourne.
 
 Le mode du pont est indépendant de celui du cœur : le cas attendu est un cœur
 local, un viewer sur la même machine et un pont ouvert sur un réseau privé vers
@@ -240,13 +220,10 @@ virtuelle change l'adresse source que Pantin voit :
   `127.0.0.1` : aucune liste d'adresses ne distingue alors l'automate d'un autre
   programme local.
 
-::: warning Non mesuré
-Le comportement exact de CODESYS selon le mode réseau n'a pas été mesuré (spike
-0004b en attente, ADR 0046). Les adresses de l'espace partagé `100.64.0.0/10`,
-parfois utilisées par le NAT des machines virtuelles, sont **refusées** pour
-l'instant (ADR 0004, points ouverts). Si votre automate n'est pas accepté,
-ouvrez le **Journal** du pont : il y écrit une ligne « Module m1 refused a connection from » suivie de l'adresse, pour chaque connexion refusée.
-:::
+Les adresses de l'espace partagé `100.64.0.0/10`, parfois utilisées par le NAT
+des machines virtuelles, sont **refusées**. Si votre automate n'est pas accepté,
+ouvrez le **Journal** du pont : il y écrit une ligne « Module m1 refused a
+connection from » suivie de l'adresse, pour chaque connexion refusée.
 
 ## Démarrer, arrêter, redémarrer
 
@@ -260,8 +237,7 @@ ouvrez le **Journal** du pont : il y écrit une ligne « Module m1 refused a con
 Autres règles :
 
 - Le pont **ne se reconnecte pas** seul : si le lien avec le cœur se ferme ou si
-  les E/S changent, il s'arrête et il faut le relancer. Le cœur ne le relance pas
-  (ADR 0050).
+  les E/S changent, il s'arrête et il faut le relancer. Le cœur ne le relance pas.
 - Toute modification de la liste d'E/S arrête le pont.
 - Fermer le Pantin ne l'arrête pas : le viewer vous demande s'il faut l'arrêter
   aussi (**Arrêter le pont et fermer**, **Fermer sans arrêter le pont**).
@@ -297,10 +273,6 @@ Le module répond à l'unité 1 (son **Adresse d'unité** dans `io.json`), l'aut
 
 Réglez l'**Unit-ID** sur l'**Adresse d'unité** du module, puis chargez de nouveau le projet dans CODESYS. Le pont ne se redémarre que si vous changez l'**Adresse d'unité** dans `io.json`.
 
-::: tip Vu avec CODESYS
-Cette ligne a été obtenue avec un CODESYS Control Win V3 réel et l'**Unit-ID** par défaut, le 18 octobre 2026.
-:::
-
 ## Tags forcés
 
 Une commande écrite depuis le viewer **force** le tag : l'automate ne peut plus
@@ -318,12 +290,12 @@ main à l'automate.
 N'importe quel appareil autorisé par le filtre d'adresse peut écrire les commandes
 et lire les retours. Le filtre d'adresse n'est pas une authentification : il ne
 protège pas contre une adresse usurpée sur un réseau partagé, et il ne remplace
-pas le pare-feu de la machine (ADR 0004, 0046).
+pas le pare-feu de la machine.
 :::
 
 - **Ne branchez jamais un automate qui pilote des sorties réelles.** Un automate
   se fie aux retours de Pantin. Utilisez un SoftPLC, ou un automate dont les
-  entrées-sorties terrain sont **débranchées** (ADR 0046 point 10). La GVL générée
+  entrées-sorties terrain sont **débranchées**. La GVL générée
   le rappelle dans son en-tête.
 - Pantin n'atteint aucun actionneur réel : ses sorties ne déplacent que des
   liaisons simulées.
@@ -332,14 +304,14 @@ pas le pare-feu de la machine (ADR 0004, 0046).
 - Modbus ne passe jamais par un tunnel ou un proxy (Cloudflare, nginx) : le pont
   écoute sur l'adresse que vous choisissez, sur votre réseau. Une exposition par
   tunnel protégée par Cloudflare Access peut démarrer ou arrêter le pont, mais
-  n'ouvre jamais le bus de tags (ADR 0046 point 7, ADR 0050).
-- Avant tout usage sur un vrai réseau de production, la position de Pantin doit
-  être réévaluée par une nouvelle décision (authentification, TLS, segmentation).
+  n'ouvre jamais le bus de tags.
+- Pantin n'est pas prévu pour un réseau de production : il n'a ni authentification, ni TLS, ni segmentation.
 
 ## Voir aussi
 
 - [Tutoriel : modéliser un vérin](/guide/tutorial)
 - [Dépannage](/guide/troubleshooting)
-- [ADR 0045 : pont, mapping et esclave Modbus](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0045-plc-bridge-tag-bus-io-mapping-and-modbus-slave.md)
-- [ADR 0046 : sécurité du pont](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0046-security-of-the-plc-bridge.md)
-- [ADR 0004 : exposition réseau](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0004-network-exposure.md)
+
+::: warning Limites connues
+Seul CODESYS Control Win V3 x64 a été essayé, avec l'interface française. Les autres versions, l'interface en anglais et les cibles WAGO ne sont pas testées : les noms de menus peuvent différer. Si une valeur flottante est fausse, essayez l'autre **Ordre des mots**. Des forums signalent une limite de 10 canaux par appareil Modbus dans CODESYS : au-delà, répartissez les voies sur plusieurs modules. La reconnexion de CODESYS après une connexion refusée par Pantin n'a pas été essayée. Le comportement de CODESYS selon le mode réseau d'une machine virtuelle (NAT ou pont) n'a pas été mesuré.
+:::

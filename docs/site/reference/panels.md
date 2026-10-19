@@ -1,11 +1,11 @@
 # Panneaux et boutons
 
-Cette page liste chaque bouton, champ et commande des panneaux du viewer, zone par zone. Pour chaque contrôle : son **libellé** tel que l'interface l'affiche, ce qu'il fait, et quand il est grisé.
+Chaque bouton, champ et commande des panneaux, zone par zone : son **libellé**, ce qu'il fait, et quand il est grisé.
 
 Les menus (**Fichier**, **Édition**, **Affichage**) sont décrits dans [Menus](/reference/menus). Les combinaisons de touches et de souris sont dans [Raccourcis clavier et souris](/reference/shortcuts). La disposition générale de l'écran est dans [L'écran](/reference/interface). Les trois vues centrales (3D, Schéma, E/S) sont dans [Vues centrales](/reference/views).
 
 ::: tip Lire les tableaux
-« Grisé » veut dire que le bouton est visible mais inactif. Quand un bouton est grisé pour une raison précise, l'info-bulle (au survol) donne souvent cette raison. Un champ « validé en le quittant » envoie sa valeur quand vous appuyez sur **Entrée** ou que vous cliquez ailleurs.
+« Grisé » : le bouton est visible mais inactif, et son info-bulle donne souvent la raison. Un champ « validé en le quittant » envoie sa valeur avec **Entrée** ou un clic ailleurs.
 :::
 
 ## La barre d'outils
@@ -108,9 +108,9 @@ Pendant l'import, le formulaire affiche **Import en cours…**. Pour un STEP : *
 
 ![La carte Pont automate, pont en marche](/screenshots/fr/bridge-running.webp)
 
-La carte est tout en bas du panneau de gauche. Elle est visible dans toutes les dispositions centrales. Elle apparaît dès que le cœur répond sur l'état du pont.
+La carte est en bas du panneau de gauche, visible dans toutes les dispositions.
 
-La ligne d'état affiche une pastille (un pictogramme de 12 px : coche, anneau, anneau à moitié plein ou croix dans un octogone, en plus de la couleur) et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
+La ligne d'état affiche une pastille (coche, anneau, anneau à moitié plein ou croix dans un octogone, en plus de la couleur) et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
 
 | État | Pastille | Bouton d'action |
 | --- | --- | --- |
@@ -158,7 +158,7 @@ Une confirmation s'affiche en ligne, au-dessus de la ligne de message, à la pla
 | **Supprimer la liaison « nom » ?** | **Supprimer**, **Annuler** |
 | **Supprimer l'assemblage « nom » et tout son contenu ?** | **Supprimer**, **Annuler**. Une liste dit ce qui disparaît : corps, liaisons de l'assemblage, liaisons avec d'autres assemblages, préactionneurs, actionneurs, capteurs, sous-ensembles, tags supprimés et tags ajoutés, et les assemblages qui perdent leur rattachement. |
 | **Supprimer n fichier(s) orphelin(s) du dossier meshes ?** (menu **Fichier**, **Nettoyer les fichiers orphelins…**) | **Supprimer**, **Annuler**. La liste donne les fichiers et leur taille. |
-| **Remplacer l'alimentation de ... par une alimentation depuis ... ?** (nouveau lien dans le schéma) | **Remplacer**, **Annuler** |
+| **Remplacer l'alimentation de ... par une alimentation depuis ... ?** (lien tracé dans le schéma) | **Remplacer**, **Annuler** |
 
 La suppression d'un préactionneur, d'un actionneur, d'un capteur ou d'un objet de convoyage ne demande aucune confirmation.
 
@@ -563,7 +563,3 @@ Elle s'affiche quand aucun Pantin n'est ouvert. C'est une fenêtre modale au-des
 | Textes vides | **Aucun Pantin. Créez-en un depuis l'onglet Accueil.** ; **Aucun Pantin ne correspond au filtre.** |
 
 Les erreurs de la fenêtre (fichier non pris en charge, cœur injoignable...) s'affichent dans la ligne de message de la fenêtre.
-
-::: warning Non vérifié
-Le style exact des pastilles de couleur (pont, modules) est défini par la feuille de style ; cette page décrit ce que le texte et la structure disent, pas les teintes.
-:::

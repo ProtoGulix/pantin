@@ -1,14 +1,14 @@
 # Keyboard and mouse shortcuts
 
-This page lists every keyboard and mouse gesture that the viewer's code handles, grouped by area. The menu entries are described in [Menus](/en/reference/menus).
+Keyboard and mouse gestures, grouped by area. Menu entries are in [Menus](/en/reference/menus).
 
 ::: info Ctrl or Cmd
-Wherever the viewer reads a Ctrl shortcut, the <kbd>Cmd</kbd> key (macOS) works too. The exceptions are camera navigation and the gizmo drag, which test only <kbd>Ctrl</kbd> (see below).
+On macOS, <kbd>Cmd</kbd> replaces <kbd>Ctrl</kbd> in shortcuts. Exceptions: camera navigation and the gizmo drag accept only <kbd>Ctrl</kbd>.
 :::
 
 ## Global (whole window)
 
-These shortcuts are those of the menus. A shortcut with <kbd>Alt</kbd> added is never recognised. <kbd>Shift</kbd> is not tested: <kbd>Shift</kbd>+<kbd>G</kbd> acts like <kbd>G</kbd>.
+These shortcuts are those of the menus. Adding <kbd>Alt</kbd> disables them; <kbd>Shift</kbd> is ignored (<kbd>Shift</kbd>+<kbd>G</kbd> acts like <kbd>G</kbd>).
 
 | Gesture | Effect | Condition |
 |---|---|---|
@@ -26,13 +26,20 @@ These shortcuts are those of the menus. A shortcut with <kbd>Alt</kbd> added is 
 | <kbd>Esc</kbd> | Ends the placement tool in progress (gizmo, alignment, axis pick) | See the Escape chain below. |
 | <kbd>Space</kbd> or <kbd>Shift</kbd>+<kbd>Space</kbd> | Opens the list of standard views at the pointer's position | See "3D view". |
 
-In an input field (text, number, list), none of these shortcuts runs: the keys keep their normal meaning. One exception on the browser side: <kbd>Ctrl</kbd>+<kbd>S</kbd> and <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>7</kbd> are always intercepted, even when greyed out or in a field, so that the browser neither saves the page nor changes tab. In a field, they then run nothing.
+In an input field, these shortcuts do not run: the keys keep their normal meaning. <kbd>Ctrl</kbd>+<kbd>S</kbd> and <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>7</kbd> stay intercepted, even when greyed out, so that the browser neither saves the page nor changes tab.
 
 Single-key shortcuts (<kbd>F2</kbd>, <kbd>Del</kbd>, <kbd>G</kbd>...) give way to a component that has already handled the key (tree, menus, diagram, console).
 
 ### The Escape chain
 
-<kbd>Esc</kbd> acts on the nearest component, in this order: a placement gizmo drag (it goes back to the starting position; this listener is attached to the document, in the capture phase, so it goes before everything else), a wiring in progress in the diagram (it is abandoned; an active placement tool stays on, the next <kbd>Esc</kbd> ends it; this listener is also on the document, in the capture phase), an input field (it restores its value), a confirmation question (it chooses cancel), a menu or a context menu (it closes), then the active placement tool (gizmo, alignment, axis pick). <kbd>Esc</kbd> does not end the tool when a context menu is open, nor when a field has focus.
+<kbd>Esc</kbd> acts on the first case in this list:
+
+1. a gizmo drag: the assembly goes back to its starting position;
+2. a wiring in progress in the diagram: it is abandoned (the placement tool stays active);
+3. an input field: it restores its value;
+4. a confirmation question: it chooses cancel;
+5. a menu or a context menu: it closes;
+6. the active placement tool (gizmo, alignment, axis pick): it ends.
 
 ## Menu bar
 
@@ -87,13 +94,13 @@ These three lists are operated the same way.
 | Click on an entry | Runs it. |
 | Click elsewhere | Closes the menu. |
 
-The tree's context menu opens with the focus on its first entry when you open it from the keyboard. It is placed at the pointer and kept inside the window. The diagram's menu also closes with <kbd>Tab</kbd>.
+Opened from the keyboard, the tree's menu has the focus on its first entry. The diagram's menu also closes with <kbd>Tab</kbd>.
 
 ## 3D view and camera navigation
 
 ### Mouse
 
-The left button has no camera role: a click selects, and dragging in empty space does nothing. A "click" is a press without movement, so turning the camera never selects. The **View** menu chooses the configuration.
+The left button does not drive the camera: a click selects, dragging in empty space does nothing. The **View** menu chooses the configuration.
 
 | Gesture | Mouse: SolidWorks | Mouse: ZW3D |
 |---|---|---|
@@ -103,17 +110,11 @@ The left button has no camera role: a click selects, and dragging in empty space
 | Right button, drag | No camera effect | Turns the camera |
 | Wheel | Zoom around the cursor | Zoom around the cursor |
 
-Details:
-
-- With **Mouse: ZW3D**, only the middle button alone and the right button are assigned; the modifiers change nothing.
-- For the wheel direction, with **Mouse: SolidWorks** pushing the wheel forward zooms out; with **Mouse: ZW3D** it is the opposite. **Reverse wheel direction** (**View** menu) flips the direction in both cases.
-- The browser's context menu is suppressed on the 3D view, so that the right button can be used for the camera.
-- Rotation is made around the point of a body under the cursor at the time of the press, if there is one.
+- With **Mouse: ZW3D**, only the middle button alone and the right button count; <kbd>Ctrl</kbd> and <kbd>Shift</kbd> change nothing.
+- With **Mouse: SolidWorks**, pushing the wheel forward zooms out; with **Mouse: ZW3D**, it is the opposite. **Reverse wheel direction** (**View** menu) flips the direction in both cases.
+- The browser's context menu is suppressed on the 3D view: the right button drives the camera.
+- Rotation is made around the point of the body under the cursor, if there is one.
 - A press on the view interrupts a view animation in progress.
-
-::: warning Not verified
-The ZW3D wheel direction is not verified (spike 0007): the Babylon.js one is used.
-:::
 
 ### Selection
 
@@ -127,7 +128,7 @@ The ZW3D wheel direction is not verified (spike 0007): the Babylon.js one is use
 
 ### Keyboard (the 3D view has focus)
 
-The arrows drive the camera only when the 3D view has focus (a click on it gives it the focus), so that the arrows keep working in the tree and the fields.
+The arrows drive the camera when the 3D view has focus (a click on it gives it the focus).
 
 | Gesture | Effect |
 |---|---|
@@ -138,7 +139,7 @@ The arrows drive the camera only when the 3D view has focus (a click on it gives
 | <kbd>Space</kbd> or <kbd>Shift</kbd>+<kbd>Space</kbd> | Opens the list of standard views at the pointer (**Front** ... **Isometric**). Acts only if nothing in particular has focus (page or 3D view), without <kbd>Ctrl</kbd>, <kbd>Alt</kbd> or <kbd>Cmd</kbd>, outside an input field, with a Pantin open and the 3D view displayed. |
 | <kbd>↓</kbd> / <kbd>↑</kbd>, <kbd>Esc</kbd> in this list | Next or previous entry; close. |
 
-<kbd>Alt</kbd> and <kbd>Cmd</kbd> disable these arrow keys.
+<kbd>Alt</kbd> and <kbd>Cmd</kbd> disable these arrows.
 
 ### View cube
 
@@ -160,7 +161,7 @@ The gizmo (arrows and arcs on the assembly) is activated with <kbd>G</kbd> (move
 
 ## Chain diagram
 
-The diagram can be navigated entirely from the keyboard: a single element of the diagram is a tab stop at a time, and the arrows move the focus. The keys below are handled only without <kbd>Ctrl</kbd>, <kbd>Alt</kbd> or <kbd>Cmd</kbd>.
+The diagram can be navigated entirely from the keyboard: a single element is a tab stop, and the arrows move the focus. These keys act only without <kbd>Ctrl</kbd>, <kbd>Alt</kbd> or <kbd>Cmd</kbd>.
 
 | Gesture | Effect |
 |---|---|
@@ -184,7 +185,7 @@ The diagram can be navigated entirely from the keyboard: a single element of the
 | Drag from the source end of a link to a target | Creates the link. The possible targets light up, the others fade. A press that moves by less than 4 pixels stays a click. |
 | <kbd>Esc</kbd> during the drag | Abandons the wiring. |
 
-A diagram key that nothing handled does not reach the window shortcuts: <kbd>Del</kbd> shows the help above and <kbd>F2</kbd> is ignored, so as not to act on the selection in place of the element that has focus.
+In the diagram, <kbd>Del</kbd> and <kbd>F2</kbd> never act on the window's selection: <kbd>Del</kbd> shows a help message, <kbd>F2</kbd> is ignored.
 
 ### Value field of a numeric command
 
@@ -207,7 +208,7 @@ In this field, the keys are neither window shortcuts nor diagram shortcuts.
 | <kbd>Enter</kbd> in a tag value field of the inspector | Sends the value. |
 | <kbd>Enter</kbd> / <kbd>Esc</kbd> in a field of the joint form | Validates / cancels the form. |
 
-All these fields stop the propagation of keys: the window shortcuts do not fire while typing.
+While typing, the window shortcuts do not fire.
 
 ## Splitters
 
@@ -275,6 +276,6 @@ The window is modal: the focus stays inside it.
 | Slider of a joint (inspector) | A drag sends the position to the joint; during the drag, the simulation stream does not bring the slider back. |
 | Click on a checkbox or toggle button of an inspector row | Forces the bit or toggles the fault. |
 
-::: warning Not verified
-The panel forms (actuator, sensor, belt, I/O module, bridge) have not been re-read line by line for their own keys; those of the joint and of the property rows are covered above.
+::: warning Known limits
+The wheel direction of the **Mouse: ZW3D** preset is the Babylon.js one; it has not been compared with the original software. The keys specific to the actuator, sensor, belt, I/O module and bridge forms are not all listed here.
 :::

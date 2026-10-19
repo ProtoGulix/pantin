@@ -1,6 +1,6 @@
 # The screen
 
-This page describes the areas of the viewer window, from top to bottom and from left to right. Each area points to the page that details it. Names in **bold** are those of the interface.
+The areas of the window, from top to bottom and from left to right. Names in **bold** are those of the interface.
 
 ![The viewer with the plc-cylinder example open: tree on the left, 3D view and diagram in the centre, inspector on the right](/screenshots/en/overview.webp)
 
@@ -24,7 +24,7 @@ The splitters between the left column, the central area and the inspector move w
 
 ## The menu bar
 
-It occupies the top of the window and contains three menus: **File**, **Edit** and **View**. A menu opens on click, and the keyboard arrows move through it. The most common shortcuts are displayed in it. See [Menus](/en/reference/menus).
+It occupies the top of the window and contains three menus: **File**, **Edit** and **View**. A menu opens on click and is navigated with the arrows. Common shortcuts are displayed in it. See [Menus](/en/reference/menus).
 
 ## The toolbar
 
@@ -32,7 +32,7 @@ It is at the top of the left column, when a Pantin is open. It gathers the quick
 
 ## The left side panel
 
-It exists only when a Pantin is open. From top to bottom, it contains the toolbar, the import form (the only form of this panel), the **Pantin tree**, then at the bottom the **PLC bridge** card. Below appear, when there are any, the confirmation question and the message line. The other forms (joint, actuator, sensor...) open in the inspector.
+It exists only when a Pantin is open. From top to bottom: the toolbar, the import form, the **Pantin tree**, the **PLC bridge** card, then the confirmation question and the message line when there are any. The other forms (joint, actuator, sensor...) open in the inspector.
 
 - The tree lists the Pantin, its assemblies, its bodies, its joints and the elements of the action chain. A right-click opens the element's menu (see [Menus](/en/reference/menus#tree-context-menu)).
 - The **PLC bridge** card shows the state of the Modbus bridge and of its modules. See [Connect a PLC](/en/guide/connect-a-plc).

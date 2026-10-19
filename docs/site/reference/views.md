@@ -1,6 +1,6 @@
 # Vues centrales
 
-La zone centrale du viewer montre la machine sous trois formes : la **vue 3D**, le **schéma des chaînes** et la **vue E/S**. Elles se combinent en quatre dispositions. Cette page décrit chaque vue, bouton par bouton et geste par geste. Les touches et combinaisons de souris sont dans [Raccourcis clavier et souris](/reference/shortcuts) ; les menus dans [Menus](/reference/menus) ; les autres panneaux dans [Panneaux et boutons](/reference/panels).
+La zone centrale du viewer montre la machine sous trois formes : la **vue 3D**, le **schéma des chaînes** et la **vue E/S**. Elles se combinent en quatre dispositions. Les touches et la souris sont dans [Raccourcis clavier et souris](/reference/shortcuts) ; les menus dans [Menus](/reference/menus) ; les autres panneaux dans [Panneaux et boutons](/reference/panels).
 
 ## Les quatre dispositions
 
@@ -15,15 +15,13 @@ La touche **F4** fait tourner entre **3D + Schéma**, **3D seule** et **Schéma 
 
 Dans la disposition **3D + Schéma**, une poignée horizontale sépare les deux vues (**Redimensionner la vue 3D et le schéma**). Glissez-la pour changer le partage ; un double-clic le rétablit. Le partage est gardé dans le navigateur. La disposition choisie l'est aussi.
 
-Basculer d'une disposition à l'autre ne perd rien : la caméra 3D, le défilement du schéma et les champs en cours de saisie restent.
+Changer de disposition conserve la caméra 3D, le défilement du schéma et les champs en cours de saisie.
 
 Sans Pantin ouvert, seule la vue 3D vide est affichée, sous la [fenêtre d'accueil](/reference/panels#la-fenetre-d-accueil).
 
-Le menu **Affichage** et la barre d'outils sont aussi les endroits où s'activent les actions de caméra ; les boutons **Cadrer tout** et **Cadrer la sélection** ne fonctionnent que lorsque la vue 3D est affichée.
-
 ## La vue 3D
 
-La vue 3D est le seul endroit où le viewer dessine la machine. Elle ne calcule rien : elle affiche les positions que le cœur envoie en continu, et interpole entre deux envois pour rester fluide.
+La vue 3D dessine la machine à partir des positions que le cœur envoie en continu.
 
 Sous la vue, une ligne d'aide rappelle les gestes de souris selon le préréglage de navigation choisi (**Souris : SolidWorks** ou **Souris : ZW3D**).
 
@@ -38,15 +36,11 @@ Sous la vue, une ligne d'aide rappelle les gestes de souris selon le préréglag
 
 Les différences exactes entre les deux préréglages (quel bouton fait quoi, avec quelles touches) sont dans [Raccourcis](/reference/shortcuts).
 
-::: warning Non vérifié
-Le sens de molette du préréglage ZW3D n'a pas été confronté au vrai ZW3D : Pantin utilise le sens de Babylon.js (pousser la molette vers l'avant zoome). Le préréglage SolidWorks, lui, zoome en arrière en poussant vers l'avant (spike 0007).
-:::
-
 ### Le cube des vues
 
 ![Le cube des vues, en haut à droite de la vue 3D](/screenshots/fr/view-cube.webp)
 
-Un petit cube est dessiné dans la vue ; il tourne avec la caméra. Son rôle : regarder la machine depuis une direction précise, d'un clic. Il est visible quand la vue 3D est affichée.
+Le cube tourne avec la caméra et permet de regarder la machine depuis une direction précise, d'un clic.
 
 | Élément du cube | Effet du clic |
 | --- | --- |
@@ -54,7 +48,7 @@ Un petit cube est dessiné dans la vue ; il tourne avec la caméra. Son rôle : 
 | Une arête ou un coin | La caméra tourne vers cette direction oblique. |
 | Le survol | Allume toutes les cellules du cube qui demandent la même vue. |
 
-La caméra tourne en 300 ms. Après un clic, le clavier retourne à la vue : les flèches continuent à tourner la caméra. Trois axes sortent du cube et suivent son orientation.
+Après un clic, le focus revient à la vue : les flèches continuent à tourner la caméra.
 
 ### Les vues standard
 
@@ -80,11 +74,11 @@ La sélection est partagée entre la vue 3D, l'arborescence et le schéma : ce q
 | Clic dans le vide | Désélectionne. Pendant qu'un outil de placement est actif, ce clic est ignoré pour ne pas perdre l'assemblage sur lequel l'outil travaille. |
 | Glisser avec un bouton de caméra | Fait tourner ou déplace la caméra, et ne sélectionne jamais. |
 
-Un corps ou un assemblage sélectionné prend une teinte bleue (la couleur de sélection) et un contour. Quand vous sélectionnez une liaison (ou que vous remplissez son formulaire), ses deux corps sont teintés : le parent en jaune-orangé, l'enfant (le corps qui bouge) en bleu et cerné d'un contour, comme les pastilles (disque pour le parent, carré cerné pour l'enfant) du [formulaire de liaison](/reference/panels#nouvelle-liaison). Une flèche montre l'axe de la liaison et son sens positif ; elle est bleue, avec un disque (collerette) à la base de sa tige quand un actionneur déplace la liaison. Les faces pointées pour un alignement suivent la même logique : la face de la pièce qui bouge est bleue et cernée d'un contour, la face de la cible est jaune-orangé sans contour. Un marqueur de capteur et un faisceau lumineux sont verts, épais et opaques quand le signal est actif, neutres, fins et translucides sinon.
+Un corps ou un assemblage sélectionné prend une teinte bleue et un contour. Pour une liaison sélectionnée, le parent est jaune-orangé et l'enfant (le corps qui bouge) bleu et cerné, comme les pastilles du [formulaire de liaison](/reference/panels#nouvelle-liaison). Une flèche montre l'axe et le sens positif de la liaison. Toutes les couleurs et tous les repères sont dans [Lire les couleurs et les repères](/reference/colours).
 
 ### Les capteurs dans la vue
 
-Chaque capteur de liaison est dessiné dans la vue : un tronçon épais de l'axe pour un capteur de plage, un arc pour un pivot, un anneau sinon. Il s'allume (vert, plus épais et opaque) quand son tag d'état est à 1 et reste neutre, fin et translucide à 0 ; voir [Lire les couleurs et les repères](/reference/colours). Le viewer ne calcule jamais cet état : il lit le tag.
+Chaque capteur de liaison est dessiné dans la vue : un tronçon épais de l'axe pour un capteur de plage, un arc pour un pivot, un anneau sinon. Il s'allume (vert, plus épais et opaque) quand son tag d'état est à 1 et reste neutre, fin et translucide à 0 ; voir [Lire les couleurs et les repères](/reference/colours).
 
 ### Masquer et isoler
 
@@ -175,7 +169,7 @@ Un clic sur un noeud le sélectionne : un préactionneur, un actionneur ou un ca
 
 ### Les liens
 
-Un lien relie deux connecteurs. Il y en a de cinq sortes, nommées dans les info-bulles et pour les lecteurs d'écran : **Liaison pneumatique**, **Liaison de puissance alternative**, **Liaison d'asservissement** (d'un préactionneur à un actionneur), **Liaison mécanique** (d'un actionneur à une liaison) et **Liaison d'observation** (d'un capteur à une liaison). Chaque sorte a son style de trait, une courte étiquette écrite sur le fil et sa couleur, pour que la couleur ne soit jamais le seul repère : **PNEU** pneumatique (longs tirets, bleu ciel), **CA** puissance alternative (trait plein épais, presque blanc en thème sombre, presque noir en thème clair), **SERVO** asservissement (pointillés, pourpre rougeâtre), **MÉC** mécanique (trait plein fin, gris) et **OBS** observation (tiret et point, bleu). Ces couleurs ne sont jamais l'ambre, le rouge ou le vert des états, ni l'orange de Pantin.
+Un lien relie deux connecteurs. Il y en a de cinq sortes, nommées dans les info-bulles et pour les lecteurs d'écran : **Liaison pneumatique**, **Liaison de puissance alternative**, **Liaison d'asservissement** (d'un préactionneur à un actionneur), **Liaison mécanique** (d'un actionneur à une liaison) et **Liaison d'observation** (d'un capteur à une liaison). Chaque sorte a son style de trait et une étiquette écrite sur le fil : **PNEU**, **CA**, **SERVO**, **MÉC** et **OBS** (voir [Lire les couleurs et les repères](/reference/colours#dans-le-schema-des-chaines)).
 
 Un clic sur un lien le sélectionne et fait apparaître un petit **×** à mi-chemin. Cliquer le **×** retire le lien. Pour un lien d'observation, le **×** est grisé : un capteur surveille toujours une liaison, il se **déplace** en glissant son lien sur une autre liaison.
 
@@ -205,7 +199,7 @@ Remplacer l'alimentation d'un actionneur déjà alimenté par un autre préactio
 
 ### Les valeurs vivantes
 
-Le schéma est mis à jour quatre fois par seconde à partir des tags et de l'état des préactionneurs. Le viewer ne déduit rien : il affiche ce que le cœur rapporte.
+Le schéma est mis à jour quatre fois par seconde à partir des tags et de l'état des préactionneurs.
 
 | Ce qui s'allume | Quand |
 | --- | --- |
@@ -340,3 +334,7 @@ Le cœur choisit la zone, le type et l'adresse : vous ne les tapez pas à l'affe
 Ces boutons restent visibles quand ils sont inactifs et gardent leur info-bulle : les cliquer ne fait rien, mais le focus clavier n'est pas perdu.
 
 La table des zones et des codes fonction est dans [Connecter un automate](/guide/connect-a-plc).
+
+::: warning Limites connues
+Le sens de molette du préréglage **Souris : ZW3D** est celui de Babylon.js (pousser la molette vers l'avant zoome) ; il n'a pas été comparé au logiciel d'origine. Le préréglage **Souris : SolidWorks** zoome en arrière en poussant vers l'avant.
+:::

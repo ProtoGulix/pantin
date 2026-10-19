@@ -1,8 +1,8 @@
 # Drives, actuators and sensors
 
-This page describes the chain that animates the joints: a **drive** receives the PLC's commands, an **actuator** moves the joints, a **sensor** reads the result. Neither is a 3D part. Joints are in [The model of a Pantin](/en/guide/model#joints).
+This page describes the chain that animates the joints: a **drive** receives the PLC's commands, an **actuator** moves the joints, a **sensor** reads the result. Joints are in [The model of a Pantin](/en/guide/model#joints).
 
-Neither the drive nor the actuator is a 3D part. Together, they turn a PLC command into motion.
+The drive and the actuator are not 3D parts. Together, they turn a PLC command into motion.
 
 ## Drives
 

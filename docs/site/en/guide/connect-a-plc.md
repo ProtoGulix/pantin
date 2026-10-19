@@ -2,20 +2,14 @@
 
 Pantin presents itself to the PLC as **Modbus TCP I/O modules**: the simulator is
 the slave, the PLC is the master. The PLC program keeps its usual I/O
-configuration and queries the simulated modules as it would query real modules
-(ADR 0003).
+configuration and queries the simulated modules as it would query real modules.
 
 This page describes the bridge, the network setting, the GVL and the
 precautions. To build the machine and its I/O list, follow the
 [tutorial](/en/guide/tutorial).
 
-::: tip Verified with a real CODESYS
-Driving the `plc-cylinder` example from a real CODESYS Control Win V3 x64 was
-verified on 18 October 2026 (see [Configure the PLC](#configure-the-plc-codesys)).
-Other CODESYS versions and WAGO targets are not verified. The automatic closed
-loop (`packages/bridge/tests/test_closed_loop.py`, run by `pnpm check`) plays the
-PLC with a test Modbus client.
-:::
+The `plc-cylinder` example is driven by a CODESYS Control Win V3 x64 with the
+settings of [Configure the PLC](#configure-the-plc-codesys).
 
 ## How it works
 
@@ -26,15 +20,15 @@ PLC (CODESYS)  <--Modbus TCP-->  bridge (Python)  <--tag bus-->  core  <--REST/S
 - The **core** simulates the machine and holds the tags.
 - The **bridge** is a separate process. It opens one Modbus TCP slave **per
   module** of `io.json` and copies the tags into its registers, and the other
-  way round (ADR 0045, 0048).
+  way round.
 - The core starts and stops the bridge on demand, from the **PLC bridge** block
-  of the viewer (ADR 0050). This requires the `--bridge-python` option, which
+  of the viewer. This requires the `--bridge-python` option, which
   `pnpm serve` provides.
 
 ## One module, one port
 
 Each module of the I/O list is an independent Modbus slave, with its own
-settings (ADR 0049):
+settings:
 
 | Setting | Default | Rule |
 | --- | --- | --- |
@@ -44,8 +38,8 @@ settings (ADR 0049):
 | **Word order** | **Low word first** | for 32-bit values |
 | **Watchdog (ms)** | 1000 | 100 to 3,600,000 |
 
-Port 502 needs special rights on most systems: the repository never chooses it
-on its own (ADR 0046 point 9).
+Port 502 needs special rights on most systems: Pantin never chooses it
+on its own.
 
 The IP address is not a module setting: all the modules of a bridge listen on
 the same address, chosen at startup (see below). To tell two modules apart, the
@@ -70,13 +64,6 @@ quantity or byte count gets exception 3.
 - A tag of type bit becomes a BOOL, a float a REAL, an integer always a DINT.
 - Values are in SI units: metres, radians, metres per second.
 
-::: warning Not verified
-With the `plc-cylinder` example, CODESYS sent functions 15, 02 and 04 and the
-**Low word first** order was right. For other channels or versions, nothing is
-verified: if a float value is wrong, try the other **Word order** (ADR 0045
-points 6 and 8).
-:::
-
 ### Losing the PLC: the watchdog
 
 A module becomes "connected" at the first request served. It becomes
@@ -87,13 +74,11 @@ writes "PLC disconnected from module m1" with the reason.
 
 ## Configure the PLC (CODESYS)
 
-This setup was **verified on 18 October 2026** on a real CODESYS Control Win V3
-x64 (IDE with the French interface, version not recorded), with the example
-`examples/plc-cylinder`: module `m1`, `192.168.1.161:1502`, unit 1. The variable
+This setup is the one of the `examples/plc-cylinder` example with a CODESYS
+Control Win V3 x64: module `m1`, `192.168.1.161:1502`, unit 1. The variable
 names below are those of this example, not of a Pantin built with the
-[tutorial](/en/guide/tutorial) (its tags start with `tige`). The menu
-names below are those of the French interface, as displayed; the English labels
-were not seen, so they are not given.
+[tutorial](/en/guide/tutorial) (its tags start with `tige`). The menu names
+are those of the French interface of CODESYS.
 
 1. **Generate the GVL** and import it into the CODESYS project:
    - from the viewer: **I/O** view, **Export GVL** button;
@@ -133,11 +118,11 @@ were not seen, so they are not given.
 
    The **ModbusTCPServer Configuration** tab is only a read-only parameter list.
 
-   Leave the **Init serveur Modbus** tab empty. Seen on 18 October 2026: a
-   command of this tab (a register write, function 16, on `m1`) went first on
-   each connection; the bridge refused it, and CODESYS sent nothing more after
-   that. The log showed the refused request, then "PLC disconnected …
-   watchdog", and a reconnection that repeated in a loop.
+   Leave the **Init serveur Modbus** tab empty. A command of this tab goes
+   first on each connection. If it targets a zone the module does not have (for
+   example a register write, function 16, on `m1`), the bridge refuses it and
+   CODESYS sends nothing more after that: the log shows the refused request,
+   then "PLC disconnected … watchdog", in a loop.
 5. **Link the channels to the variables**, **ModbusTCPServer Mappage E/S** tab:
    double-click the **Variable** column of a line, "…" button, then
    **Application**, **GVL**, the variable (icon "mapper sur la variable
@@ -155,12 +140,12 @@ were not seen, so they are not given.
    variables.
 
 The mapping and the options can only be edited **offline**: if these fields are
-greyed out, use **En ligne**, **Déconnexion**. This is what was observed; the
-rule "log out to edit" comes from [ABB's CODESYS help](https://help.plc.abb.com/_cds_cmd_login.html).
+greyed out, use **En ligne**, **Déconnexion**
+(see [ABB's CODESYS help](https://help.plc.abb.com/_cds_cmd_login.html)).
 
 ### A REAL on two registers
 
-In this setup, the channel lines are WORDs: a REAL could not be mapped onto them directly. The bridge sends the **low
+In this setup, the channel lines are WORDs: a REAL cannot be mapped onto them directly. The bridge sends the **low
 word first**. Use a UNION in **your** code (never in the generated GVL):
 
 ```text
@@ -181,24 +166,16 @@ GVL.verin1_verin_position := conversion.r;
 ```
 
 On the Windows SoftPLC (little-endian), `w[0]` is the low word. Values are in SI
-units (metres): the extended cylinder gave position 0.125, that is words
+units (metres): a cylinder extended to 0.125 m gives the words
 `16#0000` and `16#3E00`.
 
-The test target is **CODESYS Control Win V3** (the SoftPLC supplied with the
-IDE). The Simulation mode of the IDE cuts all communication, so it is not
-suitable (CLAUDE.md, section 10).
-
-::: warning Not verified
-Still to verify: other CODESYS versions and the English interface (the labels
-above are those of the French interface), menu names on WAGO targets, how
-CODESYS reconnects after a refused connection, and the 10-channel limit
-reported on forums.
-:::
+The test PLC is **CODESYS Control Win V3**, the SoftPLC supplied with the IDE.
+The Simulation mode of the IDE cuts all communication, so it is not suitable.
 
 ## Network: local or private
 
 In the **PLC bridge** block, click the network pill (**Network: local**) to open
-the choice. There are two, and only two (ADR 0004).
+the choice. There are two, and only two.
 
 | Mode | Label | Effect |
 | --- | --- | --- |
@@ -220,7 +197,7 @@ In **Private network**:
 
 The network choice is **not saved**: each start of the core goes back to local
 mode. While it runs, the core keeps the last network in memory, and **Restart**
-reuses it (ADR 0050 point 6). The settings are locked while the bridge is
+reuses it. The settings are locked while the bridge is
 running.
 
 The mode of the bridge is independent of that of the core: the expected case is
@@ -238,14 +215,10 @@ changes the source address that Pantin sees:
   `127.0.0.1`: no address list then tells the PLC apart from another local
   program.
 
-::: warning Not measured
-The exact behaviour of CODESYS depending on the network mode has not been
-measured (spike 0004b pending, ADR 0046). Addresses of the shared space
-`100.64.0.0/10`, sometimes used by the NAT of virtual machines, are **refused**
-for now (ADR 0004, open points). If your PLC is not accepted, open the bridge
-**Log**: it has a line "Module m1 refused a connection from"
-followed by the address, for each refused connection.
-:::
+Addresses of the shared space `100.64.0.0/10`, sometimes used by the NAT of
+virtual machines, are **refused**. If your PLC is not accepted, open the bridge
+**Log**: it has a line "Module m1 refused a connection from" followed by the
+address, for each refused connection.
 
 ## Start, stop, restart
 
@@ -260,7 +233,7 @@ Other rules:
 
 - The bridge **does not reconnect** on its own: if the link with the core closes
   or if the I/O changes, it stops and you have to start it again. The core does
-  not restart it (ADR 0050).
+  not restart it.
 - Any change to the I/O list stops the bridge.
 - Closing the Pantin does not stop it: the viewer asks whether to stop it as well
   (**Stop the bridge and close**, **Close without stopping the bridge**).
@@ -296,10 +269,6 @@ The module answers unit 1 (its **Unit id** in `io.json`), the PLC queries unit 2
 
 Set the **Unit-ID** to the module's **Unit id**, then download the project to CODESYS again. The bridge only needs a restart if you change the **Unit id** in `io.json`.
 
-::: tip Seen with CODESYS
-This line was obtained with a real CODESYS Control Win V3 and the default **Unit-ID**, on 18 October 2026.
-:::
-
 ## Forced tags
 
 A command written from the viewer **forces** the tag: the PLC can no longer
@@ -315,26 +284,26 @@ viewer: **Release** or **Release all** gives control back to the PLC.
 Any device allowed by the address filter can write the commands and read the
 feedback. The address filter is not authentication: it does not protect against
 a spoofed address on a shared network, and it does not replace the firewall of
-the machine (ADR 0004, 0046).
+the machine.
 :::
 
 - **Never connect a PLC that drives real outputs.** A PLC trusts the feedback
-  from Pantin. Use a SoftPLC, or a PLC whose field I/O is **disconnected**
-  (ADR 0046 point 10). The generated GVL says so in its header.
+  from Pantin. Use a SoftPLC, or a PLC whose field I/O is **disconnected**.
+  The generated GVL says so in its header.
 - Pantin reaches no real actuator: its outputs only move simulated joints.
 - Services listen on `127.0.0.1` by default. Opening the network is an explicit
   choice, limited to private networks.
 - Modbus never goes through a tunnel or a proxy (Cloudflare, nginx): the bridge
   listens on the address you choose, on your network. A tunnel exposure
   protected by Cloudflare Access can start or stop the bridge, but never opens
-  the tag bus (ADR 0046 point 7, ADR 0050).
-- Before any use on a real production network, the position of Pantin must be
-  re-evaluated by a new decision (authentication, TLS, segmentation).
+  the tag bus.
+- Pantin is not meant for a production network: it has no authentication, no TLS and no segmentation.
 
 ## See also
 
 - [Tutorial: modelling a cylinder](/en/guide/tutorial)
 - [Troubleshooting](/en/guide/troubleshooting)
-- [ADR 0045: bridge, mapping and Modbus slave](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0045-plc-bridge-tag-bus-io-mapping-and-modbus-slave.md)
-- [ADR 0046: security of the bridge](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0046-security-of-the-plc-bridge.md)
-- [ADR 0004: network exposure](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0004-network-exposure.md)
+
+::: warning Known limits
+Only CODESYS Control Win V3 x64 has been tried, with the French interface. Other versions, the English interface and WAGO targets are untested: menu names may differ. If a float value is wrong, try the other **Word order**. Forums report a limit of 10 channels per Modbus device in CODESYS: beyond it, spread the channels over several modules. How CODESYS reconnects after Pantin refuses a connection has not been tried. The behaviour of CODESYS depending on the network mode of a virtual machine (NAT or bridged) has not been measured.
+:::

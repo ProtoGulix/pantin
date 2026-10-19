@@ -1,11 +1,11 @@
 # Menus
 
-The menu bar contains three menus: **File**, **Edit** and **View**. This page lists every entry in the order in which it appears. Separators are shown as a "separator" line.
+The menu bar contains three menus: **File**, **Edit** and **View**. Every entry, in the order in which it appears; a separator is a "separator" line.
 
-A greyed-out entry does nothing when you click it, and neither does its shortcut. An entry with a box (•) can be ticked: the bullet shows the current state. See [Shortcuts](/en/reference/shortcuts) for keyboard navigation in the menus.
+A greyed-out entry does nothing, nor does its shortcut. An entry with a box (•) can be ticked: the bullet shows the state. See [Shortcuts](/en/reference/shortcuts) for keyboard navigation in the menus.
 
 ::: info Ctrl or Cmd
-Shortcuts with Ctrl are displayed as "Ctrl+..." in the menus, but the viewer also accepts the <kbd>Cmd</kbd> key (macOS) instead.
+The menus show "Ctrl+..."; on macOS, <kbd>Cmd</kbd> works too.
 :::
 
 Terms used in the "Greyed out when" column:
@@ -99,7 +99,7 @@ A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, 
 | Element of the action chain (drive, actuator, sensor, belt...) | **Edit**, **Show in I/O**, **Delete** |
 | Other rows (source file node, element family) | **Frame the view on this item** |
 
-Details, from the code:
+Details:
 
 - **Group…** is offered on a body or assembly row when the selection (one or several rows of one assembly) can be grouped. **Ungroup** is offered only on the first selected row.
 - **Rename** is offered only for a renamable row (Pantin, assembly, body).

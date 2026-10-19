@@ -1,8 +1,8 @@
 # The model of a Pantin
 
-This page sets out the basic notions of a Pantin machine: body, assembly, group and joint. The procedures and the other elements have their own page, listed at the end. Names in **bold** are those of the interface.
+This page defines the basic notions of a Pantin machine: body, assembly, group and joint. The procedures and the other elements have their own page, listed at the end. Names in **bold** are those of the interface.
 
-The general principle: a machine is a tree of **bodies** linked by **joints**. An **action chain** (drive then actuator) moves the joints. **Sensors** read the result. The PLC only talks to the tags.
+A machine is a tree of **bodies** linked by **joints**. An **action chain** (drive, then actuator) moves the joints. **Sensors** read the result. The PLC only talks to the tags.
 
 ```
    PLC ──tags──> drive ──ports──> actuator ──> joint ──> body
@@ -12,21 +12,23 @@ The general principle: a machine is a tree of **bodies** linked by **joints**. A
 
 ## Concepts: body, assembly, group
 
-Three words come back everywhere in Pantin. Read this section before the procedures.
+These three words come back everywhere in Pantin.
 
 | Word | What it is | What it does |
 | --- | --- | --- |
-| **Body** | One 3D mesh file (a GLB, an STL, or one component of a STEP). | Pantin never splits or merges it: one file, one body. A body has no tag. |
-| **Assembly** | A node of the structure tree, as in a CAD assembly. | It organises bodies and other assemblies. It has a name and a **key**, which is the prefix of tags. |
-| **Group** | An assembly used as an end of a joint. | It forms **one rigid piece**: all its bodies move together. |
+| **Body** | One 3D mesh: a GLB file, an STL file, or one part of a STEP. | Pantin never splits or merges it: one file, one body. A body has no tag. |
+| **Assembly** | A node of the structure tree, like a CAD assembly. | It organises bodies and other assemblies. It has a name and a **key**, which is the prefix of tags. |
+| **Group** | An assembly that serves as an end of a joint. | It forms **one rigid piece**: all its bodies move together. |
 
-A group is not another kind of object: it is an assembly that a joint uses. The word "group" says what it does; the word "assembly" says where it is filed.
+A group is not another kind of object: it is an assembly used in a joint. The word "group" says what the assembly does; the word "assembly" says where it is filed.
 
 ### The central rule
 
 **A body with no parent joint moves with its group.**
 
-In an assembly, a body that is the child of no joint therefore stays stuck to its assembly. When a joint moves the assembly, all these bodies follow, without linking them one by one. A body that has a parent joint moves relative to its parent, as before.
+A body that is the child of no joint stays stuck to its assembly. When a joint moves the assembly, all these bodies follow, without linking them one by one.
+
+A body that has a parent joint moves relative to its parent.
 
 Second rule: **the structure tree never carries motion, only joints do.** Filing an assembly inside another does not make it follow the other. For a sub-assembly to follow its parent, or slide relative to it, there must be a joint between the two.
 
@@ -60,11 +62,11 @@ The origin and the axis of a joint are expressed in the frame of the parent's as
 
 ### Why it is organised this way
 
-Before, the import joined each body of an assembly to a "handle" body by a fixed joint: a star of joints, noise in the tree, and a handle picked arbitrarily. Now:
+The bodies of an assembly follow the assembly: there is no joint to create between them. This avoids a star of fixed joints around an arbitrarily chosen body.
 
-- an import creates no joint inside an assembly, only one fixed joint per sub-assembly, from the parent group to the child group;
-- to animate a sub-assembly, you turn that single fixed joint into a slider or a pivot;
-- when the import does not split enough (a STEP with no sub-assembly), you make the group yourself: see [Make a group](/en/guide/groups#make-a-group).
+- An import creates no joint inside an assembly. It creates one fixed joint per sub-assembly, from the parent group to the child group.
+- To animate a sub-assembly, you turn that fixed joint into a slider or a pivot.
+- When the import does not split enough (a STEP with no sub-assembly), you make the group yourself: see [Make a group](/en/guide/groups#make-a-group).
 
 The menu of an assembly in the tree offers **New joint…**, **Hide in the 3D view**, **Isolate in the 3D view** and **Show every assembly**. The menu of the Pantin offers **New assembly**. Every element (drive, sensor, belt...) belongs to an assembly, which provides the prefix of its tags.
 
@@ -78,19 +80,19 @@ A **body** is an imported 3D mesh. Pantin reads:
 
 To import, use **File** then **Import…**, or the **Import into this Pantin** action of the menu of a Pantin. The form asks for the **Unit** (STL only) and the **Up axis** (GLB and STL), then **Import**. A STEP has nothing to set: its unit is read from the file and Z is up. STEP conversion can take up to 2 minutes: keep the page open.
 
-A STEP that contains named sub-assemblies becomes several bodies and several assemblies. The import creates no joint inside an assembly: its bodies follow the assembly. It creates one fixed joint per sub-assembly, between the parent group and the child group. A STEP with no sub-assembly gives a single assembly and no joint. GLB and STL files create no joint.
+What each format gives:
 
-To prepare your files before the import (sub-assemblies, units, names), see [Preparing 3D models](/en/guide/preparing-models).
+- A STEP with named sub-assemblies gives several bodies and several assemblies, with one fixed joint per sub-assembly.
+- A STEP with no sub-assembly gives a single assembly and no joint.
+- A GLB or an STL gives one body and no joint.
 
-::: warning Not verified
-The full path from a CAD software to glTF with the right pivots has not been validated on a real part. From a CAD software, prefer STEP, and check the placement of the bodies after the import.
-:::
+To prepare your files before the import, see [Preparing your CAD files](/en/guide/preparing-models).
 
 A body has no tag: it is moved by the joints, or by its group (see [the central rule](#the-central-rule)).
 
 ## Joints
 
-A **joint** links a **Parent body** to a **Child body**, which can be bodies or groups (see [What a joint can link](#what-a-joint-can-link)). It has an **origin**, an **axis** (frame of the parent's assembly, Z up) and, depending on its type, limits. Create it with **Edit** then **New joint…** or from the menu of an assembly in the tree.
+A **joint** links a **Parent body** to a **Child body**, which can be bodies or groups (see [What a joint can link](#what-a-joint-can-link)). It has an **origin**, an **axis** (frame of the parent's assembly, Z up) and, depending on its type, limits. Create it with **Edit** then **New joint…**, or from the menu of an assembly in the tree.
 
 | Type in the interface | Motion | Own settings |
 | --- | --- | --- |
@@ -102,17 +104,23 @@ A **joint** links a **Parent body** to a **Child body**, which can be bodies or 
 
 The coordinate of a joint is in metres (prismatic, helical) or in radians (pivots). In the interface, you read it in millimetres and degrees.
 
-The **Take the axis from a face** button places the axis from a face you click in the 3D view; it is offered only for a saved joint whose type moves (see [Panels and buttons](/en/reference/panels)). **Reverse the axis** changes the positive direction.
-
-A body or a group has at most one joint bringing it to its parent, and joints never form a loop.
+The **Take the axis from a face** button places the axis from a face you click in the 3D view. **Reverse the axis** changes the positive direction. The first is offered only for a saved joint whose type moves (see [Panels and buttons](/en/reference/panels)).
 
 ### In which frame a joint is read
 
-A joint's origin and axis are read in the frame of its **parent's** assembly (the group itself when the parent is a group), not in the frame of the group it moves. The trihedron shown in the 3D view when a joint is selected is that frame. Turning the frame of the moved group therefore never changes the numbers of its joint.
+A joint's origin and axis are read in the frame of its **parent's** assembly (the group itself when the parent is a group). This is not the frame of the group it moves.
 
-To make a tilted axis (rails at 70°, for example) read `[0, 0, 1]` without moving anything, the joint form offers **Align the frame on this axis**. The command is offered only for a joint already created whose type moves, never for a **Fixed** joint. It is disabled while the form has changes not applied: click **Apply** first, since it uses the axis stored in the document. It turns the frame of the parent's assembly and that of the group the joint moves, so that the axis reads `[0, 0, 1]`; no body moves. The message names the turned assemblies and the rewritten joints, or says the frames were already aligned.
+The trihedron shown in the 3D view when a joint is selected is that frame. Turning the frame of the moved group therefore never changes the numbers of its joint.
 
-The result message names the assemblies whose frame turned and lists the joints whose numbers changed: the other joints of the same parent are rewritten too, since they are read in the same frame. With a large parent the list can be long: group the rails first to get a small parent (see [Group](/en/guide/groups)). When nothing changed, the message is **The frames are already aligned on this axis, nothing changed.** The steps for tilted slides are in [Preparing your 3D models](/en/guide/preparing-models). Decision: [ADR 0056](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0056-reorient-a-group-frame.md).
+A tilted axis (rails at 70°, for example) reads `[0, 0, 1]` after **Align the frame on this axis**, without moving anything:
+
+- The command is in the joint form. It is offered only for a joint already created whose type moves, never for a **Fixed** joint.
+- It is disabled while the form has changes not applied. Click **Apply** first: it uses the axis stored in the document.
+- It turns the frame of the parent's assembly and that of the group the joint moves. No body moves.
+- The message names the turned assemblies and the joints whose numbers changed. The other joints of the same parent are rewritten too, since they are read in the same frame.
+- When nothing changed, the message is **The frames are already aligned on this axis, nothing changed.**
+
+With a large parent the list can be long: group the rails first to get a small parent (see [Group](/en/guide/groups)). The steps for tilted slides are in [Preparing your CAD files](/en/guide/preparing-models#align-the-frame-of-each-moving-sub-assembly-with-its-motion).
 
 ### Tags of a joint
 
@@ -123,7 +131,7 @@ The tags of a joint use the assembly it moves: that of its child body, or the ch
 | `position` | feedback | always, for a moving joint |
 | `setpoint` | command | as long as no actuator moves the joint |
 
-As soon as an actuator moves a joint, the actuator commands it: the `setpoint` tag no longer exists.
+As soon as an actuator moves a joint, the actuator commands it: the `setpoint` tag does not exist.
 
 ### Preview by slider
 
@@ -136,3 +144,7 @@ Each moving joint has a slider (**Position of "name"**) to move it by hand and c
 - [Products and conveying](/en/guide/conveying): belts, emitters, presence sensors.
 - [Tags, faults and the I/O list](/en/guide/tags): what the PLC sees.
 - [Tutorial](/en/guide/tutorial): all of it, step by step.
+
+::: warning Known limits
+The full path from a CAD software to glTF, with the right pivots, has not been tried on a real part. From a CAD software, prefer STEP and check the placement of the bodies after the import.
+:::

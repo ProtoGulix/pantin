@@ -105,7 +105,14 @@ export default defineConfig({
           { text: "Guide", link: "/guide/fundamentals" },
           { text: "Référence", link: "/reference/interface" },
         ],
-        sidebar: [...frenchGuide, { text: "Référence de l'interface", items: frenchReference }],
+        sidebar: [
+          ...frenchGuide,
+          { text: "Référence de l'interface", items: frenchReference },
+          {
+            text: "Pour les contributeurs",
+            items: [{ text: "Pour les contributeurs", link: "/contributing" }],
+          },
+        ],
         outline: { label: "Sur cette page" },
         docFooter: { prev: "Page précédente", next: "Page suivante" },
         darkModeSwitchLabel: "Apparence",
@@ -124,7 +131,14 @@ export default defineConfig({
           { text: "Guide", link: "/en/guide/fundamentals" },
           { text: "Reference", link: "/en/reference/interface" },
         ],
-        sidebar: [...englishGuide, { text: "Interface reference", items: englishReference }],
+        sidebar: [
+          ...englishGuide,
+          { text: "Interface reference", items: englishReference },
+          {
+            text: "For contributors",
+            items: [{ text: "For contributors", link: "/en/contributing" }],
+          },
+        ],
       },
     },
   },

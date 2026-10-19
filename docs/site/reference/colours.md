@@ -1,8 +1,6 @@
 # Lire les couleurs et les repères
 
-Chaque codage de l'écran se lit sans la couleur : un pictogramme, une forme, un plein ou un contour, un style de trait ou un mot dit la même chose qu'elle. Les couleurs ont en plus été choisies pour les utilisateurs daltoniens : les paires de codages montrés ensemble sont enregistrées et vérifiées par des tests, avec une simulation de la protanopie, de la deutéranopie et de la tritanopie. Là où deux couleurs ne peuvent pas rester assez distantes (les axes en thème clair, les fils du schéma, le signal actif ou non, les volumes des convoyeurs, avec des écarts mesurés de 8 à 34), le test enregistre l'écart mesuré et le repère qui prend le relais.
-
-Pantin suit les principes de la norme ISA-101 pour les écrans de conduite (gris par défaut, couleur réservée à ce qui compte, jamais seule), sans prétendre s'y conformer : le texte de la norme n'a pas été lu ([ADR 0057](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0057-colour-blind-safe-coding.md), [rapport 0010](https://github.com/ProtoGulix/pantin/blob/develop/docs/spikes/0010-isa-101-hmi-colour.md)). L'identité visuelle (orange de la marque, deux thèmes) ne change pas. Cette page décrit ce que fait le code ; les teintes exactes se règlent dans les thèmes.
+Chaque code de couleur a aussi un pictogramme, une forme, un contour, un style de trait ou un mot : la couleur n'est jamais seule. Les couleurs sont choisies pour rester lisibles par les utilisateurs daltoniens ; là où deux couleurs restent proches (axes en thème clair, fils du schéma, volumes des convoyeurs), c'est la forme, le trait ou l'étiquette qui tranche. L'écran est gris par défaut, la couleur est réservée à ce qui compte, dans l'esprit de la norme ISA-101 pour les écrans de conduite.
 
 ## Une couleur, un sens
 
@@ -15,7 +13,7 @@ Pantin suit les principes de la norme ISA-101 pour les écrans de conduite (gris
 | Orange de la marque | Pantin lui-même : boutons principaux, onglet ou mode de vue actif. Jamais un état. |
 | Gris et couleurs du texte | Toute autre propriété (piloté, surveillé, terminé, information). |
 
-Une exception assumée : l'axe Y est vert, comme dans la plupart des logiciels de CAO. La lettre **Y** au bout de l'axe le distingue du vert « actif ».
+L'axe Y est vert, comme dans la plupart des logiciels de CAO. La lettre **Y** au bout de l'axe le distingue du vert « actif ».
 
 ## Les états : un pictogramme à côté de la couleur
 
@@ -28,7 +26,7 @@ Une exception assumée : l'axe Y est vert, comme dans la plupart des logiciels d
 | Anneau dont la moitié gauche est pleine | bleu de sélection | Occupé, en cours |
 | Lettre **F** près d'un connecteur du schéma ; cadenas et mot **forcé** dans l'inspecteur | ambre | Tag forcé depuis le viewer |
 
-Ces pictogrammes (12 px) se trouvent sur la pastille du pont, les lignes des modules, la liste des modules d'E/S (qui écrit aussi le mot de l'état) et les badges du journal.
+Ces pictogrammes se trouvent sur la pastille du pont, les lignes des modules, la liste des modules d'E/S (qui écrit aussi le mot de l'état) et les badges du journal.
 
 ### Les badges du journal
 
@@ -37,8 +35,6 @@ Ces pictogrammes (12 px) se trouvent sur la pastille du pont, les lignes des mod
 | Cercle avec un i et mot **Info** | sans remplissage, texte atténué | Information |
 | Triangle et mot **Avert.** | ambre, texte sombre | Avertissement |
 | Croix dans un octogone et mot **Erreur** | rouge, texte blanc | Erreur |
-
-Chaque badge rempli a un contour qui reste visible sur le fond du panneau.
 
 ## Dans la vue 3D
 
@@ -67,20 +63,17 @@ Chaque sorte de fil a son trait et une étiquette écrite sur le fil :
 | **MÉC** | Mécanique | Plein, 1,5 px | Gris clair (thème sombre), gris foncé (thème clair) |
 | **OBS** | Observation | Tiret et point, 1 px | Bleu-violet moyen (thème sombre), indigo proche du violet (thème clair) |
 
-Ce sont l'étiquette et le style de trait qui identifient un fil, pas sa couleur. Aucun fil n'a l'ambre, le rouge ou le vert des états, ni l'orange de Pantin. Le pneumatique et l'observation, tous deux bleutés, ne se distinguent que par le trait, l'épaisseur et l'étiquette.
+L'étiquette et le style de trait identifient un fil, pas sa couleur. Le pneumatique et l'observation, tous deux bleutés, se distinguent par le trait, l'épaisseur et l'étiquette.
 
 ## Les volumes des convoyeurs
 
 | Volume | Repère (sans couleur) | Couleur |
 | --- | --- | --- |
-| Émetteur | Signe **+** sur le volume, volume cerné et translucide | Presque blanc (thème sombre), presque noir (thème clair) : le gris le plus éloigné du fond |
-| Absorbeur | Signe **−** sur le volume, volume cerné et translucide | Gris moyen, le plus proche du fond que la règle des 3:1 permet |
+| Émetteur | Signe **+** sur le volume, volume cerné et translucide | Presque blanc (thème sombre), presque noir (thème clair) |
+| Absorbeur | Signe **−** sur le volume, volume cerné et translucide | Gris moyen |
 | Guide | Corps presque plein | Gris clair bleuté (thème sombre), presque noir (thème clair) |
 | Bande | Corps plein | Gris foncé (thème sombre), presque noir (thème clair) |
 
-Les signes **+** et **−** sont dessinés avec un halo, lisible sur n'importe quel gris.
-
-## Ce qui n'est pas vérifié
-
-- La visibilité du contour de sélection sur tous les maillages importés.
-- Le rendu des couleurs sur un écran réel : les mesures sont faites par calcul, sur des simulations de daltonisme (Machado 2009), pas avec des personnes.
+::: warning Limites connues
+Le contour de sélection n'a pas été essayé sur tous les maillages importés.
+:::

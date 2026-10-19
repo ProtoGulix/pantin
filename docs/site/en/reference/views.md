@@ -1,6 +1,6 @@
 # Central views
 
-The central area of the viewer shows the machine in three forms: the **3D view**, the **chain diagram** and the **I/O view**. They combine into four layouts. This page describes each view, button by button and gesture by gesture. Keys and mouse combinations are in [Keyboard and mouse shortcuts](/en/reference/shortcuts); the menus in [Menus](/en/reference/menus); the other panels in [Panels and buttons](/en/reference/panels).
+The central area of the viewer shows the machine in three forms: the **3D view**, the **chain diagram** and the **I/O view**. They combine into four layouts. Keys and mouse are in [Keyboard and mouse shortcuts](/en/reference/shortcuts); the menus in [Menus](/en/reference/menus); the other panels in [Panels and buttons](/en/reference/panels).
 
 ## The four layouts
 
@@ -15,15 +15,13 @@ The **F4** key cycles through **3D + Diagram**, **3D only** and **Chain diagram 
 
 In the **3D + Diagram** layout, a horizontal handle separates the two views (**Resize the 3D view and the diagram**). Drag it to change the split; a double-click restores it. The split is kept in the browser. So is the chosen layout.
 
-Switching from one layout to another loses nothing: the 3D camera, the diagram's scroll position and the fields being typed in stay.
+Changing layout keeps the 3D camera, the diagram's scroll position and the fields being typed in stay.
 
 With no Pantin open, only the empty 3D view is displayed, under the [welcome window](/en/reference/panels#the-welcome-window).
 
-The **View** menu and the toolbar are also where the camera actions are activated; the **Frame all** and **Frame selection** buttons work only when the 3D view is displayed.
-
 ## The 3D view
 
-The 3D view is the only place where the viewer draws the machine. It computes nothing: it displays the positions that the core sends continuously, and interpolates between two sends to stay smooth.
+The 3D view draws the machine from the positions that the core sends continuously.
 
 Under the view, a help line reminds the mouse gestures according to the chosen navigation preset (**Mouse: SolidWorks** or **Mouse: ZW3D**).
 
@@ -38,15 +36,11 @@ Under the view, a help line reminds the mouse gestures according to the chosen n
 
 The exact differences between the two presets (which button does what, with which keys) are in [Shortcuts](/en/reference/shortcuts).
 
-::: warning Not verified
-The wheel direction of the ZW3D preset has not been checked against the real ZW3D: Pantin uses the Babylon.js direction (pushing the wheel forward zooms in). The SolidWorks preset, for its part, zooms out when pushing forward (spike 0007).
-:::
-
 ### The view cube
 
 ![The view cube, at the top right of the 3D view](/screenshots/en/view-cube.webp)
 
-A small cube is drawn in the view; it turns with the camera. Its role: to look at the machine from a precise direction, with one click. It is visible when the 3D view is displayed.
+The cube turns with the camera and lets you look at the machine from a precise direction, with one click.
 
 | Cube element | Effect of the click |
 | --- | --- |
@@ -80,11 +74,11 @@ The selection is shared between the 3D view, the tree and the diagram: what you 
 | Click in empty space | Deselects. While a placement tool is active, this click is ignored so as not to lose the assembly the tool is working on. |
 | Drag with a camera button | Turns or pans the camera, and never selects. |
 
-A selected body or assembly takes a blue tint (the selection colour) and an outline. When you select a joint (or fill in its form), its two bodies are tinted: the parent in yellow-orange, the child (the body that moves) in blue with an outline, like the markers (a disc for the parent, an outlined square for the child) of the [joint form](/en/reference/panels#new-joint). An arrow shows the joint's axis and its positive direction; it is blue, with a disc (collar) at the base of its shaft when an actuator moves the joint. The faces picked for an alignment follow the same logic: the face of the part that moves is blue with an outline, the target face is yellow-orange without one. A sensor marker and a light beam are green, thick and opaque when the signal is on, neutral, thin and translucent otherwise.
+A selected body or assembly takes a blue tint and an outline. For a selected joint, the parent is yellow-orange and the child (the body that moves) is blue and outlined, like the markers of the [joint form](/en/reference/panels#new-joint). An arrow shows the joint's axis and positive direction. All colours and cues are in [Reading colours and cues](/en/reference/colours).
 
 ### Sensors in the view
 
-Each joint sensor is drawn in the view: a thick stretch of the axis for a range sensor, an arc for a pivot, a ring otherwise. It lights up (green, thicker and opaque) when its state tag is 1 and stays neutral, thin and translucent at 0; see [Reading colours and cues](/en/reference/colours). The viewer never computes this state: it reads the tag.
+Each joint sensor is drawn in the view: a thick stretch of the axis for a range sensor, an arc for a pivot, a ring otherwise. It lights up (green, thicker and opaque) when its state tag is 1 and stays neutral, thin and translucent at 0; see [Reading colours and cues](/en/reference/colours).
 
 ### Hiding and isolating
 
@@ -175,7 +169,7 @@ A click on a node selects it: a drive, an actuator or a sensor is shown in the i
 
 ### Links
 
-A link joins two connectors. There are five kinds, named in the tooltips and for screen readers: **Pneumatic link**, **AC power link**, **Servo link** (from a drive to an actuator), **Mechanical link** (from an actuator to a joint) and **Observation link** (from a sensor to a joint). Each kind has its own line style, a short label written on the wire and its own colour, so colour is never the only cue: **PNEU** pneumatic (long dashes, sky blue), **AC** AC power (thick solid line, near white in the dark theme, near black in the light one), **SERVO** servo (dots, reddish purple), **MECH** mechanical (thin solid line, grey) and **OBS** observation (dash and dot, blue). The colours are never the amber, red or green of the states, nor the orange of Pantin.
+A link joins two connectors. There are five kinds, named in the tooltips and for screen readers: **Pneumatic link**, **AC power link**, **Servo link** (from a drive to an actuator), **Mechanical link** (from an actuator to a joint) and **Observation link** (from a sensor to a joint). Each kind has its own line style and a label written on the wire: **PNEU**, **AC**, **SERVO**, **MECH** and **OBS** (see [Reading colours and cues](/en/reference/colours#in-the-chain-diagram)).
 
 A click on a link selects it and makes a small **×** appear halfway along. Clicking the **×** removes the link. For an observation link, the **×** is greyed out: a sensor always watches a joint, it is **moved** by dragging its link onto another joint.
 
@@ -205,7 +199,7 @@ Replacing the feed of an actuator that is already fed by another drive first goe
 
 ### Live values
 
-The diagram is updated four times a second from the tags and the state of the drives. The viewer deduces nothing: it displays what the core reports.
+The diagram is updated four times a second from the tags and the state of the drives.
 
 | What lights up | When |
 | --- | --- |
@@ -340,3 +334,7 @@ The core chooses the zone, the type and the address: you do not type them when m
 These buttons stay visible when inactive and keep their tooltip: clicking them does nothing, but the keyboard focus is not lost.
 
 The table of zones and function codes is in [Connect a PLC](/en/guide/connect-a-plc).
+
+::: warning Known limits
+The wheel direction of the **Mouse: ZW3D** preset is the Babylon.js one (pushing the wheel forward zooms in); it has not been compared with the original software. The **Mouse: SolidWorks** preset zooms out when pushing forward.
+:::

@@ -15,13 +15,13 @@ time.
 | --- | --- | --- |
 | "Cannot reach the Pantin core. Is it running on 127.0.0.1:4800?" | The core is not started, or listens elsewhere | Run `pnpm serve`. With `--port` or `--listen`, open the viewer at the address shown at startup ("Pantin core (local mode) on http://...") |
 | The core stops at startup with an `EADDRINUSE` error | Port 4800 is already taken, by another core for example | Close the other program, or start the core with `--port <another number>` |
-| The core refuses to start: `Refusing to listen on "…"` | The `--listen` address is public, wildcard (`0.0.0.0`, `::`), link-local, or a host name | Use `127.0.0.1` (default) or **one** private address of the machine, for example `192.168.1.20` (ADR 0004). `--allow` takes an IP or a CIDR |
+| The core refuses to start: `Refusing to listen on "…"` | The `--listen` address is public, wildcard (`0.0.0.0`, `::`), link-local, or a host name | Use `127.0.0.1` (default) or **one** private address of the machine, for example `192.168.1.20`. `--allow` takes an IP or a CIDR |
 | `Invalid --allow "…"` | An entry is neither an IP nor a CIDR | Write `192.168.1.10` or `192.168.1.0/24` |
 | `--bridge-python "…" is not a file` at startup | The given path does not exist | Create the environment with `pnpm setup:python`, then start again with `pnpm serve` |
 | A `Rejected connection from …` line in the core output | A source outside the private ranges, or outside the `--allow` list, was closed on acceptance | Normal if the source is unknown. Otherwise, add its address to `--allow` |
 | "The 3D view cannot start: the browser refuses WebGL" | WebGL is disabled | Turn on the hardware acceleration of the browser, then restart it. The panels stay usable |
 | "The pose stream stopped: the core refused it or no longer answers" | The position stream is closed, for example because many tabs are open on the same core | Close a tab, then reopen the Pantin |
-| "The pose stream sent data that does not match the protocol" | The stream does not follow the expected protocol, for example with a viewer and a core of different versions (probable cause, not verified) | Rebuild the viewer and restart the core (`pnpm serve` does both) |
+| "The pose stream sent data that does not match the protocol" | The stream does not follow the expected protocol, for example with a viewer and a core of different versions | Rebuild the viewer and restart the core (`pnpm serve` does both) |
 | "Item not found; the list may have changed. Reload the page." | An item was deleted in the meantime, for example from another tab | Reload the page |
 | "Conflict: the request clashes with the current state of the Pantin…" | Name already used, body still used by a joint, drive still feeding an actuator | Read the full message, then detach or delete the blocking element first |
 | "Internal core error; see its log." | An unexpected error in the core | Look at the output of the terminal where the core runs |
@@ -64,7 +64,7 @@ The core refuses without changing anything, and the viewer shows its sentence wo
 | Refusal when moving a body to another assembly | The body and its two groups are not moved by the same joint | Move the whole group, or use **Group…** |
 | Joint between assemblies refused: the child is a body | Between two assemblies the child must be a group | Pick the **Group: name** entry as **Child body** |
 | After **Group…**, the PLC program no longer finds its variables | Tags were renamed ("regenerate the PLC's GVL") | **Export GVL** again, then reload it in the program |
-| A body now moves with its group although it used to stay still | An old Pantin (schema 12) migrated on opening: a body with no parent joint now follows its group. The **Console** lists these bodies ("Bodies with no parent joint now follow their group when it moves: …") | Check the scene. For it to stay still, move it into an assembly that does not move (see [Move a body](/en/guide/groups#move-a-body-to-another-assembly)), or put it apart in a group (not verified in the viewer) |
+| A body moves with its group although it should stay still, or the **Console** shows “Bodies with no parent joint now follow their group when it moves: …” on opening | A body with no parent joint follows its group; this message lists the bodies concerned in a Pantin saved by an earlier version | Move it into an assembly that does not move (see [Move a body](/en/guide/groups#move-a-body-to-another-assembly)) |
 
 ## The PLC bridge
 
@@ -121,12 +121,8 @@ in the log.
 | A Modbus exception 2 or 3 on the PLC side | Address outside the mapped range, or wrong quantity | Compare the addresses of the CODESYS project with the I/O list |
 | A Modbus exception 11 | Wrong **Unit id** | Align the unit id of the module and the one of the CODESYS channel |
 | The log: "unit 255 ... GATEWAY_NO_RESPONSE (11)" | The **Unit-ID** of the CODESYS Modbus server defaults to 16#FF (255) | Set it to the module's **Unit id** (**Général** tab). See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
-| On each connection: a refused request "ILLEGAL_ADDRESS (2)", then "PLC disconnected … watchdog", in a loop | A command of the **Init serveur Modbus** tab targets a zone the module does not have (seen: function 16 on `m1`); CODESYS stops after that refusal | Empty the **Init serveur Modbus** tab, or make it target a zone of the module. See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
+| On each connection: a refused request "ILLEGAL_ADDRESS (2)", then "PLC disconnected … watchdog", in a loop | A command of the **Init serveur Modbus** tab targets a zone the module does not have (for example function 16 on `m1`); CODESYS stops after that refusal | Empty the **Init serveur Modbus** tab, or make it target a zone of the module. See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
 | In CODESYS, **Valeur actuelle** shows "Pas actualisé (vérifier l'info-bulle)" | The lines are not linked to variables, or unused variables are not refreshed | Link each line to a variable (**ModbusTCPServer Mappage E/S** tab) and set **Toujours actualiser les variables** to "Activé 2 (toujours dans la tâche du cycle de bus)". Offline only |
-
-::: warning Little verified with CODESYS
-The "unit 255", "Init serveur Modbus" and "Pas actualisé" rows were seen on a real CODESYS Control Win V3 on 18 October 2026. The other causes come from the code and the decisions of the repository and have not been confirmed with CODESYS (ADR 0045, step 2).
-:::
 
 ## Forced tags
 
@@ -165,9 +161,4 @@ you to each problem.
 
 ## Still stuck?
 
-The ADRs of the repository explain the choices behind these behaviours, in
-particular
-[0045](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0045-plc-bridge-tag-bus-io-mapping-and-modbus-slave.md),
-[0046](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0046-security-of-the-plc-bridge.md)
-and
-[0050](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0050-bridge-started-from-the-viewer.md).
+Open the **Console** and, for the bridge, the **Bridge log**: they give the cause in most cases. To report a problem, attach your Pantin. The design choices are explained in the [For contributors](/en/contributing) page.

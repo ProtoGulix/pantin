@@ -1,11 +1,11 @@
 # Panels and buttons
 
-This page lists every button, field and control of the viewer's panels, area by area. For each control: its **label** as the interface shows it, what it does, and when it is greyed out.
+Every button, field and control of the panels, area by area: its **label**, what it does, and when it is greyed out.
 
 The menus (**File**, **Edit**, **View**) are described in [Menus](/en/reference/menus). Key and mouse combinations are in [Keyboard and mouse shortcuts](/en/reference/shortcuts). The general layout of the screen is in [The screen](/en/reference/interface). The three central views (3D, Diagram, I/O) are in [Central views](/en/reference/views).
 
 ::: tip Reading the tables
-"Greyed out" means the button is visible but inactive. When a button is greyed out for a specific reason, the tooltip (on hover) often gives that reason. A field that is "validated on leaving" sends its value when you press **Enter** or click elsewhere.
+"Greyed out": the button is visible but inactive, and its tooltip often gives the reason. A field "validated on leaving" sends its value with **Enter** or a click elsewhere.
 :::
 
 ## The toolbar
@@ -108,9 +108,9 @@ During the import, the form shows **Importing…**. For a STEP: **Converting STE
 
 ![The PLC bridge card, bridge running](/screenshots/en/bridge-running.webp)
 
-The card is at the very bottom of the left panel. It is visible in all central layouts. It appears as soon as the core answers about the bridge state.
+The card is at the bottom of the left panel, visible in all layouts.
 
-The status line shows a dot (a 12 px glyph: check, ring, half-filled ring or cross in an octagon, besides the colour) and the state text, followed by a clickable pill that tells the network mode.
+The status line shows a dot (check, ring, half-filled ring or cross in an octagon, besides the colour) and the state text, followed by a clickable pill that tells the network mode.
 
 | State | Dot | Action button |
 | --- | --- | --- |
@@ -158,7 +158,7 @@ A confirmation is shown inline, above the message line, in place of a dialog. It
 | **Delete joint "name"?** | **Delete**, **Cancel** |
 | **Delete assembly "name" and all its contents?** | **Delete**, **Cancel**. A list says what disappears: bodies, joints of the assembly, joints with other assemblies, drives, actuators, sensors, sub-assemblies, removed tags and added tags, and the assemblies that lose their attachment. |
 | **Delete n orphan file(s) from the meshes folder?** (**File** menu, **Clean up orphan files…**) | **Delete**, **Cancel**. The list gives the files and their size. |
-| **Replace the feed of ... by one from ...?** (new link in the diagram) | **Replace**, **Cancel** |
+| **Replace the feed of ... by one from ...?** (link drawn in the diagram) | **Replace**, **Cancel** |
 
 Deleting a drive, an actuator, a sensor or a conveying object asks for no confirmation.
 
@@ -563,7 +563,3 @@ It is displayed when no Pantin is open. It is a modal window above the empty 3D 
 | Empty texts | **No Pantin yet. Create one from the Home tab.**; **No Pantin matches the filter.** |
 
 The window's errors (unsupported file, unreachable core...) are shown in the window's message line.
-
-::: warning Not verified
-The exact style of the coloured dots (bridge, modules) is defined by the stylesheet; this page describes what the text and the structure say, not the tints.
-:::

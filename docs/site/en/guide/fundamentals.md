@@ -1,12 +1,12 @@
 # Fundamentals
 
-This page explains what Pantin is for, how it is built and how to start it. It is written for hobbyists and automation engineers alike: you do not need any programming knowledge.
+This page explains what Pantin is for, how it is built and how to start it. You do not need any programming knowledge.
 
 ## What Pantin is for
 
-Pantin simulates an industrial machine (kinematics and a little physics) that a real PLC program drives in a closed loop.
+Pantin simulates an industrial machine (its movements and a little physics). A real PLC program drives it in a closed loop.
 
-The starting use case: validate a PLC program on a special-purpose machine **before** commissioning.
+The goal: validate a PLC program on a special-purpose machine **before** commissioning.
 
 The closed loop works like this:
 
@@ -15,15 +15,11 @@ The closed loop works like this:
 3. the simulated sensors (limit switch, photocell) change state;
 4. the PLC reads this feedback and decides what to do next.
 
-You import your own 3D models, animate them, then link the machine's tags to your PLC.
-
-::: warning Verified on one case
-The bridge is tested in a closed loop with a test Modbus client. A real CODESYS Control Win V3 x64 drove the `plc-cylinder` example on 18 October 2026 ([setup](/en/guide/connect-a-plc#configure-the-plc-codesys)). Other CODESYS versions and WAGO targets are not verified.
-:::
+You import your 3D models, animate them, then link the machine's tags to your PLC. A **tag** is a named value of the machine: a command the PLC writes, or a feedback it reads.
 
 ## The three processes
 
-Pantin is not a single program. It starts three, which talk to each other only over the local network of the machine.
+Pantin is made of three processes. They talk to each other over the local network of your machine.
 
 ```
   Browser                   Core (Node)                 Bridge (Python)
@@ -34,24 +30,24 @@ Pantin is not a single program. It starts three, which talk to each other only o
  └───────────┘             └──────────────────┘        └─────────────┘                └──────────┘
 ```
 
-- **The core** contains the whole simulation: joints, drives, sensors, products, physics, tags. It reads and writes the files of the Pantin. It runs without any window open.
+- **The core** contains the whole simulation: joints, drives, sensors, products, physics, tags. It reads and writes the files of the Pantin. It runs without a window open.
 - **The viewer** is the web page you open in the browser. It displays the state sent by the core and serves as the editing interface. It computes nothing of the simulation.
 - **The PLC bridge** is a small Python process, started by the core on demand (the **Start** button of the **PLC bridge** card). It presents itself to the PLC as Modbus TCP input/output modules.
 
-### Why the simulation does not depend on the browser
+### The simulation does not depend on the browser
 
-Closing the tab, leaving it in the background or having a slow computer has no effect on the simulation. The browser only watches. For the PLC this is essential: a stable control loop must not depend on the frame rate of the screen.
+Closing the tab, leaving it in the background or having a slow computer has no effect on the simulation. The browser only watches. The PLC thus always faces a stable machine.
 
 ## A fixed time step
 
 The core advances in fixed steps of **1/120 s** (about 8.3 ms), whatever the frame rate. A command written to a tag takes effect at the next step.
 
-This makes the simulation reproducible: the same commands give the same results. The display adapts to the speed of your screen.
+The same commands therefore give the same results. The display adapts to the speed of your screen.
 
 The simulation bar of the viewer lets you **Pause**, **Resume**, or advance by **1 step** or **10 steps**.
 
 ::: tip
-When the simulation is paused while a PLC bridge is connected, the PLC sees a frozen machine. Pantin tells you so in the **Console**.
+When the simulation is paused and a PLC bridge is connected, the PLC sees a frozen machine. The **Console** tells you so.
 :::
 
 ## Units and axes
@@ -65,7 +61,9 @@ When the simulation is paused while a PLC bridge is connected, the PLC sees a fr
 
 Tag values are in International System units (metres, radians), not millimetres.
 
-The **Z axis points up**, as in CAD software. The viewer converts to the frame of its 3D engine, so you do not have to deal with it. When you import an STL, you give the unit of the file (**mm**, **cm**, **m**, **in**); for a GLB or an STL, its **Up axis** (**Z up (CAD)** or **Y up (glTF standard)**). A STEP has nothing to set.
+The **Z axis points up**, as in CAD software. The viewer converts to the frame of its 3D engine: you have nothing to do.
+
+When you import an STL, you give the unit of the file (**mm**, **cm**, **m**, **in**). For a GLB or an STL, you also give the **Up axis** (**Z up (CAD)** or **Y up (glTF standard)**). A STEP has nothing to set.
 
 ## A Pantin is a folder
 
@@ -79,15 +77,15 @@ A simulated machine is called a **Pantin**. It is a folder of text files, compat
 
 `io.json` only exists once the I/O is configured. You do not edit it by hand: the viewer creates and changes it.
 
-Pantins are stored by default in the `pantin-projects` folder of your home folder (`~/pantin-projects`). You can choose another folder when you start the core with the `--pantins-dir` option.
+Pantins are stored by default in the `pantin-projects` folder of your home folder (`~/pantin-projects`). The `--pantins-dir` option of the core chooses another folder.
 
-Since everything is text, you can version a Pantin with git, compare two versions or share it. The details of the format are in the [Pantin document guide](https://github.com/ProtoGulix/pantin/blob/develop/docs/guides/pantin-document.md).
+Since everything is text, you can version a Pantin with git, compare two versions or share it. The format is described in the [Pantin document guide](https://github.com/ProtoGulix/pantin/blob/develop/docs/guides/pantin-document.md).
 
 ## Local by default
 
 On startup, the core listens **only on the local machine** (`127.0.0.1`). Nobody else on your network can connect to it.
 
-Opening the network is an explicit choice, and it stays limited to the private local network (decision [ADR 0004](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0004-network-exposure.md)):
+Opening the network is an explicit choice, limited to the private local network:
 
 - the core refuses to start on a public address or on `0.0.0.0`;
 - in private network mode, it listens on **a single private address** that you give (`--listen`);
@@ -98,11 +96,7 @@ For the PLC bridge, the **PLC bridge** card offers the same choice: **Local only
 
 ## Install and start
 
-Prerequisites: Node.js 24 or newer, pnpm, and Python 3 for the bridge and the STEP conversion.
-
-::: warning Not verified
-The minimum Python versions and the exact system prerequisites are not detailed here. See the `README.md` file of the repository and the scripts `packages/bridge/setup.sh` and `packages/step-converter/setup.sh`.
-:::
+Prerequisites: Node.js 24 or newer, pnpm, and Python 3 for the bridge and the STEP conversion. The details are in the `README.md` file of the repository.
 
 From the repository folder:
 
@@ -116,14 +110,18 @@ pnpm serve
 - `pnpm setup:python` prepares the Python environments of the PLC bridge and the STEP converter.
 - `pnpm serve` builds the viewer then starts the core, which also serves the viewer.
 
-The core prints a line like `Pantin core (local mode) on http://127.0.0.1:4800`. Open this address in your browser: the default port is **4800**. To change it, start the core with the `--port` option.
+The core prints a line like `Pantin core (local mode) on http://127.0.0.1:4800`. Open this address in your browser. The default port is **4800**; the `--port` option chooses another one.
 
-The **Home** screen offers you to create a Pantin (**Empty Pantin** or **From a 3D file**) or to open an existing one.
+The **Home** screen offers to create a Pantin (**Empty Pantin** or **From a 3D file**) or to open an existing one.
 
 ## What next
 
 - Build a first example step by step: [Tutorial](/en/guide/tutorial).
-- Prepare your CAD files before the import: [Preparing 3D models](/en/guide/preparing-models).
-- Understand the elements of a machine: [The model of a Pantin](/en/guide/model) (bodies, assemblies, groups, joints), then [Group, ungroup, move a body](/en/guide/groups), [Drives, actuators and sensors](/en/guide/action-chain), [Products and conveying](/en/guide/conveying) and [Tags, faults and the I/O list](/en/guide/tags).
+- Prepare your CAD files before the import: [Preparing your CAD files](/en/guide/preparing-models).
+- Understand the elements of a machine: [The model of a Pantin](/en/guide/model), then [Group, ungroup, move a body](/en/guide/groups), [Drives, actuators and sensors](/en/guide/action-chain), [Products and conveying](/en/guide/conveying) and [Tags, faults and the I/O list](/en/guide/tags).
 - Link a PLC: [Connect a PLC](/en/guide/connect-a-plc).
 - Something does not work: [Troubleshooting](/en/guide/troubleshooting).
+
+::: warning Known limits
+A real CODESYS Control Win V3 x64 drove the `plc-cylinder` example in a closed loop ([setup](/en/guide/connect-a-plc#configure-the-plc-codesys)). Other CODESYS versions and WAGO targets have not been tried.
+:::

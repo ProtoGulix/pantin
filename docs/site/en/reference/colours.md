@@ -1,8 +1,6 @@
 # Reading colours and cues
 
-Every coding on screen can be read without colour: an icon, a shape, a fill or an outline, a line style or a word says the same thing. The colours were also chosen for colour-blind users: the pairs of codings shown together are registered and checked by tests, with a simulation of protanopia, deuteranopia and tritanopia. Where two colours cannot stay far enough apart (the axes in the light theme, the diagram wires, a signal on or off, the conveyor volumes, with measured gaps from 8 to 34), the test records the measured gap and the cue that takes over.
-
-Pantin follows the principles of the ISA-101 standard for operator screens (grey by default, colour kept for what matters, never alone) without claiming conformance: the text of the standard was not read ([ADR 0057](https://github.com/ProtoGulix/pantin/blob/develop/docs/decisions/0057-colour-blind-safe-coding.md), [report 0010](https://github.com/ProtoGulix/pantin/blob/develop/docs/spikes/0010-isa-101-hmi-colour.md)). The visual identity (brand orange, two themes) does not change. This page describes what the code does; the exact shades are set in the themes.
+Every colour code also has an icon, a shape, an outline, a line style or a word: colour is never alone. The colours are chosen to stay readable by colour-blind users; where two colours stay close (axes in the light theme, diagram wires, conveyor volumes), the shape, line or label decides. The screen is grey by default and colour is kept for what matters, in the spirit of the ISA-101 standard for operator screens.
 
 ## One colour, one meaning
 
@@ -15,7 +13,7 @@ Pantin follows the principles of the ISA-101 standard for operator screens (grey
 | Brand orange | Pantin itself: primary buttons, the active tab or view mode. Never a state. |
 | Grey and text colours | Every other property (driven, watched, done, information). |
 
-One declared exception: the Y axis is green, as in most CAD software. The letter **Y** at the end of the axis tells it apart from the "on" green.
+The Y axis is green, as in most CAD software. The letter **Y** at the end of the axis tells it apart from the "on" green.
 
 ## States: an icon beside the colour
 
@@ -28,7 +26,7 @@ One declared exception: the Y axis is green, as in most CAD software. The letter
 | Ring with its left half filled | selection blue | Busy, under way |
 | Letter **F** beside a diagram socket; padlock and the word **forced** in the inspector | amber | Tag forced from the viewer |
 
-These 12 px icons appear on the bridge status dot, the module lines, the I/O module list (which also writes the status word) and the journal badges.
+These icons appear on the bridge status dot, the module lines, the I/O module list (which also writes the status word) and the journal badges.
 
 ### Journal badges
 
@@ -37,8 +35,6 @@ These 12 px icons appear on the bridge status dot, the module lines, the I/O mod
 | Circled i and word **Info** | no fill, muted text | Information |
 | Triangle and word **Warn.** | amber, dark text | Warning |
 | Cross in an octagon and word **Error** | red, white text | Error |
-
-Each filled badge has an outline that stays visible on the panel background.
 
 ## In the 3D view
 
@@ -67,20 +63,17 @@ Each kind of wire has its own stroke and a label written on the wire:
 | **MECH** | Mechanical | Solid, 1.5 px | Light grey (dark theme), dark grey (light theme) |
 | **OBS** | Observation | Dash-dot, 1 px | Medium blue-violet (dark theme), indigo close to violet (light theme) |
 
-The label and the stroke identify a wire, not its colour. No wire takes the amber, red or green of the states, or the Pantin orange. Pneumatic and observation, both bluish, differ only by stroke, width and label.
+The label and the stroke identify a wire, not its colour. Pneumatic and observation, both bluish, differ by stroke, width and label.
 
 ## Conveyor volumes
 
 | Volume | Cue (no colour) | Colour |
 | --- | --- | --- |
-| Emitter | Sign **+** on the volume, outlined translucent volume | Almost white (dark theme), almost black (light theme): the grey farthest from the ground |
-| Absorber | Sign **−** on the volume, outlined translucent volume | Mid grey, the nearest the ground that the 3:1 rule allows |
+| Emitter | Sign **+** on the volume, outlined translucent volume | Almost white (dark theme), almost black (light theme) |
+| Absorber | Sign **−** on the volume, outlined translucent volume | Mid grey |
 | Guide | Nearly solid body | Light bluish grey (dark theme), almost black (light theme) |
 | Belt | Solid body | Dark grey (dark theme), almost black (light theme) |
 
-The **+** and **−** signs are drawn with a halo, legible on any grey.
-
-## What is not verified
-
-- The visibility of the selection outline on every imported mesh.
-- How the colours look on a real screen: the measurements are computed on colour-blindness simulations (Machado 2009), not with people.
+::: warning Known limits
+The selection outline has not been tried on every imported mesh.
+:::
