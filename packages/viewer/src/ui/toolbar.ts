@@ -1,4 +1,3 @@
-import type { CentralLayout } from "../central-layout.ts";
 import type { PanelView } from "../view-model.ts";
 import { element, iconButton } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -19,34 +18,6 @@ function saveButton(view: PanelView, intents: PanelIntents): HTMLElement {
     save.append(element("span", { className: "unsaved-dot" }));
   }
   return save;
-}
-
-// "3D / Schéma / 3D + Schéma / E/S": four toggle buttons, exactly one pressed
-// (ADR 0030 point 7, ADR 0049 point 11).
-function viewSwitch(view: PanelView, intents: PanelIntents): HTMLElement {
-  const { translate, toolbar } = view;
-  const choice = (layout: CentralLayout, text: string, title: string) => {
-    const pressed = toolbar.centralLayout === layout;
-    const created = element("button", {
-      className: `view-switch__button${pressed ? " is-pressed" : ""}`,
-      text,
-      attributes: { type: "button", title, "aria-pressed": String(pressed) },
-    });
-    created.addEventListener("click", () => intents.setCentralLayout(layout));
-    return created;
-  };
-  return element(
-    "div",
-    {
-      className: "view-switch",
-      attributes: { role: "group", "aria-label": translate("toolbar.viewSwitch") },
-    },
-    [
-      choice("3d", translate("toolbar.view3d"), translate("menubar.view.layout3d")),
-      choice("diagram", translate("toolbar.viewDiagram"), translate("menubar.view.layoutDiagram")),
-      choice("both", translate("toolbar.viewBoth"), translate("menubar.view.layoutBoth")),
-    ],
-  );
 }
 
 function busyIndicator(view: PanelView): HTMLElement | null {
@@ -85,8 +56,6 @@ function editButtons(
       intents.frameSelection,
       !toolbar.frameSelectionEnabled,
     ),
-    element("span", { className: "toolbar__separator", attributes: { role: "separator" } }),
-    viewSwitch(view, intents),
   ];
 }
 

@@ -158,7 +158,12 @@ function createEngine(canvas: HTMLCanvasElement): Engine {
     loadingUIBackgroundColor: "",
     loadingUIText: "",
   };
-  new ResizeObserver(() => engine.resize()).observe(canvas);
+  // A canvas taken out of the layout measures 0x0: the engine keeps its last size until it is back.
+  new ResizeObserver(() => {
+    if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+      engine.resize();
+    }
+  }).observe(canvas);
   return engine;
 }
 

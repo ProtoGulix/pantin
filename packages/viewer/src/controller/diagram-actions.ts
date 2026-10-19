@@ -1,4 +1,14 @@
-import { type CentralLayout, nextLayout, showsIo } from "../central-layout.ts";
+import {
+  type CentralLayout,
+  type CentralView,
+  chooseView,
+  closeBottomZone,
+  nextTopView,
+  openBottomZone,
+  revealView,
+  showsIo,
+  type Zone,
+} from "../central-layout.ts";
 import { type DeviceRef, deviceExists, deviceOfDiagramNode } from "../device-selection.ts";
 import { treeNodeForJointNode } from "../diagram/diagram-selection.ts";
 import type { Endpoint } from "../diagram/diagram-wiring.ts";
@@ -17,7 +27,8 @@ import type { ViewerStore } from "./viewer-store.ts";
 // band, and clicking a node. Display state only; nothing is sent to the core.
 
 export function setCentralLayout(store: ViewerStore, layout: CentralLayout): void {
-  if (store.state.centralLayout !== layout) {
+  const current = store.state.centralLayout;
+  if (current.top !== layout.top || current.bottom !== layout.bottom) {
     store.ports.storeCentralLayout(layout);
     // Showing the I/O view reads the mapping: the store's hook does it (io-load.ts).
     // Entering it is a gesture: a failed read is tried again.
@@ -26,8 +37,25 @@ export function setCentralLayout(store: ViewerStore, layout: CentralLayout): voi
   }
 }
 
-export function cycleCentralLayout(store: ViewerStore): void {
-  setCentralLayout(store, nextLayout(store.state.centralLayout));
+export function chooseZoneView(store: ViewerStore, zone: Zone, view: CentralView): void {
+  setCentralLayout(store, chooseView(store.state.centralLayout, zone, view));
+}
+
+/** For a link that wants a view on screen, wherever it is: no change when a zone shows it. */
+export function revealCentralView(store: ViewerStore, view: CentralView): void {
+  setCentralLayout(store, revealView(store.state.centralLayout, view));
+}
+
+export function openBottomZoneOf(store: ViewerStore): void {
+  setCentralLayout(store, openBottomZone(store.state.centralLayout));
+}
+
+export function closeBottomZoneOf(store: ViewerStore): void {
+  setCentralLayout(store, closeBottomZone(store.state.centralLayout));
+}
+
+export function cycleTopView(store: ViewerStore): void {
+  setCentralLayout(store, nextTopView(store.state.centralLayout));
 }
 
 export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
@@ -79,7 +107,10 @@ export function selectDiagramNode(store: ViewerStore, diagramNodeId: string): vo
 
 export function diagramIntents(store: ViewerStore) {
   return {
-    setCentralLayout: (layout: CentralLayout) => setCentralLayout(store, layout),
+    chooseZoneView: (zone: Zone, view: CentralView) => chooseZoneView(store, zone, view),
+    revealCentralView: (view: CentralView) => revealCentralView(store, view),
+    openBottomZone: () => openBottomZoneOf(store),
+    closeBottomZone: () => closeBottomZoneOf(store),
     toggleDiagramBand: (bandKey: string) => toggleDiagramBand(store, bandKey),
     selectDiagramNode: (nodeId: string) => selectDiagramNode(store, nodeId),
     linkDiagramNodes: (from: Endpoint, to: Endpoint) => linkDiagramNodes(store, from, to),

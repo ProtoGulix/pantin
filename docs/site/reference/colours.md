@@ -65,6 +65,10 @@ Chaque sorte de fil a son trait et une étiquette écrite sur le fil :
 
 L'étiquette et le style de trait identifient un fil, pas sa couleur. Le pneumatique et l'observation, tous deux bleutés, se distinguent par le trait, l'épaisseur et l'étiquette.
 
+## Dans la vue Liaisons
+
+Les liaisons ne sont **jamais** distinguées par la couleur : tous les traits et signes ont la même teinte neutre. Chaque type de liaison a son style de trait (fin continu, longs tirets, continu épais, points ronds, tiret et point), son signe au milieu (carré plein, rectangle à double flèche, arc à deux butées, cercle à flèche, filet) et son nom. L'élément sélectionné et son chemin jusqu'au Monde sont teintés **et** épaissis, et la forme du groupe sélectionné s'agrandit pour montrer son nom en entier. La liste complète est dans [La vue Liaisons](/reference/views#la-vue-liaisons).
+
 ## Les volumes des convoyeurs
 
 | Volume | Repère (sans couleur) | Couleur |

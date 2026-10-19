@@ -21,26 +21,9 @@
   --edge-observation: #1200b6;
 }
 
-/* The canvas stays in place (its size, and the engine's, do not change); the diagram covers it. */
-.viewport--diagram .viewport__canvas {
-  visibility: hidden;
-}
-
-.viewport--diagram .viewport__hint {
-  display: none;
-}
-
 .diagram {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
   overflow: auto;
   background: var(--viewport-background);
-}
-
-.viewport--both .diagram {
-  /* Below the splitter, which is 4px high. */
-  top: calc(var(--split, 60%) + 4px);
 }
 
 .diagram[hidden] {

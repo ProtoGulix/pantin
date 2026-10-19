@@ -1,21 +1,27 @@
 # Vues centrales
 
-La zone centrale du viewer montre la machine sous trois formes : la **vue 3D**, le **schéma des chaînes** et la **vue E/S**. Elles se combinent en quatre dispositions. Les touches et la souris sont dans [Raccourcis clavier et souris](/reference/shortcuts) ; les menus dans [Menus](/reference/menus) ; les autres panneaux dans [Panneaux et boutons](/reference/panels).
+La zone centrale du viewer montre la machine sous quatre formes : la **vue 3D**, le **schéma des chaînes**, la vue **Liaisons** et la **vue E/S**. Elle a une zone du haut et, si vous l'ouvrez, une zone du bas ; chaque zone a son sélecteur. Les touches et la souris sont dans [Raccourcis clavier et souris](/reference/shortcuts) ; les menus dans [Menus](/reference/menus) ; les autres panneaux dans [Panneaux et boutons](/reference/panels).
 
-## Les quatre dispositions
+## Les zones et leurs sélecteurs
 
-| Disposition | Ce qu'elle montre | Comment l'obtenir |
-| --- | --- | --- |
-| **3D seule** | La vue 3D occupe toute la zone. | Bouton **3D** de la barre d'outils, menu **Affichage** |
-| **Schéma des chaînes seul** | Le schéma occupe toute la zone. | Bouton **Schéma**, menu **Affichage** |
-| **3D + Schéma** | La vue 3D en haut, le schéma en dessous. C'est la disposition par défaut. | Bouton **3D + Schéma**, menu **Affichage** |
-| **E/S seules** | La liste d'E/S (modules, voies, tags non affectés). | Menu **Affichage**, bouton **Config E/S** de la carte **Pont automate**, ou **Afficher dans E/S** |
+![La zone centrale : la vue 3D en haut, la vue Liaisons en bas, un sélecteur de vue en haut à gauche de chaque zone](/screenshots/fr/zones.webp)
 
-La touche **F4** fait tourner entre **3D + Schéma**, **3D seule** et **Schéma des chaînes seul**. Elle ne passe jamais par **E/S seules** : depuis cette vue, elle revient à **3D + Schéma**.
+La zone centrale a deux zones, l'une au-dessus de l'autre. Au départ, la **zone du haut** montre la vue **3D** et la **zone du bas** le **Schéma**. Chaque zone a son **sélecteur de vue**, en haut à gauche : quatre boutons à bascule **3D**, **Schéma**, **Liaisons** et **E/S**. Le bouton de la vue affichée est enfoncé, souligné d'un trait et teinté.
 
-Dans la disposition **3D + Schéma**, une poignée horizontale sépare les deux vues (**Redimensionner la vue 3D et le schéma**). Glissez-la pour changer le partage ; un double-clic le rétablit. Le partage est gardé dans le navigateur. La disposition choisie l'est aussi.
+| Contrôle | Ce qu'il fait |
+| --- | --- |
+| Sélecteur **Vue de la zone du haut** | Choisit la vue de la zone du haut. |
+| Sélecteur **Vue de la zone du bas** | Choisit la vue de la zone du bas. |
+| **Ouvrir la zone du bas** (bouton **+**, à droite du sélecteur du haut) | Ouvre la zone du bas, sur la première vue que la zone du haut n'affiche pas. Absent quand la zone du bas est ouverte. |
+| **Fermer la zone du bas** (bouton **✕**, à droite du sélecteur du bas) | Ferme la zone du bas : la zone du haut occupe toute la zone centrale. |
 
-Changer de disposition conserve la caméra 3D, le défilement du schéma et les champs en cours de saisie.
+Une vue ne s'affiche que dans **une seule zone** à la fois. Dans le sélecteur de l'autre zone, son bouton est grisé et **barré**, et son info-bulle dit pourquoi (par exemple **3D : déjà affichée dans l'autre zone**). Pour la déplacer, choisissez d'abord une autre vue dans la zone qui l'affiche.
+
+La touche **F4** passe la zone du haut à la vue suivante, dans l'ordre **3D**, **Schéma**, **Liaisons**, **E/S**, puis de nouveau **3D**. Elle saute la vue que la zone du bas affiche. Le menu **Affichage** propose les mêmes choix : **Zone du haut : 3D**, **Zone du bas : Schéma**, **Ouvrir la zone du bas**, **Fermer la zone du bas** (voir [Menus](/reference/menus)).
+
+Quand la zone du bas est ouverte, une poignée horizontale sépare les deux zones (**Redimensionner les deux zones**). Glissez-la pour changer le partage ; un double-clic le rétablit. Le partage est gardé dans le navigateur. Le choix des vues l'est aussi : un réglage enregistré par une version précédente est repris tel quel.
+
+Changer de vue conserve la caméra 3D, le défilement du schéma et les champs en cours de saisie. La vue 3D ne se dessine que tant qu'elle est affichée dans une des deux zones.
 
 Sans Pantin ouvert, seule la vue 3D vide est affichée, sous la [fenêtre d'accueil](/reference/panels#la-fenetre-d-accueil).
 
@@ -230,6 +236,72 @@ Un clic sur un connecteur de commande ne sélectionne pas le noeud : l'inspecteu
 
 Le schéma se parcourt entièrement au clavier : les flèches passent d'un noeud à l'autre, **Entrée** entre dans les connecteurs d'un noeud, **Espace** sélectionne le noeud (ou bascule une commande booléenne), **Échap** revient en arrière, **Début** et **Fin** vont au premier ou dernier noeud, **Suppr** retire le lien d'un connecteur ou le lien sélectionné, **F2** renomme un préactionneur, un actionneur ou un capteur. Le détail est dans [Raccourcis](/reference/shortcuts). **Suppr** ne supprime jamais un élément : pour cela, utilisez le menu **Édition**. Si vous appuyez dessus sur un noeud, la ligne de message vous le rappelle.
 
+## La vue Liaisons
+
+![La vue Liaisons de l'exemple plc-cylinder : le Monde à gauche, trois corps, une liaison fixe et la glissière du vérin, marquée de l'éclair des liaisons déplacées par un actionneur](/screenshots/fr/joint-view.webp)
+
+La vue **Liaisons** dessine l'**arbre cinématique** de la machine : qui bouge par rapport à qui. Ce n'est pas l'arborescence de gauche. L'arborescence range les corps dans des assemblages et ne porte aucun mouvement ; la vue Liaisons ne montre que ce qui est relié par des liaisons. Les deux arbres peuvent différer, et c'est le but : vous voyez d'un coup d'œil un corps qui ne suit pas le groupe que vous attendiez, ou un corps relié par vingt liaisons fixes. Pour comprendre les groupes, voir [Le modèle d'un Pantin](/guide/model#les-concepts-corps-assemblage-groupe).
+
+La vue ne fait que montrer : elle ne modifie rien. Pour créer, changer ou supprimer une liaison, utilisez l'arborescence, l'inspecteur et le formulaire de liaison.
+
+### Ce que la vue montre
+
+L'arbre se lit de gauche à droite : chaque colonne est un niveau plus loin du Monde.
+
+| Élément | Forme | Ce qu'il veut dire |
+| --- | --- | --- |
+| **Monde** | Un cercle, avec des hachures de sol et le nom en dessous. | Le sol fixe, à gauche de l'arbre. Tout ce qui y est rattaché sans liaison ne bouge pas. |
+| **Groupe** | Un rectangle à coins arrondis, avec son nom, un nombre et une flèche **▸**. | Un assemblage visé par une liaison : une seule pièce rigide. Le nombre est celui des corps qui le suivent, sans liaison propre. La flèche les déplie. |
+| **Corps** | Une pastille (un rectangle aux extrémités rondes). | Un corps qui est l'extrémité d'une liaison, ou, une fois un groupe déplié, un corps qui suit ce groupe. |
+| **Liaison** | Une courbe du parent vers l'enfant, avec un signe au milieu et son nom près de l'enfant. | Chaque liaison du Pantin, y compris les liaisons fixes. Le type se lit au style du trait et au signe. |
+| **Corps qui suit son groupe** | Un trait fin en pointillés très serrés, sans signe ni nom. | Le corps n'a pas de liaison : il bouge avec son groupe. |
+| **Rattachement au Monde** | Un trait fin et clair, sans signe ni nom. | L'élément n'a pas de liaison parente : il est fixé au Monde. |
+
+Le type d'une liaison se lit à trois indices, jamais à la couleur seule : le style du trait, le signe au milieu, et le nom de la liaison.
+
+| Type | Trait | Signe |
+| --- | --- | --- |
+| **Fixe** | Fin, continu. | Un carré plein (soudure). |
+| **Glissière** | Épais, longs tirets. | Un rectangle avec une flèche à deux pointes. |
+| **Pivot limité** | Épais, continu. | Un arc fermé par deux butées. |
+| **Pivot continu** | Épais, en points ronds. | Un cercle complet avec une flèche. |
+| **Hélicoïdale (vis et écrou)** | Épais, alternant tiret et point. | Trois petits traits obliques (un filet). |
+
+Une liaison **déplacée par un actionneur** porte en plus un signe en forme d'**éclair** à côté de son signe de type.
+
+Les corps qui suivent leur groupe sont repliés par défaut : le groupe affiche seulement leur nombre. Cliquez la flèche **▸** du groupe (info-bulle **Afficher les N corps qui le suivent**) pour les voir, chacun au bout d'un trait en pointillés ; la flèche se retourne et son info-bulle devient **Masquer les N corps qui le suivent**. Un corps qui n'est ni l'extrémité d'une liaison ni rangé dans un groupe est compté dans le **Monde**, puisqu'il ne bouge jamais.
+
+Un nom long est coupé par des points de suspension dans sa forme ; la forme de l'élément sélectionné s'agrandit pour montrer son nom en entier.
+
+### Un sous-assemblage sans liaison
+
+Dans l'arborescence, un sous-assemblage est rangé dans l'assemblage au-dessus de lui. Cela ne le fait pas bouger avec lui : seules les liaisons transmettent le mouvement. La vue Liaisons le montre : un sous-assemblage qui n'a pas de liaison parente apparaît **rattaché au Monde**, par un trait fin, même quand l'assemblage au-dessus est mobile. Cela veut dire qu'il reste immobile quand le groupe du dessus bouge. Si ce n'est pas voulu, reliez-le au groupe qu'il doit suivre (liaison fixe, glissière ou pivot).
+
+### La ligne de légende
+
+En bas à gauche de la vue, une ligne **Légende** (avec un chevron) est repliée. Cliquez-la (info-bulle **Afficher la légende**) pour déplier la liste de tous les traits, signes et formes décrits plus haut ; **Fermer la légende** la replie. Cet état est gardé dans le navigateur.
+
+![La légende dépliée : un trait et un signe par type de liaison, le signe de l'actionneur, les formes du Monde, du groupe et du corps](/screenshots/fr/joint-legend.webp)
+
+### Ce que vous pouvez faire dans la vue
+
+| Geste | Effet |
+| --- | --- |
+| Clic sur un groupe ou un corps | Le sélectionne. L'arborescence, la vue 3D, le schéma et l'inspecteur suivent, comme pour toute sélection. |
+| Clic sur une liaison | Sélectionne la liaison. |
+| Clic droit | Ouvre le menu contextuel de l'arborescence pour ce groupe, ce corps ou cette liaison, avec les mêmes entrées (voir [Menus](/reference/menus#menu-contextuel-de-l-arborescence)). |
+| Double-clic | Cadre l'élément (ou l'enfant de la liaison) dans la vue 3D quand elle est affichée. Sinon, sélectionne seulement : la disposition ne change jamais d'elle-même. |
+| Molette | Zoome autour du pointeur. |
+| Glisser le fond | Déplace la vue. |
+| Bouton **Ajuster** (en haut à droite de la vue) | Resserre l'arbre pour qu'il tienne dans la zone, jusqu'à ce que les noms se touchent ; au-delà, faites glisser la vue. |
+| Clic sur **▸**, ou <kbd>+</kbd> / <kbd>−</kbd> au clavier | Déplie ou replie les corps qui suivent un groupe. |
+
+L'élément sélectionné ailleurs (arborescence, vue 3D, schéma) est mis en évidence ici : son contour et son chemin jusqu'au Monde sont épaissis et teintés. Pour un préactionneur ou un actionneur, ce sont les liaisons qu'il déplace. La sélection multiple reste dans l'arborescence.
+
+Au clavier, un seul élément est un arrêt de tabulation ; les touches sont dans [Raccourcis clavier et souris](/reference/shortcuts#vue-liaisons). Zoom et déplacement ne sont pas enregistrés : ils restent quand vous changez de vue, et l'arbre est recadré quand vous ouvrez un autre Pantin.
+
+Sans aucune liaison, la vue affiche **Aucune liaison : tous les corps sont fixes dans le Monde.**
+
 ## La vue E/S
 
 ![La vue E/S avec le module m1, ses réglages et le tableau des voies](/screenshots/fr/io-view.webp)
@@ -337,4 +409,6 @@ La table des zones et des codes fonction est dans [Connecter un automate](/guide
 
 ::: warning Limites connues
 Le sens de molette du préréglage **Souris : ZW3D** est celui de Babylon.js (pousser la molette vers l'avant zoome) ; il n'a pas été comparé au logiciel d'origine. Le préréglage **Souris : SolidWorks** zoome en arrière en poussant vers l'avant.
+
+La vue **Liaisons** n'a été éprouvée que sur de petits Pantins et sur des Pantins de test : sur un grand Pantin réel (plusieurs dizaines de groupes), la lisibilité des signes et des noms n'est pas vérifiée. Elle montre la structure, pas l'état : la position d'une liaison et un défaut « grippé » n'y apparaissent pas, et on ne peut pas y modifier une liaison.
 :::

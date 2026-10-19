@@ -6,8 +6,25 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Added
+
+- Viewer (ADR 0059): a Joints view that draws the kinematic tree as a left-to-right
+  tree, World on the left, groups as rounded rectangles with the count of the
+  bodies that follow them, bodies as pills, one curve per joint coded by line
+  style, glyph and name (never by colour), a bolt mark on joints moved by an
+  actuator, folding, zoom and pan, selection shared with the tree, the 3D view and
+  the inspector, the tree's context menu on right click, keyboard navigation and a
+  one-line legend. The user guide gains a section for it, in French and English,
+  with new screenshots.
+
 ### Changed
 
+- Viewer (ADR 0059 amendment): the central area has a top zone and an optional
+  bottom zone, each with its own view selector (3D, Diagram, Joints, I/O), instead
+  of the combined layouts; F4 moves the top zone to the next view, skipping the view
+  of the bottom zone; the View menu follows; the page height holds in a short
+  window. Layouts stored by earlier versions are read into the new form. The user
+  guide and its screenshots follow.
 - ADRs 0001 and 0002 accepted, with the runtime choices the spikes settled;
   ADR 0045 records the real CODESYS demonstration as P6 done, spike 4b
   becomes a backlog measurement; missing amendment links added. The backlog

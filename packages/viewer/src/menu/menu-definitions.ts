@@ -1,4 +1,4 @@
-import type { CentralLayout } from "../central-layout.ts";
+import { type CentralView, isViewDisabledIn, type Zone } from "../central-layout.ts";
 import type { DragKind } from "../gizmo/placement-snapping.ts";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import type { NavigationPresetId } from "../navigation/navigation-presets.ts";
@@ -39,7 +39,10 @@ export type MenuCommand =
   | "toggleInspector"
   | "toggleConsole"
   | "cycleLayout"
-  | `layout:${CentralLayout}`
+  | "openBottomZone"
+  | "closeBottomZone"
+  | `topView:${CentralView}`
+  | `bottomView:${CentralView}`
   | `language:${Language}`
   | `theme:${ThemeChoice}`;
 
@@ -100,18 +103,23 @@ export function themeItem(choice: ThemeChoice): MenuItemDefinition {
   };
 }
 
-const LAYOUT_LABEL_KEYS: Readonly<Record<CentralLayout, MessageKey>> = {
-  "3d": "menubar.view.layout3d",
-  diagram: "menubar.view.layoutDiagram",
-  both: "menubar.view.layoutBoth",
-  io: "menubar.view.layoutIo",
+const VIEW_LABEL_KEYS: Readonly<Record<CentralView, MessageKey>> = {
+  "3d": "view.3d",
+  diagram: "view.diagram",
+  joints: "view.joints",
+  io: "view.io",
 };
 
-// Explicit entries next to the F4 cycle, checked on the layout in use (ADR 0030).
-export function layoutItem(layout: CentralLayout): MenuItemDefinition {
+// "Vue du haut : 3D" and "Vue du bas : 3D": checked on the view of the zone, disabled when the
+// other zone shows it (ADR 0059 amendment). The bottom zone's views open it when it is closed.
+export function zoneViewItem(zone: Zone, view: CentralView): MenuItemDefinition {
+  const command = zone === "top" ? (`topView:${view}` as const) : (`bottomView:${view}` as const);
+  const labelKey: MessageKey = zone === "top" ? "menubar.view.topView" : "menubar.view.bottomView";
   return {
-    ...item(`layout:${layout}`, LAYOUT_LABEL_KEYS[layout], (context) => context.editing),
-    checked: (context) => context.centralLayout === layout,
+    command,
+    label: (translate) => translate(labelKey, { view: translate(VIEW_LABEL_KEYS[view]) }),
+    enabled: (context) => context.editing && !isViewDisabledIn(context.centralLayout, zone, view),
+    checked: (context) => context.centralLayout[zone] === view,
   };
 }
 

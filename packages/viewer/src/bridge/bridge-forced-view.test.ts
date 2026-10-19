@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { bridgeStatusOf, RUNNING_STATUS } from "./bridge-fixtures.ts";
 import { type BridgeModel, bridgeAfterStatus, INITIAL_BRIDGE_MODEL } from "./bridge-model.ts";
@@ -12,7 +13,7 @@ function modelOf(status: Parameters<typeof bridgeAfterStatus>[1]): BridgeModel {
 
 describe("the forced tags warning", () => {
   const withForced = (status: Parameters<typeof bridgeAfterStatus>[1], count: number) =>
-    buildBridgeView(modelOf(status), fr, "3d", [], count)?.forcedWarning ?? null;
+    buildBridgeView(modelOf(status), fr, layoutOf("3d"), [], count)?.forcedWarning ?? null;
 
   it("is shown while the bridge runs and a tag is forced", () => {
     expect(withForced(RUNNING_STATUS, 2)).toEqual({
@@ -29,7 +30,7 @@ describe("the forced tags warning", () => {
 
   it("redraws the block when the count changes", () => {
     const keyOf = (count: number) => {
-      const view = buildBridgeView(modelOf(RUNNING_STATUS), fr, "3d", [], count);
+      const view = buildBridgeView(modelOf(RUNNING_STATUS), fr, layoutOf("3d"), [], count);
       return view === null ? "" : bridgeRedrawKey(view);
     };
     expect(keyOf(1)).not.toBe(keyOf(2));

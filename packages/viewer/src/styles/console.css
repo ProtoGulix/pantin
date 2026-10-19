@@ -21,7 +21,7 @@
   border-top: 1px solid var(--border);
 }
 
-/* Always visible under the central area, away from the toolbar's brand-coloured view switch. */
+/* Always visible under the central area, away from the brand-coloured view selectors of the zones. */
 .console-bar {
   display: flex;
   flex: none;

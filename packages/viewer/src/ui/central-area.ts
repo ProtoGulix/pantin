@@ -1,4 +1,9 @@
-import { CENTRAL_LAYOUTS, type CentralLayout } from "../central-layout.ts";
+import {
+  type CentralLayout,
+  isSplitLayout,
+  parseCentralView,
+  zoneOfView,
+} from "../central-layout.ts";
 import type { Translate } from "../i18n/translate.ts";
 import {
   clampSplitRatio,
@@ -9,11 +14,12 @@ import {
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./browser-storage.ts";
 import { createSplitter } from "./splitter.ts";
 
-// The central area (ADR 0030 point 7): a class for the layout, and in "both"
-// a horizontal splitter between the 3D view and the diagram. The canvas keeps
-// its element and the diagram its scroll, so a switch loses neither the camera
-// nor the diagram's place; the engine follows the canvas size through the
-// ResizeObserver of viewport.ts, which also covers every splitter move.
+// The central area (ADR 0030 point 7, ADR 0059 amendment): a top zone and, when the bottom
+// zone is open, a horizontal splitter and the bottom zone. Every view marks itself with
+// data-central-view (zone-view.ts) and takes its place from a zone class set here, so the 3D
+// canvas keeps its element and the diagram its scroll when a view changes zone; the engine
+// follows the canvas size through the ResizeObserver of scene/viewport.ts, which also covers
+// every splitter move.
 
 export class CentralArea {
   private readonly splitter: HTMLElement;
@@ -52,10 +58,14 @@ export class CentralArea {
   }
 
   render(layout: CentralLayout, translate: Translate): void {
-    for (const name of CENTRAL_LAYOUTS) {
-      this.area.classList.toggle(`viewport--${name}`, name === layout);
+    this.area.classList.toggle("viewport--split", isSplitLayout(layout));
+    // Read by the overlays that follow the 3D view (hint, view cube) in styles/zones.css.
+    this.area.dataset.top3d = String(layout.top === "3d");
+    this.area.dataset.bottom3d = String(layout.bottom === "3d");
+    for (const host of this.area.querySelectorAll<HTMLElement>("[data-central-view]")) {
+      placeInZone(host, layout);
     }
-    this.splitter.hidden = layout !== "both";
+    this.splitter.hidden = !isSplitLayout(layout);
     this.splitter.setAttribute("aria-label", translate("splitter.central"));
     this.splitter.title = translate("splitter.central");
     this.applyRatio();
@@ -66,4 +76,15 @@ export class CentralArea {
     this.area.style.setProperty("--split", `${shown * 100}%`);
     this.splitter.setAttribute("aria-valuenow", String(Math.round(shown * 100)));
   }
+}
+
+// A view in no zone is out of sight (styles/zones.css): the 3D canvas is display:none there, so
+// the browser neither lays it out nor keeps a large WebGL surface to composite. Its engine is not
+// resized to nothing (scene/viewport.ts) and follows the canvas again when it comes back.
+function placeInZone(host: HTMLElement, layout: CentralLayout): void {
+  const view = parseCentralView(host.dataset.centralView);
+  const zone = view === null ? "none" : zoneOfView(layout, view);
+  host.classList.toggle("zone-view--top", zone === "top");
+  host.classList.toggle("zone-view--bottom", zone === "bottom");
+  host.classList.toggle("zone-view--none", zone === "none");
 }

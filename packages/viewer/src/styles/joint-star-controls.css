@@ -1,0 +1,90 @@
+/* The controls of the joint view (ADR 0059), over the drawing: the fit button and the legend.
+   Neutral colours only, as joint-star.css. */
+/* The fit button, top right. */
+.joint-star__controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.joint-star__fit {
+  padding: 3px 10px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.joint-star__fit:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+/* Legend: one line, closed; a click unfolds the rows. */
+.joint-star-legend {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  max-width: 44ch;
+  max-height: calc(100% - 16px);
+  overflow: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: default;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.joint-star-legend__toggle {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 8px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.joint-star-legend.is-open .joint-star-legend__toggle {
+  color: var(--text);
+}
+
+.joint-star-legend__toggle:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.joint-star-legend__chevron {
+  flex: none;
+}
+
+.joint-star-legend__list {
+  margin: 0;
+  padding: 0 8px 6px;
+  list-style: none;
+}
+
+.joint-star-legend__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.joint-star-sample {
+  flex: none;
+}
+
+.joint-star-sample__selection {
+  stroke: var(--selection);
+  stroke-width: 3;
+}

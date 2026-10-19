@@ -1,21 +1,27 @@
 # Central views
 
-The central area of the viewer shows the machine in three forms: the **3D view**, the **chain diagram** and the **I/O view**. They combine into four layouts. Keys and mouse are in [Keyboard and mouse shortcuts](/en/reference/shortcuts); the menus in [Menus](/en/reference/menus); the other panels in [Panels and buttons](/en/reference/panels).
+The central area of the viewer shows the machine in four forms: the **3D view**, the **chain diagram**, the **Joints** view and the **I/O view**. It has a top zone and, if you open it, a bottom zone; each zone has its own selector. Keys and mouse are in [Keyboard and mouse shortcuts](/en/reference/shortcuts); the menus in [Menus](/en/reference/menus); the other panels in [Panels and buttons](/en/reference/panels).
 
-## The four layouts
+## The zones and their selectors
 
-| Layout | What it shows | How to get it |
-| --- | --- | --- |
-| **3D only** | The 3D view takes up the whole area. | **3D** button of the toolbar, **View** menu |
-| **Chain diagram only** | The diagram takes up the whole area. | **Diagram** button, **View** menu |
-| **3D + Diagram** | The 3D view on top, the diagram below. This is the default layout. | **3D + Diagram** button, **View** menu |
-| **I/O alone** | The I/O list (modules, channels, unmapped tags). | **View** menu, **I/O config** button of the **PLC bridge** card, or **Show in I/O** |
+![The central area: the 3D view on top, the Joints view below, a view selector at the top left of each zone](/screenshots/en/zones.webp)
 
-The **F4** key cycles through **3D + Diagram**, **3D only** and **Chain diagram only**. It never goes through **I/O alone**: from that view, it goes back to **3D + Diagram**.
+The central area has two zones, one above the other. At the start, the **top zone** shows the **3D** view and the **bottom zone** shows the **Diagram**. Each zone has its own **view selector**, at the top left: four toggle buttons, **3D**, **Diagram**, **Joints** and **I/O**. The button of the displayed view is pressed, underlined and tinted.
 
-In the **3D + Diagram** layout, a horizontal handle separates the two views (**Resize the 3D view and the diagram**). Drag it to change the split; a double-click restores it. The split is kept in the browser. So is the chosen layout.
+| Control | What it does |
+| --- | --- |
+| **View of the top zone** selector | Chooses the view of the top zone. |
+| **View of the bottom zone** selector | Chooses the view of the bottom zone. |
+| **Open the bottom zone** (**+** button, to the right of the top selector) | Opens the bottom zone, on the first view the top zone does not show. Absent while the bottom zone is open. |
+| **Close the bottom zone** (**✕** button, to the right of the bottom selector) | Closes the bottom zone: the top zone takes up the whole central area. |
 
-Changing layout keeps the 3D camera, the diagram's scroll position and the fields being typed in stay.
+A view is shown in **one zone only** at a time. In the selector of the other zone, its button is greyed and **struck through**, and its tooltip says why (for example **3D: already shown in the other zone**). To move it, first choose another view in the zone that shows it.
+
+The **F4** key moves the top zone to the next view, in the order **3D**, **Diagram**, **Joints**, **I/O**, then **3D** again. It skips the view the bottom zone shows. The **View** menu offers the same choices: **Top zone: 3D**, **Bottom zone: Diagram**, **Open the bottom zone**, **Close the bottom zone** (see [Menus](/en/reference/menus)).
+
+While the bottom zone is open, a horizontal handle separates the two zones (**Resize the two zones**). Drag it to change the split; a double-click restores it. The split is kept in the browser. So is the choice of views: a setting saved by an earlier version is read as it was.
+
+Changing a view keeps the 3D camera, the diagram's scroll position and the fields being typed in. The 3D view is only drawn while it is displayed in one of the two zones.
 
 With no Pantin open, only the empty 3D view is displayed, under the [welcome window](/en/reference/panels#the-welcome-window).
 
@@ -230,6 +236,72 @@ A click on a command connector does not select the node: the inspector does not 
 
 The diagram can be navigated entirely from the keyboard: the arrows move from node to node, **Enter** goes into a node's connectors, **Space** selects the node (or toggles a boolean command), **Esc** goes back, **Home** and **End** go to the first or last node, **Del** removes the link of a connector or the selected link, **F2** renames a drive, an actuator or a sensor. The detail is in [Shortcuts](/en/reference/shortcuts). **Del** never deletes an element: for that, use the **Edit** menu. If you press it on a node, the message line reminds you.
 
+## The Joints view
+
+![The Joints view of the plc-cylinder example: World on the left, three bodies, a fixed joint and the cylinder's slider, marked with the bolt of joints moved by an actuator](/screenshots/en/joint-view.webp)
+
+The **Joints** view draws the machine's **kinematic tree**: what moves relative to what. It is not the tree on the left. The tree files bodies into assemblies and carries no motion; the Joints view only shows what is linked by joints. The two trees can differ, and that is the point: you see at a glance a body that does not follow the group you expected, or a body tied by twenty fixed joints. To understand groups, see [The model of a Pantin](/en/guide/model#concepts-body-assembly-group).
+
+The view only displays: it changes nothing. To create, change or delete a joint, use the tree, the inspector and the joint form.
+
+### What the view shows
+
+The tree reads from left to right: each column is one level further from World.
+
+| Item | Shape | What it means |
+| --- | --- | --- |
+| **World** | A circle, with ground hatching and the name under it. | The fixed ground, at the left of the tree. Whatever is attached to it without a joint does not move. |
+| **Group** | A rounded rectangle, with its name, a number and a **▸** arrow. | An assembly that a joint targets: one rigid piece. The number counts the bodies that follow it, without a joint of their own. The arrow unfolds them. |
+| **Body** | A pill (a rectangle with round ends). | A body that is the end of a joint, or, once a group is unfolded, a body that follows that group. |
+| **Joint** | A curve from the parent to the child, with a sign in the middle and its name near the child. | Every joint of the Pantin, fixed joints included. The type is read from the line style and the sign. |
+| **Body that follows its group** | A thin line of very tight dots, with no sign or name. | The body has no joint: it moves with its group. |
+| **Attachment to World** | A thin, light line, with no sign or name. | The item has no parent joint: it is fixed to World. |
+
+The type of a joint is read from three cues, never from colour alone: the line style, the sign in the middle, and the joint's name.
+
+| Type | Line | Sign |
+| --- | --- | --- |
+| **Fixed** | Thin, solid. | A filled square (weld). |
+| **Prismatic (slider)** | Thick, long dashes. | A rectangle with a two-headed arrow. |
+| **Revolute (limited pivot)** | Thick, solid. | An arc closed by two end stops. |
+| **Continuous (unlimited pivot)** | Thick, round dots. | A full circle with an arrow. |
+| **Helical (screw and nut)** | Thick, alternating dash and dot. | Three small slanted strokes (a thread). |
+
+A joint **moved by an actuator** also carries a **bolt**-shaped sign next to its type sign.
+
+Bodies that follow their group are folded by default: the group only shows their number. Click the group's **▸** arrow (tooltip **Show the N bodies that follow it**) to see them, each at the end of a dotted line; the arrow turns over and its tooltip becomes **Hide the N bodies that follow it**. A body that is neither the end of a joint nor filed in a group is counted in **World**, since it never moves.
+
+A long name is cut by an ellipsis inside its shape; the shape of the selected item grows to show its name in full.
+
+### A sub-assembly with no joint
+
+In the tree, a sub-assembly is filed in the assembly above it. That does not make it move with it: only joints carry motion. The Joints view shows it: a sub-assembly with no parent joint appears **attached to World**, by a thin line, even when the assembly above it moves. It means it stays still when the group above moves. If that is not what you want, link it to the group it should follow (a fixed joint, a slider or a pivot).
+
+### The legend line
+
+At the bottom left of the view, a **Legend** line (with a chevron) is folded. Click it (tooltip **Show the legend**) to unfold the list of all the lines, signs and shapes described above; **Close the legend** folds it. This state is kept in the browser.
+
+![The unfolded legend: a line and a sign for each joint type, the actuator sign, the shapes of World, group and body](/screenshots/en/joint-legend.webp)
+
+### What you can do in the view
+
+| Gesture | Effect |
+| --- | --- |
+| Click on a group or a body | Selects it. The tree, the 3D view, the diagram and the inspector follow, as for any selection. |
+| Click on a joint | Selects the joint. |
+| Right-click | Opens the tree's context menu for that group, body or joint, with the same entries (see [Menus](/en/reference/menus#tree-context-menu)). |
+| Double-click | Frames the item (or the joint's child) in the 3D view when it is displayed. Otherwise, it only selects: the layout never changes on its own. |
+| Wheel | Zooms around the pointer. |
+| Drag the background | Pans the view. |
+| **Fit** button (top right of the view) | Squeezes the tree to fit the zone, until the names would touch; beyond that, drag the view. |
+| Click on **▸**, or <kbd>+</kbd> / <kbd>−</kbd> on the keyboard | Unfolds or folds the bodies that follow a group. |
+
+The item selected elsewhere (tree, 3D view, diagram) is highlighted here: its outline and its path to World are thickened and tinted. For a drive or an actuator, the joints it moves are highlighted. Multiple selection stays in the tree.
+
+On the keyboard, a single item is a tab stop; the keys are in [Keyboard and mouse shortcuts](/en/reference/shortcuts#joints-view). Zoom and pan are not saved: they stay when you switch views, and the tree is fitted again when you open another Pantin.
+
+With no joint at all, the view says **No joint: every body is fixed in World.**
+
 ## The I/O view
 
 ![The I/O view with module m1, its settings and the channel table](/screenshots/en/io-view.webp)
@@ -337,4 +409,6 @@ The table of zones and function codes is in [Connect a PLC](/en/guide/connect-a-
 
 ::: warning Known limits
 The wheel direction of the **Mouse: ZW3D** preset is the Babylon.js one (pushing the wheel forward zooms in); it has not been compared with the original software. The **Mouse: SolidWorks** preset zooms out when pushing forward.
+
+The **Joints** view has only been tried on small Pantins and test Pantins: on a large real Pantin (several dozen groups), the legibility of the signs and names is not verified. It shows the structure, not the state: a joint's position and an injected fault do not appear in it, and a joint cannot be edited in it.
 :::

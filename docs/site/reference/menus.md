@@ -49,7 +49,7 @@ Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [P
 
 | Entrée | Raccourci | Ce qu'elle fait | Grisé quand |
 |---|---|---|---|
-| **Tout cadrer** | <kbd>F</kbd> | Cadre la vue 3D sur tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (dispositions **Schéma des chaînes seul** et **E/S seules**). |
+| **Tout cadrer** | <kbd>F</kbd> | Cadre la vue 3D sur tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (la vue 3D n'est affichée dans aucune zone). |
 | **Cadrer la sélection** | | Cadre la vue 3D sur l'élément sélectionné. | Aucun corps, aucune sélection, sélection d'un élément de la chaîne d'action, ou vue 3D non affichée. |
 | séparateur | | | |
 | **Face** | <kbd>Ctrl</kbd>+<kbd>1</kbd> | Tourne la caméra vers la vue de face, en 300 ms. | Pas de Pantin ouvert ou vue 3D non affichée. |
@@ -63,11 +63,17 @@ Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [P
 | **Inspecteur** (case) | | Affiche ou masque l'inspecteur. Coché quand il est affiché. | Pas de Pantin ouvert. |
 | **Console** (case) | <kbd>F8</kbd> | Affiche ou masque la console. | Pas de Pantin ouvert. |
 | séparateur | | | |
-| **Changer la vue centrale** | <kbd>F4</kbd> | Passe à la disposition suivante : **3D + Schéma**, **3D seule**, **Schéma des chaînes seul**, puis de nouveau **3D + Schéma**. La disposition **E/S seules** est hors de ce cycle : <kbd>F4</kbd> la quitte pour **3D + Schéma**. | Pas de Pantin ouvert. |
-| **3D seule** (case) | | Choisit cette disposition. | Pas de Pantin ouvert. |
-| **Schéma des chaînes seul** (case) | | Choisit cette disposition. | Idem. |
-| **3D + Schéma** (case) | | Choisit cette disposition (celle par défaut). | Idem. |
-| **E/S seules** (case) | | Choisit cette disposition (liste d'E/S). | Idem. |
+| **Vue suivante de la zone du haut** | <kbd>F4</kbd> | Passe la zone du haut à la vue suivante, dans l'ordre **3D**, **Schéma**, **Liaisons**, **E/S**, puis de nouveau **3D**, en sautant la vue que la zone du bas affiche. | Pas de Pantin ouvert. |
+| **Zone du haut : 3D** (case) | | Affiche cette vue dans la zone du haut. Coché pour la vue actuelle de cette zone. | Pas de Pantin ouvert, ou la vue est déjà affichée dans la zone du bas. |
+| **Zone du haut : Schéma** (case) | | Idem. | Idem. |
+| **Zone du haut : Liaisons** (case) | | Idem. | Idem. |
+| **Zone du haut : E/S** (case) | | Idem. | Idem. |
+| **Zone du bas : 3D** (case) | | Affiche cette vue dans la zone du bas, et ouvre cette zone si elle est fermée. | Pas de Pantin ouvert, ou la vue est déjà affichée dans la zone du haut. |
+| **Zone du bas : Schéma** (case) | | Idem. | Idem. |
+| **Zone du bas : Liaisons** (case) | | Idem. | Idem. |
+| **Zone du bas : E/S** (case) | | Idem. | Idem. |
+| **Ouvrir la zone du bas** | | Ouvre la zone du bas, sur la première vue que la zone du haut n'affiche pas. | Pas de Pantin ouvert, ou la zone du bas est déjà ouverte. |
+| **Fermer la zone du bas** | | Ferme la zone du bas. | Pas de Pantin ouvert, ou la zone du bas est déjà fermée. |
 | séparateur | | | |
 | **Perspective** (case) | | Bascule la caméra entre perspective et projection orthographique. | Jamais. |
 | **Souris : SolidWorks** (case) | | Choisit la configuration de souris SolidWorks. | Jamais. |
@@ -94,7 +100,7 @@ Les réglages de souris sont détaillés dans [Raccourcis](/reference/shortcuts#
 
 ## Menu contextuel de l'arborescence
 
-Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du clavier, ouvre le menu de cette ligne. Son titre est « Actions sur « nom » ». Les entrées dépendent du type de ligne :
+Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du clavier, ouvre le menu de cette ligne. Un clic droit sur un groupe, un corps ou une liaison de la [vue Liaisons](/reference/views#la-vue-liaisons), ou <kbd>Maj</kbd>+<kbd>F10</kbd> sur l'un d'eux, ouvre le même menu. Son titre est « Actions sur « nom » ». Les entrées dépendent du type de ligne :
 
 | Type de ligne | Entrées, dans l'ordre |
 |---|---|

@@ -1,4 +1,5 @@
 import type { IoMappingResponse } from "@pantin/protocol";
+import { type CentralView, layoutOf } from "../central-layout.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -26,14 +27,14 @@ export const pantin = pantinResponse(false, [railBody, stepBody("carriage", "Car
 ]);
 export const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-export async function ioStore(api: Parameters<typeof testStore>[0], layout: "io" | "3d" = "io") {
+export async function ioStore(api: Parameters<typeof testStore>[0], layout: CentralView = "io") {
   const store = testStore({
     getPantin: async () => ({ ...pantin }),
     listPantins: async () => [],
     ...api,
   });
   store.requestedPantinId = pantin.id;
-  store.update({ ...withOpenPantin(store.state, pantin), centralLayout: layout });
+  store.update({ ...withOpenPantin(store.state, pantin), centralLayout: layoutOf(layout) });
   await settle();
   return store;
 }

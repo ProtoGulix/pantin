@@ -239,9 +239,11 @@ are in degrees per second.
 
 ![The chain diagram: valve, cylinder, joint and sensors](/screenshots/en/diagram.webp)
 
-The central view has three layouts. In the toolbar, the **Central view**
-selector offers **3D**, **Diagram** and **3D + Diagram** (F4 changes layout).
-Choose **Diagram**.
+The central area has a top zone and a bottom zone, each with its own view
+selector at the top left (**3D**, **Diagram**, **Joints**, **I/O**). By default,
+the 3D view is on top and the diagram below. If the diagram is not displayed,
+choose **Diagram** in the selector of the bottom zone (the **+** button opens
+that zone). The F4 key moves the top zone to the next view.
 
 The diagram shows four columns: **Drives**, **Actuators**, **Joints** and
 **Sensors**. The **New drive**, **New actuator** and **New sensor** buttons at
@@ -308,7 +310,7 @@ The core simulates continuously. You can command the valve by hand.
 
 ![A coil forced from the diagram, with its F mark](/screenshots/en/forced-tag.webp)
 
-1. Switch to **Diagram** or **3D + Diagram**, or select the valve and look at
+1. Display the **Diagram** in one of the zones, or select the valve and look at
    the **Commands** group of the inspector.
 2. In the diagram, click the **Coil 14** command: it is a switch (**On** /
    **Off**). The rod extends in about 2.5 s.
@@ -362,7 +364,7 @@ registers. The I/O list (`io.json`) makes the link. It is edited in the viewer,
 never by hand.
 
 1. At the bottom of the left panel, find the **PLC bridge** block.
-2. Click **I/O config**. The central view switches to **I/O alone**.
+2. Click **I/O config**. The **I/O** view is displayed in the top zone (if it was in no zone yet).
 3. If the Pantin has no I/O list, the message "This Pantin has no I/O list
    (io.json) yet" appears with the **Create the mapping** button. Click it: it
    creates a first empty module, `m1`, on port 1502. Use **Add a module**

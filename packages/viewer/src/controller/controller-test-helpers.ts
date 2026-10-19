@@ -42,6 +42,7 @@ export function testStore(
       showJointPositions: () => undefined,
       showInspectorLive: () => undefined,
       renderDiagram: () => undefined,
+      renderJointStar: () => undefined,
       showDiagramLive: () => undefined,
       // The silent stand-in answers every call; a test names the ones it watches.
       viewport: () => silent<Viewport>(viewport),

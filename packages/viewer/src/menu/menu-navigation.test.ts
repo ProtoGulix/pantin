@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { pantinResponse, pantinSummaries } from "../test-fixtures.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
@@ -34,11 +35,17 @@ const VIEW_MENU_ENTRIES = [
   ["Isométrique", null],
   ["Inspecteur", true],
   ["Console", false],
-  ["Changer la vue centrale", null],
-  ["3D seule", false],
-  ["Schéma des chaînes seul", false],
-  ["3D + Schéma", true],
-  ["E/S seules", false],
+  ["Vue suivante de la zone du haut", null],
+  ["Zone du haut : 3D", true],
+  ["Zone du haut : Schéma", false],
+  ["Zone du haut : Liaisons", false],
+  ["Zone du haut : E/S", false],
+  ["Zone du bas : 3D", false],
+  ["Zone du bas : Schéma", true],
+  ["Zone du bas : Liaisons", false],
+  ["Zone du bas : E/S", false],
+  ["Ouvrir la zone du bas", null],
+  ["Fermer la zone du bas", null],
   ["Perspective", false],
   ["Souris : SolidWorks", true],
   ["Souris : ZW3D", false],
@@ -118,7 +125,7 @@ describe("menu bar model standard views", () => {
   });
 
   it("enables the views only while the 3D view is shown", () => {
-    const diagramOnly = { ...editing(false), centralLayout: "diagram" } as const;
+    const diagramOnly = { ...editing(false), centralLayout: layoutOf("diagram") } as const;
     expect(
       viewEntries(diagramOnly)?.every((entry) => entry.type === "item" && !entry.enabled),
     ).toBe(true);

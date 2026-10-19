@@ -1,6 +1,6 @@
 import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
 import type { BridgeIntents } from "../bridge/bridge-intents.ts";
-import type { CentralLayout } from "../central-layout.ts";
+import type { CentralView, Zone } from "../central-layout.ts";
 import type { DiagramElementKind, DiagramHint } from "../controller/diagram-edit-actions.ts";
 import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
@@ -169,9 +169,13 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   alignFramesOnJointAxis(): void;
   moveJoint(pantinId: string, jointId: string, position: number): void;
 
-  // The chain diagram (ADR 0029): the central layout, a band folded,
+  // The chain diagram (ADR 0029): the zones of the central area, a band folded,
   // a node clicked (an id like "drive:valve").
-  setCentralLayout(layout: CentralLayout): void;
+  chooseZoneView(zone: Zone, view: CentralView): void;
+  // Shows a view in the top zone when no zone shows it yet.
+  revealCentralView(view: CentralView): void;
+  openBottomZone(): void;
+  closeBottomZone(): void;
   toggleDiagramBand(bandKey: string): void;
   selectDiagramNode(nodeId: string): void;
   // Wiring (ADR 0029 points 6 and 7): two sockets linked, by drag or from

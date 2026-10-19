@@ -2,7 +2,7 @@
 
 Every button, field and control of the panels, area by area: its **label**, what it does, and when it is greyed out.
 
-The menus (**File**, **Edit**, **View**) are described in [Menus](/en/reference/menus). Key and mouse combinations are in [Keyboard and mouse shortcuts](/en/reference/shortcuts). The general layout of the screen is in [The screen](/en/reference/interface). The three central views (3D, Diagram, I/O) are in [Central views](/en/reference/views).
+The menus (**File**, **Edit**, **View**) are described in [Menus](/en/reference/menus). Key and mouse combinations are in [Keyboard and mouse shortcuts](/en/reference/shortcuts). The general layout of the screen is in [The screen](/en/reference/interface). The four central views (3D, Diagram, Joints, I/O) are in [Central views](/en/reference/views).
 
 ::: tip Reading the tables
 "Greyed out": the button is visible but inactive, and its tooltip often gives the reason. A field "validated on leaving" sends its value with **Enter** or a click elsewhere.
@@ -17,13 +17,12 @@ It sits under the menu bar, above the tree. It exists only when a Pantin is open
 | **Close the Pantin (back to the welcome window)** (arrow) | Closes the Pantin and goes back to the welcome window. If the Pantin has unsaved changes, a [confirmation](#confirmations) asks what to do. | Never |
 | **Save** | Writes the Pantin to disk. When there are unsaved changes, the tooltip becomes **Save (unsaved changes)** and a dot appears on the button. | No unsaved changes, or a request is in progress |
 | **Import a 3D file (GLB, STL, STEP) into the open Pantin** | Opens the browser's file picker, then the [import form](#the-import-form). | A request or an import is in progress |
-| **Frame all** | Places the 3D camera to see all the bodies. | No body, or the 3D view is not displayed (**Diagram** or I/O layout) |
+| **Frame all** | Places the 3D camera to see all the bodies. | No body, or the 3D view is shown in no zone |
 | **Frame selection** | Places the 3D camera on the item selected in the tree. | No body, no tree node selected, or 3D view not displayed |
-| **Central view**: **3D** / **Diagram** / **3D + Diagram** | Three toggle buttons, only one pressed: chooses what the central area displays. The tooltip gives the full name (**3D only**, **Chain diagram only**, **3D + Diagram**). | Never |
 | Waiting wheel (**Working**) | Indicator, not a button: a request is in progress. | Not applicable |
 
-::: info The I/O layout
-The toolbar has only three view buttons. The **I/O alone** layout is chosen in the **View** menu, or with the **I/O config** button of the [PLC bridge card](#the-plc-bridge-card). The **F4** key cycles through **3D + Diagram**, **3D only** and **Chain diagram only**, and never goes through the I/O view.
+::: info Choosing the views
+The toolbar has no view button: each zone of the central area has its own selector, at the top left (see [Central views](/en/reference/views#the-zones-and-their-selectors)). The I/O view is chosen in one of these selectors, in the **View** menu, or with the **I/O config** button of the [PLC bridge card](#the-plc-bridge-card): if it is shown in no zone, that button puts it in the top zone. The <kbd>F4</kbd> key moves the top zone to the next view.
 :::
 
 ## The left panel
@@ -108,7 +107,7 @@ During the import, the form shows **Importing…**. For a STEP: **Converting STE
 
 ![The PLC bridge card, bridge running](/screenshots/en/bridge-running.webp)
 
-The card is at the bottom of the left panel, visible in all layouts.
+The card is at the bottom of the left panel, visible whichever views are displayed.
 
 The status line shows a dot (check, ring, half-filled ring or cross in an octagon, besides the colour) and the state text, followed by a clickable pill that tells the network mode.
 

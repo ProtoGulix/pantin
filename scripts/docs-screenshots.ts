@@ -22,13 +22,14 @@ import {
   captureForcedTag,
   captureHome,
   captureIoView,
+  captureJointView,
   captureOverview,
   captureTransportBar,
   captureViewCube,
 } from "./docs-screenshots/capture-views.ts";
 import { type RunningCore, startCore } from "./docs-screenshots/core-process.ts";
 import { type Language, loadLabels } from "./docs-screenshots/labels.ts";
-import { goToWelcome, openExample, showCentralView } from "./docs-screenshots/pantin-page.ts";
+import { goToWelcome, openExample } from "./docs-screenshots/pantin-page.ts";
 import { type Session, saveShot } from "./docs-screenshots/session.ts";
 
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -97,9 +98,9 @@ async function captureLanguage(
     await captureHome(session, CONTEXT_COLOUR_SCHEME);
     await captureViewCube(session);
     // Software WebGL renders the 3D view at about one frame per second, and every screenshot and
-    // click waits for frames. The 3D view stops rendering when hidden, so the diagram layout
-    // makes everything after this point fast.
-    await showCentralView(session, "toolbar.viewDiagram");
+    // click waits for frames. The 3D view stops rendering when hidden, so showing the diagram
+    // alone makes everything after the joint view fast.
+    await captureJointView(session);
     await captureTransportBar(session, "transport-bar");
     await captureImportForm(session, REPOSITORY_ROOT);
     await captureTreeContextMenu(session);

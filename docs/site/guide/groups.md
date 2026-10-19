@@ -1,6 +1,6 @@
 # Grouper, dégrouper, déplacer un corps
 
-Ces procédures règlent la structure d'un Pantin : quels corps bougent ensemble. Les mots **corps**, **assemblage** et **groupe** sont définis dans [Le modèle d'un Pantin](/guide/model#les-concepts-corps-assemblage-groupe).
+Ces procédures règlent la structure d'un Pantin : quels corps bougent ensemble. Après chaque changement, vérifiez vos liaisons dans la vue **Liaisons** : elle montre les groupes comme des rectangles arrondis, avec le nombre de corps qui les suivent, et ce qui reste rattaché au Monde (voir [La vue Liaisons](/reference/views#la-vue-liaisons)). Les mots **corps**, **assemblage** et **groupe** sont définis dans [Le modèle d'un Pantin](/guide/model#les-concepts-corps-assemblage-groupe).
 
 ## Faire un groupe
 

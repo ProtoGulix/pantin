@@ -76,10 +76,25 @@ export async function openExample(session: Session): Promise<void> {
   await page.waitForTimeout(FIRST_FRAMES_DELAY_MS);
 }
 
-export async function showCentralView(
+export type CentralViewKey = "view.3d" | "view.diagram" | "view.joints" | "view.io";
+
+function zoneBar(session: Session, zone: "top" | "bottom"): Locator {
+  return session.page.getByRole("group", { name: session.label(`zone.${zone}.label`) });
+}
+
+/** Chooses a view in the selector of one zone (a view shown in the other zone is disabled). */
+export async function chooseZoneView(
   session: Session,
-  view: "toolbar.view3d" | "toolbar.viewDiagram" | "toolbar.viewBoth",
+  zone: "top" | "bottom",
+  view: CentralViewKey,
 ): Promise<void> {
-  const group = session.page.getByRole("group", { name: session.label("toolbar.viewSwitch") });
-  await group.getByRole("button", { name: session.label(view), exact: true }).click(FORCED);
+  await zoneBar(session, zone)
+    .getByRole("button", { name: session.label(view), exact: true })
+    .click(FORCED);
+}
+
+export async function closeBottomZone(session: Session): Promise<void> {
+  await zoneBar(session, "bottom")
+    .getByRole("button", { name: session.label("zone.closeBottom") })
+    .click(FORCED);
 }

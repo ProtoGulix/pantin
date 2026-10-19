@@ -11,10 +11,11 @@ Les zones de la fenêtre, de haut en bas et de gauche à droite. Les noms en **g
 | Barre d'outils     | Barre de transport                  |           |
 |--------------------|-------------------------------------|           |
 | Arborescence       |                                     |           |
-|  (Pantin,          |  Vue centrale :                     | Inspecteur|
-|   assemblages,     |  3D, Schéma, 3D + Schéma ou E/S     |           |
-|   corps, liaisons, |                                     |           |
-|   éléments)        |-------------------------------------|           |
+|  (Pantin,          |  Zone du haut : une vue             | Inspecteur|
+|   assemblages,     |  (3D, Schéma, Liaisons ou E/S)      |           |
+|   corps, liaisons, |- - - - - - - - - - - - - - - - - - -|           |
+|   éléments)        |  Zone du bas (facultative)          |           |
+|                    |-------------------------------------|           |
 |--------------------| Console + barre compteur            |           |
 | Pont automate      |                                     |           |
 +--------------------+-------------------------------------+-----------+
@@ -28,7 +29,7 @@ Elle occupe le haut de la fenêtre et contient quatre menus : **Fichier**, **Éd
 
 ## La barre d'outils
 
-Elle est en haut de la colonne de gauche, quand un Pantin est ouvert. Elle réunit les boutons d'accès rapide : retour à l'accueil (**Fermer le Pantin**), **Enregistrer**, import d'un fichier 3D, cadrage, et le sélecteur **Vue centrale** (**3D**, **Schéma**, **3D + Schéma**). Un indicateur signale un traitement en cours. Voir [Panneaux et boutons](/reference/panels).
+Elle est en haut de la colonne de gauche, quand un Pantin est ouvert. Elle réunit les boutons d'accès rapide : retour à l'accueil (**Fermer le Pantin**), **Enregistrer**, import d'un fichier 3D et cadrage. Un indicateur signale un traitement en cours. Voir [Panneaux et boutons](/reference/panels).
 
 ## Le panneau latéral gauche
 
@@ -39,7 +40,7 @@ Il n'existe que lorsqu'un Pantin est ouvert. De haut en bas : la barre d'outils,
 
 ## La vue centrale
 
-Elle a quatre dispositions, au choix : **3D seule**, **Schéma des chaînes seul**, **3D + Schéma** (par défaut) et **E/S seules**. Le sélecteur de la barre d'outils propose les trois premières. Le menu **Affichage** propose les quatre, et <kbd>F4</kbd> fait tourner les trois premières. Sans Pantin ouvert, la vue 3D occupe toute la zone. Voir [Vues centrales](/reference/views).
+Elle a une zone du haut et, si vous l'ouvrez, une zone du bas. Chaque zone affiche une vue à la fois, parmi **3D**, **Schéma**, **Liaisons** et **E/S**, choisie avec le sélecteur placé en haut à gauche de la zone. Une vue ne s'affiche que dans une zone à la fois. Par défaut, la vue 3D est en haut et le schéma en bas. Le menu **Affichage** propose les mêmes choix, et <kbd>F4</kbd> passe la zone du haut à la vue suivante. Sans Pantin ouvert, la vue 3D occupe toute la zone. Voir [Vues centrales](/reference/views).
 
 Dans la vue 3D, un cube des vues permet de choisir une vue standard d'un clic.
 

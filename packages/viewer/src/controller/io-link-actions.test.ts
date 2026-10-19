@@ -1,5 +1,6 @@
 import type { IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { bodyOf, documentOf, driveOf, jointOf } from "../diagram/diagram-fixtures.ts";
 import { unmappedEntryId } from "../io/io-element-tags.ts";
 import { deviceRowId, familyNodeId, jointNodeId } from "../tree/node-ids.ts";
@@ -55,7 +56,7 @@ async function ioStore() {
   store.requestedPantinId = pantin.id;
   store.update({
     ...withOpenPantin(store.state, pantin),
-    centralLayout: "io",
+    centralLayout: layoutOf("io"),
     inspectorOpen: false,
   });
   await settle();
@@ -68,7 +69,7 @@ describe("a clicked tag selects its owner", () => {
     createPanelIntents(store).selectIoOwner({ kind: "drive", id: "v1" });
     expect(store.state.selection).toEqual({ kind: "drive", id: "v1" });
     expect(store.state.expandedNodeIds.has(familyNodeId("press", "a", "actionChain"))).toBe(true);
-    expect(store.state.centralLayout).toBe("io");
+    expect(store.state.centralLayout.top).toBe("io");
     expect(store.state.inspectorOpen).toBe(true);
   });
 
@@ -97,7 +98,7 @@ function quietStore(reads: { count: number }, answer: IoMappingResponse = mappin
   store.requestedPantinId = pantin.id;
   store.update({
     ...withOpenPantin(store.state, pantin),
-    centralLayout: "3d",
+    centralLayout: layoutOf("3d"),
     inspectorOpen: false,
   });
   return store;
@@ -108,10 +109,10 @@ describe("showing an element in the I/O view", () => {
     const store = await ioStore();
     const intents = createPanelIntents(store);
     intents.selectDevice({ kind: "drive", id: "v1" });
-    store.update({ ...store.state, centralLayout: "3d" });
+    store.update({ ...store.state, centralLayout: layoutOf("3d") });
     intents.showTagInIo("a.v1.extend");
     await settle();
-    expect(store.state.centralLayout).toBe("io");
+    expect(store.state.centralLayout.top).toBe("io");
     expect(store.state.io.selectedModuleKey).toBe("m2");
     expect(store.state.io.focus).toEqual({ cellId: "io-cell-1-0-tag", serial: 1 });
   });
@@ -130,7 +131,7 @@ describe("showing an element in the I/O view", () => {
     const store = quietStore({ count: 0 });
     createPanelIntents(store).showDeviceInIo(deviceRowId("press", "drive", "v2"));
     await settle();
-    expect(store.state.centralLayout).toBe("io");
+    expect(store.state.centralLayout.top).toBe("io");
     expect(store.state.io.focus?.cellId).toBe(unmappedEntryId("a.v2.extend"));
   });
 
@@ -141,7 +142,7 @@ describe("showing an element in the I/O view", () => {
     await settle();
     // The document change itself starts the read; "Show in I/O" shares it.
     reads.count = 0;
-    store.update({ ...store.state, centralLayout: "3d", openPantin: { ...pantin } });
+    store.update({ ...store.state, centralLayout: layoutOf("3d"), openPantin: { ...pantin } });
     createPanelIntents(store).showDeviceInIo(deviceRowId("press", "drive", "v2"));
     await settle();
     expect(reads.count).toBe(1);
@@ -158,7 +159,7 @@ describe('the mapping behind "Show in I/O"', () => {
     const other = { ...pantin, id: "other" };
     store.requestedPantinId = other.id;
     reads.count = 0;
-    store.update({ ...withOpenPantin(store.state, other), centralLayout: "3d" });
+    store.update({ ...withOpenPantin(store.state, other), centralLayout: layoutOf("3d") });
     expect(store.state.io.mapping).toBeNull();
     createPanelIntents(store).showDeviceInIo(deviceRowId("other", "drive", "v1"));
     await settle();
@@ -171,7 +172,7 @@ describe('the mapping behind "Show in I/O"', () => {
       getIoMapping: () => new Promise((resolve) => (release = () => resolve(mapping))),
     });
     store.requestedPantinId = pantin.id;
-    store.update({ ...withOpenPantin(store.state, pantin), centralLayout: "io" });
+    store.update({ ...withOpenPantin(store.state, pantin), centralLayout: layoutOf("io") });
     expect(store.state.pendingRequestCount).toBe(0);
     release();
     await settle();

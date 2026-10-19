@@ -1,5 +1,5 @@
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
-import { parseStoredLayout } from "./central-layout.ts";
+import { parseStoredLayout, serialiseLayout } from "./central-layout.ts";
 import { receiveViewportPick } from "./controller/axis-pick-actions.ts";
 import { receiveBridge } from "./controller/bridge-actions.ts";
 import { refreshConsole } from "./controller/console-actions.ts";
@@ -129,6 +129,7 @@ function createPorts(
     showJointPositions: (positions) => screen.showJointPositions(positions),
     showInspectorLive: (tags, runtime, forced) => screen.showInspectorLive(tags, runtime, forced),
     renderDiagram: (model) => withIntents((intents) => screen.renderDiagram(model, intents)),
+    renderJointStar: (model) => withIntents((intents) => screen.renderJointStar(model, intents)),
     showDiagramLive: (tags, runtime, forced) => screen.showDiagramLive(tags, runtime, forced),
     showConsoleLive: (view) => screen.showConsoleLive(view),
     showClock: (view) => withIntents((intents) => screen.showClock(view, intents)),
@@ -155,7 +156,8 @@ function createPorts(
       writeStoredText(STORAGE_KEYS.theme, choice);
       theme.choose(choice);
     },
-    storeCentralLayout: (layout) => writeStoredText(STORAGE_KEYS.centralLayout, layout),
+    storeCentralLayout: (layout) =>
+      writeStoredText(STORAGE_KEYS.centralLayout, serialiseLayout(layout)),
     storeGizmoSteps: (steps) => writeStoredText(STORAGE_KEYS.gizmoSteps, serializeSteps(steps)),
     storeGizmoSpace: (space) => writeStoredText(STORAGE_KEYS.gizmoSpace, space),
     storeNavigation: (settings) =>

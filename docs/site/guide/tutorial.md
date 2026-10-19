@@ -252,9 +252,11 @@ un pivot, ils sont en degrés par seconde.
 
 ![Le schéma des chaînes : distributeur, vérin, liaison et capteurs](/screenshots/fr/diagram.webp)
 
-La vue centrale a trois dispositions. Dans la barre d'outils, le sélecteur **Vue
-centrale** propose **3D**, **Schéma** et **3D + Schéma** (F4 change de
-disposition). Choisissez **Schéma**.
+La zone centrale a une zone du haut et une zone du bas, chacune avec son
+sélecteur de vue en haut à gauche (**3D**, **Schéma**, **Liaisons**, **E/S**).
+Par défaut, la vue 3D est en haut et le schéma en bas. Si le schéma n'est pas
+affiché, choisissez **Schéma** dans le sélecteur de la zone du bas (le bouton
+**+** ouvre cette zone). La touche F4 passe la zone du haut à la vue suivante.
 
 Le schéma montre quatre colonnes : **Préactionneurs**, **Actionneurs**,
 **Liaisons** et **Capteurs**. Les boutons **Nouveau préactionneur**, **Nouvel
@@ -326,7 +328,7 @@ Le cœur simule en continu. Vous pouvez commander le distributeur à la main.
 
 ![Une bobine forcée depuis le schéma, avec sa marque F](/screenshots/fr/forced-tag.webp)
 
-1. Passez en **Schéma** ou **3D + Schéma**, ou sélectionnez le distributeur et
+1. Affichez le **Schéma** dans une des zones, ou sélectionnez le distributeur et
    regardez le groupe **Commandes** de l'inspecteur.
 2. Dans le schéma, cliquez la commande **Bobine 14** : c'est un interrupteur
    (**Marche** / **Arrêt**). La tige sort en environ 2,5 s.
@@ -382,7 +384,7 @@ registres Modbus. La liste d'E/S (`io.json`) fait le lien. Elle est modifiée da
 le viewer, jamais à la main.
 
 1. Au bas du panneau de gauche, trouvez le bloc **Pont automate**.
-2. Cliquez **Config E/S**. La vue centrale passe à **E/S seules**.
+2. Cliquez **Config E/S**. La vue **E/S** s'affiche dans la zone du haut (si elle n'était déjà dans aucune zone).
 3. Si le Pantin n'a pas de liste d'E/S, le message « Ce Pantin n'a pas encore de
    liste d'E/S (io.json) » apparaît avec le bouton **Créer le mapping**.
    Cliquez-le : il crée un premier module vide, `m1`, sur le port 1502.

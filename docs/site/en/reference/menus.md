@@ -49,7 +49,7 @@ The **Move**, **Rotate** and **Align…** tools are detailed in [Panels and butt
 
 | Entry | Shortcut | What it does | Greyed out when |
 |---|---|---|---|
-| **Frame all** | <kbd>F</kbd> | Frames the 3D view on all the bodies. | No body, or the 3D view is not displayed (layouts **Chain diagram only** and **I/O alone**). |
+| **Frame all** | <kbd>F</kbd> | Frames the 3D view on all the bodies. | No body, or the 3D view is not displayed (the 3D view is shown in no zone). |
 | **Frame selection** | | Frames the 3D view on the selected element. | No body, no selection, selection of an element of the action chain, or 3D view not displayed. |
 | separator | | | |
 | **Front** | <kbd>Ctrl</kbd>+<kbd>1</kbd> | Turns the camera to the front view, in 300 ms. | No Pantin open or 3D view not displayed. |
@@ -63,11 +63,17 @@ The **Move**, **Rotate** and **Align…** tools are detailed in [Panels and butt
 | **Inspector** (box) | | Shows or hides the inspector. Ticked when it is displayed. | No Pantin open. |
 | **Console** (box) | <kbd>F8</kbd> | Shows or hides the console. | No Pantin open. |
 | separator | | | |
-| **Cycle the central view** | <kbd>F4</kbd> | Goes to the next layout: **3D + Diagram**, **3D only**, **Chain diagram only**, then **3D + Diagram** again. The **I/O alone** layout is outside this cycle: <kbd>F4</kbd> leaves it for **3D + Diagram**. | No Pantin open. |
-| **3D only** (box) | | Chooses this layout. | No Pantin open. |
-| **Chain diagram only** (box) | | Chooses this layout. | Same. |
-| **3D + Diagram** (box) | | Chooses this layout (the default one). | Same. |
-| **I/O alone** (box) | | Chooses this layout (I/O list). | Same. |
+| **Next view in the top zone** | <kbd>F4</kbd> | Moves the top zone to the next view, in the order **3D**, **Diagram**, **Joints**, **I/O**, then **3D** again, skipping the view the bottom zone shows. | No Pantin open. |
+| **Top zone: 3D** (box) | | Shows this view in the top zone. Ticked for the current view of that zone. | No Pantin open, or the view is already shown in the bottom zone. |
+| **Top zone: Diagram** (box) | | Same. | Same. |
+| **Top zone: Joints** (box) | | Same. | Same. |
+| **Top zone: I/O** (box) | | Same. | Same. |
+| **Bottom zone: 3D** (box) | | Shows this view in the bottom zone, and opens that zone if it is closed. | No Pantin open, or the view is already shown in the top zone. |
+| **Bottom zone: Diagram** (box) | | Same. | Same. |
+| **Bottom zone: Joints** (box) | | Same. | Same. |
+| **Bottom zone: I/O** (box) | | Same. | Same. |
+| **Open the bottom zone** | | Opens the bottom zone, on the first view the top zone does not show. | No Pantin open, or the bottom zone is already open. |
+| **Close the bottom zone** | | Closes the bottom zone. | No Pantin open, or the bottom zone is already closed. |
 | separator | | | |
 | **Perspective** (box) | | Switches the camera between perspective and orthographic projection. | Never. |
 | **Mouse: SolidWorks** (box) | | Chooses the SolidWorks mouse configuration. | Never. |
@@ -94,7 +100,7 @@ The mouse settings are detailed in [Shortcuts](/en/reference/shortcuts#_3d-view-
 
 ## Tree context menu
 
-A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, opens the menu of that row. Its title is `Actions on "name"`. The entries depend on the row type:
+A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, opens the menu of that row. A right-click on a group, a body or a joint of the [Joints view](/en/reference/views#the-joints-view), or <kbd>Shift</kbd>+<kbd>F10</kbd> on one of them, opens the same menu. Its title is `Actions on "name"`. The entries depend on the row type:
 
 | Row type | Entries, in order |
 |---|---|

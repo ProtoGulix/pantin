@@ -92,10 +92,16 @@
   box-sizing: border-box;
 }
 
+/* The page is as tall as the window through a chain of percentages, not 100vh: a browser that
+   reports a stale or smaller vh (tall or resized windows) cannot cut the app short. */
+html {
+  height: 100%;
+}
+
 body {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   margin: 0;
   overflow: hidden;
 }

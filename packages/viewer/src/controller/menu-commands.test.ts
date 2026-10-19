@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_CENTRAL_LAYOUT, layoutOf } from "../central-layout.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { withWelcomeHidden } from "../session-state.ts";
 import { pantinResponse } from "../test-fixtures.ts";
@@ -34,19 +35,28 @@ describe("runMenuCommand with no Pantin open", () => {
 });
 
 describe("runMenuCommand on the central layout and the language", () => {
-  it("sets the layout named after layout:, and falls back to both on garbage", () => {
+  it("sets the view of a zone named after topView: and bottomView:, and ignores garbage", () => {
     const store = testStore({});
-    runMenuCommand(store, "layout:3d", ignoreLanguage);
-    expect(store.state.centralLayout).toBe("3d");
+    runMenuCommand(store, "topView:io", ignoreLanguage);
+    runMenuCommand(store, "bottomView:joints", ignoreLanguage);
+    expect(store.state.centralLayout).toEqual(layoutOf("io", "joints"));
     // Cast: the type forbids a bad suffix, which is what this test feeds in.
-    runMenuCommand(store, "layout:sideways" as MenuCommand, ignoreLanguage);
-    expect(store.state.centralLayout).toBe("both");
+    runMenuCommand(store, "topView:sideways" as MenuCommand, ignoreLanguage);
+    expect(store.state.centralLayout).toEqual(layoutOf("io", "joints"));
   });
 
-  it("cycles the layout on cycleLayout", () => {
+  it("opens and closes the bottom zone", () => {
+    const store = testStore({});
+    runMenuCommand(store, "closeBottomZone", ignoreLanguage);
+    expect(store.state.centralLayout).toEqual(layoutOf("3d"));
+    runMenuCommand(store, "openBottomZone", ignoreLanguage);
+    expect(store.state.centralLayout).toEqual(layoutOf("3d", "diagram"));
+  });
+
+  it("moves the top view on cycleLayout, skipping the bottom view", () => {
     const store = testStore({});
     runMenuCommand(store, "cycleLayout", ignoreLanguage);
-    expect(store.state.centralLayout).toBe("3d");
+    expect(store.state.centralLayout).toEqual(layoutOf("joints", "diagram"));
   });
 
   it("still hands language:en to changeLanguage, without touching the layout", () => {
@@ -54,7 +64,7 @@ describe("runMenuCommand on the central layout and the language", () => {
     const chosen: string[] = [];
     runMenuCommand(store, "language:en", (language) => chosen.push(language));
     expect(chosen).toEqual(["en"]);
-    expect(store.state.centralLayout).toBe("both");
+    expect(store.state.centralLayout).toEqual(DEFAULT_CENTRAL_LAYOUT);
   });
 });
 

@@ -1,5 +1,6 @@
 import type { PantinResponse } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { bodyOf, documentOf, jointOf } from "../diagram/diagram-fixtures.ts";
 import { DEFAULT_SNAP_STEPS } from "../gizmo/placement-snapping.ts";
 import { selectedNodeIdOf } from "../selection.ts";
@@ -82,7 +83,7 @@ describe("the tool follows the selection", () => {
     expect(store.state.gizmoMode).toBeNull();
     toggleInspector(store);
     toggleGizmo(store, "move");
-    store.update({ ...store.state, centralLayout: "diagram" });
+    store.update({ ...store.state, centralLayout: layoutOf("diagram") });
     expect(store.state.gizmoMode).toBeNull();
   });
 

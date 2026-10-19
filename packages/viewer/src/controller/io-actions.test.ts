@@ -1,6 +1,7 @@
 import type { IoMappingResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { PantinApiError } from "../api-transport.ts";
+import { layoutOf } from "../central-layout.ts";
 import { pantinResponse } from "../test-fixtures.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -64,7 +65,7 @@ describe("the I/O view actions", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(store.state.io.mapping).toEqual(mapping);
     expect(store.state.io.selectedModuleKey).toBe("m1");
-    setCentralLayout(store, "io");
+    setCentralLayout(store, layoutOf("io"));
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(calls).toEqual([]);
   });

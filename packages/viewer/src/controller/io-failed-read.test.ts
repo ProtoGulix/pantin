@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { setCentralLayout } from "./diagram-actions.ts";
 import { ioIntents } from "./io-actions.ts";
 import { answer, ioStore, settle } from "./io-reload-test-helpers.ts";
@@ -44,7 +45,7 @@ describe("a failed read", () => {
       "3d",
     );
     failing = false;
-    setCentralLayout(store, "io");
+    setCentralLayout(store, layoutOf("io"));
     await settle();
     expect(reads).toBe(2);
     expect(store.state.io.mapping).not.toBeNull();

@@ -53,12 +53,12 @@ const ALLOWLIST: Readonly<Record<string, string>> = {
   "message-line.css :: .message-line--error": "error icon and visually hidden level word",
   "message-line.css :: .message-line--error .message-line__level":
     "error icon and visually hidden level word",
-  "panel.css :: .view-switch__button.is-pressed":
-    "brand: the active view mode, aria-pressed and a 2 px bottom bar",
   "properties.css :: .forced-mark__badge": "lock glyph and the word Forced",
   "properties.css :: .property-grid__error": "error glyph in front of the sentence",
   "properties.css :: .property-grid__value--editable .text-input.is-invalid":
     "dashed border, and the error line under the group",
+  "zones.css :: .zone-bar__button.is-pressed":
+    "brand: the active view of a zone, its name in words, aria-pressed and a 2 px bottom bar",
   "switch-diagram.css :: .switch-diagram__hold":
     "dashed outline against the solid outline of the on zone, and the dimensions in text",
   "switch-diagram.css :: .switch-diagram__on":

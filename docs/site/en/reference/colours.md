@@ -65,6 +65,10 @@ Each kind of wire has its own stroke and a label written on the wire:
 
 The label and the stroke identify a wire, not its colour. Pneumatic and observation, both bluish, differ by stroke, width and label.
 
+## In the Joints view
+
+Joints are **never** told apart by colour: all lines and signs share the same neutral tint. Each joint type has its own line style (thin solid, long dashes, thick solid, round dots, dash and dot), its sign in the middle (filled square, rectangle with a double arrow, arc with two end stops, circle with an arrow, thread) and its name. The selected item and its path to World are tinted **and** thickened, and the shape of the selected group grows to show its full name. The full list is in [The Joints view](/en/reference/views#the-joints-view).
+
 ## Conveyor volumes
 
 | Volume | Cue (no colour) | Colour |

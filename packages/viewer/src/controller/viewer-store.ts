@@ -27,6 +27,7 @@ import type { LatestWinsSender } from "../gizmo/latest-wins-sender.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import { withPlacementFeedbackRules, withToolRules } from "../gizmo/tool-rules.ts";
 import { createTranslator, type Language } from "../i18n/translate.ts";
+import { createJointStarModelBuilder } from "../joint-star/joint-star-view-model.ts";
 import { withAxisPickRules } from "../joints/axis-pick.ts";
 import { jointPreviewOf } from "../joints/joint-preview.ts";
 import type { InspectorPreferences } from "../layout-preferences.ts";
@@ -95,6 +96,7 @@ export class ViewerStore {
   // Who is linked to whom in the open document, built once per answer of the core.
   readonly chainLinksOf = createChainLinksCache();
   private readonly buildDiagramModel = createDiagramModelBuilder(this.chainLinksOf);
+  private readonly buildJointStarModel = createJointStarModelBuilder();
 
   constructor(
     ports: StorePorts,
@@ -138,6 +140,7 @@ export class ViewerStore {
     this.ports.showInspectorLive(this.tagValues, this.driveRuntime, this.forcedTags);
     // After followPoses: a Pantin just opened has no tag values yet.
     this.ports.renderDiagram(this.buildDiagramModel(next));
+    this.ports.renderJointStar(this.buildJointStarModel(next));
     this.ports.showDiagramLive(this.tagValues, this.driveRuntime, this.forcedTags);
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());

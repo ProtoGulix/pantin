@@ -9,6 +9,7 @@ import type { DiagramModel } from "../diagram/diagram-view-model.ts";
 import type { GizmoSpace } from "../gizmo/gizmo-space.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import type { Language } from "../i18n/translate.ts";
+import type { JointStarModel } from "../joint-star/joint-star-view-model.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { PoseStreamClient } from "../pose-stream-client.ts";
 import type { Viewport } from "../scene/viewport.ts";
@@ -34,6 +35,8 @@ export interface StorePorts {
   // The chain diagram (ADR 0029), redrawn from the model; the live state
   // (tags and drive runtime) reaches it without a redraw.
   renderDiagram(model: DiagramModel): void;
+  // The joint star (ADR 0059), redrawn from the model.
+  renderJointStar(model: JointStarModel): void;
   showDiagramLive(
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,

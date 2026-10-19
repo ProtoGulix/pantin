@@ -96,7 +96,7 @@ function actionButton(view: BridgeView, intents: PanelIntents): HTMLElement {
 
 function configureIoButton(view: BridgeView, intents: PanelIntents): HTMLElement {
   const created = toolButton("gear", view.configureIo.label, "bridge-configure-io", () =>
-    intents.setCentralLayout("io"),
+    intents.revealCentralView("io"),
   );
   // The visible text names the button; the longer label stays as the tooltip.
   created.removeAttribute("aria-label");

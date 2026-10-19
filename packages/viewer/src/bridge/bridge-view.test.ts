@@ -1,5 +1,6 @@
 import { BRIDGE_FAILURE_KINDS, type BridgeState } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { createTranslator, LANGUAGES } from "../i18n/translate.ts";
 import { bridgeStatusOf, FAILED_STATUS, RUNNING_STATUS } from "./bridge-fixtures.ts";
 import { type BridgeModel, bridgeAfterStatus, INITIAL_BRIDGE_MODEL } from "./bridge-model.ts";
@@ -13,7 +14,7 @@ function modelOf(status: Parameters<typeof bridgeAfterStatus>[1], pending = fals
 }
 
 function viewOf(status: Parameters<typeof bridgeAfterStatus>[1], pending = false) {
-  const view = buildBridgeView(modelOf(status, pending), fr, "3d");
+  const view = buildBridgeView(modelOf(status, pending), fr, layoutOf("3d"));
   if (view === null) {
     throw new Error("Expected a view.");
   }
@@ -22,7 +23,7 @@ function viewOf(status: Parameters<typeof bridgeAfterStatus>[1], pending = false
 
 describe("the bridge block before any status", () => {
   it("is not shown", () => {
-    expect(buildBridgeView(INITIAL_BRIDGE_MODEL, fr, "3d")).toBeNull();
+    expect(buildBridgeView(INITIAL_BRIDGE_MODEL, fr, layoutOf("3d"))).toBeNull();
   });
 });
 
@@ -44,9 +45,9 @@ describe("the state chip and the button, for every state", () => {
   });
 
   it("says the same in English", () => {
-    const view = buildBridgeView(modelOf(FAILED_STATUS), en, "3d");
+    const view = buildBridgeView(modelOf(FAILED_STATUS), en, layoutOf("3d"));
     expect([view?.stateText, view?.button.label]).toEqual(["Failed", "Restart"]);
-    expect(buildBridgeView(modelOf(RUNNING_STATUS), en, "3d")?.localLabel).toBe(
+    expect(buildBridgeView(modelOf(RUNNING_STATUS), en, layoutOf("3d"))?.localLabel).toBe(
       "Local only (127.0.0.1)",
     );
   });
@@ -95,7 +96,9 @@ describe("the network", () => {
 
   it("shows the core's refusal under the fields", () => {
     const model = { ...modelOf(bridgeStatusOf()), networkError: "listen address is public" };
-    expect(buildBridgeView(model, fr, "3d")?.networkError).toBe("listen address is public");
+    expect(buildBridgeView(model, fr, layoutOf("3d"))?.networkError).toBe(
+      "listen address is public",
+    );
   });
 });
 
@@ -105,7 +108,7 @@ const MAPPING = [
 ];
 
 function linesOf(model: BridgeModel, mapping = MAPPING, language: "fr" | "en" = "fr") {
-  const view = buildBridgeView(model, createTranslator(language), "3d", mapping);
+  const view = buildBridgeView(model, createTranslator(language), layoutOf("3d"), mapping);
   return view?.moduleLines.map((line) => [
     line.key,
     line.address,
@@ -161,18 +164,20 @@ describe("the module lines of a bridge that does not run", () => {
   });
 
   it("say to configure the I/O when the mapping has no module", () => {
-    const view = buildBridgeView(modelOf(bridgeStatusOf()), fr, "3d", []);
+    const view = buildBridgeView(modelOf(bridgeStatusOf()), fr, layoutOf("3d"), []);
     expect([view?.moduleLines, view?.noModuleText]).toEqual([
       [],
       "Aucun module : configurez les E/S",
     ]);
-    const english = buildBridgeView(modelOf(bridgeStatusOf()), en, "3d", []);
+    const english = buildBridgeView(modelOf(bridgeStatusOf()), en, layoutOf("3d"), []);
     expect(english?.noModuleText).toBe("No module: configure the I/O");
-    expect(buildBridgeView(modelOf(RUNNING_STATUS), fr, "3d", [])?.noModuleText).toBeNull();
+    expect(
+      buildBridgeView(modelOf(RUNNING_STATUS), fr, layoutOf("3d"), [])?.noModuleText,
+    ).toBeNull();
   });
 
   it("claim no missing module while the mapping is not loaded", () => {
-    const view = buildBridgeView(modelOf(bridgeStatusOf()), fr, "3d", null);
+    const view = buildBridgeView(modelOf(bridgeStatusOf()), fr, layoutOf("3d"), null);
     expect([view?.moduleLines, view?.noModuleText]).toEqual([[], null]);
   });
 });
@@ -202,7 +207,8 @@ describe("a failed bridge", () => {
       const headlines = BRIDGE_FAILURE_KINDS.map((kind) => {
         const failure = { kind, message: "m", exitCode: null, signal: null };
         const model = modelOf({ ...FAILED_STATUS, failure });
-        return buildBridgeView(model, createTranslator(language), "3d")?.failure?.headline;
+        return buildBridgeView(model, createTranslator(language), layoutOf("3d"))?.failure
+          ?.headline;
       });
       expect(
         headlines.every((headline) => headline !== undefined && !headline.startsWith("bridge.")),
@@ -249,12 +255,12 @@ describe("a bridge that cannot be started", () => {
 describe("the I/O shortcut", () => {
   it("is active only in the I/O layout", () => {
     const model = modelOf(RUNNING_STATUS);
-    expect(buildBridgeView(model, fr, "io")?.configureIo).toEqual({
+    expect(buildBridgeView(model, fr, layoutOf("io"))?.configureIo).toEqual({
       text: "Config E/S",
       label: "Configurer les E/S",
       active: true,
     });
-    expect(buildBridgeView(model, en, "both")?.configureIo).toEqual({
+    expect(buildBridgeView(model, en, layoutOf("3d", "diagram"))?.configureIo).toEqual({
       text: "I/O config",
       label: "Configure I/O",
       active: false,
@@ -265,10 +271,10 @@ describe("the I/O shortcut", () => {
 describe("the network summary", () => {
   it("tells the mode and opens by itself on a refusal", () => {
     const model = modelOf(bridgeStatusOf());
-    const local = buildBridgeView(model, fr, "3d");
+    const local = buildBridgeView(model, fr, layoutOf("3d"));
     expect([local?.networkTitle, local?.networkForcedOpen]).toEqual(["Réseau : local", false]);
     const lan = { ...model, draft: { ...model.draft, mode: "lan" as const }, networkError: "bad" };
-    const refused = buildBridgeView(lan, en, "3d");
+    const refused = buildBridgeView(lan, en, layoutOf("3d"));
     expect([refused?.networkTitle, refused?.networkForcedOpen]).toEqual([
       "Network: private network",
       true,
@@ -283,8 +289,8 @@ describe("the redraw key", () => {
       ...refused,
       draft: { ...refused.draft, allowText: "10.0.0.9" },
     };
-    const before = buildBridgeView(refused, fr, "3d");
-    const after = buildBridgeView(typed, fr, "3d");
+    const before = buildBridgeView(refused, fr, layoutOf("3d"));
+    const after = buildBridgeView(typed, fr, layoutOf("3d"));
     expect(before && after && bridgeRedrawKey(after)).toBe(before && bridgeRedrawKey(before));
     expect(after?.networkError).toBe("bad entry");
   });

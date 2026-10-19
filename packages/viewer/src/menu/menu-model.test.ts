@@ -147,25 +147,6 @@ describe("menu bar model alignment (ADR 0035)", () => {
   });
 });
 
-describe("menu bar model layouts", () => {
-  it("checks the layout in use, and offers each layout while a Pantin is open", () => {
-    const checked = (state: ViewerState) =>
-      buildMenuBar(state, translate)[2]
-        ?.entries.filter((entry) => entry.type === "item" && entry.command.startsWith("layout:"))
-        .map((entry) => entry.type === "item" && [entry.command, entry.checked]);
-    expect(checked({ ...editing(false), centralLayout: "diagram" })).toEqual([
-      ["layout:3d", false],
-      ["layout:diagram", true],
-      ["layout:both", false],
-      ["layout:io", false],
-    ]);
-    expect(enabledCommands(editing(false))).toEqual(
-      expect.arrayContaining(["layout:3d", "layout:diagram", "layout:both", "layout:io"]),
-    );
-    expect(enabledCommands(listing)).not.toContain("layout:both");
-  });
-});
-
 describe("menu bar model on a device", () => {
   it.each(["drive", "actuator", "sensor"] as const)(
     "enables Supprimer and Renommer on a %s, not Cadrer la sélection",
@@ -278,7 +259,7 @@ describe("shortcut listing", () => {
       { keys: "Ctrl+6", action: "Dessous" },
       { keys: "Ctrl+7", action: "Isométrique" },
       { keys: "F8", action: "Console" },
-      { keys: "F4", action: "Changer la vue centrale" },
+      { keys: "F4", action: "Vue suivante de la zone du haut" },
     ]);
   });
 });

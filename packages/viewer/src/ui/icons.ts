@@ -47,7 +47,13 @@ type ToolIcon =
   | "lock"
   | "unlock"
   | "edit"
-  | "delete";
+  | "delete"
+  | "joint-weld"
+  | "joint-prismatic"
+  | "joint-revolute"
+  | "joint-continuous"
+  | "joint-helical"
+  | "ground-hatch";
 
 export type IconName = TreeIcon | ToolIcon;
 
@@ -141,6 +147,18 @@ const PATHS: Readonly<Record<IconName, string>> = {
   // A closed padlock: this tag is forced. An open one: release it.
   lock: "M3.5 7.5h9v6h-9Z M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5",
   unlock: "M3.5 7.5h9v6h-9Z M5.5 7.5V5a2.5 2.5 0 0 1 4.8-1",
+  // The glyphs of the joint star's edges (ADR 0059 point 5), one per joint type: a weld
+  // (filled by the stylesheet), a slider between two end arrows, a limited arc with its two
+  // stops and its pivot, a full circle with an arrow, three slanted thread strokes; and the
+  // ground hatch of World.
+  "joint-weld": "M4 4h8v8H4Z",
+  "joint-prismatic": "M5 5.5h6v5H5Z M1 8h4 M11 8h4 M2.8 6.4 1 8l1.8 1.6 M13.2 6.4 15 8l-1.8 1.6",
+  "joint-revolute":
+    "M2.6 7.5A7 7 0 0 1 13.4 7.5 M3.8 8.5 1.5 6.5 M12.2 8.5 14.5 6.5 M8 12V5.2 M8.9 12a.9.9 0 1 1-1.8 0a.9.9 0 1 1 1.8 0Z",
+  "joint-continuous": "M14 8A6 6 0 1 1 8 2 M8 .2 10.6 2 8 3.8 M9 8a1 1 0 1 1-2 0a1 1 0 1 1 2 0Z",
+  "joint-helical": "M2 12.5 5.5 3.5 M6.5 12.5 10 3.5 M11 12.5 14.5 3.5",
+  "ground-hatch":
+    "M1.5 5.5h13 M3 5.5 1.5 9 M6 5.5 4.5 9 M9 5.5 7.5 9 M12 5.5 10.5 9 M15 5.5 13.5 9",
   edit: "M10.5 2.5l3 3L6 13H3v-3Z M9 4l3 3",
   delete: "M2.5 4h11 M6 4V2.5h4V4 M4 4l.7 9.5h6.6L12 4 M6.8 6.5v5 M9.2 6.5v5",
   // A disc: the stylesheet fills it when the sensor is on, and leaves a ring when it is off.
@@ -160,6 +178,11 @@ const FILLED_PATHS: Readonly<Partial<Record<IconName, string>>> = {
 };
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+
+/** The path of an icon in its 16 x 16 box, for views that place glyphs inside a larger SVG. */
+export function iconPath(name: IconName): string {
+  return PATHS[name];
+}
 
 export function icon(name: IconName, className = "icon"): SVGSVGElement {
   const svg = document.createElementNS(SVG_NAMESPACE, "svg");

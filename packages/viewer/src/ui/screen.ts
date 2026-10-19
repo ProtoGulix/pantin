@@ -5,6 +5,7 @@ import { effectiveLayout } from "../central-layout.ts";
 import type { ClockView } from "../clock/clock-model.ts";
 import type { ConsoleView } from "../console/console-view.ts";
 import type { DiagramModel } from "../diagram/diagram-view-model.ts";
+import type { JointStarModel } from "../joint-star/joint-star-view-model.ts";
 import type { ThemeName } from "../theme/theme.ts";
 import type { PanelView } from "../view-model.ts";
 import { AboutDialog } from "./about-dialog.ts";
@@ -14,6 +15,7 @@ import { ConsolePanel } from "./console-panel.ts";
 import { DiagramView } from "./diagram-view.ts";
 import { Inspector } from "./inspector.ts";
 import { IoPanel } from "./io-panel.ts";
+import { JointStarView } from "./joint-star-view.ts";
 import { JournalDialog } from "./journal-dialog.ts";
 import { MenuBar } from "./menu-bar.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -21,6 +23,7 @@ import { SidePanel } from "./side-panel.ts";
 import { TransportBar } from "./transport-bar.ts";
 import { ViewCube } from "./view-cube.ts";
 import { WelcomeDialog } from "./welcome-dialog.ts";
+import { ZoneBars } from "./zone-bars.ts";
 
 // Everything the page draws from the view, built from the elements of index.html.
 
@@ -42,6 +45,7 @@ export interface Screen {
     forced: ReadonlySet<string>,
   ): void;
   renderDiagram(model: DiagramModel, intents: PanelIntents): void;
+  renderJointStar(model: JointStarModel, intents: PanelIntents): void;
   showDiagramLive(
     tags: ReadonlyMap<string, number>,
     runtime: ReadonlyMap<string, DriveRuntime>,
@@ -68,6 +72,22 @@ function createConsolePanel(): ConsolePanel {
 // Over the canvas, under the welcome dialog.
 function createDiagramView(): DiagramView {
   return new DiagramView(
+    requireElement(".viewport", HTMLElement),
+    requireElement("#welcome", HTMLElement),
+  );
+}
+
+// Same place again for the joint star (ADR 0059).
+function createJointStarView(): JointStarView {
+  return new JointStarView(
+    requireElement(".viewport", HTMLElement),
+    requireElement("#welcome", HTMLElement),
+  );
+}
+
+// The selector rows of the two zones, over the views and under the welcome dialog.
+function createZoneBars(): ZoneBars {
+  return new ZoneBars(
     requireElement(".viewport", HTMLElement),
     requireElement("#welcome", HTMLElement),
   );
@@ -100,6 +120,17 @@ function createWelcomeDialog(sidePanel: SidePanel, canvas: HTMLCanvasElement): W
   );
 }
 
+// The views that share the central zone, with their selector rows.
+function createZoneViews() {
+  return {
+    diagram: createDiagramView(),
+    jointStar: createJointStarView(),
+    ioPanel: createIoPanel(),
+    centralArea: new CentralArea(requireElement(".viewport", HTMLElement)),
+    zoneBars: createZoneBars(),
+  };
+}
+
 // Everything drawn from the view: menu bar, left panel, welcome dialog, texts of index.html.
 export function createScreen(): Screen {
   const panel = requireElement("#side-panel", HTMLElement);
@@ -109,9 +140,7 @@ export function createScreen(): Screen {
   const welcome = createWelcomeDialog(sidePanel, canvas);
   const journal = new JournalDialog(requireElement("#journal", HTMLElement));
   const about = new AboutDialog(requireElement("#about", HTMLElement));
-  const diagram = createDiagramView();
-  const ioPanel = createIoPanel();
-  const centralArea = new CentralArea(requireElement(".viewport", HTMLElement));
+  const { diagram, jointStar, ioPanel, centralArea, zoneBars } = createZoneViews();
   const consolePanel = createConsolePanel();
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
@@ -127,6 +156,12 @@ export function createScreen(): Screen {
         effectiveLayout(view.toolbar.centralLayout, view.toolbar.mode === "edit"),
         view.translate,
       );
+      zoneBars.render(
+        view.toolbar.centralLayout,
+        view.translate,
+        view.toolbar.mode === "edit",
+        intents,
+      );
       ioPanel.render(view.io, view.translate, view.language, intents);
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
@@ -137,6 +172,7 @@ export function createScreen(): Screen {
     showJointPositions: (positions) => inspector.showJointPositions(positions),
     showInspectorLive: (tags, runtime, forced) => inspector.showLive(tags, runtime, forced),
     renderDiagram: (model, intents) => diagram.render(model, intents),
+    renderJointStar: (model, intents) => jointStar.render(model, intents),
     showDiagramLive: (tags, runtime, forced) => diagram.showLive(tags, runtime, forced),
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),

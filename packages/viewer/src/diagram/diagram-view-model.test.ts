@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { nodeSelection } from "../selection.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { bodyNodeId } from "../tree/node-ids.ts";
@@ -11,7 +12,7 @@ const pantin = pantinResponse(false, [railBody, stepBody("carriage", "Carriage")
 ]);
 const base = {
   ...withOpenPantin(initialViewerState("fr"), pantin),
-  centralLayout: "both" as const,
+  centralLayout: layoutOf("3d", "diagram"),
 };
 
 function shown(model: ReturnType<ReturnType<typeof createDiagramModelBuilder>>) {
@@ -24,8 +25,8 @@ function shown(model: ReturnType<ReturnType<typeof createDiagramModelBuilder>>) 
 describe("createDiagramModelBuilder", () => {
   it("is shown in the diagram and both layouts, not in 3D alone or with no Pantin", () => {
     const build = createDiagramModelBuilder(createChainLinksCache());
-    expect(build({ ...base, centralLayout: "diagram" }).shown).toBe(true);
-    expect(build({ ...base, centralLayout: "3d" }).shown).toBe(false);
+    expect(build({ ...base, centralLayout: layoutOf("diagram") }).shown).toBe(true);
+    expect(build({ ...base, centralLayout: layoutOf("3d") }).shown).toBe(false);
     expect(build({ ...base, openPantin: null }).shown).toBe(false);
   });
 

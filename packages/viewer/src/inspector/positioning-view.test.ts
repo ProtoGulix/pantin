@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { newAlignmentSession } from "../alignment/alignment-session.ts";
+import { layoutOf } from "../central-layout.ts";
 import { EMPTY_CLIENT_CONSOLE } from "../console/console-list.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { nodeSelection } from "../selection.ts";
@@ -64,7 +65,7 @@ describe("positioning of an assembly", () => {
   });
 
   it("disables the tools while the diagram alone hides the 3D view", () => {
-    const view = viewOf({ ...assembly, centralLayout: "diagram" });
+    const view = viewOf({ ...assembly, centralLayout: layoutOf("diagram") });
     expect(view?.tools.every((tool) => tool.disabled)).toBe(true);
   });
 

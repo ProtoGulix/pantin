@@ -43,7 +43,7 @@ The `io.json` file links tags to PLC variables and to Modbus addresses. It **nev
 - Modbus **modules**, each with its **Key**, its **Port**, its **Unit id**, its **Word order** and its **Watchdog (ms)**;
 - **channels**: a **Tag**, a **Variable**, a **Zone**, an **Address** and a **Type**.
 
-Open the **I/O alone** view (**View** menu). If the Pantin has no list yet, **Create the mapping**. You can **Add a module**, **Map** the **Unmapped tags** to a module, **Reassign** or **Remove** a channel. Problems appear in **Problems**.
+Display the **I/O** view in a zone (the zone's selector, or the **View** menu). If the Pantin has no list yet, **Create the mapping**. You can **Add a module**, **Map** the **Unmapped tags** to a module, **Reassign** or **Remove** a channel. Problems appear in **Problems**.
 
 **Export GVL** downloads the matching CODESYS global variable list. If a tag is renamed, its channel follows; the name of the variable never changes.
 

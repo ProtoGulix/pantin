@@ -68,6 +68,8 @@ The bodies of an assembly follow the assembly: there is no joint to create betwe
 - To animate a sub-assembly, you turn that fixed joint into a slider or a pivot.
 - When the import does not split enough (a STEP with no sub-assembly), you make the group yourself: see [Make a group](/en/guide/groups#make-a-group).
 
+To check the result, open the **Joints** view (view selector of the central area). It draws the tree of joints, with the fixed World on the left: you see which groups move relative to what, and a body or a sub-assembly that stays attached to World when you expected it to follow a group. See [The Joints view](/en/reference/views#the-joints-view).
+
 The menu of an assembly in the tree offers **New joint…**, **Hide in the 3D view**, **Isolate in the 3D view** and **Show every assembly**. The menu of the Pantin offers **New assembly**. Every element (drive, sensor, belt...) belongs to an assembly, which provides the prefix of its tags.
 
 ## Bodies

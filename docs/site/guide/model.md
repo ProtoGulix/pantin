@@ -68,6 +68,8 @@ Les corps d'un assemblage suivent l'assemblage : il n'y a pas de liaison à cré
 - Pour animer un sous-assemblage, vous transformez cette liaison fixe en glissière ou en pivot.
 - Quand l'import ne découpe pas assez (un STEP sans sous-assemblage), vous créez le groupe vous-même : voir [Faire un groupe](/guide/groups#faire-un-groupe).
 
+Pour contrôler le résultat, ouvrez la vue **Liaisons** (sélecteur de vue de la zone centrale). Elle dessine l'arbre des liaisons, le Monde fixe à gauche : vous voyez quels groupes bougent par rapport à quoi, et un corps ou un sous-assemblage qui reste rattaché au Monde alors que vous attendiez qu'il suive un groupe. Voir [La vue Liaisons](/reference/views#la-vue-liaisons).
+
 Le menu d'un assemblage, dans l'arborescence, propose **Nouvelle liaison…**, **Masquer dans la vue 3D**, **Isoler dans la vue 3D** et **Afficher tous les assemblages**. Le menu du Pantin propose **Nouvel assemblage**. Tout élément (préactionneur, capteur, bande...) appartient à un assemblage, qui fournit le préfixe de ses tags.
 
 ## Les corps

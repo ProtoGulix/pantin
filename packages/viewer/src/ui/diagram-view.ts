@@ -27,6 +27,7 @@ import { ValueInput } from "./diagram-value-input.ts";
 import { element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { isEditable } from "./shortcuts.ts";
+import { markAsZoneView } from "./zone-view.ts";
 
 // The chain diagram in the central area (ADR 0029). It is redrawn when the
 // layout changes; selection and live state are applied in place and only to
@@ -60,6 +61,7 @@ export class DiagramView {
   // The diagram goes under `before` (the welcome overlay); central-area.ts
   // places it over the canvas, or under it.
   constructor(viewport: HTMLElement, before: HTMLElement) {
+    markAsZoneView(this.host, "diagram");
     this.host.hidden = true;
     viewport.insertBefore(this.host, before);
     this.guardWindowShortcuts();

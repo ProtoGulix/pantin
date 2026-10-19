@@ -1,0 +1,241 @@
+/* The joint star (ADR 0059), alone or under the 3D view. Tokens in base.css.
+   Neutral colours only: the three cues of an edge are its line, its glyph and its name. The blue
+   of the selection marks the selected node or edge and its path to World; no brand orange, no
+   state colour. The neutral strokes are tested at 3:1 or more on the ground in both themes
+   (tests/viewer-joint-star-colours.test.ts). */
+.joint-star {
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background: var(--viewport-background);
+}
+
+.joint-star[hidden] {
+  display: none;
+}
+
+.joint-star.is-panning {
+  cursor: grabbing;
+}
+
+.joint-star__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+
+.joint-star__empty {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  max-width: 40ch;
+  margin: 0;
+  color: var(--text-muted);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+/* Edges. Width, dashes and caps come from joint-star-styles.ts as attributes. */
+.joint-star-edge__line {
+  fill: none;
+  stroke: var(--text-muted);
+}
+
+.joint-star-edge.is-faint .joint-star-edge__line,
+.joint-star-edge__line.is-faint {
+  stroke: var(--text-faint);
+}
+
+.joint-star-edge__hit {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.joint-star-edge__backing {
+  fill: var(--viewport-background);
+  stroke: none;
+}
+
+.joint-star-glyph {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.joint-star-glyph--weld,
+.joint-star-glyph--bolt {
+  fill: var(--text-muted);
+}
+
+.joint-star-glyph--ground {
+  stroke: var(--text-muted);
+}
+
+/* The name next to the glyph, with a halo of the ground so that lines do not cut it. */
+.joint-star-edge__label {
+  fill: var(--text);
+  stroke: var(--viewport-background);
+  stroke-width: 3;
+  paint-order: stroke;
+  pointer-events: none;
+}
+
+/* The name of a node sits inside its shape, or under the circle of World: on the ground. */
+.joint-star-node__label {
+  fill: var(--text);
+  pointer-events: none;
+}
+
+.joint-star-node__ground-text {
+  stroke: var(--viewport-background);
+  stroke-width: 3;
+  paint-order: stroke;
+}
+
+/* The selected node's shape grown to its whole name, above the edges and the next columns. */
+.joint-star-node__top {
+  display: none;
+  pointer-events: none;
+}
+
+.joint-star-node__top.is-shown {
+  display: inline;
+}
+
+.joint-star-node__backing {
+  fill: var(--surface-2);
+}
+
+.joint-star-node__selection-shape {
+  fill: var(--selection-soft);
+  stroke: var(--selection);
+  stroke-width: 3;
+}
+
+.joint-star-node__top .joint-star-node__label {
+  font-weight: 700;
+}
+
+.joint-star-node__label.is-replaced {
+  visibility: hidden;
+}
+
+.joint-star-edge__label {
+  font-size: 10px;
+  fill: var(--text-muted);
+}
+
+.joint-star-edge {
+  pointer-events: none;
+}
+
+.joint-star-edge[role="graphics-symbol"] {
+  pointer-events: auto;
+}
+
+/* Selection: the edge itself is thicker, its path to World takes the selection blue. */
+.joint-star-edge.is-selected .joint-star-edge__line {
+  stroke: var(--selection);
+  stroke-width: calc(var(--edge-width, 1) * 1px + 2px);
+}
+
+/* The path to World is one pixel thicker than the same edge at rest: a cue that is not colour. */
+.joint-star-edge.is-on-path:not(.is-selected) .joint-star-edge__line {
+  stroke: var(--selection);
+  stroke-width: calc(var(--edge-width, 1) * 1px + 1px);
+}
+
+.joint-star-edge.is-selected .joint-star-glyph,
+.joint-star-edge.is-on-path .joint-star-glyph {
+  stroke: var(--selection);
+}
+
+.joint-star-edge.is-selected .joint-star-glyph--weld,
+.joint-star-edge.is-selected .joint-star-glyph--bolt,
+.joint-star-edge.is-on-path .joint-star-glyph--weld,
+.joint-star-edge.is-on-path .joint-star-glyph--bolt {
+  fill: var(--selection);
+}
+
+/* Nodes */
+.joint-star-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.joint-star-node__shape {
+  fill: var(--surface-2);
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.joint-star-node:hover .joint-star-node__shape {
+  stroke: var(--text);
+}
+
+.joint-star-node__count {
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: start;
+  fill: var(--text);
+  pointer-events: none;
+}
+
+/* Fold chevron and count of the bodies that follow a group: the shape says folded (right)
+   or unfolded (down), the number says how many. */
+.joint-star-node__chevron {
+  fill: var(--text-muted);
+  pointer-events: none;
+}
+
+.joint-star-node__toggle-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.joint-star-node__toggle:hover .joint-star-node__toggle-hit {
+  fill: var(--hover);
+}
+
+.joint-star-node__toggle:hover .joint-star-node__chevron {
+  fill: var(--text);
+}
+
+.joint-star-node.is-on-path .joint-star-node__shape {
+  stroke: var(--selection);
+}
+
+.joint-star-node.is-selected .joint-star-node__shape {
+  fill: var(--selection-soft);
+  stroke: var(--selection);
+  stroke-width: 3;
+}
+
+.joint-star-node.is-selected .joint-star-node__label {
+  font-weight: 700;
+}
+
+/* A dashed ring in the text colour, only while the keyboard is on the node. */
+.joint-star-node__focus {
+  display: none;
+  fill: none;
+  stroke: var(--text);
+  stroke-dasharray: 3 2;
+  stroke-width: 1.5;
+}
+
+.joint-star-node:focus-visible .joint-star-node__focus {
+  display: inline;
+}
+
+/* With a selection, what is outside its path steps back (lightness, not colour). */
+.joint-star__svg--focus .joint-star-node:not(.is-selected, .is-on-path),
+.joint-star__svg--focus .joint-star-edge:not(.is-selected, .is-on-path) {
+  opacity: 0.45;
+}

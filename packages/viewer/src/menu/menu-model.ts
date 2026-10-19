@@ -1,4 +1,4 @@
-import { CENTRAL_LAYOUTS, showsViewport } from "../central-layout.ts";
+import { CENTRAL_VIEWS, showsViewport } from "../central-layout.ts";
 import { isDeviceKind } from "../device-selection.ts";
 import { LANGUAGES, type Translate } from "../i18n/translate.ts";
 import { NAVIGATION_PRESET_IDS } from "../navigation/navigation-presets.ts";
@@ -12,7 +12,6 @@ import {
   arrowStepItem,
   item,
   languageItem,
-  layoutItem,
   type MenuCommand,
   type MenuDefinition,
   type MenuEntryDefinition,
@@ -22,6 +21,7 @@ import {
   type Shortcut,
   standardViewItem,
   themeItem,
+  zoneViewItem,
 } from "./menu-definitions.ts";
 
 export type { MenuCommand } from "./menu-definitions.ts";
@@ -103,7 +103,18 @@ const MENUS: readonly MenuDefinition[] = [
         primaryModifier: false,
         labelKey: "shortcut.cycleLayout",
       }),
-      ...CENTRAL_LAYOUTS.map(layoutItem),
+      ...CENTRAL_VIEWS.map((view) => zoneViewItem("top", view)),
+      ...CENTRAL_VIEWS.map((view) => zoneViewItem("bottom", view)),
+      item(
+        "openBottomZone",
+        "menubar.view.openBottomZone",
+        (context) => context.editing && context.centralLayout.bottom === null,
+      ),
+      item(
+        "closeBottomZone",
+        "menubar.view.closeBottomZone",
+        (context) => context.editing && context.centralLayout.bottom !== null,
+      ),
       "separator",
       navigationToggleItem(
         "perspective",

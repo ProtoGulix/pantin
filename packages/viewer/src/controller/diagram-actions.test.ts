@@ -1,5 +1,6 @@
 import type { PantinResponse } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_CENTRAL_LAYOUT, layoutOf, serialiseLayout } from "../central-layout.ts";
 import {
   bodyOf,
   cylinderOf,
@@ -15,7 +16,11 @@ import { withRevealedNode } from "../tree/tree-state.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
 import {
-  cycleCentralLayout,
+  chooseZoneView,
+  closeBottomZoneOf,
+  cycleTopView,
+  openBottomZoneOf,
+  revealCentralView,
   selectDiagramNode,
   setCentralLayout,
   toggleDiagramBand,
@@ -36,21 +41,36 @@ function openStore(listTags = async () => ({ stepCount: 0, tags: [], drives: [] 
 describe("the diagram state", () => {
   it("starts in both layouts, and opening a Pantin keeps the chosen one", () => {
     const store = openStore();
-    expect(store.state.centralLayout).toBe("both");
-    setCentralLayout(store, "diagram");
+    expect(store.state.centralLayout).toEqual(DEFAULT_CENTRAL_LAYOUT);
+    setCentralLayout(store, layoutOf("diagram"));
     store.update(withOpenPantin(store.state, pantin));
-    expect(store.state.centralLayout).toBe("diagram");
+    expect(store.state.centralLayout).toEqual(layoutOf("diagram"));
   });
 
-  it("switches layout, cycles with F4 and remembers each change", () => {
+  it("switches layout, moves the top view with F4 and remembers each change", () => {
     const stored: string[] = [];
-    const store = testStore({}, {}, (layout) => stored.push(layout));
-    setCentralLayout(store, "3d");
+    const store = testStore({}, {}, (layout) => stored.push(serialiseLayout(layout)));
+    setCentralLayout(store, layoutOf("3d"));
     // Already there: nothing to remember.
-    setCentralLayout(store, "3d");
-    cycleCentralLayout(store);
-    expect(store.state.centralLayout).toBe("diagram");
+    setCentralLayout(store, layoutOf("3d"));
+    cycleTopView(store);
+    expect(store.state.centralLayout).toEqual(layoutOf("diagram"));
     expect(stored).toEqual(["3d", "diagram"]);
+  });
+
+  it("chooses the view of a zone, refuses the one the other zone shows, opens and closes the bottom", () => {
+    const stored: string[] = [];
+    const store = testStore({}, {}, (layout) => stored.push(serialiseLayout(layout)));
+    chooseZoneView(store, "bottom", "3d");
+    expect(store.state.centralLayout).toEqual(layoutOf("3d", "diagram"));
+    chooseZoneView(store, "bottom", "joints");
+    closeBottomZoneOf(store);
+    openBottomZoneOf(store);
+    expect(store.state.centralLayout).toEqual(layoutOf("3d", "diagram"));
+    revealCentralView(store, "io");
+    revealCentralView(store, "io");
+    expect(store.state.centralLayout).toEqual(layoutOf("io", "diagram"));
+    expect(stored).toEqual(["3d/joints", "3d", "3d/diagram", "io/diagram"]);
   });
 
   it("folds a band and unfolds it", () => {
@@ -78,14 +98,14 @@ describe("refreshTagValues with the diagram", () => {
       reads += 1;
       return { stepCount: 0, tags: [], drives: [] };
     });
-    setCentralLayout(store, "3d");
+    setCentralLayout(store, layoutOf("3d"));
     await refreshTagValues(store);
     expect(reads).toBe(0);
-    setCentralLayout(store, "diagram");
+    setCentralLayout(store, layoutOf("diagram"));
     await refreshTagValues(store);
     expect(reads).toBe(1);
     // Under the 3D view the diagram is shown too (ADR 0030 point 7).
-    setCentralLayout(store, "both");
+    setCentralLayout(store, layoutOf("3d", "diagram"));
     await refreshTagValues(store);
     expect(reads).toBe(2);
   });
@@ -170,16 +190,16 @@ describe("the viewport follows the layout", () => {
     const { calls, store } = renderCalls();
     store.requestedPantinId = pantin.id;
     store.update(withOpenPantin(store.state, pantin));
-    setCentralLayout(store, "diagram");
-    setCentralLayout(store, "3d");
-    setCentralLayout(store, "diagram");
-    setCentralLayout(store, "both");
+    setCentralLayout(store, layoutOf("diagram"));
+    setCentralLayout(store, layoutOf("3d"));
+    setCentralLayout(store, layoutOf("diagram"));
+    setCentralLayout(store, layoutOf("3d", "diagram"));
     expect(calls.slice(-5)).toEqual([true, false, true, false, true]);
   });
 
   it("keeps rendering with no Pantin open, whatever the layout says", () => {
     const { calls, store } = renderCalls();
-    store.update({ ...store.state, centralLayout: "diagram" });
+    store.update({ ...store.state, centralLayout: layoutOf("diagram") });
     expect(calls).toEqual([true]);
   });
 });

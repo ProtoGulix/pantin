@@ -1,4 +1,11 @@
-import { bridgeCard, diagramCoil, FORCED, regionAround, showCentralView } from "./pantin-page.ts";
+import {
+  bridgeCard,
+  chooseZoneView,
+  closeBottomZone,
+  diagramCoil,
+  FORCED,
+  regionAround,
+} from "./pantin-page.ts";
 import type { Region, Session } from "./session.ts";
 import { saveShot } from "./session.ts";
 
@@ -47,6 +54,31 @@ export async function captureViewCube(session: Session): Promise<void> {
   );
 }
 
+/**
+ * The 3D view on top and the Liaisons view below, then the Liaisons view alone, with its legend.
+ * Only the first picture needs the 3D view: it is hidden right after, before the others.
+ */
+export async function captureJointView(session: Session): Promise<void> {
+  const { page, label } = session;
+  await chooseZoneView(session, "bottom", "view.joints");
+  const joints = page.locator(".joint-star");
+  await joints.waitFor();
+  const fit = page.getByRole("button", { name: label("jointStar.fit"), exact: true });
+  await fit.click(FORCED);
+  await saveShot(session, "zones");
+  // Leaving the 3D view first: closing the bottom zone before would make the software renderer
+  // draw the 3D view at full size once more.
+  await chooseZoneView(session, "top", "view.diagram");
+  await closeBottomZone(session);
+  await chooseZoneView(session, "top", "view.joints");
+  await fit.click(FORCED);
+  await saveShot(session, "joint-view", joints);
+  await page.getByRole("button", { name: label("jointStar.legend.title") }).click(FORCED);
+  await saveShot(session, "joint-legend", page.locator(".joint-star-legend"));
+  await page.getByRole("button", { name: label("jointStar.legend.title") }).click(FORCED);
+  await chooseZoneView(session, "top", "view.diagram");
+}
+
 export async function captureDiagram(session: Session): Promise<void> {
   const diagram = session.page.getByRole("region", { name: session.label("diagram.label") });
   await diagram.waitFor();
@@ -60,7 +92,7 @@ export async function captureIoView(session: Session): Promise<void> {
     .click(FORCED);
   await page.getByRole("heading", { name: label("io.modules.title") }).waitFor();
   await saveShot(session, "io-view");
-  await showCentralView(session, "toolbar.viewDiagram");
+  await chooseZoneView(session, "top", "view.diagram");
 }
 
 /** Frames the whole drive node through the whole joint node, inside the diagram's own box. */

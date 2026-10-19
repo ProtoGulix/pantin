@@ -1,5 +1,6 @@
 import type { Tag } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -54,7 +55,7 @@ describe("the forced tags of a tag read", () => {
     store.update({
       ...withOpenPantin(store.state, pantin),
       inspectorOpen: false,
-      centralLayout: "3d",
+      centralLayout: layoutOf("3d"),
     });
     await refreshTagValues(store);
     expect(listTags).not.toHaveBeenCalled();

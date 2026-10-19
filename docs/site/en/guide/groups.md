@@ -1,6 +1,6 @@
 # Group, ungroup, move a body
 
-These procedures set the structure of a Pantin: which bodies move together. The words **body**, **assembly** and **group** are defined in [The model of a Pantin](/en/guide/model#concepts-body-assembly-group).
+These procedures set the structure of a Pantin: which bodies move together. After each change, check your joints in the **Joints** view: it shows groups as rounded rectangles, with the number of bodies that follow them, and whatever stays attached to World (see [The Joints view](/en/reference/views#the-joints-view)). The words **body**, **assembly** and **group** are defined in [The model of a Pantin](/en/guide/model#concepts-body-assembly-group).
 
 ## Make a group
 

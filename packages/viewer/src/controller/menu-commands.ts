@@ -1,4 +1,4 @@
-import { parseStoredLayout } from "../central-layout.ts";
+import { parseCentralView, type Zone } from "../central-layout.ts";
 import { isConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import { selectedDeviceOf, selectedNodeIdOf } from "../selection.ts";
@@ -9,7 +9,12 @@ import { deleteActuator } from "./actuator-actions.ts";
 import { toggleAlignment } from "./alignment-actions.ts";
 import { toggleConsole } from "./console-actions.ts";
 import { deleteConveyor, resetSimulation } from "./conveyor-actions.ts";
-import { cycleCentralLayout, setCentralLayout } from "./diagram-actions.ts";
+import {
+  chooseZoneView,
+  closeBottomZoneOf,
+  cycleTopView,
+  openBottomZoneOf,
+} from "./diagram-actions.ts";
 import { deleteDrive, toggleInspector } from "./drive-actions.ts";
 import { releaseAllTags } from "./drive-commands.ts";
 import { toggleGizmo, toggleGizmoSpace } from "./gizmo-actions.ts";
@@ -63,15 +68,24 @@ function chooseTheme(store: ViewerStore, choice: string): void {
   }
 }
 
-// "language:fr", "layout:3d", "navigation:zw3d", "arrowStep:15" and "theme:dark": the part after the colon is the argument.
-// A layout is parsed, not cast: the command is a plain string by now.
+function chooseParsedView(store: ViewerStore, zone: Zone, text: string): void {
+  const view = parseCentralView(text);
+  if (view !== null) {
+    chooseZoneView(store, zone, view);
+  }
+}
+
+// "language:fr", "topView:diagram", "navigation:zw3d", "arrowStep:15" and "theme:dark": the part after the colon is the argument.
+// A view is parsed, not cast: the command is a plain string by now.
 function runParameterisedCommand(
   store: ViewerStore,
   command: string,
   changeLanguage: (language: string) => void,
 ): void {
-  if (command.startsWith("layout:")) {
-    setCentralLayout(store, parseStoredLayout(command.slice("layout:".length)));
+  if (command.startsWith("topView:")) {
+    chooseParsedView(store, "top", command.slice("topView:".length));
+  } else if (command.startsWith("bottomView:")) {
+    chooseParsedView(store, "bottom", command.slice("bottomView:".length));
   } else if (command.startsWith("navigation:")) {
     setNavigationPreset(store, command.slice("navigation:".length));
   } else if (command.startsWith("view:")) {
@@ -93,7 +107,13 @@ function runViewCommand(
 ): void {
   switch (command) {
     case "cycleLayout":
-      cycleCentralLayout(store);
+      cycleTopView(store);
+      return;
+    case "openBottomZone":
+      openBottomZoneOf(store);
+      return;
+    case "closeBottomZone":
+      closeBottomZoneOf(store);
       return;
     case "toggleConsole":
       toggleConsole(store);

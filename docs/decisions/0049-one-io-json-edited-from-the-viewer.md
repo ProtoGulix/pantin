@@ -382,3 +382,10 @@ the command line to finish the P7 demonstration.
 Rejected alternative: generating the GVL in the viewer from `GET .../io`. It
 would duplicate the generator and keep two formats to maintain, against
 CLAUDE.md 3.2 (no domain logic in the viewer).
+
+## Amendment (2026-10-19): one view selector per zone (ADR 0059)
+
+The central layouts are replaced by a top zone and an optional bottom zone,
+each with its own view selector (3D, Schéma, Liaisons, E/S), as described in
+the amendment of ADR 0059 of the same date. The splitter, its stored ratio
+and the render loop rule are unchanged.

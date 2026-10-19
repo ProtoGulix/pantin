@@ -43,7 +43,7 @@ Le fichier `io.json` relie les tags aux variables de l'automate et aux adresses 
 - des **modules** Modbus, chacun avec sa **Clé**, son **Port**, son **Adresse d'unité**, son **Ordre des mots** et son **Chien de garde (ms)** ;
 - des **voies** : un **Tag**, une **Variable**, une **Zone**, une **Adresse** et un **Type**.
 
-Ouvrez la vue **E/S seules** (menu **Affichage**). Si le Pantin n'a pas encore de liste, **Créer le mapping**. Vous pouvez **Ajouter un module**, **Affecter** les **Tags non affectés** à un module, **Réaffecter** ou **Retirer** une voie. Les problèmes apparaissent dans **Problèmes**.
+Affichez la vue **E/S** dans une zone (sélecteur de la zone, ou menu **Affichage**). Si le Pantin n'a pas encore de liste, **Créer le mapping**. Vous pouvez **Ajouter un module**, **Affecter** les **Tags non affectés** à un module, **Réaffecter** ou **Retirer** une voie. Les problèmes apparaissent dans **Problèmes**.
 
 **Exporter la GVL** télécharge la liste de variables globales CODESYS correspondante. Si un tag est renommé, sa voie suit ; le nom de la variable ne change jamais.
 

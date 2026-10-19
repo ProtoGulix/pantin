@@ -11,10 +11,11 @@ The areas of the window, from top to bottom and from left to right. Names in **b
 | Toolbar            | Transport bar                       |           |
 |--------------------|-------------------------------------|           |
 | Tree               |                                     |           |
-|  (Pantin,          |  Central view:                      | Inspector |
-|   assemblies,      |  3D, Diagram, 3D + Diagram or I/O   |           |
-|   bodies, joints,  |                                     |           |
-|   elements)        |-------------------------------------|           |
+|  (Pantin,          |  Top zone: one view                 | Inspector |
+|   assemblies,      |  (3D, Diagram, Joints or I/O)       |           |
+|   bodies, joints,  |- - - - - - - - - - - - - - - - - - -|           |
+|   elements)        |  Bottom zone (optional)             |           |
+|                    |-------------------------------------|           |
 |--------------------| Console + counter bar               |           |
 | PLC bridge         |                                     |           |
 +--------------------+-------------------------------------+-----------+
@@ -28,7 +29,7 @@ It occupies the top of the window and contains four menus: **File**, **Edit**, *
 
 ## The toolbar
 
-It is at the top of the left column, when a Pantin is open. It gathers the quick-access buttons: back to the welcome window (**Close the Pantin**), **Save**, import of a 3D file, framing, and the **Central view** selector (**3D**, **Diagram**, **3D + Diagram**). An indicator shows that a request is in progress. See [Panels and buttons](/en/reference/panels).
+It is at the top of the left column, when a Pantin is open. It gathers the quick-access buttons: back to the welcome window (**Close the Pantin**), **Save**, import of a 3D file and framing. An indicator shows that a request is in progress. See [Panels and buttons](/en/reference/panels).
 
 ## The left side panel
 
@@ -39,7 +40,7 @@ It exists only when a Pantin is open. From top to bottom: the toolbar, the impor
 
 ## The central view
 
-It has four layouts, to choose from: **3D only**, **Chain diagram only**, **3D + Diagram** (the default) and **I/O alone**. The toolbar selector offers the first three. The **View** menu offers all four, and <kbd>F4</kbd> cycles through the first three. With no Pantin open, the 3D view takes up the whole area. See [Central views](/en/reference/views).
+It has a top zone and, if you open it, a bottom zone. Each zone shows one view at a time, among **3D**, **Diagram**, **Joints** and **I/O**, chosen with the selector at the top left of the zone. A view is shown in one zone at a time. By default, the 3D view is on top and the diagram below. The **View** menu offers the same choices, and <kbd>F4</kbd> moves the top zone to the next view. With no Pantin open, the 3D view takes up the whole area. See [Central views](/en/reference/views).
 
 In the 3D view, a view cube lets you choose a standard view with one click.
 

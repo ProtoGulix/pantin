@@ -1,16 +1,5 @@
-/* The I/O view (ADR 0049 point 11), over the 3D view like the diagram. Tokens in base.css. */
-.viewport--io .viewport__canvas {
-  visibility: hidden;
-}
-
-.viewport--io .viewport__hint {
-  display: none;
-}
-
+/* The I/O view (ADR 0049 point 11), in a zone of the central area. Tokens in base.css. */
 .io-view {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;

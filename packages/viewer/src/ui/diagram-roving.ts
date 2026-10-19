@@ -1,4 +1,9 @@
-import type { DrawnDiagram } from "./diagram-draw.ts";
+// What the roving focus needs of a drawing: its root and what takes the focus, by key. The chain
+// diagram and the joint star both provide it.
+export interface FocusScope {
+  svg: SVGElement;
+  focusables: ReadonlyMap<string, SVGElement>;
+}
 
 // One tab stop for the whole diagram (roving tabindex): nodes, ports and links
 // number in the hundreds, so Tab enters and leaves it, and the arrow keys move
@@ -11,7 +16,7 @@ export class RovingFocus {
   // The tab stop among nodes, ports and links, and the last item focused of any kind.
   private current: string | null = null;
   private last: string | null = null;
-  private drawn: DrawnDiagram | null = null;
+  private drawn: FocusScope | null = null;
 
   /** True while the keyboard focus is somewhere in the diagram. */
   holdsFocus(svg: Element | null): boolean {
@@ -20,7 +25,7 @@ export class RovingFocus {
   }
 
   /** A new drawing: the remembered item (or the first node) becomes the tab stop. */
-  attach(drawn: DrawnDiagram, firstKey: string | null, restoreFocus: boolean): void {
+  attach(drawn: FocusScope, firstKey: string | null, restoreFocus: boolean): void {
     this.drawn = drawn;
     const stop =
       this.current !== null && drawn.focusables.has(this.current) ? this.current : firstKey;

@@ -1,6 +1,7 @@
 import type { CreateBeltRequest, CreatePresenceSensorRequest } from "@pantin/protocol";
 import { describe, expect, it, vi } from "vitest";
 import type { PantinApiClient } from "../api-client.ts";
+import { layoutOf } from "../central-layout.ts";
 import { beamCell, conveyorPantin, feedBelt } from "../conveyors/conveyor-fixtures.ts";
 import { withOpenPantin } from "../viewer-state.ts";
 import { testStore } from "./controller-test-helpers.ts";
@@ -83,7 +84,7 @@ describe("reading the tags", () => {
     const listTags = vi.fn(async () => ({ stepCount: 0, tags: [], drives: [] }));
     const store = openStore({ listTags });
     // "3d": the diagram, shown by default, would read too.
-    store.state = { ...store.state, inspectorOpen: false, centralLayout: "3d" };
+    store.state = { ...store.state, inspectorOpen: false, centralLayout: layoutOf("3d") };
     await refreshTagValues(store);
     expect(listTags).toHaveBeenCalledOnce();
   });

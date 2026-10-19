@@ -11,7 +11,8 @@ phase.
 - [Console, diagram, welcome and placement extras](console-and-diagram-extras.md) — small follow-ups left by ADRs 0027 to 0035
 - [Frame rotation extras](frame-rotation-extras.md) — other ways to give the rotation of ADR 0056
 - [Share a frozen scene](frozen-scene-export.md) — one GLB export, if the need is real
-- [Split a GLB body by nodes](glb-split-by-nodes.md) — several bodies from one file
+- [Joint star view: extras](joint-star-extras.md) — live state, sensor mark, editing from the view
+- [Split a GLB body by nodes](glb-split-by-nodes.md) — several bodies from one file (on hold: needs a real GLB)
 - [I/O mapping export to a spreadsheet](io-csv-export.md) — read-only CSV for electricians
 - [Multi-selection in the 3D view](multi-selection-in-3d.md) — for grouping, without breaking click-to-go-down
 - [Nested assemblies: extras](nested-assemblies-extras.md) — axis from geometry, metallic CAD colours

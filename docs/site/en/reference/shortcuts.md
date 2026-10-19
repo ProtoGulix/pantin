@@ -21,7 +21,7 @@ These shortcuts are those of the menus. Adding <kbd>Alt</kbd> disables them; <kb
 | <kbd>L</kbd> | **Assembly's own axes** | Same. |
 | <kbd>A</kbd> | **Align…** | Same, or alignment in progress. |
 | <kbd>F</kbd> | **Frame all** | Bodies present and 3D view displayed. |
-| <kbd>F4</kbd> | **Cycle the central view** | Pantin open. |
+| <kbd>F4</kbd> | **Next view in the top zone** (3D, Diagram, Joints, I/O, skipping the view of the bottom zone) | Pantin open. |
 | <kbd>F8</kbd> | **Console** | Pantin open. |
 | <kbd>Esc</kbd> | Ends the placement tool in progress (gizmo, alignment, axis pick) | See the Escape chain below. |
 | <kbd>Space</kbd> or <kbd>Shift</kbd>+<kbd>Space</kbd> | Opens the list of standard views at the pointer's position | See "3D view". |
@@ -198,6 +198,29 @@ In the diagram, <kbd>Del</kbd> and <kbd>F2</kbd> never act on the window's selec
 
 In this field, the keys are neither window shortcuts nor diagram shortcuts.
 
+## Joints view
+
+The view is fully usable from the keyboard: a single item is a tab stop, and the arrows move the focus from node to node. These keys only act without <kbd>Ctrl</kbd>, <kbd>Alt</kbd> or <kbd>Cmd</kbd>.
+
+| Gesture | Effect |
+|---|---|
+| <kbd>←</kbd> | Goes to the parent (towards World). |
+| <kbd>→</kbd> | Goes to the first child. |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Goes to the previous or next sibling. |
+| <kbd>Space</kbd> on a node | Selects the node. |
+| <kbd>Enter</kbd> on a node | Frames it in the 3D view when it is displayed; otherwise, only selects it. |
+| <kbd>J</kbd> | Selects the joint above the node (the one that links it to its parent). |
+| <kbd>+</kbd> / <kbd>−</kbd> | Unfolds or folds the bodies that follow the group. |
+| <kbd>Menu</kbd> (context key) or <kbd>Shift</kbd>+<kbd>F10</kbd> | Opens the tree's context menu for this node. |
+| Click on a node or a joint | Selects it. |
+| Right-click | Opens the tree's context menu. |
+| Double-click | Frames in the 3D view when it is displayed; otherwise, only selects. |
+| Wheel | Zooms around the pointer. |
+| Drag the background | Pans the view. |
+| Click on **▸** | Unfolds or folds the bodies that follow a group. |
+
+<kbd>Delete</kbd> and <kbd>F2</kbd> act on the window's selection (**Delete**, **Rename**) when the focus is on the selected node; on another node they are ignored, so that they never touch anything other than what the focus points at.
+
 ## Input fields
 
 | Gesture | Effect |
@@ -212,14 +235,14 @@ While typing, the window shortcuts do not fire.
 
 ## Splitters
 
-Four splitters resize the window: between the left column and the central area, between the central area and the inspector, at the top edge of the console, and, in the **3D + Diagram** layout, between the 3D view and the diagram.
+Four splitters resize the window: between the left column and the central area, between the central area and the inspector, at the top edge of the console, and, while the bottom zone is open, between the top zone and the bottom zone.
 
 | Gesture | Effect |
 |---|---|
 | Drag | Resizes; the size is remembered by the browser. |
 | <kbd>←</kbd> / <kbd>→</kbd> (vertical splitters) | Moves by 16 pixels. |
 | <kbd>↑</kbd> / <kbd>↓</kbd> (console splitter) | Moves by 16 pixels: <kbd>↑</kbd> raises the edge, so it enlarges the console. |
-| <kbd>↑</kbd> / <kbd>↓</kbd> (horizontal 3D / diagram splitter) | Moves by 16 pixels. |
+| <kbd>↑</kbd> / <kbd>↓</kbd> (horizontal splitter between the two zones) | Moves by 16 pixels. |
 | Double-click | Goes back to the default size. |
 | Focus | Each splitter is a tab stop (it has keyboard focus). |
 

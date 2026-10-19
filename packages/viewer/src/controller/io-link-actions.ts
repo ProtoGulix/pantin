@@ -5,7 +5,7 @@ import { ownerOfDevice, ownerOfSelection, targetOfOwner } from "../io/io-owner.t
 import { isMappingCurrent } from "../io/io-state.ts";
 import { jointNodeId, parseNodeId } from "../tree/node-ids.ts";
 import { withRevealedDevice, withRevealedNode } from "../tree/tree-state.ts";
-import { setCentralLayout } from "./diagram-actions.ts";
+import { revealCentralView } from "./diagram-actions.ts";
 import { ensureIoMapping } from "./io-load.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -37,7 +37,7 @@ export function selectIoOwner(store: ViewerStore, owner: IoTagOwner): void {
 
 // Shows the I/O view on a place: the module's table, or the unmapped list.
 function showPlace(store: ViewerStore, place: TagPlace | null): void {
-  setCentralLayout(store, "io");
+  revealCentralView(store, "io");
   const { io } = store.state;
   store.update({
     ...store.state,

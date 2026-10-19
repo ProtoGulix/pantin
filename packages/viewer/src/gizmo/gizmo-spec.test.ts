@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { layoutOf } from "../central-layout.ts";
 import { nodeSelection } from "../selection.ts";
 import { pantinResponse, railBody } from "../test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "../tree/node-ids.ts";
@@ -32,7 +33,10 @@ describe("the gizmo of a state", () => {
 
   it("is absent while the diagram alone covers the 3D view", () => {
     expect(
-      gizmoSpecOf({ ...select(on, assemblyNodeId("press", "main")), centralLayout: "diagram" }),
+      gizmoSpecOf({
+        ...select(on, assemblyNodeId("press", "main")),
+        centralLayout: layoutOf("diagram"),
+      }),
     ).toBeNull();
   });
 

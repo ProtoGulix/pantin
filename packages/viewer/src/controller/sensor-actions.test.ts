@@ -1,6 +1,7 @@
 import type { CreateSensorRequest, PantinResponse, Sensor } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import type { PantinApiClient } from "../api-client.ts";
+import { layoutOf } from "../central-layout.ts";
 import { pantinResponse, railBody, slideJoint, stepBody } from "../test-fixtures.ts";
 import { jointNodeId } from "../tree/node-ids.ts";
 import { withOpenPantin } from "../viewer-state.ts";
@@ -75,7 +76,7 @@ describe("refreshTagValues", () => {
     };
     const store = storeWith({ listTags }, pantin);
     // "3d": the diagram, shown by default, would read too.
-    store.state = { ...store.state, inspectorOpen: panelOpen, centralLayout: "3d" };
+    store.state = { ...store.state, inspectorOpen: panelOpen, centralLayout: layoutOf("3d") };
     await refreshTagValues(store);
     return reads;
   };

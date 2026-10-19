@@ -1,0 +1,139 @@
+/* The zones of the central area (ADR 0059 amendment): a top zone and, when it is open, a bottom
+   zone under the splitter. central-area.ts puts zone-view--top, --bottom or --none on each view;
+   --split is the top zone's share while the bottom zone is open. Tokens in base.css.
+   Neutral colours only; the active view is marked in the brand colour as the old switch was
+   (ADR 0053), and every button says its view in words. */
+.viewport {
+  --zone-bar-height: 34px;
+  --splitter-height: 4px;
+  --top-zone-height: 100%;
+}
+
+.viewport--split {
+  --top-zone-height: var(--split, 60%);
+}
+
+.zone-view {
+  position: absolute;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  --zone-offset: 0px;
+}
+
+/* The views other than 3D start under the selector row, so that it never covers their content. */
+.zone-view--panel {
+  --zone-offset: var(--zone-bar-height);
+}
+
+.viewport .zone-view--top {
+  top: var(--zone-offset);
+  height: calc(var(--top-zone-height) - var(--zone-offset));
+}
+
+.viewport .zone-view--bottom {
+  top: calc(var(--split, 60%) + var(--splitter-height) + var(--zone-offset));
+  height: calc(100% - var(--split, 60%) - var(--splitter-height) - var(--zone-offset));
+}
+
+/* In no zone: out of sight. Panels keep their scroll with visibility; the 3D canvas is taken out
+   of the layout, because a hidden but laid-out WebGL canvas still costs the compositor, which
+   made screenshots of the software renderer time out. */
+.viewport .zone-view--none {
+  top: 0;
+  height: 100%;
+  visibility: hidden;
+}
+
+.viewport__canvas.zone-view {
+  z-index: 0;
+}
+
+.viewport .viewport__canvas.zone-view--none {
+  display: none;
+}
+
+/* Overlays of the 3D view follow the zone that shows it. */
+.viewport--split[data-top3d="true"] .viewport__hint {
+  bottom: calc(100% - var(--split, 60%) + 10px);
+}
+
+.viewport[data-bottom3d="true"] .view-cube {
+  top: calc(var(--split, 60%) + var(--splitter-height) + 44px);
+}
+
+/* No zone shows the 3D view: its overlays go too. */
+.viewport[data-top3d="false"][data-bottom3d="false"] .viewport__hint,
+.viewport[data-top3d="false"][data-bottom3d="false"] .view-cube {
+  display: none;
+}
+
+/* Selector row, top left of its zone. */
+.zone-bar {
+  position: absolute;
+  left: 8px;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.zone-bar[hidden] {
+  display: none;
+}
+
+.zone-bar--top {
+  top: 6px;
+}
+
+.zone-bar--bottom {
+  top: calc(var(--split, 60%) + var(--splitter-height) + 6px);
+}
+
+.zone-bar__views {
+  display: flex;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.zone-bar__button {
+  height: 22px;
+  padding: 0 8px;
+  font: inherit;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.zone-bar__button + .zone-bar__button {
+  border-left: 1px solid var(--border);
+}
+
+.zone-bar__button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.zone-bar__button.is-pressed {
+  color: var(--text);
+  background: var(--brand-soft);
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+
+/* The view shown in the other zone: struck through as well as dimmed, the tooltip says why. */
+.zone-bar__button:disabled {
+  color: var(--text-faint);
+  text-decoration: line-through;
+  cursor: default;
+}
+
+.zone-bar__action {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+}
+
+.zone-bar__action[hidden] {
+  display: none;
+}

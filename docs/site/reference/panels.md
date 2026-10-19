@@ -2,7 +2,7 @@
 
 Chaque bouton, champ et commande des panneaux, zone par zone : son **libellé**, ce qu'il fait, et quand il est grisé.
 
-Les menus (**Fichier**, **Édition**, **Affichage**) sont décrits dans [Menus](/reference/menus). Les combinaisons de touches et de souris sont dans [Raccourcis clavier et souris](/reference/shortcuts). La disposition générale de l'écran est dans [L'écran](/reference/interface). Les trois vues centrales (3D, Schéma, E/S) sont dans [Vues centrales](/reference/views).
+Les menus (**Fichier**, **Édition**, **Affichage**) sont décrits dans [Menus](/reference/menus). Les combinaisons de touches et de souris sont dans [Raccourcis clavier et souris](/reference/shortcuts). La disposition générale de l'écran est dans [L'écran](/reference/interface). Les quatre vues centrales (3D, Schéma, Liaisons, E/S) sont dans [Vues centrales](/reference/views).
 
 ::: tip Lire les tableaux
 « Grisé » : le bouton est visible mais inactif, et son info-bulle donne souvent la raison. Un champ « validé en le quittant » envoie sa valeur avec **Entrée** ou un clic ailleurs.
@@ -17,13 +17,12 @@ Elle se trouve sous la barre de menus, au-dessus de l'arborescence. Elle n'exist
 | **Fermer le Pantin (retour à l'accueil)** (flèche) | Ferme le Pantin et revient à l'accueil. Si le Pantin a des modifications non sauvegardées, une [confirmation](#les-confirmations) demande quoi faire. | Jamais |
 | **Enregistrer** | Écrit le Pantin sur le disque. Quand il y a des modifications non sauvegardées, l'info-bulle devient **Enregistrer (modifications non sauvegardées)** et un point apparaît sur le bouton. | Aucune modification non sauvegardée, ou une requête est en cours |
 | **Importer un fichier 3D (GLB, STL, STEP) dans le Pantin ouvert** | Ouvre le sélecteur de fichiers du navigateur, puis le [formulaire d'import](#le-formulaire-d-import). | Une requête ou un import est en cours |
-| **Cadrer tout** | Place la caméra 3D pour voir tous les corps. | Aucun corps, ou la vue 3D n'est pas affichée (disposition **Schéma** ou E/S) |
+| **Cadrer tout** | Place la caméra 3D pour voir tous les corps. | Aucun corps, ou la vue 3D n'est affichée dans aucune zone |
 | **Cadrer la sélection** | Place la caméra 3D sur l'élément sélectionné dans l'arborescence. | Aucun corps, aucun nœud de l'arborescence sélectionné, ou vue 3D non affichée |
-| **Vue centrale** : **3D** / **Schéma** / **3D + Schéma** | Trois boutons à bascule, un seul enfoncé : choisit ce que la zone centrale affiche. L'info-bulle donne le nom complet (**3D seule**, **Schéma des chaînes seul**, **3D + Schéma**). | Jamais |
 | Roue d'attente (**Traitement en cours**) | Indicateur, pas un bouton : une requête est en cours. | Sans objet |
 
-::: info La disposition E/S
-La barre d'outils n'a que trois boutons de vue. La disposition **E/S seules** se choisit dans le menu **Affichage**, ou avec le bouton **Config E/S** de la [carte Pont automate](#la-carte-pont-automate). La touche **F4** fait tourner entre **3D + Schéma**, **3D seule** et **Schéma des chaînes seul**, et ne passe jamais par la vue E/S.
+::: info Le choix des vues
+La barre d'outils n'a pas de bouton de vue : chaque zone de la zone centrale a son propre sélecteur, en haut à gauche (voir [Vues centrales](/reference/views#les-zones-et-leurs-selecteurs)). La vue E/S se choisit dans un de ces sélecteurs, dans le menu **Affichage**, ou avec le bouton **Config E/S** de la [carte Pont automate](#la-carte-pont-automate) : si elle n'est affichée dans aucune zone, ce bouton la place dans la zone du haut. La touche <kbd>F4</kbd> passe la zone du haut à la vue suivante.
 :::
 
 ## Le panneau de gauche
@@ -108,7 +107,7 @@ Pendant l'import, le formulaire affiche **Import en cours…**. Pour un STEP : *
 
 ![La carte Pont automate, pont en marche](/screenshots/fr/bridge-running.webp)
 
-La carte est en bas du panneau de gauche, visible dans toutes les dispositions.
+La carte est en bas du panneau de gauche, visible quelles que soient les vues affichées.
 
 La ligne d'état affiche une pastille (coche, anneau, anneau à moitié plein ou croix dans un octogone, en plus de la couleur) et le texte de l'état, suivis d'une pastille cliquable qui dit le mode réseau.
 

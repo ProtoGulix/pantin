@@ -10,6 +10,7 @@ import { drawModuleList } from "./io-module-list.ts";
 import { drawProblemList } from "./io-problem-list.ts";
 import { drawUnmappedList } from "./io-unmapped-list.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import { markAsZoneView } from "./zone-view.ts";
 
 // The I/O view in the central area (ADR 0049 point 11): modules on the left,
 // the selected module's settings and channels, unmapped tags on the right,
@@ -102,6 +103,7 @@ export class IoPanel {
 
   // Placed like the diagram: over the canvas, under the welcome overlay.
   constructor(viewport: HTMLElement, before: HTMLElement) {
+    markAsZoneView(this.host, "io");
     this.host.hidden = true;
     this.host.append(this.content);
     viewport.insertBefore(this.host, before);

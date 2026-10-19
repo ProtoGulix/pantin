@@ -21,7 +21,7 @@ Ces raccourcis sont ceux des menus. <kbd>Alt</kbd> en plus les désactive ; <kbd
 | <kbd>L</kbd> | **Repère local de l'assemblage** | Idem. |
 | <kbd>A</kbd> | **Aligner…** | Idem, ou alignement en cours. |
 | <kbd>F</kbd> | **Tout cadrer** | Corps présents et vue 3D affichée. |
-| <kbd>F4</kbd> | **Changer la vue centrale** | Pantin ouvert. |
+| <kbd>F4</kbd> | **Vue suivante de la zone du haut** (3D, Schéma, Liaisons, E/S, en sautant la vue de la zone du bas) | Pantin ouvert. |
 | <kbd>F8</kbd> | **Console** | Pantin ouvert. |
 | <kbd>Échap</kbd> | Termine l'outil de placement en cours (manipulateur, alignement, choix d'axe) | Voir la chaîne d'Échap ci-dessous. |
 | <kbd>Espace</kbd> ou <kbd>Maj</kbd>+<kbd>Espace</kbd> | Ouvre la liste des vues standard à l'emplacement du pointeur | Voir « Vue 3D ». |
@@ -198,6 +198,29 @@ Dans le schéma, <kbd>Suppr</kbd> et <kbd>F2</kbd> n'agissent jamais sur la sél
 
 Dans ce champ, les touches ne sont pas des raccourcis de la fenêtre ni du schéma.
 
+## Vue Liaisons
+
+La vue se parcourt entièrement au clavier : un seul élément est un arrêt de tabulation, les flèches déplacent le focus d'un noeud à l'autre. Ces touches n'agissent que sans <kbd>Ctrl</kbd>, <kbd>Alt</kbd> ni <kbd>Cmd</kbd>.
+
+| Geste | Effet |
+|---|---|
+| <kbd>←</kbd> | Va au parent (vers le Monde). |
+| <kbd>→</kbd> | Va au premier enfant. |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Va au frère précédent ou suivant. |
+| <kbd>Espace</kbd> sur un noeud | Sélectionne le noeud. |
+| <kbd>Entrée</kbd> sur un noeud | Le cadre dans la vue 3D quand elle est affichée ; sinon, le sélectionne seulement. |
+| <kbd>J</kbd> | Sélectionne la liaison au-dessus du noeud (celle qui le relie à son parent). |
+| <kbd>+</kbd> / <kbd>−</kbd> | Déplie ou replie les corps qui suivent le groupe. |
+| <kbd>Menu</kbd> (touche contextuelle) ou <kbd>Maj</kbd>+<kbd>F10</kbd> | Ouvre le menu contextuel de l'arborescence pour ce noeud. |
+| Clic sur un noeud ou une liaison | Le sélectionne. |
+| Clic droit | Ouvre le menu contextuel de l'arborescence. |
+| Double-clic | Cadre dans la vue 3D quand elle est affichée ; sinon, sélectionne seulement. |
+| Molette | Zoome autour du pointeur. |
+| Glisser le fond | Déplace la vue. |
+| Clic sur **▸** | Déplie ou replie les corps qui suivent un groupe. |
+
+<kbd>Suppr</kbd> et <kbd>F2</kbd> agissent sur la sélection de la fenêtre (**Supprimer**, **Renommer**) quand le focus est sur le noeud sélectionné ; sur un autre noeud, elles sont ignorées, pour ne pas toucher à autre chose que ce que le focus désigne.
+
 ## Champs de saisie
 
 | Geste | Effet |
@@ -212,14 +235,14 @@ Pendant la saisie, les raccourcis de la fenêtre ne se déclenchent pas.
 
 ## Séparateurs
 
-Quatre séparateurs redimensionnent la fenêtre : entre la colonne de gauche et la zone centrale, entre la zone centrale et l'inspecteur, au bord haut de la console, et, dans la disposition **3D + Schéma**, entre la vue 3D et le schéma.
+Quatre séparateurs redimensionnent la fenêtre : entre la colonne de gauche et la zone centrale, entre la zone centrale et l'inspecteur, au bord haut de la console, et, quand la zone du bas est ouverte, entre la zone du haut et la zone du bas.
 
 | Geste | Effet |
 |---|---|
 | Glisser | Redimensionne ; la taille est mémorisée par le navigateur. |
 | <kbd>←</kbd> / <kbd>→</kbd> (séparateurs verticaux) | Déplace de 16 pixels. |
 | <kbd>↑</kbd> / <kbd>↓</kbd> (séparateur de la console) | Déplace de 16 pixels : <kbd>↑</kbd> remonte le bord, donc agrandit la console. |
-| <kbd>↑</kbd> / <kbd>↓</kbd> (séparateur horizontal 3D / schéma) | Déplace de 16 pixels. |
+| <kbd>↑</kbd> / <kbd>↓</kbd> (séparateur horizontal entre les deux zones) | Déplace de 16 pixels. |
 | Double-clic | Revient à la taille par défaut. |
 | Focus | Chaque séparateur est un arrêt de tabulation (il a le focus au clavier). |
 

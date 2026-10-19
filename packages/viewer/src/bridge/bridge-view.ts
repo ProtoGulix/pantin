@@ -1,5 +1,5 @@
 import type { BridgeFailureKind, BridgeState, BridgeStatus } from "@pantin/protocol";
-import type { CentralLayout } from "../central-layout.ts";
+import { type CentralLayout, showsIo } from "../central-layout.ts";
 import { createTranslator, type MessageKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import {
@@ -190,7 +190,7 @@ function configureIoOf(t: Translate, layout: CentralLayout): BridgeView["configu
   return {
     text: t("bridge.configureIoShort"),
     label: t("bridge.configureIo"),
-    active: layout === "io",
+    active: showsIo(layout),
   };
 }
 
