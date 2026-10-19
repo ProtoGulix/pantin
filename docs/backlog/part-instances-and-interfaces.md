@@ -1,5 +1,7 @@
 # Part instances, interface frames and joints between instances
 
+Phase: 9. ADR: 0002, 0012, 0017, 0019, 0021, 0043, 0047.
+
 A part could declare a root body and named interface frames (for example
 "base" and "carriage"), and a scene could join interfaces of two instances
 ("instance.interface"): a cylinder bolted on a frame, a plate on a carriage.

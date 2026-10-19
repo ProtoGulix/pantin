@@ -6,6 +6,7 @@
 - Partly superseded by: ADR 0049 (points 4, 6, 7, 9 and 10: one io.json edited from the viewer, renames carried, io_changed and mappingId on the open mapping)
 - Extended by: ADR 0050 (the core starts and stops the bridge; `--status-lines`)
 - Applies: ADR 0003 (slave first), ADR 0007 (Python bridge, pymodbus),
+- P6 done, spike 4b reduced: see the amendment of 2026-10-19 at the end
   ADR 0031 point 6 (forced tags), ADR 0032 (Context and point 13: a PLC in
   the loop only makes sense at 1x; point 11: the falling-behind warning)
 - Amends: ADR 0003 point 2 (the per-module endpoint model reaches the
@@ -523,3 +524,19 @@ Facts checked in the repository on 2026-10-13:
   - REAL channel mapping;
   - identifier rules;
   - source IPs through NAT or bridge.
+
+## Amendment (2026-10-19): P6 done by a manual demonstration, spike 4b reduced
+
+P6 is done: on 2026-10-18 the user's CODESYS Control Win V3 x64 drove
+`examples/plc-cylinder` both ways through the bridge (module `m1` on port
+1502, unit 1), with the setup written in the user guide (Connecting a PLC).
+Two facts came out of it and are in the guide: the CODESYS Unit-ID defaults
+to 255, which the bridge refuses with exception 11 until it is set to the
+module's unit; the **Init serveur Modbus** tab must stay empty.
+
+What spike 4b still has to measure, with CODESYS in a virtual machine: the
+exchange period and latency, the source address seen with NAT and with a
+bridged network (ADR 0004 still refuses 100.64.0.0/10), a port other than
+502 or 1502, a privileged port, and how CODESYS reconnects after a refused
+accept or a closed slave. It is a backlog item, no longer a
+blocker of phase 7.

@@ -1,5 +1,7 @@
 # STEP converter robustness
 
+Phase: debt (before server mode). ADR: 0009; still open on 2026-10-19, none of the three is done.
+
 Non-blocking reviewer findings on the STEP import (ADR 0009), 2026-09-28:
 
 1. Rollback in `packages/core/src/service/import-operations.ts`: use

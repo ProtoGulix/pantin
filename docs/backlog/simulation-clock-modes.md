@@ -1,5 +1,7 @@
 # Simulation clock modes
 
+Phase: 9. ADR: 0032, 0005.
+
 Further modes on top of the clock control of ADR 0032 (pause, step, achieved
 ratio), kept out of it on purpose:
 

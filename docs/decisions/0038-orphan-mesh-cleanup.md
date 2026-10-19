@@ -402,3 +402,9 @@ Tests:
    with the names in detail); some failed (error, detail
    `"a.glb: EACCES"`).
 8. `formatFileSize` in French and English: bytes, ko or kB, Mo or MB.
+
+## Amendment (2026-10-19): the backlog note named in the context
+
+The note `docs/backlog/clean-orphan-meshes.md` cited in the context no longer
+exists: this ADR delivered it, and its remaining subject is
+`docs/backlog/retry-deferred-mesh-deletions.md`.

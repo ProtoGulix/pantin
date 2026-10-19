@@ -1,5 +1,7 @@
 # dependency-cruiser hides npm dependencies served from dist/
 
+Phase: debt. ADR: 0043 P0; the exclude in .dependency-cruiser.cjs is unchanged.
+
 The `exclude` option of `.dependency-cruiser.cjs` drops every path with a
 `dist/` folder, so an import of an npm package whose entry sits in its own
 `dist/` (vitest, Rapier) is invisible to every rule. Rapier got a carve-out in

@@ -3,6 +3,7 @@
 - Status: accepted
 - Date: 2026-09-30
 - Extends: ADR 0022 (drives and drive type folders), ADR 0019 (tag keys)
+- Amended by: ADR 0025 (point 4: stateful sensors; point 2: new types)
 
 ## Context
 

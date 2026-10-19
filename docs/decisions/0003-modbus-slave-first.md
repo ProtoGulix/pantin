@@ -4,6 +4,7 @@
 - Date: 2026-09-28
 - Extended by: ADR 0045
 - Amended by: ADR 0045 (points 2 and 3)
+- Addressing settled: see the amendment at the end
 
 ## Context
 
@@ -36,3 +37,11 @@ polls the PLC (client), or it impersonates I/O modules that the PLC polls
 - Spike 4 must produce measured figures for multi-module endpoints and the
   exchange period, not only a working exchange.
 - The protocol will need an endpoint entry per module in the I/O mapping.
+
+## Amendment (2026-10-19): addressing settled
+
+The per-module addressing left to spike 4 is settled by ADR 0045, then
+ADR 0049: one `io.json` per Pantin, one endpoint (address, port, unit id)
+per module. A real CODESYS Control Win V3 x64 polled such a module on
+2026-10-18 (see the amendment of ADR 0045). The exchange period is still not
+measured (spike 4b, in the backlog).

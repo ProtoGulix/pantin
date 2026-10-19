@@ -6,6 +6,14 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Changed
+
+- ADRs 0001 and 0002 accepted, with the runtime choices the spikes settled;
+  ADR 0045 records the real CODESYS demonstration as P6 done, spike 4b
+  becomes a backlog measurement; missing amendment links added. The backlog
+  is sorted by phase and theme in an index, with merged duplicates and the
+  follow-ups announced by the ADRs.
+
 ## [0.2.0] - 2026-10-19
 
 Rigid groups: an assembly targeted by a joint moves as one piece, and an

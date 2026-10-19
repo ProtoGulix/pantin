@@ -1,6 +1,6 @@
 # 0001. Technology stack
 
-- Status: proposed (tooling part accepted; runtime part pending phase 0b spikes)
+- Status: accepted (user, 2026-10-19; runtime part settled by the spikes, see the amendment at the end)
 - Date: 2026-09-28
 
 ## Context
@@ -50,3 +50,18 @@ docker compose for server mode.
 - Every contributor needs Node 24 and corepack-activated pnpm.
 - The runtime rows of this ADR are rewritten from the spike reports before
   phase 1; any deviation is a new ADR.
+
+## Amendment (2026-10-19): accepted, the runtime part settled by the spikes
+
+The user accepts this ADR as it stands, with its runtime part settled by the
+phase 0b spikes and the ADRs that followed them:
+
+- Core: TypeScript on Node, as proposed.
+- Physics: Rapier, `@dimforge/rapier3d-deterministic-compat` 0.21.0 pinned,
+  never the SIMD build (spike 0002, ADR 0005).
+- PLC bridge: a Python sidecar (spike 0003, ADR 0007), whose Modbus TCP
+  slave is hand-written on asyncio; pymodbus is only a test client
+  (spike 0009, ADR 0048). asyncua stays the candidate for OPC UA.
+- Viewer: Babylon.js, as proposed.
+- docker compose for the server mode is not built yet; it will come with
+  its own ADR (see ADR 0050).

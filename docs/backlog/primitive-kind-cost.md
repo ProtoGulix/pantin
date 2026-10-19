@@ -1,5 +1,7 @@
 # The cost of adding a primitive kind
 
+Phase: debt (before the next kind). ADR: 0043, 0047.
+
 Adding a phase 6 kind (rollers, curved belts) means touching many files in
 three packages. CLAUDE.md section 3.3 warns against exactly this: "adding a
 part must never require changing the core", with FactoryForge's eight shared

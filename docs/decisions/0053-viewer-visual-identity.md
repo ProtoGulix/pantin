@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-16
+- Amended by: ADR 0057 (colour-blind safe coding, see the amendments below)
 
 ## Context
 

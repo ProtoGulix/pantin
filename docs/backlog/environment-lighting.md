@@ -1,5 +1,7 @@
 # Environment lighting for PBR materials
 
+Phase: debt (on hold). ADR: 0053.
+
 Put on hold by the user on 2026-09-29. Committing an environment binary to the
 repository is not wanted (size, licence). If dull rendering becomes a real
 problem, prefer a free HDRI loaded from a CDN (licence checked) or an

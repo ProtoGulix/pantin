@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-16
+- Extended by: ADR 0053 (the identity adopted in the viewer)
 
 ## Context
 

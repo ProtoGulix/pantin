@@ -1,5 +1,7 @@
 # Detect external edits of pantin.json
 
+Phase: 9. ADR: 0006.
+
 Once loaded, a Pantin stays in the core's memory (ADR 0006): an edit made
 outside Pantin (text editor, git pull) is ignored until the core restarts.
 Idea: compare the file's modification time or content hash on access, and

@@ -1,5 +1,7 @@
 # Split a GLB body by nodes
 
+Phase: 8. ADR: 0055.
+
 Left out of ADR 0055 (assemblies as rigid groups), 2026-10-18.
 
 A GLB or STL file is one body: a frame and a rod exported in the same GLB

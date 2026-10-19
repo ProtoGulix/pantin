@@ -1,5 +1,7 @@
 # Check the Cloudflare Access token at the origin
 
+Phase: debt (security, before any shared exposure). ADR: 0014, 0046, 0050.
+
 Today the development exposure (ADR 0014) relies on the Access policy and on
 nginx accepting loopback connections only. Before any shared or longer-lived
 exposure, verify the `Cf-Access-Jwt-Assertion` header at the origin

@@ -1,5 +1,7 @@
 # Retry failed deferred mesh deletions
 
+Phase: debt. ADR: 0038.
+
 The orphan cleanup command itself is done (ADR 0038). What remains: a
 deferred mesh deletion is retried only once. `deletePendingMeshes` drops the
 path from the pending set before `deleteMesh`, so a failure (a read-only

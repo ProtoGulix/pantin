@@ -1,5 +1,7 @@
 # Colliders from machine meshes
 
+Phase: conveying and physics (after phase 6). ADR: 0043.
+
 In phase 6 only belts and box guides collide (ADR 0043). A pusher cylinder or
 a gripper touching products needs colliders built from the body meshes
 (convex hulls or decomposition), moved as kinematic bodies with their joints.

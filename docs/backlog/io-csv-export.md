@@ -1,5 +1,7 @@
 # I/O mapping export to a spreadsheet
 
+Phase: 8. ADR: 0049.
+
 ADR 0049 replaced io.csv with io.json, which nobody edits by hand. Some users
 still want the mapping in a spreadsheet, to review it with an electrician or to
 paste it into a wiring document. A read-only export (one row per channel:

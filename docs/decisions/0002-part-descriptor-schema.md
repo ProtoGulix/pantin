@@ -1,6 +1,6 @@
 # 0002. Part descriptor schema
 
-- Status: proposed (schema itself is written and validated in phase 1)
+- Status: accepted (user, 2026-10-19; see the amendment at the end)
 - Date: 2026-09-28
 - Partly superseded by: ADR 0021 (the Pantin document is the phase 1 contract; part manifests move to phase 9)
 
@@ -44,3 +44,11 @@ versionable in git, and validated before it enters the domain.
   fixture.
 - Any tool (CLI, viewer, bridge) validates manifests through the same Zod
   schema.
+
+## Amendment (2026-10-19): accepted, with ADR 0021
+
+The user accepts this ADR as it stands, partly superseded by ADR 0021. The
+Pantin document of ADR 0021 is the contract in use (schema 13 on
+2026-10-19, with a migration per version). Part manifests as described here
+come back with phase 9 (part instances and packs), where they will be
+checked again against this ADR.

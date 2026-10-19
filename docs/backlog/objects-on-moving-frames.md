@@ -1,5 +1,7 @@
 # Guides and belts on moving frames
 
+Phase: conveying and physics (after phase 6). ADR: 0043 point 1 and 3.
+
 Since 2026-10-13 a phase 6 object follows its body or the joints anchoring
 its assembly (ADR 0043 point 1). A belt is teleported to its frame pose each
 step and its velocity is the surface velocity only (point 3), so a belt
