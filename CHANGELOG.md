@@ -6,6 +6,18 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+## [0.2.0] - 2026-10-19
+
+Rigid groups: an assembly targeted by a joint moves as one piece, and an
+assembly is split into groups by hand (Group, Ungroup) when the STEP import
+did not do it; a frame can be aligned on a joint axis without moving
+anything. Colour is never the only cue: every state carries a glyph, the
+colours stay apart for colour-blind users, with the visual identity kept.
+The user guide is rewritten in plain language with a guide to preparing 3D
+models, and the version now shows in the viewer (Help, About Pantin), the
+core API and the guide header. Pantins saved by 0.1.0 are migrated on
+opening.
+
 ### Added
 
 - Core (ADR 0058): `GET /api/version` answers the build version, `0.2.0` on a
@@ -538,6 +550,7 @@ become bodies (phase 8), and phase 9 (packs, several instances).
 - The CI workflow now runs on pushes to `develop` and `master`; it watched a
   `main` branch that does not exist.
 
+[0.2.0]: https://github.com/ProtoGulix/pantin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0
 [0.1.0-alpha.2]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/ProtoGulix/pantin/releases/tag/v0.1.0-alpha.1
