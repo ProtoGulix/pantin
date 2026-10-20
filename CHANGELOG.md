@@ -8,6 +8,9 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Spike 0011 (real CAD files: placements, groups and pivots): the STEP import of the
+  user's assembly checked against ADR 0055 (51 bodies, 10 assemblies, 9 joints); the glTF
+  export from the CAD itself stays not verified. The backlog item is closed.
 - Viewer and core (ADR 0060): "Edit > Delete redundant fixed joints…", also in the
   context menu of the Pantin row, previews then deletes the fixed joints that groups
   made useless (parent and child in one assembly, no moving joint above the parent),

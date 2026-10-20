@@ -50,7 +50,7 @@ phase.
 ## Spikes and checks
 
 - [Spike 4b: CODESYS in a VM](spike-4b-codesys-vm.md) — latency, NAT vs bridged IPs, ports
-- [Spike 5 report: CAD pivots](spike-5-cad-pivots-report.md) — write up the machine-v2 STEP import
+- [Spike 5b: export from the user's CAD](spike-5b-user-cad-export.md) — on hold: needs a file from that CAD
 - [Trademark check for the name](name-trademark-check.md) — INPI and EUIPO, by hand
 
 ## Debt and tooling
