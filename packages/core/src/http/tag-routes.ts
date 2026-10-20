@@ -17,6 +17,12 @@ export const TAG_ROUTES: readonly Route[] = [
   },
   {
     method: "GET",
+    pattern: ["pantins", ":pantinId", "signals"],
+    handle: async (context) =>
+      sendJson(context.response, 200, await context.service.listSignals(pantinIdOf(context))),
+  },
+  {
+    method: "GET",
     pattern: ["pantins", ":pantinId", "console"],
     handle: async (context) => {
       const { after } = parseWithSchema(

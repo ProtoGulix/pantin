@@ -17,6 +17,27 @@ Each tag has:
 
 In the inspector, the tags of an element are grouped into **Commands** and **Feedback**. A command that is written takes effect at the next step (1/120 s).
 
+## List the signals
+
+A signal is described by its name, type, direction, unit and the element that owns it. The following command reads the saved `pantin.json`, without the core:
+
+```
+pnpm pantin signals examples/plc-cylinder
+```
+
+```
+NAME                   TYPE   DIRECTION  UNIT   OWNER
+tige.verin.position    float  feedback   metre  joint verin
+verin1.verin1.coil_14  bit    command    none   drive verin1
+verin1.verin1.coil_12  bit    command    none   drive verin1
+tige.verin-min.state   bit    feedback   none   sensor verin min
+tige.verin-max.state   bit    feedback   none   sensor verin max
+```
+
+`--json` prints the same list as JSON (`{ "signals": [...] }`). The core also serves it, unsaved edits included, at `GET /api/pantins/:pantinId/signals`.
+
+The unit is `metre`, `radian`, `metre_per_second`, `radian_per_second`, `percent`, `none` (bits, counts) or `unknown` (a servo drive that does not feed an actuator yet). Values stay in SI units and are never scaled.
+
 ## Force and release a tag
 
 When you write a command from the viewer (**Send** button), the tag is **forced**: a **forced** badge appears. While it is forced, the PLC's writes to this tag are ignored, and the **Console** notes it.

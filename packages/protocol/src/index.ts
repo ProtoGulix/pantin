@@ -25,6 +25,7 @@ export * from "./placement.ts";
 export * from "./redundant-joints-api.ts";
 export * from "./sensor.ts";
 export * from "./sensor-api.ts";
+export * from "./signal.ts";
 export * from "./tag.ts";
 export * from "./tag-bus.ts";
 export * from "./version.ts";

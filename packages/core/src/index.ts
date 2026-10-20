@@ -15,6 +15,7 @@ export {
 export { evaluateIoMapping, ioTagsOf } from "./domain/io-evaluation.ts";
 export { describeIoProblem } from "./domain/io-problem-text.ts";
 export { type DocumentReading, readPantinDocument } from "./domain/pantin-document.ts";
+export { deriveSignals } from "./domain/signals.ts";
 export { ApiError } from "./errors.ts";
 export {
   type PantinServerOptions,

@@ -61,7 +61,7 @@ import { redundantJointsOperations } from "./redundant-joints-operations.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { runSimulationSteps } from "./simulation.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
-import { listTags, releaseAllTags, releaseTag, writeTag } from "./tag-operations.ts";
+import { listSignals, listTags, releaseAllTags, releaseTag, writeTag } from "./tag-operations.ts";
 
 // Orchestrates the Pantins: documents are edited in memory and written to disk
 // only on save. One service per server instance, no shared state.
@@ -259,6 +259,7 @@ export function createPantinService(
     setJointPosition: (pantinId: PantinId, jointId: string, position: number) =>
       setJointPosition(context, pantinId, jointId, position),
     listTags: (pantinId: PantinId) => listTags(context, pantinId),
+    listSignals: (pantinId: PantinId) => listSignals(context, pantinId),
     writeTag: (pantinId: PantinId, tagName: string, value: number, source: WriteSource) =>
       writeTag(context, pantinId, tagName, value, source),
     releaseTag: (pantinId: PantinId, tagName: string) => releaseTag(context, pantinId, tagName),

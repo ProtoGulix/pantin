@@ -6,6 +6,13 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Added
+
+- Signals (ADR 0064 points 1 and 2): `GET /api/pantins/:pantinId/signals` and
+  `pantin signals <folder> [--json]` list every signal of a Pantin, the static definition
+  of a tag, with its type, direction, unit (metre, radian, per second, percent, none or
+  unknown), owner and an English description. Derived from the document, never stored.
+
 ### Fixed
 
 - Core (ADR 0043 point 3): a belt carried by a moving frame (a shuttle, a transfer

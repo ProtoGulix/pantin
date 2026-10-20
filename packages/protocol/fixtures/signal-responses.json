@@ -1,0 +1,152 @@
+{
+  "description": "Responses of GET /api/pantins/:pantinId/signals (SignalListResponse, ADR 0064 point 2). Each `message` is a decoded JSON answer. Every decoder must accept every `valid` entry and refuse every `invalid` one. Together the valid entries hold every owner kind and every unit.",
+  "version": 1,
+  "valid": [
+    {
+      "name": "an empty list",
+      "message": { "signals": [] }
+    },
+    {
+      "name": "one signal per owner kind and per unit",
+      "message": {
+        "signals": [
+          {
+            "name": "carriage.stroke.position",
+            "type": "float",
+            "direction": "feedback",
+            "unit": "metre",
+            "owner": { "kind": "joint", "id": "stroke", "name": "Stroke" },
+            "member": "position",
+            "description": "Joint \"Stroke\": Position"
+          },
+          {
+            "name": "arm.shoulder.position",
+            "type": "float",
+            "direction": "feedback",
+            "unit": "radian",
+            "owner": { "kind": "joint", "id": "shoulder", "name": "Shoulder" },
+            "member": "position",
+            "description": "Joint \"Shoulder\": Position"
+          },
+          {
+            "name": "main.axis.speed",
+            "type": "float",
+            "direction": "feedback",
+            "unit": "metre_per_second",
+            "owner": { "kind": "drive", "id": "axis", "name": "Axis servo" },
+            "member": "speed",
+            "description": "Drive \"Axis servo\": Speed"
+          },
+          {
+            "name": "main.rotor.speed",
+            "type": "float",
+            "direction": "feedback",
+            "unit": "radian_per_second",
+            "owner": { "kind": "drive", "id": "rotor", "name": "Rotor servo" },
+            "member": "speed",
+            "description": "Drive \"Rotor servo\": Speed"
+          },
+          {
+            "name": "main.fan.speed_setpoint",
+            "type": "float",
+            "direction": "command",
+            "unit": "percent",
+            "owner": { "kind": "drive", "id": "fan", "name": "Fan" },
+            "member": "speed_setpoint",
+            "description": "Drive \"Fan\": Speed setpoint"
+          },
+          {
+            "name": "main.limit.state",
+            "type": "bit",
+            "direction": "feedback",
+            "unit": "none",
+            "owner": { "kind": "sensor", "id": "limit", "name": "Limit" },
+            "member": "state",
+            "description": "Sensor \"Limit\": State"
+          },
+          {
+            "name": "main.source.spawn",
+            "type": "bit",
+            "direction": "command",
+            "unit": "none",
+            "owner": { "kind": "emitter", "id": "source", "name": "Source" },
+            "member": "spawn",
+            "description": "Emitter \"Source\": Spawn"
+          },
+          {
+            "name": "main.cell.state",
+            "type": "bit",
+            "direction": "feedback",
+            "unit": "none",
+            "owner": { "kind": "presence_sensor", "id": "cell", "name": "Cell" },
+            "member": "state",
+            "description": "Presence sensor \"Cell\": State"
+          },
+          {
+            "name": "main.idle.setpoint",
+            "type": "float",
+            "direction": "command",
+            "unit": "unknown",
+            "owner": { "kind": "drive", "id": "idle", "name": "Idle servo" },
+            "member": "setpoint",
+            "description": "Drive \"Idle servo\": Position setpoint"
+          }
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "no signals field",
+      "message": {}
+    },
+    {
+      "name": "an unknown unit",
+      "message": {
+        "signals": [
+          {
+            "name": "main.a.b",
+            "type": "float",
+            "direction": "feedback",
+            "unit": "millimetre",
+            "owner": { "kind": "joint", "id": "a", "name": "A" },
+            "member": "b",
+            "description": "Joint \"A\": B"
+          }
+        ]
+      }
+    },
+    {
+      "name": "an unknown owner kind",
+      "message": {
+        "signals": [
+          {
+            "name": "main.a.b",
+            "type": "bit",
+            "direction": "feedback",
+            "unit": "none",
+            "owner": { "kind": "actuator", "id": "a", "name": "A" },
+            "member": "b",
+            "description": "Actuator \"A\": B"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a name that is not a tag name",
+      "message": {
+        "signals": [
+          {
+            "name": "stroke",
+            "type": "bit",
+            "direction": "feedback",
+            "unit": "none",
+            "owner": { "kind": "joint", "id": "a", "name": "A" },
+            "member": "b",
+            "description": "Joint \"A\": B"
+          }
+        ]
+      }
+    }
+  ]
+}

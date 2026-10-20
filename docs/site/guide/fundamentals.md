@@ -15,7 +15,7 @@ La boucle fermée fonctionne ainsi :
 3. les capteurs simulés (fin de course, cellule) changent d'état ;
 4. l'automate lit ces retours et décide de la suite.
 
-Vous importez vos modèles 3D, vous les animez, puis vous reliez les tags de la machine à votre automate. Un **tag** est une valeur nommée de la machine : une commande que l'automate écrit, ou un retour qu'il lit.
+Vous importez vos modèles 3D, vous les animez, puis vous reliez les tags de la machine à votre automate. Un **signal** (« tag » dans le viewer et dans le reste de ce guide) est une valeur nommée de la machine : une commande que l'automate écrit, ou un retour qu'il lit.
 
 ## Les trois processus
 

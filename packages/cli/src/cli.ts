@@ -7,6 +7,7 @@ import { exportIoCsv } from "./io-export.ts";
 import { ioInit } from "./io-init-command.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
 import { realEnvironment } from "./real-environment.ts";
+import { parseSignalsArguments, signalsCommand } from "./signals-command.ts";
 import { validatePantinFolder } from "./validate-folder.ts";
 
 // The pantin command's logic, with its output streams injected so that tests
@@ -22,6 +23,8 @@ const USAGE = [
   "                      print the I/O mapping as CSV, one row per channel (read-only)",
   "  gvl <folder> [--output <file>]",
   "                      print the CODESYS global variable list of io.json",
+  "  signals <folder> [--json]",
+  "                      print the signals (tags with type, direction, unit, owner), read-only",
   BRIDGE_LOG_USAGE,
 ].join("\n");
 
@@ -60,6 +63,15 @@ function report(result: CommandResult, { stdout, stderr }: Streams): number {
     writeLine(stderr, `error: ${error}`);
   }
   return result.exitCode;
+}
+
+async function runSignals(args: readonly string[], streams: Streams): Promise<number> {
+  const parsed = parseSignalsArguments(args);
+  if (parsed === undefined) {
+    writeLine(streams.stderr, USAGE);
+    return 2;
+  }
+  return report(await signalsCommand(parsed.folder, parsed.json), streams);
 }
 
 async function runIoInit(args: readonly string[], streams: Streams): Promise<number> {
@@ -142,6 +154,9 @@ export async function runCommand(
   }
   if (command === "gvl") {
     return runGenerated(args.slice(1), generateGvl, streams);
+  }
+  if (command === "signals") {
+    return runSignals(args.slice(1), streams);
   }
   if (command === "io") {
     return runIo(args.slice(1), streams);

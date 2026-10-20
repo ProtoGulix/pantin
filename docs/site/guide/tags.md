@@ -17,6 +17,27 @@ Chaque tag a :
 
 Dans l'inspecteur, les tags d'un élément sont groupés en **Commandes** et **Retours**. Une commande écrite prend effet au pas suivant (1/120 s).
 
+## Lister les signaux
+
+Un signal se décrit par son nom, son type, sa direction, son unité et l'élément auquel il appartient. La commande suivante lit le `pantin.json` enregistré, sans le cœur :
+
+```
+pnpm pantin signals examples/plc-cylinder
+```
+
+```
+NAME                   TYPE   DIRECTION  UNIT   OWNER
+tige.verin.position    float  feedback   metre  joint verin
+verin1.verin1.coil_14  bit    command    none   drive verin1
+verin1.verin1.coil_12  bit    command    none   drive verin1
+tige.verin-min.state   bit    feedback   none   sensor verin min
+tige.verin-max.state   bit    feedback   none   sensor verin max
+```
+
+`--json` affiche la même liste en JSON (`{ "signals": [...] }`). Le cœur la sert aussi, modifications non enregistrées comprises, par `GET /api/pantins/:pantinId/signals`.
+
+L'unité est `metre`, `radian`, `metre_per_second`, `radian_per_second`, `percent`, `none` (bits, comptages) ou `unknown` (un variateur servo qui n'alimente encore aucun actionneur). Les valeurs restent en unités SI et ne sont jamais mises à l'échelle.
+
 ## Forcer et relâcher un tag
 
 Quand vous écrivez une commande depuis le viewer (bouton **Envoyer**), le tag est **forcé** : un badge **forcé** apparaît. Tant qu'il est forcé, les écritures de l'automate sur ce tag sont ignorées, et la **Console** le note.

@@ -1,6 +1,7 @@
-import type { PantinId, Tag, TagListResponse } from "@pantin/protocol";
+import type { PantinId, SignalListResponse, Tag, TagListResponse } from "@pantin/protocol";
 import { forcedTagWrittenEvent } from "../domain/console-events.ts";
 import { writeSpawnValue } from "../domain/physics-state.ts";
+import { deriveSignals } from "../domain/signals.ts";
 import { type TagEntry, tagEntries } from "../domain/tag-entries.ts";
 import {
   decideRelease,
@@ -98,6 +99,15 @@ export async function listTags(
   const openPantin = await loadPantin(context, pantinId);
   syncTagStates(openPantin);
   return describeTagList(openPantin);
+}
+
+/** The signals of the open document, unsaved edits included (ADR 0064 point 2). */
+export async function listSignals(
+  context: ServiceContext,
+  pantinId: PantinId,
+): Promise<SignalListResponse> {
+  const openPantin = await loadPantin(context, pantinId);
+  return { signals: deriveSignals(openPantin.document) };
 }
 
 export async function writeTag(

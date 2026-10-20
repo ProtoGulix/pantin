@@ -15,7 +15,7 @@ The closed loop works like this:
 3. the simulated sensors (limit switch, photocell) change state;
 4. the PLC reads this feedback and decides what to do next.
 
-You import your 3D models, animate them, then link the machine's tags to your PLC. A **tag** is a named value of the machine: a command the PLC writes, or a feedback it reads.
+You import your 3D models, animate them, then link the machine's tags to your PLC. A **signal** ("tag" in the viewer and in the rest of this guide) is a named value of the machine: a command the PLC writes, or a feedback it reads.
 
 ## The three processes
 
