@@ -10,9 +10,6 @@ fixed; what remains needs a decision or is not a viewer fix.
 
 ## What
 
-- Deleting a drive asks no confirmation, unlike bodies and joints; discarding
-  the unsaved changes undoes it meanwhile. It needs a decision (drives only, or
-  actuators and sensors too) and a new prompt text.
 - Home page screenshot (`scripts/docs-screenshots/capture-views.ts`): the status bar
   counts 2 warnings in the English picture (`en/home-light.webp`, `en/overview.webp`)
   and 0 in the French one, on the same example (schema 13, so not a migration

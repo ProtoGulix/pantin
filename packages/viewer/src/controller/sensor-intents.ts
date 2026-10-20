@@ -1,10 +1,10 @@
+import { requestDeviceDelete } from "./device-deletion-actions.ts";
 import {
   addEndSwitches,
   cancelSensorForm,
   changeSensorAssembly,
   changeSensorJoint,
   changeSensorType,
-  deleteSensor,
   editSensorName,
   editSensorParameter,
   openSensorForm,
@@ -26,6 +26,7 @@ export function sensorIntents(store: ViewerStore) {
     changeSensorJoint: (jointId: string) => changeSensorJoint(store, jointId),
     changeSensorAssembly: (assembly: string) => changeSensorAssembly(store, assembly),
     submitSensorForm: () => void submitSensorForm(store),
-    deleteSensor: (sensorId: string) => void deleteSensor(store, sensorId),
+    deleteSensor: (sensorId: string) =>
+      requestDeviceDelete(store, { kind: "sensor", id: sensorId }),
   };
 }

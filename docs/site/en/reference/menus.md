@@ -37,7 +37,7 @@ Terms used in the "Greyed out when" column:
 | **Release all forced tags** | | Releases all the tags forced from the viewer. No effect if no tag is forced. | No Pantin open or working. |
 | separator | | | |
 | **Rename** | <kbd>F2</kbd> | Renames the selected element. | The selection is not a Pantin, nor a body, nor an element of the action chain (drive, actuator, sensor, belt...). An assembly cannot be renamed through this menu: use <kbd>F2</kbd> in the tree or its context menu. |
-| **Delete** | <kbd>Del</kbd> | Deletes the selected element (body, joint or element of the action chain). For a body or a joint, a confirmation question is shown. A drive still linked to an actuator is refused by the core. | The selection is not a body, nor a joint, nor an element of the action chain, or working. |
+| **Delete** | <kbd>Del</kbd> | Deletes the selected element (body, joint or element of the action chain). For a body, a joint, a drive, an actuator or a sensor, a confirmation question is shown. A drive still linked to an actuator is refused by the core. | The selection is not a body, nor a joint, nor an element of the action chain, or working. |
 | separator | | | |
 | **Move** (box) | <kbd>G</kbd> | Turns the move gizmo of the selected assembly on or off. With a body selected, the selection moves to its assembly. | No usable assembly is selected. |
 | **Rotate** (box) | <kbd>R</kbd> | Turns the rotation gizmo on or off. | Same. |

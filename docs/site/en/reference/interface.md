@@ -60,7 +60,7 @@ Under the central view, it is shown and hidden with **View** then **Console**, o
 
 ## The question line and the message line
 
-In the left panel, a confirmation question (closing with unsaved changes, deleting a body or a joint) is shown under the **PLC bridge** card. It takes the keyboard: <kbd>Enter</kbd> chooses the primary button, <kbd>Esc</kbd> cancels. The message line just below shows errors and confirmations.
+In the left panel, a confirmation question (closing with unsaved changes, deleting a body, a joint, a drive, an actuator or a sensor) is shown under the **PLC bridge** card. It takes the keyboard: <kbd>Enter</kbd> chooses the primary button, <kbd>Esc</kbd> cancels. The message line just below shows errors and confirmations.
 
 ## The welcome window
 

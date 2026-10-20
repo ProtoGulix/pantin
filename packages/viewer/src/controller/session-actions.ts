@@ -19,6 +19,7 @@ import {
   requestAssemblyDeletion,
 } from "./assembly-actions.ts";
 import { stopBridge } from "./bridge-actions.ts";
+import { confirmDeviceDelete } from "./device-deletion-actions.ts";
 import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
 import { cancelGroup, confirmGroup } from "./grouping-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
@@ -114,6 +115,9 @@ async function saveThenClose(store: ViewerStore): Promise<void> {
 function confirmPendingDelete(store: ViewerStore): Promise<void> {
   if (store.state.pendingDeleteAssembly !== null) {
     return confirmDeleteAssembly(store);
+  }
+  if (store.state.pendingDeleteDevice !== null) {
+    return confirmDeviceDelete(store);
   }
   return store.state.pendingDeleteJointId === null
     ? confirmDelete(store)

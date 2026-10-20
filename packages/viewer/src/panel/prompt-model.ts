@@ -6,8 +6,10 @@ import type {
 } from "@pantin/protocol";
 import type { PendingGroup } from "../grouping/grouping-model.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
+import type { PendingDeviceDeletion } from "../pending-device-deletion.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { assemblyDeletionDetails } from "./assembly-deletion-details.ts";
+import { deviceDeletionQuestion } from "./device-deletion-prompt.ts";
 import { orphanCleanupDetails, orphanCleanupPromptText } from "./orphan-cleanup-details.ts";
 import type { PromptSection } from "./prompt-section.ts";
 import { redundantJointsSections, redundantJointsText } from "./redundant-joints-prompt.ts";
@@ -176,6 +178,16 @@ function closePromptView(state: ViewerState, open: PantinResponse, t: Translate)
   };
 }
 
+function deviceDeletePrompt(
+  document: PantinDocument,
+  device: PendingDeviceDeletion,
+  state: ViewerState,
+  t: Translate,
+): PromptView | null {
+  const question = deviceDeletionQuestion(document, device, t);
+  return question === null ? null : deletePrompt(question.text, state, t, question.details);
+}
+
 export function buildPromptView(state: ViewerState, t: Translate): PromptView | null {
   const open = state.openPantin;
   if (open === null) {
@@ -218,6 +230,9 @@ export function buildPromptView(state: ViewerState, t: Translate): PromptView | 
   const orphans = state.pendingOrphanCleanup;
   if (orphans !== null) {
     return orphanCleanupPrompt(orphans, state, t);
+  }
+  if (state.pendingDeleteDevice !== null) {
+    return deviceDeletePrompt(open.document, state.pendingDeleteDevice, state, t);
   }
   const joint = open.document.joints.find(
     (candidate) => candidate.id === state.pendingDeleteJointId,

@@ -80,7 +80,7 @@ Right-click on a row (or the **Menu** key). An entry is offered only when it mak
 | **Delete** | Body, joint, assembly | Asks for confirmation (see [the confirmations](#confirmations)). |
 | **Edit** | Element (drive, actuator, sensor, conveying object) | Opens its form. |
 | **Show in I/O** | Element that owns tags | Switches to the I/O view on its tags. |
-| **Delete** | Element | Deletes the element without confirmation. |
+| **Delete** | Element | Asks for confirmation for a drive, an actuator or a sensor (see [the confirmations](#confirmations)). A conveying object is deleted without confirmation. |
 
 Esc or a click elsewhere closes the menu.
 
@@ -155,11 +155,14 @@ A confirmation is shown inline, above the message line, in place of a dialog. It
 | **The PLC bridge keeps running when the Pantin is closed.** (no pending change) | **Stop the bridge and close** (primary), **Close without stopping the bridge**, **Cancel** |
 | **Delete body "name"?** | **Delete**, **Cancel** |
 | **Delete joint "name"?** | **Delete**, **Cancel** |
+| **Delete drive "name"?** | **Delete**, **Cancel**. If the drive still feeds actuators, an extra line says: **It still feeds: c1, c2. The core refuses the deletion while these actuators depend on it: change their feed first.** |
+| **Delete actuator "name"?** | **Delete**, **Cancel** |
+| **Delete sensor "name"?** | **Delete**, **Cancel** |
 | **Delete assembly "name" and all its contents?** | **Delete**, **Cancel**. A list says what disappears: bodies, joints of the assembly, joints with other assemblies, drives, actuators, sensors, sub-assemblies, removed tags and added tags, and the assemblies that lose their attachment. |
 | **Delete n orphan file(s) from the meshes folder?** (**File** menu, **Clean up orphan files…**) | **Delete**, **Cancel**. The list gives the files and their size. |
 | **Replace the feed of ... by one from ...?** (link drawn in the diagram) | **Replace**, **Cancel** |
 
-Deleting a drive, an actuator, a sensor or a conveying object asks for no confirmation.
+Deleting a conveying object (emitter, belt...) asks for no confirmation.
 
 ### The message line
 
@@ -196,7 +199,7 @@ Three groups of icons, separated by a line. A group that does not apply to the s
 | Position | Step field (**Move step, in mm** or **Rotation step, in degrees**) | Snapping step of the gizmo, validated on leaving. Holding **Ctrl** during a drag removes the snapping. Visible only when **Move** or **Rotate** is active. | Never |
 | Position | **Restore the previous placement** | Gives back the placement kept before the last change. | Nothing to restore (the tooltip says **nothing to restore**), or the assembly's anchor has changed |
 | Element | **Edit** | Opens the form of the selected element. | Never |
-| Element | **Delete** | Deletes the selected element, without confirmation. | Never |
+| Element | **Delete** | Deletes the selected element, after confirmation for a drive, an actuator or a sensor. | Never |
 
 The cross in the title closes the inspector.
 

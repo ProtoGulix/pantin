@@ -18,6 +18,7 @@ export function withGroupRequested(
     pendingGroup: { target, name: suggestedName },
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteDevice: null,
     pendingDeleteAssembly: null,
     pendingOrphanCleanup: null,
     pendingRedundantJoints: null,

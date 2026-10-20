@@ -4,7 +4,6 @@ import {
   changeActuatorDrive,
   changeActuatorPort,
   changeActuatorType,
-  deleteActuator,
   editActuatorName,
   editActuatorParameter,
   openActuatorForm,
@@ -12,6 +11,7 @@ import {
   submitActuatorForm,
   toggleActuatorJoint,
 } from "./actuator-actions.ts";
+import { requestDeviceDelete } from "./device-deletion-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The intents of the actuators section (ADR 0028), for createPanelIntents.
@@ -30,6 +30,7 @@ export function actuatorIntents(store: ViewerStore) {
       changeActuatorPort(store, inputPort, outputPort),
     toggleActuatorJoint: (jointId: string, on: boolean) => toggleActuatorJoint(store, jointId, on),
     submitActuatorForm: () => void submitActuatorForm(store),
-    deleteActuator: (actuatorId: string) => void deleteActuator(store, actuatorId),
+    deleteActuator: (actuatorId: string) =>
+      requestDeviceDelete(store, { kind: "actuator", id: actuatorId }),
   };
 }

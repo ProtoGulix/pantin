@@ -226,6 +226,7 @@ describe("deleting a device from the inspector", () => {
     const intents = createPanelIntents(store);
     intents.selectDevice({ kind: "sensor", id: "e1" });
     intents.deleteSensor("e1");
+    intents.resolvePrompt("confirmDelete");
     await vi.waitFor(() => expect(selectedDeviceOf(store.state.selection)).toBeNull());
     expect(deleteSensor).toHaveBeenCalledWith("press", "e1");
   });

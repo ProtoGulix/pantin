@@ -37,7 +37,7 @@ Termes utilisés dans la colonne « Grisé quand » :
 | **Relâcher tous les tags forcés** | | Relâche tous les tags forcés depuis le viewer. Sans effet si aucun tag n'est forcé. | Pas de Pantin ouvert ou traitement en cours. |
 | séparateur | | | |
 | **Renommer** | <kbd>F2</kbd> | Renomme l'élément sélectionné. | La sélection n'est ni un Pantin, ni un corps, ni un élément de la chaîne d'action (préactionneur, actionneur, capteur, bande...). Un assemblage ne se renomme pas par ce menu : utilisez <kbd>F2</kbd> dans l'arborescence ou son menu contextuel. |
-| **Supprimer** | <kbd>Suppr</kbd> | Supprime l'élément sélectionné (corps, liaison ou élément de la chaîne d'action). Pour un corps ou une liaison, une question de confirmation s'affiche. Un préactionneur encore relié à un actionneur est refusé par le coeur. | La sélection n'est ni un corps, ni une liaison, ni un élément de la chaîne d'action, ou traitement en cours. |
+| **Supprimer** | <kbd>Suppr</kbd> | Supprime l'élément sélectionné (corps, liaison ou élément de la chaîne d'action). Pour un corps, une liaison, un préactionneur, un actionneur ou un capteur, une question de confirmation s'affiche. Un préactionneur encore relié à un actionneur est refusé par le coeur. | La sélection n'est ni un corps, ni une liaison, ni un élément de la chaîne d'action, ou traitement en cours. |
 | séparateur | | | |
 | **Déplacer** (case) | <kbd>G</kbd> | Active ou coupe le manipulateur de déplacement de l'assemblage sélectionné. Avec un corps sélectionné, la sélection passe à son assemblage. | Aucun assemblage utilisable n'est sélectionné. |
 | **Tourner** (case) | <kbd>R</kbd> | Active ou coupe le manipulateur de rotation. | Idem. |

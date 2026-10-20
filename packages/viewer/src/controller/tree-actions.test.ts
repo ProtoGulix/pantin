@@ -63,7 +63,7 @@ describe("device rows", () => {
     expect(store.state.driveForm?.driveId).toBe("v1");
   });
 
-  it("choosing delete asks the core to delete the device, as the toolbar does", () => {
+  it("choosing delete asks to confirm, then the core deletes the device, as the toolbar does", () => {
     const deleteDrive = vi.fn().mockResolvedValue(pantin);
     const store = testStore({ deleteDrive });
     store.requestedPantinId = pantin.id;
@@ -72,6 +72,8 @@ describe("device rows", () => {
     intents.openContextMenu(driveRow, 10, 20);
     intents.runDeviceAction(driveRow, "delete");
     expect(store.state.contextMenu).toBeNull();
+    expect(deleteDrive).not.toHaveBeenCalled();
+    intents.resolvePrompt("confirmDelete");
     expect(deleteDrive).toHaveBeenCalledWith("press", "v1");
   });
 

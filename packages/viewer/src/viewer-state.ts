@@ -28,6 +28,7 @@ import {
 } from "./layout-preferences.ts";
 import type { PanelMessage } from "./messages.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "./navigation/navigation-settings.ts";
+import type { PendingDeviceDeletion } from "./pending-device-deletion.ts";
 import type { InvalidPlacementText, PlacementDraft } from "./placement-feedback.ts";
 import { NO_PREVIOUS_PLACEMENTS, type PreviousPlacements } from "./previous-placement.ts";
 import { nodeSelection, type Selection } from "./selection.ts";
@@ -90,6 +91,8 @@ export interface ViewerState {
   // Edit view: a body, then a joint, waiting for the user to confirm its deletion.
   pendingDeleteBodyId: string | null;
   pendingDeleteJointId: string | null;
+  // A drive, an actuator or a sensor waiting for confirmation, with what the core would refuse.
+  pendingDeleteDevice: PendingDeviceDeletion | null;
   // Same for an assembly (ADR 0037): the core's preview of what goes with it.
   pendingDeleteAssembly: PendingAssemblyDeletion | null;
   // "Grouper…" waiting for the group's name (ADR 0055 point 12).
@@ -211,6 +214,7 @@ export function initialViewerState(
     ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteDevice: null,
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,
@@ -254,6 +258,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteDevice: null,
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,
@@ -261,15 +266,10 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     jointForm: null,
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
-    alignment: null,
-    axisPick: null,
-    placementDraft: null,
-    placementInvalid: null,
+    ...NO_TOOL_STATE,
+    gizmoMode: state.gizmoMode, // the chosen move or rotate gizmo stays on
     previousPlacements: NO_PREVIOUS_PLACEMENTS,
-    driveForm: null,
-    actuatorForm: null,
-    sensorForm: null,
-    conveyorForm: null,
+    ...NO_DEVICE_FORMS,
     ...NO_DEVICE_DATA,
     collapsedDiagramBands: new Set(),
     pendingFeedReplacement: null,

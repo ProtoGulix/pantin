@@ -60,7 +60,7 @@ Sous la vue centrale, elle s'affiche et se masque avec **Affichage** puis **Cons
 
 ## La ligne de question et la ligne de message
 
-Dans le panneau de gauche, une question de confirmation (fermer avec des modifications non enregistrées, supprimer un corps ou une liaison) s'affiche sous la carte **Pont automate**. Elle prend le clavier : <kbd>Entrée</kbd> choisit le bouton principal, <kbd>Échap</kbd> annule. La ligne de message juste dessous affiche les erreurs et les confirmations.
+Dans le panneau de gauche, une question de confirmation (fermer avec des modifications non enregistrées, supprimer un corps, une liaison, un préactionneur, un actionneur ou un capteur) s'affiche sous la carte **Pont automate**. Elle prend le clavier : <kbd>Entrée</kbd> choisit le bouton principal, <kbd>Échap</kbd> annule. La ligne de message juste dessous affiche les erreurs et les confirmations.
 
 ## La fenêtre d'accueil
 

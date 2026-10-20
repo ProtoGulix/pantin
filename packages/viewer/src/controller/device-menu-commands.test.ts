@@ -61,6 +61,8 @@ describe("Supprimer on a selected device", () => {
       const store = openStore({ [call]: remove });
       store.update(withSelection(store.state, { kind, id }));
       runMenuCommand(store, "delete", ignoreLanguage);
+      expect(remove).not.toHaveBeenCalled();
+      createPanelIntents(store).resolvePrompt("confirmDelete");
       await settle();
       expect(remove).toHaveBeenCalledWith("press", id);
       expect(store.state.message?.key).toBe(done);
@@ -77,6 +79,7 @@ describe("a refused drive deletion", () => {
     });
     store.update(withSelection(store.state, { kind: "drive", id: "v1" }));
     runMenuCommand(store, "delete", ignoreLanguage);
+    createPanelIntents(store).resolvePrompt("confirmDelete");
     return store;
   }
 
@@ -114,6 +117,7 @@ describe("a refused drive deletion", () => {
     });
     store.update(withSelection(store.state, { kind: "drive", id: "v1" }));
     runMenuCommand(store, "delete", ignoreLanguage);
+    createPanelIntents(store).resolvePrompt("confirmDelete");
     await settle();
     expect(store.state.message?.key).toBe("error.network");
   });

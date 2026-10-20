@@ -80,7 +80,7 @@ Clic droit sur une ligne (ou touche **Menu**). L'entrée se propose seulement qu
 | **Supprimer** | Corps, liaison, assemblage | Demande confirmation (voir [les confirmations](#les-confirmations)). |
 | **Modifier** | Élément (préactionneur, actionneur, capteur, objet de convoyage) | Ouvre son formulaire. |
 | **Afficher dans E/S** | Élément qui possède des tags | Bascule en vue E/S sur ses tags. |
-| **Supprimer** | Élément | Supprime l'élément sans confirmation. |
+| **Supprimer** | Élément | Demande confirmation pour un préactionneur, un actionneur ou un capteur (voir [les confirmations](#les-confirmations)). Un objet de convoyage est supprimé sans confirmation. |
 
 Échap ou un clic ailleurs ferme le menu.
 
@@ -155,11 +155,14 @@ Une confirmation s'affiche en ligne, au-dessus de la ligne de message, à la pla
 | **Le pont automate continue de tourner quand le Pantin est fermé.** (sans modification en attente) | **Arrêter le pont et fermer** (principal), **Fermer sans arrêter le pont**, **Annuler** |
 | **Supprimer le corps « nom » ?** | **Supprimer**, **Annuler** |
 | **Supprimer la liaison « nom » ?** | **Supprimer**, **Annuler** |
+| **Supprimer le préactionneur « nom » ?** | **Supprimer**, **Annuler**. Si le préactionneur alimente encore des actionneurs, une ligne ajoute : **Il alimente encore : c1, c2. Le cœur refuse la suppression tant que ces actionneurs en dépendent : changez d'abord leur alimentation.** |
+| **Supprimer l'actionneur « nom » ?** | **Supprimer**, **Annuler** |
+| **Supprimer le capteur « nom » ?** | **Supprimer**, **Annuler** |
 | **Supprimer l'assemblage « nom » et tout son contenu ?** | **Supprimer**, **Annuler**. Une liste dit ce qui disparaît : corps, liaisons de l'assemblage, liaisons avec d'autres assemblages, préactionneurs, actionneurs, capteurs, sous-ensembles, tags supprimés et tags ajoutés, et les assemblages qui perdent leur rattachement. |
 | **Supprimer n fichier(s) orphelin(s) du dossier meshes ?** (menu **Fichier**, **Nettoyer les fichiers orphelins…**) | **Supprimer**, **Annuler**. La liste donne les fichiers et leur taille. |
 | **Remplacer l'alimentation de ... par une alimentation depuis ... ?** (lien tracé dans le schéma) | **Remplacer**, **Annuler** |
 
-La suppression d'un préactionneur, d'un actionneur, d'un capteur ou d'un objet de convoyage ne demande aucune confirmation.
+La suppression d'un objet de convoyage (émetteur, bande...) ne demande aucune confirmation.
 
 ### La ligne de message
 
@@ -196,7 +199,7 @@ Trois groupes d'icônes, séparés par un trait. Un groupe qui ne s'applique pas
 | Positionner | Champ de pas (**Pas du déplacement, en mm** ou **Pas de la rotation, en degrés**) | Pas d'aimantation du manipulateur, validé en le quittant. Maintenir **Ctrl** pendant un glissement supprime l'aimantation. Visible seulement quand **Déplacer** ou **Tourner** est actif. | Jamais |
 | Positionner | **Rétablir le placement précédent** | Renvoie le placement gardé avant la dernière modification. | Rien à rétablir (l'info-bulle dit **rien à rétablir**), ou l'ancrage de l'assemblage a changé |
 | Élément | **Modifier** | Ouvre le formulaire de l'élément sélectionné. | Jamais |
-| Élément | **Supprimer** | Supprime l'élément sélectionné, sans confirmation. | Jamais |
+| Élément | **Supprimer** | Supprime l'élément sélectionné, après confirmation pour un préactionneur, un actionneur ou un capteur. | Jamais |
 
 La croix du titre ferme l'inspecteur.
 

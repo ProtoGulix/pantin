@@ -89,6 +89,7 @@ export function withAssemblyContentsDeleted(
       pendingRedundantJoints: null,
       pendingDeleteBodyId: null,
       pendingDeleteJointId: null,
+      pendingDeleteDevice: null,
     },
     pantin,
   );

@@ -27,6 +27,7 @@ export function withOrphanPreview(state: ViewerState, list: OrphanMeshList): Vie
     pendingRedundantJoints: null,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteDevice: null,
     pendingDeleteAssembly: null,
     pendingFeedReplacement: null,
     contextMenu: null,

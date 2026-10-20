@@ -1,8 +1,8 @@
+import { requestDeviceDelete } from "./device-deletion-actions.ts";
 import {
   cancelDriveForm,
   changeDriveAssembly,
   changeDriveType,
-  deleteDrive,
   editDriveName,
   editDriveParameter,
   openDriveForm,
@@ -30,7 +30,7 @@ export function driveIntents(store: ViewerStore) {
     changeDriveType: (type: string) => changeDriveType(store, type),
     changeDriveAssembly: (assembly: string) => changeDriveAssembly(store, assembly),
     submitDriveForm: () => void submitDriveForm(store),
-    deleteDrive: (driveId: string) => void deleteDrive(store, driveId),
+    deleteDrive: (driveId: string) => requestDeviceDelete(store, { kind: "drive", id: driveId }),
     setDriveUnresponsive: (driveId: string, on: boolean) =>
       void setDriveUnresponsive(store, driveId, on),
     setJointJammed: (jointId: string, on: boolean) => void setJointJammed(store, jointId, on),

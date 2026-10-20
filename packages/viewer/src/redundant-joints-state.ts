@@ -30,6 +30,7 @@ export function withRedundantJointsPreview(
     pendingRedundantJoints: list,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
+    pendingDeleteDevice: null,
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,

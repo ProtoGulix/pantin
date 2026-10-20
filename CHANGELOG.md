@@ -60,6 +60,9 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Viewer: deleting a drive, an actuator or a sensor now asks for a confirmation, like a body
+  or a joint, from the inspector button, the context menu and Edit > Delete (key Delete).
+  The question for a drive says when it still feeds actuators, which the core refuses.
 - Tooling: the viewer reads a bit tag as on through one `isBitOn` instead of seven
   copies of the 0.5 threshold; dependency-cruiser now sees npm packages served from
   their own `dist/`, lets test helpers use vitest and keeps shipped code from
