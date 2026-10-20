@@ -13,5 +13,5 @@ fixed; what remains needs a decision or is not a viewer fix.
 - Home page screenshot (`scripts/docs-screenshots/capture-views.ts`): the status bar
   counts 2 warnings in the English picture (`en/home-light.webp`, `en/overview.webp`)
   and 0 in the French one, on the same example (schema 13, so not a migration
-  message). The messages themselves were not read; whether core console messages are
-  translated is a separate question.
+  message). The messages themselves were not read (the viewer translates console
+  codes, ADR 0031 point 2).

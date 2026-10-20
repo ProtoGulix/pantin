@@ -7,14 +7,13 @@ phase.
 ## Phase 8 — editing
 
 - [Belts in the chain diagram](belts-in-chain-diagram.md) — draw the belt as the end of its chain
-- [CAD navigation extras](cad-navigation-extras.md) — touchpad preset, box select, previous view, Normal To
+- [CAD navigation extras](cad-navigation-extras.md) — touchpad preset, previous view, Normal To
 - [Console, diagram, welcome and placement extras](console-and-diagram-extras.md) — small follow-ups left by ADRs 0027 to 0035
 - [Frame rotation extras](frame-rotation-extras.md) — other ways to give the rotation of ADR 0056
 - [Share a frozen scene](frozen-scene-export.md) — one GLB export, if the need is real
 - [Joint star view: extras](joint-star-extras.md) — live state, sensor mark, editing from the view
 - [Split a GLB body by nodes](glb-split-by-nodes.md) — several bodies from one file (on hold: needs a real GLB)
 - [Multi-selection in the 3D view](multi-selection-in-3d.md) — for grouping, without breaking click-to-go-down
-- [Nested assemblies: extras](nested-assemblies-extras.md) — axis from geometry, metallic CAD colours
 - [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells
 - [Interface polish](ui-polish-from-docs.md) — small defects found while documenting
 
@@ -25,6 +24,7 @@ phase.
 - [Simulation clock modes](simulation-clock-modes.md) — as-fast-as-possible runs, record and replay
 - [Detect external edits of pantin.json](detect-external-pantin-edits.md) — conflict when the file changed outside
 - [Bridge in server mode](server-mode-bridge.md) — docker compose with a separate bridge container
+- [Desktop app, and a core without Python](desktop-app-without-python.md) — Electron study (on hold)
 
 ## Conveying and physics (after phase 6)
 
@@ -41,8 +41,7 @@ phase.
 - [Bridge reconnection](bridge-reconnection.md) — swap slaves on `io_changed` without a restart
 - [PLC bridge extras](plc-bridge-extras.md) — feedback forcing, scaled INT, fail-safe values, aliases
 - [OPC UA](opc-ua.md) — second protocol, its own ADR
-- [Viewer on the tag bus](viewer-on-tag-bus.md) — bodies, tags and events pushed on the bus
-- [Push tag values instead of polling](push-sensor-states.md) — fast sensor pulses never missed
+- [Viewer on the tag bus](viewer-on-tag-bus.md) — bodies, tags and events pushed, no more polling
 
 ## Spikes and checks
 
@@ -53,7 +52,7 @@ phase.
 ## Debt and tooling
 
 - [Cost of adding a primitive kind](primitive-kind-cost.md) — registry per kind before rollers
-- [Environment lighting](environment-lighting.md) — on hold
+- [Environment lighting](environment-lighting.md) — on hold, with metallic CAD colours
 
 ## Security
 

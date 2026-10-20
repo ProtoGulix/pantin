@@ -60,6 +60,9 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Backlog: an on-hold note on a desktop app study (Electron, a core without Python);
+  duplicate notes merged and done items removed.
+
 - Viewer: deleting a drive, an actuator or a sensor now asks for a confirmation, like a body
   or a joint, from the inspector button, the context menu and Edit > Delete (key Delete).
   The question for a drive says when it still feeds actuators, which the core refuses.

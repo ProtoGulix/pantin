@@ -15,4 +15,4 @@ done by ADR 0049 (io.json follows renames). The rest is open.
 - A fail-safe value per tag; the watchdog only resets bit commands.
 - One listen address per module (IP aliases) instead of one for all modules.
 - Accept unit id "any" (broadcast-style match) in the slave.
-- Diagnostics (ADR 0031 point 4) on the tag bus.
+- Diagnostics (ADR 0031 point 4) on the tag bus: see `viewer-on-tag-bus.md`.
