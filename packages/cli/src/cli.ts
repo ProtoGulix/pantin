@@ -1,6 +1,9 @@
 import { BRIDGE_LOG_USAGE, type BridgeLogEnvironment, bridgeLog } from "./bridge-log-command.ts";
 import type { CommandResult } from "./command-result.ts";
+import type { GeneratedText } from "./folder-text.ts";
+import { parseGenerateArguments, writeGeneratedFile } from "./generated-output.ts";
 import { generateGvl } from "./gvl.ts";
+import { exportIoCsv } from "./io-export.ts";
 import { ioInit } from "./io-init-command.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
 import { realEnvironment } from "./real-environment.ts";
@@ -15,7 +18,10 @@ const USAGE = [
   "  schema [io]         print the JSON Schema of pantin.json, or of io.json with io",
   "  io init <folder> [--update]",
   "                      write io.json, or with --update map the unmapped tags into m1",
-  "  gvl <folder>        print the CODESYS global variable list of io.json",
+  "  io export <folder> [--output <file>]",
+  "                      print the I/O mapping as CSV, one row per channel (read-only)",
+  "  gvl <folder> [--output <file>]",
+  "                      print the CODESYS global variable list of io.json",
   BRIDGE_LOG_USAGE,
 ].join("\n");
 
@@ -66,13 +72,42 @@ async function runIoInit(args: readonly string[], streams: Streams): Promise<num
   return report(await ioInit(folder, args.includes("--update")), streams);
 }
 
-async function runGvl(folder: string, { stdout, stderr }: Streams): Promise<number> {
-  const result = await generateGvl(folder);
-  stdout.write(result.stdout);
+// With --output the bytes go straight to the file: a shell redirection can
+// re-encode them (Windows PowerShell 5.1, NOT VERIFIED), which would damage the BOM.
+async function runGenerated(
+  args: readonly string[],
+  generate: (folder: string) => Promise<GeneratedText>,
+  { stdout, stderr }: Streams,
+): Promise<number> {
+  const parsed = parseGenerateArguments(args);
+  if (parsed === undefined) {
+    writeLine(stderr, USAGE);
+    return 2;
+  }
+  const generated = await generate(parsed.folder);
+  const result =
+    parsed.outputFile !== undefined && generated.exitCode === 0
+      ? await writeGeneratedFile(generated, parsed.outputFile)
+      : generated;
+  if (parsed.outputFile === undefined) {
+    stdout.write(result.text);
+  }
   for (const error of result.errors) {
     writeLine(stderr, error);
   }
   return result.exitCode;
+}
+
+async function runIo(args: readonly string[], streams: Streams): Promise<number> {
+  const [subcommand, ...rest] = args;
+  if (subcommand === "init") {
+    return runIoInit(rest, streams);
+  }
+  if (subcommand === "export") {
+    return runGenerated(rest, exportIoCsv, streams);
+  }
+  writeLine(streams.stderr, USAGE);
+  return 2;
 }
 
 async function runBridgeLog(
@@ -105,11 +140,11 @@ export async function runCommand(
   if (command === "validate" && argument !== undefined && extra.length === 0) {
     return validate(argument, streams);
   }
-  if (command === "gvl" && argument !== undefined && extra.length === 0) {
-    return runGvl(argument, streams);
+  if (command === "gvl") {
+    return runGenerated(args.slice(1), generateGvl, streams);
   }
-  if (command === "io" && argument === "init") {
-    return runIoInit(extra, streams);
+  if (command === "io") {
+    return runIo(args.slice(1), streams);
   }
   if (command === "schema" && argument === undefined) {
     streams.stdout.write(pantinJsonSchemaText());

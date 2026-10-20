@@ -50,13 +50,16 @@ async function editMapping(
 
 // Not `store.run`: a download changes nothing, so it must not disable the
 // menus. A refusal (409 for an invalid mapping) shows the core's problems.
-async function exportGvl(store: ViewerStore): Promise<void> {
+async function exportMappingFile(
+  store: ViewerStore,
+  fetchFile: (pantinId: string) => Promise<{ fileName: string; text: string }>,
+): Promise<void> {
   const open = store.state.openPantin;
   if (open === null) {
     return;
   }
   try {
-    const file = await store.ports.api.fetchIoGvl(open.id);
+    const file = await fetchFile(open.id);
     store.ports.saveTextFile(file.fileName, file.text);
   } catch (error) {
     store.update({ ...store.state, message: describeFailure(error) });
@@ -149,7 +152,8 @@ export function ioIntents(store: ViewerStore) {
       void editMapping(store, (id) => api().updateIoChannel(id, tag, { tag })),
     unmapIoChannel: (tag: string) =>
       void editMapping(store, (id) => api().deleteIoChannel(id, tag)),
-    exportIoGvl: () => void exportGvl(store),
+    exportIoGvl: () => void exportMappingFile(store, (id) => store.ports.api.fetchIoGvl(id)),
+    exportIoCsv: () => void exportMappingFile(store, (id) => store.ports.api.fetchIoCsv(id)),
     retryIoMapping: () => void retryIoMapping(store),
     selectIoOwner: (owner: IoTagOwner) => selectIoOwner(store, owner),
     showTagInIo: (tag: string) => void showTagInIo(store, tag),

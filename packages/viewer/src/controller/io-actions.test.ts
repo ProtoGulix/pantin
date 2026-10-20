@@ -155,3 +155,39 @@ describe("the GVL export", () => {
     ]);
   });
 });
+
+describe("the CSV export", () => {
+  it("hands the file the core generated to the browser", async () => {
+    const saved: string[] = [];
+    const store = testStore(
+      { fetchIoCsv: async () => ({ fileName: "press-io.csv", text: "module" }) },
+      {},
+      undefined,
+      { saveTextFile: (name, text) => saved.push(`${name}:${text}`) },
+    );
+    store.update(withOpenPantin(store.state, pantin));
+    ioIntents(store).exportIoCsv();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saved).toEqual(["press-io.csv:module"]);
+    expect(store.state.message).toBeNull();
+  });
+
+  it("shows the core's refusal and saves nothing", async () => {
+    const saved: string[] = [];
+    const store = testStore(
+      {
+        fetchIoCsv: async () => {
+          throw new PantinApiError("api", "The mapping is invalid: overlap", "conflict", 409);
+        },
+      },
+      {},
+      undefined,
+      { saveTextFile: (name) => saved.push(name) },
+    );
+    store.update(withOpenPantin(store.state, pantin));
+    ioIntents(store).exportIoCsv();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saved).toEqual([]);
+    expect(store.state.message?.detail).toBe("The mapping is invalid: overlap");
+  });
+});

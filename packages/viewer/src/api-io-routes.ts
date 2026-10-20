@@ -23,14 +23,16 @@ import {
 // I/O mapping routes of the API client (ADR 0049 point 4). Every answer is the
 // whole mapping, so the viewer never patches its copy by hand.
 
-interface GvlFile {
+interface TextFile {
   fileName: string;
   text: string;
 }
 
 export interface IoRoutes {
   // The GVL is text, not JSON: only the error answers are validated.
-  fetchIoGvl(pantinId: string): Promise<GvlFile>;
+  fetchIoGvl(pantinId: string): Promise<TextFile>;
+  // The CSV keeps its byte order mark, which Excel needs to read accents.
+  fetchIoCsv(pantinId: string): Promise<TextFile>;
   getIoMapping(pantinId: string): Promise<IoMappingResponse>;
   createIoModule(pantinId: string, request: CreateIoModuleRequest): Promise<IoMappingResponse>;
   updateIoModule(
@@ -72,6 +74,17 @@ export function ioRoutes(send: SendJson, fetchFunction: FetchFunction): IoRoutes
         throw await failureFromResponse(response);
       }
       return { fileName: `${pantinId}.gvl`, text: await response.text() };
+    },
+    fetchIoCsv: async (pantinId) => {
+      const response = await sendRequest(fetchFunction, pantinUrl(pantinId, "/io/csv"), {
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw await failureFromResponse(response);
+      }
+      // Response.text() would drop the byte order mark; ignoreBOM keeps it.
+      const decoder = new TextDecoder("utf-8", { ignoreBOM: true });
+      return { fileName: `${pantinId}-io.csv`, text: decoder.decode(await response.arrayBuffer()) };
     },
     getIoMapping: (pantinId) => send(pantinUrl(pantinId, "/io"), jsonRequest("GET"), answer),
     createIoModule: async (pantinId, request) => {

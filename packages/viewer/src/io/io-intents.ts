@@ -18,6 +18,8 @@ export interface IoIntents {
   unmapIoChannel(tag: string): void;
   // Downloads the CODESYS GVL the core generates from the mapping.
   exportIoGvl(): void;
+  // Downloads the CSV of the mapping the core generates (read-only export).
+  exportIoCsv(): void;
   // The mapping could not be read: forget the failure and read it again.
   retryIoMapping(): void;
   // A tag was clicked: select its owner and unfold the tree to it, staying on

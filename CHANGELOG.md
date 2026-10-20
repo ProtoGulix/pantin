@@ -24,6 +24,12 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Core, CLI and viewer (ADR 0049 amendment): a read-only export of the I/O mapping as
+  CSV, one row per channel. `GET /api/pantins/:pantinId/io/csv` (refused with a 409 and
+  the problems when the mapping is invalid, like the GVL), `pnpm pantin io export <folder> [--output <file>]` (also on `pantin gvl`),
+  and an **Export CSV** button next to **Export GVL** in the I/O view. Comma-separated,
+  UTF-8 with a byte order mark. There is still no import. The user guide documents it,
+  in French and English.
 - The tag key of an emitter and of a presence sensor can be renamed, like
   that of a drive or a joint: `PUT .../emitters/:id/tag-key` and
   `PUT .../presence-sensors/:id/tag-key` answer the renamed tags, io.json

@@ -6,6 +6,7 @@ import {
   UpdateIoModuleRequestSchema,
 } from "@pantin/protocol";
 import { renderGvl } from "../domain/gvl.ts";
+import { renderIoCsv } from "../domain/io-csv.ts";
 import { describeIoProblem } from "../domain/io-problem-text.ts";
 import { type Parser, parseWithSchema } from "../domain/validation.ts";
 import { ApiError } from "../errors.ts";
@@ -34,14 +35,17 @@ async function bodyOf<Output>(
   return parseWithSchema(schema, await readJsonBody(context.request), what);
 }
 
-// The GVL of a mapping that is not valid would hide the very problems the user
-// has to fix, so it is refused with them (ADR 0049 amendment).
-function refusalOf(answer: IoMappingResponse): ApiError {
+// The GVL or the CSV of a mapping that is not valid would hide the very
+// problems the user has to fix, so it is refused with them (ADR 0049 amendments).
+function refusalOf(answer: IoMappingResponse, what: string): ApiError {
   if (answer.status === "missing") {
     return new ApiError("conflict", "This Pantin has no io.json yet: create the mapping first.");
   }
   const problems = answer.problems.map(describeIoProblem).join("; ");
-  return new ApiError("conflict", `The mapping is invalid, so no GVL is generated: ${problems}`);
+  return new ApiError(
+    "conflict",
+    `The mapping is invalid, so no ${what} is generated: ${problems}`,
+  );
 }
 
 export const IO_ROUTES: readonly Route[] = [
@@ -58,9 +62,22 @@ export const IO_ROUTES: readonly Route[] = [
       const pantinId = pantinIdOf(context);
       const answer = await context.service.readIo(pantinId);
       if (answer.status !== "valid") {
-        throw refusalOf(answer);
+        throw refusalOf(answer, "GVL");
       }
       sendTextDownload(context.response, renderGvl(answer.modules), `${pantinId}.gvl`);
+    },
+  },
+  {
+    method: "GET",
+    pattern: [...IO, "csv"],
+    handle: async (context) => {
+      const pantinId = pantinIdOf(context);
+      const answer = await context.service.readIo(pantinId);
+      if (answer.status !== "valid") {
+        throw refusalOf(answer, "CSV");
+      }
+      const csv = renderIoCsv(answer.modules);
+      sendTextDownload(context.response, csv, `${pantinId}-io.csv`, "text/csv");
     },
   },
   {

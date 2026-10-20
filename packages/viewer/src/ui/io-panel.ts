@@ -1,4 +1,4 @@
-import type { Language, Translate } from "../i18n/translate.ts";
+import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import type { IoState } from "../io/io-state.ts";
 import type { IoView } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
@@ -59,17 +59,23 @@ function editor(view: IoView, translate: Translate, intents: PanelIntents): HTML
 }
 
 // aria-disabled, not `disabled`, so that the tooltip shows and the focus stays.
-function gvlButton(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {
-  const { enabled, titleKey } = view.gvl;
-  const created = ioButton(
-    translate("io.gvl.export"),
-    "io-button",
-    !enabled,
-    "io-export-gvl",
-    intents.exportIoGvl,
-  );
-  created.title = translate(titleKey);
-  return element("div", { className: "io-view__toolbar" }, [created]);
+function exportButton(
+  translate: Translate,
+  exported: IoView["gvl"],
+  labelKey: MessageKey,
+  testId: string,
+  intent: () => void,
+): HTMLElement {
+  const created = ioButton(translate(labelKey), "io-button", !exported.enabled, testId, intent);
+  created.title = translate(exported.titleKey);
+  return created;
+}
+
+function exportToolbar(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {
+  return element("div", { className: "io-view__toolbar" }, [
+    exportButton(translate, view.gvl, "io.gvl.export", "io-export-gvl", intents.exportIoGvl),
+    exportButton(translate, view.csv, "io.csv.export", "io-export-csv", intents.exportIoCsv),
+  ]);
 }
 
 function pageContent(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement[] {
@@ -85,7 +91,7 @@ function pageContent(view: IoView, translate: Translate, intents: PanelIntents):
       ? [editor(view, translate, intents)]
       : statusPage(view, translate, intents);
   return [
-    gvlButton(view, translate, intents),
+    exportToolbar(view, translate, intents),
     ...stale,
     ...(problems === null ? [] : [problems]),
     ...body,

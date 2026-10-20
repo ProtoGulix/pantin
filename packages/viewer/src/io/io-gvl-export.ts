@@ -5,13 +5,13 @@ import type { IoState } from "./io-state.ts";
 // decides whether a GVL exists; the viewer only reads the mapping it already
 // holds to avoid a request that is known to be refused (409).
 
-export interface IoGvlExport {
+export interface IoFileExport {
   enabled: boolean;
   // Tooltip: why the action is unavailable, or what the file contains.
   titleKey: MessageKey;
 }
 
-export function ioGvlExportOf(state: IoState): IoGvlExport {
+export function ioGvlExportOf(state: IoState): IoFileExport {
   const mapping = state.mapping;
   if (mapping === null) {
     return { enabled: false, titleKey: "io.gvl.unknown" };

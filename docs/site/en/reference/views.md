@@ -331,14 +331,17 @@ If a read fails while a mapping was already displayed, the view adds **The mappi
 | Control | Effect | Greyed out when |
 | --- | --- | --- |
 | **Export GVL** | Downloads the CODESYS GVL of the mapping shown, unsaved changes included. | See below |
+| **Export CSV** | Downloads the mapping as a spreadsheet file (`<Pantin>-io.csv`), one row per channel: module, port, unit id, tag, variable, zone, address, type, direction, comment. A comment that starts with `=`, `+`, `-` or `@` (or a tab or a carriage return) is written with a leading apostrophe, so that the spreadsheet shows it as text. Read-only: the file is never read back. | Same as **Export GVL** |
 
-The button stays visible but inactive (explanatory tooltip) when:
+The buttons stay visible but inactive (explanatory tooltip) when:
 
 - the mapping is not read yet (**The mapping is not read yet: the GVL is not available.**);
 - there is no mapping (**No mapping: create it first to export the GVL.**);
 - the mapping has problems (**The mapping has problems: fix them (list below) to export the GVL.**).
 
-Under the button, **Problems (n)** lists everything the core finds to complain about. A problem attached to a cell is a button (tooltip **Go to the cell concerned**): it selects the module, scrolls to the cell and gives it the focus. A problem that concerns the whole file is plain text, prefixed **Whole file:**. The list disappears when there are no more.
+For **Export CSV**, the tooltip of an inactive button is the same in the three cases: **The mapping is not read yet, is missing or has problems: fix it (list below) to export the CSV.**
+
+Under the buttons, **Problems (n)** lists everything the core finds to complain about. A problem attached to a cell is a button (tooltip **Go to the cell concerned**): it selects the module, scrolls to the cell and gives it the focus. A problem that concerns the whole file is plain text, prefixed **Whole file:**. The list disappears when there are no more.
 
 ### Modules
 

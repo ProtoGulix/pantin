@@ -89,6 +89,22 @@ are those of the French interface of CODESYS.
    zone, the address and the tag. It has **no `AT` addresses**: it is in the
    CODESYS device tree that you link each Modbus channel to these variables.
    Do not edit it: it is regenerated.
+
+   To review the mapping with an electrician or paste it into a wiring
+   document, export it as a spreadsheet file: **I/O** view, **Export CSV**
+   button, or `pnpm pantin io export <Pantin folder> --output mapping.csv`
+   (prefer `--output` to a `>` redirection: in Windows PowerShell 5.1 a
+   redirection re-encodes the file, NOT VERIFIED). `pantin gvl` accepts
+   `--output` too. The file has one row per channel (module, port, unit id,
+   tag, variable, zone, address, type, direction, comment), comma-separated, in
+   UTF-8 with a byte order mark so that spreadsheets read accents correctly. A
+   comment that starts with `=`, `+`, `-` or `@` (or a tab or a carriage
+   return), such as `-B12`, is written with a leading apostrophe so that the
+   spreadsheet shows it as text and not as a formula; depending on the
+   spreadsheet, the apostrophe may appear in the cell (NOT VERIFIED). If your spreadsheet puts everything
+   in one column (a regional setting expecting semicolons), use its import
+   function and choose the comma. The export is read-only: edits made in the
+   file are never read back, change the mapping in the viewer.
 2. **Add the master and one server per module.** In the device tree, under
    **Device**, add **Ethernet**, then **Modbus_TCP_Client** (the master: the
    PLC), then one **Modbus_TCP_Server** (a Pantin module) **per module**.

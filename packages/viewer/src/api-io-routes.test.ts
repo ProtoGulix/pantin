@@ -108,6 +108,27 @@ describe("PantinApiClient I/O channels", () => {
   });
 });
 
+describe("PantinApiClient CSV download", () => {
+  it("reads the CSV with its byte order mark, named after the Pantin", async () => {
+    const bytes = new TextEncoder().encode("\uFEFFmodule,port\r\n");
+    const { fetchFunction, requests } = fakeFetch(new Response(bytes));
+    const file = await createPantinApiClient(fetchFunction).fetchIoCsv("press");
+    expect([file, requests[0]?.url, requests[0]?.init?.method]).toEqual([
+      { fileName: "press-io.csv", text: "\uFEFFmodule,port\r\n" },
+      "/api/pantins/press/io/csv",
+      "GET",
+    ]);
+  });
+
+  it("raises the core's 409 with its problems", async () => {
+    const { fetchFunction } = fakeFetch(
+      jsonResponse({ error: { code: "conflict", message: "The mapping is invalid" } }, 409),
+    );
+    const error = await captureError(createPantinApiClient(fetchFunction).fetchIoCsv("press"));
+    expect([error.kind, error.code, error.status]).toEqual(["api", "conflict", 409]);
+  });
+});
+
 describe("PantinApiClient GVL download", () => {
   it("reads the GVL as text with GET, named after the Pantin", async () => {
     const { fetchFunction, requests } = fakeFetch(new Response("VAR_GLOBAL\nEND_VAR\n"));

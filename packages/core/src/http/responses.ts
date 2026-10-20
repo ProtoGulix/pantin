@@ -12,9 +12,14 @@ export function sendJson(response: ServerResponse, status: number, value: unknow
 }
 
 /** A text answer, offered for download under `fileName` when one is given. */
-export function sendText(response: ServerResponse, text: string, fileName?: string): void {
+export function sendText(
+  response: ServerResponse,
+  text: string,
+  fileName?: string,
+  mediaType = "text/plain",
+): void {
   response.writeHead(200, {
-    "content-type": "text/plain; charset=utf-8",
+    "content-type": `${mediaType}; charset=utf-8`,
     "content-length": Buffer.byteLength(text),
     ...(fileName === undefined
       ? {}
@@ -24,8 +29,13 @@ export function sendText(response: ServerResponse, text: string, fileName?: stri
 }
 
 /** A generated text file, offered for download under `fileName`. */
-export function sendTextDownload(response: ServerResponse, text: string, fileName: string): void {
-  sendText(response, text, fileName);
+export function sendTextDownload(
+  response: ServerResponse,
+  text: string,
+  fileName: string,
+  mediaType = "text/plain",
+): void {
+  sendText(response, text, fileName, mediaType);
 }
 
 export function sendApiError(response: ServerResponse, error: ApiError): void {

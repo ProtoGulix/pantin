@@ -5,6 +5,7 @@ export { BRIDGE_LOG_FILE_NAME, BRIDGE_LOG_ROTATED_FILE_NAME } from "./bridge/bri
 export { defaultLogsDirectory, defaultPantinsDirectory } from "./domain/default-directories.ts";
 export { renderGvl } from "./domain/gvl.ts";
 export { allocateVariable, proposeAddress, zoneAndTypeOf } from "./domain/io-allocation.ts";
+export { renderIoCsv } from "./domain/io-csv.ts";
 export {
   type IoReading,
   readIoDocument,

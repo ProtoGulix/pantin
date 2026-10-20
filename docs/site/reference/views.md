@@ -331,14 +331,17 @@ Si une lecture échoue alors qu'un mapping était déjà affiché, la vue ajoute
 | Contrôle | Effet | Grisé quand |
 | --- | --- | --- |
 | **Exporter la GVL** | Télécharge la GVL CODESYS du mapping affiché, modifications non enregistrées comprises. | Voir ci-dessous |
+| **Exporter en CSV** | Télécharge le mapping en fichier de tableur (`<Pantin>-io.csv`), une ligne par voie : module, port, identifiant d'unité (unit id), tag, variable, zone, adresse, type, sens, commentaire. Un commentaire qui commence par `=`, `+`, `-` ou `@` (ou par une tabulation ou un retour chariot) est écrit avec une apostrophe devant, pour que le tableur l'affiche comme du texte. Lecture seule : le fichier n'est jamais relu. | Comme **Exporter la GVL** |
 
-Le bouton reste visible mais inactif (info-bulle explicative) quand :
+Les boutons restent visibles mais inactifs (info-bulle explicative) quand :
 
 - le mapping n'est pas encore lu (**Le mapping n'est pas encore lu : la GVL n'est pas disponible.**) ;
 - il n'y a pas de mapping (**Pas de mapping : créez-le d'abord pour exporter la GVL.**) ;
 - le mapping a des problèmes (**Le mapping a des problèmes : corrigez-les (liste ci-dessous) pour exporter la GVL.**).
 
-Sous le bouton, **Problèmes (n)** liste tout ce que le cœur trouve à redire. Un problème attaché à une cellule est un bouton (info-bulle **Aller à la cellule concernée**) : il sélectionne le module, défile jusqu'à la cellule et lui donne le focus. Un problème qui concerne le fichier entier est un simple texte, préfixé **Fichier entier :**. La liste disparaît quand il n'y en a plus.
+Pour **Exporter en CSV**, l'info-bulle d'un bouton inactif est la même dans les trois cas : **Le mapping n'est pas encore lu, est absent ou a des problèmes : corrigez-le (liste ci-dessous) pour exporter le CSV.**
+
+Sous les boutons, **Problèmes (n)** liste tout ce que le cœur trouve à redire. Un problème attaché à une cellule est un bouton (info-bulle **Aller à la cellule concernée**) : il sélectionne le module, défile jusqu'à la cellule et lui donne le focus. Un problème qui concerne le fichier entier est un simple texte, préfixé **Fichier entier :**. La liste disparaît quand il n'y en a plus.
 
 ### Les modules
 

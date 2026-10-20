@@ -92,6 +92,24 @@ de menus sont ceux de l'interface française de CODESYS.
    de l'adresse et du tag. Elle **n'a pas d'adresses `AT`** : c'est dans l'arbre
    des appareils CODESYS que vous reliez chaque canal Modbus à ces variables.
    Ne la modifiez pas : elle est régénérée.
+
+   Pour relire le mapping avec un électricien ou le coller dans un dossier de
+   câblage, exportez-le en fichier de tableur : vue **E/S**, bouton
+   **Exporter en CSV**, ou `pnpm pantin io export <dossier du Pantin> --output mapping.csv`
+   (préférez `--output` à une redirection `>` : dans Windows PowerShell 5.1,
+   une redirection ré-encode le fichier, NON VÉRIFIÉ). `pantin gvl` accepte
+   aussi `--output`. Le fichier a une ligne par voie (module, port,
+   identifiant d'unité (unit id), tag, variable, zone, adresse, type, sens,
+   commentaire), séparée par des virgules, en UTF-8 avec une marque d'ordre des
+   octets pour que les tableurs lisent bien les accents. Un commentaire qui
+   commence par `=`, `+`, `-` ou `@` (ou par une tabulation ou un retour chariot),
+   comme `-B12`, est écrit avec une apostrophe devant pour que le tableur
+   l'affiche comme du texte et non comme une formule ; selon le tableur,
+   l'apostrophe peut apparaître dans la cellule (NON VÉRIFIÉ). Si votre
+   tableur met tout dans une seule colonne (réglage régional qui attend des
+   points-virgules), passez par sa fonction d'import et choisissez la virgule.
+   L'export est en lecture seule : les modifications faites dans le fichier ne
+   sont jamais relues, changez le mapping dans le viewer.
 2. **Ajoutez le maître et un serveur par module.** Dans l'arbre des appareils,
    sous **Device**, ajoutez **Ethernet**, puis **Modbus_TCP_Client** (le maître :
    l'automate), puis un **Modbus_TCP_Server** (un module Pantin) **par module**.

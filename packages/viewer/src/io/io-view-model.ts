@@ -10,7 +10,8 @@ import {
   moduleConnection,
 } from "../bridge/module-connection.ts";
 import type { MessageKey } from "../i18n/translate.ts";
-import { type IoGvlExport, ioGvlExportOf } from "./io-gvl-export.ts";
+import { ioCsvExportOf } from "./io-csv-export.ts";
+import { type IoFileExport, ioGvlExportOf } from "./io-gvl-export.ts";
 import {
   cellIdOf,
   cellOfPath,
@@ -83,7 +84,8 @@ export interface IoView {
   // cannot create two modules.
   busy: boolean;
   mode: IoMode;
-  gvl: IoGvlExport;
+  gvl: IoFileExport;
+  csv: IoFileExport;
   // The last refresh failed: the table shown may be out of date.
   outOfDate: boolean;
   problems: readonly IoProblemItem[];
@@ -201,6 +203,7 @@ export function buildIoView(
     busy,
     mode: ioModeOf(state),
     gvl: ioGvlExportOf(state),
+    csv: ioCsvExportOf(state),
     outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
     modules: (mapping?.modules ?? []).map((module, index) =>

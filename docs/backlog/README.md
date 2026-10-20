@@ -13,7 +13,6 @@ phase.
 - [Share a frozen scene](frozen-scene-export.md) — one GLB export, if the need is real
 - [Joint star view: extras](joint-star-extras.md) — live state, sensor mark, editing from the view
 - [Split a GLB body by nodes](glb-split-by-nodes.md) — several bodies from one file (on hold: needs a real GLB)
-- [I/O mapping export to a spreadsheet](io-csv-export.md) — read-only CSV for electricians
 - [Multi-selection in the 3D view](multi-selection-in-3d.md) — for grouping, without breaking click-to-go-down
 - [Nested assemblies: extras](nested-assemblies-extras.md) — axis from geometry, metallic CAD colours
 - [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells

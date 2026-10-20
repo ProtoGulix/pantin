@@ -395,3 +395,39 @@ and the render loop rule are unchanged.
 `pantin io migrate`, its CSV parser and the core's `legacy_io_files` problem
 are removed after release 0.2.0, as point 8 planned. A folder that still holds
 `io.csv` and `io-modules.json` is migrated with 0.2.0 first.
+
+## Amendment (2026-10-20): a read-only CSV export
+
+Some users want the mapping in a spreadsheet, to review it with an electrician
+or to paste it into a wiring document. It follows the pattern of the GVL
+export of the amendment of 2026-10-14:
+
+1. The pure renderer `renderIoCsv` lives in the core
+   (`packages/core/src/domain/io-csv.ts`): a header row, then one row per
+   channel (module, port, unitId, tag, variable, zone, address, ioType,
+   direction, comment), modules in file order and channels in canonical order.
+   RFC 4180 quoting, CRLF line breaks, a comma as separator, UTF-8 with a byte
+   order mark so that Excel reads accents. The separator is the one RFC 4180
+   defines because the semicolon that French Excel expects is a regional
+   setting that is NOT VERIFIED here; the guide says how to import with a
+   comma.
+   Formula guard: a comment that starts with `=`, `+`, `-`, `@`, a tab or a
+   carriage return is written with a leading apostrophe, so that a spreadsheet
+   shows text and does not run it. Trade-off: a comment such as `-B12` or
+   `+A1-S2` (common IEC 81346 designations) would otherwise be read as a
+   formula, but depending on the spreadsheet the apostrophe may show in the
+   cell (NOT VERIFIED). Only the comment is guarded: tags and variables are
+   checked names, the other cells are numbers or fixed words.
+2. New route `GET /api/pantins/:pantinId/io/csv`, answered as `text/csv;
+   charset=utf-8` with `Content-Disposition: attachment; filename="<pantinId>-io.csv"`.
+   A missing or invalid mapping is refused with a 409 and its problems, as the
+   GVL is.
+3. `pantin io export <folder>` prints the same text, with the exit codes of
+   `pantin gvl`. Both accept `--output <file>`, which writes the bytes directly:
+   a `>` redirection may re-encode the file in Windows PowerShell 5.1 (NOT
+   VERIFIED). The I/O view gets an "Exporter en CSV" /
+   "Export CSV" button next to the GVL one, enabled by the same rule. The
+   viewer holds no CSV logic.
+
+Import stays rejected, as the "whole-file `PUT .../io`" alternative above: a
+file edited in a spreadsheet and read back would bring a second source of truth.
