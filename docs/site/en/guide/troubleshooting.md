@@ -42,7 +42,7 @@ time.
 | "The component "…" is N MiB once converted, above the limit of 64 MiB." or "The converted meshes exceed 256 MiB in total." | One converted mesh is above 64 MiB, or all of them together are above 256 MiB | Simplify the part in your CAD (fewer faces, no fine threads), import a sub-assembly, or export as GLB or STL |
 | "The assembly "…" is placed with a scale or a mirror, which Pantin cannot represent. Export the model without scaled or mirrored instances." | An assembly instance of the STEP is scaled or mirrored | In the CAD, replace the mirrored instance with a real symmetric part, then export again |
 | A message in the console: "No face file…" | The body has no face table | The model is displayed and animated normally. Only **Align** cannot pick an axis on this body |
-| "Cannot display body "…"" | The mesh of the body does not load | Import the file again. If the problem persists, check that it opens in your CAD |
+| "Cannot display body "…"" | The mesh of the body does not load | Click **Retry** in the message: the mesh is loaded again (useful after a passing failure). Otherwise import the file again; if the problem persists, check that it opens in your CAD |
 
 During a STEP conversion, the page must stay open: "Converting STEP… Up to 2
 minutes".

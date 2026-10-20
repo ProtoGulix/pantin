@@ -52,11 +52,12 @@ export function inputCell(
   value: string,
   messages: readonly string[] | undefined,
   onCommit: (text: string) => void,
+  extraClass = "",
 ): HTMLElement {
   const input = committingTextInput(value, { label, focusKey: id, onCommit });
   input.id = id;
   markProblems(input, messages);
-  return element("td", { className: "io-cell" }, [input]);
+  return element("td", { className: `io-cell ${extraClass}`.trim() }, [input]);
 }
 
 /** A labelled setting of a module, committed when the field is left. */

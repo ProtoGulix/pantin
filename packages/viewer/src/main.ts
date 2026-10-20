@@ -17,7 +17,7 @@ import { parseStoredGizmoSpace } from "./gizmo/gizmo-space.ts";
 import { parseStoredSteps, serializeSteps } from "./gizmo/gizmo-steps.ts";
 import { chooseLanguage } from "./i18n/translate.ts";
 import { parseStoredGroups, parseStoredOpen, serializeGroups } from "./layout-preferences.ts";
-import { errorMessage, type PanelMessage } from "./messages.ts";
+import { errorMessage, meshLoadMessage, type PanelMessage } from "./messages.ts";
 import { parseStoredNavigation, serializeNavigation } from "./navigation/navigation-settings.ts";
 import { createPoseStreamClient, type PoseStreamClient } from "./pose-stream-client.ts";
 import { createInertViewport } from "./scene/inert-viewport.ts";
@@ -58,7 +58,7 @@ function createViewportOrInert(
         onLoadError: (bodyName, reason) =>
           store.update({
             ...store.state,
-            message: errorMessage("message.meshLoad", { name: bodyName }, reason),
+            message: meshLoadMessage(bodyName, reason),
           }),
       },
       SCENE_PALETTES[theme],

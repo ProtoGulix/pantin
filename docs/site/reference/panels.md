@@ -288,7 +288,7 @@ Sujet **Préactionneur · nom**.
 
 | Section | Lignes |
 | --- | --- |
-| **Général** | **Nom** (éditable), **Type**, **Préfixe des tags** (`assemblage.clé`) |
+| **Général** | **Nom** (éditable), **Type**, **Clé de tag** (éditable : la renommer renomme les tags, comme pour une liaison), **Préfixe des tags** (`assemblage.clé`, lecture seule) |
 | **Paramètres** | Les paramètres du type (vitesses, rampes...), éditables, avec leur unité |
 | **Commandes** | Les tags que l'automate écrit : bascule **Marche** / **Arrêt** pour un bit, champ et **Envoyer** pour une valeur. Marque **forcé** et **Relâcher** par ligne. |
 | **Retours** | Les tags que l'automate lit (valeurs vivantes) |
@@ -307,7 +307,7 @@ Types d'actionneurs : **Vérin double effet**, **Vérin simple effet**, **Moteur
 
 #### Un capteur
 
-Sujet **Capteur · nom**. Sections : **Général** (**Nom**, **Type**, **Préfixe des tags**), **Paramètres** (plage, résolution, hystérésis, **Normalement fermé**..., selon le type ; les choix et les cases à cocher sont des listes **Oui** / **Non**), **État** (les tags du capteur, en valeurs vivantes) et **E/S**.
+Sujet **Capteur · nom**. Sections : **Général** (**Nom**, **Type**, **Clé de tag** éditable, **Préfixe des tags**), **Paramètres** (plage, résolution, hystérésis, **Normalement fermé**..., selon le type ; les choix et les cases à cocher sont des listes **Oui** / **Non**), **État** (les tags du capteur, en valeurs vivantes) et **E/S**.
 
 Types de capteurs de liaison : **Contact idéal**, **Fin de course mécanique**, **Détecteur de vérin (magnétique)**, **Détecteur inductif (axial)**, **Codeur**.
 

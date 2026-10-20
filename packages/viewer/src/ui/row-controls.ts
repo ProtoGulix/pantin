@@ -1,6 +1,7 @@
 import type { Translate } from "../i18n/translate.ts";
 import { type PropertyRow, type RowEditor, rowFocusKey } from "../properties/property-rows.ts";
 import { button, element } from "./dom.ts";
+import { DRAFT_ATTRIBUTE } from "./input-drafts.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { applyToggle } from "./row-actions.ts";
 
@@ -45,6 +46,8 @@ export function numberControl(
       type: "text",
       "aria-label": translate("properties.editLabel", { property: row.label }),
       "data-focus-key": rowFocusKey(row.id),
+      // Keyed by the tag, not by the row: the text outlives a redraw (input-drafts.ts).
+      [DRAFT_ATTRIBUTE]: editor.tag,
       spellcheck: "false",
     },
   });

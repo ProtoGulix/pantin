@@ -101,7 +101,7 @@ Les réglages de souris sont détaillés dans [Raccourcis](/reference/shortcuts#
 
 ## Menu contextuel de l'arborescence
 
-Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du clavier, ouvre le menu de cette ligne. Un clic droit sur un groupe, un corps ou une liaison de la [vue Liaisons](/reference/views#la-vue-liaisons), ou <kbd>Maj</kbd>+<kbd>F10</kbd> sur l'un d'eux, ouvre le même menu. Son titre est « Actions sur « nom » ». Les entrées dépendent du type de ligne :
+Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> ou <kbd>Maj</kbd>+<kbd>F10</kbd> du clavier, ouvre le menu de cette ligne. Un clic droit sur un groupe, un corps ou une liaison de la [vue Liaisons](/reference/views#la-vue-liaisons), ou <kbd>Maj</kbd>+<kbd>F10</kbd> sur l'un d'eux, ouvre le même menu. Son titre est « Actions sur « nom » ». Les entrées dépendent du type de ligne :
 
 | Type de ligne | Entrées, dans l'ordre |
 |---|---|

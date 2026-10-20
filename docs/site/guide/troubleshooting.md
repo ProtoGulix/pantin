@@ -41,7 +41,7 @@ temps de simulation.
 | « The component "…" is N MiB once converted, above the limit of 64 MiB. » ou « The converted meshes exceed 256 MiB in total. » | Un maillage converti dépasse 64 Mio, ou l'ensemble dépasse 256 Mio | Simplifiez la pièce dans votre CAO (moins de faces, pas de filetages fins), importez un sous-assemblage, ou exportez en GLB ou STL |
 | « The assembly "…" is placed with a scale or a mirror, which Pantin cannot represent. Export the model without scaled or mirrored instances. » | Une instance d'assemblage du STEP est mise à l'échelle ou en miroir | Dans la CAO, remplacez l'instance en miroir par une vraie pièce symétrique, puis réexportez |
 | Un message dans la console : « Pas de fichier de faces… » | Le corps n'a pas de table de faces | Le modèle s'affiche et s'anime normalement. Seul **Aligner** ne peut pas viser d'axe sur ce corps |
-| « Impossible d'afficher le corps « … » » | Le maillage du corps ne se charge pas | Réimportez le fichier. Si le problème persiste, vérifiez qu'il s'ouvre dans votre CAO |
+| « Impossible d'afficher le corps « … » » | Le maillage du corps ne se charge pas | Cliquez sur **Réessayer** dans le message : le maillage est rechargé (utile après une coupure passagère). Sinon réimportez le fichier ; si le problème persiste, vérifiez qu'il s'ouvre dans votre CAO |
 
 Pendant une conversion STEP, la page doit rester ouverte : « Conversion STEP en
 cours… Jusqu'à 2 minutes ».

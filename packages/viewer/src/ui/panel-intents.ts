@@ -212,5 +212,7 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
 
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;
+  // Loads again the bodies whose mesh failed to load, and clears the message.
+  retryMeshLoad(): void;
   changeLanguage(language: string): void;
 }

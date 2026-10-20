@@ -67,7 +67,7 @@ The arrows act when the tree has focus; the selected item follows the focus.
 | <kbd>←</kbd> | Folds the row; if it is already folded, goes to its parent. |
 | <kbd>Enter</kbd> | Activates the row: the inspector opens on it, and a foldable row toggles between unfolded and folded. |
 | <kbd>F2</kbd> | Renames the row (if it is renamable). |
-| <kbd>Menu</kbd> (context key) | Opens the row's context menu. |
+| <kbd>Menu</kbd> (context key) or <kbd>Shift</kbd>+<kbd>F10</kbd> | Opens the row's context menu. |
 | Click | Selects the row (the selection is made on press). |
 | <kbd>Ctrl</kbd>+click (or <kbd>Cmd</kbd>+click) | Adds the row to the selection, or removes it. The last selected row cannot be removed. Reserved for body and group rows of one assembly; elsewhere it is a plain click. |
 | <kbd>Shift</kbd>+click | Selects the range between the first selected row and the clicked row (same rows as above). |

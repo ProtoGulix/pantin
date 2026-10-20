@@ -7,6 +7,7 @@ import {
   chooseGridStep,
   faceSideLook,
   floorHeight,
+  forgetFailedLoads,
   frameBounds,
   isCurrentLoad,
   isOutlined,
@@ -65,6 +66,19 @@ describe("failed mesh load", () => {
     const wanted = new Map([[initial.id, bodyRenderKey("p", initial)]]);
     expect(planSceneSync(wanted, "p", [initial]).bodiesToLoad).toEqual([]);
     expect(planSceneSync(wanted, "p", [body("b1", "m")]).bodiesToLoad).toHaveLength(1);
+  });
+
+  it("is planned again once the failed bodies are forgotten, and only those", () => {
+    const failed = body("b1", "mm");
+    const loaded = body("b2", "mm");
+    const wanted = new Map([
+      [failed.id, bodyRenderKey("p", failed)],
+      [loaded.id, bodyRenderKey("p", loaded)],
+    ]);
+    const failedIds = new Set([failed.id]);
+    forgetFailedLoads(wanted, failedIds);
+    expect(planSceneSync(wanted, "p", [failed, loaded]).bodiesToLoad).toEqual([failed]);
+    expect(failedIds.size).toBe(0);
   });
 
   it("ignores a result whose key was replaced while it ran", () => {

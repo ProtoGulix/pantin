@@ -44,6 +44,7 @@ function channelRow(
       value,
       problems.get(field),
       (text) => intents.editIoChannel(channel.tag, field, text),
+      field === "variable" ? "io-cell--variable" : "",
     );
   return element("tr", { className: "io-row" }, [
     tagCell(

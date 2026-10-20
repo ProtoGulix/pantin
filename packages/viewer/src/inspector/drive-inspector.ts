@@ -91,7 +91,15 @@ export function driveGroups(drive: Drive, context: InspectorContext): GroupDraft
       rows: [
         deviceNameRow(device, drive.name, t),
         row("type", t("drives.form.type"), DRIVE_LABELS[drive.type][language].name),
-        // The prefix of its tags: assembly key and tag key (ADR 0019).
+        // An edit of the tag key renames the tags (ADR 0019); the prefix is read only.
+        row("tagKey", t("properties.tagKey"), drive.tagKey, {
+          input: "text",
+          target: {
+            kind: "deviceTagKey",
+            pantinId: context.pantin.id,
+            device: { kind: "drive", id: drive.id },
+          },
+        }),
         row("tagPrefix", t("inspector.tagPrefix"), `${drive.assembly}.${drive.tagKey}`),
       ],
     },

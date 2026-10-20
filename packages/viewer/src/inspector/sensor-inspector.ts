@@ -55,7 +55,15 @@ export function sensorGroups(sensor: Sensor, context: InspectorContext): GroupDr
       rows: [
         deviceNameRow(device, sensor.name, t),
         row("type", t("drives.form.type"), SENSOR_LABELS[sensor.type][language].name),
-        // The prefix of its tags: assembly key and tag key (ADR 0019).
+        // An edit of the tag key renames the tags (ADR 0019); the prefix is read only.
+        row("tagKey", t("properties.tagKey"), sensor.tagKey, {
+          input: "text",
+          target: {
+            kind: "deviceTagKey",
+            pantinId: context.pantin.id,
+            device: { kind: "sensor", id: sensor.id },
+          },
+        }),
         row("tagPrefix", t("inspector.tagPrefix"), `${sensor.assembly}.${sensor.tagKey}`),
       ],
     },

@@ -124,6 +124,14 @@ describe("commandForKey in depth", () => {
     });
   });
 
+  it("opens the context menu with Shift+F10, not with F10 alone", () => {
+    expect(commandForKey(expandedRows, rail, "F10", true)).toEqual({
+      type: "contextMenu",
+      nodeId: rail,
+    });
+    expect(commandForKey(expandedRows, rail, "F10")).toEqual({ type: "none" });
+  });
+
   it("ignores other keys", () => {
     expect(commandForKey(expandedRows, rail, "a")).toEqual({ type: "none" });
   });

@@ -48,6 +48,9 @@ export function renderMessageLine(
               attributes: { title: message.detail },
             }),
       ]),
+      message.retryMeshLoad
+        ? button(translate("message.retryMeshLoad"), "message-line__link", intents.retryMeshLoad)
+        : null,
       iconButton("close", translate("message.dismiss"), intents.dismissMessage),
     ],
   );

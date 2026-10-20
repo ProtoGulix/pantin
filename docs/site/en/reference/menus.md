@@ -101,7 +101,7 @@ The mouse settings are detailed in [Shortcuts](/en/reference/shortcuts#_3d-view-
 
 ## Tree context menu
 
-A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, opens the menu of that row. A right-click on a group, a body or a joint of the [Joints view](/en/reference/views#the-joints-view), or <kbd>Shift</kbd>+<kbd>F10</kbd> on one of them, opens the same menu. Its title is `Actions on "name"`. The entries depend on the row type:
+A right-click on a row of the tree, or the <kbd>Menu</kbd> key or <kbd>Shift</kbd>+<kbd>F10</kbd> of the keyboard, opens the menu of that row. A right-click on a group, a body or a joint of the [Joints view](/en/reference/views#the-joints-view), or <kbd>Shift</kbd>+<kbd>F10</kbd> on one of them, opens the same menu. Its title is `Actions on "name"`. The entries depend on the row type:
 
 | Row type | Entries, in order |
 |---|---|

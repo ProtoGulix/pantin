@@ -53,6 +53,7 @@ export function commandForKey(
   rows: readonly TreeRow[],
   selectedNodeId: string | null,
   key: string,
+  shiftKey = false,
 ): TreeCommand {
   const index = rows.findIndex((row) => row.id === selectedNodeId);
   const row = rows[index];
@@ -78,6 +79,9 @@ export function commandForKey(
       return row.renamable ? { type: "rename", nodeId: row.id } : NONE;
     case "ContextMenu":
       return { type: "contextMenu", nodeId: row.id };
+    // The other standard keyboard way to the context menu.
+    case "F10":
+      return shiftKey ? { type: "contextMenu", nodeId: row.id } : NONE;
     default:
       return NONE;
   }

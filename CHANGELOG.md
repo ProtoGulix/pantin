@@ -30,6 +30,12 @@ All notable changes to Pantin. The format follows
   and an **Export CSV** button next to **Export GVL** in the I/O view. Comma-separated,
   UTF-8 with a byte order mark. There is still no import. The user guide documents it,
   in French and English.
+- Viewer: the inspector of a drive and of a joint sensor has an editable **Tag key**
+  row (the core routes already existed): renaming it renames the tags and lists them in
+  the message line. Actuators own no tag, so they have none.
+- Viewer: the message "Cannot display body ..." offers a **Retry** button that loads
+  the bodies whose mesh failed again, after a passing failure. The troubleshooting
+  guide says so.
 - The tag key of an emitter and of a presence sensor can be renamed, like
   that of a drive or a joint: `PUT .../emitters/:id/tag-key` and
   `PUT .../presence-sensors/:id/tag-key` answer the renamed tags, io.json
@@ -79,6 +85,15 @@ All notable changes to Pantin. The format follows
   becomes a backlog measurement; missing amendment links added. The backlog
   is sorted by phase and theme in an index, with merged duplicates and the
   follow-ups announced by the ADRs.
+
+### Fixed
+
+- Viewer: the import form's **Up axis** list no longer cuts its longest choice (the label
+  sits above the list); the Variable column of the I/O view is wide enough to read a
+  variable name; the joint form's axis hint now says "frame of the parent body's assembly",
+  as its labels do; **Shift+F10** opens the tree's context menu; a value typed in a command
+  field survives the redraw of the inspector (ticking a fault, for example); the unused
+  `prompt.deleteDrive.text` text is removed.
 
 ### Removed
 

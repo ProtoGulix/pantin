@@ -19,7 +19,7 @@ import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
 import { createRenderSwitch } from "./render-switch.ts";
-import { bodyRenderKey, isCurrentLoad, planSceneSync } from "./scene-plan.ts";
+import { bodyRenderKey, forgetFailedLoads, isCurrentLoad, planSceneSync } from "./scene-plan.ts";
 import { createContext, type ViewportContext } from "./viewport-context.ts";
 import { listenToPicks, pickBody } from "./viewport-picks.ts";
 import { applyPosesEachFrame, forgetPoses, pushSnapshot } from "./viewport-poses.ts";
@@ -48,6 +48,8 @@ export interface ViewportCallbacks {
 
 export interface Viewport {
   showBodies(pantinId: string | null, bodies: readonly Body[]): void;
+  /** Loads again the bodies whose mesh failed to load, from the last bodies shown. */
+  retryFailedBodies(): void;
   setSelectedBodies(bodyIds: ReadonlySet<string>): void;
   // Hidden bodies stay loaded, so showing them again downloads nothing.
   setHiddenBodies(bodyIds: ReadonlySet<string>): void;
@@ -96,6 +98,7 @@ export interface Viewport {
 function removeBody(context: ViewportContext, bodyId: string): void {
   const loaded = context.loadedBodies.get(bodyId);
   context.wantedKeys.delete(bodyId);
+  context.failedBodyIds.delete(bodyId);
   if (loaded === undefined) {
     return;
   }
@@ -183,6 +186,7 @@ function showBodies(
   }
   const loads = plan.bodiesToLoad.map((body) => {
     context.wantedKeys.set(body.id, bodyRenderKey(pantinId, body));
+    context.failedBodyIds.delete(body.id);
     return loadAndShow(context, pantinId, body, loadBytes).catch((error: unknown) => {
       // The key stays in wantedKeys: the plan then treats the body as settled
       // and does not retry at every redraw. A change of key (unit, mesh,
@@ -191,6 +195,7 @@ function showBodies(
       if (!isCurrentLoad(context.wantedKeys, body.id, bodyRenderKey(pantinId, body))) {
         return;
       }
+      context.failedBodyIds.add(body.id);
       callbacks.onLoadError(body.name, error instanceof Error ? error.message : String(error));
     });
   });
@@ -222,6 +227,28 @@ function applyScenePalette(context: ViewportContext, palette: ScenePalette): voi
   context.assemblyTrihedron.setAxisColours(palette.axes);
 }
 
+// Remembers the last bodies shown, so that a retry can replay them.
+function createBodySync(
+  context: ViewportContext,
+  loadBytes: MeshBytesLoader,
+  callbacks: ViewportCallbacks,
+): Pick<Viewport, "showBodies" | "retryFailedBodies"> {
+  let lastShown: { pantinId: string | null; bodies: readonly Body[] } = {
+    pantinId: null,
+    bodies: [],
+  };
+  return {
+    showBodies: (pantinId, bodies) => {
+      lastShown = { pantinId, bodies };
+      showBodies(context, pantinId, bodies, loadBytes, callbacks);
+    },
+    retryFailedBodies: () => {
+      forgetFailedLoads(context.wantedKeys, context.failedBodyIds);
+      showBodies(context, lastShown.pantinId, lastShown.bodies, loadBytes, callbacks);
+    },
+  };
+}
+
 export function createViewport(
   canvas: HTMLCanvasElement,
   loadBytes: MeshBytesLoader,
@@ -244,7 +271,7 @@ export function createViewport(
   const navigation = navigationOf(context, canvas);
   const setRendering = createRenderSwitch(engine, scene);
   return {
-    showBodies: (pantinId, bodies) => showBodies(context, pantinId, bodies, loadBytes, callbacks),
+    ...createBodySync(context, loadBytes, callbacks),
     frameBodies: (bodyIds) => frameBodies(context, bodyIds),
     pushPoses: (snapshot) => pushSnapshot(context, snapshot),
     clearPoses: () => forgetPoses(context),

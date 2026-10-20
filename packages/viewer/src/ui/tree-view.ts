@@ -213,7 +213,7 @@ function listenToKeys(tree: HTMLElement, current: Current): void {
       return;
     }
     const selected = current.rows.find((row) => row.active)?.id ?? null;
-    const command = commandForKey(current.rows, selected, event.key);
+    const command = commandForKey(current.rows, selected, event.key, event.shiftKey);
     if (command.type !== "none") {
       event.preventDefault();
       dispatch(command, intents, tree);

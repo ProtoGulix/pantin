@@ -6,6 +6,7 @@ import { renderConveyorForm } from "./conveyor-form.ts";
 import { renderActuatorForm, renderDriveForm, renderSensorForm } from "./device-forms.ts";
 import { button, element, iconButton } from "./dom.ts";
 import { captureFocus, focusField, restoreFocus } from "./focus.ts";
+import { captureDrafts, restoreDrafts } from "./input-drafts.ts";
 import { showInspectorLive } from "./inspector-live.ts";
 import { renderPositioning } from "./inspector-positioning.ts";
 import { renderInspectorToolbar } from "./inspector-toolbar.ts";
@@ -67,6 +68,7 @@ export class Inspector {
       return;
     }
     const focus = captureFocus(this.root);
+    const drafts = captureDrafts(this.root);
     this.root.setAttribute("aria-label", view.title);
     this.upper.replaceChildren(
       ...[
@@ -91,6 +93,7 @@ export class Inspector {
         ...view.hints.map((hint) => element("p", { className: "inspector__empty", text: hint })),
       ].filter((part) => part !== null),
     );
+    restoreDrafts(this.root, drafts);
     restoreFocus(this.root, focus);
     this.serveFocusRequest(view.focusRequest);
   }

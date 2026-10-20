@@ -29,7 +29,7 @@ import type { ViewerStore } from "./viewer-store.ts";
 
 type KeyTarget = Extract<
   EditTarget,
-  { kind: "assemblyKey" | "tagKey" | "conveyorTagKey" | "bodyAssembly" }
+  { kind: "assemblyKey" | "tagKey" | "conveyorTagKey" | "deviceTagKey" | "bodyAssembly" }
 >;
 
 function sendKeyEdit(store: ViewerStore, target: KeyTarget, value: string) {
@@ -44,6 +44,10 @@ function sendKeyEdit(store: ViewerStore, target: KeyTarget, value: string) {
         return target.owner.kind === "emitter"
           ? api.renameEmitterTagKey(pantinId, target.owner.id, value)
           : api.renamePresenceSensorTagKey(pantinId, target.owner.id, value);
+      case "deviceTagKey":
+        return target.device.kind === "drive"
+          ? api.renameDriveTagKey(pantinId, target.device.id, value)
+          : api.renameSensorTagKey(pantinId, target.device.id, value);
       case "bodyAssembly":
         return api.moveBody(pantinId, target.bodyId, value);
     }

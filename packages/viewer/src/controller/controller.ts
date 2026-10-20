@@ -197,6 +197,11 @@ function jointIntents(store: ViewerStore) {
   };
 }
 
+function retryMeshLoad(store: ViewerStore): void {
+  store.update({ ...store.state, message: null });
+  store.ports.viewport().retryFailedBodies();
+}
+
 export function createPanelIntents(store: ViewerStore): PanelIntents {
   const changeLanguage = (language: string) => {
     if (isLanguage(language)) {
@@ -237,6 +242,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
       store.ports.storeCollapsedGroups(collapsedPropertyGroups);
     },
     dismissMessage: () => store.update({ ...store.state, message: null }),
+    retryMeshLoad: () => retryMeshLoad(store),
     // The device actions are the toolbar's, which take these same intents.
     runDeviceAction: (nodeId, action) => runDeviceAction(store, intents, nodeId, action),
     changeLanguage,

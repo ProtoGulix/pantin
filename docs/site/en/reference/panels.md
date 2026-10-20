@@ -288,7 +288,7 @@ Subject **Drive · name**.
 
 | Section | Rows |
 | --- | --- |
-| **General** | **Name** (editable), **Type**, **Tag prefix** (`assembly.key`) |
+| **General** | **Name** (editable), **Type**, **Tag key** (editable: renaming it renames the tags, as for a joint), **Tag prefix** (`assembly.key`, read-only) |
 | **Parameters** | The parameters of the type (speeds, ramps...), editable, with their unit |
 | **Commands** | The tags the PLC writes: **On** / **Off** toggle for a bit, field and **Send** for a value. **forced** mark and **Release** per row. |
 | **Feedback** | The tags the PLC reads (live values) |
@@ -307,7 +307,7 @@ Actuator types: **Double-acting cylinder**, **Single-acting cylinder**, **AC mot
 
 #### A sensor
 
-Subject **Sensor · name**. Sections: **General** (**Name**, **Type**, **Tag prefix**), **Parameters** (range, resolution, hysteresis, **Normally closed**..., depending on the type; the choices and checkboxes are **Yes** / **No** lists), **State** (the sensor's tags, as live values) and **I/O**.
+Subject **Sensor · name**. Sections: **General** (**Name**, **Type**, **Tag key** (editable), **Tag prefix**), **Parameters** (range, resolution, hysteresis, **Normally closed**..., depending on the type; the choices and checkboxes are **Yes** / **No** lists), **State** (the sensor's tags, as live values) and **I/O**.
 
 Joint sensor types: **Ideal switch**, **Mechanical limit switch**, **Cylinder sensor (magnetic)**, **Inductive sensor (axial)**, **Encoder**.
 

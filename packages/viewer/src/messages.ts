@@ -19,6 +19,8 @@ export interface PanelMessage {
   // Devices the message names, shown as links that select them (ADR 0030
   // point 4). Kept as references: their names are read from the document.
   links: readonly DeviceRef[];
+  // Offers a "Retry" action that loads again the meshes which failed to load.
+  retryMeshLoad: boolean;
 }
 
 export function errorMessage(
@@ -27,11 +29,15 @@ export function errorMessage(
   detail: string | null = null,
   links: readonly DeviceRef[] = [],
 ): PanelMessage {
-  return { level: "error", key, parameters, detail, links };
+  return { level: "error", key, parameters, detail, links, retryMeshLoad: false };
+}
+
+export function meshLoadMessage(bodyName: string, reason: string): PanelMessage {
+  return { ...errorMessage("message.meshLoad", { name: bodyName }, reason), retryMeshLoad: true };
 }
 
 export function infoMessage(key: MessageKey, parameters: MessageParameters = {}): PanelMessage {
-  return { level: "info", key, parameters, detail: null, links: [] };
+  return { level: "info", key, parameters, detail: null, links: [], retryMeshLoad: false };
 }
 
 function apiErrorKey(code: ApiErrorCode): MessageKey {

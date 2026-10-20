@@ -67,7 +67,7 @@ Les flèches agissent quand l'arborescence a le focus ; l'élément sélectionn�
 | <kbd>←</kbd> | Replie la ligne ; si elle est déjà repliée, passe à son parent. |
 | <kbd>Entrée</kbd> | Active la ligne : l'inspecteur s'ouvre sur elle, et une ligne dépliable bascule entre dépliée et repliée. |
 | <kbd>F2</kbd> | Renomme la ligne (si elle est renommable). |
-| <kbd>Menu</kbd> (touche contextuelle) | Ouvre le menu contextuel de la ligne. |
+| <kbd>Menu</kbd> (touche contextuelle) ou <kbd>Maj</kbd>+<kbd>F10</kbd> | Ouvre le menu contextuel de la ligne. |
 | Clic | Sélectionne la ligne (la sélection se fait dès l'appui). |
 | <kbd>Ctrl</kbd>+clic (ou <kbd>Cmd</kbd>+clic) | Ajoute la ligne à la sélection, ou l'en retire. La dernière ligne sélectionnée ne se retire pas. Réservé aux lignes de corps et de groupe d'un même assemblage ; ailleurs, c'est un clic simple. |
 | <kbd>Maj</kbd>+clic | Sélectionne la plage entre la première ligne sélectionnée et la ligne cliquée (mêmes lignes que ci-dessus). |

@@ -9,6 +9,7 @@ export function createInertViewport(): Viewport {
     setAlignmentPicking: ignore,
     showFaceHighlights: ignore,
     showBodies: ignore,
+    retryFailedBodies: ignore,
     setSelectedBodies: ignore,
     setHiddenBodies: ignore,
     frameBodies: ignore,

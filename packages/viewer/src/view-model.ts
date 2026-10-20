@@ -42,6 +42,8 @@ export interface MessageView {
   detail: string | null;
   // Devices the message names, in the order it gives them.
   links: MessageLinkView[];
+  // Shows a "Retry" button for the meshes which failed to load.
+  retryMeshLoad: boolean;
 }
 
 export interface MessageLinkView {
@@ -112,6 +114,7 @@ function buildMessageView(state: ViewerState, t: Translate): MessageView | null 
     text: t(message.key, message.parameters),
     detail: message.detail,
     links: messageLinks(state, message.links),
+    retryMeshLoad: message.retryMeshLoad,
   };
 }
 

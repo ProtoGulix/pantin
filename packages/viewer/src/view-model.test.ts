@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EMPTY_CLIENT_CONSOLE } from "./console/console-list.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
 import { withImportStarted } from "./import-state.ts";
-import { errorMessage } from "./messages.ts";
+import { errorMessage, meshLoadMessage } from "./messages.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { withRevealedDevice } from "./tree/tree-state.ts";
@@ -118,7 +118,7 @@ describe("message line and language", () => {
   it("translates the stored message in the current language, with its detail", () => {
     const state = {
       ...opened(false, "en"),
-      message: errorMessage("message.meshLoad", { name: "Rail" }, "bad file"),
+      message: meshLoadMessage("Rail", "bad file"),
     };
     expect(buildPanelView(state).message).toEqual({
       level: "error",
@@ -126,7 +126,13 @@ describe("message line and language", () => {
       text: 'Cannot display body "Rail".',
       links: [],
       detail: "bad file",
+      retryMeshLoad: true,
     });
+  });
+
+  it("offers no retry for the other messages", () => {
+    const state = { ...opened(false, "en"), message: errorMessage("error.network") };
+    expect(buildPanelView(state).message?.retryMeshLoad).toBe(false);
   });
 
   it("feeds the tree rows and the inspector from the same selection", () => {

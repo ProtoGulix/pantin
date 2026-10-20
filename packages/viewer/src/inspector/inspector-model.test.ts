@@ -45,7 +45,7 @@ describe("inspector of a drive", () => {
 
   it("names it, and edits its name in place", () => {
     expect(view.subject).toBe("Préactionneur · v1");
-    const [name, type, prefix] = rowsOf(view.groups, "general");
+    const [name, type, , prefix] = rowsOf(view.groups, "general");
     expect([name?.value, name?.edit]).toEqual([
       "v1",
       {
@@ -265,7 +265,7 @@ describe("inspector without anything to show", () => {
 
   it("names the tag prefix of a sensor", () => {
     const sensor = device("sensor", "e1");
-    expect(rowsOf(sensor.groups, "general")[2]?.value).toBe("a.e1");
+    expect(rowsOf(sensor.groups, "general")[3]?.value).toBe("a.e1");
   });
 
   it("disables the actuator and sensor buttons without a joint that moves", () => {

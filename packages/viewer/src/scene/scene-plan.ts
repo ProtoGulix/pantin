@@ -29,6 +29,18 @@ export function isCurrentLoad(
   return wantedKeys.get(bodyId) === key;
 }
 
+// Makes the bodies whose mesh failed to load wanted again: the next plan then
+// loads them. Their ids leave the failed set, which a new failure refills.
+export function forgetFailedLoads(
+  wantedKeys: Map<string, string>,
+  failedBodyIds: Set<string>,
+): void {
+  for (const bodyId of failedBodyIds) {
+    wantedKeys.delete(bodyId);
+  }
+  failedBodyIds.clear();
+}
+
 export function planSceneSync(
   loadedKeysByBodyId: ReadonlyMap<string, string>,
   pantinId: string | null,

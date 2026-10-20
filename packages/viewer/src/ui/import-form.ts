@@ -7,7 +7,7 @@ import type { PanelIntents } from "./panel-intents.ts";
 // either the buttons or the progress line while the core works.
 
 function field(label: string, control: HTMLElement): HTMLElement {
-  return element("label", { className: "inline-field" }, [
+  return element("label", { className: "inline-field inline-field--stacked" }, [
     element("span", { className: "inline-field__label", text: label }),
     control,
   ]);

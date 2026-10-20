@@ -47,6 +47,8 @@ export type EditTarget =
   | { kind: "tagKey"; pantinId: string; jointId: string }
   // An emitter or a presence sensor, which own a tag key like a joint (ADR 0043).
   | { kind: "conveyorTagKey"; pantinId: string; owner: TagKeyOwner }
+  // A drive or a joint sensor, which own a tag key too (ADR 0019).
+  | { kind: "deviceTagKey"; pantinId: string; device: { kind: "drive" | "sensor"; id: string } }
   // Choosing another type opens the joint form with it (ADR 0018).
   | { kind: "jointType"; pantinId: string; jointId: string }
   | { kind: "bodyAssembly"; pantinId: string; bodyId: string }

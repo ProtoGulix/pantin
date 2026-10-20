@@ -92,6 +92,13 @@
   align-items: center;
 }
 
+/* The label above its control: the import form's longest choice ("Y vers le haut
+   (standard glTF)") would be cut beside a 90 px label at the inspector width. */
+.inline-field--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
 .inline-field__label {
   display: flex;
   gap: 5px;

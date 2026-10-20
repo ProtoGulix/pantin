@@ -50,4 +50,16 @@ describe("a tag key edit of a conveyor object", () => {
     await commitPropertyEdit(store, target, "eye");
     expect(renamePresenceSensorTagKey).toHaveBeenCalledWith("press", "cell", "eye");
   });
+
+  it("renames a drive's and a joint sensor's tag key through their routes", async () => {
+    const renameDriveTagKey = vi.fn(async () => answer("a.v1.extend", "a.valve.extend"));
+    const renameSensorTagKey = vi.fn(async () => answer("a.e1.count", "a.enc.count"));
+    const store = openStore({ renameDriveTagKey, renameSensorTagKey });
+    const device = (kind: "drive" | "sensor", id: string) =>
+      ({ kind: "deviceTagKey", pantinId: "press", device: { kind, id } }) as const;
+    await commitPropertyEdit(store, device("drive", "v1"), "valve");
+    await commitPropertyEdit(store, device("sensor", "e1"), "enc");
+    expect(renameDriveTagKey).toHaveBeenCalledWith("press", "v1", "valve");
+    expect(renameSensorTagKey).toHaveBeenCalledWith("press", "e1", "enc");
+  });
 });

@@ -28,6 +28,8 @@ export interface ViewportContext {
   stage: Stage;
   // What each body should show (set as soon as a load starts, to skip duplicates).
   wantedKeys: Map<string, string>;
+  // Bodies whose mesh failed to load: they keep their key, so only a retry loads them again.
+  failedBodyIds: Set<string>;
   loadedBodies: Map<string, LoadedBody>;
   bodyIdByMesh: Map<AbstractMesh, string>;
   poses: PoseInterpolator;
@@ -65,6 +67,7 @@ export function createContext(
     view: createCameraView(scene, canvas, camera),
     stage,
     wantedKeys: new Map(),
+    failedBodyIds: new Set(),
     loadedBodies,
     bodyIdByMesh: new Map(),
     poses,

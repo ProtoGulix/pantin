@@ -225,6 +225,11 @@
   min-width: 70px;
 }
 
+/* Wide enough for a CODESYS variable name such as GVL_Press.xValveExtend. */
+.io-cell--variable input {
+  min-width: 24ch;
+}
+
 /* A problem is marked by an outline as well as by colour. */
 .is-problem {
   outline: 1px dashed var(--state-emergency);
