@@ -12,12 +12,9 @@ actionneur, capteur, tag) sont expliquées dans
 d'abord si ces mots sont nouveaux.
 
 ::: tip Pour comparer
-Le dossier `examples/plc-cylinder` contient une machine voisine, organisée
-autrement : une liaison fixe interne `ecrou`, la glissière `verin` à l'intérieur
-de l'assemblage `verin1`, et des tags en `verin1.*`. Un Pantin construit avec ce
-tutoriel a des tags légèrement différents (voir l'étape 4). Copiez l'exemple
-dans le dossier des Pantins du cœur pour l'ouvrir et comparer la machine, pas
-les noms de tags.
+Le dossier `examples/plc-cylinder` contient la machine construite par ce
+tutoriel, avec les mêmes noms. Copiez-le dans le dossier des Pantins du cœur pour
+l'ouvrir et comparer.
 :::
 
 ## Ce qu'il vous faut

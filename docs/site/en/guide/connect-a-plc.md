@@ -128,7 +128,7 @@ are those of the French interface of CODESYS.
    **Application**, **GVL**, the variable (icon "mapper sur la variable
    existante", map onto the existing variable).
    - Commandes `Bit0` → `verin1_verin1_coil_14`, `Bit1` → `verin1_verin1_coil_12`;
-   - Capteurs `Bit0` → `verin1_verin_min_state`, `Bit1` → `verin1_verin_max_state`;
+   - Capteurs `Bit0` → `tige_verin_min_state`, `Bit1` → `tige_verin_max_state`;
    - Position `[0]` and `[1]` (the WORD lines, not their bits) → two WORD
      variables of **your own** GVL.
 
@@ -162,7 +162,7 @@ Declare in the program (`VAR`) `conversion : U_REAL_WORDS;` and, in **your** GVL
 ```text
 conversion.w[0] := position_word_0;
 conversion.w[1] := position_word_1;
-GVL.verin1_verin_position := conversion.r;
+GVL.tige_verin_position := conversion.r;
 ```
 
 On the Windows SoftPLC (little-endian), `w[0]` is the low word. Values are in SI
@@ -305,5 +305,5 @@ the machine.
 - [Troubleshooting](/en/guide/troubleshooting)
 
 ::: warning Known limits
-Only CODESYS Control Win V3 x64 has been tried, with the French interface. Other versions, the English interface and WAGO targets are untested: menu names may differ. If a float value is wrong, try the other **Word order**. Forums report a limit of 10 channels per Modbus device in CODESYS: beyond it, spread the channels over several modules. How CODESYS reconnects after Pantin refuses a connection has not been tried. The behaviour of CODESYS depending on the network mode of a virtual machine (NAT or bridged) has not been measured.
+Only CODESYS Control Win V3 x64 has been tried, with the French interface. Other versions, the English interface and WAGO targets are untested: menu names may differ. If a float value is wrong, try the other **Word order**. Forums report a limit of 10 channels per Modbus device in CODESYS: beyond it, spread the channels over several modules. The `tige_verin_*` variable names of this example have not been tried on CODESYS yet: the run of 18 October 2026 used the former names `verin1_verin_*`, with the same addresses. How CODESYS reconnects after Pantin refuses a connection has not been tried. The behaviour of CODESYS depending on the network mode of a virtual machine (NAT or bridged) has not been measured.
 :::

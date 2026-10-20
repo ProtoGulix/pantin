@@ -24,6 +24,16 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- User guide: the tutorial gains the "Pour comparer" tip, the groups guide shows the
+  redundant-joints cleanup with a new capture (both the "To delete" and "Kept" lists),
+  the joint view screenshot has a corrected alt text, and all screenshots are
+  regenerated, in French and English.
+- Example `plc-cylinder` rebuilt with the ADR 0055 group layout, as in the user guide
+  tutorial: the rod and carriage form the group `Tige`, held by the slider `verin`.
+  The sensors and the position keep their Modbus addresses but are renamed
+  (`tige.verin-min.state`, `tige.verin-max.state`, `tige.verin.position`; GVL
+  `tige_verin_min_state`, `tige_verin_max_state`, `tige_verin_position`). The valve
+  tags are unchanged.
 - Viewer (ADR 0059 amendment): the central area has a top zone and an optional
   bottom zone, each with its own view selector (3D, Diagram, Joints, I/O), instead
   of the combined layouts; F4 moves the top zone to the next view, skipping the view

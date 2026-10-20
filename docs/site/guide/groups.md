@@ -67,7 +67,9 @@ Un Pantin fait avant les groupes contient souvent des liaisons fixes entre des c
    - **Conservées (N)** : les liaisons fixes gardées, avec la raison, par exemple « son parent bouge avec « nom » ». Cette liste n'apparaît que si le cœur en garde.
 4. Cliquez **Supprimer** (ou **Annuler**). Le message donne les liaisons supprimées et rappelle que **Ne pas enregistrer**, à la fermeture, annule l'opération. Une liaison modifiée ou supprimée entre l'aperçu et votre clic est laissée de côté et comptée comme ignorée dans le message.
 
-Le cœur ne supprime qu'une liaison fixe dont la suppression ne déplace rien : le parent et l'enfant sont dans le même assemblage, et aucune liaison mobile ne se trouve au-dessus du parent. Une liaison fixe entre deux assemblages n'est jamais proposée : elle tient le groupe enfant en place. Une liaison fixe sous une glissière ou un pivot est conservée.
+![Le panneau de gauche : la ligne qui propose de supprimer deux liaisons fixes redondantes, avec les listes À supprimer et Conservées](/screenshots/fr/redundant-joints-prompt.webp)
+
+Le cœur ne supprime qu'une liaison fixe dont la suppression ne déplace rien : le parent et l'enfant sont dans le même assemblage, et aucune liaison mobile ne se trouve au-dessus du parent. Une liaison fixe entre deux assemblages n'est jamais proposée : elle tient le groupe enfant en place. Une liaison fixe est conservée quand une liaison mobile, entre deux corps du même assemblage, se trouve au-dessus de son parent. Une liaison fixe dont le parent est le groupe lui-même reste supprimable, même si le groupe bouge.
 
 Le Pantin ne change pas d'aspect. Rien n'est écrit sur le disque avant l'enregistrement. Aucun tag n'est renommé : il n'y a pas de GVL à régénérer.
 

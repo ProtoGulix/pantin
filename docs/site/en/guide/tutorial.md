@@ -11,11 +11,9 @@ are explained in [the fundamentals](/en/guide/fundamentals) and [the model](/en/
 Read them first if these words are new to you.
 
 ::: tip To compare
-The `examples/plc-cylinder` folder contains a similar machine, organised
-differently: an inner fixed joint `ecrou`, the `verin` slider inside the
-`verin1` assembly, and `verin1.*` tags. A Pantin built with this tutorial has
-slightly different tags (see step 4). Copy the example into the Pantins folder
-of the core to open it and compare the machine, not the tag names.
+The `examples/plc-cylinder` folder holds the machine this tutorial builds, with
+the same names. Copy it into the Pantins folder of the core to open it and
+compare.
 :::
 
 ## What you need

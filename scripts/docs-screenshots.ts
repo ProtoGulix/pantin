@@ -17,6 +17,7 @@ import {
   captureNewDriveForm,
   captureTreeContextMenu,
 } from "./docs-screenshots/capture-editing.ts";
+import { captureRedundantJointsPrompt } from "./docs-screenshots/capture-redundant.ts";
 import {
   captureDiagram,
   captureForcedTag,
@@ -105,6 +106,7 @@ async function captureLanguage(
     await captureImportForm(session, REPOSITORY_ROOT);
     await captureTreeContextMenu(session);
     await captureGroupPrompt(session);
+    await captureRedundantJointsPrompt(session, REPOSITORY_ROOT);
     await captureJointInspector(session);
     await captureNewDriveForm(session);
     await captureNewActuatorForm(session);

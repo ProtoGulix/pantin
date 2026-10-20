@@ -36,7 +36,8 @@ export function assemblyRow(page: Page): Locator {
 }
 
 export function jointRow(page: Page): Locator {
-  return page.getByRole("treeitem", { name: JOINT_ROW });
+  // The joint appears under its parent and its child assembly and in its own list: any row selects it.
+  return page.getByRole("treeitem", { name: JOINT_ROW }).first();
 }
 
 export function diagramCoil(page: Page): Locator {

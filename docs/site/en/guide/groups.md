@@ -67,7 +67,9 @@ A Pantin made before groups often holds fixed joints between bodies of one assem
    - **Kept (N)**: the fixed joints kept, with the reason, for example `its parent moves with "name"`. This list appears only if the core keeps some.
 4. Click **Delete** (or **Cancel**). The message gives the joints deleted and reminds you that **Don't save**, when closing, undoes the operation. A joint changed or deleted between the preview and your click is left out and counted in the message as skipped.
 
-The core deletes a fixed joint only when deleting it moves nothing: the parent and the child are in the same assembly, and no moving joint sits above the parent. A fixed joint between two assemblies is never offered: it holds the child group in place. A fixed joint under a slider or a pivot is kept.
+![The left panel: the line offering to delete two redundant fixed joints, with the To delete and Kept lists](/screenshots/en/redundant-joints-prompt.webp)
+
+The core deletes a fixed joint only when deleting it moves nothing: the parent and the child are in the same assembly, and no moving joint sits above the parent. A fixed joint between two assemblies is never offered: it holds the child group in place. A fixed joint is kept when a moving joint, between two bodies of the same assembly, sits above its parent. A fixed joint whose parent is the group itself stays deletable, even if the group moves.
 
 The Pantin looks the same. Nothing is written to disk before saving. No tag is renamed: there is no GVL to regenerate.
 

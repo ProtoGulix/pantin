@@ -238,7 +238,7 @@ The diagram can be navigated entirely from the keyboard: the arrows move from no
 
 ## The Joints view
 
-![The Joints view of the plc-cylinder example: World on the left, three bodies, a fixed joint and the cylinder's slider, marked with the bolt of joints moved by an actuator](/screenshots/en/joint-view.webp)
+![The Joints view of the plc-cylinder example: World on the left, the Verin1 group (one body) attached to World, the Tige group (two bodies) and the cylinder's slider between them, marked with the bolt of joints moved by an actuator](/screenshots/en/joint-view.webp)
 
 The **Joints** view draws the machine's **kinematic tree**: what moves relative to what. It is not the tree on the left. The tree files bodies into assemblies and carries no motion; the Joints view only shows what is linked by joints. The two trees can differ, and that is the point: you see at a glance a body that does not follow the group you expected, or a body tied by twenty fixed joints. To understand groups, see [The model of a Pantin](/en/guide/model#concepts-body-assembly-group).
 

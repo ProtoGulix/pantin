@@ -3,7 +3,11 @@
 A Pantin to close the loop with a PLC over Modbus TCP (ADR 0045, ADR 0049):
 a double-acting cylinder (125 mm stroke) with its carriage, fed by a 5/2
 double solenoid valve with memory, and two limit switches. The assembly is
-`verin1`.
+`verin1` (the valve, the cylinder body). The rod and the carriage form the
+group `Tige` (ADR 0055), held to `verin1` by the slider `verin`: the slider
+and its two switches therefore carry the tag prefix `tige`. In `pantin.json`
+the slider's id is `tige`, given by the Group step of the tutorial; its name
+and tag key are `verin`, and the screens and tags only show those.
 
 ## Tags
 
@@ -11,9 +15,9 @@ double solenoid valve with memory, and two limit switches. The assembly is
 | --- | --- | --- |
 | `verin1.verin1.coil_14` | command | valve pilot 14: pressure on the cap, the cylinder extends |
 | `verin1.verin1.coil_12` | command | valve pilot 12: pressure on the rod, the cylinder retracts |
-| `verin1.verin-min.state` | feedback | inductive switch at the retracted end |
-| `verin1.verin-max.state` | feedback | cylinder switch at the extended end (125 mm) |
-| `verin1.verin.position` | feedback | position of the rod, in metres |
+| `tige.verin-min.state` | feedback | inductive switch at the retracted end |
+| `tige.verin-max.state` | feedback | cylinder switch at the extended end (125 mm) |
+| `tige.verin.position` | feedback | position of the rod, in metres |
 
 The valve has memory: set one pilot, and the spool stays there after the
 pilot is released. Extending takes about 2.5 s and retracting about 2.3 s.
@@ -27,9 +31,9 @@ pilot is released. Extending takes about 2.5 s and retracting about 2.3 s.
 | --- | --- | --- | --- |
 | `verin1.verin1.coil_14` | coil | 0 | `verin1_verin1_coil_14` |
 | `verin1.verin1.coil_12` | coil | 1 | `verin1_verin1_coil_12` |
-| `verin1.verin-min.state` | discrete input | 0 | `verin1_verin_min_state` |
-| `verin1.verin-max.state` | discrete input | 1 | `verin1_verin_max_state` |
-| `verin1.verin.position` | input register | 0 (REAL, 2 registers) | `verin1_verin_position` |
+| `tige.verin-min.state` | discrete input | 0 | `tige_verin_min_state` |
+| `tige.verin-max.state` | discrete input | 1 | `tige_verin_max_state` |
+| `tige.verin.position` | input register | 0 (REAL, 2 registers) | `tige_verin_position` |
 
 ## Run it
 

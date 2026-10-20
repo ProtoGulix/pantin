@@ -132,7 +132,7 @@ de menus sont ceux de l'interface française de CODESYS.
    **Application**, **GVL**, la variable (icône « mapper sur la variable
    existante »).
    - Commandes `Bit0` → `verin1_verin1_coil_14`, `Bit1` → `verin1_verin1_coil_12` ;
-   - Capteurs `Bit0` → `verin1_verin_min_state`, `Bit1` → `verin1_verin_max_state` ;
+   - Capteurs `Bit0` → `tige_verin_min_state`, `Bit1` → `tige_verin_max_state` ;
    - Position `[0]` et `[1]` (les lignes WORD, pas leurs bits) → deux variables
      WORD de **votre propre** GVL.
 
@@ -167,7 +167,7 @@ Déclarez dans le programme (`VAR`) `conversion : U_REAL_WORDS;` et, dans **votr
 ```text
 conversion.w[0] := position_word_0;
 conversion.w[1] := position_word_1;
-GVL.verin1_verin_position := conversion.r;
+GVL.tige_verin_position := conversion.r;
 ```
 
 Sur le SoftPLC Windows (little-endian), `w[0]` est le mot faible. Les valeurs
@@ -313,5 +313,5 @@ pas le pare-feu de la machine.
 - [Dépannage](/guide/troubleshooting)
 
 ::: warning Limites connues
-Seul CODESYS Control Win V3 x64 a été essayé, avec l'interface française. Les autres versions, l'interface en anglais et les cibles WAGO ne sont pas testées : les noms de menus peuvent différer. Si une valeur flottante est fausse, essayez l'autre **Ordre des mots**. Des forums signalent une limite de 10 canaux par appareil Modbus dans CODESYS : au-delà, répartissez les voies sur plusieurs modules. La reconnexion de CODESYS après une connexion refusée par Pantin n'a pas été essayée. Le comportement de CODESYS selon le mode réseau d'une machine virtuelle (NAT ou pont) n'a pas été mesuré.
+Seul CODESYS Control Win V3 x64 a été essayé, avec l'interface française. Les autres versions, l'interface en anglais et les cibles WAGO ne sont pas testées : les noms de menus peuvent différer. Si une valeur flottante est fausse, essayez l'autre **Ordre des mots**. Des forums signalent une limite de 10 canaux par appareil Modbus dans CODESYS : au-delà, répartissez les voies sur plusieurs modules. Les noms de variables `tige_verin_*` de cet exemple n'ont pas encore été essayés sur CODESYS : l'essai du 18 octobre 2026 utilisait les anciens noms `verin1_verin_*`, avec les mêmes adresses. La reconnexion de CODESYS après une connexion refusée par Pantin n'a pas été essayée. Le comportement de CODESYS selon le mode réseau d'une machine virtuelle (NAT ou pont) n'a pas été mesuré.
 :::

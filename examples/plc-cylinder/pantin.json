@@ -9,6 +9,15 @@
         "translation": [0, 0, 0],
         "rotation": [0, 0, 0, 1]
       }
+    },
+    {
+      "key": "tige",
+      "name": "Tige",
+      "placement": {
+        "translation": [0, 0, 0],
+        "rotation": [0, 0, 0, 1]
+      },
+      "parent": "verin1"
     }
   ],
   "bodies": [
@@ -37,7 +46,7 @@
     {
       "id": "id1s0400125e-0-2",
       "name": "ID1S0400125E_0_2",
-      "assembly": "verin1",
+      "assembly": "tige",
       "source": {
         "fileName": "ID1S0400125E_0.stp",
         "format": "step",
@@ -59,7 +68,7 @@
     {
       "id": "id1s040cf-16040-3",
       "name": "ID1S040CF-16040_3",
-      "assembly": "verin1",
+      "assembly": "tige",
       "source": {
         "fileName": "ID1S0400125E_0.stp",
         "format": "step",
@@ -81,33 +90,17 @@
   ],
   "joints": [
     {
-      "id": "ecrou",
-      "tagKey": "ecrou",
-      "type": "fixed",
-      "name": "ecrou",
-      "parent": {
-        "kind": "body",
-        "id": "id1s0400125e-0-2"
-      },
-      "child": {
-        "kind": "body",
-        "id": "id1s040cf-16040-3"
-      },
-      "origin": [0, 0, 0],
-      "axis": [0, 0, 1]
-    },
-    {
-      "id": "verin",
+      "id": "tige",
       "tagKey": "verin",
       "type": "prismatic",
       "name": "verin",
       "parent": {
-        "kind": "body",
-        "id": "id1s0400125e-0-1"
+        "kind": "assembly",
+        "key": "verin1"
       },
       "child": {
-        "kind": "body",
-        "id": "id1s0400125e-0-2"
+        "kind": "assembly",
+        "key": "tige"
       },
       "origin": [0, 0, 0],
       "axis": [-1, 0, 0],
@@ -135,7 +128,7 @@
           "rod": "port_2"
         }
       },
-      "joints": ["verin"],
+      "joints": ["tige"],
       "type": "double_acting_cylinder",
       "extendSpeed": 0.05,
       "retractSpeed": 0.055
@@ -146,8 +139,8 @@
       "id": "verin-min",
       "tagKey": "verin-min",
       "name": "verin min",
-      "assembly": "verin1",
-      "joint": "verin",
+      "assembly": "tige",
+      "joint": "tige",
       "type": "inductive_switch",
       "facePosition": 0,
       "nominalDistance": 0.005,
@@ -159,8 +152,8 @@
       "id": "verin-max",
       "tagKey": "verin-max",
       "name": "verin max",
-      "assembly": "verin1",
-      "joint": "verin",
+      "assembly": "tige",
+      "joint": "tige",
       "type": "cylinder_switch",
       "position": 0.125,
       "windowWidth": 0.002,

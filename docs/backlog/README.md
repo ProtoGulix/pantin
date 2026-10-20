@@ -61,7 +61,6 @@ phase.
 - [Retry deferred mesh deletions](retry-deferred-mesh-deletions.md) — save error contract
 - [One shared bit threshold](shared-bit-threshold.md) — five copies of 0.5
 - [Remove `pantin io migrate`](remove-io-migrate.md) — due now
-- [Rebuild plc-cylinder with the group layout](plc-cylinder-group-layout.md) — match the tutorial
 - [Environment lighting](environment-lighting.md) — on hold
 
 ## Security

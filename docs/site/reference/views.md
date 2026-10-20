@@ -238,7 +238,7 @@ Le schéma se parcourt entièrement au clavier : les flèches passent d'un noeud
 
 ## La vue Liaisons
 
-![La vue Liaisons de l'exemple plc-cylinder : le Monde à gauche, trois corps, une liaison fixe et la glissière du vérin, marquée de l'éclair des liaisons déplacées par un actionneur](/screenshots/fr/joint-view.webp)
+![La vue Liaisons de l'exemple plc-cylinder : le Monde à gauche, le groupe Verin1 (un corps) relié au Monde, le groupe Tige (deux corps) et la glissière du vérin entre les deux, marquée de l'éclair des liaisons déplacées par un actionneur](/screenshots/fr/joint-view.webp)
 
 La vue **Liaisons** dessine l'**arbre cinématique** de la machine : qui bouge par rapport à qui. Ce n'est pas l'arborescence de gauche. L'arborescence range les corps dans des assemblages et ne porte aucun mouvement ; la vue Liaisons ne montre que ce qui est relié par des liaisons. Les deux arbres peuvent différer, et c'est le but : vous voyez d'un coup d'œil un corps qui ne suit pas le groupe que vous attendiez, ou un corps relié par vingt liaisons fixes. Pour comprendre les groupes, voir [Le modèle d'un Pantin](/guide/model#les-concepts-corps-assemblage-groupe).
 
