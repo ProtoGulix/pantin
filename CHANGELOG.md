@@ -8,6 +8,13 @@ All notable changes to Pantin. The format follows
 
 ### Fixed
 
+- Core (ADR 0043 point 3): a belt carried by a moving frame (a shuttle, a transfer
+  carriage) now adds the frame's velocity to its surface velocity, so a box rides along
+  instead of the belt sliding under it. The velocity comes from two consecutive poses of
+  the fixed step, rotation included (ADR 0043, amendment 2026-10-20).
+- Docs screenshots: each language runs on its own throwaway core and a fresh copy of the
+  example. The English pictures showed 2 warnings in the status bar that the French run had
+  raised in the shared console (the bridge's refused request).
 - Core (STEP import): a failed import now deletes a mesh whose write stopped half way
   (never a file or face file that already existed), tries every deletion even if one fails, logs the
   failures and rethrows the original error. The converter process runner no longer hangs

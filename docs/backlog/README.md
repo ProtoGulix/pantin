@@ -15,7 +15,6 @@ phase.
 - [Split a GLB body by nodes](glb-split-by-nodes.md) — several bodies from one file (on hold: needs a real GLB)
 - [Multi-selection in the 3D view](multi-selection-in-3d.md) — for grouping, without breaking click-to-go-down
 - [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells
-- [Interface polish](ui-polish-from-docs.md) — small defects found while documenting
 
 ## Phase 9 — community and instances
 
@@ -30,7 +29,7 @@ phase.
 
 - [Conveyors beyond the straight belt](conveyor-shapes-beyond-straight-belts.md) — curves, rollers, belt transfers
 - [Colliders from machine meshes](mesh-colliders.md) — pushers and grippers touching products
-- [Guides and belts on moving frames](objects-on-moving-frames.md) — add the frame velocity
+- [Guides on moving frames](objects-on-moving-frames.md) — colliders carried by a moving frame, not verified
 - [Friction per material](per-material-friction.md) — table by material pair
 - [Pose stream load from resting products](product-stream-load.md) — sleeping bodies or coarser rounding
 - [Inductive presence sensor](inductive-presence-sensor.md) — sees metals only

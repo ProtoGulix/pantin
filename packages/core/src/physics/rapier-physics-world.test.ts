@@ -1,6 +1,10 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { PhysicsWorld, ProductPose, SpawnRequest } from "../domain/physics-world.ts";
-import { IDENTITY_TRANSFORM, type RigidTransform } from "../domain/rigid-transform.ts";
+import {
+  axisAngleRotation,
+  IDENTITY_TRANSFORM,
+  type RigidTransform,
+} from "../domain/rigid-transform.ts";
 import {
   createPhysicsWorldFactory,
   createRapierPhysicsWorld,
@@ -204,6 +208,32 @@ describe("Rapier ray casts", () => {
     expect(world.castRays([ray])[0]).not.toBeNull();
     world.remove(["p1"]);
     expect(world.castRays([ray])).toEqual([null]);
+    world.dispose();
+  });
+});
+
+describe("Rapier belt on a turning frame", () => {
+  it("swings a box round with the belt it rests on", () => {
+    const world = createRapierPhysicsWorld(rapier, [BELT], []);
+    const stand = (angle: number) => ({
+      belts: [
+        {
+          id: "b1",
+          pose: { ...IDENTITY_TRANSFORM, rotation: axisAngleRotation([0, 0, 1], angle) },
+          surfaceVelocity: [0, 0, 0] as const,
+        },
+      ],
+      guides: [],
+    });
+    world.step({ ...stand(0), spawns: [CARTON("p1", 0.8)] });
+    for (let step = 1; step <= 120; step += 1) {
+      world.step({ ...stand((0.4 * step) / 120), spawns: [] });
+    }
+    const [box] = world.step({ ...stand(0.4), spawns: [] }).products;
+    const [x = Number.NaN, y = Number.NaN] = box?.pose.translation ?? [];
+    // Sanity bounds, not exact: the contact solver lets the box slip a little.
+    expect(Math.atan2(y, x)).toBeGreaterThan(0.32);
+    expect(Math.atan2(y, x)).toBeLessThan(0.48);
     world.dispose();
   });
 });

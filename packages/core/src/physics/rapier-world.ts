@@ -18,17 +18,13 @@ import type {
   StepOutput,
 } from "../domain/physics-world.ts";
 import { apply, normalize, type RigidTransform, type Vector3 } from "../domain/rigid-transform.ts";
+import { BELT_THICKNESS, beltBodyPose, beltBodyVelocities } from "./belt-motion.ts";
 
 export type RapierModule = typeof RAPIER;
 type World = InstanceType<RapierModule["World"]>;
 
 // Z up, in metres per second squared.
 export const GRAVITY = { x: 0, y: 0, z: -9.81 } as const;
-
-// Thickness of the belt cuboid under its surface, in metres. A product falling
-// at 5 m/s moves 4 cm in a 1/120 s step, so 5 cm cannot be crossed in one step,
-// while the cuboid stays shallow enough not to touch what lies under the belt.
-const BELT_THICKNESS = 0.05;
 
 // One friction coefficient on every collider (ADR 0043 point 9, spike 0002).
 const FRICTION = 0.5;
@@ -93,11 +89,11 @@ type WorldState = {
 
 function addBelt(rapier: RapierModule, world: World, belt: BeltShape): Fixture {
   // The top face is the belt rectangle: the cuboid hangs under the frame origin.
-  const centre = apply(belt.pose, [0, 0, -BELT_THICKNESS / 2]);
+  const centre = beltBodyPose(belt.pose);
   const body = world.createRigidBody(
     rapier.RigidBodyDesc.kinematicVelocityBased()
-      .setTranslation(...centre)
-      .setRotation(rotation(belt.pose.rotation)),
+      .setTranslation(...centre.translation)
+      .setRotation(rotation(centre.rotation)),
   );
   world.createCollider(
     rapier.ColliderDesc.cuboid(belt.length / 2, belt.width / 2, BELT_THICKNESS / 2)
@@ -163,21 +159,30 @@ function fixtureStates<T extends { id: string }>(
 }
 
 // Method A of spike 0002: the surface moves at its speed during the step, then
-// the belt goes back to the frame's pose, so it never leaves its place.
+// the belt goes back to the frame's pose, so it never leaves its place. The
+// belt starts the step where the last step left it and travels to its new frame
+// pose at the frame's own velocity added to the surface velocity, so a belt
+// carried by a shuttle drags the box it holds instead of sliding under it
+// (ADR 0043 point 3). The angular velocity makes the surface turn with its
+// frame. A joint that jumps between two steps gives one step of huge velocity.
 function placeBelts(state: WorldState, belts: readonly BeltState[]): void {
   for (const [fixture, belt] of fixtureStates(state.belts, belts, "belt")) {
     const body = state.world.getRigidBody(fixture.handle);
-    body.setTranslation(vector(apply(belt.pose, [0, 0, -BELT_THICKNESS / 2])), false);
-    body.setRotation(rotation(belt.pose.rotation), false);
-    body.setLinvel(vector(belt.surfaceVelocity), true);
+    const { x, y, z } = body.translation();
+    const q = body.rotation();
+    const previous: RigidTransform = { translation: [x, y, z], rotation: [q.x, q.y, q.z, q.w] };
+    const { linear, angular } = beltBodyVelocities(previous, belt);
+    body.setLinvel(vector(linear), true);
+    body.setAngvel(vector(angular), true);
   }
 }
 
 function putBeltsBack(state: WorldState, belts: readonly BeltState[]): void {
   for (const [fixture, belt] of fixtureStates(state.belts, belts, "belt")) {
     const body = state.world.getRigidBody(fixture.handle);
-    body.setTranslation(vector(apply(belt.pose, [0, 0, -BELT_THICKNESS / 2])), false);
-    body.setRotation(rotation(belt.pose.rotation), false);
+    const pose = beltBodyPose(belt.pose);
+    body.setTranslation(vector(pose.translation), false);
+    body.setRotation(rotation(pose.rotation), false);
   }
 }
 

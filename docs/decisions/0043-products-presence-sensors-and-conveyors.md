@@ -336,3 +336,32 @@ Facts checked in the repository on 2026-10-12:
   - The behaviour of guides on moving bodies.
 - Next ADR: loads fed back to the drive (a belt stalled by queued boxes)
   and mesh colliders.
+
+## Amendment (2026-10-20): belts on moving frames
+
+Point 3 gave a belt its surface velocity only, and the belt was put at its
+frame's pose before each step. A belt carried by a moving frame (a shuttle, a
+transfer carriage, a turntable) therefore slid under its box instead of
+carrying it. The rule is now:
+
+- The belt body keeps the pose the last step left it at and is not teleported
+  before the step. Its velocity is the surface velocity plus the frame's own
+  linear velocity, and its angular velocity is the frame's, so the surface
+  turns with the frame.
+- Both come from two consecutive poses of the fixed step (ADR 0005): the
+  displacement and the relative rotation between the pose the body holds and
+  the frame pose of this step, divided by the step. No clock is read. The
+  target pose is rounded to single precision like the engine's own, so a belt
+  that does not move gets exactly zero.
+- After the step the belt is snapped to the target pose (`putBeltsBack`), as
+  before, so it never drifts.
+- Limits. A joint position written directly (not through the step) makes the
+  frame jump, which gives one step of very large velocity: products on that
+  belt can be thrown during that step. The same happens when the physics world
+  is rebuilt after an edit of a belt or guide during a run: it is built at the
+  reference poses while the joints stay where they are
+  (`service/physics-runtime.ts`). Nothing guards against either yet (backlog
+  note objects-on-moving-frames). Guides on moving frames stay NOT VERIFIED.
+
+Alternative set aside: keep the teleport and the surface velocity alone. It is
+simpler, but the products slip off a moving shuttle.

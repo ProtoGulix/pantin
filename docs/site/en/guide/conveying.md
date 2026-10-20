@@ -14,6 +14,8 @@ Conveying objects are created from the **Conveying** family of the tree (**New b
 
 The product is never saved: it only exists while the core is running. The **Create a product** button of the emitter writes 1 then 0 on its `spawn` tag.
 
+A belt carried by a moving group (a shuttle on a slider, a turntable) adds the velocity of that group to its surface velocity, so the products lying on it ride along. A joint position written directly jumps at once, which gives a very large velocity during one step: the products lying on that belt can be thrown during that step.
+
 In the 3D view the volumes are neutral greys that follow the theme. An emitter is an outlined box with a **+** sign, an absorber an outlined box with a **−** sign (the signs always face you and keep a readable size), a guide a nearly solid steel-grey box. The greys differ in lightness only, so the signs and the shapes are what tell the three apart.
 
 The chain of a belt is: a drive (for example a **Contactor**) feeds an actuator (for example an **AC motor**), which moves the joint of the drum, which the belt names.

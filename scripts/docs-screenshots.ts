@@ -1,6 +1,6 @@
 // Regenerates the screenshots of the user guide (ADR 0051), in French and English:
 //   pnpm --filter @pantin/viewer build && pnpm docs:screenshots
-// It starts a throwaway core on a free localhost port with a copy of examples/plc-cylinder, drives
+// It starts a throwaway core per language on a free localhost port with a copy of examples/plc-cylinder, drives
 // the viewer in headless Chromium, and writes WebP files to docs/site/public/screenshots/<lang>/.
 // Not part of `pnpm check`: it needs a local Chromium (PANTIN_CHROMIUM, else the Playwright cache).
 import { cp, mkdtemp, rm, stat } from "node:fs/promises";
@@ -28,7 +28,7 @@ import {
   captureTransportBar,
   captureViewCube,
 } from "./docs-screenshots/capture-views.ts";
-import { type RunningCore, startCore } from "./docs-screenshots/core-process.ts";
+import { startCore } from "./docs-screenshots/core-process.ts";
 import { type Language, loadLabels } from "./docs-screenshots/labels.ts";
 import { goToWelcome, openExample } from "./docs-screenshots/pantin-page.ts";
 import { type Session, saveShot } from "./docs-screenshots/session.ts";
@@ -120,10 +120,12 @@ async function captureLanguage(
   }
 }
 
+// A core per language, on a fresh copy of the example. The core keeps an opened Pantin and its
+// console between two page loads: the warnings the French run raises (the bridge's refused
+// request, its stop) would otherwise count in the status bar of the English pictures.
 async function captureAllLanguages(
   browser: Browser,
   encoderPage: Page,
-  baseUrl: string,
   outputRoot: string,
   pantinsDirectory: string,
 ): Promise<void> {
@@ -131,8 +133,18 @@ async function captureAllLanguages(
     // The bridge log outlives a run: start each language with an empty one, so the journal
     // picture shows that run only.
     await rm(join(pantinsDirectory, ".logs"), { recursive: true, force: true });
-    const names = await captureLanguage(browser, encoderPage, baseUrl, outputRoot, entry);
-    process.stdout.write(`${entry.language}: ${names.length} screenshots (${names.join(", ")})\n`);
+    const exampleCopy = join(pantinsDirectory, "plc-cylinder");
+    await rm(exampleCopy, { recursive: true, force: true });
+    await cp(join(REPOSITORY_ROOT, "examples/plc-cylinder"), exampleCopy, { recursive: true });
+    const core = await startCore({ repositoryRoot: REPOSITORY_ROOT, pantinsDirectory });
+    try {
+      const names = await captureLanguage(browser, encoderPage, core.baseUrl, outputRoot, entry);
+      process.stdout.write(
+        `${entry.language}: ${names.length} screenshots (${names.join(", ")})\n`,
+      );
+    } finally {
+      await core.stop();
+    }
   }
 }
 
@@ -157,13 +169,9 @@ async function main(): Promise<void> {
     "Build the viewer first: pnpm --filter @pantin/viewer build.",
   );
   const pantinsDirectory = await mkdtemp(join(tmpdir(), "pantin-screenshots-"));
-  let core: RunningCore | undefined;
   let browser: Browser | undefined;
   let encoderBrowser: Browser | undefined;
   try {
-    const exampleCopy = join(pantinsDirectory, "plc-cylinder");
-    await cp(join(REPOSITORY_ROOT, "examples/plc-cylinder"), exampleCopy, { recursive: true });
-    core = await startCore({ repositoryRoot: REPOSITORY_ROOT, pantinsDirectory });
     // WebGL has no GPU in headless mode: software rendering through SwiftShader.
     browser = await launchChromium(["--use-angle=swiftshader", "--enable-unsafe-swiftshader"]);
     // The WebP encoder is a separate browser: next to the 3D view it would wait for the busy
@@ -173,14 +181,13 @@ async function main(): Promise<void> {
     // Pictures go to a temporary folder first: a failed run leaves the published ones untouched.
     const freshOutput = join(pantinsDirectory, "screenshots");
     await Promise.race([
-      captureAllLanguages(browser, encoderPage, core.baseUrl, freshOutput, pantinsDirectory),
+      captureAllLanguages(browser, encoderPage, freshOutput, pantinsDirectory),
       interruption(),
     ]);
     await replaceDirectory(freshOutput, OUTPUT_ROOT);
   } finally {
     await browser?.close();
     await encoderBrowser?.close();
-    await core?.stop();
     await rm(pantinsDirectory, { recursive: true, force: true });
   }
 }
