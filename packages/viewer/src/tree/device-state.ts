@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import { isBitOn } from "../bit-tag.ts";
 import type { MessageKey } from "../i18n/translate.ts";
 import { documentStateTags } from "./device-families.ts";
 
@@ -11,13 +12,13 @@ export type TagValues = ReadonlyMap<string, number>;
 
 export const NO_TAG_VALUES: TagValues = new Map();
 
-/** On from 0.5, like the 3D beams and the diagram; null while the tag is not polled yet. */
+/** On as isBitOn reads it, like the 3D beams and the diagram; null while the tag is not polled yet. */
 export function stateMarkOf(stateTag: string | null, values: TagValues): StateMark | null {
   const value = stateTag === null ? undefined : values.get(stateTag);
   if (value === undefined) {
     return null;
   }
-  return value >= 0.5 ? "on" : "off";
+  return isBitOn(value) ? "on" : "off";
 }
 
 export const STATE_MARK_LABELS: Readonly<Record<StateMark, MessageKey>> = {

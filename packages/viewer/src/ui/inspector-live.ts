@@ -1,4 +1,5 @@
 import type { DriveRuntime } from "@pantin/protocol";
+import { isBitOn } from "../bit-tag.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { liveText } from "../inspector/live-text.ts";
 import { type DiagnosticLine, nextDiagnosticUpdate } from "../panel/drive-diagnostics.ts";
@@ -49,7 +50,7 @@ function showText(
 ) {
   target.textContent = text;
   if (target instanceof HTMLButtonElement && source.kind === "tag") {
-    target.setAttribute("aria-pressed", String((tags.get(source.tag) ?? 0) >= 0.5));
+    target.setAttribute("aria-pressed", String(isBitOn(tags.get(source.tag) ?? 0)));
   }
 }
 

@@ -1,4 +1,5 @@
 import type { DriveRuntime, PantinDocument } from "@pantin/protocol";
+import { isBitOn } from "../bit-tag.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { type DiagnosticLine, diagnosticLines } from "../panel/drive-diagnostics.ts";
 import { driveNode } from "./diagram-chains.ts";
@@ -33,15 +34,12 @@ export const NO_LIVE_STATE: LiveState = {
 
 export const socketKey = (nodeId: string, socketId: string) => `${nodeId}|${socketId}`;
 
-// A bit is 1 in the process image; half is the threshold the inspector uses too.
-const BIT_THRESHOLD = 0.5;
-
 function litSockets(diagram: ChainDiagram, tagValues: ReadonlyMap<string, number>): Set<string> {
   const lit = new Set<string>();
   for (const node of diagram.nodes) {
     for (const socket of node.sockets) {
       const value = socket.tagName === undefined ? undefined : tagValues.get(socket.tagName);
-      if (value !== undefined && value >= BIT_THRESHOLD) {
+      if (value !== undefined && isBitOn(value)) {
         lit.add(socketKey(node.id, socket.id));
       }
     }

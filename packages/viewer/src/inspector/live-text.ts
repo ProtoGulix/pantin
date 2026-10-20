@@ -1,4 +1,5 @@
 import type { DriveRuntime } from "@pantin/protocol";
+import { isBitOn } from "../bit-tag.ts";
 import type { Translate } from "../i18n/translate.ts";
 import { diagnosticLines } from "../panel/drive-diagnostics.ts";
 import type { LiveSource } from "../properties/property-rows.ts";
@@ -7,10 +8,8 @@ import { coordinateToDisplay, formatDisplayNumber } from "../units.ts";
 // The text a live cell shows (ADR 0030), from the latest tag read. Pure, so
 // that every rule is tested without a page; the page only writes the result.
 
-const LIT = 0.5;
-
 function isLit(value: number | undefined): boolean {
-  return value !== undefined && value >= LIT;
+  return value !== undefined && isBitOn(value);
 }
 
 /** A value in display units (mm, degrees), or as it arrives when it has none. */

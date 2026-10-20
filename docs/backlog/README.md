@@ -56,10 +56,8 @@ phase.
 ## Debt and tooling
 
 - [Cost of adding a primitive kind](primitive-kind-cost.md) — registry per kind before rollers
-- [dependency-cruiser dist exclude](dependency-cruiser-dist-exclude.md) — five hidden violations
 - [STEP converter robustness](converter-robustness.md) — rollback, process group, size caps
 - [Retry deferred mesh deletions](retry-deferred-mesh-deletions.md) — save error contract
-- [One shared bit threshold](shared-bit-threshold.md) — five copies of 0.5
 - [Environment lighting](environment-lighting.md) — on hold
 
 ## Security

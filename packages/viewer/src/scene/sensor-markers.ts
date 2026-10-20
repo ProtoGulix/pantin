@@ -7,6 +7,7 @@ import { CreateTube } from "@babylonjs/core/Meshes/Builders/tubeBuilder.js";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 import type { Scene } from "@babylonjs/core/scene.js";
+import { isBitOn } from "../bit-tag.ts";
 import { coreDisplacementToBabylon, type QuaternionTuple, type Vector3Tuple } from "../frames.ts";
 import type { SensorMarker } from "../sensors/sensor-markers.ts";
 import { type SignalColours, signalColourFor, signalLookFor } from "../theme/signal-look.ts";
@@ -86,7 +87,7 @@ function signalMaterials(scene: Scene, colours: SignalColours): SignalMaterials 
 
 // A marker without a bit is always lit; the same rule as the tree's disc.
 function isMarkerOn(marker: SensorMarker, values: ReadonlyMap<string, number>): boolean {
-  return marker.stateTag === null || (values.get(marker.stateTag) ?? 0) >= 0.5;
+  return marker.stateTag === null || isBitOn(values.get(marker.stateTag) ?? 0);
 }
 
 function placed(node: TransformNode, start: Vector3Tuple, rotation: QuaternionTuple) {

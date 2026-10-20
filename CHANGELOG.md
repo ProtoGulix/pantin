@@ -27,6 +27,10 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Tooling: the viewer reads a bit tag as on through one `isBitOn` instead of seven
+  copies of the 0.5 threshold; dependency-cruiser now sees npm packages served from
+  their own `dist/`, lets test helpers use vitest and keeps shipped code from
+  importing them.
 - User guide: the tutorial gains the "Pour comparer" tip, the groups guide shows the
   redundant-joints cleanup with a new capture (both the "To delete" and "Kept" lists),
   the joint view screenshot has a corrected alt text, and all screenshots are

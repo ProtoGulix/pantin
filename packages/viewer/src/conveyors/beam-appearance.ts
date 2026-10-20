@@ -1,3 +1,4 @@
+import { isBitOn } from "../bit-tag.ts";
 import {
   type SignalColours,
   type SignalLook,
@@ -15,7 +16,7 @@ export interface BeamLook extends SignalLook {
 
 /** A missing tag (not read yet) counts as off, like the sensor markers. */
 export function isBeamOn(stateTag: string | null, values: ReadonlyMap<string, number>): boolean {
-  return stateTag !== null && (values.get(stateTag) ?? 0) >= 0.5;
+  return stateTag !== null && isBitOn(values.get(stateTag) ?? 0);
 }
 
 export function beamLookFor(on: boolean, colours: SignalColours): BeamLook {

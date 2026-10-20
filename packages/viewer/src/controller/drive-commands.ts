@@ -1,3 +1,4 @@
+import { isBitOn } from "../bit-tag.ts";
 import { showsDiagram } from "../central-layout.ts";
 import { forcedTagUnit } from "../drives/drive-tags.ts";
 import { parseNumber } from "../joints/joint-form.ts";
@@ -78,7 +79,7 @@ export async function releaseAllTags(store: ViewerStore): Promise<void> {
 
 /** A bit flips from what the core last reported. */
 export async function toggleBitTag(store: ViewerStore, name: string): Promise<void> {
-  await writeTag(store, name, (store.tagValues.get(name) ?? 0) >= 0.5 ? 0 : 1);
+  await writeTag(store, name, isBitOn(store.tagValues.get(name) ?? 0) ? 0 : 1);
 }
 
 /** Typed in mm or degrees (per second), sent in SI. */

@@ -163,8 +163,25 @@ module.exports = {
       name: "no-dev-dependency-in-sources",
       comment: "Shipped code must not rely on devDependencies.",
       severity: "error",
-      from: { path: "^packages/[^/]+/src/", pathNot: "\\.test\\.ts$" },
+      // Test code may use vitest: test files, test-support folders and *-test-helpers.ts
+      // files only exist to serve tests; shipped-code-imports-no-test-code keeps them
+      // out of shipped code.
+      from: {
+        path: "^packages/[^/]+/src/",
+        pathNot: "\\.test\\.ts$|/test-support/|-test-helpers\\.ts$",
+      },
       to: { dependencyTypes: ["npm-dev"] },
+    },
+    {
+      name: "shipped-code-imports-no-test-code",
+      comment:
+        "Test helpers may import vitest, so shipped code must never reach them (see no-dev-dependency-in-sources).",
+      severity: "error",
+      from: {
+        path: "^packages/[^/]+/src/",
+        pathNot: "\\.test\\.ts$|/test-support/|-test-helpers\\.ts$",
+      },
+      to: { path: "/test-support/|-test-helpers\\.ts$" },
     },
     {
       name: "no-unresolvable-import",
@@ -176,9 +193,9 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    // Build output is left out, except Rapier whose entry sits in its own dist/
-    // and must stay visible to the rapier-only-in-rapier-world rule.
-    exclude: { path: "^(?!.*@dimforge).*(^|/)dist/" },
+    // Only the packages' own build output is left out: an npm dependency served from its
+    // dist/ (vitest, Rapier) must stay visible to the rules, such as rapier-only-in-rapier-world.
+    exclude: { path: "^packages/[^/]+/dist/" },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.base.json" },
     combinedDependencies: true,
