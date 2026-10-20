@@ -101,6 +101,29 @@ function tagPrefixOf(kind: ConveyorKind, id: string, context: InspectorContext):
   return owner === undefined ? null : `${owner.assembly}.${owner.tagKey}`;
 }
 
+// Like a joint's tag key row in the grid: a text field whose edit renames the
+// tags, answered by the list of renamed tags (ADR 0019).
+function tagKeyRows(
+  kind: ConveyorKind,
+  id: string,
+  prefix: string | null,
+  context: InspectorContext,
+): PropertyRow[] {
+  const { pantin, t } = context;
+  if (prefix === null || (kind !== "emitter" && kind !== "presenceSensor")) {
+    return [];
+  }
+  const owner = findConveyor(pantin.document, kind, id);
+  if (owner === undefined) {
+    return [];
+  }
+  const target = { kind: "conveyorTagKey", pantinId: pantin.id, owner: { kind, id } } as const;
+  return [
+    row("tagKey", t("properties.tagKey"), owner.tagKey, { input: "text", target }),
+    row("tagPrefix", t("inspector.tagPrefix"), prefix),
+  ];
+}
+
 function groupsOf(kind: ConveyorKind, id: string, context: InspectorContext): GroupDraft[] {
   const { pantin, language, t } = context;
   const { document } = pantin;
@@ -119,7 +142,7 @@ function groupsOf(kind: ConveyorKind, id: string, context: InspectorContext): Gr
       rows: [
         deviceNameRow(device, form.name, t),
         row("type", t("drives.form.type"), typeLabel(kind, id, context)),
-        ...(prefix === null ? [] : [row("tagPrefix", t("inspector.tagPrefix"), prefix)]),
+        ...tagKeyRows(kind, id, prefix, context),
       ],
     },
     {

@@ -11,6 +11,8 @@ import {
   type PantinId,
   type PantinResponse,
   PresenceSensorIdSchema,
+  type RenamedTagsResponse,
+  RenameTagKeyRequestSchema,
 } from "@pantin/protocol";
 import { type Parser, parseWithSchema } from "../domain/validation.ts";
 import type { PantinService } from "../service/pantin-service.ts";
@@ -36,9 +38,46 @@ type KindRoutes<Request, Item> = {
     request: Request,
   ) => Promise<Item>;
   remove: (service: PantinService, pantinId: PantinId, id: string) => Promise<PantinResponse>;
+  // Only emitters and presence sensors own a tag key to rename.
+  renameTagKey?: (
+    service: PantinService,
+    pantinId: PantinId,
+    id: string,
+    tagKey: string,
+  ) => Promise<RenamedTagsResponse>;
   // The response body around the item: `{ belt }`.
   wrap: (item: Item) => object;
 };
+
+function tagKeyRoutesOf<Request, Item>(
+  kind: KindRoutes<Request, Item>,
+  member: string[],
+  idOf: (parameters: Record<string, string>) => string,
+): Route[] {
+  const { renameTagKey } = kind;
+  if (renameTagKey === undefined) {
+    return [];
+  }
+  return [
+    {
+      method: "PUT",
+      pattern: [...member, "tag-key"],
+      handle: async (context) => {
+        const { tagKey } = parseWithSchema(
+          RenameTagKeyRequestSchema,
+          await readJsonBody(context.request),
+          "The new tag key",
+        );
+        const id = idOf(context.parameters);
+        sendJson(
+          context.response,
+          200,
+          await renameTagKey(context.service, pantinIdOf(context), id, tagKey),
+        );
+      },
+    },
+  ];
+}
 
 function routesOf<Request, Item>(kind: KindRoutes<Request, Item>): Route[] {
   const collection = ["pantins", ":pantinId", kind.segment];
@@ -47,7 +86,9 @@ function routesOf<Request, Item>(kind: KindRoutes<Request, Item>): Route[] {
     parseWithSchema(kind.idSchema, parameters.itemId, `The ${kind.what} id in the URL`);
   const bodyOf = async (request: Parameters<typeof readJsonBody>[0]) =>
     parseWithSchema(kind.requestSchema, await readJsonBody(request), `The ${kind.what}`);
+  const tagKeyRoutes = tagKeyRoutesOf(kind, member, idOf);
   return [
+    ...tagKeyRoutes,
     {
       method: "POST",
       pattern: collection,
@@ -121,6 +162,8 @@ export const CONVEYOR_ROUTES: readonly Route[] = [
     create: (service, pantinId, request) => service.createEmitter(pantinId, request),
     update: (service, pantinId, id, request) => service.updateEmitter(pantinId, id, request),
     remove: (service, pantinId, id) => service.deleteEmitter(pantinId, id),
+    renameTagKey: (service, pantinId, id, tagKey) =>
+      service.renameEmitterTagKey(pantinId, id, tagKey),
     wrap: (emitter) => ({ emitter }),
   }),
   ...routesOf({
@@ -141,6 +184,8 @@ export const CONVEYOR_ROUTES: readonly Route[] = [
     create: (service, pantinId, request) => service.createPresenceSensor(pantinId, request),
     update: (service, pantinId, id, request) => service.updatePresenceSensor(pantinId, id, request),
     remove: (service, pantinId, id) => service.deletePresenceSensor(pantinId, id),
+    renameTagKey: (service, pantinId, id, tagKey) =>
+      service.renamePresenceSensorTagKey(pantinId, id, tagKey),
     wrap: (presenceSensor) => ({ presenceSensor }),
   }),
   RESET_ROUTE,

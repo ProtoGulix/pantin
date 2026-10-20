@@ -317,7 +317,7 @@ Subject **Belt · name**, **Guide · name**, **Emitter · name**, **Absorber · 
 
 | Section | Rows |
 | --- | --- |
-| **General** | **Name** (editable), **Type**, **Tag prefix** (emitter and presence sensor only) |
+| **General** | **Name** (editable), **Type**, **Tag key** (editable, emitter and presence sensor only: renaming it renames the tags, as for a joint), **Tag prefix** (`assembly.key`, read-only) |
 | **Frame** | **Assembly**, **Followed body** (or **none (the assembly's frame)**), read-only |
 | **Placement** | **X**, **Y**, **Z** (mm), **RX**, **RY**, **RZ** (degrees), editable |
 | **Parameters** | Depending on the object (see the form below) |

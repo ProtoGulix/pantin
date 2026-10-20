@@ -16,6 +16,7 @@ import {
   EMITTERS,
   GUIDES,
   PRESENCE_SENSORS,
+  renameConveyorTagKey,
   replaceConveyorItem,
 } from "./conveyor-edits.ts";
 
@@ -137,5 +138,35 @@ describe("deleteConveyorItem", () => {
     expect(() => deleteConveyorItem(GUIDES, conveyorDocument(), "ghost")).toThrow(
       'This Pantin has no guide "ghost".',
     );
+  });
+});
+
+describe("renameConveyorTagKey", () => {
+  const withEmitter = () => addConveyorItem(EMITTERS, conveyorDocument(), emitterRequest).document;
+
+  it("changes only the tag key, not the id, and not the given document", () => {
+    const before = withEmitter();
+    const renamed = renameConveyorTagKey(EMITTERS, before, "source", "feeder");
+    expect(renamed.emitters[0]).toMatchObject({ id: "source", tagKey: "feeder" });
+    expect(before.emitters[0]?.tagKey).toBe("source");
+  });
+
+  it("accepts the key the item already has", () => {
+    const renamed = renameConveyorTagKey(EMITTERS, withEmitter(), "source", "source");
+    expect(renamed.emitters[0]?.tagKey).toBe("source");
+  });
+
+  it("refuses a key another owner of the assembly uses, offering a free one", () => {
+    // The drum joint owns "drum" in assembly "main".
+    expectConflict(
+      () => renameConveyorTagKey(EMITTERS, withEmitter(), "source", "drum"),
+      'Key "drum" is already used by joint "drum" in assembly "main". "drum-2" is free.',
+    );
+  });
+
+  it("is not found for an unknown id", () => {
+    expect(() =>
+      renameConveyorTagKey(PRESENCE_SENSORS, conveyorDocument(), "ghost", "eye"),
+    ).toThrow('This Pantin has no presence sensor "ghost".');
   });
 });

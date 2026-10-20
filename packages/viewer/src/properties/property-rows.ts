@@ -35,6 +35,8 @@ export type PropertyGroupId =
   | "conveyorFrame"
   | "conveyorPlacement";
 
+type TagKeyOwner = { kind: "emitter" | "presenceSensor"; id: string };
+
 export type EditTarget =
   // A Pantin or a body, named by its tree node.
   | { kind: "rename"; nodeId: string }
@@ -43,6 +45,8 @@ export type EditTarget =
   // The keys that name tags, and a body's assembly: each may rename tags (ADR 0019).
   | { kind: "assemblyKey"; pantinId: string; key: string }
   | { kind: "tagKey"; pantinId: string; jointId: string }
+  // An emitter or a presence sensor, which own a tag key like a joint (ADR 0043).
+  | { kind: "conveyorTagKey"; pantinId: string; owner: TagKeyOwner }
   // Choosing another type opens the joint form with it (ADR 0018).
   | { kind: "jointType"; pantinId: string; jointId: string }
   | { kind: "bodyAssembly"; pantinId: string; bodyId: string }

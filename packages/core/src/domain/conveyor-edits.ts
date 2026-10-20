@@ -14,7 +14,7 @@ import {
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { makeUniqueId, slugifyDisplayName } from "./ids.ts";
-import { type TagKeyOwnerException, tagKeyOwners } from "./tag-keys.ts";
+import { keyTaken, type TagKeyOwnerException, tagKeyOwners } from "./tag-keys.ts";
 import { parseWithSchema } from "./validation.ts";
 
 // Adding, replacing and deleting belts, guides, emitters, absorbers and
@@ -37,6 +37,7 @@ export type KindDescription<Item extends { id: string }, Request extends { assem
   // Only emitters and presence sensors own a tag key.
   tags?: {
     keyOf: (item: Item) => string;
+    withKey: (item: Item, tagKey: string) => Item;
     except: (id: string) => TagKeyOwnerException;
   };
 };
@@ -81,6 +82,7 @@ export const EMITTERS: KindDescription<Emitter, CreateEmitterRequest> = {
   make: (id, request, tagKey) => ({ id, tagKey: ownedKey(tagKey), ...request }),
   tags: {
     keyOf: (emitter) => emitter.tagKey,
+    withKey: (emitter, tagKey) => ({ ...emitter, tagKey }),
     except: (emitterId) => ({ emitterId }),
   },
 };
@@ -93,6 +95,7 @@ export const PRESENCE_SENSORS: KindDescription<PresenceSensor, CreatePresenceSen
   make: (id, request, tagKey) => ({ id, tagKey: ownedKey(tagKey), ...request }),
   tags: {
     keyOf: (sensor) => sensor.tagKey,
+    withKey: (sensor, tagKey) => ({ ...sensor, tagKey }),
     except: (presenceSensorId) => ({ presenceSensorId }),
   },
 };
@@ -177,5 +180,32 @@ export function deleteConveyorItem<
   return kind.withList(
     document,
     kind.list(document).filter((item) => item.id !== id),
+  );
+}
+
+/** The key was checked as a key by the request schema; here it must be free in the assembly. */
+export function renameConveyorTagKey<
+  Item extends { id: string; assembly: string },
+  Request extends { assembly: string },
+>(
+  kind: KindDescription<Item, Request>,
+  document: PantinDocument,
+  id: string,
+  tagKey: string,
+): PantinDocument {
+  const item = findItem(kind, document, id);
+  if (kind.tags === undefined) {
+    throw new Error(`The ${kind.label} has no tag key to rename.`);
+  }
+  const taken = tagKeyOwners(document, item.assembly, kind.tags.except(id));
+  const owner = taken.get(tagKey);
+  if (owner !== undefined) {
+    const takenKeys = new Set([...taken.keys(), kind.tags.keyOf(item)]);
+    throw keyTaken(tagKey, `${owner} in assembly "${item.assembly}"`, takenKeys);
+  }
+  const renamed = kind.tags.withKey(item, tagKey);
+  return kind.withList(
+    document,
+    kind.list(document).map((candidate) => (candidate.id === id ? renamed : candidate)),
   );
 }

@@ -95,6 +95,33 @@ describe("PantinApiClient phase 6 edits", () => {
   });
 });
 
+describe("PantinApiClient phase 6 tag keys", () => {
+  const answer = { pantin: pantinResponse(true), renamedTags: [] };
+
+  it.each([
+    ["renameEmitterTagKey", "emitters", "source"],
+    ["renamePresenceSensorTagKey", "presence-sensors", "cell"],
+  ] as const)("%s sends the typed key with PUT .../tag-key", async (method, path, id) => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(answer));
+    const client = createPantinApiClient(fetchFunction);
+    expect(await client[method]("press", id, "Not A Key")).toEqual(answer);
+    expect([requests[0]?.init?.method, requests[0]?.url, requests[0]?.init?.body]).toEqual([
+      "PUT",
+      `/api/pantins/press/${path}/${id}/tag-key`,
+      JSON.stringify({ tagKey: "Not A Key" }),
+    ]);
+  });
+
+  it("shows the core's refusal of a taken key as a typed error", async () => {
+    const refusal = { error: { code: "conflict", message: 'Key "drum" is already used.' } };
+    const { fetchFunction } = fakeFetch(jsonResponse(refusal, 409));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).renameEmitterTagKey("press", "source", "drum"),
+    );
+    expect([error.kind, error.code]).toEqual(["api", "conflict"]);
+  });
+});
+
 describe("PantinApiClient phase 6 deletion and reset", () => {
   it("deletes with DELETE, the id encoded in the URL, and returns the Pantin", async () => {
     const pantin = pantinResponse(true);

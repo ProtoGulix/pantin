@@ -317,7 +317,7 @@ Sujet **Bande · nom**, **Guide · nom**, **Émetteur · nom**, **Absorbeur · n
 
 | Section | Lignes |
 | --- | --- |
-| **Général** | **Nom** (éditable), **Type**, **Préfixe des tags** (émetteur et cellule seulement) |
+| **Général** | **Nom** (éditable), **Type**, **Clé de tag** (éditable, émetteur et cellule seulement : la renommer renomme les tags, comme pour une liaison), **Préfixe des tags** (`assemblage.clé`, lecture seule) |
 | **Repère** | **Assemblage**, **Corps suivi** (ou **aucun (repère de l'assemblage)**), en lecture seule |
 | **Placement** | **X**, **Y**, **Z** (mm), **RX**, **RY**, **RZ** (degrés), éditables |
 | **Paramètres** | Selon l'objet (voir le formulaire ci-dessous) |

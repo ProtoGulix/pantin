@@ -27,7 +27,10 @@ import type { ViewerStore } from "./viewer-store.ts";
 // Assemblies and keys (ADR 0019). Every key change may rename tags: the core
 // lists them, and the message line shows them, since the PLC side must follow.
 
-type KeyTarget = Extract<EditTarget, { kind: "assemblyKey" | "tagKey" | "bodyAssembly" }>;
+type KeyTarget = Extract<
+  EditTarget,
+  { kind: "assemblyKey" | "tagKey" | "conveyorTagKey" | "bodyAssembly" }
+>;
 
 function sendKeyEdit(store: ViewerStore, target: KeyTarget, value: string) {
   const { api } = store.ports;
@@ -37,6 +40,10 @@ function sendKeyEdit(store: ViewerStore, target: KeyTarget, value: string) {
         return api.renameAssemblyKey(pantinId, target.key, value);
       case "tagKey":
         return api.renameTagKey(pantinId, target.jointId, value);
+      case "conveyorTagKey":
+        return target.owner.kind === "emitter"
+          ? api.renameEmitterTagKey(pantinId, target.owner.id, value)
+          : api.renamePresenceSensorTagKey(pantinId, target.owner.id, value);
       case "bodyAssembly":
         return api.moveBody(pantinId, target.bodyId, value);
     }

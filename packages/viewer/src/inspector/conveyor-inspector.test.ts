@@ -66,6 +66,19 @@ describe("the inspector of an emitter", () => {
     });
   });
 
+  it("edits its tag key in place, as a joint does, before the read-only prefix", () => {
+    const tagKey = rowOf(view.groups, "general", "tagKey");
+    expect([tagKey?.label, tagKey?.value]).toEqual(["Clé de tag", "source"]);
+    expect(tagKey?.edit).toEqual({
+      input: "text",
+      target: {
+        kind: "conveyorTagKey",
+        pantinId: "press",
+        owner: { kind: "emitter", id: "source" },
+      },
+    });
+  });
+
   it("offers the 'Créer un produit' button for this emitter only", () => {
     expect(view.spawn).toEqual({
       emitterId: "source",
@@ -87,12 +100,35 @@ describe("the inspector of a presence sensor", () => {
     expect(rowOf(view.groups, "parameters", "parameter-normallyClosed")?.value).toBe("Non");
   });
 
+  it("edits its tag key in place", () => {
+    expect(rowOf(view.groups, "general", "tagKey")?.edit).toEqual({
+      input: "text",
+      target: {
+        kind: "conveyorTagKey",
+        pantinId: "press",
+        owner: { kind: "presenceSensor", id: "cell" },
+      },
+    });
+  });
+
   it("reads its state from the state tag, live", () => {
     expect(rowOf(view.groups, "state", "state")?.live).toMatchObject({
       kind: "tag",
       tag: "main.cell.state",
       format: "bit",
     });
+  });
+});
+
+describe("the other objects", () => {
+  it("have no tag key to edit, since they own no tag", () => {
+    for (const [kind, id] of [
+      ["belt", "feed"],
+      ["guide", "side"],
+      ["absorber", "sink"],
+    ] as const) {
+      expect(rowOf(select(kind, id).groups, "general", "tagKey")).toBeUndefined();
+    }
   });
 });
 

@@ -18,7 +18,6 @@ phase.
 - [Nested assemblies: extras](nested-assemblies-extras.md) — axis from geometry, metallic CAD colours
 - [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells
 - [Retry a body whose mesh failed](retry-failed-body-mesh.md) — a "Réessayer" action
-- [Tag key rename for emitters and presence sensors](phase-6-tag-key-rename.md) — missing PUT route
 - [Interface polish](ui-polish-from-docs.md) — small defects found while documenting
 
 ## Phase 9 — community and instances

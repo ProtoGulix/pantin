@@ -21,6 +21,8 @@ import {
   PantinResponseSchema,
   type PresenceSensor,
   PresenceSensorResponseSchema,
+  type RenamedTagsResponse,
+  RenamedTagsResponseSchema,
 } from "@pantin/protocol";
 import {
   jsonRequest,
@@ -66,6 +68,17 @@ export interface ConveyorRoutes {
     request: CreatePresenceSensorRequest,
   ): Promise<PresenceSensor>;
   deletePresenceSensor(pantinId: string, presenceSensorId: string): Promise<PantinResponse>;
+  // Like drives and joint sensors: the answer lists the tags that changed name.
+  renameEmitterTagKey(
+    pantinId: string,
+    emitterId: string,
+    tagKey: string,
+  ): Promise<RenamedTagsResponse>;
+  renamePresenceSensorTagKey(
+    pantinId: string,
+    presenceSensorId: string,
+    tagKey: string,
+  ): Promise<RenamedTagsResponse>;
   // Back to the reference configuration: no product, command, motion or fault.
   // The unsaved edits and the clock stay; discard is the route that reloads.
   resetPantin(pantinId: string): Promise<PantinResponse>;
@@ -93,6 +106,13 @@ function kindRoutes<Request, Response, Item>(
     },
     remove: (pantinId: string, id: string) =>
       send(itemUrl(pantinId, id), jsonRequest("DELETE"), PantinResponseSchema),
+    // Sent as typed: the core suggests a valid key for a bad one (ADR 0019).
+    renameTagKey: (pantinId: string, id: string, tagKey: string) =>
+      send(
+        `${itemUrl(pantinId, id)}/tag-key`,
+        jsonRequest("PUT", { tagKey }),
+        RenamedTagsResponseSchema,
+      ),
   };
 }
 
@@ -140,6 +160,7 @@ function emitterAndAbsorberRoutes(send: SendJson) {
     createEmitter: emitters.create,
     updateEmitter: emitters.update,
     deleteEmitter: emitters.remove,
+    renameEmitterTagKey: emitters.renameTagKey,
     createAbsorber: absorbers.create,
     updateAbsorber: absorbers.update,
     deleteAbsorber: absorbers.remove,
@@ -160,6 +181,7 @@ export function conveyorRoutes(send: SendJson): ConveyorRoutes {
     createPresenceSensor: sensors.create,
     updatePresenceSensor: sensors.update,
     deletePresenceSensor: sensors.remove,
+    renamePresenceSensorTagKey: sensors.renameTagKey,
     resetPantin: (pantinId) =>
       send(pantinUrl(pantinId, "/reset"), jsonRequest("POST"), PantinResponseSchema),
   };

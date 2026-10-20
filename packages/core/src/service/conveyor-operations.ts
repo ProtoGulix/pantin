@@ -11,6 +11,7 @@ import type {
   PantinId,
   PantinResponse,
   PresenceSensor,
+  RenamedTagsResponse,
 } from "@pantin/protocol";
 import {
   ABSORBERS,
@@ -21,13 +22,19 @@ import {
   GUIDES,
   type KindDescription,
   PRESENCE_SENSORS,
+  renameConveyorTagKey,
   replaceConveyorItem,
 } from "../domain/conveyor-edits.ts";
 import { forgetEmitter, forgetPresenceSensor, type PhysicsState } from "../domain/physics-state.ts";
 import { forgetTagStates } from "../domain/tag-states.ts";
-import { tagStateOwnerPrefix } from "../domain/tags.ts";
+import { renamedTags, tagStateOwnerPrefix } from "../domain/tags.ts";
 import { loadSettledPantin } from "./mesh-lifecycle.ts";
-import { type OpenPantin, type ServiceContext, updateDocument } from "./open-pantins.ts";
+import {
+  type OpenPantin,
+  type ServiceContext,
+  toResponse,
+  updateDocument,
+} from "./open-pantins.ts";
 
 // Belts, guides, emitters, absorbers and presence sensors of an open Pantin
 // (ADR 0043 point 12). Edits go through updateDocument, which rebuilds the
@@ -55,7 +62,7 @@ function forget(
 }
 
 function operationsOf<
-  Item extends { id: string },
+  Item extends { id: string; assembly: string },
   Request extends { name: string; assembly: string },
 >(context: ServiceContext, kind: KindDescription<Item, Request>, forgetting: Forgetting = {}) {
   return {
@@ -85,6 +92,20 @@ function operationsOf<
       }
       forget(openPantin, id, forgetting.afterChange);
       return replaced;
+    },
+    renameTagKey: async (
+      pantinId: PantinId,
+      id: string,
+      tagKey: string,
+    ): Promise<RenamedTagsResponse> => {
+      const openPantin = await loadSettledPantin(context, pantinId);
+      const before = openPantin.document;
+      // Only a tag key changes, so the physics world stays as it is.
+      openPantin.document = renameConveyorTagKey(kind, before, id, tagKey);
+      return {
+        pantin: toResponse(pantinId, openPantin),
+        renamedTags: renamedTags(before, openPantin.document),
+      };
     },
     remove: async (pantinId: PantinId, id: string): Promise<PantinResponse> => {
       const openPantin = await loadSettledPantin(context, pantinId);
@@ -126,8 +147,10 @@ export function conveyorOperations(context: ServiceContext) {
     createEmitter: emitters.create,
     updateEmitter: emitters.replace,
     deleteEmitter: emitters.remove,
+    renameEmitterTagKey: emitters.renameTagKey,
     createPresenceSensor: presenceSensors.create,
     updatePresenceSensor: presenceSensors.replace,
     deletePresenceSensor: presenceSensors.remove,
+    renamePresenceSensorTagKey: presenceSensors.renameTagKey,
   };
 }

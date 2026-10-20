@@ -8,6 +8,11 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- The tag key of an emitter and of a presence sensor can be renamed, like
+  that of a drive or a joint: `PUT .../emitters/:id/tag-key` and
+  `PUT .../presence-sensors/:id/tag-key` answer the renamed tags, io.json
+  follows the new names, and the inspector of both has an editable
+  **Tag key** row.
 - Spike 0011 (real CAD files: placements, groups and pivots): the STEP import of the
   user's assembly checked against ADR 0055 (51 bodies, 10 assemblies, 9 joints); the glTF
   export from the CAD itself stays not verified. The backlog item is closed.

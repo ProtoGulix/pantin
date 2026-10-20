@@ -26,6 +26,11 @@ import {
 // as a frame, and a drum joint that is deleted or changes type, are refused
 // with `conflict`; deleting an assembly deletes its objects (ADR 0037).
 //
+//   PUT    /api/pantins/:pantinId/emitters/:id/tag-key  RenameTagKeyRequest
+//   PUT    /api/pantins/:pantinId/presence-sensors/:id/tag-key  RenameTagKeyRequest
+//          -> RenamedTagsResponse (as for drives and joint sensors; a key the
+//          assembly already uses is refused with `conflict` and a free one)
+//
 //   POST   /api/pantins/:pantinId/reset  -> PantinResponse
 //          (the runtime goes back to the reference configuration: no product,
 //          command, motion or fault. The document with its unsaved edits, the
