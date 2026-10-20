@@ -2,7 +2,7 @@ import { createTranslator } from "../i18n/translate.ts";
 import { alignFramesButtonOf, alignFramesMessage } from "../joints/align-frames.ts";
 import { jointFormFor } from "../joints/joint-edit-form.ts";
 import { coreRefusalMessage, errorMessage } from "../messages.ts";
-import { withRequestFinished, withRequestStarted } from "../viewer-state.ts";
+import { withRequestFinished, withRequestStarted } from "../request-count.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // "Aligner le repère sur cet axe" (ADR 0056): one core command. The core

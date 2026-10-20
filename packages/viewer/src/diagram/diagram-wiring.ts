@@ -234,5 +234,8 @@ export function removalBetween(
           ),
         });
   }
+  if (target.kind === "belt") {
+    return refuse("diagram.refusal.beltNeedsDrum");
+  }
   return refuse("diagram.refusal.sensorNeedsJoint");
 }

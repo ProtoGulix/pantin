@@ -33,6 +33,8 @@ function pressMenuKey(socketId: string, forced: string[]) {
     diagram: wiringDiagram,
     typeLabels: new Map<string, string>(),
     highlight: new Map(),
+    filter: "",
+    matches: new Set<string>(),
     empty: false,
     translate: createTranslator("fr"),
   };

@@ -189,6 +189,8 @@ Le schéma se parcourt entièrement au clavier : un seul élément est un arrêt
 | Glisser de l'extrémité source d'un lien vers une cible | Crée le lien. Les cibles possibles s'éclairent, les autres s'estompent. Un appui qui bouge de moins de 4 pixels reste un clic. |
 | <kbd>Échap</kbd> pendant le glisser | Abandonne le câblage. |
 
+Dans le champ de filtre de la barre d'outils du schéma, <kbd>Échap</kbd> vide le filtre avant toute autre action.
+
 Dans le schéma, <kbd>Suppr</kbd> et <kbd>F2</kbd> n'agissent jamais sur la sélection de la fenêtre : <kbd>Suppr</kbd> affiche un message d'aide, <kbd>F2</kbd> est ignoré.
 
 ### Champ de valeur d'une commande numérique
@@ -262,6 +264,7 @@ Les lignes forment une liste : un seul arrêt de tabulation, sur la dernière li
 | Clic sur une ligne | Idem. |
 | Clic sur un filtre de niveau | Affiche ou masque ce niveau. |
 | Clic sur le bouton d'effacement | Masque les lignes lues jusqu'ici dans ce viewer ; le cœur les garde (grisé s'il n'y a rien à effacer). |
+| Clic sur **Exporter** | Enregistre les lignes affichées dans `console-<Pantin>.txt`. |
 | Clic sur la croix | Ferme la console. |
 
 Dans la console, <kbd>F2</kbd> et <kbd>Suppr</kbd> ne déclenchent pas les raccourcis de la fenêtre (ils agiraient sur la sélection, pas sur la ligne).

@@ -46,6 +46,8 @@ export interface ConsoleView {
   filters: ConsoleFilterView[];
   lines: ConsoleLineView[];
   canClear: boolean;
+  // There is a line to write to a file: what the filters show.
+  canExport: boolean;
   // Why there is no line, or null when there is one.
   emptyText: string | null;
 }
@@ -119,6 +121,7 @@ export function buildConsoleView(
     })),
     lines,
     canClear: kept.length > 0,
+    canExport: lines.length > 0,
     emptyText: lines.length === 0 ? t(emptyKey) : null,
   };
 }

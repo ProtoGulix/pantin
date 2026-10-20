@@ -54,10 +54,22 @@ function head(view: ConsoleView, t: Translate, intents: PanelIntents): HTMLEleme
   });
   clear.disabled = !view.canClear;
   clear.addEventListener("click", () => intents.clearConsole());
+  const exported = element("button", {
+    className: "button",
+    text: t("console.export"),
+    attributes: {
+      type: "button",
+      title: t("console.exportHint"),
+      "data-focus-key": "console-export",
+    },
+  });
+  exported.disabled = !view.canExport;
+  exported.addEventListener("click", () => intents.exportConsole());
   return element("div", { className: "console__head" }, [
     element("h2", { className: "console__title", text: t("console.title") }),
     filterButtons(view, t, intents),
     element("span", { className: "toolbar__spacer" }),
+    exported,
     clear,
     iconButton("close", t("console.close"), intents.toggleConsole),
   ]);

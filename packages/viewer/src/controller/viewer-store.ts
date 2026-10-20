@@ -34,16 +34,11 @@ import type { InspectorPreferences } from "../layout-preferences.ts";
 import { describeFailure } from "../messages.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
 import { withNormalToRules } from "../navigation/normal-to.ts";
+import { withRequestFinished, withRequestStarted } from "../request-count.ts";
 import type { Viewport } from "../scene/viewport.ts";
 import type { ThemeChoice } from "../theme/theme.ts";
 import { buildPanelView } from "../view-model.ts";
-import {
-  initialViewerState,
-  type ViewerState,
-  withOpenPantin,
-  withRequestFinished,
-  withRequestStarted,
-} from "../viewer-state.ts";
+import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import { reloadIoAfterDocumentChange } from "./io-load.ts";
 import { type JournalInputs, showJournal } from "./journal-actions.ts";
 import type { StorePorts } from "./store-ports.ts";

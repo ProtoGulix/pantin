@@ -158,14 +158,14 @@ Le schéma est découpé en **bandes**, une par assemblage. Chaque bande est rep
 | **Préactionneurs** | Distributeurs, contacteurs, variateurs. |
 | **Actionneurs** | Vérins, moteurs. |
 | **Liaisons** | Les liaisons mobiles déplacées ou surveillées. Les liaisons fixes ne sont pas dessinées. |
-| **Capteurs** | Capteurs de liaison. |
+| **Capteurs et bandes** | Capteurs de liaison, et les bandes de convoyeur : une bande est le dernier noeud de sa chaîne, reliée à la liaison de son tambour. Seules les bandes dont le tambour est une liaison mobile (pivot continu) sont dessinées. |
 
 L'en-tête des colonnes reste en haut quand le schéma défile. Un élément placé dans une autre bande que celle de son assemblage porte un badge au nom de cet **Assemblage**.
 
 | Contrôle | Effet |
 | --- | --- |
 | Bouton de bande (chevron et nom) | Replie la bande à son seul en-tête (**Replier l'assemblage nom**) ou la déplie (**Déplier l'assemblage nom**). Une bande repliée n'a ni nœud ni lien. |
-| **+** en tête de colonne **Préactionneurs**, **Actionneurs**, **Capteurs** | Ouvre le formulaire de création correspondant dans l'inspecteur (**Nouveau préactionneur**, **Nouvel actionneur**, **Nouveau capteur**). |
+| **+** en tête de colonne **Préactionneurs**, **Actionneurs**, **Capteurs et bandes** | Ouvre le formulaire de création correspondant dans l'inspecteur (**Nouveau préactionneur**, **Nouvel actionneur**, **Nouveau capteur**). |
 | En-tête de colonne **Liaisons** | Pas de **+** : une liaison relie deux corps, elle se crée depuis l'arborescence (**Nouvelle liaison…**). L'info-bulle le dit. |
 
 Quand le Pantin n'a encore aucun élément, le schéma dit : **Aucune chaîne à montrer pour l'instant. Ajoutez un préactionneur, un actionneur ou un capteur avec les boutons + ci-dessus.**
@@ -178,8 +178,9 @@ Un noeud est une boîte avec son nom, son type et ses **connecteurs** (petits ro
 | --- | --- |
 | Préactionneur | À gauche, ses tags de commande (ce que l'automate écrit). À droite, ses orifices de sortie. |
 | Actionneur | À gauche, ses orifices d'entrée. À droite, un lien vers les liaisons qu'il déplace. |
-| Liaison | Un lien depuis l'actionneur, un lien vers les capteurs. |
+| Liaison | Un lien depuis l'actionneur, un lien vers les capteurs et les bandes. |
 | Capteur | Un lien vers la liaison surveillée, et ses tags de retour (valeur en lecture seule). |
+| Bande | Un lien depuis la liaison du tambour. La bande n'a pas de tag. |
 
 Un clic sur un noeud le sélectionne : un préactionneur, un actionneur ou un capteur s'affiche dans l'inspecteur ; une liaison sélectionne sa ligne dans l'arborescence. La chaîne du noeud sélectionné reste en pleine couleur, le reste s'estompe, et les noeuds liés sont marqués. Sélectionner un élément ailleurs (arborescence, vue 3D) le met en évidence ici.
 
@@ -187,7 +188,7 @@ Un clic sur un noeud le sélectionne : un préactionneur, un actionneur ou un ca
 
 Un lien relie deux connecteurs. Il y en a de cinq sortes, nommées dans les info-bulles et pour les lecteurs d'écran : **Liaison pneumatique**, **Liaison de puissance alternative**, **Liaison d'asservissement** (d'un préactionneur à un actionneur), **Liaison mécanique** (d'un actionneur à une liaison) et **Liaison d'observation** (d'un capteur à une liaison). Chaque sorte a son style de trait et une étiquette écrite sur le fil : **PNEU**, **CA**, **SERVO**, **MÉC** et **OBS** (voir [Lire les couleurs et les repères](/reference/colours#dans-le-schema-des-chaines)).
 
-Un clic sur un lien le sélectionne et fait apparaître un petit **×** à mi-chemin. Cliquer le **×** retire le lien. Pour un lien d'observation, le **×** est grisé : un capteur surveille toujours une liaison, il se **déplace** en glissant son lien sur une autre liaison.
+Un clic sur un lien le sélectionne et fait apparaître un petit **×** à mi-chemin. Cliquer le **×** retire le lien. Pour un lien d'observation, le **×** est grisé : un capteur surveille toujours une liaison, il se **déplace** en glissant son lien sur une autre liaison. Le **×** du lien d'une bande est grisé aussi, et l'info-bulle dit : **Une bande repose toujours sur la liaison de son tambour : ce lien ne peut pas être retiré. Changez le tambour dans le formulaire de la bande.**
 
 ### Relier deux éléments
 
@@ -208,6 +209,7 @@ Si le lien est refusé, la raison s'affiche dans la ligne de message :
 | Liaison déjà déplacée | **La liaison … est déjà déplacée par ….** |
 | Unités différentes | **La liaison … n'a pas la même unité que les liaisons de … (mètres ou degrés).** |
 | Capteur sans liaison | **Un capteur surveille toujours une liaison : glissez son lien sur une autre liaison au lieu de le retirer.** |
+| Bande sans tambour | **Une bande repose toujours sur la liaison de son tambour : changez le tambour dans le formulaire de la bande au lieu de retirer son lien.** |
 | Sans objet | **Ces deux éléments ne peuvent pas être reliés.** |
 | Modification en cours | **Une autre modification est en cours : réessayez dans un instant.** |
 
@@ -241,6 +243,19 @@ Les connecteurs de commande à gauche d'un préactionneur sont des boutons. Ils 
 | Touche **Menu** sur un connecteur forcé (au clavier) | Ouvre un menu d'une entrée, **Relâcher** (titre **Tag forcé**), qui rend le tag à l'automate. |
 
 Un clic sur un connecteur de commande ne sélectionne pas le noeud : l'inspecteur ne saute pas pendant un essai.
+
+### Filtrer et imprimer
+
+La barre d'outils du schéma (groupe **Filtre du diagramme**) porte un champ de filtre, un compteur et le bouton **Imprimer**.
+
+| Contrôle | Effet |
+| --- | --- |
+| Champ **Filtrer par nom ou tag** (nom accessible : **Filtrer les chaînes par nom ou par tag**) | Ne garde que les chaînes dont un noeud correspond, par son nom ou par un de ses tags. La recherche ignore les majuscules et les accents. Les noeuds qui correspondent reçoivent un **contour épais** : la forme du trait, pas une couleur, les distingue. |
+| **Correspondances : N** | Nombre de noeuds qui correspondent. |
+| **Échap** dans le champ | Vide le filtre et rend toutes les chaînes. |
+| **Imprimer** | Ouvre la fenêtre d'impression du navigateur, qui permet aussi d'enregistrer en PDF. Le schéma est imprimé avec le thème clair, sombre sur blanc, quel que soit le thème de l'écran. Le filtre s'applique à l'impression (seules les chaînes affichées sont imprimées) ; la sélection et les mises en évidence ne sont pas imprimées. |
+
+Quand aucune chaîne ne correspond, le schéma dit : **Aucune chaîne ne correspond à ce filtre. Videz-le pour revoir toutes les chaînes.**
 
 ### Au clavier
 

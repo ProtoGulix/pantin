@@ -66,6 +66,12 @@ export function toggleDiagramBand(store: ViewerStore, bandKey: string): void {
   store.update({ ...store.state, collapsedDiagramBands });
 }
 
+export function setDiagramFilter(store: ViewerStore, text: string): void {
+  if (text !== store.state.diagramFilter) {
+    store.update({ ...store.state, diagramFilter: text });
+  }
+}
+
 /** Selects the device, if the open Pantin still has it (a link of the inspector). */
 export function selectDevice(store: ViewerStore, device: DeviceRef): void {
   const open = store.state.openPantin;
@@ -112,6 +118,7 @@ export function diagramIntents(store: ViewerStore) {
     openBottomZone: () => openBottomZoneOf(store),
     closeBottomZone: () => closeBottomZoneOf(store),
     toggleDiagramBand: (bandKey: string) => toggleDiagramBand(store, bandKey),
+    setDiagramFilter: (text: string) => setDiagramFilter(store, text),
     selectDiagramNode: (nodeId: string) => selectDiagramNode(store, nodeId),
     linkDiagramNodes: (from: Endpoint, to: Endpoint) => linkDiagramNodes(store, from, to),
     removeDiagramLink: (fromNodeId: string, toNodeId: string) =>

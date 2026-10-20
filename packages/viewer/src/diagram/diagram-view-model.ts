@@ -4,6 +4,7 @@ import { createTranslator, type Language, type Translate } from "../i18n/transla
 import type { ViewerState } from "../viewer-state.ts";
 import { layoutChainDiagram } from "./chain-layout.ts";
 import type { ChainLinks } from "./diagram-chains.ts";
+import { matchingNodeIds } from "./diagram-filter.ts";
 import { diagramHighlight, type NodeHighlight } from "./diagram-selection.ts";
 import { nodeTypeLabels } from "./diagram-texts.ts";
 import type { ChainDiagram } from "./diagram-types.ts";
@@ -21,6 +22,9 @@ export type DiagramModel =
       diagram: ChainDiagram;
       typeLabels: ReadonlyMap<string, string>;
       highlight: ReadonlyMap<string, NodeHighlight>;
+      // The filter text, and the nodes of the diagram that match it (none for an empty text).
+      filter: string;
+      matches: ReadonlySet<string>;
       // No chain at all to draw (and no band collapsed): the view says how to start one.
       empty: boolean;
       translate: Translate;
@@ -30,6 +34,7 @@ interface Layout {
   document: PantinDocument;
   collapsed: ReadonlySet<string>;
   language: Language;
+  filter: string;
   diagram: ChainDiagram;
   typeLabels: ReadonlyMap<string, string>;
 }
@@ -39,12 +44,13 @@ export function createDiagramModelBuilder(
 ): (state: ViewerState) => DiagramModel {
   let last: Layout | null = null;
   const layoutFor = (document: PantinDocument, state: ViewerState): Layout => {
-    const { collapsedDiagramBands: collapsed, language } = state;
+    const { collapsedDiagramBands: collapsed, language, diagramFilter: filter } = state;
     if (
       last !== null &&
       last.document === document &&
       last.collapsed === collapsed &&
-      last.language === language
+      last.language === language &&
+      last.filter === filter
     ) {
       return last;
     }
@@ -53,7 +59,8 @@ export function createDiagramModelBuilder(
       document,
       collapsed,
       language,
-      diagram: layoutChainDiagram(document, collapsed, language),
+      filter,
+      diagram: layoutChainDiagram(document, collapsed, language, filter),
       typeLabels: nodeTypeLabels(document, language, translate),
     };
     return last;
@@ -69,6 +76,8 @@ export function createDiagramModelBuilder(
       document: open.document,
       diagram,
       typeLabels,
+      filter: state.diagramFilter,
+      matches: matchingNodeIds(diagram, state.diagramFilter),
       highlight: diagramHighlight(open.document, linksOf(open.document), state.selection),
       empty: diagram.nodes.length === 0 && diagram.bands.every((band) => !band.collapsed),
       translate: createTranslator(state.language),

@@ -6,7 +6,7 @@ messages du cœur et du pont sont en anglais, ceux du viewer en français.
 
 Pour lire l'historique, ouvrez la **Console** (menu **Affichage**, **Console**, ou
 F8). Elle garde les erreurs, avertissements et infos du Pantin ouvert, avec le
-temps de simulation.
+temps de simulation. Le bouton **Exporter** enregistre les lignes affichées dans un fichier texte `console-<Pantin>.txt`, à joindre à un signalement.
 
 ## Le viewer et le cœur
 

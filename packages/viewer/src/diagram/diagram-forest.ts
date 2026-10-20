@@ -1,7 +1,13 @@
-import { endpointAssemblyIn, JOINT_COORDINATE_UNITS, type PantinDocument } from "@pantin/protocol";
+import {
+  type Belt,
+  endpointAssemblyIn,
+  JOINT_COORDINATE_UNITS,
+  type PantinDocument,
+} from "@pantin/protocol";
 import type { Language } from "../i18n/translate.ts";
 import {
   actuatorSockets,
+  beltSockets,
   driveSockets,
   jointSockets,
   type SocketSpecs,
@@ -31,7 +37,9 @@ export interface ForestNode {
   children: ForestNode[];
 }
 
-const COLUMN_OF: Record<NodeKind, number> = { drive: 0, actuator: 1, joint: 2, sensor: 3 };
+// A belt shares the last column with the sensors: it is the end of its chain, drawn after them.
+const COLUMN_OF: Record<NodeKind, number> = { drive: 0, actuator: 1, joint: 2, sensor: 3, belt: 3 };
+const BELT_AFTER_SENSORS = 1;
 
 // Code point order, not locale order, so that the layout does not depend on the browser.
 function compareIds(first: string, second: string): number {
@@ -103,7 +111,23 @@ export function buildForest(document: PantinDocument, language: Language): Fores
       }),
     );
   }
+  attachBelts(document.belts, joints);
   return sortForest(roots);
+}
+
+function attachBelts(belts: readonly Belt[], joints: Map<string, ForestNode>): void {
+  for (const belt of belts) {
+    joints.get(belt.drumJoint)?.children.push(
+      makeNode({
+        kind: "belt",
+        elementId: belt.id,
+        label: belt.name,
+        elementType: "belt",
+        assembly: belt.assembly,
+        sockets: beltSockets(),
+      }),
+    );
+  }
 }
 
 function actuatorNodes(document: PantinDocument, language: Language): Map<string, ForestNode> {
@@ -168,8 +192,9 @@ function attachJoints(
 }
 
 function sortForest(nodes: ForestNode[]): ForestNode[] {
+  const rank = (node: ForestNode) => (node.kind === "belt" ? BELT_AFTER_SENSORS : 0);
   const sorted = [...nodes].sort(
-    (a, b) => a.column - b.column || compareIds(a.elementId, b.elementId),
+    (a, b) => a.column - b.column || rank(a) - rank(b) || compareIds(a.elementId, b.elementId),
   );
   for (const node of sorted) {
     node.children = sortForest(node.children);

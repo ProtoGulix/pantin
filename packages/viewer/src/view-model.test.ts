@@ -3,16 +3,12 @@ import { EMPTY_CLIENT_CONSOLE } from "./console/console-list.ts";
 import { bodyOf, cylinderOf, documentOf, driveOf, jointOf } from "./diagram/diagram-fixtures.ts";
 import { withImportStarted } from "./import-state.ts";
 import { errorMessage, meshLoadMessage } from "./messages.ts";
+import { withRequestStarted } from "./request-count.ts";
 import { pantinResponse, pantinSummaries, withNode } from "./test-fixtures.ts";
 import { assemblyNodeId, bodyNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { withRevealedDevice } from "./tree/tree-state.ts";
 import { buildPanelView as buildPanelViewWith } from "./view-model.ts";
-import {
-  initialViewerState,
-  type ViewerState,
-  withOpenPantin,
-  withRequestStarted,
-} from "./viewer-state.ts";
+import { initialViewerState, type ViewerState, withOpenPantin } from "./viewer-state.ts";
 
 // The console lines are not what these tests are about.
 const buildPanelView = (state: ViewerState) =>

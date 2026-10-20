@@ -7,7 +7,7 @@ interface.
 
 To read the history, open the **Console** (**View** menu, **Console**, or F8).
 It keeps the errors, warnings and infos of the open Pantin, with the simulation
-time.
+time. The **Export** button saves the lines shown in a text file `console-<Pantin>.txt`, to attach to a report.
 
 ## The viewer and the core
 

@@ -8,11 +8,9 @@ Small follow-ups that ADRs sent to the backlog and no file held.
 
 ## What
 
-- Console (ADR 0031): export as text; codes for sensors (a sensor changing
-  state, as a trace for the PLC program). Diagnostics on the tag bus are in
+- Console (ADR 0031): codes for sensors (a sensor changing state, as a trace
+  for the PLC program). Diagnostics on the tag bus are in
   `viewer-on-tag-bus.md`.
-- Chain diagram (ADR 0029): a filter by name or tag; a print or PDF export as
-  machine documentation. The side by side split is done (ADR 0030).
 - Welcome window (ADR 0027): "Open an example" needs an endpoint that copies
   an example into the Pantins folder.
 - Body placement (ADR 0033 point 7, ADR 0034 point 6): read only in the

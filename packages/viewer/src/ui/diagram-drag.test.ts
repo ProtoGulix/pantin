@@ -119,6 +119,8 @@ function startWiring() {
         diagram: wiringDiagram,
         typeLabels: new Map(),
         highlight: new Map(),
+        filter: "",
+        matches: new Set<string>(),
         empty: false,
         translate: (key: string) => key,
       }),

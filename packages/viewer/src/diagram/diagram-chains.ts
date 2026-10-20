@@ -2,9 +2,10 @@ import { JOINT_COORDINATE_UNITS, type PantinDocument } from "@pantin/protocol";
 import { endpointBodyId, groupRepresentatives } from "../joint-bodies.ts";
 
 // Who is linked to whom in the chains of ADR 0029: a drive feeds actuators, an
-// actuator moves joints, a sensor watches a joint. Read from the document
-// rather than from the layout, so that the 3D view and the diagram agree even
-// while a band is collapsed. Node ids are the diagram's "<kind>:<element id>".
+// actuator moves joints, a sensor watches a joint, a belt rests on its drum
+// joint. Read from the document rather than from the layout, so that the 3D
+// view and the diagram agree even while a band is collapsed. Node ids are the
+// diagram's "<kind>:<element id>".
 
 export interface ChainLinks {
   parent: ReadonlyMap<string, string>;
@@ -19,6 +20,7 @@ export const driveNode = (id: string) => `drive:${id}`;
 export const actuatorNode = (id: string) => `actuator:${id}`;
 export const jointNode = (id: string) => `joint:${id}`;
 export const sensorNode = (id: string) => `sensor:${id}`;
+export const beltNode = (id: string) => `belt:${id}`;
 
 /**
  * Several pure functions ask for the links of the same document at every store
@@ -63,12 +65,17 @@ function buildChainLinks(document: PantinDocument): ChainLinks {
   for (const sensor of document.sensors.filter((candidate) => movable.has(candidate.joint))) {
     link(jointNode(sensor.joint), sensorNode(sensor.id));
   }
+  // A belt rests on its drum joint, which is a continuous (so movable) joint.
+  for (const belt of document.belts.filter((candidate) => movable.has(candidate.drumJoint))) {
+    link(jointNode(belt.drumJoint), beltNode(belt.id));
+  }
   const bodyOfJoint = new Map([...movable].map(([id, body]) => [jointNode(id), body]));
   const nodeIds = new Set([
     ...document.drives.map((drive) => driveNode(drive.id)),
     ...document.actuators.map((actuator) => actuatorNode(actuator.id)),
     ...bodyOfJoint.keys(),
     ...document.sensors.filter((sensor) => movable.has(sensor.joint)).map((s) => sensorNode(s.id)),
+    ...document.belts.filter((belt) => movable.has(belt.drumJoint)).map((b) => beltNode(b.id)),
   ]);
   return { parent, children, bodyOfJoint, nodeIds };
 }

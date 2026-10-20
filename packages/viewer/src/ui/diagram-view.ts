@@ -21,8 +21,11 @@ import {
   applyForcedValues,
   applyLitText,
   applyLive,
+  markMatches,
 } from "./diagram-live-apply.ts";
+import { browserPrintPorts, createPrinter } from "./diagram-print.ts";
 import { RovingFocus } from "./diagram-roving.ts";
+import { DiagramToolbar } from "./diagram-toolbar.ts";
 import { ValueInput } from "./diagram-value-input.ts";
 import { element } from "./dom.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -45,6 +48,12 @@ export class DiagramView {
     attributes: { tabindex: "0", role: "region" },
   });
   private readonly emptyText = element("p", { className: "diagram__empty" });
+  private readonly toolbar = new DiagramToolbar(
+    (text) => this.intents?.setDiagramFilter(text),
+    () => this.print(),
+  );
+  private readonly printOnce = createPrinter();
+  private heads: HTMLElement | null = null;
   private readonly roving = new RovingFocus();
   private readonly edgeSelection = new EdgeSelection();
   private readonly linkMenu = new LinkMenu();
@@ -64,7 +73,24 @@ export class DiagramView {
     markAsZoneView(this.host, "diagram");
     this.host.hidden = true;
     viewport.insertBefore(this.host, before);
+    this.host.append(this.toolbar.root);
     this.guardWindowShortcuts();
+  }
+
+  private print(): void {
+    if (this.drawn !== null && this.heads !== null) {
+      this.printOnce(browserPrintPorts(this.heads, this.drawn.svg));
+    }
+  }
+
+  // Everything but the toolbar, which keeps its text field (and its focus) across redraws.
+  private replaceContent(...content: Node[]): void {
+    for (const child of [...this.host.children]) {
+      if (child !== this.toolbar.root) {
+        child.remove();
+      }
+    }
+    this.host.append(...content);
   }
 
   // The diagram's own handlers run first (they are deeper); what none of them
@@ -95,6 +121,7 @@ export class DiagramView {
     this.model = model;
     this.intents = intents;
     this.host.setAttribute("aria-label", model.translate("diagram.label"));
+    this.toolbar.show(model);
     if (redraw) {
       this.redraw(model, intents);
     }
@@ -143,19 +170,19 @@ export class DiagramView {
     this.litStates = new Map();
     this.tags = new Map();
     this.forced = new Set();
-    this.emptyText.textContent = model.translate("diagram.empty");
+    this.emptyText.textContent = model.translate(
+      model.filter.trim() === "" ? "diagram.empty" : "diagram.filter.none",
+    );
     const help = element("p", {
       className: "visually-hidden",
       text: model.translate("diagram.help"),
       attributes: { id: HELP_ID },
     });
-    this.host.replaceChildren(
-      help,
-      drawColumnHeads(model, intents),
-      drawn.svg,
-      ...(model.empty ? [this.emptyText] : []),
-    );
+    const heads = drawColumnHeads(model, intents);
+    this.heads = heads;
+    this.replaceContent(help, heads, drawn.svg, ...(model.empty ? [this.emptyText] : []));
     this.listen(drawn);
+    markMatches(drawn.nodes, model.matches);
     const first = model.diagram.nodes[0];
     const firstKey = first === undefined ? null : focusKeyOf({ nodeId: first.id, socketId: null });
     this.roving.attach(drawn, firstKey, hadFocus);

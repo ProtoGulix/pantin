@@ -1,4 +1,5 @@
 import type { PantinDocument } from "@pantin/protocol";
+import type { MessageKey } from "../i18n/translate.ts";
 import type { ChainDiagram, DiagramEdge, DiagramNode } from "./diagram-types.ts";
 import { type EditResult, type Endpoint, linkBetween, splitNodeId } from "./diagram-wiring.ts";
 
@@ -78,4 +79,16 @@ export function isDragSource(endpoint: Endpoint): boolean {
 /** A sensor's link can be grabbed by its wire: the end to move is the sensor's. */
 export function edgeDragSource(edge: DiagramEdge): Endpoint | null {
   return edge.kind === "observation" ? { nodeId: edge.toNode, socketId: edge.toSocket } : null;
+}
+
+/**
+ * Why a link cannot be removed, as the text of its disabled button: a sensor
+ * always watches a joint, a belt always rests on its drum joint. Null for a link
+ * the user may remove.
+ */
+export function fixedLinkReason(edge: DiagramEdge): MessageKey | null {
+  if (edge.kind === "observation") {
+    return "diagram.edge.removeSensor";
+  }
+  return splitNodeId(edge.toNode).kind === "belt" ? "diagram.edge.removeBelt" : null;
 }

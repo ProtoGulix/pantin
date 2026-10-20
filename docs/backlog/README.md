@@ -6,7 +6,6 @@ phase.
 
 ## Phase 8 — editing
 
-- [Belts in the chain diagram](belts-in-chain-diagram.md) — draw the belt as the end of its chain
 - [CAD navigation extras](cad-navigation-extras.md) — touchpad preset, free rotation and roll
 - [Console, diagram, welcome and placement extras](console-and-diagram-extras.md) — small follow-ups left by ADRs 0027 to 0035
 - [Frame rotation extras](frame-rotation-extras.md) — other ways to give the rotation of ADR 0056

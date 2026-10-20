@@ -1,4 +1,5 @@
 import type { ConsoleLevel, ConsoleSource } from "@pantin/protocol";
+import { consoleExportFileName, consoleExportText } from "../console/console-export.ts";
 import {
   type ClientConsole,
   clearConsoleLines,
@@ -75,6 +76,24 @@ export function clearConsole(store: ViewerStore): void {
   store.update(store.state);
 }
 
+/** Offers the lines the panel shows as a text file, in the language of the viewer. */
+function exportConsole(store: ViewerStore): void {
+  const { state } = store;
+  const view = buildConsoleView(
+    state.console,
+    store.consoleList,
+    state.openPantin,
+    state.language,
+    createTranslator(state.language),
+  );
+  if (view !== null && state.openPantin !== null && view.canExport) {
+    store.ports.saveTextFile(
+      consoleExportFileName(state.openPantin.id),
+      consoleExportText(view.lines),
+    );
+  }
+}
+
 /** Selects the source of a line, as a click in the diagram or the tree would; gone, it does nothing. */
 function selectConsoleSource(store: ViewerStore, source: ConsoleSource): void {
   const open = store.state.openPantin;
@@ -91,6 +110,7 @@ export function consoleIntents(store: ViewerStore) {
     toggleConsole: () => toggleConsole(store),
     toggleConsoleLevel: (level: ConsoleLevel) => toggleConsoleLevel(store, level),
     clearConsole: () => clearConsole(store),
+    exportConsole: () => exportConsole(store),
     selectConsoleSource: (source: ConsoleSource) => selectConsoleSource(store, source),
   };
 }

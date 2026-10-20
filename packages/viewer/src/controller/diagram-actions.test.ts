@@ -23,6 +23,7 @@ import {
   revealCentralView,
   selectDiagramNode,
   setCentralLayout,
+  setDiagramFilter,
   toggleDiagramBand,
 } from "./diagram-actions.ts";
 import { refreshTagValues } from "./drive-commands.ts";
@@ -201,5 +202,15 @@ describe("the viewport follows the layout", () => {
     const { calls, store } = renderCalls();
     store.update({ ...store.state, centralLayout: layoutOf("diagram") });
     expect(calls).toEqual([true]);
+  });
+});
+
+describe("the diagram filter", () => {
+  it("keeps the text as typed, and forgets it when another Pantin opens", () => {
+    const store = openStore();
+    setDiagramFilter(store, "Valve");
+    expect(store.state.diagramFilter).toBe("Valve");
+    store.update(withOpenPantin(store.state, { ...pantin, id: "other" }));
+    expect(store.state.diagramFilter).toBe("");
   });
 });

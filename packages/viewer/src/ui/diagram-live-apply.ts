@@ -174,3 +174,16 @@ export function applyForcedMarks(
     }
   }
 }
+
+/**
+ * Marks the nodes that match the filter; the stylesheet draws their outline
+ * apart from the selection's.
+ */
+export function markMatches(
+  nodes: ReadonlyMap<string, { group: { classList: { add(token: string): void } } }>,
+  matches: ReadonlySet<string>,
+): void {
+  for (const nodeId of matches) {
+    nodes.get(nodeId)?.group.classList.add("is-match");
+  }
+}

@@ -66,6 +66,19 @@ export function encoderOf(id: string, assembly: string, joint: string) {
   return { id, tagKey: id, name: id, assembly, joint, type: "encoder", pulsesPerUnit: 1000 };
 }
 
+export function beltOf(id: string, assembly: string, drumJoint: string) {
+  return {
+    id,
+    name: id,
+    assembly,
+    placement: { translation: [0, 0, 0], rotation: [0, 0, 0, 1] },
+    length: 1,
+    width: 0.3,
+    drumJoint,
+    drumRadius: 0.05,
+  };
+}
+
 interface FixtureBody {
   id: string;
   assembly: string;
@@ -78,6 +91,7 @@ interface Parts {
   drives?: object[];
   actuators?: object[];
   sensors?: object[];
+  belts?: object[];
 }
 
 // Joints of the fixtures hang from the body "frame"; a joint whose child sits
@@ -118,7 +132,7 @@ export function documentOf(parts: Parts): PantinDocument {
     drives: parts.drives ?? [],
     actuators: parts.actuators ?? [],
     sensors: parts.sensors ?? [],
-    belts: [],
+    belts: parts.belts ?? [],
     guides: [],
     emitters: [],
     absorbers: [],

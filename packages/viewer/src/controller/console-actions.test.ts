@@ -108,29 +108,31 @@ describe("refreshConsole in flight", () => {
   });
 });
 
-async function filledStore() {
-  const store = openStore(async () =>
-    answerOf([
-      entryOf(1),
-      entryOf(2, {
-        code: "fault_set",
-        level: "info",
-        source: { kind: "joint", id: "j1" },
-        params: { fault: "jammed" },
-      }),
-      entryOf(3, {
-        code: "migrated",
-        level: "info",
-        source: { kind: "pantin" },
-        params: { from: 1, to: 2 },
-      }),
-      entryOf(4, {
-        code: "forced_tag_written",
-        level: "error",
-        source: { kind: "sensor", id: "gone" },
-        params: { tag: "press.valve.extend", forcedValue: 1, writtenValue: 0 },
-      }),
-    ]),
+async function filledStore(ports: Partial<StorePorts> = {}) {
+  const store = openStore(
+    async () =>
+      answerOf([
+        entryOf(1),
+        entryOf(2, {
+          code: "fault_set",
+          level: "info",
+          source: { kind: "joint", id: "j1" },
+          params: { fault: "jammed" },
+        }),
+        entryOf(3, {
+          code: "migrated",
+          level: "info",
+          source: { kind: "pantin" },
+          params: { from: 1, to: 2 },
+        }),
+        entryOf(4, {
+          code: "forced_tag_written",
+          level: "error",
+          source: { kind: "sensor", id: "gone" },
+          params: { tag: "press.valve.extend", forcedValue: 1, writtenValue: 0 },
+        }),
+      ]),
+    ports,
   );
   await refreshConsole(store);
   return store;
@@ -171,6 +173,27 @@ describe("console intents", () => {
     clearConsole(store);
     expect(store.consoleList.clearedUpTo).toBe(4);
     expect(store.consoleList.entries).toHaveLength(4);
+  });
+});
+
+describe("console export", () => {
+  it("offers the lines shown as a text file named after the Pantin", async () => {
+    const saved: { fileName: string; text: string }[] = [];
+    const store = await filledStore({
+      saveTextFile: (fileName, text) => saved.push({ fileName, text }),
+    });
+    createPanelIntents(store).exportConsole();
+    expect(saved).toHaveLength(1);
+    expect(saved[0]?.fileName).toBe("console-press.txt");
+    expect(saved[0]?.text.trimEnd().split("\n")).toHaveLength(4);
+  });
+
+  it("writes no file while there is no line to show", async () => {
+    const saved: string[] = [];
+    const store = await filledStore({ saveTextFile: (fileName) => saved.push(fileName) });
+    clearConsole(store);
+    createPanelIntents(store).exportConsole();
+    expect(saved).toEqual([]);
   });
 });
 

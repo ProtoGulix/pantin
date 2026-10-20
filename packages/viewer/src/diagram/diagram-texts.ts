@@ -4,7 +4,7 @@ import type { PantinDocument } from "@pantin/protocol";
 import { SENSOR_LABELS } from "@pantin/sensor-types/labels";
 import type { Language, MessageKey, Translate } from "../i18n/translate.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
-import { actuatorNode, driveNode, jointNode, sensorNode } from "./diagram-chains.ts";
+import { actuatorNode, beltNode, driveNode, jointNode, sensorNode } from "./diagram-chains.ts";
 import { endpointLabel } from "./diagram-link-targets.ts";
 import type { ChainDiagram, DiagramEdge, DiagramNode, Socket } from "./diagram-types.ts";
 
@@ -30,6 +30,7 @@ export function nodeTypeLabels(
     ...document.sensors.map(
       (sensor) => [sensorNode(sensor.id), SENSOR_LABELS[sensor.type][language].name] as const,
     ),
+    ...document.belts.map((belt) => [beltNode(belt.id), t("objects.kind.belt")] as const),
   ]);
 }
 
@@ -50,6 +51,7 @@ const ANCHOR_KEYS: Readonly<Record<string, MessageKey>> = {
   "joint:out": "diagram.port.jointOut",
   "actuator:out": "diagram.port.actuatorOut",
   "sensor:in": "diagram.port.sensorIn",
+  "belt:in": "diagram.port.beltIn",
 };
 
 /** The accessible name of a port: its side and its name, or what its anchor links to. */

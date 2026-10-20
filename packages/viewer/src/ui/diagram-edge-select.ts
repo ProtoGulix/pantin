@@ -1,3 +1,4 @@
+import { fixedLinkReason } from "../diagram/diagram-link-targets.ts";
 import type { DiagramEdge } from "../diagram/diagram-types.ts";
 import type { Translate } from "../i18n/translate.ts";
 import type { DrawnDiagram } from "./diagram-draw.ts";
@@ -6,7 +7,7 @@ import { svgElement } from "./svg-dom.ts";
 
 // A link clicked in the diagram is selected and offers a small × to remove it
 // (ADR 0029 point 6); Delete does the same (diagram-keys.ts). A sensor's link
-// cannot be removed, but the button stays to say why in its tooltip: the user
+// or of a belt cannot be removed, but the button stays to say why in its tooltip: the user
 // who looks for it learns to drag the link onto another joint instead.
 
 const BUTTON_RADIUS = 8;
@@ -45,8 +46,9 @@ export class EdgeSelection {
     }
     drawn.edges.get(edge.id)?.classList.add("is-selected");
     const at = middleOf(edge);
-    const keeps = edge.kind === "observation";
-    const label = t(keeps ? "diagram.edge.removeSensor" : "diagram.edge.remove");
+    const reason = fixedLinkReason(edge);
+    const keeps = reason !== null;
+    const label = t(reason ?? "diagram.edge.remove");
     const removeButton = svgElement(
       "g",
       {

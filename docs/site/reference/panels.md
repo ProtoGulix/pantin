@@ -533,6 +533,7 @@ Tout en bas de la zone centrale, une fine barre toujours visible porte le compte
 | Titre **Console du Pantin** | Nom du panneau. | Sans objet |
 | **Erreur** / **Avertissement** / **Info** (filtres) | Trois boutons à bascule : montrent ou cachent les lignes de ce niveau. Enfoncé = affiché. | Jamais |
 | **Effacer** | Masque les lignes lues jusqu'ici, dans ce viewer seulement ; le cœur garde son historique. | Aucune ligne lue (des filtres qui masquent toutes les lignes ne la grisent pas) |
+| **Exporter** | Enregistre les lignes affichées, telles qu'affichées (filtres de niveau et **Effacer** compris), dans un fichier texte `console-<Pantin>.txt`. | Aucune ligne affichée |
 | **Fermer la console** (croix) | Ferme le panneau. | Jamais |
 | Liste de lignes | Une ligne par événement : heure de simulation, niveau, source, texte, détail et compteur de répétitions. | Sans objet |
 

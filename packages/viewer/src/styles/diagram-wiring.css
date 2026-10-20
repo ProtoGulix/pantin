@@ -4,7 +4,7 @@
 /* Column heads: they stay at the top while the diagram scrolls. */
 .diagram-columns {
   position: sticky;
-  top: 0;
+  top: var(--diagram-toolbar-height);
   z-index: 2;
   height: 30px;
   background: var(--viewport-background);

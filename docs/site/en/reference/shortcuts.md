@@ -189,6 +189,8 @@ The diagram can be navigated entirely from the keyboard: a single element is a t
 | Drag from the source end of a link to a target | Creates the link. The possible targets light up, the others fade. A press that moves by less than 4 pixels stays a click. |
 | <kbd>Esc</kbd> during the drag | Abandons the wiring. |
 
+In the filter field of the diagram toolbar, <kbd>Esc</kbd> clears the filter before anything else.
+
 In the diagram, <kbd>Del</kbd> and <kbd>F2</kbd> never act on the window's selection: <kbd>Del</kbd> shows a help message, <kbd>F2</kbd> is ignored.
 
 ### Value field of a numeric command
@@ -262,6 +264,7 @@ The lines form a list: a single tab stop, on the last line you were on (otherwis
 | Click on a line | Same. |
 | Click on a level filter | Shows or hides that level. |
 | Click on the clear button | Hides the lines read so far in this viewer; the core keeps them (greyed out if there is nothing to clear). |
+| Click on **Export** | Saves the lines shown in `console-<Pantin>.txt`. |
 | Click on the cross | Closes the console. |
 
 In the console, <kbd>F2</kbd> and <kbd>Del</kbd> do not fire the window shortcuts (they would act on the selection, not on the line).

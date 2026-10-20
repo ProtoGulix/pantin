@@ -101,6 +101,11 @@ export function jointSockets(): SocketSpecs {
   return { left: [IN_ANCHOR], right: [OUT_ANCHOR] };
 }
 
+// A belt has no tag and nothing after it: only the link from its drum joint.
+export function beltSockets(): SocketSpecs {
+  return { left: [IN_ANCHOR], right: [] };
+}
+
 export function sensorSockets(sensor: Sensor, language: Language): SocketSpecs {
   const labels = SENSOR_LABELS[sensor.type][language];
   return {

@@ -123,6 +123,8 @@ export interface ViewerState {
   // bands the user folded: display state only, never saved.
   centralLayout: CentralLayout;
   collapsedDiagramBands: ReadonlySet<string>;
+  // The text typed in the diagram's filter: only chains with a matching node stay.
+  diagramFilter: string;
   pendingFeedReplacement: PendingDiagramLink | null;
   // F2 on a device: the inspector's field to focus. The serial makes asking
   // twice for the same key a new request, since a redraw must not refocus.
@@ -226,6 +228,7 @@ export function initialViewerState(
     ...NO_DEVICE_DATA,
     centralLayout,
     collapsedDiagramBands: new Set(),
+    diagramFilter: "",
     pendingFeedReplacement: null,
     inspectorFocus: null,
     console: INITIAL_CONSOLE_STATE,
@@ -272,6 +275,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     ...NO_DEVICE_FORMS,
     ...NO_DEVICE_DATA,
     collapsedDiagramBands: new Set(),
+    diagramFilter: "",
     pendingFeedReplacement: null,
   };
 }
@@ -293,12 +297,4 @@ export function withOpenPantin(state: ViewerState, openPantin: PantinResponse): 
         selection: nodeSelection(pantinNodeId(openPantin.id)),
         multiSelectedNodeIds: [],
       };
-}
-
-export function withRequestStarted(state: ViewerState): ViewerState {
-  return { ...state, pendingRequestCount: state.pendingRequestCount + 1 };
-}
-
-export function withRequestFinished(state: ViewerState): ViewerState {
-  return { ...state, pendingRequestCount: Math.max(0, state.pendingRequestCount - 1) };
 }

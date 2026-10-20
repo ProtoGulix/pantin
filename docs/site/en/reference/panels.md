@@ -533,6 +533,7 @@ At the very bottom of the central area, a thin always-visible bar holds the cons
 | Title **Pantin console** | Name of the panel. | Not applicable |
 | **Error** / **Warning** / **Info** (filters) | Three toggle buttons: show or hide the lines of this level. Pressed = shown. | Never |
 | **Clear** | Hides the lines read so far, in this viewer only; the core keeps its history. | No line read (filters that hide every line do not grey it out) |
+| **Export** | Saves the lines shown, as displayed (level filters and **Clear** included), in a text file `console-<Pantin>.txt`. | No line shown |
 | **Close the console** (cross) | Closes the panel. | Never |
 | List of lines | One line per event: simulation time, level, source, text, detail and repeat counter. | Not applicable |
 

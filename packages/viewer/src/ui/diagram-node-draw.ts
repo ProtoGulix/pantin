@@ -1,6 +1,7 @@
 import { NODE_TITLE_HEIGHT, NODE_WIDTH } from "../diagram/diagram-constants.ts";
 import { focusKeyOf } from "../diagram/diagram-focus.ts";
 import { commandSocketName } from "../diagram/diagram-forcing.ts";
+import { matchRing } from "../diagram/diagram-match-ring.ts";
 import { portLabel, truncateLabel } from "../diagram/diagram-texts.ts";
 import type { DiagramNode, Socket } from "../diagram/diagram-types.ts";
 import type { Translate } from "../i18n/translate.ts";
@@ -176,7 +177,8 @@ function badgeParts(node: DiagramNode, t: Translate): SVGElement[] {
 }
 
 function accessibleLabel(node: DiagramNode, typeLabel: string, t: Translate): string {
-  const parameters = { kind: t(`diagram.kind.${node.kind}`), name: node.label, type: typeLabel };
+  const kind = node.kind === "belt" ? t("objects.kind.belt") : t(`diagram.kind.${node.kind}`);
+  const parameters = { kind, name: node.label, type: typeLabel };
   return node.foreignAssembly === undefined
     ? t("diagram.node", parameters)
     : t("diagram.nodeWithAssembly", { ...parameters, assembly: node.foreignAssembly.name });
@@ -225,8 +227,11 @@ export function drawNode(node: DiagramNode, typeLabel: string, t: Translate): Dr
   };
   // The full label is in the tooltip, where the box shows it cut to fit.
   const title = svgElement("title", {}, [baseLabel]);
+  // Hidden until the node matches the filter; it is no part of the box, which the selection styles.
+  const ring = svgElement("rect", { class: "diagram-node__match", ...matchRing(node) });
   const group = svgElement("g", attributes, [
     title,
+    ring,
     box,
     ...titleParts(node, typeLabel),
     ...socketParts,

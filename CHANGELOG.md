@@ -40,6 +40,13 @@ All notable changes to Pantin. The format follows
 - Viewer (ADR 0059): the joint view marks a joint watched by a sensor with an outlined
   detector mark, next to the filled bolt of an actuator, and says it in the edge's name and
   in the legend.
+- Viewer (ADR 0029): the chain diagram draws a belt as the last node of its chain, in the
+  column of the sensors, linked from its drum joint (the link cannot be removed from the
+  diagram, and says why). A filter by name or tag keeps the chains that hold a match and
+  outlines the matching nodes; **Print** sends the diagram to the browser's print dialog
+  (light theme, no library; the dialog can save a PDF).
+- Viewer (ADR 0031): **Export** in the console writes the lines shown, in the viewer's
+  language, to a text file.
 - Core, CLI and viewer (ADR 0049 amendment): a read-only export of the I/O mapping as
   CSV, one row per channel. `GET /api/pantins/:pantinId/io/csv` (refused with a 409 and
   the problems when the mapping is invalid, like the GVL), `pnpm pantin io export <folder> [--output <file>]` (also on `pantin gvl`),

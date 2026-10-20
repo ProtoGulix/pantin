@@ -10,10 +10,11 @@ import { withGroupCancelled, withGroupRequested } from "../grouping/grouping-sta
 import { createTranslator } from "../i18n/translate.ts";
 import { coreRefusalMessage } from "../messages.ts";
 import { withPreviousPlacementDropped } from "../previous-placement.ts";
+import { withRequestFinished, withRequestStarted } from "../request-count.ts";
 import { selectedNodeIdOf, selectedNodeIdsOf } from "../selection.ts";
 import { assemblyNodeId } from "../tree/node-ids.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
-import { type ViewerState, withRequestFinished, withRequestStarted } from "../viewer-state.ts";
+import type { ViewerState } from "../viewer-state.ts";
 import { refreshPantinList } from "./pantin-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 

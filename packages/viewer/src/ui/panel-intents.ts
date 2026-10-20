@@ -177,6 +177,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   openBottomZone(): void;
   closeBottomZone(): void;
   toggleDiagramBand(bandKey: string): void;
+  // The text of the diagram's filter, as typed.
+  setDiagramFilter(text: string): void;
   selectDiagramNode(nodeId: string): void;
   // Wiring (ADR 0029 points 6 and 7): two sockets linked, by drag or from
   // "Relier à…"; the link between two nodes removed; a hint for a key that
@@ -191,6 +193,8 @@ export interface PanelIntents extends IoIntents, BridgeIntents {
   toggleConsole(): void;
   toggleConsoleLevel(level: ConsoleLevel): void;
   clearConsole(): void;
+  // The lines the console shows, offered as a text file.
+  exportConsole(): void;
   selectConsoleSource(source: ConsoleSource): void;
 
   // The transport bar (ADR 0032 point 10): run or pause, and a number of steps while paused.

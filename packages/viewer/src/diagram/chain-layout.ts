@@ -12,6 +12,7 @@ import {
   SOCKET_PITCH,
 } from "./diagram-constants.ts";
 import { edgesOf } from "./diagram-edges.ts";
+import { filterForest } from "./diagram-filter.ts";
 import { buildForest, type ForestNode } from "./diagram-forest.ts";
 import { nodeHeight, placeRows, rowPitch } from "./diagram-rows.ts";
 import type { SocketSpec } from "./diagram-sockets.ts";
@@ -23,8 +24,9 @@ import type {
   Socket,
 } from "./diagram-types.ts";
 
-// The chain diagram of ADR 0029, computed from the document and the set of
-// collapsed assembly keys. Pure: same input, same output, nothing stored.
+// The chain diagram of ADR 0029, computed from the document, the set of
+// collapsed assembly keys and the filter text (empty keeps every chain). Pure:
+// same input, same output, nothing stored.
 //
 // Choices the ADR leaves open:
 // - a collapsed band is its header line alone: it has no node and no edge, as
@@ -133,8 +135,9 @@ export function layoutChainDiagram(
   document: PantinDocument,
   collapsed: ReadonlySet<string>,
   language: Language,
+  filter = "",
 ): ChainDiagram {
-  const roots = rootsByBand(document, buildForest(document, language));
+  const roots = rootsByBand(document, filterForest(buildForest(document, language), filter));
   const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
   const bands: DiagramBand[] = [];
   const nodes: DiagramNode[] = [];

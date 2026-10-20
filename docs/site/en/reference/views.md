@@ -158,14 +158,14 @@ The diagram is split into **bands**, one per assembly. Each band is foldable. Th
 | **Drives** | Valves, contactors, variable speed drives. |
 | **Actuators** | Cylinders, motors. |
 | **Joints** | The moving joints that are moved or watched. Fixed joints are not drawn. |
-| **Sensors** | Joint sensors. |
+| **Sensors and belts** | Joint sensors, and conveyor belts: a belt is the last node of its chain, linked from its drum joint. Only belts whose drum is a movable joint (continuous revolute) are drawn. |
 
 The column header stays at the top when the diagram scrolls. An element placed in a band other than that of its assembly bears a badge with the name of that **Assembly**.
 
 | Control | Effect |
 | --- | --- |
 | Band button (chevron and name) | Folds the band to its header alone (**Collapse assembly name**) or unfolds it (**Expand assembly name**). A folded band has neither node nor link. |
-| **+** at the head of the **Drives**, **Actuators**, **Sensors** columns | Opens the matching creation form in the inspector (**New drive**, **New actuator**, **New sensor**). |
+| **+** at the head of the **Drives**, **Actuators**, **Sensors and belts** columns | Opens the matching creation form in the inspector (**New drive**, **New actuator**, **New sensor**). |
 | **Joints** column header | No **+**: a joint links two bodies, it is created from the tree (**New joint…**). The tooltip says so. |
 
 When the Pantin has no element yet, the diagram says: **No chain to show yet. Add a drive, an actuator or a sensor with the + buttons above.**
@@ -178,8 +178,9 @@ A node is a box with its name, its type and its **connectors** (small circles wi
 | --- | --- |
 | Drive | On the left, its command tags (what the PLC writes). On the right, its output ports. |
 | Actuator | On the left, its input ports. On the right, a link to the joints it moves. |
-| Joint | A link from the actuator, a link to the sensors. |
+| Joint | A link from the actuator, a link to the sensors and belts. |
 | Sensor | A link to the watched joint, and its feedback tags (read-only value). |
+| Belt | A link from the drum joint. A belt has no tag. |
 
 A click on a node selects it: a drive, an actuator or a sensor is shown in the inspector; a joint selects its row in the tree. The selected node's chain stays in full colour, the rest fades, and the linked nodes are marked. Selecting an element elsewhere (tree, 3D view) highlights it here.
 
@@ -187,7 +188,7 @@ A click on a node selects it: a drive, an actuator or a sensor is shown in the i
 
 A link joins two connectors. There are five kinds, named in the tooltips and for screen readers: **Pneumatic link**, **AC power link**, **Servo link** (from a drive to an actuator), **Mechanical link** (from an actuator to a joint) and **Observation link** (from a sensor to a joint). Each kind has its own line style and a label written on the wire: **PNEU**, **AC**, **SERVO**, **MECH** and **OBS** (see [Reading colours and cues](/en/reference/colours#in-the-chain-diagram)).
 
-A click on a link selects it and makes a small **×** appear halfway along. Clicking the **×** removes the link. For an observation link, the **×** is greyed out: a sensor always watches a joint, it is **moved** by dragging its link onto another joint.
+A click on a link selects it and makes a small **×** appear halfway along. Clicking the **×** removes the link. For an observation link, the **×** is greyed out: a sensor always watches a joint, it is **moved** by dragging its link onto another joint. The **×** of a belt's link is greyed out too, and the tooltip says: **A belt always rests on its drum joint: this link cannot be removed. Change the drum in the belt's form.**
 
 ### Linking two elements
 
@@ -208,6 +209,7 @@ If the link is refused, the reason is shown in the message line:
 | Joint already moved | **Joint … is already moved by ….** |
 | Different units | **Joint … is not in the same unit as the joints of … (metres or degrees).** |
 | Sensor without a joint | **A sensor always watches a joint: drag its link onto another joint instead of removing it.** |
+| Belt without a drum | **A belt always rests on its drum joint: change the drum in the belt's form instead of removing its link.** |
 | Not applicable | **These two cannot be linked.** |
 | Edit in progress | **Another edit is in progress: try again in a moment.** |
 
@@ -241,6 +243,19 @@ The command connectors on the left of a drive are buttons. They write the tag as
 | **Menu** key on a forced connector (keyboard) | Opens a one-entry menu, **Release** (title **Forced tag**), which gives the tag back to the PLC. |
 
 A click on a command connector does not select the node: the inspector does not jump during a test.
+
+### Filtering and printing
+
+The diagram toolbar (group **Diagram filter**) holds a filter field, a counter and the **Print** button.
+
+| Control | Effect |
+| --- | --- |
+| **Filter by name or tag** field (accessible name: **Filter the chains by name or tag**) | Keeps only the chains where a node matches, by its name or by one of its tags. The search ignores case and accents. Matching nodes get a **heavy outline**: the line weight, not a colour, tells them apart. |
+| **Matches: N** | Number of matching nodes. |
+| **Esc** in the field | Clears the filter and brings every chain back. |
+| **Print** | Opens the browser's print dialog, which can also save as a PDF. The diagram is printed with the light theme, dark on white, whatever the screen theme. The filter applies to the print (only the chains shown are printed); selection and highlights are not printed. |
+
+When no chain matches, the diagram says: **No chain matches this filter. Clear it to see every chain.**
 
 ### On the keyboard
 

@@ -1,0 +1,67 @@
+/* The filter, the match outline and the print sheet of the chain diagram (ADR 0029). */
+
+/* The filter and Print: they stay at the top while the diagram scrolls, over the column heads. */
+.diagram__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--diagram-toolbar-height);
+  padding: 0 8px;
+  background: var(--viewport-background);
+}
+
+.diagram__filter {
+  width: 28ch;
+}
+
+.diagram__filter-status {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* A node that matches the filter: a second outline outside the box, in the text colour. The box's
+   own stroke is the selection's, so a selected match shows both cues and colour tells nothing. */
+.diagram-node__match {
+  display: none;
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.diagram-node.is-match .diagram-node__match {
+  display: inline;
+}
+
+/* Print (ADR 0029): only a copy of the drawing, made by ui/diagram-print.ts, on the light theme. */
+.print-sheet {
+  display: none;
+}
+
+@media print {
+  body > :not(.print-sheet) {
+    display: none;
+  }
+
+  .print-sheet {
+    display: block;
+  }
+
+  /* Natural size, so that the column heads stay above their columns; a landscape page holds it. */
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  .print-sheet .diagram-columns {
+    position: static;
+  }
+
+  .print-sheet .diagram-columns__add {
+    display: none;
+  }
+}

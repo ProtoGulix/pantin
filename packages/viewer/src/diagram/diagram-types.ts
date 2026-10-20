@@ -4,7 +4,7 @@ import type { PortDomain } from "@pantin/drive-types/ports";
 // in diagram units (one unit is one SVG user unit). The renderer only draws
 // it; nothing here touches the DOM.
 
-export type NodeKind = "drive" | "actuator" | "joint" | "sensor";
+export type NodeKind = "drive" | "actuator" | "joint" | "sensor" | "belt";
 
 // "command": a drive's tag the PLC writes; "output": a drive port;
 // "input": an actuator port; "feedback": a sensor's tag;
@@ -40,7 +40,7 @@ export interface DiagramNode {
   label: string;
   // The element's type, e.g. "valve_5_2_double", for the renderer's icon and type label.
   elementType: string;
-  // 0 drives, 1 actuators, 2 joints, 3 sensors.
+  // 0 drives, 1 actuators, 2 joints, 3 sensors and belts (the last node of a chain).
   column: number;
   // Index of the node's first leaf row inside its band, from 0. Nodes are emitted in reading
   // order: band, then row, then column.
