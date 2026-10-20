@@ -27,6 +27,8 @@ export type MenuCommand =
   | "frameAll"
   | "frameSelection"
   | `view:${StandardViewId}`
+  | "previousView"
+  | "normalTo"
   | "perspective"
   | "reverseWheel"
   | `arrowStep:${number}`
@@ -53,6 +55,10 @@ export interface Shortcut {
   key: string;
   // Ctrl on Windows and Linux, Cmd on macOS.
   primaryModifier: boolean;
+  // Shift is required when true; a shortcut that does not say ignores it.
+  shift?: boolean;
+  // Typing in a text field keeps this key for the field (Ctrl+Shift+Z redoes the text).
+  yieldsToTextField?: boolean;
   labelKey: MessageKey;
 }
 
@@ -187,5 +193,28 @@ export function standardViewItem(id: StandardViewId): MenuItemDefinition {
     key: VIEW_SHORTCUT_KEYS[id],
     primaryModifier: true,
     labelKey: `shortcut.view.${id}`,
+  });
+}
+
+/** "Vue normale à une face" (Ctrl+8, SolidWorks): checked while it waits for the click. */
+export function normalToItem(): MenuItemDefinition {
+  return {
+    ...item("normalTo", "menubar.view.normalTo", (context) => context.viewsAvailable, {
+      key: "8",
+      primaryModifier: true,
+      labelKey: "shortcut.normalTo",
+    }),
+    checked: (context) => context.normalTo,
+  };
+}
+
+/** "Vue précédente" (Ctrl+Shift+Z, SolidWorks). */
+export function previousViewItem(): MenuItemDefinition {
+  return item("previousView", "menubar.view.previousView", (context) => context.viewsAvailable, {
+    key: "z",
+    primaryModifier: true,
+    shift: true,
+    yieldsToTextField: true,
+    labelKey: "shortcut.previousView",
   });
 }

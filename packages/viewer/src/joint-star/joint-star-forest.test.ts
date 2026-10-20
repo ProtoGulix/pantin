@@ -55,6 +55,28 @@ describe("buildJointStarForest", () => {
     const edge = frame.edges[0];
     expect(edge?.jointType).toBe("prismatic");
     expect(edge?.driven).toBe(true);
+    expect(edge?.watched).toBe(false);
+  });
+
+  it("marks a joint a sensor watches, whether or not an actuator moves it", () => {
+    const document = starDocument({
+      assemblies: ["a"],
+      bodies: [
+        ["frame", "a"],
+        ["slide", "a"],
+      ],
+      joints: [
+        {
+          id: "j1",
+          parent: bodyEndpoint("frame"),
+          child: bodyEndpoint("slide"),
+          type: "prismatic",
+        },
+      ],
+      watchedJoints: ["j1"],
+    });
+    const edge = nodeById(buildJointStarForest(document), "body:frame").edges[0];
+    expect(edge).toMatchObject({ driven: false, watched: true });
   });
 });
 

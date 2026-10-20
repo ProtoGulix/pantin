@@ -1,5 +1,4 @@
 import "@babylonjs/core/Culling/ray.js";
-import { Engine } from "@babylonjs/core/Engines/engine.js";
 import "@babylonjs/core/Rendering/outlineRenderer.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import type { Body, PoseSnapshot } from "@pantin/protocol";
@@ -18,6 +17,7 @@ import { type ScenePalette, signalColoursOf } from "../theme/scene-palette.ts";
 import { type LoadedBody, loadBody } from "./body-loader.ts";
 import { frameBodies } from "./camera-framing.ts";
 import { createCameraNavigation } from "./camera-navigation.ts";
+import { createEngine } from "./engine-setup.ts";
 import { createRenderSwitch } from "./render-switch.ts";
 import { bodyRenderKey, forgetFailedLoads, isCurrentLoad, planSceneSync } from "./scene-plan.ts";
 import { createContext, type ViewportContext } from "./viewport-context.ts";
@@ -57,7 +57,7 @@ export interface Viewport {
   frameBodies(bodyIds: readonly string[] | null): void;
   /** Feeds one snapshot of the pose stream; bodies follow it from the next frame. */
   pushPoses(snapshot: PoseSnapshot): void;
-  /** Forgets every pose; overlays hide until the next snapshot (bodies are replaced with the Pantin). */
+  /** Forgets every pose and the previous views; overlays hide until the next snapshot (a new Pantin). */
   clearPoses(): void;
   /** Colours a joint's bodies and draws its axis; null goes back to the selection. */
   showJointPreview(preview: JointPreview | null): void;
@@ -85,6 +85,8 @@ export interface Viewport {
   setNavigation(settings: NavigationSettings): void;
   /** A standard view or a cube cell (ADR 0036): the camera turns to these angles in 300 ms. */
   showView(angles: CameraAngles): void;
+  /** The camera goes back to the view before its last change (ADR 0036); nothing if none. */
+  previousView(): void;
   /** Alpha and beta of the camera when they change, for the view cube; also once at once. */
   onCameraOrientation(listener: (alpha: number, beta: number) => void): void;
   /** True: a click is an alignment pick (ADR 0035 point 3); false: it selects. */
@@ -150,24 +152,6 @@ async function loadAndShow(
     return;
   }
   addLoadedBody(context, body.id, loaded);
-}
-
-function createEngine(canvas: HTMLCanvasElement): Engine {
-  const engine = new Engine(canvas, true, { stencil: true }, true);
-  // Loading progress is shown by the panel; Babylon's full-page overlay would hide it.
-  engine.loadingScreen = {
-    displayLoadingUI: () => undefined,
-    hideLoadingUI: () => undefined,
-    loadingUIBackgroundColor: "",
-    loadingUIText: "",
-  };
-  // A canvas taken out of the layout measures 0x0: the engine keeps its last size until it is back.
-  new ResizeObserver(() => {
-    if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
-      engine.resize();
-    }
-  }).observe(canvas);
-  return engine;
 }
 
 function showBodies(
@@ -272,9 +256,15 @@ export function createViewport(
   const setRendering = createRenderSwitch(engine, scene);
   return {
     ...createBodySync(context, loadBytes, callbacks),
-    frameBodies: (bodyIds) => frameBodies(context, bodyIds),
+    frameBodies: (bodyIds) => {
+      navigation.rememberView();
+      frameBodies(context, bodyIds);
+    },
     pushPoses: (snapshot) => pushSnapshot(context, snapshot),
-    clearPoses: () => forgetPoses(context),
+    clearPoses: () => {
+      forgetPoses(context);
+      navigation.forgetViews();
+    },
     setSelectedBodies: (bodyIds) => context.highlights.setSelectedBodies(bodyIds),
     setHiddenBodies: (bodyIds) => hideBodies(context, bodyIds),
     showJointPreview: (preview) => context.highlights.setJointPreview(preview),
@@ -291,6 +281,7 @@ export function createViewport(
     releasePlacementGizmo: () => context.placementGizmo.release(),
     setNavigation: (settings) => navigation.apply(settings),
     showView: (angles) => navigation.showView(angles),
+    previousView: () => navigation.previousView(),
     onCameraOrientation: (listener) => navigation.onOrientation(listener),
     setAlignmentPicking: (active) => {
       context.alignmentPicking = active;

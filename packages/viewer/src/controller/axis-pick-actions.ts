@@ -9,6 +9,7 @@ import {
 } from "../joints/axis-pick.ts";
 import { describeFailure, infoMessage } from "../messages.ts";
 import { faceFileOf, receiveAlignmentPick } from "./alignment-actions.ts";
+import { receiveNormalToPick } from "./navigation-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // "Prendre l'axe sur une face" (ADR 0041): the button waits for one click in
@@ -31,7 +32,9 @@ export async function receiveViewportPick(
   store: ViewerStore,
   click: ViewportPick | null,
 ): Promise<void> {
-  if (isPickingAxis(store.state)) {
+  if (store.state.normalTo) {
+    receiveNormalToPick(store, click);
+  } else if (isPickingAxis(store.state)) {
     await receiveAxisPick(store, click);
   } else {
     await receiveAlignmentPick(store, click);

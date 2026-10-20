@@ -39,6 +39,8 @@ const SHORTCUT_KEYS = [
   "Ctrl+5",
   "Ctrl+6",
   "Ctrl+7",
+  "Ctrl+8",
+  "Ctrl+Maj+Z",
   "F8",
   "F4",
   "Flèches",

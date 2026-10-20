@@ -60,6 +60,8 @@ Les outils **Déplacer**, **Tourner** et **Aligner…** sont détaillés dans [P
 | **Dessus** | <kbd>Ctrl</kbd>+<kbd>5</kbd> | Vue de dessus. | Idem. |
 | **Dessous** | <kbd>Ctrl</kbd>+<kbd>6</kbd> | Vue de dessous. | Idem. |
 | **Isométrique** | <kbd>Ctrl</kbd>+<kbd>7</kbd> | Vue isométrique. | Idem. |
+| **Vue normale à une face** (case) | <kbd>Ctrl</kbd>+<kbd>8</kbd> | Attend un clic sur une face d'un corps dans la vue 3D, puis place la caméra de face devant elle. La ligne de message dit : **Cliquez sur une face dans la vue 3D pour la regarder de face. Échap annule.** <kbd>Échap</kbd> ou la même commande annule l'attente. Coché pendant l'attente. | Idem. |
+| **Vue précédente** | <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> | Remet la vue précédente de la caméra (angles, cible et zoom), jusqu'à 50 vues en arrière. Dans un champ de saisie, ce raccourci garde son sens de rétablissement du champ. | Idem. |
 | séparateur | | | |
 | **Inspecteur** (case) | | Affiche ou masque l'inspecteur. Coché quand il est affiché. | Pas de Pantin ouvert. |
 | **Console** (case) | <kbd>F8</kbd> | Affiche ou masque la console. | Pas de Pantin ouvert. |

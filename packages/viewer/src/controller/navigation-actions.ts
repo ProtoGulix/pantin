@@ -1,9 +1,12 @@
+import type { ViewportPick } from "../alignment/pick-resolution.ts";
 import type { Vector3Tuple } from "../frames.ts";
+import { infoMessage } from "../messages.ts";
 import {
   ARROW_STEPS_DEGREES,
   isNavigationPresetId,
   type NavigationSettings,
 } from "../navigation/navigation-settings.ts";
+import { normalToDirectionOf, withNormalToToggled } from "../navigation/normal-to.ts";
 import {
   anglesFromDirection,
   isStandardViewId,
@@ -56,4 +59,25 @@ export function showStandardView(store: ViewerStore, viewId: string): void {
   if (isStandardViewId(viewId)) {
     showViewFromDirection(store, STANDARD_VIEWS[viewId].camera);
   }
+}
+
+/** "Vue précédente" (Ctrl+Shift+Z): the camera goes back to the view before its last change. */
+export function showPreviousView(store: ViewerStore): void {
+  store.ports.viewport().previousView();
+}
+
+/** "Vue normale à une face" (Ctrl+8): waits for a click on a face; the same command cancels. */
+export function toggleNormalTo(store: ViewerStore): void {
+  const next = withNormalToToggled(store.state);
+  store.update(next.normalTo ? { ...next, message: infoMessage("message.normalToWaiting") } : next);
+}
+
+/** A click in the 3D view while "Normal To" waits: the camera squares to the face, the mode ends. */
+export function receiveNormalToPick(store: ViewerStore, click: ViewportPick | null): void {
+  // A click on empty space keeps waiting.
+  if (click === null) {
+    return;
+  }
+  store.update({ ...store.state, normalTo: false, message: null });
+  showViewFromDirection(store, normalToDirectionOf(click));
 }

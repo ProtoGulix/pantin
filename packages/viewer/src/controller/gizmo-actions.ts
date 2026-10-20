@@ -1,6 +1,7 @@
 import { withTypedStep } from "../gizmo/gizmo-steps.ts";
 import type { DragKind, SnapSteps } from "../gizmo/placement-snapping.ts";
 import { isBodySelected, withToolTarget } from "../gizmo/tool-rules.ts";
+import { withoutNormalToHint } from "../navigation/normal-to.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The placement gizmo's switches and steps (ADR 0034 points 3 and 5): display
@@ -24,7 +25,15 @@ export function toggleGizmo(store: ViewerStore, kind: DragKind): void {
 
 /** Escape with nothing else to close: no positioning tool stays on (ADR 0039 point 6). */
 export function turnToolOff(store: ViewerStore): void {
-  store.update({ ...store.state, gizmoMode: null, alignment: null, axisPick: null });
+  store.update(
+    withoutNormalToHint({
+      ...store.state,
+      gizmoMode: null,
+      alignment: null,
+      axisPick: null,
+      normalTo: false,
+    }),
+  );
 }
 
 /** "Local / Global" (ADR 0042 point 2): the other axes, remembered in the browser. */

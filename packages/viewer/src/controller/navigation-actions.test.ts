@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import { escapeCommand } from "../menu/menu-context.ts";
 import { DEFAULT_NAVIGATION } from "../navigation/navigation-settings.ts";
+import type { Viewport } from "../scene/viewport.ts";
+import { withOpenPantin } from "../viewer-state.ts";
+import { click, PANTIN } from "./alignment-test-helpers.ts";
+import { receiveViewportPick } from "./axis-pick-actions.ts";
 import { testStore } from "./controller-test-helpers.ts";
+import { turnToolOff } from "./gizmo-actions.ts";
 import { runMenuCommand } from "./menu-commands.ts";
 import { showViewFromDirection } from "./navigation-actions.ts";
 
@@ -73,5 +79,53 @@ describe("standard views", () => {
     const store = testStore({}, { showView });
     showViewFromDirection(store, [0, -1, 1]);
     expect(showView.mock.calls[0]?.[0].beta).toBeCloseTo(Math.PI / 4, 9);
+  });
+});
+
+function editingStore(viewport: Partial<Viewport>) {
+  const store = testStore({}, viewport);
+  store.state = withOpenPantin(store.state, PANTIN);
+  return store;
+}
+
+describe("Normal To", () => {
+  it("waits for a click with a hint, then squares the camera to the face and ends", async () => {
+    const showView = vi.fn();
+    const store = editingStore({ showView });
+    runMenuCommand(store, "normalTo", noLanguage);
+    expect(store.state.normalTo).toBe(true);
+    expect(store.state.message?.key).toBe("message.normalToWaiting");
+    await receiveViewportPick(store, { ...click("block"), normal: [0, -1, 0] });
+    expect(store.state.normalTo).toBe(false);
+    expect(store.state.message).toBeNull();
+    expect(showView.mock.calls[0]?.[0]).toMatchObject({ alpha: -Math.PI / 2, beta: Math.PI / 2 });
+  });
+
+  it("keeps waiting on a click in empty space, and the same command cancels", async () => {
+    const showView = vi.fn();
+    const store = editingStore({ showView });
+    runMenuCommand(store, "normalTo", noLanguage);
+    await receiveViewportPick(store, null);
+    expect(store.state.normalTo).toBe(true);
+    expect(showView).not.toHaveBeenCalled();
+    runMenuCommand(store, "normalTo", noLanguage);
+    expect(store.state.normalTo).toBe(false);
+  });
+
+  it("is cancelled by Escape, which turns every tool off", () => {
+    const store = editingStore({});
+    runMenuCommand(store, "normalTo", noLanguage);
+    expect(escapeCommand(store.state)).toBe("turnToolOff");
+    turnToolOff(store);
+    expect(store.state.normalTo).toBe(false);
+    expect(store.state.message).toBeNull();
+  });
+});
+
+describe("Previous view", () => {
+  it("asks the viewport to go back", () => {
+    const previousView = vi.fn();
+    runMenuCommand(testStore({}, { previousView }), "previousView", noLanguage);
+    expect(previousView).toHaveBeenCalledTimes(1);
   });
 });

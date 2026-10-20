@@ -18,6 +18,8 @@ import {
   type MenuId,
   navigationPresetItem,
   navigationToggleItem,
+  normalToItem,
+  previousViewItem,
   type Shortcut,
   standardViewItem,
   themeItem,
@@ -82,6 +84,8 @@ const MENUS: readonly MenuDefinition[] = [
       ),
       "separator",
       ...STANDARD_VIEW_IDS.map(standardViewItem),
+      normalToItem(),
+      previousViewItem(),
       "separator",
       {
         ...item("toggleInspector", "menubar.view.inspector", (context) => context.editing),
@@ -193,16 +197,30 @@ export interface KeyPress {
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
+  shiftKey?: boolean;
+  // The physical key ("Digit8", "Numpad8"): digits are read from it, see `keyMatches`.
+  code?: string;
   // True while the user types in a text field: shortcuts never fire then.
   inEditableField: boolean;
+}
+
+// A digit is the same physical key on every layout, but its character is not: AZERTY gives
+// "_" for Ctrl+8. So a digit shortcut follows the physical key; other keys follow the
+// character, so that Z stays the Z of the user's layout. Without a code, the character counts.
+function keyMatches(shortcut: Shortcut, press: KeyPress): boolean {
+  if (/^[0-9]$/.test(shortcut.key) && press.code !== undefined && press.code !== "") {
+    return press.code === `Digit${shortcut.key}` || press.code === `Numpad${shortcut.key}`;
+  }
+  return press.key.toLowerCase() === shortcut.key.toLowerCase();
 }
 
 function matches(shortcut: Shortcut, press: KeyPress): boolean {
   const primary = press.ctrlKey || press.metaKey;
   return (
     !press.altKey &&
+    (shortcut.shift === undefined || shortcut.shift === (press.shiftKey ?? false)) &&
     primary === shortcut.primaryModifier &&
-    press.key.toLowerCase() === shortcut.key.toLowerCase()
+    keyMatches(shortcut, press)
   );
 }
 
@@ -212,6 +230,8 @@ export interface ShortcutMatch {
   // browser default (Ctrl+S "save page") is always blocked, even when they do
   // not run. F2 and Suppr keep their normal meaning in a text field.
   primaryModifier: boolean;
+  // The key is left to the focused text field, which has its own use for it.
+  yieldsToField: boolean;
   // Run only when the command is enabled and the user is not typing.
   run: boolean;
 }
@@ -227,6 +247,7 @@ export function shortcutForKeyPress(state: ViewerState, press: KeyPress): Shortc
         return {
           command: entry.command,
           primaryModifier,
+          yieldsToField: entry.shortcut.yieldsToTextField === true && press.inEditableField,
           run,
         };
       }

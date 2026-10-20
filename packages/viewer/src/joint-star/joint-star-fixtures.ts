@@ -5,7 +5,7 @@ import {
   type PantinDocument,
   PantinDocumentSchema,
 } from "@pantin/protocol";
-import { actuatorOf, bodyOf } from "../diagram/diagram-fixtures.ts";
+import { actuatorOf, bodyOf, encoderOf } from "../diagram/diagram-fixtures.ts";
 
 // Small documents for the joint star tests, checked by the protocol schema.
 
@@ -22,6 +22,8 @@ export interface StarFixture {
   joints?: JointSpec[];
   // Joint ids moved by an actuator.
   drivenJoints?: string[];
+  // Joint ids watched by a sensor.
+  watchedJoints?: string[];
 }
 
 function jointDocument(spec: JointSpec) {
@@ -65,7 +67,9 @@ export function starDocument(fixture: StarFixture): PantinDocument {
               driven,
             ),
           ],
-    sensors: [],
+    sensors: (fixture.watchedJoints ?? []).map((jointId) =>
+      encoderOf(`encoder-${jointId}`, fixture.assemblies[0] ?? "a", jointId),
+    ),
     belts: [],
     guides: [],
     emitters: [],

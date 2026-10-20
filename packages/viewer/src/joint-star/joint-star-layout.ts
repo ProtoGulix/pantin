@@ -75,6 +75,7 @@ export interface PlacedEdge {
   jointType: JointType | undefined;
   jointName: string | undefined;
   driven: boolean;
+  watched: boolean;
 }
 
 interface StarBounds {
@@ -239,6 +240,7 @@ function placeEdges(slots: readonly Slot[]): PlacedEdge[] {
       jointType: edge.jointType,
       jointName: edge.jointName,
       driven: edge.driven,
+      watched: edge.watched,
     });
   }
   return edges;

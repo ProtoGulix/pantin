@@ -258,6 +258,8 @@ describe("shortcut listing", () => {
       { keys: "Ctrl+5", action: "Dessus" },
       { keys: "Ctrl+6", action: "Dessous" },
       { keys: "Ctrl+7", action: "Isométrique" },
+      { keys: "Ctrl+8", action: "Vue normale à une face" },
+      { keys: "Ctrl+Maj+Z", action: "Vue précédente" },
       { keys: "F8", action: "Console" },
       { keys: "F4", action: "Vue suivante de la zone du haut" },
     ]);

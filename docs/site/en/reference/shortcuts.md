@@ -8,12 +8,16 @@ On macOS, <kbd>Cmd</kbd> replaces <kbd>Ctrl</kbd> in shortcuts. Exceptions: came
 
 ## Global (whole window)
 
-These shortcuts are those of the menus. Adding <kbd>Alt</kbd> disables them; <kbd>Shift</kbd> is ignored (<kbd>Shift</kbd>+<kbd>G</kbd> acts like <kbd>G</kbd>).
+These shortcuts are those of the menus. Adding <kbd>Alt</kbd> disables them; <kbd>Shift</kbd> is ignored (<kbd>Shift</kbd>+<kbd>G</kbd> acts like <kbd>G</kbd>), except for <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>, where it is required.
+
+The digit shortcuts (<kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>Ctrl</kbd>+<kbd>8</kbd>) follow the physical digit key, on the top row or the numeric keypad, not the character it types: they work on an AZERTY keyboard, where that row types symbols without <kbd>Shift</kbd>.
 
 | Gesture | Effect | Condition |
 |---|---|---|
 | <kbd>Ctrl</kbd>+<kbd>S</kbd> | **Save** | Menu entry not greyed out. |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>Ctrl</kbd>+<kbd>7</kbd> | Views **Front**, **Back**, **Left**, **Right**, **Top**, **Bottom**, **Isometric** | Pantin open and 3D view displayed. |
+| <kbd>Ctrl</kbd>+<kbd>8</kbd> | **View normal to a face**: waits for a click on a face in the 3D view, then looks at it square on. <kbd>Esc</kbd> cancels. | Pantin open and 3D view displayed. |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> | **Previous view**: goes back to the camera's previous view (50 views kept) | Pantin open and 3D view displayed. |
 | <kbd>F2</kbd> | **Rename** the selection | Menu entry not greyed out. |
 | <kbd>Del</kbd> | **Delete** the selection | Menu entry not greyed out. |
 | <kbd>G</kbd> | **Move** (move gizmo) | A usable assembly is selected (or a body: the selection then moves to its assembly). |
@@ -23,10 +27,10 @@ These shortcuts are those of the menus. Adding <kbd>Alt</kbd> disables them; <kb
 | <kbd>F</kbd> | **Frame all** | Bodies present and 3D view displayed. |
 | <kbd>F4</kbd> | **Next view in the top zone** (3D, Diagram, Joints, I/O, skipping the view of the bottom zone) | Pantin open. |
 | <kbd>F8</kbd> | **Console** | Pantin open. |
-| <kbd>Esc</kbd> | Ends the placement tool in progress (gizmo, alignment, axis pick) | See the Escape chain below. |
+| <kbd>Esc</kbd> | Ends the placement tool in progress (gizmo, alignment, axis pick, view normal to a face) | See the Escape chain below. |
 | <kbd>Space</kbd> or <kbd>Shift</kbd>+<kbd>Space</kbd> | Opens the list of standard views at the pointer's position | See "3D view". |
 
-In an input field, these shortcuts do not run: the keys keep their normal meaning. <kbd>Ctrl</kbd>+<kbd>S</kbd> and <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>7</kbd> stay intercepted, even when greyed out, so that the browser neither saves the page nor changes tab.
+In an input field, these shortcuts do not run: the keys keep their normal meaning. <kbd>Ctrl</kbd>+<kbd>S</kbd> and <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>8</kbd> stay intercepted, even when greyed out, so that the browser neither saves the page nor changes tab. Only <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> lets the input field handle it: it then redoes the field's typing.
 
 Single-key shortcuts (<kbd>F2</kbd>, <kbd>Del</kbd>, <kbd>G</kbd>...) give way to a component that has already handled the key (tree, menus, diagram, console).
 
@@ -39,7 +43,7 @@ Single-key shortcuts (<kbd>F2</kbd>, <kbd>Del</kbd>, <kbd>G</kbd>...) give way t
 3. an input field: it restores its value;
 4. a confirmation question: it chooses cancel;
 5. a menu or a context menu: it closes;
-6. the active placement tool (gizmo, alignment, axis pick): it ends.
+6. the active placement tool (gizmo, alignment, axis pick) or the wait of **View normal to a face**: it ends.
 
 ## Menu bar
 

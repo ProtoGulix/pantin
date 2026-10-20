@@ -135,9 +135,10 @@ export interface ViewerState {
   gizmoSteps: SnapSteps;
   // Which axes the gizmo offers (ADR 0042 point 2), also kept in the browser.
   gizmoSpace: GizmoSpace;
-  // The alignment (ADR 0035) or the axis pick (ADR 0041) under way, or null. Display state.
+  // The alignment (ADR 0035), the axis pick (ADR 0041) or "Normal To" (ADR 0036) under way. Display state.
   alignment: AlignmentSession | null;
   axisPick: AxisPickState | null;
+  normalTo: boolean;
   // Placement field feedback (ADR 0039 point 5): the last placement a drag sent
   // while it lasts, and typed text that is not a number. Display state.
   placementDraft: PlacementDraft | null;
@@ -175,11 +176,10 @@ const NO_TOOL_STATE = {
   gizmoMode: null,
   alignment: null,
   axisPick: null,
+  normalTo: false,
   placementDraft: null,
   placementInvalid: null,
 } as const;
-
-const NO_ABOUT = { about: CLOSED_ABOUT } as const;
 
 export function initialViewerState(
   language: Language,
@@ -210,7 +210,7 @@ export function initialViewerState(
     welcomeHidden: false,
     welcomeTab: "home",
     welcomeFilter: "",
-    ...NO_ABOUT,
+    about: CLOSED_ABOUT,
     ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,

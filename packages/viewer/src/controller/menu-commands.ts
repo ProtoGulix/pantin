@@ -23,7 +23,9 @@ import { openJointForm } from "./joint-actions.ts";
 import {
   setArrowStep,
   setNavigationPreset,
+  showPreviousView,
   showStandardView,
+  toggleNormalTo,
   togglePerspective,
   toggleReverseWheel,
 } from "./navigation-actions.ts";
@@ -122,6 +124,12 @@ function runViewCommand(
       return;
     case "frameSelection":
       withSelection(store, (nodeId) => frameNode(store, nodeId));
+      return;
+    case "previousView":
+      showPreviousView(store);
+      return;
+    case "normalTo":
+      toggleNormalTo(store);
       return;
     case "perspective":
       togglePerspective(store);

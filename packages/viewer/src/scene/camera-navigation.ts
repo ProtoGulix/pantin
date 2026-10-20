@@ -10,9 +10,10 @@ import {
 } from "../navigation/navigation-presets.ts";
 import { DEFAULT_NAVIGATION, type NavigationSettings } from "../navigation/navigation-settings.ts";
 import type { CameraAngles } from "../navigation/standard-views.ts";
-import { isArrowKey } from "../navigation/turntable.ts";
+import { canvasArrowOf } from "../navigation/turntable.ts";
 import { dragZoomFactor, wheelZoomFactor } from "../navigation/zoom-math.ts";
 import { createViewAnimator, type ViewAnimator } from "./camera-animation.ts";
+import { type CameraHistory, createCameraHistory } from "./camera-history.ts";
 import { createCameraMoves } from "./camera-moves.ts";
 import type { CameraPivot } from "./camera-pivot.ts";
 import { createCameraPivot } from "./camera-pivot.ts";
@@ -32,6 +33,12 @@ export interface CameraNavigation {
   apply(settings: NavigationSettings): void;
   /** Turns the camera to these angles in 300 ms, keeping the target and the zoom. */
   showView(angles: CameraAngles): void;
+  /** The view as it is now goes into the history of "Vue précédente", before a change. */
+  rememberView(): void;
+  /** Empties that history, when another Pantin opens. */
+  forgetViews(): void;
+  /** Puts the previous view back (ADR 0036). */
+  previousView(): void;
   /** Called with alpha and beta when they change, and once at once. */
   onOrientation(listener: (alpha: number, beta: number) => void): void;
 }
@@ -79,6 +86,7 @@ function listenToPointer(
   pivot: CameraPivot,
   moves: Moves,
   animator: ViewAnimator,
+  history: CameraHistory,
 ): void {
   const { canvas } = host;
   let dragZoom: { x: number; y: number } | null = null;
@@ -86,6 +94,7 @@ function listenToPointer(
     "pointerdown",
     (event) => {
       canvas.focus({ preventScroll: true });
+      history.remember();
       animator.cancel();
       const held = { ctrl: event.ctrlKey, shift: event.shiftKey };
       const interaction = resolveBinding(live.preset, event.button, held);
@@ -114,11 +123,17 @@ function listenToPointer(
   canvas.addEventListener("pointercancel", endDrag);
 }
 
-function listenToWheel(canvas: HTMLCanvasElement, live: Live, moves: Moves): void {
+function listenToWheel(
+  canvas: HTMLCanvasElement,
+  live: Live,
+  moves: Moves,
+  history: CameraHistory,
+): void {
   canvas.addEventListener(
     "wheel",
     (event) => {
       event.preventDefault();
+      history.rememberGesture(performance.now());
       const pixels = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? WHEEL_PIXELS_PER_LINE : 1;
       const cursor = cursorOf(canvas, event);
       const factor = wheelZoomFactor(
@@ -134,16 +149,23 @@ function listenToWheel(canvas: HTMLCanvasElement, live: Live, moves: Moves): voi
 
 // Only with the canvas focused, so that arrows keep moving in the tree and in
 // the fields.
-function listenToKeys(canvas: HTMLCanvasElement, live: Live, moves: Moves): void {
+function listenToKeys(
+  canvas: HTMLCanvasElement,
+  live: Live,
+  moves: Moves,
+  history: CameraHistory,
+): void {
   canvas.addEventListener("keydown", (event) => {
-    if (!isArrowKey(event.key) || event.altKey || event.metaKey) {
+    const arrow = canvasArrowOf(event);
+    if (arrow === null) {
       return;
     }
     event.preventDefault();
+    history.rememberGesture(performance.now());
     if (event.ctrlKey) {
-      moves.panByArrow(event.key);
+      moves.panByArrow(arrow);
     } else {
-      moves.turnByArrow(event.key, event.shiftKey, live.settings.arrowStepDegrees);
+      moves.turnByArrow(arrow, event.shiftKey, live.settings.arrowStepDegrees);
     }
   });
 }
@@ -153,10 +175,12 @@ export function createCameraNavigation(host: NavigationHost): CameraNavigation {
   const live: Live = { settings: DEFAULT_NAVIGATION, preset: NAVIGATION_PRESETS.solidworks };
   const pivot = createCameraPivot(camera);
   const animator = createViewAnimator(camera);
-  const moves = createCameraMoves(scene, camera, view, () => {
+  const taken = () => {
     pivot.release();
     animator.cancel();
-  });
+  };
+  const moves = createCameraMoves(scene, camera, view, taken);
+  const history = createCameraHistory(camera, view, taken);
   const listeners: ((alpha: number, beta: number) => void)[] = [];
   let announced: CameraAngles | null = null;
   camera.inputs.removeByType("ArcRotateCameraMouseWheelInput");
@@ -165,9 +189,9 @@ export function createCameraNavigation(host: NavigationHost): CameraNavigation {
   // on the right button and cancels a right-button drag.
   camera.attachControl(false);
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-  listenToPointer(host, live, pivot, moves, animator);
-  listenToWheel(canvas, live, moves);
-  listenToKeys(canvas, live, moves);
+  listenToPointer(host, live, pivot, moves, animator, history);
+  listenToWheel(canvas, live, moves, history);
+  listenToKeys(canvas, live, moves, history);
   // After the inputs and before the matrices are built, so that neither the
   // pivot nor the orthographic bounds lag a frame behind the camera.
   camera.onAfterCheckInputsObservable.add(() => {
@@ -191,7 +215,13 @@ export function createCameraNavigation(host: NavigationHost): CameraNavigation {
       }
       live.settings = next;
     },
+    rememberView: history.remember,
+    forgetViews: history.forget,
+    previousView() {
+      history.back();
+    },
     showView(angles) {
+      history.remember();
       pivot.release();
       animator.goTo(angles, performance.now());
     },

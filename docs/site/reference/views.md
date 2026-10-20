@@ -64,6 +64,16 @@ Sept vues standard existent : **Face**, **Arrière**, **Gauche**, **Droite**, **
 - appuyer sur **Espace** (le focus sur la vue ou la page, pas sur un bouton, l'arborescence ou le schéma) : une liste des vues apparaît à la position du pointeur, avec les flèches haut et bas et **Échap** pour fermer ;
 - les touches de raccourci, indiquées dans [Raccourcis](/reference/shortcuts), ou le menu **Affichage**.
 
+Les raccourcis <kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>Ctrl</kbd>+<kbd>7</kbd> utilisent la touche physique du chiffre (rangée du haut ou pavé numérique) : ils marchent aussi sur un clavier AZERTY.
+
+### Regarder une face de face
+
+**Affichage**, **Vue normale à une face** (<kbd>Ctrl</kbd>+<kbd>8</kbd>) tourne la caméra pour regarder une face à angle droit. Après la commande, la ligne de message dit : **Cliquez sur une face dans la vue 3D pour la regarder de face. Échap annule.** Cliquez une face d'un corps : la caméra se place devant elle. <kbd>Échap</kbd>, ou la même commande une seconde fois, annule l'attente. Pendant l'attente, l'entrée de menu est cochée.
+
+### Revenir à la vue précédente
+
+**Affichage**, **Vue précédente** (<kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd>) remet la vue d'avant de la caméra : angles, cible et zoom. Les 50 dernières vues sont gardées. Dans un champ de saisie, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> reste le rétablissement du champ.
+
 ### Cadrer
 
 **Tout cadrer** (menu **Affichage**, bouton **Cadrer tout**) place la caméra pour voir tous les corps. **Cadrer la sélection** (bouton, menu, ou **Cadrer la vue sur l'élément** dans le menu contextuel de l'arborescence) la place sur l'élément sélectionné. Les deux sont grisés sans corps, et en disposition sans vue 3D.
@@ -238,7 +248,7 @@ Le schéma se parcourt entièrement au clavier : les flèches passent d'un noeud
 
 ## La vue Liaisons
 
-![La vue Liaisons de l'exemple plc-cylinder : le Monde à gauche, le groupe Verin1 (un corps) relié au Monde, le groupe Tige (deux corps) et la glissière du vérin entre les deux, marquée de l'éclair des liaisons déplacées par un actionneur](/screenshots/fr/joint-view.webp)
+![La vue Liaisons de l'exemple plc-cylinder : le Monde à gauche, le groupe Verin1 (un corps) relié au Monde, le groupe Tige (deux corps) et la glissière du vérin entre les deux, marquée de l'éclair des liaisons déplacées par un actionneur et du détecteur des liaisons surveillées par un capteur](/screenshots/fr/joint-view.webp)
 
 La vue **Liaisons** dessine l'**arbre cinématique** de la machine : qui bouge par rapport à qui. Ce n'est pas l'arborescence de gauche. L'arborescence range les corps dans des assemblages et ne porte aucun mouvement ; la vue Liaisons ne montre que ce qui est relié par des liaisons. Les deux arbres peuvent différer, et c'est le but : vous voyez d'un coup d'œil un corps qui ne suit pas le groupe que vous attendiez, ou un corps relié par vingt liaisons fixes. Pour comprendre les groupes, voir [Le modèle d'un Pantin](/guide/model#les-concepts-corps-assemblage-groupe).
 
@@ -267,7 +277,7 @@ Le type d'une liaison se lit à trois indices, jamais à la couleur seule : le s
 | **Pivot continu** | Épais, en points ronds. | Un cercle complet avec une flèche. |
 | **Hélicoïdale (vis et écrou)** | Épais, alternant tiret et point. | Trois petits traits obliques (un filet). |
 
-Une liaison **déplacée par un actionneur** porte en plus un signe en forme d'**éclair** à côté de son signe de type.
+Une liaison **déplacée par un actionneur** porte en plus un signe en forme d'**éclair** à côté de son signe de type. Une liaison **surveillée par un capteur** porte un signe de détecteur avec ses ondes, **dessiné en contour** là où l'éclair est plein. Si la liaison est à la fois déplacée et surveillée, les deux signes se suivent. Le nom accessible de la liaison le dit aussi : **mue par un actionneur**, **surveillée par un capteur**. La légende a une ligne pour chacun.
 
 Les corps qui suivent leur groupe sont repliés par défaut : le groupe affiche seulement leur nombre. Cliquez la flèche **▸** du groupe (info-bulle **Afficher les N corps qui le suivent**) pour les voir, chacun au bout d'un trait en pointillés ; la flèche se retourne et son info-bulle devient **Masquer les N corps qui le suivent**. Un corps qui n'est ni l'extrémité d'une liaison ni rangé dans un groupe est compté dans le **Monde**, puisqu'il ne bouge jamais.
 
@@ -281,7 +291,7 @@ Dans l'arborescence, un sous-assemblage est rangé dans l'assemblage au-dessus d
 
 En bas à gauche de la vue, une ligne **Légende** (avec un chevron) est repliée. Cliquez-la (info-bulle **Afficher la légende**) pour déplier la liste de tous les traits, signes et formes décrits plus haut ; **Fermer la légende** la replie. Cet état est gardé dans le navigateur.
 
-![La légende dépliée : un trait et un signe par type de liaison, le signe de l'actionneur, les formes du Monde, du groupe et du corps](/screenshots/fr/joint-legend.webp)
+![La légende dépliée : un trait et un signe par type de liaison, le signe de l'actionneur, le signe du capteur, les formes du Monde, du groupe et du corps](/screenshots/fr/joint-legend.webp)
 
 ### Ce que vous pouvez faire dans la vue
 

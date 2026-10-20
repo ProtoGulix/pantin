@@ -33,6 +33,8 @@ const VIEW_MENU_ENTRIES = [
   ["Dessus", null],
   ["Dessous", null],
   ["Isométrique", null],
+  ["Vue normale à une face", false],
+  ["Vue précédente", null],
   ["Inspecteur", true],
   ["Console", false],
   ["Vue suivante de la zone du haut", null],
@@ -112,6 +114,7 @@ describe("menu bar model standard views", () => {
     expect(shortcutForKeyPress(editing(false), press("5", { ctrlKey: true }))).toEqual({
       command: "view:top",
       primaryModifier: true,
+      yieldsToField: false,
       run: true,
     });
   });

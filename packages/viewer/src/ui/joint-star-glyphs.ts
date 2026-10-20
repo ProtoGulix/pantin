@@ -3,8 +3,9 @@ import { type IconName, iconPath } from "./icons.ts";
 import { svgElement } from "./svg-dom.ts";
 
 // The marks of the joint star shared by the drawing and its legend (ADR 0059
-// point 5): the 12 px glyph of a joint type, the bolt of a driven joint, and
-// the line style of an edge. Colours come from the stylesheet, never from here.
+// point 5): the 12 px glyph of a joint type, the bolt of a driven joint, the
+// detector of a watched one, and the line style of an edge. Colours come from the
+// stylesheet, never from here.
 
 const GLYPH_SIZE = 12;
 const ICON_SIZE = 16;
@@ -41,6 +42,11 @@ export function edgeGlyph(glyphId: StarGlyphId, x: number, y: number): SVGElemen
 
 export function boltMark(x: number, y: number): SVGElement {
   return glyphMark("bolt", x, y, "joint-star-glyph joint-star-glyph--bolt");
+}
+
+/** The mark of a joint a sensor watches: a detector and its waves, outlined where the bolt is filled. */
+export function sensorMark(x: number, y: number): SVGElement {
+  return glyphMark("sensor", x, y, "joint-star-glyph joint-star-glyph--sensor");
 }
 
 /** The SVG attributes of the line of an edge: its width, dashes and caps. */

@@ -8,6 +8,7 @@ import type { FaceHighlight } from "../alignment/alignment-session.ts";
 import { alignmentHighlightsOf, isAligning } from "../alignment/alignment-view.ts";
 import { faceAtTriangle, primitiveOfPointers } from "../alignment/face-lookup.ts";
 import type { ViewportPick } from "../alignment/pick-resolution.ts";
+import { isPickingNormalTo } from "../navigation/normal-to.ts";
 import { selectedNodeIdOf } from "../selection.ts";
 import { formatDisplayNumber, metresToMillimetres } from "../units.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -61,9 +62,9 @@ export function isPickingAxis(state: ViewerState): boolean {
   return state.axisPick?.waiting === true;
 }
 
-/** True while clicks in the 3D view are picks (alignment or axis) and not selections. */
+/** True while clicks in the 3D view are picks (alignment, axis, "Normal To") and not selections. */
 export function isPickingFaces(state: ViewerState): boolean {
-  return isAligning(state) || isPickingAxis(state);
+  return isAligning(state) || isPickingAxis(state) || isPickingNormalTo(state);
 }
 
 /** The faces to tint: the alignment's picks, or the face the axis was taken on. */

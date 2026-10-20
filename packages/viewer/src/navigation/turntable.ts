@@ -71,6 +71,20 @@ export function isArrowKey(key: string): key is ArrowKey {
   return (ARROW_KEYS as readonly string[]).includes(key);
 }
 
+/**
+ * The arrow key the canvas turns or pans with, or null. One a shortcut already took is left
+ * alone: Ctrl+Numpad8 with NumLock off arrives as Ctrl+ArrowUp.
+ */
+export function canvasArrowOf(event: {
+  key: string;
+  altKey: boolean;
+  metaKey: boolean;
+  defaultPrevented: boolean;
+}): ArrowKey | null {
+  const free = !event.altKey && !event.metaKey && !event.defaultPrevented;
+  return free && isArrowKey(event.key) ? event.key : null;
+}
+
 const QUARTER_TURN_DEGREES = 90;
 // Share of the visible height that one Ctrl + arrow pans.
 const PAN_SHARE_OF_HEIGHT = 0.1;

@@ -13,6 +13,3 @@ Left out of ADR 0036 (CAD navigation and standard views).
   cancels Babylon's pinch zoom. Add a "touchpad" preset if asked.
 - Free (trackball) rotation and roll (SolidWorks Alt + middle drag,
   Alt + arrows): need a camera of our own.
-- Previous view (SolidWorks Ctrl+Shift+Z).
-- "Normal To" (SolidWorks Ctrl+8): it waited for face picking, which exists
-  since ADR 0035, so it can be built.

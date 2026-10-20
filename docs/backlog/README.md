@@ -7,14 +7,14 @@ phase.
 ## Phase 8 — editing
 
 - [Belts in the chain diagram](belts-in-chain-diagram.md) — draw the belt as the end of its chain
-- [CAD navigation extras](cad-navigation-extras.md) — touchpad preset, previous view, Normal To
+- [CAD navigation extras](cad-navigation-extras.md) — touchpad preset, free rotation and roll
 - [Console, diagram, welcome and placement extras](console-and-diagram-extras.md) — small follow-ups left by ADRs 0027 to 0035
 - [Frame rotation extras](frame-rotation-extras.md) — other ways to give the rotation of ADR 0056
 - [Share a frozen scene](frozen-scene-export.md) — one GLB export, if the need is real
-- [Joint star view: extras](joint-star-extras.md) — live state, sensor mark, editing from the view
+- [Joint star view: extras](joint-star-extras.md) — live state, editing from the view, cross-links
 - [Split a GLB body by nodes](glb-split-by-nodes.md) — several bodies from one file (on hold: needs a real GLB)
 - [Multi-selection in the 3D view](multi-selection-in-3d.md) — for grouping, without breaking click-to-go-down
-- [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells
+- [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells (needs a core route)
 
 ## Phase 9 — community and instances
 

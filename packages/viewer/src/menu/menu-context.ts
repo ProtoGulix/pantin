@@ -36,6 +36,8 @@ export interface MenuContext {
   aligning: boolean;
   // The mouse preset and the other settings of the 3D view (ADR 0036).
   navigation: NavigationSettings;
+  // "Vue normale à une face" waits for a click (ADR 0036).
+  normalTo: boolean;
   // The standard views need the 3D view to be on screen (ADR 0036 point 4).
   viewsAvailable: boolean;
 }
@@ -78,6 +80,7 @@ export function menuContext(state: ViewerState): MenuContext {
     gizmoAvailable: canUseGizmo(state),
     aligning: isAligning(state),
     navigation: state.navigation,
+    normalTo: state.normalTo,
     viewsAvailable: state.openPantin !== null && showsViewport(state.centralLayout),
   };
 }
@@ -94,7 +97,10 @@ export function escapeCommand(state: ViewerState): EscapeCommand | null {
   if (state.contextMenu !== null) {
     return null;
   }
-  return state.gizmoMode !== null || state.alignment !== null || state.axisPick !== null
+  return state.gizmoMode !== null ||
+    state.alignment !== null ||
+    state.axisPick !== null ||
+    state.normalTo
     ? "turnToolOff"
     : null;
 }

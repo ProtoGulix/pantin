@@ -64,6 +64,16 @@ Seven standard views exist: **Front**, **Back**, **Left**, **Right**, **Top**, *
 - press **Space** (focus on the view or the page, not on a button, the tree or the diagram): a list of views appears at the pointer's position, with the up and down arrows and **Esc** to close;
 - the shortcut keys, given in [Shortcuts](/en/reference/shortcuts), or the **View** menu.
 
+The shortcuts <kbd>Ctrl</kbd>+<kbd>1</kbd> to <kbd>Ctrl</kbd>+<kbd>7</kbd> use the physical digit key (top row or numeric keypad): they also work on an AZERTY keyboard.
+
+### Looking square at a face
+
+**View**, **View normal to a face** (<kbd>Ctrl</kbd>+<kbd>8</kbd>) turns the camera to look at a face at a right angle. After the command, the message line says: **Click a face in the 3D view to look at it square on. Esc cancels.** Click a face of a body: the camera moves in front of it. <kbd>Esc</kbd>, or the same command a second time, cancels the wait. While waiting, the menu entry is checked.
+
+### Going back to the previous view
+
+**View**, **Previous view** (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>) puts back the camera's earlier view: angles, target and zoom. The last 50 views are kept. In an input field, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> stays the field's own redo.
+
 ### Framing
 
 **Frame all** (**View** menu, **Frame all** button) places the camera to see all the bodies. **Frame selection** (button, menu, or **Frame the view on this item** in the tree's context menu) places it on the selected element. Both are greyed out without a body, and in a layout without a 3D view.
@@ -238,7 +248,7 @@ The diagram can be navigated entirely from the keyboard: the arrows move from no
 
 ## The Joints view
 
-![The Joints view of the plc-cylinder example: World on the left, the Verin1 group (one body) attached to World, the Tige group (two bodies) and the cylinder's slider between them, marked with the bolt of joints moved by an actuator](/screenshots/en/joint-view.webp)
+![The Joints view of the plc-cylinder example: World on the left, the Verin1 group (one body) attached to World, the Tige group (two bodies) and the cylinder's slider between them, marked with the bolt of joints moved by an actuator and the detector of joints watched by a sensor](/screenshots/en/joint-view.webp)
 
 The **Joints** view draws the machine's **kinematic tree**: what moves relative to what. It is not the tree on the left. The tree files bodies into assemblies and carries no motion; the Joints view only shows what is linked by joints. The two trees can differ, and that is the point: you see at a glance a body that does not follow the group you expected, or a body tied by twenty fixed joints. To understand groups, see [The model of a Pantin](/en/guide/model#concepts-body-assembly-group).
 
@@ -267,7 +277,7 @@ The type of a joint is read from three cues, never from colour alone: the line s
 | **Continuous (unlimited pivot)** | Thick, round dots. | A full circle with an arrow. |
 | **Helical (screw and nut)** | Thick, alternating dash and dot. | Three small slanted strokes (a thread). |
 
-A joint **moved by an actuator** also carries a **bolt**-shaped sign next to its type sign.
+A joint **moved by an actuator** also carries a **bolt**-shaped sign next to its type sign. A joint **watched by a sensor** carries a detector sign with its waves, **drawn as an outline** where the bolt is filled. If the joint is both moved and watched, the two signs follow each other. The joint's accessible name says it too: **moved by an actuator**, **watched by a sensor**. The legend has a row for each.
 
 Bodies that follow their group are folded by default: the group only shows their number. Click the group's **▸** arrow (tooltip **Show the N bodies that follow it**) to see them, each at the end of a dotted line; the arrow turns over and its tooltip becomes **Hide the N bodies that follow it**. A body that is neither the end of a joint nor filed in a group is counted in **World**, since it never moves.
 
@@ -281,7 +291,7 @@ In the tree, a sub-assembly is filed in the assembly above it. That does not mak
 
 At the bottom left of the view, a **Legend** line (with a chevron) is folded. Click it (tooltip **Show the legend**) to unfold the list of all the lines, signs and shapes described above; **Close the legend** folds it. This state is kept in the browser.
 
-![The unfolded legend: a line and a sign for each joint type, the actuator sign, the shapes of World, group and body](/screenshots/en/joint-legend.webp)
+![The unfolded legend: a line and a sign for each joint type, the actuator sign, the sensor sign, the shapes of World, group and body](/screenshots/en/joint-legend.webp)
 
 ### What you can do in the view
 

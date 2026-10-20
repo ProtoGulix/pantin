@@ -4,7 +4,7 @@ import { edgeStyleOf, type StarEdgeStyle } from "../joint-star/joint-star-styles
 import { JOINT_TYPES, jointTypeLabelKey } from "../joints/joint-labels.ts";
 import { readStoredText, STORAGE_KEYS, writeStoredText } from "./browser-storage.ts";
 import { element } from "./dom.ts";
-import { boltMark, edgeGlyph, glyphMark, lineAttributes } from "./joint-star-glyphs.ts";
+import { boltMark, edgeGlyph, glyphMark, lineAttributes, sensorMark } from "./joint-star-glyphs.ts";
 import { svgElement } from "./svg-dom.ts";
 
 // The legend of the joint view (ADR 0059 point 5), in a corner. Closed it is one
@@ -110,6 +110,13 @@ function rowsOf(translate: Translate): LegendRow[] {
         boltMark(22, 10),
       ]),
       text: translate("jointStar.legend.driven"),
+    },
+    {
+      mark: sample([
+        svgElement("circle", { class: "joint-star-edge__backing", cx: 22, cy: 10, r: 8 }),
+        sensorMark(22, 10),
+      ]),
+      text: translate("jointStar.legend.watched"),
     },
     {
       mark: edgeSample(edgeStyleOf("follows", undefined), ""),

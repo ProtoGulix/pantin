@@ -7,20 +7,21 @@ import {
 } from "../joint-star/joint-star-layout.ts";
 import { edgeStyleOf } from "../joint-star/joint-star-styles.ts";
 import { jointTypeLabelKey } from "../joints/joint-labels.ts";
-import { boltMark, edgeGlyph, lineAttributes } from "./joint-star-glyphs.ts";
+import { boltMark, edgeGlyph, lineAttributes, sensorMark } from "./joint-star-glyphs.ts";
 import { svgElement } from "./svg-dom.ts";
 
 // The edges of the joint tree as SVG (ADR 0059 point 5): a curve, and on a joint the
-// glyph of its type, the bolt when an actuator drives it, and its name, by the
-// curve, near the child. Nothing is placed here: `project` of joint-star-draw.ts moves
-// the curve and the marks, so the marks keep their size whatever the zoom.
+// glyph of its type, the bolt when an actuator drives it, the detector when a sensor
+// watches it, and its name, by the curve, near the child. Nothing is placed here:
+// `project` of joint-star-draw.ts moves the curve and the marks, so the marks keep
+// their size whatever the zoom.
 
 const EDGE_HIT_WIDTH = 12;
 // The marks hang this far beside the curve near the child, so that the curve stays clear
 // and no room is kept between columns for the name.
 export const MARKS_DROP = 14;
 const GLYPH_BACKING_RADIUS = 8;
-// From the glyph of a joint to its name, and to the bolt of a driven joint.
+// From the glyph of a joint to its name, and between it and each mark after it.
 const NAME_OFFSET = 11;
 const BOLT_OFFSET = 14;
 
@@ -52,25 +53,36 @@ function edgeLabelText(edge: PlacedEdge, context: EdgeContext): string {
     parent: lookup(edge.parentId),
     child: lookup(edge.childId),
   });
-  return edge.driven ? `${base}, ${context.translate("jointStar.edge.driven")}` : base;
+  const states = [
+    edge.driven ? context.translate("jointStar.edge.driven") : null,
+    edge.watched ? context.translate("jointStar.edge.watched") : null,
+  ].filter((state) => state !== null);
+  return [base, ...states].join(", ");
 }
 
-// The glyph, the bolt of a driven joint, then the name to their left, around the origin: the
-// group is moved beside the curve by `project`. The name goes left, towards the
-// parent, because the child column on the right is the crowded side.
+// The marks after the glyph, nearest first: a second cue to the line style, never a colour.
+function wiringMarks(edge: PlacedEdge): ((x: number, y: number) => SVGElement)[] {
+  return [...(edge.driven ? [boltMark] : []), ...(edge.watched ? [sensorMark] : [])];
+}
+
+// The glyph, the marks of a driven or watched joint, then the name to their left, around
+// the origin: the group is moved beside the curve by `project`. The name goes left,
+// towards the parent, because the child column on the right is the crowded side.
 function edgeMarks(edge: PlacedEdge, glyphId: Parameters<typeof edgeGlyph>[0]): SVGElement {
   const backing = (x: number, radius: number) =>
     svgElement("circle", { class: "joint-star-edge__backing", cx: x, cy: 0, r: radius });
   const marks = [backing(0, GLYPH_BACKING_RADIUS), edgeGlyph(glyphId, 0, 0)];
-  if (edge.driven) {
-    marks.push(backing(-BOLT_OFFSET, GLYPH_BACKING_RADIUS - 1), boltMark(-BOLT_OFFSET, 0));
+  const wiring = wiringMarks(edge);
+  for (const [index, mark] of wiring.entries()) {
+    const x = -BOLT_OFFSET * (index + 1);
+    marks.push(backing(x, GLYPH_BACKING_RADIUS - 1), mark(x, 0));
   }
   marks.push(
     svgElement(
       "text",
       {
         class: "joint-star-edge__label",
-        x: -(NAME_OFFSET + (edge.driven ? BOLT_OFFSET : 0)),
+        x: -(NAME_OFFSET + wiring.length * BOLT_OFFSET),
         y: 4,
         "text-anchor": "end",
       },

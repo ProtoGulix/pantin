@@ -8,12 +8,16 @@ Sur macOS, <kbd>Cmd</kbd> remplace <kbd>Ctrl</kbd> dans les raccourcis. Exceptio
 
 ## Global (fenêtre entière)
 
-Ces raccourcis sont ceux des menus. <kbd>Alt</kbd> en plus les désactive ; <kbd>Maj</kbd> est ignoré (<kbd>Maj</kbd>+<kbd>G</kbd> agit comme <kbd>G</kbd>).
+Ces raccourcis sont ceux des menus. <kbd>Alt</kbd> en plus les désactive ; <kbd>Maj</kbd> est ignoré (<kbd>Maj</kbd>+<kbd>G</kbd> agit comme <kbd>G</kbd>), sauf pour <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd>, où il est obligatoire.
+
+Les raccourcis à chiffre (<kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>Ctrl</kbd>+<kbd>8</kbd>) suivent la touche physique du chiffre, sur la rangée du haut ou sur le pavé numérique, et non le caractère qu'elle produit : ils marchent donc sur un clavier AZERTY, où cette rangée donne des signes sans <kbd>Maj</kbd>.
 
 | Geste | Effet | Condition |
 |---|---|---|
 | <kbd>Ctrl</kbd>+<kbd>S</kbd> | **Enregistrer** | Entrée de menu non grisée. |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>Ctrl</kbd>+<kbd>7</kbd> | Vues **Face**, **Arrière**, **Gauche**, **Droite**, **Dessus**, **Dessous**, **Isométrique** | Pantin ouvert et vue 3D affichée. |
+| <kbd>Ctrl</kbd>+<kbd>8</kbd> | **Vue normale à une face** : attend un clic sur une face dans la vue 3D, puis la regarde de face. <kbd>Échap</kbd> annule. | Pantin ouvert et vue 3D affichée. |
+| <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> | **Vue précédente** : revient à la vue précédente de la caméra (50 vues gardées) | Pantin ouvert et vue 3D affichée. |
 | <kbd>F2</kbd> | **Renommer** la sélection | Entrée de menu non grisée. |
 | <kbd>Suppr</kbd> | **Supprimer** la sélection | Entrée de menu non grisée. |
 | <kbd>G</kbd> | **Déplacer** (manipulateur de déplacement) | Un assemblage utilisable est sélectionné (ou un corps : la sélection passe alors à son assemblage). |
@@ -23,10 +27,10 @@ Ces raccourcis sont ceux des menus. <kbd>Alt</kbd> en plus les désactive ; <kbd
 | <kbd>F</kbd> | **Tout cadrer** | Corps présents et vue 3D affichée. |
 | <kbd>F4</kbd> | **Vue suivante de la zone du haut** (3D, Schéma, Liaisons, E/S, en sautant la vue de la zone du bas) | Pantin ouvert. |
 | <kbd>F8</kbd> | **Console** | Pantin ouvert. |
-| <kbd>Échap</kbd> | Termine l'outil de placement en cours (manipulateur, alignement, choix d'axe) | Voir la chaîne d'Échap ci-dessous. |
+| <kbd>Échap</kbd> | Termine l'outil de placement en cours (manipulateur, alignement, choix d'axe, vue normale à une face) | Voir la chaîne d'Échap ci-dessous. |
 | <kbd>Espace</kbd> ou <kbd>Maj</kbd>+<kbd>Espace</kbd> | Ouvre la liste des vues standard à l'emplacement du pointeur | Voir « Vue 3D ». |
 
-Dans un champ de saisie, ces raccourcis ne s'exécutent pas : les touches gardent leur sens normal. <kbd>Ctrl</kbd>+<kbd>S</kbd> et <kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>7</kbd> restent interceptés, même grisés, pour que le navigateur n'enregistre pas la page ni ne change d'onglet.
+Dans un champ de saisie, ces raccourcis ne s'exécutent pas : les touches gardent leur sens normal. <kbd>Ctrl</kbd>+<kbd>S</kbd> et <kbd>Ctrl</kbd>+<kbd>1</kbd> à <kbd>8</kbd> restent interceptés, même grisés, pour que le navigateur n'enregistre pas la page ni ne change d'onglet. Seul <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> laisse le champ de saisie le traiter : il rétablit alors la saisie du champ.
 
 Les raccourcis à touche simple (<kbd>F2</kbd>, <kbd>Suppr</kbd>, <kbd>G</kbd>...) cèdent la place à un composant qui a déjà traité la touche (arborescence, menus, schéma, console).
 
@@ -39,7 +43,7 @@ Les raccourcis à touche simple (<kbd>F2</kbd>, <kbd>Suppr</kbd>, <kbd>G</kbd>..
 3. un champ de saisie : il restaure sa valeur ;
 4. une question de confirmation : elle choisit l'annulation ;
 5. un menu ou un menu contextuel : il se ferme ;
-6. l'outil de placement actif (manipulateur, alignement, choix d'axe) : il se termine.
+6. l'outil de placement actif (manipulateur, alignement, choix d'axe) ou l'attente de **Vue normale à une face** : il se termine.
 
 ## Barre de menus
 

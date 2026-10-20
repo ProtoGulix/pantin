@@ -36,7 +36,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function draw() {
+function draw(
+  wiring: { drivenJoints?: string[]; watchedJoints?: string[] } = { drivenJoints: ["lift"] },
+) {
   vi.stubGlobal("document", {
     createElementNS: (_namespace: string, tag: string) => new FakeElement(tag),
   });
@@ -55,7 +57,7 @@ function draw() {
         type: "prismatic",
       },
     ],
-    drivenJoints: ["lift"],
+    ...wiring,
   });
   const layout = layoutJointStar(buildJointStarForest(document));
   const drawn = drawJointStar(layout, createTranslator("en"));
@@ -96,6 +98,29 @@ describe("drawJointStar", () => {
     const anchor = drawn.edges.get("body:frame")?.group;
     expect(attribute(anchor, "aria-hidden")).toBe("true");
     expect(attribute(anchor, "role")).toBeUndefined();
+  });
+});
+
+describe("drawJointStar, a watched joint", () => {
+  it("marks it with the detector, after the bolt when it is driven too, and says it in words", () => {
+    const { drawn, attribute } = draw({ drivenJoints: ["lift"], watchedJoints: ["lift"] });
+    const lift = drawn.edges.get("body:slide")?.group as unknown as FakeElement;
+    expect(attribute(lift, "aria-label")).toBe(
+      "Joint lift, Prismatic (slider), from frame to slide, moved by an actuator, watched by a sensor",
+    );
+    const classes = lift.descendants().map((child) => child.attributes.get("class") ?? "");
+    expect(classes).toContain("joint-star-glyph joint-star-glyph--bolt");
+    expect(classes).toContain("joint-star-glyph joint-star-glyph--sensor");
+  });
+
+  it("shows the detector alone when no actuator moves the joint", () => {
+    const { drawn, attribute } = draw({ watchedJoints: ["lift"] });
+    const lift = drawn.edges.get("body:slide")?.group as unknown as FakeElement;
+    expect(attribute(lift, "aria-label")).toContain("watched by a sensor");
+    expect(attribute(lift, "aria-label")).not.toContain("moved by an actuator");
+    const classes = lift.descendants().map((child) => child.attributes.get("class") ?? "");
+    expect(classes).not.toContain("joint-star-glyph joint-star-glyph--bolt");
+    expect(classes).toContain("joint-star-glyph joint-star-glyph--sensor");
   });
 });
 

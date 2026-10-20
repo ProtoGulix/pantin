@@ -33,6 +33,7 @@ import { jointPreviewOf } from "../joints/joint-preview.ts";
 import type { InspectorPreferences } from "../layout-preferences.ts";
 import { describeFailure } from "../messages.ts";
 import type { NavigationSettings } from "../navigation/navigation-settings.ts";
+import { withNormalToRules } from "../navigation/normal-to.ts";
 import type { Viewport } from "../scene/viewport.ts";
 import type { ThemeChoice } from "../theme/theme.ts";
 import { buildPanelView } from "../view-model.ts";
@@ -120,7 +121,9 @@ export class ViewerStore {
 
   update(requested: ViewerState): void {
     // The tools follow the selection, the layout and the inspector (ADR 0039 point 3).
-    const next = withAxisPickRules(withPlacementFeedbackRules(withToolRules(requested)));
+    const next = withNormalToRules(
+      withAxisPickRules(withPlacementFeedbackRules(withToolRules(requested))),
+    );
     // A restart on another assembly reads face files again, like a new alignment.
     if (requested.alignment !== null && next.alignment !== requested.alignment) {
       this.faceFiles.clear();

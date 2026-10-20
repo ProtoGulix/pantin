@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   arrowPan,
   arrowRotation,
+  canvasArrowOf,
   fromScreenAxes,
   isArrowKey,
   targetKeepingPivot,
@@ -87,6 +88,14 @@ describe("arrow keys", () => {
   it("knows the four arrows", () => {
     expect(isArrowKey("ArrowLeft")).toBe(true);
     expect(isArrowKey("f")).toBe(false);
+  });
+
+  it("leaves to a shortcut the arrow it already took, as Ctrl+Numpad8 with NumLock off", () => {
+    const press = { key: "ArrowUp", altKey: false, metaKey: false, defaultPrevented: false };
+    expect(canvasArrowOf(press)).toBe("ArrowUp");
+    expect(canvasArrowOf({ ...press, defaultPrevented: true })).toBeNull();
+    expect(canvasArrowOf({ ...press, altKey: true })).toBeNull();
+    expect(canvasArrowOf({ ...press, key: "f" })).toBeNull();
   });
 
   it("turns by the step, and by a quarter turn with Shift", () => {

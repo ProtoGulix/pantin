@@ -20,6 +20,8 @@ export function listenToShortcuts(state: () => ViewerState, intents: PanelIntent
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
       altKey: event.altKey,
+      shiftKey: event.shiftKey,
+      code: event.code,
       inEditableField: isEditable(event.target),
     });
   // Ctrl/Cmd shortcuts in the capture phase: text fields stop the propagation
@@ -28,7 +30,7 @@ export function listenToShortcuts(state: () => ViewerState, intents: PanelIntent
     "keydown",
     (event) => {
       const found = match(event);
-      if (found?.primaryModifier) {
+      if (found?.primaryModifier && !found.yieldsToField) {
         event.preventDefault();
         if (found.run) {
           intents.runMenuCommand(found.command);

@@ -26,6 +26,7 @@ export function createInertViewport(): Viewport {
     releasePlacementGizmo: ignore,
     setNavigation: ignore,
     showView: ignore,
+    previousView: ignore,
     onCameraOrientation: ignore,
     setScenePalette: ignore,
   };

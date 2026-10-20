@@ -1,5 +1,6 @@
 import type { Joint, JointEndpoint, JointType, PantinDocument } from "@pantin/protocol";
 import { actuatorOfJoint } from "../actuators/actuator-joints.ts";
+import { sensorsOfJoint } from "../sensors/joint-sensors.ts";
 
 // The kinematic forest of a document, as the joint star view shows it (ADR
 // 0059 points 2 and 3). It mirrors computeDisplacements in
@@ -23,6 +24,8 @@ interface StarEdge {
   jointName: string | undefined;
   // The joint is moved by an actuator.
   driven: boolean;
+  // A sensor watches the joint (ADR 0023).
+  watched: boolean;
   child: StarNode;
 }
 
@@ -119,13 +122,25 @@ function implicitParent(
   return world === undefined ? undefined : { parent: world, kind: "anchor" };
 }
 
-function edgeTo(child: StarNode, kind: StarEdgeKind, joint?: Joint, driven = false): StarEdge {
+interface JointWiring {
+  driven: boolean;
+  watched: boolean;
+}
+
+const NO_WIRING: JointWiring = { driven: false, watched: false };
+
+function edgeTo(
+  child: StarNode,
+  kind: StarEdgeKind,
+  joint?: Joint,
+  wiring: JointWiring = NO_WIRING,
+): StarEdge {
   return {
     kind,
     jointId: joint?.id,
     jointType: joint?.type,
     jointName: joint?.name,
-    driven,
+    ...wiring,
     child,
   };
 }
@@ -142,9 +157,11 @@ function attachLinks(document: PantinDocument, nodes: ReadonlyMap<string, StarNo
     const joint = parentJointOf.get(node.id);
     const jointParent = joint === undefined ? undefined : nodes.get(endpointNodeId(joint.parent));
     if (joint !== undefined && jointParent !== undefined) {
-      jointParent.edges.push(
-        edgeTo(node, "joint", joint, actuatorOfJoint(document, joint.id) !== undefined),
-      );
+      const wiring = {
+        driven: actuatorOfJoint(document, joint.id) !== undefined,
+        watched: sensorsOfJoint(document, joint.id).length > 0,
+      };
+      jointParent.edges.push(edgeTo(node, "joint", joint, wiring));
       continue;
     }
     const implicit = implicitParent(node, assemblyOfBody, nodes);

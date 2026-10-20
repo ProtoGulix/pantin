@@ -60,6 +60,8 @@ The **Move**, **Rotate** and **Align…** tools are detailed in [Panels and butt
 | **Top** | <kbd>Ctrl</kbd>+<kbd>5</kbd> | Top view. | Same. |
 | **Bottom** | <kbd>Ctrl</kbd>+<kbd>6</kbd> | Bottom view. | Same. |
 | **Isometric** | <kbd>Ctrl</kbd>+<kbd>7</kbd> | Isometric view. | Same. |
+| **View normal to a face** (checkbox) | <kbd>Ctrl</kbd>+<kbd>8</kbd> | Waits for a click on a face of a body in the 3D view, then puts the camera square in front of it. The message line says: **Click a face in the 3D view to look at it square on. Esc cancels.** <kbd>Esc</kbd> or the same command cancels the wait. Checked while waiting. | Same. |
+| **Previous view** | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> | Puts back the camera's previous view (angles, target and zoom), up to 50 views back. In an input field, this shortcut keeps its meaning of redo for the field. | Same. |
 | separator | | | |
 | **Inspector** (box) | | Shows or hides the inspector. Ticked when it is displayed. | No Pantin open. |
 | **Console** (box) | <kbd>F8</kbd> | Shows or hides the console. | No Pantin open. |

@@ -15,6 +15,8 @@ All notable changes to Pantin. The format follows
 - Docs screenshots: each language runs on its own throwaway core and a fresh copy of the
   example. The English pictures showed 2 warnings in the status bar that the French run had
   raised in the shared console (the bridge's refused request).
+- Viewer: the view shortcuts Ctrl+1 to Ctrl+7 (and the new Ctrl+8) now work on AZERTY
+  keyboards: digit shortcuts follow the physical key, not the character it types.
 - Core (STEP import): a failed import now deletes a mesh whose write stopped half way
   (never a file or face file that already existed), tries every deletion even if one fails, logs the
   failures and rethrows the original error. The converter process runner no longer hangs
@@ -31,6 +33,13 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer (ADR 0036): **Affichage > Vue normale à une face** (Ctrl+8) waits for a click on a
+  face of a body in the 3D view, then the camera looks square at it; Escape or the same
+  command cancels. **Vue précédente** (Ctrl+Shift+Z) puts back the camera's previous view
+  (angles, target and zoom, up to 50 steps). A text field keeps Ctrl+Shift+Z for its own redo.
+- Viewer (ADR 0059): the joint view marks a joint watched by a sensor with an outlined
+  detector mark, next to the filled bolt of an actuator, and says it in the edge's name and
+  in the legend.
 - Core, CLI and viewer (ADR 0049 amendment): a read-only export of the I/O mapping as
   CSV, one row per channel. `GET /api/pantins/:pantinId/io/csv` (refused with a 409 and
   the problems when the mapping is invalid, like the GVL), `pnpm pantin io export <folder> [--output <file>]` (also on `pantin gvl`),
