@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-28
+- Amended by: ADR 0063 (a disk stamp per file, changes made outside Pantin)
 
 ## Context
 

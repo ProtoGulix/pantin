@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Extended by: ADR 0061 (sensor changes traced while running or stepping)
 - Extends: ADR 0012 (fixed-step loop, points 5 and 6), ADR 0015 (pose stream)
 - Amends: ADR 0015 (point 3: sending while paused; point 7: the stream also
   carries the clock state)

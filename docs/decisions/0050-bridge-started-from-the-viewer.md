@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-14
+- Extended by: ADR 0064 (point 4: a start needs a Modbus module; ports of Modbus modules only)
 - Applies: ADR 0004 (modes, private ranges), ADR 0046 (bridge security),
   ADR 0009 point 2 (interpreter passed by a flag), ADR 0015 and ADR 0032
   point 9 (status on the pose stream), ADR 0049 point 7 (a mapping edit stops

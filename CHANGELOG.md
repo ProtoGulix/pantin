@@ -33,6 +33,12 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- ADRs 0061 to 0064, accepted, and spike 0012 (CODESYS symbol export). Decisions only,
+  the slices follow: a verbose console that traces sensor changes while running or stepping (0061),
+  opening a copy of an example (0062), a warning when a Pantin's files change outside
+  Pantin (0063), and named signals, a multi-transport io.json (schema 2, migrated on
+  read) and PLC symbol import (0064). The spike checks the CODESYS symbol configuration
+  XML on one public sample only; the parser waits for a real export.
 - Viewer (ADR 0036): **Affichage > Vue normale à une face** (Ctrl+8) waits for a click on a
   face of a body in the 3D view, then the camera looks square at it; Escape or the same
   command cancels. **Vue précédente** (Ctrl+Shift+Z) puts back the camera's previous view

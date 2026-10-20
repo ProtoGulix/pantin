@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-01
+- Amended by: ADR 0061 (the console's verbose trace level)
 - Depends on: ADR 0028 (diagnostics), ADR 0030 (forcing in the diagram)
 - Amends: ADR 0028 (point 5: where diagnostics are shown)
 - Point 4 partly deferred by: ADR 0045 (diagnostics not yet on the tag bus)

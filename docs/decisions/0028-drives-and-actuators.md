@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-30
+- Pattern applied by: ADR 0064 (one folder per transport)
 - Amends: ADR 0022 (points 3, 4, 5 and 6: drive types, drive document, joint setpoint, behaviour)
 - Extends: ADR 0022 (one folder per type), ADR 0019 (tag keys), ADR 0025 (stateful step)
 - Changes: CLAUDE.md sections 4 (actuator-types package and its imports) and 5.3 (drives and actuators)

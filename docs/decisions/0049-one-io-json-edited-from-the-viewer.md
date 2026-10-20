@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-13
+- Partly superseded by: ADR 0064 (io.json version 2 with one transport per module, see its header)
+- Amended by: ADR 0063 (io.json changed outside Pantin)
 - Partly supersedes: ADR 0045 (point 4: `io_changed` also on a mapping
   change; point 6: `io.csv` and `io-modules.json`; point 7: the syntax
   rules, the rename rule, the route reading files from disk, `mappingId`,

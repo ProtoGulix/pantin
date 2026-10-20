@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-13
+- Amended by: ADR 0061 (the console's verbose trace level)
+- Extended by: ADR 0064 (point 9: dotted PLC variable references)
 - Partly superseded by: ADR 0048 (points 3, 10 and 13 P3: a hand-written Modbus slave instead of pymodbus)
 - Partly superseded by: ADR 0049 (points 4, 6, 7, 9 and 10: one io.json edited from the viewer, renames carried, io_changed and mappingId on the open mapping)
 - Extended by: ADR 0050 (the core starts and stops the bridge; `--status-lines`)

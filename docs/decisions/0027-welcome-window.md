@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-30
+- Extended by: ADR 0062 (opening a copy of an example)
 - Replaces: the list view of the side panel
 
 ## Context
