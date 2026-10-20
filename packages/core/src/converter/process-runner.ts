@@ -11,7 +11,9 @@ export type ProcessSpawner = (
 
 export type ProcessLimits = {
   timeLimitMs: number;
-  // Delay between SIGTERM and SIGKILL once the time limit is reached.
+  // Two waits of this length: between SIGTERM and SIGKILL once the time limit
+  // is reached, and, after the process exited, for its pipes to drain before
+  // they are destroyed.
   killGraceMs: number;
   // Per stream; beyond it the process is killed and the run fails.
   maxOutputBytes: number;
@@ -53,6 +55,48 @@ function collect(
   });
 }
 
+function toOutcome(
+  state: RunState,
+  exitCode: number | null,
+  signal: NodeJS.Signals | null,
+): ProcessOutcome {
+  return {
+    exitCode,
+    signal,
+    // Decoded once at the end, so no multi-byte character is split between chunks.
+    stdout: Buffer.concat(state.stdout).toString("utf8"),
+    stderr: Buffer.concat(state.stderr).toString("utf8"),
+    timedOut: state.timedOut,
+    outputTooLarge: state.outputTooLarge,
+  };
+}
+
+// Calls `onSettled` once. It waits for "close" (all output read) but never for
+// "close" alone: a grandchild that inherited the pipes keeps them open after
+// the converter is gone, and "close" would never come. After "exit" the pipes
+// get one grace period to drain, then they are destroyed. Simpler than a
+// process group (detached spawn plus kill(-pid)), which a grandchild calling
+// setsid() escapes anyway.
+function onceSettled(
+  child: ChildProcess,
+  graceMs: number,
+  onSettled: (exitCode: number | null, signal: NodeJS.Signals | null) => void,
+): void {
+  let settled = false;
+  const settle = (exitCode: number | null, signal: NodeJS.Signals | null): void => {
+    if (!settled) {
+      settled = true;
+      child.stdout?.destroy();
+      child.stderr?.destroy();
+      onSettled(exitCode, signal);
+    }
+  };
+  child.on("exit", (exitCode, signal) => {
+    setTimeout(() => settle(exitCode, signal), graceMs).unref();
+  });
+  child.on("close", settle);
+}
+
 // Rejects only when the program cannot be started at all (e.g. ENOENT).
 export function runProcess(
   spawn: ProcessSpawner,
@@ -73,17 +117,9 @@ export function runProcess(
       clearTimeout(timer);
       reject(error);
     });
-    child.on("close", (exitCode, signal) => {
+    onceSettled(child, limits.killGraceMs, (exitCode, signal) => {
       clearTimeout(timer);
-      resolve({
-        exitCode,
-        signal,
-        // Decoded once at the end, so no multi-byte character is split between chunks.
-        stdout: Buffer.concat(state.stdout).toString("utf8"),
-        stderr: Buffer.concat(state.stderr).toString("utf8"),
-        timedOut: state.timedOut,
-        outputTooLarge: state.outputTooLarge,
-      });
+      resolve(toOutcome(state, exitCode, signal));
     });
   });
 }

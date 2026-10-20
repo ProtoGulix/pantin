@@ -62,7 +62,7 @@ describe("the world of a Pantin", () => {
     const { factory, counts } = countingFactory();
     const reported: unknown[] = [];
     const bench = open(conveyorLine(), { physicsWorldFactory: factory });
-    bench.context.reportStepError = (error) => reported.push(error);
+    bench.context.reportError = (error) => reported.push(error);
     await bench.write(SPAWN, 1);
     bench.step(10);
     expect(bench.products()).toHaveLength(1);

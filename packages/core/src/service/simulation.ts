@@ -65,7 +65,7 @@ export function runSteps(context: ServiceContext, openPantin: OpenPantin, steps:
       events = runStep(context, openPantin);
     } catch (error) {
       if (recordConsoleEvents(context, openPantin, [stepErrorEvent(error)])) {
-        context.reportStepError(error);
+        context.reportError(error);
       }
       return step;
     }

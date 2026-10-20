@@ -32,7 +32,7 @@ export function meshPathsToKeep(openPantin: OpenPantin): Set<string> {
     ...meshPathsOf(openPantin.document),
     ...openPantin.savedMeshPaths,
     ...openPantin.writingMeshPaths,
-    ...openPantin.pendingMeshDeletions,
+    ...openPantin.pendingMeshDeletions.keys(),
   ]);
 }
 
@@ -44,24 +44,67 @@ export async function releaseMesh(
   meshPath: string,
 ): Promise<void> {
   if (isReferencedOnDisk(openPantin, meshPath)) {
-    openPantin.pendingMeshDeletions.add(meshPath);
+    openPantin.pendingMeshDeletions.set(
+      meshPath,
+      openPantin.pendingMeshDeletions.get(meshPath) ?? 0,
+    );
     return;
   }
   await context.store.deleteMesh(pantinId, meshPath);
 }
 
+function hasErrnoCode(reason: unknown): reason is { code: string } {
+  return (
+    typeof reason === "object" &&
+    reason !== null &&
+    "code" in reason &&
+    typeof reason.code === "string"
+  );
+}
+
+// After this many failed saves a file is given up on and left to the orphan
+// cleanup (ADR 0038), where the user sees the I/O cause.
+const MAX_MESH_DELETION_ATTEMPTS = 3;
+
+// A deletion that fails stays pending and is retried at the next save, up to
+// MAX_MESH_DELETION_ATTEMPTS times. Each failure goes to the server log with
+// the mesh path of the document and the errno code, never an absolute path:
+// the save itself succeeded and must answer so.
 async function deletePendingMeshes(
   context: ServiceContext,
   pantinId: PantinId,
   openPantin: OpenPantin,
 ): Promise<void> {
-  for (const meshPath of [...openPantin.pendingMeshDeletions]) {
-    const isStillUsed = meshPathsOf(openPantin.document).has(meshPath);
-    if (!isReferencedOnDisk(openPantin, meshPath) && !isStillUsed) {
+  const meshPaths = [...openPantin.pendingMeshDeletions.keys()].filter(
+    (meshPath) =>
+      !isReferencedOnDisk(openPantin, meshPath) && !meshPathsOf(openPantin.document).has(meshPath),
+  );
+  const outcomes = await Promise.allSettled(
+    meshPaths.map((meshPath) => context.store.deleteMesh(pantinId, meshPath)),
+  );
+  outcomes.forEach((outcome, at) => {
+    const meshPath = meshPaths[at] ?? "";
+    if (outcome.status === "fulfilled") {
       openPantin.pendingMeshDeletions.delete(meshPath);
-      await context.store.deleteMesh(pantinId, meshPath);
+      return;
     }
-  }
+    const attempts = (openPantin.pendingMeshDeletions.get(meshPath) ?? 0) + 1;
+    const code = hasErrnoCode(outcome.reason) ? outcome.reason.code : "unknown";
+    const verdict =
+      attempts >= MAX_MESH_DELETION_ATTEMPTS
+        ? "left to the orphan cleanup"
+        : "retried at the next save";
+    context.reportError(
+      new Error(
+        `Could not delete mesh "${meshPath}" of Pantin "${pantinId}" (${code}), attempt ${attempts} of ${MAX_MESH_DELETION_ATTEMPTS}: ${verdict}.`,
+      ),
+    );
+    if (attempts >= MAX_MESH_DELETION_ATTEMPTS) {
+      openPantin.pendingMeshDeletions.delete(meshPath);
+    } else {
+      openPantin.pendingMeshDeletions.set(meshPath, attempts);
+    }
+  });
 }
 
 // Never serialise nor replace a document whose bodies' meshes are still being
@@ -149,7 +192,10 @@ async function reloadDocument(
   await waitForImports(openPantin);
   // From here to the reset, no await: no import can slip in between.
   const savedMeshPaths = meshPathsOf(saved);
-  const candidates = [...meshPathsOf(openPantin.document), ...openPantin.pendingMeshDeletions];
+  const candidates = [
+    ...meshPathsOf(openPantin.document),
+    ...openPantin.pendingMeshDeletions.keys(),
+  ];
   const unsavedMeshes = new Set(candidates.filter((meshPath) => !savedMeshPaths.has(meshPath)));
   openPantin.document = saved;
   openPantin.savedText = serializePantinDocument(saved);

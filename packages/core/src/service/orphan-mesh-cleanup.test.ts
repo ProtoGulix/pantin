@@ -124,24 +124,21 @@ describe("a file that cannot be deleted", () => {
 });
 
 describe("the retry after a save", () => {
-  it("leaves a file the retry could not delete, which the cleanup lists and deletes", async () => {
+  it("keeps a file the retry could not delete pending, so the cleanup does not list it", async () => {
     const real = createPantinStore(pantinsDirectory);
     const service = await newAxis({
       ...real,
       deleteMesh: async () => {
-        throw new Error("EBUSY");
+        throw Object.assign(new Error("busy"), { code: "EBUSY" });
       },
     });
     const rail = await importStl(service, "rail.stl");
     await service.savePantin("axis");
     await service.deleteBody("axis", rail.id);
-    await expect(service.savePantin("axis")).rejects.toThrow("EBUSY");
-    expect((await service.listOrphanMeshes("axis")).files.map((f) => f.fileName)).toEqual([
-      "rail.stl",
-    ]);
-    const answer = await service.deleteOrphanMeshes("axis", ["rail.stl"]);
-    expect(answer.deleted).toHaveLength(1);
-    expect(await meshExists("rail.stl")).toBe(false);
+    await service.savePantin("axis");
+    // The next save retries it, so it is not an orphan yet (meshPathsToKeep).
+    expect((await service.listOrphanMeshes("axis")).files).toEqual([]);
+    expect(await meshExists("rail.stl")).toBe(true);
   });
 });
 

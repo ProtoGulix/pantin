@@ -193,7 +193,7 @@ export type ServiceOptions = {
   productLimit?: number;
   wallClock?: () => Date;
   newConsoleId?: () => string;
-  reportStepError?: (error: unknown) => void;
+  reportError?: (error: unknown) => void;
   onBridgeActivity?: (pantinId: PantinId) => void;
   writeBridgeCoreLine?: BridgeCoreLineWriter;
 };
@@ -214,7 +214,7 @@ export function createServiceContext(
     },
     wallClock: options.wallClock ?? (() => new Date()),
     newConsoleId: options.newConsoleId ?? (() => crypto.randomUUID()),
-    reportStepError: options.reportStepError ?? (() => undefined),
+    reportError: options.reportError ?? (() => undefined),
     onBridgeActivity: options.onBridgeActivity ?? (() => undefined),
     writeBridgeCoreLine: options.writeBridgeCoreLine ?? (() => undefined),
   };

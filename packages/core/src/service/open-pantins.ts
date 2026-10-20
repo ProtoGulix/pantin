@@ -51,7 +51,8 @@ export type OpenPantin = {
   writingMeshPaths: Set<string>;
   // Meshes of deleted bodies that pantin.json still references: deleted
   // after the next save, so the disk never references a missing mesh.
-  pendingMeshDeletions: Set<string>;
+  // Each with the number of failed deletion attempts so far.
+  pendingMeshDeletions: Map<string, number>;
   // Saves of one Pantin run one after the other.
   saveQueue: Promise<unknown>;
   // One promise per import whose bodies are in the document but whose mesh
@@ -121,7 +122,7 @@ export function newOpenPantin(
     ioAlignedDocument: document,
     savedMeshPaths: meshPathsOf(document),
     writingMeshPaths: new Set(),
-    pendingMeshDeletions: new Set(),
+    pendingMeshDeletions: new Map(),
     saveQueue: Promise.resolve(),
     inFlightImports: new Set(),
     jointPositions: new Map(),
@@ -187,9 +188,10 @@ export type ServiceContext = {
   wallClock: () => Date;
   // Makes the id of a console (random in the real core, fixed in tests).
   newConsoleId: () => string;
-  // Receives a step error the console shows for the first time, for the
-  // server log: repeats fold in the console and are not reported again.
-  reportStepError: (error: unknown) => void;
+  // Server log only: a step error shown for the first time in the console, a
+  // mesh a failed import rollback could not delete, a deferred deletion that
+  // failed at a save.
+  reportError: (error: unknown) => void;
   // The bridge or a PLC module connected or left (ADR 0050 point 5).
   onBridgeActivity: (pantinId: PantinId) => void;
   writeBridgeCoreLine: BridgeCoreLineWriter;

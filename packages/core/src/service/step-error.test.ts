@@ -43,7 +43,7 @@ function startService() {
   const reported: unknown[] = [];
   const service = createPantinService(createPantinStore(pantinsDirectory), undefined, {
     wallClock: () => new Date("2026-10-01T12:00:00.000Z"),
-    reportStepError: (error) => reported.push(error),
+    reportError: (error) => reported.push(error),
   });
   return { service, reported };
 }

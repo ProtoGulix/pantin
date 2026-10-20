@@ -98,3 +98,61 @@ describe("saving while an import is writing its meshes", () => {
     },
   );
 });
+
+// A store whose mesh deletions fail `failures` times with EACCES, then work.
+async function axisWithFailingDeletions(failures: number) {
+  const real = createPantinStore(pantinsDirectory);
+  let failuresLeft = failures;
+  const store: PantinStore = {
+    ...real,
+    deleteMesh: async (pantinId, meshPath) => {
+      if (failuresLeft > 0) {
+        failuresLeft -= 1;
+        throw Object.assign(new Error("read-only"), { code: "EACCES" });
+      }
+      await real.deleteMesh(pantinId, meshPath);
+    },
+  };
+  const reported: string[] = [];
+  const service = createPantinService(store, undefined, {
+    reportError: (error) => reported.push(String(error)),
+  });
+  await service.createPantin("Axis");
+  const {
+    bodies: [body],
+  } = await service.importBodies("axis", { fileName: "b.stl", unit: "mm" }, buildAsciiStl());
+  if (body === undefined) {
+    throw new Error("import returned no body");
+  }
+  await service.savePantin("axis");
+  await service.deleteBody("axis", body.id);
+  return { service, body, reported };
+}
+
+describe("a deferred mesh deletion that fails", () => {
+  it("is logged while the save answers normally, then retried at the next save", async () => {
+    const { service, body, reported } = await axisWithFailingDeletions(1);
+    expect((await service.savePantin("axis")).unsavedChanges).toBe(false);
+    expect(reported).toHaveLength(1);
+    expect(reported[0]).toContain("(EACCES)");
+    expect(reported[0]).toContain("retried at the next save");
+    expect(await meshExists(body.mesh)).toBe(true);
+    expect((await service.listOrphanMeshes("axis")).files).toEqual([]);
+
+    await service.savePantin("axis");
+    expect(await meshExists(body.mesh)).toBe(false);
+  });
+
+  it("is given up after 3 failed saves and left to the orphan cleanup", async () => {
+    const { service, body, reported } = await axisWithFailingDeletions(3);
+    await service.savePantin("axis");
+    await service.savePantin("axis");
+    expect((await service.listOrphanMeshes("axis")).files).toEqual([]);
+    await service.savePantin("axis");
+    expect(reported).toHaveLength(3);
+    expect(reported[2]).toContain("left to the orphan cleanup");
+    expect((await service.listOrphanMeshes("axis")).files.map((f) => f.fileName)).toEqual([
+      body.mesh.replace("meshes/", ""),
+    ]);
+  });
+});

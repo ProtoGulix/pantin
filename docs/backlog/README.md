@@ -55,8 +55,6 @@ phase.
 ## Debt and tooling
 
 - [Cost of adding a primitive kind](primitive-kind-cost.md) — registry per kind before rollers
-- [STEP converter robustness](converter-robustness.md) — rollback, process group, size caps
-- [Retry deferred mesh deletions](retry-deferred-mesh-deletions.md) — save error contract
 - [Environment lighting](environment-lighting.md) — on hold
 
 ## Security

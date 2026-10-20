@@ -64,7 +64,10 @@ async function releaseMeshes(
     try {
       await releaseMesh(context, pantinId, openPantin, meshPath);
     } catch {
-      openPantin.pendingMeshDeletions.add(meshPath);
+      openPantin.pendingMeshDeletions.set(
+        meshPath,
+        openPantin.pendingMeshDeletions.get(meshPath) ?? 0,
+      );
       retained.push(meshPath);
     }
   }

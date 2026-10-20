@@ -22,13 +22,7 @@ import {
   unsupportedFileError,
 } from "../domain/import-body.ts";
 import { addFixedJoints } from "../domain/import-joints.ts";
-import {
-  addAssembly,
-  addBodies,
-  removeAssembly,
-  removeBodies,
-  removeJoints,
-} from "../domain/pantin-document.ts";
+import { addAssembly, addBodies } from "../domain/pantin-document.ts";
 import {
   type PlannedAssembly,
   type PlannedLink,
@@ -36,8 +30,7 @@ import {
 } from "../domain/step-assembly-tree.ts";
 import { buildStepBodies } from "../domain/step-bodies.ts";
 import { recordConsoleEvents } from "./console-record.ts";
-import { forgetJointRuntimeState } from "./joint-operations.ts";
-import { releaseMesh } from "./mesh-lifecycle.ts";
+import { isExistingFileConflict, rollbackImport } from "./import-rollback.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
 // Import of one uploaded file: one body for GLB and STL, one body per
@@ -65,32 +58,39 @@ async function writeAllOrNothing(
   { openPantin, assemblies, planned, joints }: Reservation,
 ): Promise<ImportedBodies> {
   const written: string[] = [];
+  let attempted: string | undefined;
+  let foreignFaceFileOf: string | undefined;
   try {
     for (const { body, bytes, faceFile } of planned) {
+      attempted = body.mesh;
       // Exclusive creation: an existing file is never overwritten.
       await context.store.writeMesh(pantinId, body.mesh, bytes);
       written.push(body.mesh);
+      attempted = undefined;
       // No rollback entry of its own: deleting the mesh deletes its face file too.
       if (faceFile !== undefined && faceFile !== null) {
         const faceFileBytes = new TextEncoder().encode(JSON.stringify(faceFile));
-        await context.store.writeFaceFile(pantinId, body.mesh, faceFileBytes);
+        try {
+          await context.store.writeFaceFile(pantinId, body.mesh, faceFileBytes);
+        } catch (error) {
+          // The face file was already there: it is not ours to delete.
+          foreignFaceFileOf = isExistingFileConflict(error) ? body.mesh : undefined;
+          throw error;
+        }
       }
     }
   } catch (error) {
-    // Joints first, so that no joint ever points to a missing body.
-    const jointIds = new Set(joints.map((joint) => joint.id));
-    openPantin.document = removeJoints(openPantin.document, jointIds);
-    for (const jointId of jointIds) {
-      forgetJointRuntimeState(openPantin, jointId);
-    }
-    const plannedIds = new Set(planned.map(({ body }) => body.id));
-    openPantin.document = removeBodies(openPantin.document, plannedIds);
-    for (const assembly of [...assemblies].reverse()) {
-      openPantin.document = removeAssembly(openPantin.document, assembly.key);
-    }
-    for (const meshPath of written) {
-      await releaseMesh(context, pantinId, openPantin, meshPath);
-    }
+    // A write that failed half way leaves a partial file, unless the file was
+    // already there and the exclusive creation refused it: that one is not ours.
+    const halfWritten = attempted === undefined || isExistingFileConflict(error) ? [] : [attempted];
+    const bodyIds = new Set(planned.map(({ body }) => body.id));
+    await rollbackImport(
+      context,
+      pantinId,
+      { openPantin, assemblies, bodyIds, joints },
+      [...written, ...halfWritten],
+      foreignFaceFileOf,
+    );
     throw error;
   }
   return { assemblies, bodies: planned.map(({ body }) => body), joints };

@@ -150,7 +150,7 @@ function serviceOptionsOf(
       : { physicsWorldFactory: options.physicsWorldFactory }),
     ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
     ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
-    reportStepError: options.reportError,
+    reportError: options.reportError,
     onBridgeActivity: (pantinId) => bridge().refresh(pantinId),
     writeBridgeCoreLine: (pantinId, level, text) => bridge().logCoreEvent(pantinId, level, text),
   };

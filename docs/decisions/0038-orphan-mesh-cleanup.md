@@ -408,3 +408,23 @@ Tests:
 The note `docs/backlog/clean-orphan-meshes.md` cited in the context no longer
 exists: this ADR delivered it, and its remaining subject is
 `docs/backlog/retry-deferred-mesh-deletions.md`.
+
+## Amendment (2026-10-20): failed deferred deletions are retried
+
+This delivers the backlog note `retry-deferred-mesh-deletions.md`, now
+removed: the link in the amendment above is historical. Point 5 left
+`deletePendingMeshes` as it was; it changes, with no change to the API shape:
+
+- A save whose `pantin.json` write succeeded always answers 200. A deferred
+  deletion that fails is sent to the server log (`reportError`) with the mesh
+  path of the document and the errno code, never an absolute path.
+- The path stays in `pendingMeshDeletions` with a count of failed attempts,
+  and the next save retries it. Deletions run together (`Promise.allSettled`),
+  so one failure does not stop the others.
+- After 3 failed attempts (`MAX_MESH_DELETION_ATTEMPTS`) the core gives up: the
+  path leaves the pending set and the keep rule, so the orphan cleanup lists it
+  and shows the I/O cause if the user deletes it from there (point 5).
+- Rejected: failing the save with a 500 (the first version of this amendment:
+  it denied a save that worked), a console event (the console codes are a
+  closed protocol list) and a warning field in the save response (a public
+  schema change).

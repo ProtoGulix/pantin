@@ -1,4 +1,8 @@
-import { RenamedTagsResponseSchema } from "@pantin/protocol";
+import {
+  ApiErrorResponseSchema,
+  RenamedTagsResponseSchema,
+  TagListResponseSchema,
+} from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { startBusAxis } from "../test-support/bus-axis.ts";
 import {
@@ -63,6 +67,19 @@ describe("renaming the tag key of an emitter", () => {
   });
 });
 
+describe("forced tags of an emitter", () => {
+  it("stay forced, with their value, under the new tag key", async () => {
+    await line.send("PUT", `${LINE}/tags/frame.source.spawn`, { value: 1 });
+    await rename("emitters", "source", "feeder");
+    const { tags } = TagListResponseSchema.parse((await line.send("GET", `${LINE}/tags`)).json);
+    expect(tags.find((tag) => tag.name === "frame.feeder.spawn")).toMatchObject({
+      value: 1,
+      forced: true,
+    });
+    expect(tags.some((tag) => tag.name === "frame.source.spawn")).toBe(false);
+  });
+});
+
 describe("renaming the tag key of a presence sensor", () => {
   it("answers the renamed tags and moves the tag", async () => {
     const answer = await rename("presence-sensors", "cell", "eye");
@@ -86,7 +103,11 @@ describe("refusals", () => {
   });
 
   it("refuses a key that is not a key, with a 400", async () => {
-    expect((await rename("emitters", "source", "Not a key")).status).toBe(400);
+    const refused = await rename("emitters", "source", "Not a key");
+    expect(refused.status).toBe(400);
+    const { error } = ApiErrorResponseSchema.parse(refused.json);
+    expect(error.code).toBe("invalid_request");
+    expect(error.message).toContain("tagKey");
   });
 
   it("answers 404 for an unknown item", async () => {

@@ -11,7 +11,13 @@ describe("meshPathsToKeep", () => {
     expect(meshPathsToKeep(newOpenPantin(createPantinDocument("Axis"), "c"))).toEqual(new Set());
   });
 
-  it.each([["savedMeshPaths"], ["writingMeshPaths"], ["pendingMeshDeletions"]] as const)(
+  it("keeps a path that only the pending deletions hold", () => {
+    const openPantin = newOpenPantin(createPantinDocument("Axis"), "c");
+    openPantin.pendingMeshDeletions = new Map([["meshes/a.stl", 0]]);
+    expect(meshPathsToKeep(openPantin)).toEqual(new Set(["meshes/a.stl"]));
+  });
+
+  it.each([["savedMeshPaths"], ["writingMeshPaths"]] as const)(
     "keeps a path that only %s holds",
     (field) => {
       const openPantin = newOpenPantin(createPantinDocument("Axis"), "c");

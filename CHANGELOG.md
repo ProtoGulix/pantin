@@ -6,6 +6,22 @@ All notable changes to Pantin. The format follows
 
 ## Unreleased
 
+### Fixed
+
+- Core (STEP import): a failed import now deletes a mesh whose write stopped half way
+  (never a file or face file that already existed), tries every deletion even if one fails, logs the
+  failures and rethrows the original error. The converter process runner no longer hangs
+  when a grandchild process keeps the pipes open after the converter is killed.
+- Core (ADR 0038, amended): a deferred mesh deletion that fails no longer fails the save.
+  It is logged by the core, retried at the next 2 saves, then left to the orphan file
+  cleanup, which lists it.
+
+### Security
+
+- Core: a STEP conversion is refused above 500 components, 64 MiB for one converted
+  mesh or 256 MiB for all of them, with a message that says how to shrink the file. The
+  troubleshooting page of the guide lists the messages, in French and English.
+
 ### Added
 
 - The tag key of an emitter and of a presence sensor can be renamed, like

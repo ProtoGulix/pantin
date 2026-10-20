@@ -42,6 +42,14 @@ export type KindDescription<Item extends { id: string }, Request extends { assem
   };
 };
 
+// A kind that owns a tag key: the only kind a tag key can be renamed on.
+export type TaggedKindDescription<
+  Item extends { id: string },
+  Request extends { assembly: string },
+> = KindDescription<Item, Request> & {
+  tags: NonNullable<KindDescription<Item, Request>["tags"]>;
+};
+
 // The kinds with `tags` are always given their key.
 function ownedKey(tagKey: string | undefined): string {
   if (tagKey === undefined) {
@@ -74,7 +82,7 @@ export const ABSORBERS: KindDescription<Absorber, CreateAbsorberRequest> = {
   make: (id, request) => ({ id, ...request }),
 };
 
-export const EMITTERS: KindDescription<Emitter, CreateEmitterRequest> = {
+export const EMITTERS: TaggedKindDescription<Emitter, CreateEmitterRequest> = {
   label: "emitter",
   fallbackId: "emitter",
   list: (document) => document.emitters,
@@ -87,18 +95,19 @@ export const EMITTERS: KindDescription<Emitter, CreateEmitterRequest> = {
   },
 };
 
-export const PRESENCE_SENSORS: KindDescription<PresenceSensor, CreatePresenceSensorRequest> = {
-  label: "presence sensor",
-  fallbackId: "presence-sensor",
-  list: (document) => document.presenceSensors,
-  withList: (document, presenceSensors) => ({ ...document, presenceSensors }),
-  make: (id, request, tagKey) => ({ id, tagKey: ownedKey(tagKey), ...request }),
-  tags: {
-    keyOf: (sensor) => sensor.tagKey,
-    withKey: (sensor, tagKey) => ({ ...sensor, tagKey }),
-    except: (presenceSensorId) => ({ presenceSensorId }),
-  },
-};
+export const PRESENCE_SENSORS: TaggedKindDescription<PresenceSensor, CreatePresenceSensorRequest> =
+  {
+    label: "presence sensor",
+    fallbackId: "presence-sensor",
+    list: (document) => document.presenceSensors,
+    withList: (document, presenceSensors) => ({ ...document, presenceSensors }),
+    make: (id, request, tagKey) => ({ id, tagKey: ownedKey(tagKey), ...request }),
+    tags: {
+      keyOf: (sensor) => sensor.tagKey,
+      withKey: (sensor, tagKey) => ({ ...sensor, tagKey }),
+      except: (presenceSensorId) => ({ presenceSensorId }),
+    },
+  };
 
 type Edited<Item> = { document: PantinDocument; item: Item };
 
@@ -188,15 +197,12 @@ export function renameConveyorTagKey<
   Item extends { id: string; assembly: string },
   Request extends { assembly: string },
 >(
-  kind: KindDescription<Item, Request>,
+  kind: TaggedKindDescription<Item, Request>,
   document: PantinDocument,
   id: string,
   tagKey: string,
 ): PantinDocument {
   const item = findItem(kind, document, id);
-  if (kind.tags === undefined) {
-    throw new Error(`The ${kind.label} has no tag key to rename.`);
-  }
   const taken = tagKeyOwners(document, item.assembly, kind.tags.except(id));
   const owner = taken.get(tagKey);
   if (owner !== undefined) {

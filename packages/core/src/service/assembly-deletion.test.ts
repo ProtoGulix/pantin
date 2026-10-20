@@ -138,7 +138,7 @@ describe("a file that cannot be deleted", () => {
     expect(answer.pantin.document.assemblies).toEqual([]);
     expect(answer.retainedMeshFiles).toEqual([rail.mesh]);
     const openPantin = await loadPantin(context, "axis");
-    expect([...openPantin.pendingMeshDeletions]).toEqual([rail.mesh]);
+    expect([...openPantin.pendingMeshDeletions.keys()]).toEqual([rail.mesh]);
     failing = false;
     await savePantin(context, "axis");
     expect(await fileExists(rail.mesh)).toBe(false);
@@ -202,7 +202,7 @@ describe("timing", () => {
   it("lets the simulation step on after a deletion while the clock runs", async () => {
     const errors: unknown[] = [];
     const service = createPantinService(createPantinStore(pantinsDirectory), undefined, {
-      reportStepError: (error) => errors.push(error),
+      reportError: (error) => errors.push(error),
     });
     const manual = createManualTimer();
     startSimulationLoop(manual.timer, service.runSimulationSteps, () => undefined);
