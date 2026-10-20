@@ -56,6 +56,21 @@ Le cœur refuse tant que les corps du groupe cesseraient de le suivre. Cas fréq
 
 Grouper puis dégrouper ne redonne pas forcément le Pantin de départ. Rien ne bouge à l'écran, mais les liaisons fixes supprimées ne sont pas rétablies et des identifiants ou des clés de tag peuvent différer. Pour revenir en arrière, abandonnez les modifications non enregistrées.
 
+## Nettoyer les anciennes liaisons fixes
+
+Un Pantin fait avant les groupes contient souvent des liaisons fixes entre des corps d'un même assemblage. Un corps sans liaison parente suit déjà son groupe : ces liaisons ne font plus rien. **Supprimer les liaisons fixes redondantes…** les retire en une seule fois.
+
+1. Choisissez **Édition** puis **Supprimer les liaisons fixes redondantes…**, ou la même entrée dans le menu contextuel de la ligne du Pantin. La commande agit sur tout le Pantin, pas sur la sélection.
+2. Sans liaison à supprimer, le message « Aucune liaison fixe redondante. » s'affiche et rien d'autre n'arrive.
+3. Sinon, une ligne apparaît : « Supprimer N liaisons fixes redondantes ? Les corps suivent déjà leur groupe : rien ne bouge. » Elle est suivie de deux listes, chacune avec un titre et un nombre :
+   - **À supprimer (N)** : les liaisons retirées, rangées par assemblage ;
+   - **Conservées (N)** : les liaisons fixes gardées, avec la raison, par exemple « son parent bouge avec « nom » ». Cette liste n'apparaît que si le cœur en garde.
+4. Cliquez **Supprimer** (ou **Annuler**). Le message donne les liaisons supprimées et rappelle que **Ne pas enregistrer**, à la fermeture, annule l'opération. Une liaison modifiée ou supprimée entre l'aperçu et votre clic est laissée de côté et comptée comme ignorée dans le message.
+
+Le cœur ne supprime qu'une liaison fixe dont la suppression ne déplace rien : le parent et l'enfant sont dans le même assemblage, et aucune liaison mobile ne se trouve au-dessus du parent. Une liaison fixe entre deux assemblages n'est jamais proposée : elle tient le groupe enfant en place. Une liaison fixe sous une glissière ou un pivot est conservée.
+
+Le Pantin ne change pas d'aspect. Rien n'est écrit sur le disque avant l'enregistrement. Aucun tag n'est renommé : il n'y a pas de GVL à régénérer.
+
 ## Déplacer un corps dans un autre assemblage
 
 Glissez un corps sur un autre assemblage, ou choisissez l'**Assemblage** dans l'inspecteur. Les liaisons fixes entre le corps et l'ancien assemblage sont supprimées et listées dans le message.

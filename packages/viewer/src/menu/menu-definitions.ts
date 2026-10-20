@@ -19,6 +19,7 @@ export type MenuCommand =
   | "newJoint"
   | "group"
   | "ungroup"
+  | "deleteRedundantJoints"
   | "resetSimulation"
   | "releaseAllTags"
   | "rename"

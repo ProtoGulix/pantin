@@ -32,6 +32,7 @@ Termes utilisés dans la colonne « Grisé quand » :
 | **Nouvelle liaison…** | | Ouvre le formulaire de création d'une liaison. | Pas de Pantin ouvert, aucun corps dans le Pantin, ou traitement en cours. |
 | **Grouper…** | | Crée un groupe avec les corps et sous-groupes sélectionnés dans l'arborescence : une ligne demande le nom du groupe. Voir [Faire un groupe](/guide/groups#faire-un-groupe). | La sélection n'est pas faite de corps et de sous-groupes d'un même assemblage, ou traitement en cours. |
 | **Dégrouper** | | Dissout le groupe sélectionné dans l'assemblage où il est rangé. Voir [Défaire un groupe](/guide/groups#defaire-un-groupe). | La ligne sélectionnée n'est pas un assemblage rangé dans un autre assemblage, ou traitement en cours. |
+| **Supprimer les liaisons fixes redondantes…** | | Liste les liaisons fixes devenues inutiles (entre corps d'un même assemblage, sans liaison mobile au-dessus du parent) et les supprime après confirmation. Agit sur tout le Pantin. Voir [Nettoyer les anciennes liaisons fixes](/guide/groups#nettoyer-les-anciennes-liaisons-fixes). | Pas de Pantin ouvert, import en cours ou traitement en cours. |
 | **Remise à zéro de la simulation** | | Remet la simulation à son état initial. | Pas de Pantin ouvert ou traitement en cours. |
 | **Relâcher tous les tags forcés** | | Relâche tous les tags forcés depuis le viewer. Sans effet si aucun tag n'est forcé. | Pas de Pantin ouvert ou traitement en cours. |
 | séparateur | | | |
@@ -104,7 +105,7 @@ Un clic droit sur une ligne de l'arborescence, ou la touche <kbd>Menu</kbd> du c
 
 | Type de ligne | Entrées, dans l'ordre |
 |---|---|
-| Pantin | **Renommer**, **Cadrer la vue sur l'élément**, **Importer dans ce Pantin**, **Nouvel assemblage** |
+| Pantin | **Renommer**, **Cadrer la vue sur l'élément**, **Importer dans ce Pantin**, **Nouvel assemblage**, **Supprimer les liaisons fixes redondantes…** |
 | Assemblage | **Renommer**, **Cadrer la vue sur l'élément**, **Nouvelle liaison…**, **Grouper…** (si la sélection s'y prête), **Dégrouper** (assemblage rangé dans un autre), **Masquer dans la vue 3D** (devient **Afficher dans la vue 3D** s'il est masqué), **Isoler dans la vue 3D** (devient **Afficher tous les assemblages** s'il est isolé), **Supprimer** |
 | Dossier « Liaisons entre assemblages » | **Cadrer la vue sur l'élément**, **Nouvelle liaison…** |
 | Corps | **Renommer**, **Cadrer la vue sur l'élément**, **Grouper…** (si la sélection s'y prête), **Supprimer** |

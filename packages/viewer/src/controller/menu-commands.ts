@@ -29,6 +29,7 @@ import {
 } from "./navigation-actions.ts";
 import { requestOrphanCleanup } from "./orphan-cleanup-actions.ts";
 import { savePantin } from "./pantin-actions.ts";
+import { requestRedundantJointsDeletion } from "./redundant-joints-actions.ts";
 import { deleteSensor } from "./sensor-actions.ts";
 import { requestClose, requestDelete } from "./session-actions.ts";
 import { frameNode, renameSelection } from "./tree-actions.ts";
@@ -229,6 +230,9 @@ export function runMenuCommand(
     case "group":
     case "ungroup":
       runSelectionCommand(store, command);
+      return;
+    case "deleteRedundantJoints":
+      void requestRedundantJointsDeletion(store);
       return;
     default:
       runViewCommand(store, command, changeLanguage);

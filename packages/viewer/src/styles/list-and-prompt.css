@@ -95,6 +95,12 @@
   overflow-wrap: anywhere;
 }
 
+.prompt-line__heading {
+  margin: 0;
+  padding-left: 28px;
+  font-weight: 600;
+}
+
 .prompt-line__actions {
   display: flex;
   flex-wrap: wrap;

@@ -3,6 +3,7 @@ import type {
   OrphanMeshList,
   PantinResponse,
   PantinSummary,
+  RedundantJointsList,
 } from "@pantin/protocol";
 import { type AboutState, CLOSED_ABOUT } from "./about-state.ts";
 import type { ActuatorFormState } from "./actuators/actuator-form.ts";
@@ -86,17 +87,17 @@ export interface ViewerState {
   closeBridgeNotice: boolean;
   // The box "Also stop the bridge" of that prompt, checked by default.
   closeStopsBridge: boolean;
-  // Edit view: a body waiting for the user to confirm its deletion.
+  // Edit view: a body, then a joint, waiting for the user to confirm its deletion.
   pendingDeleteBodyId: string | null;
-  // Same for a joint.
   pendingDeleteJointId: string | null;
-  // Same for an assembly with its contents (ADR 0037): the core's preview,
-  // shown in the prompt and kept to name what the user agreed to remove.
+  // Same for an assembly (ADR 0037): the core's preview of what goes with it.
   pendingDeleteAssembly: PendingAssemblyDeletion | null;
   // "Grouper…" waiting for the group's name (ADR 0055 point 12).
   pendingGroup: PendingGroup | null;
-  // The orphan mesh files the core listed (ADR 0038), waiting for the user to confirm.
+  // What the core listed for a cleanup, waiting for the user to confirm: orphan
+  // mesh files (ADR 0038), then redundant fixed joints (ADR 0060).
   pendingOrphanCleanup: OrphanMeshList | null;
+  pendingRedundantJoints: RedundantJointsList | null;
   // The open "New joint" form, or null.
   jointForm: JointFormState | null;
   // Hidden and isolated assemblies of the 3D view (ADR 0019): never saved.
@@ -213,6 +214,7 @@ export function initialViewerState(
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
     jointForm: null,
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,
     // Shown from the start: the panel is where drives are wired (ADR 0022).
@@ -255,6 +257,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
     jointForm: null,
     customAxisJointIds: new Set(),
     assemblyDisplay: NO_ASSEMBLY_DISPLAY,

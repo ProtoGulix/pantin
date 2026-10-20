@@ -20,6 +20,7 @@ export function withGroupRequested(
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,

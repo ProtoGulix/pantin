@@ -27,6 +27,7 @@ import { type GroupRoutes, groupRoutes } from "./api-group-routes.ts";
 import { type IoRoutes, ioRoutes } from "./api-io-routes.ts";
 import { type JointRoutes, jointRoutes } from "./api-joint-routes.ts";
 import { type OrphanMeshRoutes, orphanMeshRoutes } from "./api-orphan-mesh-routes.ts";
+import { type RedundantJointRoutes, redundantJointRoutes } from "./api-redundant-joint-routes.ts";
 import { type SensorRoutes, sensorRoutes } from "./api-sensor-routes.ts";
 import {
   type FetchFunction,
@@ -57,6 +58,7 @@ export interface PantinApiClient
     BridgeRoutes,
     IoRoutes,
     OrphanMeshRoutes,
+    RedundantJointRoutes,
     VersionRoutes {
   listPantins(): Promise<PantinSummary[]>;
   createPantin(name: string): Promise<PantinResponse>;
@@ -204,6 +206,7 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...bridgeRoutes(send, fetchFunction),
     ...ioRoutes(send, fetchFunction),
     ...orphanMeshRoutes(send),
+    ...redundantJointRoutes(send),
     ...versionRoutes(send),
   };
 }

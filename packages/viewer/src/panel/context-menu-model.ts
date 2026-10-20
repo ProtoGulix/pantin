@@ -19,6 +19,7 @@ export type ContextAction =
   | "newJoint"
   | "group"
   | "ungroup"
+  | "deleteRedundantJoints"
   | "changeJointType"
   | "actuateJoint"
   | "addJointSensor"
@@ -55,7 +56,7 @@ export function contextEntries(ref: NodeRef, renamable: boolean): ContextAction[
   const entries: ContextAction[] = renamable ? ["rename"] : [];
   entries.push("frame");
   if (ref.kind === "pantin") {
-    entries.push("importInto", "newAssembly");
+    entries.push("importInto", "newAssembly", "deleteRedundantJoints");
   }
   if (ref.kind === "assembly" || ref.kind === "folder") {
     entries.push("newJoint");
@@ -84,6 +85,7 @@ const CONTEXT_LABELS = {
   newJoint: "menu.newJoint",
   group: "menu.group",
   ungroup: "menu.ungroup",
+  deleteRedundantJoints: "menu.deleteRedundantJoints",
   changeJointType: "menu.changeJointType",
   actuateJoint: "menu.addJointActuator",
   addJointSensor: "menu.addJointSensor",
@@ -107,6 +109,10 @@ function isOffered(action: ContextAction, ref: NodeRef, state: ViewerState): boo
   }
   if (action === "group" || action === "ungroup") {
     return isGroupingOffered(action, state);
+  }
+  if (action === "deleteRedundantJoints") {
+    const context = menuContext(state);
+    return context.editing && !context.busy && !context.importing;
   }
   if (!JOINT_WIRING.includes(action) || ref.kind !== "joint") {
     return true;

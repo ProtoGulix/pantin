@@ -32,6 +32,7 @@ Terms used in the "Greyed out when" column:
 | **New joint…** | | Opens the joint creation form. | No Pantin open, no body in the Pantin, or working. |
 | **Group…** | | Creates a group with the bodies and sub-groups selected in the tree: a line asks for the name of the group. See [Make a group](/en/guide/groups#make-a-group). | The selection is not made of bodies and sub-groups of one assembly, or working. |
 | **Ungroup** | | Dissolves the selected group into the assembly where it is filed. See [Ungroup a group](/en/guide/groups#ungroup-a-group). | The selected row is not an assembly filed inside another assembly, or working. |
+| **Delete redundant fixed joints…** | | Lists the fixed joints that have become useless (between bodies of one assembly, with no moving joint above the parent) and deletes them after confirmation. Acts on the whole Pantin. See [Clean up old fixed joints](/en/guide/groups#clean-up-old-fixed-joints). | No Pantin open, import running or working. |
 | **Reset the simulation** | | Puts the simulation back to its initial state. | No Pantin open or working. |
 | **Release all forced tags** | | Releases all the tags forced from the viewer. No effect if no tag is forced. | No Pantin open or working. |
 | separator | | | |
@@ -104,7 +105,7 @@ A right-click on a row of the tree, or the <kbd>Menu</kbd> key of the keyboard, 
 
 | Row type | Entries, in order |
 |---|---|
-| Pantin | **Rename**, **Frame the view on this item**, **Import into this Pantin**, **New assembly** |
+| Pantin | **Rename**, **Frame the view on this item**, **Import into this Pantin**, **New assembly**, **Delete redundant fixed joints…** |
 | Assembly | **Rename**, **Frame the view on this item**, **New joint…**, **Group…** (if the selection allows it), **Ungroup** (assembly filed inside another), **Hide in the 3D view** (becomes **Show in the 3D view** if it is hidden), **Isolate in the 3D view** (becomes **Show every assembly** if it is isolated), **Delete** |
 | "Joints between assemblies" folder | **Frame the view on this item**, **New joint…** |
 | Body | **Rename**, **Frame the view on this item**, **Group…** (if the selection allows it), **Delete** |

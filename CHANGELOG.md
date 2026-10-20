@@ -8,6 +8,11 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Viewer and core (ADR 0060): "Edit > Delete redundant fixed joints…", also in the
+  context menu of the Pantin row, previews then deletes the fixed joints that groups
+  made useless (parent and child in one assembly, no moving joint above the parent),
+  and lists the ones it keeps with the reason. Nothing is written until saving. The
+  user guide documents it, in French and English.
 - Viewer (ADR 0059): a Joints view that draws the kinematic tree as a left-to-right
   tree, World on the left, groups as rounded rectangles with the count of the
   bodies that follow them, bodies as pills, one curve per joint coded by line

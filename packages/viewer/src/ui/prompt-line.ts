@@ -1,4 +1,5 @@
 import type { PromptView } from "../panel/prompt-model.ts";
+import type { PromptSection } from "../panel/prompt-section.ts";
 import { button, element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
@@ -59,6 +60,14 @@ function detailList(details: readonly string[] | undefined): HTMLElement[] {
   return [element("ul", { className: "prompt-line__details" }, items)];
 }
 
+// A heading with its count, then the lines: the grouping is told in words.
+function sectionLists(sections: readonly PromptSection[] | undefined): HTMLElement[] {
+  return (sections ?? []).flatMap((section) => [
+    element("p", { className: "prompt-line__heading", text: section.heading }),
+    ...detailList(section.lines),
+  ]);
+}
+
 export function renderPromptLine(
   prompt: PromptView | null,
   intents: PanelIntents,
@@ -89,6 +98,7 @@ export function renderPromptLine(
     [
       element("div", { className: "prompt-line__question" }, [icon("info"), text]),
       ...details,
+      ...sectionLists(prompt.sections),
       ...box,
       ...nameInput,
       element("div", { className: "prompt-line__actions" }, buttons),

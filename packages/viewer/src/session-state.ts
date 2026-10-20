@@ -39,6 +39,7 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
     pendingFeedReplacement: null,
     jointForm: null,
   };
@@ -65,6 +66,7 @@ export function withCloseRequested(state: ViewerState, bridgeActive = false): Vi
         pendingDeleteAssembly: null,
         pendingGroup: null,
         pendingOrphanCleanup: null,
+        pendingRedundantJoints: null,
         pendingFeedReplacement: null,
       }
     : withPantinClosed(state);
@@ -131,6 +133,7 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     pendingDeleteAssembly: null,
     pendingGroup: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,
@@ -144,6 +147,7 @@ export function withDeleteCancelled(state: ViewerState): ViewerState {
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
   };
 }
 
@@ -170,6 +174,7 @@ export function withAssemblyDeleteRequested(
     pendingDeleteAssembly: { key: contents.assembly.key, contents },
     pendingGroup: null,
     pendingOrphanCleanup: null,
+    pendingRedundantJoints: null,
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,

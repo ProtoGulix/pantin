@@ -24,6 +24,7 @@ export function withOrphanPreview(state: ViewerState, list: OrphanMeshList): Vie
   return {
     ...state,
     pendingOrphanCleanup: list,
+    pendingRedundantJoints: null,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteAssembly: null,

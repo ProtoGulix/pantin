@@ -12,6 +12,7 @@ describe("context menu", () => {
       "frame",
       "importInto",
       "newAssembly",
+      "deleteRedundantJoints",
     ]);
     expect(contextEntries({ kind: "body", pantinId, bodyId: "rail" }, true)).toEqual([
       "rename",

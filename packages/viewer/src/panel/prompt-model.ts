@@ -1,9 +1,16 @@
-import type { OrphanMeshList, PantinDocument, PantinResponse } from "@pantin/protocol";
+import type {
+  OrphanMeshList,
+  PantinDocument,
+  PantinResponse,
+  RedundantJointsList,
+} from "@pantin/protocol";
 import type { PendingGroup } from "../grouping/grouping-model.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { assemblyDeletionDetails } from "./assembly-deletion-details.ts";
 import { orphanCleanupDetails, orphanCleanupPromptText } from "./orphan-cleanup-details.ts";
+import type { PromptSection } from "./prompt-section.ts";
+import { redundantJointsSections, redundantJointsText } from "./redundant-joints-prompt.ts";
 
 // The inline confirmation line (never window.confirm): closing with unsaved
 // changes, or deleting a body, a joint or an assembly with its contents.
@@ -21,12 +28,16 @@ export type PromptAction =
   | "confirmReplaceFeed"
   | "cancelReplaceFeed"
   | "confirmGroup"
-  | "cancelGroup";
+  | "cancelGroup"
+  | "confirmRedundantJoints"
+  | "cancelRedundantJoints";
 
 export interface PromptView {
   text: string;
   // Lines under the question, rendered as a list (what a deletion removes).
   details?: string[];
+  // Titled lists under the question, each heading carrying its count.
+  sections?: PromptSection[];
   // Buttons wait while a request runs, so a choice is never sent twice.
   enabled: boolean;
   // `disabled`: this button waits for the question to be answerable (a name typed).
@@ -66,6 +77,30 @@ function orphanCleanupPrompt(
     actions: [
       { action: "confirmOrphanCleanup", label: t("prompt.orphanCleanup.confirm"), primary: true },
       { action: "cancelOrphanCleanup", label: t("prompt.orphanCleanup.cancel"), primary: false },
+    ],
+  };
+}
+
+function redundantJointsPrompt(
+  list: RedundantJointsList,
+  state: ViewerState,
+  t: Translate,
+): PromptView {
+  return {
+    text: redundantJointsText(list, state.language, t),
+    sections: redundantJointsSections(list, t),
+    enabled: state.pendingRequestCount === 0,
+    actions: [
+      {
+        action: "confirmRedundantJoints",
+        label: t("prompt.redundantJoints.confirm"),
+        primary: true,
+      },
+      {
+        action: "cancelRedundantJoints",
+        label: t("prompt.redundantJoints.cancel"),
+        primary: false,
+      },
     ],
   };
 }
@@ -176,6 +211,9 @@ export function buildPromptView(state: ViewerState, t: Translate): PromptView | 
     }
     const text = t("prompt.deleteAssembly.text", { name: assembly.contents.assembly.name });
     return deletePrompt(text, state, t, assemblyDeletionDetails(assembly.contents, t));
+  }
+  if (state.pendingRedundantJoints !== null) {
+    return redundantJointsPrompt(state.pendingRedundantJoints, state, t);
   }
   const orphans = state.pendingOrphanCleanup;
   if (orphans !== null) {

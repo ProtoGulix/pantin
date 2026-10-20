@@ -1,5 +1,6 @@
 import { isBridgeActive } from "../bridge/bridge-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
+import { withRedundantJointsCancelled } from "../redundant-joints-state.ts";
 import {
   withBodyDeleted,
   withCloseCancelled,
@@ -23,6 +24,7 @@ import { cancelGroup, confirmGroup } from "./grouping-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { confirmOrphanCleanup } from "./orphan-cleanup-actions.ts";
 import { refreshPantinList, savePantin } from "./pantin-actions.ts";
+import { confirmRedundantJointsDeletion } from "./redundant-joints-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Moving between the list and edit views, and deleting a body, with their
@@ -118,6 +120,39 @@ function confirmPendingDelete(store: ViewerStore): Promise<void> {
     : confirmDeleteJoint(store);
 }
 
+// The prompts that follow an edit command; the close and delete prompts are
+// in resolvePrompt.
+function resolveEditPrompt(store: ViewerStore, action: PromptAction): void {
+  switch (action) {
+    case "confirmOrphanCleanup":
+      void confirmOrphanCleanup(store);
+      return;
+    case "cancelOrphanCleanup":
+      store.update(withOrphanCleanupCancelled(store.state));
+      return;
+    case "confirmRedundantJoints":
+      void confirmRedundantJointsDeletion(store);
+      return;
+    case "cancelRedundantJoints":
+      store.update(withRedundantJointsCancelled(store.state));
+      return;
+    case "confirmReplaceFeed":
+      confirmFeedReplacement(store);
+      return;
+    case "cancelReplaceFeed":
+      cancelFeedReplacement(store);
+      return;
+    case "confirmGroup":
+      void confirmGroup(store);
+      return;
+    case "cancelGroup":
+      cancelGroup(store);
+      return;
+    default:
+      return;
+  }
+}
+
 export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
   switch (action) {
     case "saveAndClose":
@@ -141,24 +176,8 @@ export function resolvePrompt(store: ViewerStore, action: PromptAction): void {
     case "cancelDelete":
       store.update(withDeleteCancelled(store.state));
       return;
-    case "confirmOrphanCleanup":
-      void confirmOrphanCleanup(store);
-      return;
-    case "cancelOrphanCleanup":
-      store.update(withOrphanCleanupCancelled(store.state));
-      return;
-    case "confirmReplaceFeed":
-      confirmFeedReplacement(store);
-      return;
-    case "cancelReplaceFeed":
-      cancelFeedReplacement(store);
-      return;
-    case "confirmGroup":
-      void confirmGroup(store);
-      return;
-    case "cancelGroup":
-      cancelGroup(store);
-      return;
+    default:
+      resolveEditPrompt(store, action);
   }
 }
 

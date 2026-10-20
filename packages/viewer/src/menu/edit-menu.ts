@@ -15,6 +15,12 @@ export const EDIT_MENU: MenuDefinition = {
     // ADR 0055 point 12: on the selected body and group rows of one assembly.
     item("group", "menubar.edit.group", (context) => context.canGroup && !context.busy),
     item("ungroup", "menubar.edit.ungroup", (context) => context.canUngroup && !context.busy),
+    // ADR 0060: acts on the whole Pantin, not on the selection.
+    item(
+      "deleteRedundantJoints",
+      "menubar.edit.deleteRedundantJoints",
+      (context) => context.editing && !context.busy && !context.importing,
+    ),
     item("resetSimulation", "menubar.edit.reset", (context) => context.editing && !context.busy),
     // Always allowed while editing: releasing a tag that is not forced changes nothing.
     item(

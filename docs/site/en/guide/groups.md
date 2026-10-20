@@ -56,6 +56,21 @@ The core refuses as long as the bodies of the group would stop following it. Fre
 
 Group then ungroup does not always give back the starting Pantin. Nothing moves on screen, but the fixed joints that were deleted are not restored, and identifiers or tag keys may differ. To go back, discard the unsaved changes.
 
+## Clean up old fixed joints
+
+A Pantin made before groups often holds fixed joints between bodies of one assembly. A body with no parent joint already follows its group, so these joints do nothing. **Delete redundant fixed joints…** removes them in one go.
+
+1. Choose **Edit** then **Delete redundant fixed joints…**, or the same entry in the context menu of the Pantin row. The command acts on the whole Pantin, not on the selection.
+2. With no joint to delete, the message `No redundant fixed joints.` appears and nothing else happens.
+3. Otherwise a line appears: `Delete N redundant fixed joints? The bodies already follow their group: nothing moves.` It is followed by two lists, each with a heading and a count:
+   - **To delete (N)**: the joints removed, listed by assembly;
+   - **Kept (N)**: the fixed joints kept, with the reason, for example `its parent moves with "name"`. This list appears only if the core keeps some.
+4. Click **Delete** (or **Cancel**). The message gives the joints deleted and reminds you that **Don't save**, when closing, undoes the operation. A joint changed or deleted between the preview and your click is left out and counted in the message as skipped.
+
+The core deletes a fixed joint only when deleting it moves nothing: the parent and the child are in the same assembly, and no moving joint sits above the parent. A fixed joint between two assemblies is never offered: it holds the child group in place. A fixed joint under a slider or a pivot is kept.
+
+The Pantin looks the same. Nothing is written to disk before saving. No tag is renamed: there is no GVL to regenerate.
+
 ## Move a body to another assembly
 
 Drag a body onto another assembly, or choose the **Assembly** in the inspector. The fixed joints between the body and the old assembly are deleted and listed in the message.

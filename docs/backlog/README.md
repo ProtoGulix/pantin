@@ -17,7 +17,6 @@ phase.
 - [Multi-selection in the 3D view](multi-selection-in-3d.md) — for grouping, without breaking click-to-go-down
 - [Nested assemblies: extras](nested-assemblies-extras.md) — axis from geometry, metallic CAD colours
 - [Place objects from a picked face](place-objects-from-picked-face.md) — one-click placement of belts and cells
-- [Remove redundant fixed joints](remove-redundant-fixed-joints.md) — clean Pantins saved before groups
 - [Retry a body whose mesh failed](retry-failed-body-mesh.md) — a "Réessayer" action
 - [Tag key rename for emitters and presence sensors](phase-6-tag-key-rename.md) — missing PUT route
 - [Interface polish](ui-polish-from-docs.md) — small defects found while documenting

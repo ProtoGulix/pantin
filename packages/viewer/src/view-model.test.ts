@@ -76,6 +76,7 @@ describe("context menu labels", () => {
       "Cadrer la vue sur l'élément",
       "Importer dans ce Pantin",
       "Nouvel assemblage",
+      "Supprimer les liaisons fixes redondantes…",
     ]);
   });
 });

@@ -57,6 +57,7 @@ import {
 } from "./open-pantins.ts";
 import { orphanMeshOperations } from "./orphan-mesh-cleanup.ts";
 import { disposePhysics } from "./physics-runtime.ts";
+import { redundantJointsOperations } from "./redundant-joints-operations.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { runSimulationSteps } from "./simulation.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
@@ -219,6 +220,11 @@ export function createServiceContext(
   };
 }
 
+// The preview-then-exact-list cleanups (ADR 0038, ADR 0060).
+function cleanupOperations(context: ServiceContext) {
+  return { ...orphanMeshOperations(context), ...redundantJointsOperations(context) };
+}
+
 export function createPantinService(
   store: PantinStore,
   stepConverter: StepConverter | undefined,
@@ -263,7 +269,7 @@ export function createPantinService(
     runSimulationSteps: (tick: SimulationTick) => runSimulationSteps(context, tick),
     ...clockOperations(context),
     ...documentObjectOperations(context),
-    ...orphanMeshOperations(context),
+    ...cleanupOperations(context),
   };
 }
 

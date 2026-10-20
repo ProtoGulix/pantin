@@ -18,6 +18,7 @@ import { IO_ROUTES } from "./io-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
 import { ORPHAN_MESH_ROUTES } from "./orphan-mesh-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
+import { REDUNDANT_JOINT_ROUTES } from "./redundant-joints-routes.ts";
 import { readBodyBytes, readJsonBody, requireContentType } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
 import { bodyIdOf, pantinIdOf, type Route, type RouteContext } from "./route-context.ts";
@@ -176,6 +177,7 @@ export const ROUTES: readonly Route[] = [
   ...POSE_STREAM_ROUTES,
   ...CLOCK_ROUTES,
   ...ORPHAN_MESH_ROUTES,
+  ...REDUNDANT_JOINT_ROUTES,
   ...TAG_ROUTES,
   ...IO_ROUTES,
   ...BRIDGE_ROUTES,
