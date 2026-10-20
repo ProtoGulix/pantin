@@ -318,7 +318,7 @@ The modules here are those that the bridge presents to the PLC (see [Connect a P
 | --- | --- |
 | Reading | **Reading the I/O list…** |
 | No list | **This Pantin has no I/O list (io.json) yet.** and the **Create the mapping** button. |
-| Unreadable | **io.json is unreadable, or old io.csv files are present: nothing can be edited here. Fix the file, or migrate it with "pantin io migrate".** |
+| Unreadable | **io.json is unreadable: nothing can be edited here. Fix the file or delete it.** |
 | Read failure | **The I/O list could not be read.** and the **Retry** button. |
 | Editing | The full editor, described below. |
 

@@ -109,7 +109,7 @@ Exemple de manifeste de pièce (à valider contre le schéma en phase 1) :
       ]
     }
 
-Liste d'E/S : un fichier io.json par Pantin, qui porte les modules et leurs voies (ADR 0045, 0049). Il est édité depuis le viewer, enregistré et annulé avec le Pantin, jamais à la main. Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus, et suit leurs renommages. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS, pantin io migrate convertit l'ancien couple io.csv et io-modules.json. Jamais de tag défini à la main à deux endroits.
+Liste d'E/S : un fichier io.json par Pantin, qui porte les modules et leurs voies (ADR 0045, 0049). Il est édité depuis le viewer, enregistré et annulé avec le Pantin, jamais à la main. Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus, et suit leurs renommages. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS. Jamais de tag défini à la main à deux endroits.
 
 ## 6. Économie de tokens (obligatoire)
 

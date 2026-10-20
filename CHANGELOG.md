@@ -49,6 +49,15 @@ All notable changes to Pantin. The format follows
   is sorted by phase and theme in an index, with merged duplicates and the
   follow-ups announced by the ADRs.
 
+### Removed
+
+- Command line and core (ADR 0049 point 8): `pantin io migrate` and its frozen
+  io.csv parser are gone, as planned after one release. The core no longer
+  looks for `io.csv` or `io-modules.json`: the `legacy_io_files` problem code
+  (an I/O mapping API code, not part of pantin.json) and its 409 on edits are
+  removed, and `pantin io init`, `gvl` and `validate` ignore those files. A
+  folder that still has them must be migrated with 0.2.0 first.
+
 ## [0.2.0] - 2026-10-19
 
 Rigid groups: an assembly targeted by a joint moves as one piece, and an

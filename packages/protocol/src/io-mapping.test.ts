@@ -30,8 +30,9 @@ describe("IoMappingResponseSchema", () => {
   it("refuses the removed codes of the CSV and a problem with a file or line", () => {
     const base = { status: "invalid", mappingId: null, modules: [], unmappedTags: [] };
     const csvCode = { path: [], code: "bad_header", message: "" };
+    const legacyFiles = { path: [], code: "legacy_io_files", message: "" };
     const withLine = { file: "io.csv", line: 3, column: 1, code: "unknown_tag", message: "" };
-    for (const problem of [csvCode, withLine]) {
+    for (const problem of [csvCode, legacyFiles, withLine]) {
       expect(IoMappingResponseSchema.safeParse({ ...base, problems: [problem] }).success).toBe(
         false,
       );

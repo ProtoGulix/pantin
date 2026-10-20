@@ -77,16 +77,6 @@ describe("pantin io init, refusals", () => {
     expect(await ioText()).toBe("keep me");
   });
 
-  it("refuses legacy files and points to io migrate", async () => {
-    await writeFile(join(folder, "io.csv"), "x");
-    const result = await runCli(["io", "init", folder]);
-    expect([result.code, result.stderr]).toEqual([
-      1,
-      expect.stringContaining('run "pantin io migrate'),
-    ]);
-    await expect(readFile(ioPath())).rejects.toThrow();
-  });
-
   it("refuses a folder that is not a valid Pantin", async () => {
     const result = await runCli(["io", "init", join(workspace, "nothing")]);
     expect(result.code).toBe(1);
@@ -221,12 +211,6 @@ describe("pantin gvl", () => {
     expect([result.code, result.stderr]).toEqual([1, expect.stringContaining("pantin io init")]);
     expect((await runCli(["gvl"])).code).toBe(2);
   });
-
-  it("refuses legacy files beside no io.json, naming io migrate", async () => {
-    await writeFile(join(folder, "io.csv"), "x");
-    const result = await runCli(["gvl", folder]);
-    expect([result.code, result.stderr]).toEqual([1, expect.stringContaining("io migrate")]);
-  });
 });
 
 describe("pantin validate and the mapping", () => {
@@ -282,12 +266,5 @@ describe("pantin validate and the mapping, notes", () => {
     expect(result.stdout).toContain(
       `2 tag(s) not mapped in io.json: ${AXIS_TAGS.slice(2).join(", ")}.`,
     );
-  });
-
-  it("fails on legacy files that still exist, pointing to io migrate", async () => {
-    await writeFile(join(folder, "io-modules.json"), "{}");
-    const result = await runCli(["validate", folder]);
-    expect(result.code).toBe(1);
-    expect(result.stderr).toContain("io migrate");
   });
 });

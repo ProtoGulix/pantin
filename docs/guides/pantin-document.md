@@ -253,11 +253,6 @@ From the command line:
   `io.json: modules[0].channels[3].address: message`. Channel numbers count the
   channels in canonical order, which is the file's order unless the file was
   edited by hand (validate then says so).
-- `pantin io migrate <folder>` converts the older `io.csv` and `io-modules.json`
-  into `io.json`, once, and deletes them. The core refuses a folder that still
-  has them. The command places `io.json` with a hard link, so it needs a
-  filesystem that has them (ext4, NTFS): on FAT, exFAT or some network shares,
-  copy the folder to a local disk first.
 
 ## 8. A minimal example
 

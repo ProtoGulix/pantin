@@ -141,7 +141,7 @@ describe("buildIoView", () => {
     expect(
       modeOf({
         ...mapping,
-        problems: [{ path: [], code: "legacy_io_files", message: "legacy" }],
+        problems: [{ path: [], code: "invalid_json", message: "broken" }],
       }),
     ).toBe("unreadable");
   });

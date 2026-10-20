@@ -682,7 +682,7 @@
   "io.loading": "Reading the I/O list…",
   "io.missing.text": "This Pantin has no I/O list (io.json) yet.",
   "io.missing.create": "Create the mapping",
-  "io.unreadable": "io.json is unreadable, or old io.csv files are present: nothing can be edited here. Fix the file, or migrate it with \"pantin io migrate\".",
+  "io.unreadable": "io.json is unreadable: nothing can be edited here. Fix the file or delete it.",
   "io.problems.title": "Problems ({count})",
   "io.problems.goTo": "Go to the cell concerned",
   "io.modules.title": "Modules",

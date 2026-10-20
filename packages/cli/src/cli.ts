@@ -2,7 +2,6 @@ import { BRIDGE_LOG_USAGE, type BridgeLogEnvironment, bridgeLog } from "./bridge
 import type { CommandResult } from "./command-result.ts";
 import { generateGvl } from "./gvl.ts";
 import { ioInit } from "./io-init-command.ts";
-import { ioMigrate } from "./io-migrate.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
 import { realEnvironment } from "./real-environment.ts";
 import { validatePantinFolder } from "./validate-folder.ts";
@@ -16,7 +15,6 @@ const USAGE = [
   "  schema [io]         print the JSON Schema of pantin.json, or of io.json with io",
   "  io init <folder> [--update]",
   "                      write io.json, or with --update map the unmapped tags into m1",
-  "  io migrate <folder> convert a legacy io.csv and io-modules.json into io.json",
   "  gvl <folder>        print the CODESYS global variable list of io.json",
   BRIDGE_LOG_USAGE,
 ].join("\n");
@@ -112,9 +110,6 @@ export async function runCommand(
   }
   if (command === "io" && argument === "init") {
     return runIoInit(extra, streams);
-  }
-  if (command === "io" && argument === "migrate" && extra.length === 1 && extra[0] !== undefined) {
-    return report(await ioMigrate(extra[0]), streams);
   }
   if (command === "schema" && argument === undefined) {
     streams.stdout.write(pantinJsonSchemaText());

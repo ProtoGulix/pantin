@@ -181,8 +181,8 @@
         "problems": [
           {
             "path": [],
-            "code": "legacy_io_files",
-            "message": "io.csv is a legacy file."
+            "code": "unreadable_file",
+            "message": "io.json cannot be read."
           },
           {
             "path": ["modules", 0, "port"],

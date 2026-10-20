@@ -3,7 +3,6 @@ import { join } from "node:path";
 import {
   describeIoProblem,
   ioTagsOf,
-  listLegacyIoFiles,
   serializeIoDocument,
   writeTextAtomically,
 } from "@pantin/core";
@@ -21,14 +20,6 @@ type Start = { refusal: string[] } | { existing: IoDocument | null; canonical: b
 
 // What is on disk decides whether init may go on at all.
 async function startOf(folder: string, update: boolean): Promise<Start> {
-  const legacyFiles = await listLegacyIoFiles(folder);
-  if (legacyFiles.length > 0) {
-    return {
-      refusal: [
-        `${legacyFiles.join(" and ")} exist in ${folder}: run "pantin io migrate ${folder}" to convert them to ${IO_JSON_FILE_NAME}.`,
-      ],
-    };
-  }
   const { reading, canonical } = await readFolderIoReading(folder);
   if (reading.kind !== "missing" && !update) {
     return {

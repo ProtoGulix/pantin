@@ -10,10 +10,7 @@ import { type IoTag, validateIoDocument } from "./io-validation.ts";
 import { type TagOwner, tagEntries } from "./tag-entries.ts";
 
 // From the open mapping and the document's tags to the answer of GET .../io
-// (ADR 0049 points 5 to 8): pure, the legacy files are looked up by the caller.
-
-/** Legacy files found beside io.json (io.csv, io-modules.json), by name. */
-export type LegacyIoFilesFound = readonly string[];
+// (ADR 0049 points 5 to 7): pure.
 
 function ownerOf(owner: TagOwner): IoTag["owner"] {
   switch (owner.kind) {
@@ -38,16 +35,6 @@ export function ioTagsOf(document: PantinDocument): IoTag[] {
     direction: entry.direction,
     owner: ownerOf(entry.owner),
   }));
-}
-
-// ADR 0049 point 8: two sources of truth are never merged, so the user is told
-// which file to act on.
-function legacyProblem(found: LegacyIoFilesFound, hasIoJson: boolean): IoProblem {
-  const names = found.join(" and ");
-  const message = hasIoJson
-    ? `${names} still exist beside io.json, which replaces them: delete them.`
-    : `${names} exist but io.json does not: run "pnpm pantin io migrate <folder>" to convert them.`;
-  return { path: [], code: "legacy_io_files", message };
 }
 
 function annotated(document: IoDocument, tags: readonly IoTag[]): IoMappingResponse["modules"] {
@@ -75,19 +62,13 @@ function statusOf(problems: readonly IoProblem[]): IoMappingResponse["status"] {
 }
 
 /** Checks the open mapping against the tags of the open document. */
-export function evaluateIoMapping(
-  reading: IoReading,
-  legacyFiles: LegacyIoFilesFound,
-  tags: readonly IoTag[],
-): IoMappingResponse {
-  const legacy =
-    legacyFiles.length === 0 ? [] : [legacyProblem(legacyFiles, reading.kind !== "missing")];
+export function evaluateIoMapping(reading: IoReading, tags: readonly IoTag[]): IoMappingResponse {
   if (reading.kind === "missing") {
     return {
-      status: legacy.length === 0 ? "missing" : "invalid",
+      status: "missing",
       mappingId: null,
       modules: [],
-      problems: legacy,
+      problems: [],
       unmappedTags: unmappedAll(tags),
     };
   }
@@ -96,17 +77,16 @@ export function evaluateIoMapping(
       status: "invalid",
       mappingId: null,
       modules: [],
-      problems: [...legacy, ...reading.problems],
+      problems: reading.problems,
       unmappedTags: unmappedAll(tags),
     };
   }
   const validation = validateIoDocument(reading.document, tags);
-  const problems = [...legacy, ...validation.problems];
   return {
-    status: statusOf(problems),
+    status: statusOf(validation.problems),
     mappingId: mappingIdOf(reading),
     modules: annotated(reading.document, tags),
-    problems,
+    problems: validation.problems,
     unmappedTags: validation.unmappedTags,
   };
 }

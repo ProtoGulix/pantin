@@ -682,7 +682,7 @@
   "io.loading": "Lecture de la liste d'E/S…",
   "io.missing.text": "Ce Pantin n'a pas encore de liste d'E/S (io.json).",
   "io.missing.create": "Créer le mapping",
-  "io.unreadable": "Le fichier io.json est illisible, ou d'anciens fichiers io.csv sont présents : aucune modification n'est possible ici. Corrigez le fichier ou migrez-le avec « pantin io migrate ».",
+  "io.unreadable": "Le fichier io.json est illisible : aucune modification n'est possible ici. Corrigez le fichier ou supprimez-le.",
   "io.problems.title": "Problèmes ({count})",
   "io.problems.goTo": "Aller à la cellule concernée",
   "io.modules.title": "Modules",

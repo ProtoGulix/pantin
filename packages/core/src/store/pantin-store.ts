@@ -12,7 +12,7 @@ import {
 } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
 import { writeTextAtomically } from "./atomic-write.ts";
-import { listLegacyIoFiles, readIoJson, writeIoJson } from "./io-files.ts";
+import { readIoJson, writeIoJson } from "./io-files.ts";
 import { deleteMeshFolderFile, listMeshFolderFiles } from "./mesh-folder-files.ts";
 import { assertRealPathInside, isErrorWithCode, resolveInside } from "./safe-paths.ts";
 
@@ -57,8 +57,6 @@ export type PantinStore = {
   readIoFile(pantinId: PantinId): Promise<Uint8Array | undefined>;
   // Same atomic write as pantin.json.
   writeIoAtomically(pantinId: PantinId, text: string): Promise<void>;
-  // The legacy io.csv and io-modules.json that exist (ADR 0049 point 8).
-  listLegacyIoFiles(pantinId: PantinId): Promise<string[]>;
   describeDocumentLocation(pantinId: PantinId): string;
 };
 
@@ -249,7 +247,6 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     readIoFile: (pantinId) => readIoJson(pantinFolder(paths, pantinId)),
     writeIoAtomically: (pantinId, text) =>
       writeIoJson(paths.pantinsDirectory, pantinFolder(paths, pantinId), text),
-    listLegacyIoFiles: (pantinId) => listLegacyIoFiles(pantinFolder(paths, pantinId)),
     // Relative to the pantins directory: error messages never reveal absolute paths.
     describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
   };

@@ -2,7 +2,6 @@ import {
   evaluateIoMapping,
   type IoReading,
   ioTagsOf,
-  listLegacyIoFiles,
   readIoDocument,
   readIoJson,
   serializeIoDocument,
@@ -42,8 +41,7 @@ export async function readFolderIoReading(
 
 export async function readFolderIo(folder: string, document: PantinDocument): Promise<FolderIo> {
   const { reading, canonical } = await readFolderIoReading(folder);
-  const legacyFiles = await listLegacyIoFiles(folder);
-  const answer = evaluateIoMapping(reading, legacyFiles, ioTagsOf(document));
+  const answer = evaluateIoMapping(reading, ioTagsOf(document));
   return { reading, answer, canonical };
 }
 

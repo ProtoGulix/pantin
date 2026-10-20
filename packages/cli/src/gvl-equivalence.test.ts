@@ -4,12 +4,10 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { copyAxisWithValve, runCli, tmpWorkspace } from "./io-test-folder.ts";
 
-// ADR 0049 point 9: `pantin gvl` keeps its output format when it moves from
-// io.csv to io.json. The fixture holds one mapping twice, as the legacy pair
-// and as io.json, and `expected.gvl`, the text the CSV based command printed
-// for the pair (generated with it before this change). Two modules, listed
-// in this order, show that modules keep the file order and channels the
-// canonical order.
+// ADR 0049 point 9: `pantin gvl` keeps the output format it had when it read
+// io.csv. `expected.gvl` is the text that command printed for the mapping held
+// by io.json (generated before the move). Two modules, listed in this order,
+// show that modules keep the file order and channels the canonical order.
 
 const FIXTURE = fileURLToPath(new URL("../fixtures/gvl-equivalence/", import.meta.url));
 
@@ -39,19 +37,5 @@ describe("pantin gvl, before and after the move to io.json", () => {
       stdout: await expectedGvl(),
       stderr: "",
     });
-  });
-
-  it("prints the same GVL for the legacy pair once migrated", async () => {
-    await cp(join(FIXTURE, "io.csv"), join(folder, "io.csv"));
-    await cp(join(FIXTURE, "io-modules.json"), join(folder, "io-modules.json"));
-    expect((await runCli(["io", "migrate", folder])).code).toBe(0);
-    expect(await runCli(["gvl", folder])).toEqual({
-      code: 0,
-      stdout: await expectedGvl(),
-      stderr: "",
-    });
-    expect(await readFile(join(folder, "io.json"), "utf8")).toBe(
-      await readFile(join(FIXTURE, "io.json"), "utf8"),
-    );
   });
 });

@@ -84,7 +84,7 @@ def test_decodes_the_path_of_a_problem_and_nests_channels_under_their_module() -
 
     assert [problem.path for problem in unreadable.problems] == [(), ("modules", 0, "port")]
     assert [problem.code for problem in unreadable.problems] == [
-        "legacy_io_files",
+        "unreadable_file",
         "schema_invalid",
     ]
     valid = decode_io_mapping(json.loads(io_cases("valid")[0].frame))

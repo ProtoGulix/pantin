@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COIL, unsavedChanges, useIoAxis } from "../test-support/io-edits.ts";
-import { discardAxis, ioTextOf, loadIo, writeLegacyFile } from "../test-support/io-files.ts";
+import { discardAxis, loadIo } from "../test-support/io-files.ts";
 import { sendRaw } from "../test-support/test-server.ts";
 
 // The I/O edit routes when the mapping cannot be edited (ADR 0049 points 4, 6
@@ -21,20 +21,6 @@ describe("edits while the mapping cannot be edited", () => {
     expect((await io.call("PATCH", `/channels/${COIL}`, {})).status).toBe(409);
     expect((await io.call("DELETE", `/channels/${COIL}`)).status).toBe(409);
     expect((await io.call("GET", "")).answer.problems[0]?.code).toBe("invalid_json");
-  });
-
-  it("answers 409 while legacy files are present, without io.json", async () => {
-    await writeLegacyFile(io.axis(), "io.csv", "x");
-    const call = await io.addModule();
-    expect(call.status).toBe(409);
-    expect(call.text).toContain("io migrate");
-  });
-
-  it("answers 409 while legacy files are present, beside an io.json", async () => {
-    await loadIo(io.axis(), ioTextOf([]));
-    await writeLegacyFile(io.axis(), "io-modules.json", "{}");
-    expect((await io.addModule()).status).toBe(409);
-    expect((await io.call("DELETE", "/modules/m1")).status).toBe(409);
   });
 
   it("answers 404 to an edit of a module or a tag when there is no mapping yet", async () => {

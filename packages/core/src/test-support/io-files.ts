@@ -60,10 +60,6 @@ export function writeIoJsonFile(axis: BusAxis, text: string): Promise<void> {
   return writeFile(join(folderOf(axis), IO_JSON_FILE_NAME), text);
 }
 
-export function writeLegacyFile(axis: BusAxis, name: string, text: string): Promise<void> {
-  return writeFile(join(folderOf(axis), name), text);
-}
-
 /** Discards the open Pantin's edits: it re-reads both files from disk. */
 export async function discardAxis(axis: BusAxis): Promise<void> {
   const response = await sendRaw(axis.server, "POST", "/api/pantins/axis/discard");

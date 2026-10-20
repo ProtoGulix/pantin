@@ -26,14 +26,13 @@ import { groupUnmappedTags, type UnmappedGroup } from "./io-unmapped.ts";
 // computes nothing: zone, type, address and variable are the core's.
 
 // Problems that say the file could not be used: nothing is edited then, and
-// the core would answer 409 to any mutation (ADR 0049 points 6 and 8).
+// the core would answer 409 to any mutation (ADR 0049 point 6).
 const BLOCKING_CODES: ReadonlySet<IoProblemCode> = new Set([
   "file_too_large",
   "invalid_encoding",
   "invalid_json",
   "unreadable_file",
   "schema_invalid",
-  "legacy_io_files",
 ]);
 
 // loading: no answer yet; failed: the read failed and nothing is known; missing: no io.json, "Create the mapping";

@@ -26,7 +26,6 @@ IO_PROBLEM_CODES = frozenset(
         "invalid_json",
         "unreadable_file",
         "schema_invalid",
-        "legacy_io_files",
         "unknown_tag",
         "zone_direction_mismatch",
         "type_mismatch",

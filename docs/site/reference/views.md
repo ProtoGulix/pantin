@@ -318,7 +318,7 @@ Les modules ici sont ceux que le pont présente à l'automate (voir [Connecter u
 | --- | --- |
 | Lecture | **Lecture de la liste d'E/S…** |
 | Pas de liste | **Ce Pantin n'a pas encore de liste d'E/S (io.json).** et le bouton **Créer le mapping**. |
-| Illisible | **Le fichier io.json est illisible, ou d'anciens fichiers io.csv sont présents : aucune modification n'est possible ici. Corrigez le fichier ou migrez-le avec « pantin io migrate ».** |
+| Illisible | **Le fichier io.json est illisible : aucune modification n'est possible ici. Corrigez le fichier ou supprimez-le.** |
 | Échec de lecture | **La liste d'E/S n'a pas pu être lue.** et le bouton **Réessayer**. |
 | Édition | L'éditeur complet, décrit ci-dessous. |
 

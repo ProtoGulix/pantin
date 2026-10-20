@@ -17,18 +17,12 @@ import { ApiError } from "../errors.ts";
 import { alignIo } from "./io-alignment.ts";
 import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins.ts";
 
-// The I/O mapping of an open Pantin (ADR 0049 points 3, 4 and 8): read and
+// The I/O mapping of an open Pantin (ADR 0049 points 3 and 4): read and
 // edited in memory like the document, checked against the open document's tags,
-// unsaved edits included. Only the legacy files are looked up on disk, on each
-// call: they are what the user must act on, and nothing else reads them.
+// unsaved edits included.
 
-async function answerOf(
-  context: ServiceContext,
-  pantinId: PantinId,
-  openPantin: OpenPantin,
-): Promise<IoMappingResponse> {
-  const legacyFiles = await context.store.listLegacyIoFiles(pantinId);
-  return evaluateIoMapping(openPantin.io, legacyFiles, ioTagsOf(openPantin.document));
+function answerOf(openPantin: OpenPantin): IoMappingResponse {
+  return evaluateIoMapping(openPantin.io, ioTagsOf(openPantin.document));
 }
 
 export async function readIo(
@@ -37,21 +31,11 @@ export async function readIo(
 ): Promise<IoMappingResponse> {
   const openPantin = await loadPantin(context, pantinId);
   alignIo(openPantin);
-  return answerOf(context, pantinId, openPantin);
+  return answerOf(openPantin);
 }
 
-// An edit never merges with a source it cannot trust (ADR 0049 points 6 and 8).
-async function refuseUneditable(
-  context: ServiceContext,
-  pantinId: PantinId,
-  openPantin: OpenPantin,
-): Promise<void> {
-  if ((await context.store.listLegacyIoFiles(pantinId)).length > 0) {
-    throw new ApiError(
-      "conflict",
-      'io.csv or io-modules.json still exist beside io.json: run "pnpm pantin io migrate <folder>" or delete them, then discard. See GET /api/pantins/<id>/io.',
-    );
-  }
+// An edit never merges with a source it cannot trust (ADR 0049 point 6).
+function refuseUneditable(openPantin: OpenPantin): void {
   if (openPantin.io.kind === "unreadable") {
     throw new ApiError(
       "conflict",
@@ -77,13 +61,13 @@ async function editIo(
   edit: (openPantin: OpenPantin, tags: IoTag[]) => IoDocument,
 ): Promise<IoMappingResponse> {
   const openPantin = await loadPantin(context, pantinId);
-  await refuseUneditable(context, pantinId, openPantin);
+  refuseUneditable(openPantin);
   // No await from here to the assignment: nobody edits in between.
   alignIo(openPantin);
   const edited = edit(openPantin, ioTagsOf(openPantin.document));
   // Canonical, so that the answer lists the channels in the order of the file.
   openPantin.io = { kind: "document", document: canonicalIoDocument(edited) };
-  return answerOf(context, pantinId, openPantin);
+  return answerOf(openPantin);
 }
 
 export function ioEditOperations(context: ServiceContext) {

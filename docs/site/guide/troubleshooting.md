@@ -137,7 +137,7 @@ journal.
 | Ce que vous voyez | Cause | Que faire |
 | --- | --- | --- |
 | « Ce Pantin n'a pas encore de liste d'E/S (io.json). » | Aucun `io.json` | **Créer le mapping** |
-| « Le fichier io.json est illisible, ou d'anciens fichiers io.csv sont présents : aucune modification n'est possible ici. » | Fichier cassé, ou ancien format | Corrigez le fichier, ou migrez-le avec `pnpm pantin io migrate <dossier>` |
+| « Le fichier io.json est illisible : aucune modification n'est possible ici. » | Fichier cassé | Corrigez le fichier, ou supprimez-le |
 | « La liste d'E/S n'a pas pu être lue. » | Erreur de lecture | **Réessayer** |
 | « Le mapping affiché peut être périmé : la dernière lecture a échoué. » | La dernière relecture a échoué | **Réessayer** |
 | **Exporter la GVL** grisé | Mapping absent, pas encore lu, ou invalide : l'infobulle le dit | Créez le mapping, ou corrigez les **Problèmes** |

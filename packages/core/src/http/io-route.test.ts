@@ -11,7 +11,6 @@ import {
   ioTextOf,
   loadIo,
   writeIoJsonFile,
-  writeLegacyFile,
 } from "../test-support/io-files.ts";
 import { SENTINEL_CONTENT, sendJsonRequest, sendRaw } from "../test-support/test-server.ts";
 
@@ -245,36 +244,5 @@ describe("GET .../io mappingId", () => {
     });
     expect(created.status).toBe(201);
     expect((await readIo()).answer.unmappedTags.length).toBeGreaterThan(0);
-  });
-});
-
-describe("GET .../io legacy files", () => {
-  it("is invalid and says to migrate when io.csv exists and io.json does not", async () => {
-    await writeLegacyFile(axis, "io.csv", "tag;variable\n");
-    const { answer } = await readIo();
-    expect(answer).toMatchObject({ status: "invalid", mappingId: null, modules: [] });
-    expect(answer.problems).toHaveLength(1);
-    expect(answer.problems[0]).toMatchObject({ path: [], code: "legacy_io_files" });
-    expect(answer.problems[0]?.message).toContain("io.csv");
-    expect(answer.problems[0]?.message).toContain('"pnpm pantin io migrate <folder>"');
-  });
-
-  it("names io-modules.json too, when both exist", async () => {
-    await writeLegacyFile(axis, "io.csv", "");
-    await writeLegacyFile(axis, "io-modules.json", "{}");
-    const message = (await readIo()).answer.problems[0]?.message;
-    expect(message).toContain("io.csv and io-modules.json");
-  });
-
-  it("says to delete them when io.json exists, and does not merge the two", async () => {
-    await loadIo(axis, ioTextOf(ALL()));
-    await writeLegacyFile(axis, "io-modules.json", "{}");
-    const { answer } = await readIo();
-    expect(answer.status).toBe("invalid");
-    expect(answer.problems).toHaveLength(1);
-    expect(answer.problems[0]?.code).toBe("legacy_io_files");
-    expect(answer.problems[0]?.message).toContain("delete them");
-    expect(answer.problems[0]?.message).not.toContain("migrate");
-    expect(answer.modules.flatMap((module) => module.channels)).toHaveLength(tags.length);
   });
 });

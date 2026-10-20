@@ -138,7 +138,7 @@ in the log.
 | What you see | Cause | What to do |
 | --- | --- | --- |
 | "This Pantin has no I/O list (io.json) yet." | No `io.json` | **Create the mapping** |
-| "io.json is unreadable, or old io.csv files are present: nothing can be edited here." | Broken file, or old format | Fix the file, or migrate it with `pnpm pantin io migrate <folder>` |
+| "io.json is unreadable: nothing can be edited here." | Broken file | Fix the file, or delete it |
 | "The I/O list could not be read." | Read error | **Retry** |
 | "The mapping shown may be out of date: the last refresh failed." | The last re-read failed | **Retry** |
 | **Export GVL** greyed out | Mapping missing, not read yet, or invalid: the tooltip says which | Create the mapping, or fix the **Problems** |

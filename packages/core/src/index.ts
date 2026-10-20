@@ -22,5 +22,5 @@ export {
 } from "./http/server.ts";
 export { writeTextAtomically } from "./store/atomic-write.ts";
 export { readFileUpTo } from "./store/bounded-read.ts";
-export { listLegacyIoFiles, readIoJson } from "./store/io-files.ts";
+export { readIoJson } from "./store/io-files.ts";
 export { assertRealPathInside, isErrorWithCode, resolveInside } from "./store/safe-paths.ts";

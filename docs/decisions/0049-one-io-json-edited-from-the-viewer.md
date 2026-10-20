@@ -389,3 +389,9 @@ The central layouts are replaced by a top zone and an optional bottom zone,
 each with its own view selector (3D, Schéma, Liaisons, E/S), as described in
 the amendment of ADR 0059 of the same date. The splitter, its stored ratio
 and the render loop rule are unchanged.
+
+## Amendment (2026-10-20): point 8 done
+
+`pantin io migrate`, its CSV parser and the core's `legacy_io_files` problem
+are removed after release 0.2.0, as point 8 planned. A folder that still holds
+`io.csv` and `io-modules.json` is migrated with 0.2.0 first.
