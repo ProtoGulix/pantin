@@ -1,7 +1,7 @@
 import {
   BRIDGE_STREAM_EVENT_NAME,
-  type BridgeStatus,
-  BridgeStatusSchema,
+  type BridgeListResponse,
+  BridgeListResponseSchema,
   CLOCK_STREAM_EVENT_NAME,
   POSE_STREAM_EVENT_NAME,
   type PoseSnapshot,
@@ -30,7 +30,7 @@ export type PoseEventSourceFactory = (url: string) => PoseEventSource;
 export interface PoseStreamCallbacks {
   onSnapshot(snapshot: PoseSnapshot): void;
   onClock(state: SimulationClockState): void;
-  onBridge(status: BridgeStatus): void;
+  onBridge(list: BridgeListResponse): void;
   // An event that breaks the contract; detail is English, for the message line.
   onInvalid(detail: string): void;
   // The browser gave up (EventSource.CLOSED): it will not reconnect.
@@ -95,7 +95,7 @@ export function createPoseStreamClient(
     };
     listen("pose", POSE_STREAM_EVENT_NAME, PoseSnapshotSchema, callbacks.onSnapshot);
     listen("clock", CLOCK_STREAM_EVENT_NAME, SimulationClockStateSchema, callbacks.onClock);
-    listen("bridge", BRIDGE_STREAM_EVENT_NAME, BridgeStatusSchema, callbacks.onBridge);
+    listen("bridge", BRIDGE_STREAM_EVENT_NAME, BridgeListResponseSchema, callbacks.onBridge);
     // EventSource retries by itself; CLOSED means it gave up, for instance
     // on a refused stream (all slots taken, ADR 0015). Forgetting the
     // followed id lets the next follow of the same Pantin try again.

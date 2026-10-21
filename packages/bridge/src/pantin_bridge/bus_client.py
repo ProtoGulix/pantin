@@ -12,7 +12,7 @@ from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import ConnectionClosed, InvalidHandshake, InvalidURI
 
 from pantin_bridge import bus_messages
-from pantin_bridge.bus_messages import CloseCode, ServerMessage, Welcome
+from pantin_bridge.bus_messages import CloseCode, ServerMessage, TransportKind, Welcome
 from pantin_bridge.errors import (
     BusClosedError,
     CoreUnavailableError,
@@ -59,7 +59,9 @@ class BusClient:
         self.failed: asyncio.Future[None] = asyncio.get_running_loop().create_future()
 
     @classmethod
-    async def open(cls, url: str, transport: str, mapping_id: str) -> tuple[BusClient, Welcome]:
+    async def open(
+        cls, url: str, transport: TransportKind, mapping_id: str
+    ) -> tuple[BusClient, Welcome]:
         """Connect as the plc of `transport` and wait for the welcome."""
         try:
             # No Origin header is sent by default, which is how the core knows a non-browser

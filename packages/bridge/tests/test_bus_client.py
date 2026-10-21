@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Final
 
 import pytest
 
@@ -22,7 +23,7 @@ from pantin_bridge.errors import BusClosedError, CoreUnavailableError, ProtocolE
 from support import eventually
 
 MAPPING_ID = "abc123"
-TRANSPORT = "modbus_tcp_slave"
+TRANSPORT: Final = "modbus_tcp_slave"
 
 
 def _url(core: FakeCore) -> str:

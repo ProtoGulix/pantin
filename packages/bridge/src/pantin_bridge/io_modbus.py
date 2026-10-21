@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Final
 
 from pantin_bridge.errors import ProtocolError
 from pantin_bridge.wire_decoding import (
@@ -17,7 +18,7 @@ from pantin_bridge.wire_decoding import (
     reject_unknown_fields,
 )
 
-MODBUS_TCP_SLAVE_KIND = "modbus_tcp_slave"
+MODBUS_TCP_SLAVE_KIND: Final = "modbus_tcp_slave"
 _MAX_ADDRESS = 65535
 _TRANSPORT_FIELDS = frozenset({"kind", "port", "unitId", "wordOrder", "watchdogMilliseconds"})
 _MODBUS_CHANNEL_FIELDS = frozenset({"zone", "address", "ioType"})

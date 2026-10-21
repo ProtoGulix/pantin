@@ -1,28 +1,21 @@
-import type { PantinDocument, TransportKind } from "@pantin/protocol";
-import { type IoReading, mappingIdOf } from "../domain/io-document-text.ts";
+import type { TransportKind } from "@pantin/protocol";
+import { mappingIdOf } from "../domain/io-document-text.ts";
 import { evaluateIoMapping, ioTagsOf } from "../domain/io-evaluation.ts";
+import type { RememberedProjectionIds } from "../domain/remembered-projection-ids.ts";
 import type { OpenPantin } from "./open-pantins.ts";
 
 // The id of the open mapping, whole or projected on one transport kind (ADR 0065 point 7),
 // for the bus tick. A projection needs the validation of the whole file, so its id is
-// remembered until the mapping or the document is replaced: an edit replaces both objects,
-// a tick replaces neither.
+// remembered, on the open Pantin, until the mapping or the document is replaced: an edit
+// replaces both objects, a tick replaces neither.
 
-type RememberedIds = {
-  io: IoReading;
-  document: PantinDocument;
-  byTransport: Map<TransportKind, string | null>;
-};
-
-const remembered = new WeakMap<OpenPantin, RememberedIds>();
-
-function rememberedIdsOf(openPantin: OpenPantin): RememberedIds {
-  const known = remembered.get(openPantin);
+function rememberedIdsOf(openPantin: OpenPantin): RememberedProjectionIds {
+  const known = openPantin.projectionIds;
   if (known?.io === openPantin.io && known.document === openPantin.document) {
     return known;
   }
   const fresh = { io: openPantin.io, document: openPantin.document, byTransport: new Map() };
-  remembered.set(openPantin, fresh);
+  openPantin.projectionIds = fresh;
   return fresh;
 }
 

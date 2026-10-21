@@ -405,9 +405,9 @@ Quand l'automate se connecte mais que rien ne marche, le journal du pont dit ce 
 
 - Dans le bloc **Pont automate**, cliquez **Journal** : la fenêtre **Journal du pont automate** s'ouvre et se met à jour toute seule, en colonnes (heure, source **Cœur** ou **Pont**, niveau), avec des bascules **Erreur**, **Avertissement** et **Info** pour filtrer. **Copier** et **Télécharger** servent à joindre le journal à une demande d'aide.
 - Les lignes d'avertissement et d'erreur arrivent aussi dans la console : « Pont automate : … ».
-- Sans le viewer, et même cœur arrêté : `pnpm pantin bridge-log <pantinId>`, avec `--logs-dir <dossier>` si le cœur a été lancé avec cette option, `--pantins-dir <dossier>` si les Pantins ne sont pas dans le dossier par défaut, et `--follow` pour suivre le fichier en direct.
+- Sans le viewer, et même cœur arrêté : `pnpm pantin bridge-log <pantinId>`, avec `--transport <type>` (par exemple `modbus_tcp_slave`) quand plusieurs fichiers existent, `--logs-dir <dossier>` si le cœur a été lancé avec cette option, `--pantins-dir <dossier>` si les Pantins ne sont pas dans le dossier par défaut, et `--follow` pour suivre le fichier en direct.
 
-Le fichier est `<dossier des Pantins>/.logs/<pantinId>/bridge.log` (détails dans [Panneaux et boutons](/reference/panels#le-journal-du-pont-automate)).
+Le fichier est `<dossier des Pantins>/.logs/<pantinId>/bridge-<type>.log` (`bridge-modbus_tcp_slave.log` pour Modbus) (détails dans [Panneaux et boutons](/reference/panels#le-journal-du-pont-automate)).
 
 Exemple : l'automate se connecte, puis la connexion tombe au bout de quelques secondes (« no request for 5.0 s »). Le journal contient :
 

@@ -4,7 +4,8 @@ import type { BridgeFailure, BridgeStatusLine } from "@pantin/protocol";
 // function from state and event to state. The process adapter turns what
 // happens to the child into events; nothing here touches a process or a clock.
 
-type BridgeReadyModule = { key: string; port: number };
+// A module the bridge serves: where the PLC connects (Modbus) or where Pantin connects (OPC UA).
+export type BridgeReadyModule = { key: string; endpoint: string };
 
 export type BridgeMachineState =
   | { phase: "stopped" }
@@ -14,6 +15,11 @@ export type BridgeMachineState =
   | { phase: "failed"; failure: BridgeFailure };
 
 export type BridgeExitingLine = Extract<BridgeStatusLine, { event: "exiting" }>;
+
+// A failure the core found itself: no server certificate and no module to name.
+function coreFailure(kind: BridgeFailure["kind"], message: string): BridgeFailure {
+  return { kind, message, exitCode: null, signal: null, certificate: null, module: null };
+}
 
 export type BridgeEvent =
   | { type: "start_requested" }
@@ -40,11 +46,20 @@ function describeExit(exitCode: number | null, signal: string | null): string {
 export function failureOfExit(event: Extract<BridgeEvent, { type: "exited" }>): BridgeFailure {
   const { exitCode, signal, exiting } = event;
   if (exiting !== undefined) {
-    return { kind: exiting.kind, message: exiting.message, exitCode, signal };
+    return {
+      kind: exiting.kind,
+      message: exiting.message,
+      exitCode,
+      signal,
+      certificate: exiting.certificate,
+      module: exiting.module,
+    };
   }
   return {
-    kind: "crashed",
-    message: `The bridge stopped without saying why (${describeExit(exitCode, signal)}). See the bridge log.`,
+    ...coreFailure(
+      "crashed",
+      `The bridge stopped without saying why (${describeExit(exitCode, signal)}). See the bridge log.`,
+    ),
     exitCode,
     signal,
   };
@@ -68,12 +83,12 @@ export function nextBridgeState(state: BridgeMachineState, event: BridgeEvent): 
       return spawnFailedState(state, event.message);
     case "start_timed_out":
       return state.phase === "starting"
-        ? failed({
-            kind: "start_timeout",
-            message: "The bridge did not report ready in time. See the bridge log.",
-            exitCode: null,
-            signal: null,
-          })
+        ? failed(
+            coreFailure(
+              "start_timeout",
+              "The bridge did not report ready in time. See the bridge log.",
+            ),
+          )
         : state;
     case "stop_requested":
       return state.phase === "starting" || state.phase === "running"
@@ -100,7 +115,5 @@ function spawnFailedState(state: BridgeMachineState, message: string): BridgeMac
   if (state.phase === "stopping") {
     return { phase: "stopped" };
   }
-  return state.phase === "starting"
-    ? failed({ kind: "spawn_failed", message, exitCode: null, signal: null })
-    : state;
+  return state.phase === "starting" ? failed(coreFailure("spawn_failed", message)) : state;
 }

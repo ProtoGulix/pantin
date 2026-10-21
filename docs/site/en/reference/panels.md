@@ -136,7 +136,7 @@ Under the status line, depending on the context:
 | --- | --- |
 | Note | Reason why the button or the settings are inactive: "Start the core with `--bridge-python <path>` (`pnpm setup:python`)." when the bridge is unavailable, or **A bridge started outside Pantin is connected.** when another bridge already holds the place. |
 | Network error | The core's refusal (non-private address, invalid list...) is shown in red, led by a cross in an octagon, and forces the network settings open. |
-| Module lines | One line per I/O module: dot, module **key** (`m1`...), `address:port` that the PLC must target, and status as text: **bridge stopped**, **waiting for the PLC** or **PLC connected**. Bridge stopped: the lines come from the I/O list and the address is the one a start would use. Bridge running: they come from what the core reports. |
+| Module lines | One line per I/O module: dot, module **key** (`m1`...), `address:port` that the PLC must target, and status as text: **bridge stopped**, **waiting for the PLC** or **PLC connected**. When the PLC is not connected, the reason is added in words (for example **connection closed by the PLC** or **the PLC stopped answering**). Bridge stopped: the lines come from the I/O list and the address is the one a start would use. Bridge running: they come from what the core reports. |
 | **No module: configure the I/O** | Replaces the lines when the I/O list has no module. |
 | **Any I/O edit stops the bridge.** | Reminder shown while the bridge is running. |
 | **n forced tag(s): the PLC cannot write them** and button **Release all (n)** | Shown when the bridge is running and tags are forced from the viewer. The button gives them all back to the PLC. |
@@ -517,7 +517,7 @@ Three toggles, in the **Levels shown** group, filter by level: **Error**, **Warn
 | Control | What it does | Greyed out when |
 | --- | --- | --- |
 | **Copy** | Copies the whole raw file to the clipboard, older lines not displayed included; the button says **Copied**, or **Cannot copy** if the browser refuses. | Never |
-| **Download** | Downloads the whole raw file, named `<pantinId>-bridge.log`. | Never |
+| **Download** | Downloads the whole raw file, named `<pantinId>-bridge-<kind>.log` (for example `m-bridge-modbus_tcp_slave.log`). | Never |
 | **Close** | Closes the window. <kbd>Escape</kbd> does the same. | Never |
 
 Window messages: **Reading the log…** while reading; **No log yet: it fills as soon as the bridge starts.** when the file does not exist; **Cannot read the log: …** on error; **n older entries are not shown: download the log to get them.** when the file is longer than the window.
@@ -526,7 +526,7 @@ Not to be confused with the **Bridge log** pane of the failure block, which only
 
 #### The log file
 
-The core writes one file per Pantin: `<Pantins folder>/.logs/<pantinId>/bridge.log` (the core's `--logs-dir` option changes the `.logs` folder). Past 1 MB it becomes `bridge.log.1` (the previous one is replaced) and a new file starts. This folder is part of no Pantin: if the Pantins folder is a git repository, add `.logs/` to its `.gitignore` (the core does not write that file).
+The core writes one file per Pantin and per transport: `<Pantins folder>/.logs/<pantinId>/bridge-<kind>.log`, for example `bridge-modbus_tcp_slave.log` for the Modbus bridge (the core's `--logs-dir` option changes the `.logs` folder). An old `bridge.log` from a previous version is left as it is, neither migrated nor read. Past 1 MB a file becomes `bridge-<kind>.log.1` (the previous one is replaced) and a new file starts. This folder is part of no Pantin: if the Pantins folder is a git repository, add `.logs/` to its `.gitignore` (the core does not write that file).
 
 Each line starts with the UTC time: `CORE INFO …` for core events (start requested, ready, stop), `CORE ERROR …` for a failure, `BRIDGE …` for lines written by the bridge. The Modbus bridge records accepted and closed connections (with the reason and the number of requests answered and refused) and each distinct refused request, for example:
 
@@ -534,7 +534,7 @@ Each line starts with the UTC time: `CORE INFO …` for core events (start reque
 Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
 ```
 
-Only the first identical refused request is recorded per connection; the total is in the closing line. The file is also served by `GET /api/pantins/:pantinId/bridge/log` (with `?download=1` to download it) and is read without the core by the `pnpm pantin bridge-log` command (see [Connect a PLC](/en/guide/connect-a-plc#reading-the-bridge-log)). A bridge started outside Pantin has no file.
+Only the first identical refused request is recorded per connection; the total is in the closing line. The file is also served by `GET /api/pantins/:pantinId/bridges/:kind/log` (with `?download=1` to download it) and is read without the core by the `pnpm pantin bridge-log` command (see [Connect a PLC](/en/guide/connect-a-plc#reading-the-bridge-log)). A bridge started outside Pantin has no file.
 
 ## The console
 

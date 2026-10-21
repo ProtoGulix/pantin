@@ -6,6 +6,7 @@
     { "path": "packages/sensor-types" },
     { "path": "packages/transport-types" },
     { "path": "packages/plc-symbol-formats" },
+    { "path": "packages/network-address" },
     { "path": "packages/protocol" },
     { "path": "packages/core" },
     { "path": "packages/viewer" },

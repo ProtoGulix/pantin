@@ -1,8 +1,10 @@
+import type { OpcuaBridgeStatus } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
-import { bridgeStatusOf, FAILED_STATUS, RUNNING_STATUS } from "./bridge-fixtures.ts";
+import { bridgeListOf, bridgeStatusOf, FAILED_STATUS, RUNNING_STATUS } from "./bridge-fixtures.ts";
 import {
   type BridgeModel,
   bridgeAfterStatus,
+  bridgeAfterStreamList,
   bridgeStartRequest,
   bridgeWithDraft,
   INITIAL_BRIDGE_MODEL,
@@ -96,5 +98,50 @@ describe("a bridge that outlives the Pantin", () => {
       states.map((state) => isBridgeActive(bridgeAfterStatus(stopped, bridgeStatusOf({ state })))),
     ).toEqual([false, true, true, false, false]);
     expect(isBridgeActive(INITIAL_BRIDGE_MODEL)).toBe(false);
+  });
+});
+
+describe("the list of bridge statuses", () => {
+  const opcua: OpcuaBridgeStatus = {
+    transport: "opcua_client",
+    availability: "available",
+    state: "stopped",
+    network: null,
+    clientCertificate: null,
+    modules: [],
+    failure: null,
+    log: [],
+    externalBridgeConnected: false,
+  };
+
+  it("keeps every kind and shows the Modbus one", () => {
+    const model = bridgeAfterStreamList(INITIAL_BRIDGE_MODEL, {
+      bridges: [opcua, RUNNING_STATUS],
+    });
+    expect([model.statuses, model.status]).toEqual([[opcua, RUNNING_STATUS], RUNNING_STATUS]);
+  });
+
+  it("shows an unavailable bridge when the list has no Modbus entry", () => {
+    const model = bridgeAfterStreamList(INITIAL_BRIDGE_MODEL, { bridges: [opcua] });
+    expect([model.statuses, model.status?.availability, model.status?.state]).toEqual([
+      [opcua],
+      "unavailable",
+      "stopped",
+    ]);
+  });
+
+  it("replaces only the Modbus entry with the answer of a request", () => {
+    const listed = bridgeAfterStreamList(INITIAL_BRIDGE_MODEL, {
+      bridges: [opcua, RUNNING_STATUS],
+    });
+    const stoppedModbus = bridgeStatusOf();
+    expect(bridgeAfterStatus(listed, stoppedModbus).statuses).toEqual([opcua, stoppedModbus]);
+  });
+
+  it("stays empty until the stream sends a list", () => {
+    expect(
+      bridgeAfterStreamList(INITIAL_BRIDGE_MODEL, bridgeListOf(bridgeStatusOf())).statuses,
+    ).toHaveLength(1);
+    expect(INITIAL_BRIDGE_MODEL.statuses).toEqual([]);
   });
 });

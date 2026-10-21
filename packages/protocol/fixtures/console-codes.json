@@ -19,6 +19,7 @@
   "bridge_disconnected": "warning",
   "bridge_failed": "error",
   "bridge_log": "warning",
+  "opcua_unsecured_lan": "warning",
   "clock_paused_with_bridge": "warning",
   "sensor_changed": "trace",
   "trace_dropped": "info"

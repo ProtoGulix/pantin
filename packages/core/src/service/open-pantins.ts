@@ -2,6 +2,7 @@ import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
 import type { PantinDocument, PantinId, PantinResponse, TransportKind } from "@pantin/protocol";
 import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
+import type { PlcModuleState } from "../domain/bridge-status.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
 import { allClearedEvents, migrationEvents } from "../domain/console-events.ts";
 import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
@@ -9,6 +10,7 @@ import { type IoReading, ioTextOf, MISSING_IO } from "../domain/io-document-text
 import { serializePantinDocument } from "../domain/pantin-document.ts";
 import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
+import type { RememberedProjectionIds } from "../domain/remembered-projection-ids.ts";
 import { EMPTY_TRACE_BUDGET, type TraceBudget } from "../domain/sensor-trace.ts";
 import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
@@ -107,8 +109,10 @@ export type OpenPantin = {
   bridgeConnected: boolean;
   // The transports whose bridge holds a plc connection (ADR 0065 point 7).
   connectedPlcTransports: Set<TransportKind>;
-  // Modules the PLC is connected to, from `plc_status` (ADR 0050 point 5).
-  plcConnectedModules: Set<string>;
+  // What the PLC reported of each module with `plc_status`, by module key (ADR 0050 point 5).
+  plcModules: Map<string, PlcModuleState>;
+  // The ids of the transports' projections, for the bus tick (io-projection-ids.ts).
+  projectionIds: RememberedProjectionIds | null;
   // Simulation steps run since the Pantin was opened.
   stepCount: number;
   // The simulation clock (ADR 0032), never saved: reset leaves it as it is.
@@ -167,7 +171,8 @@ export function newOpenPantin(
     resetCount: 0,
     bridgeConnected: false,
     connectedPlcTransports: new Set(),
-    plcConnectedModules: new Set(),
+    plcModules: new Map(),
+    projectionIds: null,
     stepCount: 0,
     clock: newClockRuntime(),
     console: emptyConsole(consoleId),

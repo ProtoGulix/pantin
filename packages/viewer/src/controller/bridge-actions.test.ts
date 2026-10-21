@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PantinApiError } from "../api-transport.ts";
-import { bridgeStatusOf, RUNNING_STATUS } from "../bridge/bridge-fixtures.ts";
+import { bridgeListOf, bridgeStatusOf, RUNNING_STATUS } from "../bridge/bridge-fixtures.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { buildPromptView } from "../panel/prompt-model.ts";
 import { bridgeIntents, receiveBridge } from "./bridge-actions.ts";
@@ -17,7 +17,7 @@ function intentsOf(store: ViewerStore) {
 describe("the bar's intents send the exact PUT bodies", () => {
   it("starts locally by default", async () => {
     const { store, sent } = openStore(accept);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     intentsOf(store).startBridge();
     await flush();
     expect(sent).toEqual([{ running: true, listen: "127.0.0.1", allow: [] }]);
@@ -26,7 +26,7 @@ describe("the bar's intents send the exact PUT bodies", () => {
 
   it("starts on the private network with the chosen address and allow list", async () => {
     const { store, sent } = openStore(accept);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     const intents = intentsOf(store);
     intents.chooseBridgeNetwork("lan");
     intents.chooseBridgeListen("192.168.56.1");
@@ -40,14 +40,23 @@ describe("the bar's intents send the exact PUT bodies", () => {
 
   it("restarts after a failure with the last network", async () => {
     const { store, sent } = openStore(accept);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     receiveBridge(
       store,
-      bridgeStatusOf({
-        state: "failed",
-        network: { listen: "192.168.56.1", allow: ["10.0.0.5"] },
-        failure: { kind: "crashed", message: "m", exitCode: null, signal: "SIGKILL" },
-      }),
+      bridgeListOf(
+        bridgeStatusOf({
+          state: "failed",
+          network: { listen: "192.168.56.1", allow: ["10.0.0.5"] },
+          failure: {
+            kind: "crashed",
+            message: "m",
+            exitCode: null,
+            signal: "SIGKILL",
+            certificate: null,
+            module: null,
+          },
+        }),
+      ),
     );
     intentsOf(store).startBridge();
     await flush();
@@ -56,7 +65,7 @@ describe("the bar's intents send the exact PUT bodies", () => {
 
   it("stops with { running: false }", async () => {
     const { store, sent } = openStore(accept);
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     intentsOf(store).stopBridge();
     await flush();
     expect(sent).toEqual([{ running: false }]);
@@ -67,10 +76,10 @@ describe("a stream status received while a request is in flight", () => {
   it("is not replaced by the request's older answer", async () => {
     // The core publishes "stopped" on the stream, then answers the PUT "stopping".
     const { store } = openStore(() => {
-      receiveBridge(store, bridgeStatusOf({ state: "stopped" }));
+      receiveBridge(store, bridgeListOf(bridgeStatusOf({ state: "stopped" })));
       return bridgeStatusOf({ state: "stopping" });
     });
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     intentsOf(store).stopBridge();
     await flush();
     expect(store.bridgeModel.status?.state).toBe("stopped");
@@ -79,10 +88,10 @@ describe("a stream status received while a request is in flight", () => {
 
   it("keeps a running bridge when the start is answered late", async () => {
     const { store } = openStore(() => {
-      receiveBridge(store, RUNNING_STATUS);
+      receiveBridge(store, bridgeListOf(RUNNING_STATUS));
       return bridgeStatusOf({ state: "starting" });
     });
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     intentsOf(store).startBridge();
     await flush();
     expect(store.bridgeModel.status?.state).toBe("running");
@@ -96,10 +105,10 @@ describe("the stream status received during a request, continued", () => {
       if (request.running) {
         return bridgeStatusOf({ state: "starting" });
       }
-      receiveBridge(store, bridgeStatusOf({ state: "stopped" }));
+      receiveBridge(store, bridgeListOf(bridgeStatusOf({ state: "stopped" })));
       return bridgeStatusOf({ state: "stopping" });
     });
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     intentsOf(store).stopBridge();
     await flush();
     intentsOf(store).startBridge();
@@ -110,10 +119,10 @@ describe("the stream status received during a request, continued", () => {
   it("shows a refusal even when the stream spoke meanwhile", async () => {
     const refusal = new PantinApiError("api", "slot taken", "conflict", 409);
     const { store } = openStore(() => {
-      receiveBridge(store, bridgeStatusOf());
+      receiveBridge(store, bridgeListOf(bridgeStatusOf()));
       return refusal;
     });
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     intentsOf(store).startBridge();
     await flush();
     expect(store.state.message?.level).toBe("error");
@@ -122,7 +131,7 @@ describe("the stream status received during a request, continued", () => {
 
   it("lets the answer through when the stream said nothing meanwhile", async () => {
     const { store } = openStore(() => bridgeStatusOf({ state: "stopping" }));
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     intentsOf(store).stopBridge();
     await flush();
     expect(store.bridgeModel.status?.state).toBe("stopping");
@@ -133,7 +142,7 @@ describe("the core's refusals", () => {
   it("shows a 400 under the fields, not in the message line", async () => {
     const refusal = new PantinApiError("api", "listen must be private", "invalid_request", 400);
     const { store } = openStore(() => refusal);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     intentsOf(store).startBridge();
     await flush();
     expect(store.bridgeModel.networkError).toBe("listen must be private");
@@ -144,7 +153,7 @@ describe("the core's refusals", () => {
   it("shows any other failure in the message line", async () => {
     const refusal = new PantinApiError("api", "slot taken", "conflict", 409);
     const { store } = openStore(() => refusal);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     intentsOf(store).startBridge();
     await flush();
     expect(store.bridgeModel.networkError).toBeNull();
@@ -153,7 +162,7 @@ describe("the core's refusals", () => {
 
   it("writes the bar in place with the status of the stream", () => {
     const { store, views } = openStore(accept);
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     expect(views.at(-1)?.stateText).toBe("En marche");
   });
 });
@@ -164,7 +173,7 @@ const labelsOf = (store: ViewerStore) =>
 describe("closing while the bridge is starting or running", () => {
   function asking(state: "starting" | "running" | "stopped", unsavedChanges = false) {
     const opened = openStore(accept, unsavedChanges);
-    receiveBridge(opened.store, bridgeStatusOf({ state }));
+    receiveBridge(opened.store, bridgeListOf(bridgeStatusOf({ state })));
     requestClose(opened.store);
     return opened;
   }
@@ -206,7 +215,7 @@ describe("closing while the bridge is starting or running", () => {
 describe("the close choice, continued", () => {
   function asking(state: "running", unsavedChanges = false) {
     const opened = openStore(accept, unsavedChanges);
-    receiveBridge(opened.store, bridgeStatusOf({ state }));
+    receiveBridge(opened.store, bridgeListOf(bridgeStatusOf({ state })));
     requestClose(opened.store);
     return opened;
   }
@@ -215,7 +224,7 @@ describe("the close choice, continued", () => {
     const { store } = openStore(
       () => new PantinApiError("api", "no bridge", "bridge_unavailable", 503),
     );
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     requestClose(store);
     resolvePrompt(store, "stopBridgeAndClose");
     await flush();

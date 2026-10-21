@@ -66,7 +66,14 @@ describe("log file lines", () => {
 
 describe("describeBridgeTransition", () => {
   const network = { listen: "192.168.1.20", allow: ["192.168.1.0/24"] };
-  const failure = { kind: "crashed", message: "gone", exitCode: 1, signal: null } as const;
+  const failure = {
+    kind: "crashed",
+    message: "gone",
+    exitCode: 1,
+    signal: null,
+    certificate: null,
+    module: null,
+  } as const;
 
   it("says what was asked and what happened", () => {
     expect(
@@ -83,11 +90,11 @@ describe("describeBridgeTransition", () => {
     expect(
       describeBridgeTransition(
         { phase: "starting" },
-        { phase: "running", modules: [{ key: "m1", port: 1502 }] },
-        { type: "ready", modules: [{ key: "m1", port: 1502 }] },
+        { phase: "running", modules: [{ key: "m1", endpoint: "192.168.1.20:1502" }] },
+        { type: "ready", modules: [{ key: "m1", endpoint: "192.168.1.20:1502" }] },
         network,
       )?.text,
-    ).toBe("Bridge ready: modules m1:1502.");
+    ).toBe("Bridge ready: modules m1 at 192.168.1.20:1502.");
     expect(
       describeBridgeTransition(
         { phase: "running", modules: [] },
@@ -104,6 +111,18 @@ describe("describeBridgeTransition", () => {
         network,
       )?.text,
     ).toBe("Bridge stopped.");
+  });
+
+  it("lists the targets of an OPC UA start, and says nothing of a password", () => {
+    const targets = { plc: "192.168.1.30", spare: "127.0.0.1" };
+    expect(
+      describeBridgeTransition(
+        { phase: "stopped" },
+        { phase: "starting" },
+        { type: "start_requested" },
+        { targets },
+      )?.text,
+    ).toBe("Start requested: targets plc=192.168.1.30, spare=127.0.0.1.");
   });
 
   it("reports a failure once, as an error with its kind", () => {

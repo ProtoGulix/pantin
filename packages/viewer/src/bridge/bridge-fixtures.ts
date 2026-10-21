@@ -1,9 +1,15 @@
-import type { BridgeStatus } from "@pantin/protocol";
+import type { BridgeListResponse, ModbusBridgeStatus } from "@pantin/protocol";
 
 // Statuses for the tests of the bridge block.
 
-export function bridgeStatusOf(overrides: Partial<BridgeStatus> = {}): BridgeStatus {
+/** The `bridge` event of the stream: the Modbus entry alone, as before the OPC UA card. */
+export function bridgeListOf(status: ModbusBridgeStatus): BridgeListResponse {
+  return { bridges: [status] };
+}
+
+export function bridgeStatusOf(overrides: Partial<ModbusBridgeStatus> = {}): ModbusBridgeStatus {
   return {
+    transport: "modbus_tcp_slave",
     availability: "available",
     state: "stopped",
     network: null,
@@ -20,14 +26,21 @@ export const RUNNING_STATUS = bridgeStatusOf({
   state: "running",
   network: { listen: "127.0.0.1", allow: [] },
   modules: [
-    { key: "m1", port: 1502, plcConnected: true },
-    { key: "m2", port: 1503, plcConnected: false },
+    { key: "m1", endpoint: "127.0.0.1:1502", plcConnected: true, reason: null },
+    { key: "m2", endpoint: "127.0.0.1:1503", plcConnected: false, reason: null },
   ],
 });
 
 export const FAILED_STATUS = bridgeStatusOf({
   state: "failed",
   network: { listen: "192.168.56.1", allow: ["192.168.56.10", "192.168.56.0/24"] },
-  failure: { kind: "configuration", message: "port 1502 is taken", exitCode: 2, signal: null },
+  failure: {
+    kind: "configuration",
+    message: "port 1502 is taken",
+    exitCode: 2,
+    signal: null,
+    certificate: null,
+    module: null,
+  },
   log: ["pantin-bridge: port 1502 is taken"],
 });

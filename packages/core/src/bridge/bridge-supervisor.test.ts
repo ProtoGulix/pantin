@@ -1,7 +1,14 @@
 import type { BridgeStatus } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../errors.ts";
-import { LOCAL, PYTHON, READY, tick, useBridgeBenches } from "../test-support/bridge-bench.ts";
+import {
+  LOCAL,
+  MODBUS,
+  PYTHON,
+  READY,
+  tick,
+  useBridgeBenches,
+} from "../test-support/bridge-bench.ts";
 
 const { started, runningBridge } = useBridgeBenches();
 
@@ -9,6 +16,7 @@ describe("starting a bridge", () => {
   it("spawns the fixed command as an argument array without a shell", async () => {
     const { supervisor, spawner } = started();
     const status = await supervisor.start("axis", {
+      kind: MODBUS,
       listen: "192.168.1.20",
       allow: ["192.168.1.0/24"],
     });
@@ -39,7 +47,7 @@ describe("starting a bridge", () => {
 
   it("answers bridge_unavailable, and says so in the status, without a Python", async () => {
     const { supervisor } = started({ pythonPath: null });
-    expect(supervisor.status("axis").availability).toBe("unavailable");
+    expect(supervisor.status("axis", MODBUS).availability).toBe("unavailable");
     const error = await supervisor.start("axis", LOCAL).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).code).toBe("bridge_unavailable");
@@ -49,12 +57,14 @@ describe("starting a bridge", () => {
 describe("a running bridge", () => {
   it("is running once the ready line arrives, with the PLC state of each module", async () => {
     const { supervisor, busFacts, changes } = await runningBridge();
-    let status: BridgeStatus = supervisor.status("axis");
+    let status: BridgeStatus = supervisor.status("axis", MODBUS);
     expect(status.state).toBe("running");
-    expect(status.modules).toEqual([{ key: "m1", port: 1502, plcConnected: false }]);
-    busFacts.plcConnectedModules.add("m1");
+    expect(status.modules).toEqual([
+      { key: "m1", endpoint: "127.0.0.1:1502", plcConnected: false, reason: null },
+    ]);
+    busFacts[MODBUS].plcModules.set("m1", { connected: true });
     supervisor.refresh("axis");
-    status = supervisor.status("axis");
+    status = supervisor.status("axis", MODBUS);
     expect(status.modules[0]?.plcConnected).toBe(true);
     expect(changes.length).toBeGreaterThanOrEqual(3);
   });
@@ -78,7 +88,7 @@ describe("a bridge that cannot start", () => {
     await supervisor.start("axis", LOCAL);
     spawner.children[0]?.failToStart(new Error("spawn ENOENT"));
     await tick();
-    const status = supervisor.status("axis");
+    const status = supervisor.status("axis", MODBUS);
     expect(status.state).toBe("failed");
     expect(status.failure?.kind).toBe("spawn_failed");
     expect(status.failure?.message).toContain("pnpm setup:python");
@@ -89,7 +99,7 @@ describe("a bridge that cannot start", () => {
     const { supervisor, spawner } = started({ timeoutMs: 30 });
     await supervisor.start("axis", LOCAL);
     await new Promise((resolve) => setTimeout(resolve, 80));
-    expect(supervisor.status("axis").failure?.kind).toBe("start_timeout");
+    expect(supervisor.status("axis", MODBUS).failure?.kind).toBe("start_timeout");
     expect(spawner.children[0]?.signals).toContain("SIGTERM");
   });
 });
@@ -97,18 +107,26 @@ describe("a bridge that cannot start", () => {
 describe("a bridge that ends by itself", () => {
   it("fails with the kind and message of its exiting line", async () => {
     const { supervisor, spawner, failures } = await runningBridge();
-    const line = { event: "exiting", kind: "mapping_changed", message: "Restart the bridge." };
+    const line = {
+      event: "exiting",
+      kind: "mapping_changed",
+      message: "Restart the bridge.",
+      certificate: null,
+      module: null,
+    };
     spawner.children[0]?.writeStdout(`${JSON.stringify(line)}\n`);
     await tick();
     spawner.children[0]?.end(1, null);
     await tick();
-    const status = supervisor.status("axis");
+    const status = supervisor.status("axis", MODBUS);
     expect(status.state).toBe("failed");
     expect(status.failure).toEqual({
       kind: "mapping_changed",
       message: "Restart the bridge.",
       exitCode: 1,
       signal: null,
+      certificate: null,
+      module: null,
     });
     expect(status.modules).toEqual([]);
     expect(failures).toEqual([status.failure]);
@@ -118,18 +136,21 @@ describe("a bridge that ends by itself", () => {
     const { supervisor, spawner } = await runningBridge();
     spawner.children[0]?.end(null, "SIGKILL");
     await tick();
-    expect(supervisor.status("axis").failure).toMatchObject({ kind: "crashed", signal: "SIGKILL" });
+    expect(supervisor.status("axis", MODBUS).failure).toMatchObject({
+      kind: "crashed",
+      signal: "SIGKILL",
+    });
   });
 
   it("restarts after a failure, and ignores the late exit of the old child", async () => {
     const { supervisor, spawner } = started({ exitsOnSigterm: false, timeoutMs: 30 });
     await supervisor.start("axis", LOCAL);
     await new Promise((resolve) => setTimeout(resolve, 60));
-    expect(supervisor.status("axis").state).toBe("failed");
+    expect(supervisor.status("axis", MODBUS).state).toBe("failed");
     await supervisor.start("axis", LOCAL);
     spawner.children[0]?.end(1, null);
     await tick();
-    expect(supervisor.status("axis").state).toBe("starting");
+    expect(supervisor.status("axis", MODBUS).state).toBe("starting");
   });
 });
 
@@ -137,7 +158,7 @@ describe("stopping a bridge", () => {
   it("sends SIGTERM and ends stopped", async () => {
     const { supervisor, spawner } = await runningBridge();
     const child = spawner.children[0];
-    expect(supervisor.stop("axis").state).toBe("stopped");
+    expect(supervisor.stop("axis", MODBUS).state).toBe("stopped");
     expect(child?.signals).toEqual(["SIGTERM"]);
   });
 
@@ -146,24 +167,24 @@ describe("stopping a bridge", () => {
     await supervisor.start("axis", LOCAL);
     spawner.children[0]?.writeStdout(`${READY}\n`);
     await tick();
-    expect(supervisor.stop("axis").state).toBe("stopping");
+    expect(supervisor.stop("axis", MODBUS).state).toBe("stopping");
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(spawner.children[0]?.signals).toEqual(["SIGTERM", "SIGKILL"]);
-    expect(supervisor.status("axis").state).toBe("stopped");
-    expect(supervisor.status("axis").failure).toBeNull();
+    expect(supervisor.status("axis", MODBUS).state).toBe("stopped");
+    expect(supervisor.status("axis", MODBUS).failure).toBeNull();
     expect(failures).toEqual([]);
   });
 
   it("answers the current state when there is nothing to stop", () => {
     const { supervisor } = started();
-    expect(supervisor.stop("axis").state).toBe("stopped");
+    expect(supervisor.stop("axis", MODBUS).state).toBe("stopped");
   });
 
   it("close stops every child and waits for them", async () => {
     const { supervisor, spawner } = await runningBridge();
     await supervisor.close();
     expect(spawner.children[0]?.signals).toContain("SIGTERM");
-    expect(supervisor.status("axis").state).toBe("stopped");
+    expect(supervisor.status("axis", MODBUS).state).toBe("stopped");
   });
 });
 
@@ -177,7 +198,7 @@ describe("the bridge's output", () => {
     }
     child?.writeStderr(`${"w".repeat(800)}\n`);
     await tick();
-    const { log } = supervisor.status("axis");
+    const { log } = supervisor.status("axis", MODBUS);
     expect(log).toHaveLength(20);
     expect(log.at(-1)).toHaveLength(500);
     expect(log.at(-2)).toBe("log 24");
@@ -190,10 +211,10 @@ describe("the bridge's output", () => {
     await supervisor.start("axis", LOCAL);
     spawner.children[0]?.writeStdout(READY.slice(0, 20));
     await tick();
-    expect(supervisor.status("axis").state).toBe("starting");
+    expect(supervisor.status("axis", MODBUS).state).toBe("starting");
     spawner.children[0]?.writeStdout(`${READY.slice(20)}\n`);
     await tick();
-    expect(supervisor.status("axis").state).toBe("running");
+    expect(supervisor.status("axis", MODBUS).state).toBe("running");
   });
 });
 
@@ -213,49 +234,33 @@ describe("closing and lingering children", () => {
     });
     await supervisor.start("axis", LOCAL);
     await new Promise((resolve) => setTimeout(resolve, 60));
-    expect(supervisor.status("axis").state).toBe("failed");
+    expect(supervisor.status("axis", MODBUS).state).toBe("failed");
     await expect(supervisor.start("axis", LOCAL)).rejects.toMatchObject({ code: "conflict" });
     await expect(supervisor.start("second", LOCAL)).resolves.toBeDefined();
     expect(spawner.calls).toHaveLength(2);
   });
 });
 
-describe("the external bridge", () => {
-  it("shows a bridge on the bus that Pantin did not start, and refuses to start over it", async () => {
-    const { supervisor, busFacts } = started();
-    busFacts.bridgeConnected = true;
-    expect(supervisor.status("axis").externalBridgeConnected).toBe(true);
-    await expect(supervisor.start("axis", LOCAL)).rejects.toThrow("outside Pantin");
-  });
-
-  it("is not external once Pantin's own bridge connected", async () => {
-    const { supervisor, busFacts } = started();
-    await supervisor.start("axis", LOCAL);
-    busFacts.bridgeConnected = true;
-    expect(supervisor.status("axis").externalBridgeConnected).toBe(false);
-  });
-});
-
 describe("the bridge log file", () => {
-  const LOG = "/logs/axis/bridge.log";
+  const LOG = "/logs/axis/bridge-modbus_tcp_slave.log";
 
   it("records the core events and every bridge line, in order", async () => {
     const { supervisor, spawner, logFiles } = await runningBridge();
     spawner.children[0]?.writeStderr("2026-10-17 10:00:01,000 INFO hello\n");
     await tick();
-    supervisor.stop("axis");
+    supervisor.stop("axis", MODBUS);
     spawner.children[0]?.end(0, null);
     await tick();
 
     expect(logFiles.files.get(LOG)?.split("\n")).toEqual([
       "2026-10-17T10:00:00.000Z CORE INFO Start requested: listen 127.0.0.1, allow none.",
-      "2026-10-17T10:00:00.000Z CORE INFO Bridge ready: modules m1:1502.",
+      "2026-10-17T10:00:00.000Z CORE INFO Bridge ready: modules m1 at 127.0.0.1:1502.",
       "2026-10-17T10:00:00.000Z BRIDGE 2026-10-17 10:00:01,000 INFO hello",
       "2026-10-17T10:00:00.000Z CORE INFO Stop requested.",
       "2026-10-17T10:00:00.000Z CORE INFO Bridge stopped.",
       "",
     ]);
-    expect(await supervisor.readLog("axis")).toBe(logFiles.files.get(LOG));
+    expect(await supervisor.readLog("axis", MODBUS)).toBe(logFiles.files.get(LOG));
   });
 
   it("records a failure with its kind, and a spawn failure", async () => {
@@ -278,6 +283,6 @@ describe("the bridge log file", () => {
 
   it("reads an empty log for a Pantin that never ran a bridge", async () => {
     const { supervisor } = await runningBridge();
-    expect(await supervisor.readLog("never")).toBe("");
+    expect(await supervisor.readLog("never", MODBUS)).toBe("");
   });
 });

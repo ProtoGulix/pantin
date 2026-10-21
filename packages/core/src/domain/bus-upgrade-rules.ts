@@ -1,5 +1,5 @@
+import { classifyIpAddress, parseIpAddress, sameIpAddress } from "@pantin/network-address";
 import type { ApiErrorCode } from "@pantin/protocol";
-import { classifyIpAddress, parseIpAddress, sameIpAddress } from "./network-address.ts";
 import { describeAcceptedHosts, isHostAccepted, type NetworkConfig } from "./network-config.ts";
 
 // What decides whether a tag bus connection may start (ADR 0046 points 5 to

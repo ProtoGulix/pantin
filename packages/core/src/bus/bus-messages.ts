@@ -106,7 +106,18 @@ async function handlePlcStatus(
     : // The schema gives a disconnected module a reason; the fallback only satisfies the type.
       ({ connected: false, reason: message.reason ?? "closed" } as const);
   const tags = message.connected ? [] : watchdogTags(mapping, message.module);
-  await context.deps.service.plcModuleStatus(context.init.pantinId, message.module, status, tags);
+  // The module is in the connection's projection, so its hello named a transport.
+  const transport = context.session.transport;
+  if (transport === null) {
+    return;
+  }
+  await context.deps.service.plcModuleStatus(
+    context.init.pantinId,
+    transport,
+    message.module,
+    status,
+    tags,
+  );
 }
 
 // A write or release the Pantin refuses is answered, not fatal.

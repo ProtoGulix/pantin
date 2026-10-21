@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bridgeStatusOf } from "../bridge/bridge-fixtures.ts";
+import { bridgeListOf, bridgeStatusOf } from "../bridge/bridge-fixtures.ts";
 import type { JournalView } from "../bridge/bridge-journal.ts";
 import { consolePantin } from "../console/console-fixtures.ts";
 import { withOpenPantin } from "../viewer-state.ts";
@@ -38,7 +38,7 @@ describe("the bridge log window", () => {
     const { store, intents, last } = journalStore(async () => `read ${++reads}`);
     intents.openBridgeJournal();
     await flush();
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     await flush();
     expect([reads, last()?.copyText]).toEqual([2, "read 2"]);
   });
@@ -46,7 +46,7 @@ describe("the bridge log window", () => {
   it("does not read on a status while closed", async () => {
     let reads = 0;
     const { store } = journalStore(async () => `read ${++reads}`);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     await flush();
     expect(reads).toBe(0);
   });
@@ -58,8 +58,8 @@ describe("the bridge log window", () => {
       () => new Promise((resolve) => releases.push(() => resolve(`read ${++reads}`))),
     );
     intents.openBridgeJournal();
-    receiveBridge(store, bridgeStatusOf());
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     expect(releases.length).toBe(1);
     releases[0]?.();
     await flush();
@@ -124,7 +124,7 @@ describe("the bridge log window, when things go wrong", () => {
     intents.openBridgeJournal();
     await flush();
     fail = true;
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     await flush();
     expect([last()?.errorText, last()?.copyText]).toEqual([
       "Lecture du journal impossible : Cannot reach the Pantin core",

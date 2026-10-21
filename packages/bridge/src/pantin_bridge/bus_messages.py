@@ -10,7 +10,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final
+from typing import Final, Literal
 
 from pantin_bridge.errors import ProtocolError, UnknownConsoleCodeError
 from pantin_bridge.wire_decoding import (
@@ -76,6 +76,7 @@ _CONSOLE_LEVELS: Final = {
     "bridge_disconnected": "warning",
     "bridge_failed": "error",
     "bridge_log": "warning",
+    "opcua_unsecured_lan": "warning",
     "clock_paused_with_bridge": "warning",
     "sensor_changed": "trace",
     "trace_dropped": "info",
@@ -259,6 +260,9 @@ def decode_server_message(text: str) -> ServerMessage:
     return decoder(body)
 
 
+# The transports a bridge announces in its hello; this bridge serves one (ADR 0065 point 7).
+TransportKind = Literal["modbus_tcp_slave"]
+
 # --- bridge to core -----------------------------------------------------------
 
 
@@ -267,7 +271,7 @@ def _frame(message: JsonObject) -> str:
     return json.dumps(message, allow_nan=False, separators=(",", ":"))
 
 
-def encode_hello(transport: str, mapping_id: str) -> str:
+def encode_hello(transport: TransportKind, mapping_id: str) -> str:
     return _frame(
         {
             "type": "hello",

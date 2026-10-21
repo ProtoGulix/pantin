@@ -1,7 +1,7 @@
 import { cp, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { join } from "node:path";
-import { IoDocumentSchema } from "@pantin/protocol";
+import { IoDocumentSchema, type TransportConfig } from "@pantin/protocol";
 
 // examples/plc-cylinder copied into a pantins directory with its Modbus module
 // moved to a port nobody holds, as packages/bridge/tests/test_closed_loop.py does.
@@ -33,4 +33,20 @@ export async function copyPlcCylinder(pantinsDirectory: string, modbusPort: numb
   const transport = { ...module.transport, port: modbusPort };
   const moved = { ...document, modules: [{ ...module, transport }] };
   await writeFile(ioPath, JSON.stringify(moved, null, 2), "utf8");
+}
+
+// Adds OPC UA modules, with no channel, next to the Modbus one of a copied plc-cylinder.
+export async function addOpcuaModules(
+  pantinsDirectory: string,
+  modules: Readonly<Record<string, TransportConfig>>,
+): Promise<void> {
+  const ioPath = join(pantinsDirectory, PLC_CYLINDER_ID, "io.json");
+  const document = IoDocumentSchema.parse(JSON.parse(await readFile(ioPath, "utf8")) as unknown);
+  const added = Object.entries(modules).map(([key, transport]) => ({
+    key,
+    transport,
+    channels: [],
+  }));
+  const extended = { ...document, modules: [...document.modules, ...added] };
+  await writeFile(ioPath, JSON.stringify(extended, null, 2), "utf8");
 }

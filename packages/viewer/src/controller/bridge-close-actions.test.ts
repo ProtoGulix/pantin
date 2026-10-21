@@ -1,7 +1,7 @@
-import type { BridgeStatus } from "@pantin/protocol";
+import type { ModbusBridgeStatus } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { PantinApiError } from "../api-transport.ts";
-import { bridgeStatusOf, RUNNING_STATUS } from "../bridge/bridge-fixtures.ts";
+import { bridgeListOf, bridgeStatusOf, RUNNING_STATUS } from "../bridge/bridge-fixtures.ts";
 import { consolePantin } from "../console/console-fixtures.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { buildPromptView } from "../panel/prompt-model.ts";
@@ -14,7 +14,7 @@ import { requestClose, resolvePrompt, setCloseStopsBridge } from "./session-acti
 
 function asking() {
   const opened = openStore(accept, true);
-  receiveBridge(opened.store, RUNNING_STATUS);
+  receiveBridge(opened.store, bridgeListOf(RUNNING_STATUS));
   requestClose(opened.store);
   return opened;
 }
@@ -59,7 +59,7 @@ describe("closing with unsaved changes and an active bridge", () => {
     async (action) => {
       const refusal = new PantinApiError("api", "no", "bridge_unavailable", 503);
       const { store } = openStore(() => refusal, true);
-      receiveBridge(store, RUNNING_STATUS);
+      receiveBridge(store, bridgeListOf(RUNNING_STATUS));
       requestClose(store);
       resolvePrompt(store, action);
       await flush();
@@ -73,7 +73,7 @@ describe("closing with unsaved changes and an active bridge", () => {
 describe("requests that overlap", () => {
   it("sends a single stop for a double click on Stop and close", async () => {
     const { store, sent } = openStore(accept);
-    receiveBridge(store, RUNNING_STATUS);
+    receiveBridge(store, bridgeListOf(RUNNING_STATUS));
     requestClose(store);
     resolvePrompt(store, "stopBridgeAndClose");
     resolvePrompt(store, "stopBridgeAndClose");
@@ -84,7 +84,7 @@ describe("requests that overlap", () => {
   it("keeps the core's refusal while the user edits the fields", async () => {
     const refusal = new PantinApiError("api", "listen must be private", "invalid_request", 400);
     const { store } = openStore(() => refusal);
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     bridgeIntents(store).startBridge();
     await flush();
     bridgeIntents(store).editBridgeAllow("10.0.0.5");
@@ -93,17 +93,17 @@ describe("requests that overlap", () => {
   });
 
   it("does not write an answer into the model of another Pantin", async () => {
-    let release: (status: BridgeStatus) => void = () => undefined;
+    let release: (status: ModbusBridgeStatus) => void = () => undefined;
     const { store } = openStore(accept);
     store.ports.api.setBridge = () =>
       new Promise((resolve) => {
         release = resolve;
       });
-    receiveBridge(store, bridgeStatusOf());
+    receiveBridge(store, bridgeListOf(bridgeStatusOf()));
     bridgeIntents(store).startBridge();
     store.update(withOpenPantin(store.state, { ...consolePantin, id: "other" }));
     store.requestedPantinId = "other";
-    receiveBridge(store, bridgeStatusOf({ state: "running" }));
+    receiveBridge(store, bridgeListOf(bridgeStatusOf({ state: "running" })));
     release(bridgeStatusOf({ state: "starting" }));
     await flush();
     expect(store.bridgeModel.status?.state).toBe("running");

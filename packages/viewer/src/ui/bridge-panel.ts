@@ -125,7 +125,10 @@ function moduleLine(line: BridgeModuleLine): HTMLElement {
     statusDot(moduleConnectionTone(line.connection)),
     element("span", { className: "bridge-panel__module-key", text: line.key }),
     element("span", { className: "bridge-panel__module-address", text: line.address }),
-    element("span", { className: "bridge-panel__module-status", text: line.statusText }),
+    element("span", {
+      className: "bridge-panel__module-status",
+      text: line.reasonText === null ? line.statusText : `${line.statusText} (${line.reasonText})`,
+    }),
   ]);
 }
 

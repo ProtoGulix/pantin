@@ -1,7 +1,7 @@
 import { request as httpRequest, type IncomingMessage } from "node:http";
 import {
-  type BridgeStatus,
-  BridgeStatusSchema,
+  type BridgeListResponse,
+  BridgeListResponseSchema,
   type PoseSnapshot,
   PoseSnapshotSchema,
   type SimulationClockState,
@@ -14,8 +14,8 @@ export type SseClient = {
   headers: IncomingMessage["headers"];
   snapshots: PoseSnapshot[];
   clocks: SimulationClockState[];
-  // The `bridge` events (ADR 0050); not in `eventNames`, which keeps the order of pose and clock.
-  bridges: BridgeStatus[];
+  // The `bridge` events (ADR 0050, ADR 0065 point 7): the statuses of every kind; not in `eventNames`, which keeps the order of pose and clock.
+  bridges: BridgeListResponse[];
   // Event names in arrival order, to check what was sent after what.
   eventNames: string[];
   comments: string[];
@@ -42,7 +42,7 @@ function parseBlock(
     client.eventNames.push("pose");
   }
   if (block.startsWith("event: bridge\n") && data !== undefined) {
-    client.bridges.push(BridgeStatusSchema.parse(JSON.parse(data)));
+    client.bridges.push(BridgeListResponseSchema.parse(JSON.parse(data)));
   }
   if (block.startsWith("event: clock\n") && data !== undefined) {
     client.clocks.push(SimulationClockStateSchema.parse(JSON.parse(data)));

@@ -1,13 +1,14 @@
 import type {
-  BridgeFailureKind,
   BridgeState,
-  BridgeStatus,
   IoMappingResponse,
+  ModbusBridgeStatus,
+  PlcModuleLossReason,
 } from "@pantin/protocol";
 import { MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
 import { type CentralLayout, showsIo } from "../central-layout.ts";
 import { createTranslator, type MessageKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
+import { type BridgeFailureView, failureViewOf } from "./bridge-failure-view.ts";
 import {
   type BridgeModel,
   type BridgeNetworkMode,
@@ -39,16 +40,8 @@ export interface BridgeModuleLine {
   connection: ModuleConnection;
   // Visible next to the dot, which is decoration.
   statusText: string;
-}
-
-interface BridgeFailureView {
-  headline: string;
-  // The bridge's own message, in English.
-  message: string;
-  // Warning rather than error: the I/O were edited, nothing is broken.
-  warning: boolean;
-  logTitle: string;
-  log: readonly string[];
+  // Why the PLC is not connected, in words; null when connected or never reported.
+  reasonText: string | null;
 }
 
 export interface BridgeView {
@@ -106,17 +99,11 @@ const STATE_TONES: Record<BridgeState, StatusTone> = {
   failed: "error",
 };
 
-const FAILURE_KEYS: Record<BridgeFailureKind, MessageKey> = {
-  configuration: "bridge.failure.configuration",
-  core_unavailable: "bridge.failure.core_unavailable",
-  mapping_not_valid: "bridge.failure.mapping_not_valid",
-  mapping_changed: "bridge.failure.mapping_changed",
-  bus_closed: "bridge.failure.bus_closed",
-  protocol: "bridge.failure.protocol",
-  unexpected: "bridge.failure.unexpected",
-  spawn_failed: "bridge.failure.spawn_failed",
-  start_timeout: "bridge.failure.start_timeout",
-  crashed: "bridge.failure.crashed",
+const REASON_KEYS: Record<PlcModuleLossReason, MessageKey> = {
+  closed: "bridge.module.reason.closed",
+  timeout: "bridge.module.reason.timeout",
+  node_mismatch: "bridge.module.reason.node_mismatch",
+  certificate_rejected: "bridge.module.reason.certificate_rejected",
 };
 
 const BUTTON_KEYS: Record<BridgeButtonKind, MessageKey> = {
@@ -132,52 +119,39 @@ function buttonKindOf(state: BridgeState): BridgeButtonKind {
   return state === "stopped" ? "start" : "stop";
 }
 
-function failureViewOf(status: BridgeStatus, t: Translate): BridgeFailureView | null {
-  const { failure } = status;
-  if (status.state !== "failed" || failure === null) {
-    return null;
-  }
-  return {
-    headline: t(FAILURE_KEYS[failure.kind]),
-    message: failure.message,
-    warning: failure.kind === "mapping_changed",
-    logTitle: t("bridge.log.title"),
-    log: status.log,
-  };
-}
-
 function lineOf(
-  module: BridgeMappingModule,
+  module: { key: string; reason?: PlcModuleLossReason | null },
   address: string,
-  status: BridgeStatus,
+  status: ModbusBridgeStatus,
   t: Translate,
 ): BridgeModuleLine {
   const connection = moduleConnection(status, module.key);
   return {
     key: module.key,
-    address: `${address}:${module.port}`,
+    address,
     connection,
     statusText: t(MODULE_CONNECTION_KEYS[connection]),
+    reasonText:
+      connection === "waiting" && module.reason != null ? t(REASON_KEYS[module.reason]) : null,
   };
 }
 
 // Running: what the core reports. Otherwise: the mapping, at the address a start would listen on.
 function moduleLinesOf(
   model: BridgeModel,
-  status: BridgeStatus,
+  status: ModbusBridgeStatus,
   mappingModules: readonly BridgeMappingModule[],
   t: Translate,
 ): BridgeModuleLine[] {
   if (status.state === "running") {
-    const address = status.network?.listen ?? "";
-    return status.modules.map((module) => lineOf(module, address, status, t));
+    return status.modules.map((module) => lineOf(module, module.endpoint, status, t));
   }
-  const address = model.draft.mode === "local" ? LOCAL_LISTEN : lanListenOf(model);
-  return mappingModules.map((module) => lineOf(module, address, status, t));
+  const listen = model.draft.mode === "local" ? LOCAL_LISTEN : lanListenOf(model);
+  return mappingModules.map((module) => lineOf(module, `${listen}:${module.port}`, status, t));
 }
 
 // Why the button is disabled; a stop is never blocked by either reason.
-function noticeOf(status: BridgeStatus, kind: BridgeButtonKind, t: Translate): string | null {
+function noticeOf(status: ModbusBridgeStatus, kind: BridgeButtonKind, t: Translate): string | null {
   if (status.availability === "unavailable") {
     return t("bridge.unavailable");
   }

@@ -1,7 +1,7 @@
-import { BRIDGE_FAILURE_KINDS, type BridgeState } from "@pantin/protocol";
+import type { BridgeState } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { layoutOf } from "../central-layout.ts";
-import { createTranslator, LANGUAGES } from "../i18n/translate.ts";
+import { createTranslator } from "../i18n/translate.ts";
 import { bridgeStatusOf, FAILED_STATUS, RUNNING_STATUS } from "./bridge-fixtures.ts";
 import { type BridgeModel, bridgeAfterStatus, INITIAL_BRIDGE_MODEL } from "./bridge-model.ts";
 import { bridgeRedrawKey, buildBridgeView } from "./bridge-view.ts";
@@ -129,6 +129,23 @@ describe("a running bridge", () => {
     ]);
   });
 
+  it("says why a module has no PLC, and shows nothing for a connected one", () => {
+    const status = {
+      ...RUNNING_STATUS,
+      modules: [
+        { key: "m1", endpoint: "127.0.0.1:1502", plcConnected: true, reason: null },
+        { key: "m2", endpoint: "127.0.0.1:1503", plcConnected: false, reason: "timeout" as const },
+        { key: "m3", endpoint: "127.0.0.1:1504", plcConnected: false, reason: null },
+      ],
+    };
+    const view = buildBridgeView(modelOf(status), createTranslator("en"), layoutOf("3d"));
+    expect(view?.moduleLines.map((line) => line.reasonText)).toEqual([
+      null,
+      "the PLC stopped answering",
+      null,
+    ]);
+  });
+
   it("says that an I/O edit stops it", () => {
     expect(viewOf(RUNNING_STATUS).runningHint).toBe("Toute modification des E/S arrête le pont.");
   });
@@ -188,42 +205,6 @@ describe("the state dot tone", () => {
       (state) => viewOf(bridgeStatusOf({ state })).stateTone,
     );
     expect(tones).toEqual(["idle", "busy", "ok", "busy", "error"]);
-  });
-});
-
-describe("a failed bridge", () => {
-  it("shows the headline, the bridge's message and its log", () => {
-    expect(viewOf(FAILED_STATUS).failure).toEqual({
-      headline: "Le pont refuse sa configuration",
-      message: "port 1502 is taken",
-      warning: false,
-      logTitle: "Journal du pont",
-      log: ["pantin-bridge: port 1502 is taken"],
-    });
-  });
-
-  it("translates every failure kind, in both languages", () => {
-    for (const language of LANGUAGES) {
-      const headlines = BRIDGE_FAILURE_KINDS.map((kind) => {
-        const failure = { kind, message: "m", exitCode: null, signal: null };
-        const model = modelOf({ ...FAILED_STATUS, failure });
-        return buildBridgeView(model, createTranslator(language), layoutOf("3d"))?.failure
-          ?.headline;
-      });
-      expect(
-        headlines.every((headline) => headline !== undefined && !headline.startsWith("bridge.")),
-      ).toBe(true);
-      expect(new Set(headlines).size).toBe(BRIDGE_FAILURE_KINDS.length);
-    }
-  });
-
-  it("shows an I/O change as a warning", () => {
-    const failure = { kind: "mapping_changed", message: "m", exitCode: 1, signal: null } as const;
-    expect(viewOf({ ...FAILED_STATUS, failure }).failure?.warning).toBe(true);
-  });
-
-  it("shows no failure block without a failure", () => {
-    expect(viewOf({ ...FAILED_STATUS, failure: null }).failure).toBeNull();
   });
 });
 

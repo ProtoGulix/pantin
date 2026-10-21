@@ -394,9 +394,9 @@ When the PLC connects but nothing works, the bridge log says what the PLC asked 
 
 - In the **PLC bridge** block, click **Log**: the **PLC bridge log** window opens and refreshes by itself, as columns (time, source **Core** or **Bridge**, level), with **Error**, **Warning** and **Info** toggles to filter. **Copy** and **Download** let you attach the log to a request for help.
 - Warning and error lines also reach the console: "PLC bridge: …".
-- Without the viewer, and even with the core stopped: `pnpm pantin bridge-log <pantinId>`, with `--logs-dir <folder>` if the core was started with that option, `--pantins-dir <folder>` if the Pantins are not in the default folder, and `--follow` to follow the file live.
+- Without the viewer, and even with the core stopped: `pnpm pantin bridge-log <pantinId>`, with `--transport <kind>` (for example `modbus_tcp_slave`) when several files exist, `--logs-dir <folder>` if the core was started with that option, `--pantins-dir <folder>` if the Pantins are not in the default folder, and `--follow` to follow the file live.
 
-The file is `<Pantins folder>/.logs/<pantinId>/bridge.log` (details in [Panels and buttons](/en/reference/panels#the-plc-bridge-log)).
+The file is `<Pantins folder>/.logs/<pantinId>/bridge-<kind>.log` (`bridge-modbus_tcp_slave.log` for Modbus) (details in [Panels and buttons](/en/reference/panels#the-plc-bridge-log)).
 
 Example: the PLC connects, then the connection drops after a few seconds ("no request for 5.0 s"). The log contains:
 

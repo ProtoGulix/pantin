@@ -29,8 +29,8 @@ while one started by hand is connected.
   malformed frame header (protocol id, length) closes the connection.
 - `--status-lines` (ADR 0050) makes a supervising process able to follow the
   bridge: JSON lines on stdout, each flushed and at most 4 KiB, everything
-  else stays on stderr. `{"event":"ready","listen":...,"modules":[{"key":...,"port":...}]}`
-  comes once every slave is bound. `{"event":"exiting","kind":...,"message":...}`
+  else stays on stderr. `{"event":"ready","transport":"modbus_tcp_slave","listen":...,"modules":[{"key":...,"port":...}]}`
+  comes once every slave is bound. `{"event":"exiting","kind":...,"message":...,"certificate":null,"module":null}`
   comes just before a non-zero exit; `kind` is `configuration`,
   `core_unavailable`, `mapping_not_valid`, `mapping_changed`, `bus_closed`,
   `protocol` or `unexpected`. The lines are held by

@@ -1,6 +1,6 @@
 import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
-import { BridgeFailureKindSchema } from "./bridge.ts";
+import { BridgeFailureKindSchema } from "./bridge-status-lines.ts";
 import { EmitterIdSchema, KeySchema } from "./ids.ts";
 import { PlcModuleLossReasonSchema } from "./plc-link.ts";
 import { TagNameSchema } from "./tag.ts";

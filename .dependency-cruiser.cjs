@@ -6,6 +6,9 @@
 const VITE_CONFIG = "^packages/viewer/vite\\.config\\.ts$";
 const BUILD_VERSION_MODULE = "^packages/core/src/build-version\\.ts$";
 
+// Packages allowed to import network-address (ADR 0065); opcua-bridge is added in S3.
+const NETWORK_ADDRESS_USERS = ["core"];
+
 const isolatedPackages = ["core", "viewer"];
 
 const isolationRules = isolatedPackages.map((packageName) => ({
@@ -75,6 +78,22 @@ module.exports = {
       severity: "error",
       from: { pathNot: "^packages/(core|plc-symbol-formats)/" },
       to: { path: "^packages/plc-symbol-formats/|^@pantin/plc-symbol-formats" },
+    },
+    {
+      name: "network-address-has-no-workspace-dependency",
+      comment:
+        "Address classification is pure and shared by the core and the OPC UA bridge: it imports no other Pantin package (ADR 0065).",
+      severity: "error",
+      from: { path: "^packages/network-address/" },
+      to: { path: "^packages/(?!network-address/)|^@pantin/" },
+    },
+    {
+      name: "network-address-is-imported-only-by-its-users",
+      comment:
+        "Only these packages import the address classification (ADR 0065); opcua-bridge joins the list in S3.",
+      severity: "error",
+      from: { pathNot: `^packages/(${NETWORK_ADDRESS_USERS.join("|")}|network-address)/` },
+      to: { path: "^packages/network-address/|^@pantin/network-address" },
     },
     {
       name: "viewer-runs-no-transport-rules",

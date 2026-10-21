@@ -1,4 +1,4 @@
-import type { BridgeStatus } from "@pantin/protocol";
+import type { ModbusBridgeStatus } from "@pantin/protocol";
 import { type CentralLayout, showsIo, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
@@ -139,7 +139,7 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
-function buildIo(state: ViewerState, bridgeStatus: BridgeStatus | null): IoView | null {
+function buildIo(state: ViewerState, bridgeStatus: ModbusBridgeStatus | null): IoView | null {
   const document = state.openPantin?.document;
   if (document === undefined || !showsIo(state.centralLayout)) {
     return null;
@@ -153,7 +153,7 @@ export function buildPanelView(
   consoleList: ClientConsole,
   clockRunning: boolean,
   tagValues: TagValues = NO_TAG_VALUES,
-  bridgeStatus: BridgeStatus | null = null,
+  bridgeStatus: ModbusBridgeStatus | null = null,
 ): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);

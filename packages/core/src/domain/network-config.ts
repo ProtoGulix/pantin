@@ -8,7 +8,7 @@ import {
   parseCidr,
   parseIpAddress,
   sameIpAddress,
-} from "./network-address.ts";
+} from "@pantin/network-address";
 
 // Startup network configuration (ADR 0004, ADR 0008): which address to
 // listen on, which connection sources to accept, which Host headers to trust.

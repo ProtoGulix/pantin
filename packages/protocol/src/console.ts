@@ -169,6 +169,13 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.bridge_log,
   }),
+  // ADR 0065 point 8: an OPC UA module reaches a private-network PLC with security None.
+  opcuaUnsecuredLan: z.object({
+    code: z.literal("opcua_unsecured_lan"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.plc_module,
+  }),
   sensorChanged: z.object({
     code: z.literal("sensor_changed"),
     level: z.literal("trace"),
@@ -214,6 +221,7 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.bridgeDisconnected,
   eventShapes.bridgeFailed,
   eventShapes.bridgeLog,
+  eventShapes.opcuaUnsecuredLan,
   eventShapes.clockPausedWithBridge,
   eventShapes.sensorChanged,
   eventShapes.traceDropped,
@@ -255,6 +263,7 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.bridgeDisconnected.extend(entryFields),
   eventShapes.bridgeFailed.extend(entryFields),
   eventShapes.bridgeLog.extend(entryFields),
+  eventShapes.opcuaUnsecuredLan.extend(entryFields),
   eventShapes.clockPausedWithBridge.extend(entryFields),
   eventShapes.sensorChanged.extend(entryFields),
   eventShapes.traceDropped.extend(entryFields),

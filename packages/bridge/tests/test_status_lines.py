@@ -31,7 +31,17 @@ from pantin_bridge.status_lines import (
 )
 from support import make_module
 
-VALID = status_line_cases("valid")
+
+def _is_written_by_this_bridge(message: dict[str, object]) -> bool:
+    """The fixture also holds the lines of the OPC UA bridge, which this one never writes."""
+    if message["event"] == "ready":
+        return message["transport"] == "modbus_tcp_slave"
+    return message["kind"] in {kind.value for kind in ExitKind}
+
+
+VALID = [
+    case for case in status_line_cases("valid") if _is_written_by_this_bridge(message_of(case))
+]
 
 
 def _emitted_for(message: dict[str, object]) -> str:
@@ -56,8 +66,13 @@ def test_every_line_the_bridge_writes_equals_its_fixture_entry(case: FixtureCase
     assert "\n" not in line
 
 
-def test_the_fixture_lists_exactly_the_exit_kinds_of_the_bridge() -> None:
-    assert load_json("bridge-status-lines.json")["exitKinds"] == [kind.value for kind in ExitKind]
+def test_the_fixture_lists_every_exit_kind_of_the_bridge() -> None:
+    fixture_kinds = load_json("bridge-status-lines.json")["exitKinds"]
+    assert isinstance(fixture_kinds, list)
+    assert {kind.value for kind in ExitKind} <= set(fixture_kinds)
+
+
+def test_the_fixture_holds_the_line_limit_of_the_bridge() -> None:
     assert load_json("bridge-status-lines.json")["maxLineBytes"] == MAX_LINE_BYTES
 
 
@@ -152,6 +167,12 @@ def test_an_unexpected_failure_gets_an_exiting_line_with_the_flag_only(
 
     assert status == cli.EXIT_FAILURE
     line = json.loads(capsys.readouterr().out)
-    assert line == {"event": "exiting", "kind": "unexpected", "message": "boom"}
+    assert line == {
+        "event": "exiting",
+        "kind": "unexpected",
+        "message": "boom",
+        "certificate": None,
+        "module": None,
+    }
     with pytest.raises(RuntimeError):
         cli.main(arguments)

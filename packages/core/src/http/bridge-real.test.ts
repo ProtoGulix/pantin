@@ -1,6 +1,10 @@
 import { spawn } from "node:child_process";
 import { connect } from "node:net";
-import { type BridgeStatus, BridgeStatusSchema, ConsoleResponseSchema } from "@pantin/protocol";
+import {
+  BridgeListResponseSchema,
+  type BridgeStatus,
+  ConsoleResponseSchema,
+} from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createRealSimulationTimer } from "../service/simulation-loop.ts";
 import { copyPlcCylinder, freePort, PLC_CYLINDER_ID } from "../test-support/plc-cylinder.ts";
@@ -17,7 +21,8 @@ import type { RunningPantinServer } from "./server.ts";
 // package's environment, so it only runs when PANTIN_BRIDGE_PYTHON points to
 // its interpreter; `pnpm test` sets it.
 const bridgePython = process.env.PANTIN_BRIDGE_PYTHON;
-const BRIDGE_PATH = `/api/pantins/${PLC_CYLINDER_ID}/bridge`;
+const BRIDGES_PATH = `/api/pantins/${PLC_CYLINDER_ID}/bridges`;
+const BRIDGE_PATH = `${BRIDGES_PATH}/modbus_tcp_slave`;
 const WAIT_MILLISECONDS = 20_000;
 
 let workspace: TestWorkspace;
@@ -62,7 +67,13 @@ async function startServerWithBridge(): Promise<RunningPantinServer> {
     ...(bridgePython === undefined
       ? {}
       : {
-          bridgePython,
+          bridgeLaunchers: [
+            {
+              kind: "modbus_tcp_slave",
+              command: bridgePython,
+              args: ["-I", "-u", "-m", "pantin_bridge"],
+            },
+          ],
           bridgeSpawn: (command, args, options) => {
             const child = spawn(command, [...args], options);
             if (child.pid !== undefined) {
@@ -76,8 +87,14 @@ async function startServerWithBridge(): Promise<RunningPantinServer> {
 }
 
 async function bridgeStatus(): Promise<BridgeStatus> {
-  const response = await sendRaw(requireServer(), "GET", BRIDGE_PATH);
-  return BridgeStatusSchema.parse(response.json);
+  const response = await sendRaw(requireServer(), "GET", BRIDGES_PATH);
+  const modbus = BridgeListResponseSchema.parse(response.json).bridges.find(
+    (status) => status.transport === "modbus_tcp_slave",
+  );
+  if (modbus === undefined) {
+    throw new Error("The bridge list has no Modbus bridge.");
+  }
+  return modbus;
 }
 
 function requireServer(): RunningPantinServer {
@@ -160,7 +177,9 @@ describeWithBridge("the real PLC bridge, a full run", () => {
     await startServerWithBridge();
     await startBridge();
     const running = await waitForState("running");
-    expect(running.modules).toEqual([{ key: "m1", port: modbusPort, plcConnected: false }]);
+    expect(running.modules).toEqual([
+      { key: "m1", endpoint: `127.0.0.1:${modbusPort}`, plcConnected: false, reason: null },
+    ]);
     expect(await canConnect(modbusPort)).toBe(true);
     await expectPlcConnectedWhileSocketOpen();
 

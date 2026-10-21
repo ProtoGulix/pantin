@@ -92,6 +92,7 @@ def test_ready_comes_after_binding_and_sigterm_exits_zero_with_the_bus_closed() 
             ready = await read_status_line(process)
             assert ready == {
                 "event": "ready",
+                "transport": "modbus_tcp_slave",
                 "listen": HOST,
                 "modules": [{"key": "m1", "port": port}],
             }

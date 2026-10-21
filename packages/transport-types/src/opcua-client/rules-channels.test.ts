@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
-import {
-  defaultOpcuaIecType,
-  isOpcuaIecTypeAllowed,
-  OPCUA_IEC_TYPES_BY_SIGNAL_TYPE,
-} from "./iec-types.ts";
+import { OPCUA_IEC_TYPES_BY_SIGNAL_TYPE } from "./iec-types.ts";
 import { OPCUA_CLIENT_RULES as rules } from "./rules.ts";
 import { derivedIdentifier, isExplicitIdentifierValid } from "./rules-identifiers.ts";
+import { defaultOpcuaIecType, isOpcuaIecTypeAllowed } from "./rules-iec-types.ts";
 import { BIT_COMMAND, channelOf, created, moduleOf } from "./rules-test-helpers.ts";
 
 describe("the IEC type table", () => {

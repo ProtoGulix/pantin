@@ -24,7 +24,7 @@ const FixtureSchema = z.object({
 });
 const CLASSIFICATION_CASES = FixtureSchema.parse(
   JSON.parse(
-    readFileSync(new URL("../../../protocol/fixtures/address-cases.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../../protocol/fixtures/address-cases.json", import.meta.url), "utf8"),
   ) as unknown,
 ).classification.map((entry): [string, AddressClass] => [entry.address, entry.class]);
 

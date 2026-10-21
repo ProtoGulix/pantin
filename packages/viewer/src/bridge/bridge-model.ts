@@ -1,4 +1,12 @@
-import type { BridgeNetwork, BridgeStatus, SetBridgeRequest } from "@pantin/protocol";
+import type {
+  BridgeListResponse,
+  BridgeStatus,
+  ModbusBridgeNetwork,
+  ModbusBridgeStatus,
+  SetModbusBridgeRequest,
+} from "@pantin/protocol";
+import { MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
+import { modbusStatusOf } from "./modbus-status.ts";
 
 // What the bridge block knows (ADR 0050 point 8): the status the core pushed and
 // what the user typed. The viewer decides nothing about the network: the core
@@ -18,8 +26,12 @@ export interface BridgeDraft {
 }
 
 export interface BridgeModel {
-  // Null until the first `bridge` event of the stream.
-  readonly status: BridgeStatus | null;
+  // Every transport's status as the core last sent them (ADR 0065 point 7); empty until the
+  // first `bridge` event. The OPC UA card will read its entry here.
+  readonly statuses: readonly BridgeStatus[];
+  // The Modbus entry of `statuses`, the only card shown for now. Null until the first
+  // `bridge` event; the unavailable status when the core's list has no Modbus entry.
+  readonly status: ModbusBridgeStatus | null;
   readonly draft: BridgeDraft;
   // The core's 400 message about the address or the allow list.
   readonly networkError: string | null;
@@ -31,6 +43,7 @@ export interface BridgeModel {
 }
 
 export const INITIAL_BRIDGE_MODEL: BridgeModel = {
+  statuses: [],
   status: null,
   draft: { mode: "local", listen: "", allowText: "" },
   networkError: null,
@@ -38,11 +51,24 @@ export const INITIAL_BRIDGE_MODEL: BridgeModel = {
   streamedWhilePending: false,
 };
 
+// What the card shows when the core's list has no Modbus bridge: a bridge that cannot start.
+const MISSING_MODBUS_STATUS: ModbusBridgeStatus = {
+  transport: MODBUS_TCP_SLAVE_KIND,
+  availability: "unavailable",
+  state: "stopped",
+  network: null,
+  listenChoices: [],
+  modules: [],
+  failure: null,
+  log: [],
+  externalBridgeConnected: false,
+};
+
 function isLoopback(address: string): boolean {
   return address === LOCAL_LISTEN || address.startsWith("127.");
 }
 
-function draftOfNetwork(network: BridgeNetwork): BridgeDraft {
+function draftOfNetwork(network: ModbusBridgeNetwork): BridgeDraft {
   return isLoopback(network.listen)
     ? { mode: "local", listen: "", allowText: "" }
     : { mode: "lan", listen: network.listen, allowText: network.allow.join(", ") };
@@ -53,7 +79,14 @@ function draftOfNetwork(network: BridgeNetwork): BridgeDraft {
  * network (starting, running, failed), the fields show it: this is how Restart
  * reuses the last network. Within one state the user's typing is left alone.
  */
-export function bridgeAfterStatus(model: BridgeModel, status: BridgeStatus): BridgeModel {
+export function bridgeAfterStatus(model: BridgeModel, status: ModbusBridgeStatus): BridgeModel {
+  const statuses = model.statuses.some((known) => known.transport === status.transport)
+    ? model.statuses.map((known) => (known.transport === status.transport ? status : known))
+    : [...model.statuses, status];
+  return shownModbusAfter({ ...model, statuses }, status);
+}
+
+function shownModbusAfter(model: BridgeModel, status: ModbusBridgeStatus): BridgeModel {
   const changedState = model.status?.state !== status.state;
   const draft =
     changedState && status.state !== "stopped" && status.network !== null
@@ -72,9 +105,13 @@ export function bridgeWithPending(model: BridgeModel, pending: boolean): BridgeM
   return { ...model, pending, streamedWhilePending: false };
 }
 
-/** A status of the stream: always the latest, and it outdates a request's answer. */
-export function bridgeAfterStreamStatus(model: BridgeModel, status: BridgeStatus): BridgeModel {
-  return { ...bridgeAfterStatus(model, status), streamedWhilePending: model.pending };
+/** The list of the stream: always the latest, and it outdates a request's answer. */
+export function bridgeAfterStreamList(model: BridgeModel, list: BridgeListResponse): BridgeModel {
+  const next = shownModbusAfter(
+    { ...model, statuses: list.bridges },
+    modbusStatusOf(list) ?? MISSING_MODBUS_STATUS,
+  );
+  return { ...next, streamedWhilePending: model.pending };
 }
 
 /**
@@ -83,7 +120,7 @@ export function bridgeAfterStreamStatus(model: BridgeModel, status: BridgeStatus
  * a stream status received meanwhile is at least as new as the answer: a stop
  * answered "stopping" after the stream said "stopped" would stick otherwise.
  */
-export function bridgeAfterAnswer(model: BridgeModel, status: BridgeStatus): BridgeModel {
+export function bridgeAfterAnswer(model: BridgeModel, status: ModbusBridgeStatus): BridgeModel {
   return model.streamedWhilePending ? model : bridgeAfterStatus(model, status);
 }
 
@@ -109,13 +146,13 @@ function allowEntriesOf(text: string): string[] {
 }
 
 /** The exact PUT body of "Start" and "Restart". */
-export function bridgeStartRequest(model: BridgeModel): SetBridgeRequest {
+export function bridgeStartRequest(model: BridgeModel): SetModbusBridgeRequest {
   return model.draft.mode === "local"
     ? { running: true, listen: LOCAL_LISTEN, allow: [] }
     : { running: true, listen: lanListenOf(model), allow: allowEntriesOf(model.draft.allowText) };
 }
 
-export const BRIDGE_STOP_REQUEST: SetBridgeRequest = { running: false };
+export const BRIDGE_STOP_REQUEST: SetModbusBridgeRequest = { running: false };
 
 /** The bridge goes on after the Pantin is closed unless it is stopped (ADR 0050 point 7). */
 export function isBridgeActive(model: BridgeModel): boolean {

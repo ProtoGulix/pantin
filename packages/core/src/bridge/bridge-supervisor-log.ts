@@ -1,4 +1,4 @@
-import type { BridgeNetwork, PantinId } from "@pantin/protocol";
+import type { BridgeNetwork, PantinId, TransportKind } from "@pantin/protocol";
 import {
   classifyBridgeLine,
   consoleMessageOfBridgeLine,
@@ -20,7 +20,7 @@ export type BridgeLogSinks = {
 
 export function logTransition(
   sinks: BridgeLogSinks,
-  pantinId: PantinId,
+  at: { pantinId: PantinId; kind: TransportKind },
   change: {
     before: BridgeMachineState;
     after: BridgeMachineState;
@@ -30,13 +30,17 @@ export function logTransition(
 ): void {
   const entry = describeBridgeTransition(change.before, change.after, change.event, change.network);
   if (entry !== undefined) {
-    sinks.logFile.coreEvent(pantinId, entry.level, entry.text);
+    sinks.logFile.coreEvent(at.pantinId, at.kind, entry.level, entry.text);
   }
 }
 
-export function logBridgeLine(sinks: BridgeLogSinks, pantinId: PantinId, line: string): void {
-  sinks.logFile.bridgeLine(pantinId, line);
+export function logBridgeLine(
+  sinks: BridgeLogSinks,
+  at: { pantinId: PantinId; kind: TransportKind },
+  line: string,
+): void {
+  sinks.logFile.bridgeLine(at.pantinId, at.kind, line);
   if (shouldReachConsole(classifyBridgeLine(line))) {
-    sinks.recordConsole(pantinId, consoleMessageOfBridgeLine(line)).catch(sinks.reportError);
+    sinks.recordConsole(at.pantinId, consoleMessageOfBridgeLine(line)).catch(sinks.reportError);
   }
 }

@@ -1,4 +1,4 @@
-import type { BridgeStatus, IoMappingModule, IoProblemCode } from "@pantin/protocol";
+import type { IoMappingModule, IoProblemCode, ModbusBridgeStatus } from "@pantin/protocol";
 import {
   MODULE_CONNECTION_KEYS,
   type ModuleConnection,
@@ -124,7 +124,7 @@ function moduleItemOf(
   module: IoMappingModule,
   problemCount: number,
   selected: boolean,
-  bridgeStatus: BridgeStatus | null,
+  bridgeStatus: ModbusBridgeStatus | null,
   language: Language,
 ): IoModuleItem {
   const connection = moduleConnection(bridgeStatus, module.key);
@@ -146,7 +146,7 @@ export function buildIoView(
   assemblyNames: ReadonlyMap<string, string>,
   language: Language,
   busy = false,
-  bridgeStatus: BridgeStatus | null = null,
+  bridgeStatus: ModbusBridgeStatus | null = null,
 ): IoView {
   const mapping = state.mapping;
   const counts = problemCountByModule(mapping?.problems ?? []);

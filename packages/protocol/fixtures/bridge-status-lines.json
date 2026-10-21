@@ -1,6 +1,6 @@
 {
-  "description": "Status lines the PLC bridge writes on stdout under --status-lines (ADR 0050 point 2). Each entry is one JSON line: `message` is the decoded line, `text` a line that is not JSON. The bridge must emit lines equal to every `valid` entry built from the same inputs; the core's Zod schema must accept every `valid` entry and refuse every `invalid` one. A line over maxLineBytes is a log line, not a status line.",
-  "version": 1,
+  "description": "Status lines a PLC bridge writes on stdout under --status-lines (ADR 0050 point 2, ADR 0065 points 5 and 7). Each entry is one JSON line: `message` is the decoded line, `text` a line that is not JSON. The Modbus bridge must emit lines equal to every `valid` entry that names its transport (`ready`) or one of its exit kinds (`exiting`, certificate and module null); the OPC UA bridge does the same for its own. The core's Zod schema must accept every `valid` entry and refuse every `invalid` one. A line over maxLineBytes is a log line, not a status line.",
+  "version": 2,
   "maxLineBytes": 4096,
   "exitKinds": [
     "configuration",
@@ -9,35 +9,103 @@
     "mapping_changed",
     "bus_closed",
     "protocol",
-    "unexpected"
+    "unexpected",
+    "untrusted_server_certificate",
+    "server_certificate_invalid",
+    "authentication_failed"
   ],
   "valid": [
     {
       "name": "ready with one module",
       "message": {
         "event": "ready",
+        "transport": "modbus_tcp_slave",
         "listen": "127.0.0.1",
-        "modules": [{ "key": "m1", "port": 1502 }]
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502
+          }
+        ]
       }
     },
     {
       "name": "ready with two modules on a private address",
       "message": {
         "event": "ready",
+        "transport": "modbus_tcp_slave",
         "listen": "192.168.1.10",
-        "modules": [{ "key": "m1", "port": 1502 }, { "key": "m2", "port": 1503 }]
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502
+          },
+          {
+            "key": "m2",
+            "port": 1503
+          }
+        ]
       }
     },
     {
       "name": "ready with no module",
-      "message": { "event": "ready", "listen": "127.0.0.1", "modules": [] }
+      "message": {
+        "event": "ready",
+        "transport": "modbus_tcp_slave",
+        "listen": "127.0.0.1",
+        "modules": []
+      }
+    },
+    {
+      "name": "opcua ready with one module",
+      "message": {
+        "event": "ready",
+        "transport": "opcua_client",
+        "modules": [
+          {
+            "key": "plc",
+            "endpoint": "opc.tcp://127.0.0.1:4840"
+          }
+        ],
+        "clientCertificate": {
+          "subject": "CN=Pantin",
+          "applicationUri": "urn:pantin:workshop:opcua-bridge",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "sha1": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
+    },
+    {
+      "name": "opcua ready with two modules and an endpoint path",
+      "message": {
+        "event": "ready",
+        "transport": "opcua_client",
+        "modules": [
+          {
+            "key": "plc",
+            "endpoint": "opc.tcp://192.168.1.20:4840/ua"
+          },
+          {
+            "key": "spare",
+            "endpoint": "opc.tcp://[fd00::1]:4841"
+          }
+        ],
+        "clientCertificate": {
+          "subject": "CN=Pantin",
+          "applicationUri": "urn:pantin:workshop:opcua-bridge",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "sha1": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
     },
     {
       "name": "exiting, configuration",
       "message": {
         "event": "exiting",
         "kind": "configuration",
-        "message": "Port 1502 is taken, or this user may not bind it."
+        "message": "Port 1502 is taken, or this user may not bind it.",
+        "certificate": null,
+        "module": null
       }
     },
     {
@@ -45,7 +113,9 @@
       "message": {
         "event": "exiting",
         "kind": "core_unavailable",
-        "message": "Cannot reach the core at http://127.0.0.1:4800."
+        "message": "Cannot reach the core at http://127.0.0.1:4800.",
+        "certificate": null,
+        "module": null
       }
     },
     {
@@ -53,7 +123,9 @@
       "message": {
         "event": "exiting",
         "kind": "mapping_not_valid",
-        "message": "The io mapping is missing."
+        "message": "The io mapping is missing.",
+        "certificate": null,
+        "module": null
       }
     },
     {
@@ -61,7 +133,9 @@
       "message": {
         "event": "exiting",
         "kind": "mapping_changed",
-        "message": "The Pantin's tags changed, so the io mapping may no longer match: restart the bridge."
+        "message": "The Pantin's tags changed, so the io mapping may no longer match: restart the bridge.",
+        "certificate": null,
+        "module": null
       }
     },
     {
@@ -69,7 +143,9 @@
       "message": {
         "event": "exiting",
         "kind": "bus_closed",
-        "message": "The tag bus was closed by the core. Restart the bridge."
+        "message": "The tag bus was closed by the core. Restart the bridge.",
+        "certificate": null,
+        "module": null
       }
     },
     {
@@ -77,7 +153,9 @@
       "message": {
         "event": "exiting",
         "kind": "protocol",
-        "message": "The core sent something the bridge cannot read."
+        "message": "The core sent something the bridge cannot read.",
+        "certificate": null,
+        "module": null
       }
     },
     {
@@ -85,44 +163,263 @@
       "message": {
         "event": "exiting",
         "kind": "unexpected",
-        "message": "Échec inattendu."
+        "message": "Échec inattendu.",
+        "certificate": null,
+        "module": null
+      }
+    },
+    {
+      "name": "exiting, untrusted_server_certificate, with the certificate",
+      "message": {
+        "event": "exiting",
+        "kind": "untrusted_server_certificate",
+        "message": "The PLC's certificate is not trusted yet.",
+        "certificate": {
+          "subject": "CN=CODESYS Control Win V3 x64",
+          "notBefore": "2026-01-01T00:00:00.000Z",
+          "notAfter": "2036-01-01T00:00:00.000Z",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sha1": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "reason": "Not trusted yet"
+        },
+        "module": "plc"
+      }
+    },
+    {
+      "name": "exiting, server_certificate_invalid, with the reason",
+      "message": {
+        "event": "exiting",
+        "kind": "server_certificate_invalid",
+        "message": "The PLC's certificate has expired.",
+        "certificate": {
+          "subject": "CN=CODESYS Control Win V3 x64",
+          "notBefore": "2026-01-01T00:00:00.000Z",
+          "notAfter": "2036-01-01T00:00:00.000Z",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sha1": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "reason": "Expired on 2026-01-01"
+        },
+        "module": "plc"
+      }
+    },
+    {
+      "name": "exiting, authentication_failed, for a module",
+      "message": {
+        "event": "exiting",
+        "kind": "authentication_failed",
+        "message": "The PLC refused the user name or password.",
+        "certificate": null,
+        "module": "plc"
       }
     }
   ],
   "invalid": [
-    { "name": "not JSON", "text": "Bridge ready: 1 module(s) on 127.0.0.1." },
-    { "name": "no event", "message": { "listen": "127.0.0.1", "modules": [] } },
+    {
+      "name": "not JSON",
+      "text": "Bridge ready: 1 module(s) on 127.0.0.1."
+    },
+    {
+      "name": "no event",
+      "message": {
+        "transport": "modbus_tcp_slave",
+        "listen": "127.0.0.1",
+        "modules": []
+      }
+    },
     {
       "name": "unknown event",
-      "message": { "event": "started", "listen": "127.0.0.1", "modules": [] }
+      "message": {
+        "event": "started",
+        "transport": "modbus_tcp_slave",
+        "listen": "127.0.0.1",
+        "modules": []
+      }
+    },
+    {
+      "name": "ready without transport",
+      "message": {
+        "event": "ready",
+        "listen": "127.0.0.1",
+        "modules": []
+      }
+    },
+    {
+      "name": "ready with an unknown transport",
+      "message": {
+        "event": "ready",
+        "transport": "carrier_pigeon",
+        "listen": "127.0.0.1",
+        "modules": []
+      }
     },
     {
       "name": "ready without listen",
-      "message": { "event": "ready", "modules": [] }
+      "message": {
+        "event": "ready",
+        "transport": "modbus_tcp_slave",
+        "modules": []
+      }
     },
     {
       "name": "ready with a port that is not a port",
       "message": {
         "event": "ready",
+        "transport": "modbus_tcp_slave",
         "listen": "127.0.0.1",
-        "modules": [{ "key": "m1", "port": 70000 }]
+        "modules": [
+          {
+            "key": "m1",
+            "port": 70000
+          }
+        ]
       }
     },
     {
       "name": "ready with a module without key",
-      "message": { "event": "ready", "listen": "127.0.0.1", "modules": [{ "port": 1502 }] }
+      "message": {
+        "event": "ready",
+        "transport": "modbus_tcp_slave",
+        "listen": "127.0.0.1",
+        "modules": [
+          {
+            "port": 1502
+          }
+        ]
+      }
+    },
+    {
+      "name": "modbus ready with an endpoint",
+      "message": {
+        "event": "ready",
+        "transport": "modbus_tcp_slave",
+        "listen": "127.0.0.1",
+        "modules": [
+          {
+            "key": "m1",
+            "port": 1502,
+            "endpoint": "x"
+          }
+        ]
+      }
+    },
+    {
+      "name": "opcua ready with a port instead of an endpoint",
+      "message": {
+        "event": "ready",
+        "transport": "opcua_client",
+        "modules": [
+          {
+            "key": "plc",
+            "port": 4840
+          }
+        ],
+        "clientCertificate": {
+          "subject": "CN=Pantin",
+          "applicationUri": "urn:pantin:workshop:opcua-bridge",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "sha1": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
+    },
+    {
+      "name": "opcua ready with listen",
+      "message": {
+        "event": "ready",
+        "transport": "opcua_client",
+        "listen": "127.0.0.1",
+        "modules": [],
+        "clientCertificate": {
+          "subject": "CN=Pantin",
+          "applicationUri": "urn:pantin:workshop:opcua-bridge",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "sha1": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
+    },
+    {
+      "name": "opcua ready without the client certificate",
+      "message": {
+        "event": "ready",
+        "transport": "opcua_client",
+        "modules": []
+      }
+    },
+    {
+      "name": "opcua ready with a client certificate missing its thumbprint",
+      "message": {
+        "event": "ready",
+        "transport": "opcua_client",
+        "modules": [],
+        "clientCertificate": {
+          "subject": "CN=Pantin",
+          "applicationUri": "urn:x",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
     },
     {
       "name": "exiting with an unknown kind",
-      "message": { "event": "exiting", "kind": "restart_required", "message": "x" }
+      "message": {
+        "event": "exiting",
+        "kind": "restart_required",
+        "message": "x",
+        "certificate": null,
+        "module": null
+      }
     },
     {
       "name": "exiting without message",
-      "message": { "event": "exiting", "kind": "bus_closed" }
+      "message": {
+        "event": "exiting",
+        "kind": "bus_closed",
+        "certificate": null,
+        "module": null
+      }
+    },
+    {
+      "name": "exiting without certificate",
+      "message": {
+        "event": "exiting",
+        "kind": "bus_closed",
+        "message": "x",
+        "module": null
+      }
+    },
+    {
+      "name": "exiting without module",
+      "message": {
+        "event": "exiting",
+        "kind": "bus_closed",
+        "message": "x",
+        "certificate": null
+      }
     },
     {
       "name": "exiting with an unknown field",
-      "message": { "event": "exiting", "kind": "bus_closed", "message": "x", "code": 1 }
+      "message": {
+        "event": "exiting",
+        "kind": "bus_closed",
+        "message": "x",
+        "certificate": null,
+        "module": null,
+        "code": 1
+      }
+    },
+    {
+      "name": "exiting with a certificate missing its reason",
+      "message": {
+        "event": "exiting",
+        "kind": "untrusted_server_certificate",
+        "message": "x",
+        "certificate": {
+          "subject": "CN=CODESYS Control Win V3 x64",
+          "notBefore": "2026-01-01T00:00:00.000Z",
+          "notAfter": "2036-01-01T00:00:00.000Z",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sha1": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "module": null
+      }
     }
   ]
 }

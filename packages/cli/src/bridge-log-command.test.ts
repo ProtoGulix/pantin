@@ -32,7 +32,7 @@ async function run(args: string[], environment?: BridgeLogEnvironment) {
   return { code, stdout: stdout.join(""), stderr: stderr.join("") };
 }
 
-async function writeLog(directory: string, text: string, name = "bridge.log") {
+async function writeLog(directory: string, text: string, name = "bridge-modbus_tcp_slave.log") {
   await mkdir(join(directory, "axis"), { recursive: true });
   await writeFile(join(directory, "axis", name), text);
 }
@@ -59,7 +59,7 @@ describe("pantin bridge-log", () => {
   it("says where it looked when there is no file", async () => {
     const result = await run(["bridge-log", "axis", "--logs-dir", root]);
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain(`No bridge log at ${join(root, "axis", "bridge.log")}`);
+    expect(result.stderr).toContain(`No bridge log for "axis"`);
   });
 
   it.each([
@@ -79,10 +79,83 @@ describe("pantin bridge-log", () => {
   });
 });
 
+describe("pantin bridge-log, one file per transport (ADR 0065 point 7)", () => {
+  const MODBUS_FILE = "bridge-modbus_tcp_slave.log";
+  const OPCUA_FILE = "bridge-opcua_client.log";
+
+  it("uses the only file there is, whichever transport it belongs to", async () => {
+    await writeLog(root, "opc ua line\n", OPCUA_FILE);
+    const result = await run(["bridge-log", "axis", "--logs-dir", root]);
+    expect(result).toEqual({ code: 0, stdout: "opc ua line\n", stderr: "" });
+  });
+
+  it("requires --transport when files of more than one kind exist, and lists them", async () => {
+    await writeLog(root, "m\n", MODBUS_FILE);
+    await writeLog(root, "o\n", OPCUA_FILE);
+    const result = await run(["bridge-log", "axis", "--logs-dir", root]);
+    expect(result.code).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("Several bridge logs exist");
+    expect(result.stderr).toContain(`modbus_tcp_slave (${join(root, "axis", MODBUS_FILE)})`);
+    expect(result.stderr).toContain(`opcua_client (${join(root, "axis", OPCUA_FILE)})`);
+    expect(result.stderr).toContain("--transport");
+  });
+});
+
+describe("pantin bridge-log --transport", () => {
+  const MODBUS_FILE = "bridge-modbus_tcp_slave.log";
+  const OPCUA_FILE = "bridge-opcua_client.log";
+
+  it("prints the file of the transport asked for", async () => {
+    await writeLog(root, "m\n", MODBUS_FILE);
+    await writeLog(root, "o\n", OPCUA_FILE);
+    const result = await run([
+      "bridge-log",
+      "axis",
+      "--transport",
+      "opcua_client",
+      "--logs-dir",
+      root,
+    ]);
+    expect(result).toEqual({ code: 0, stdout: "o\n", stderr: "" });
+  });
+
+  it("says there is no file for a transport that never ran, even when the other has one", async () => {
+    await writeLog(root, "m\n", MODBUS_FILE);
+    const result = await run([
+      "bridge-log",
+      "axis",
+      "--transport",
+      "opcua_client",
+      "--logs-dir",
+      root,
+    ]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain(
+      `No opcua_client bridge log at ${join(root, "axis", OPCUA_FILE)}`,
+    );
+  });
+
+  it("refuses an unknown transport and names the known ones", async () => {
+    const result = await run(["bridge-log", "axis", "--transport", "profibus", "--logs-dir", root]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("modbus_tcp_slave, opcua_client");
+  });
+
+  it("ignores an old bridge.log: it belongs to no transport", async () => {
+    await writeLog(root, "old\n", "bridge.log");
+    const result = await run(["bridge-log", "axis", "--logs-dir", root]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("No bridge log");
+  });
+});
+
 describe("pantin bridge-log --follow", () => {
   // A disk of two files and a clock that applies one change per sleep.
   function scripted(changes: ((files: Map<string, string>) => void)[], initial = "a\n") {
-    const files = new Map<string, string>(initial === "" ? [] : [["/l/axis/bridge.log", initial]]);
+    const files = new Map<string, string>(
+      initial === "" ? [] : [["/l/axis/bridge-modbus_tcp_slave.log", initial]],
+    );
     const reader: LogFileReader = {
       sizeOf: async (path) =>
         files.has(path) ? Buffer.byteLength(files.get(path) ?? "") : undefined,
@@ -106,12 +179,12 @@ describe("pantin bridge-log --follow", () => {
 
   it("prints what is appended, only complete lines, and follows a rotation", async () => {
     const { environment } = scripted([
-      (files) => files.set("/l/axis/bridge.log", "a\nb\nhalf"),
-      (files) => files.set("/l/axis/bridge.log", "a\nb\nhalf line\nc\n"),
+      (files) => files.set("/l/axis/bridge-modbus_tcp_slave.log", "a\nb\nhalf"),
+      (files) => files.set("/l/axis/bridge-modbus_tcp_slave.log", "a\nb\nhalf line\nc\n"),
       (files) => {
         // The core rotated: the old file went to .1 with one more line, a new one started.
-        files.set("/l/axis/bridge.log.1", "a\nb\nhalf line\nc\nd\n");
-        files.set("/l/axis/bridge.log", "e\n");
+        files.set("/l/axis/bridge-modbus_tcp_slave.log.1", "a\nb\nhalf line\nc\nd\n");
+        files.set("/l/axis/bridge-modbus_tcp_slave.log", "e\n");
       },
     ]);
     const result = await run(["bridge-log", "axis", "--logs-dir", "/l", "--follow"], environment);
@@ -120,8 +193,14 @@ describe("pantin bridge-log --follow", () => {
   });
 
   it("waits for a file that does not exist yet", async () => {
-    const { environment } = scripted([(files) => files.set("/l/axis/bridge.log", "late\n")], "");
-    const result = await run(["bridge-log", "axis", "--logs-dir", "/l", "--follow"], environment);
+    const { environment } = scripted(
+      [(files) => files.set("/l/axis/bridge-modbus_tcp_slave.log", "late\n")],
+      "",
+    );
+    const result = await run(
+      ["bridge-log", "axis", "--transport", "modbus_tcp_slave", "--logs-dir", "/l", "--follow"],
+      environment,
+    );
     expect(result).toEqual({ code: 0, stdout: "late\n", stderr: "" });
   });
 });

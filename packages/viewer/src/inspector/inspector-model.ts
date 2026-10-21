@@ -1,4 +1,4 @@
-import type { BridgeStatus, PantinResponse } from "@pantin/protocol";
+import type { ModbusBridgeStatus, PantinResponse } from "@pantin/protocol";
 import { movableJoints } from "../actuators/actuator-joints.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Translate } from "../i18n/translate.ts";
@@ -188,7 +188,7 @@ export function buildInspectorView(
   state: ViewerState,
   t: Translate,
   clockRunning: boolean,
-  bridgeStatus: BridgeStatus | null = null,
+  bridgeStatus: ModbusBridgeStatus | null = null,
 ): InspectorView {
   const pantin = state.openPantin;
   if (pantin === null || !state.inspectorOpen) {

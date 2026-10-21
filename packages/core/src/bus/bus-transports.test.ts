@@ -192,8 +192,14 @@ describe("zeroing per transport (ADR 0065 point 6)", () => {
     opcua.socket.close();
     await opcua.closed;
     await writeAs(modbus, "w1", COIL_EXTEND, 1);
-    const status = await sendRaw(axis.server, "GET", "/api/pantins/axis/bridge");
-    expect(status.json).toMatchObject({ externalBridgeConnected: true });
+    const list = await sendRaw(axis.server, "GET", "/api/pantins/axis/bridges");
+    // Per kind: the Modbus bridge is still there, the OPC UA one left.
+    expect(list.json).toMatchObject({
+      bridges: [
+        { transport: "modbus_tcp_slave", externalBridgeConnected: true },
+        { transport: "opcua_client", externalBridgeConnected: false },
+      ],
+    });
   });
 
   it("ignores a plc_status for a module of another transport, and never marks it connected", async () => {
@@ -204,7 +210,7 @@ describe("zeroing per transport (ADR 0065 point 6)", () => {
     expect((await tagNamed(axis, COIL_EXTEND))?.value).toBe(1);
     opcua.send({ type: "plc_status", module: "m1", connected: true, reason: null });
     await opcua.next("error");
-    const status = await sendRaw(axis.server, "GET", "/api/pantins/axis/bridge");
+    const status = await sendRaw(axis.server, "GET", "/api/pantins/axis/bridges");
     expect(JSON.stringify(status.json)).not.toContain('"plcConnected":true');
   });
 

@@ -128,6 +128,12 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "sensor", id: "e1" },
     params: { tag: "press.e1.extended", value: 1 },
   }),
+  opcua_unsecured_lan: entryOf(23, {
+    code: "opcua_unsecured_lan",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { module: "m2" },
+  }),
   trace_dropped: entryOf(22, {
     code: "trace_dropped",
     level: "info",
@@ -165,6 +171,8 @@ const expected = {
     bridge_failed: "Le pont automate s'est arrêté sur une erreur (détail ci-dessous).",
     bridge_log: "Pont automate : WARNING refused request: function 3, address 40000",
     sensor_changed: "Le tag press.e1.extended passe à 1.",
+    opcua_unsecured_lan:
+      "Module m2 : la session OPC UA vers un automate du réseau local n'est ni signée ni chiffrée.",
     trace_dropped:
       "Mode détaillé : 40 ligne(s) de trace omise(s), trop de changements de capteurs en peu de pas.",
   },
@@ -196,6 +204,8 @@ const expected = {
     bridge_failed: "The PLC bridge stopped on an error (detail below).",
     bridge_log: "PLC bridge: WARNING refused request: function 3, address 40000",
     sensor_changed: "Tag press.e1.extended changes to 1.",
+    opcua_unsecured_lan:
+      "Module m2: the OPC UA session to a PLC on the local network is neither signed nor encrypted.",
     trace_dropped:
       "Verbose mode: 40 trace line(s) left out, too many sensor changes in a few steps.",
   },

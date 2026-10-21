@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs";
 import { BRIDGE_MAX_STATUS_LINE_BYTES } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { appendLogLine, bridgeArguments, parseStatusLine, splitLines } from "./bridge-output.ts";
+import {
+  appendLogLine,
+  commonBridgeArguments,
+  hostAndPort,
+  parseStatusLine,
+  splitLines,
+} from "./bridge-output.ts";
 
 const FixtureSchema = z.object({
   valid: z.array(z.object({ name: z.string(), message: z.unknown() })),
@@ -68,39 +74,25 @@ describe("appendLogLine", () => {
   });
 });
 
-describe("bridgeArguments", () => {
-  it("builds the fixed command, with one --allow per entry", () => {
+describe("commonBridgeArguments", () => {
+  it("names the core and the Pantin, with the status lines flag", () => {
     expect(
-      bridgeArguments({
-        core: { host: "127.0.0.1", port: 4800 },
-        pantinId: "axis",
-        network: { listen: "192.168.1.20", allow: ["192.168.1.0/24", "10.0.0.5"] },
-      }),
-    ).toEqual([
-      "-I",
-      "-u",
-      "-m",
-      "pantin_bridge",
-      "--status-lines",
-      "--core",
-      "http://127.0.0.1:4800",
-      "--pantin",
-      "axis",
-      "--listen",
-      "192.168.1.20",
-      "--allow",
-      "192.168.1.0/24",
-      "--allow",
-      "10.0.0.5",
-    ]);
+      commonBridgeArguments({ core: { host: "127.0.0.1", port: 4800 }, pantinId: "axis" }),
+    ).toEqual(["--status-lines", "--core", "http://127.0.0.1:4800", "--pantin", "axis"]);
   });
 
   it("brackets an IPv6 core address in the URL", () => {
-    const args = bridgeArguments({
-      core: { host: "::1", port: 4800 },
-      pantinId: "axis",
-      network: { listen: "127.0.0.1", allow: [] },
-    });
+    const args = commonBridgeArguments({ core: { host: "::1", port: 4800 }, pantinId: "axis" });
     expect(args).toContain("http://[::1]:4800");
+  });
+});
+
+describe("hostAndPort", () => {
+  it("joins an IPv4 host and a port", () => {
+    expect(hostAndPort("192.168.1.10", 1502)).toBe("192.168.1.10:1502");
+  });
+
+  it("brackets an IPv6 host", () => {
+    expect(hostAndPort("fd00::5", 1502)).toBe("[fd00::5]:1502");
   });
 });

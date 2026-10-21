@@ -126,7 +126,7 @@ export async function writeTag(
   }
   const applied = writeEntry(openPantin, entry, value, source);
   if (!applied) {
-    recordPlcLinkEvents(context, pantinId, openPantin, [
+    recordPlcLinkEvents(context, pantinId, null, openPantin, [
       forcedTagWrittenEvent(tagName, tagValueOf(entry, openPantin), value),
     ]);
   }

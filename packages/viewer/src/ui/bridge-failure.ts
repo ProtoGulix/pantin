@@ -33,6 +33,7 @@ export function bridgeFailureBlock(
         glyphThenText(failure.warning ? "warning" : "error", failure.headline),
       ),
       element("p", { className: "bridge-panel__message", text: failure.message }),
+      ...failure.details.map((text) => element("p", { className: "bridge-panel__message", text })),
       failure.log.length === 0 ? null : log,
     ],
   );

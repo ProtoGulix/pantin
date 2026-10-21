@@ -1,0 +1,14 @@
+{
+  "name": "@pantin/network-address",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Pure IP address parsing and classification, shared by the core and the OPC UA bridge (ADR 0004, ADR 0065).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "zod": "4.6.5"
+  }
+}

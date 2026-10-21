@@ -183,6 +183,18 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Breaking (ADR 0065 S2): the bridge log is one file per transport,
+  `<logs dir>/<pantinId>/bridge-<kind>.log` (`bridge-modbus_tcp_slave.log` for Modbus); an
+  old `bridge.log` is left as it is. The download is named `<pantin>-bridge-<kind>.log`,
+  `pantin bridge-log` takes `--transport <kind>` (required when several kinds exist), and the
+  routes `.../bridge` become `GET .../bridges`, `PUT .../bridges/:kind` and
+  `GET .../bridges/:kind/log`. The Modbus card shows the reason a module is not connected.
+  The core accepts `--opcua-bridge <entry>` and `--opcua-pki-dir <folder>`; the OPC UA bridge
+  itself arrives later, so the OPC UA kind stays unavailable. The OPC UA status carries
+  `clientCertificate`, and a stored OPC UA password is forgotten when its module's target
+  changes.
+  User guide (FR and EN) updated; the bridge screenshots are unchanged in content.
+
 - Breaking (0.2), ADR 0065 S1: the tag bus is at version 2. A version 1 `plc` hello is refused
   with close code 4001, and a `plc` hello without a transport is a malformed message (4000).
 - Viewer (ADR 0064 point 14): the I/O view is laid out by module. A strip of modules sits on

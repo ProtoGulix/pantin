@@ -20,6 +20,7 @@ from pantin_bridge.errors import (
     ProtocolError,
 )
 from pantin_bridge.io_mapping import IoModule
+from pantin_bridge.io_modbus import MODBUS_TCP_SLAVE_KIND
 
 MAX_LINE_BYTES = 4096
 
@@ -59,6 +60,7 @@ def encode_ready(listen: str, modules: Sequence[IoModule]) -> str:
     return _encode(
         {
             "event": "ready",
+            "transport": MODBUS_TCP_SLAVE_KIND,
             "listen": listen,
             "modules": [{"key": module.key, "port": module.port} for module in modules],
         }
@@ -66,7 +68,17 @@ def encode_ready(listen: str, modules: Sequence[IoModule]) -> str:
 
 
 def _exiting_line(kind: ExitKind, message: str) -> str:
-    return _encode({"event": "exiting", "kind": kind.value, "message": message})
+    # This bridge has no server certificate and no per-module failure: both stay null (the
+    # OPC UA bridge fills them, ADR 0065 point 7).
+    return _encode(
+        {
+            "event": "exiting",
+            "kind": kind.value,
+            "message": message,
+            "certificate": None,
+            "module": None,
+        }
+    )
 
 
 def encode_exiting(kind: ExitKind, message: str) -> str:

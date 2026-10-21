@@ -136,7 +136,7 @@ Sous la ligne d'état, selon le contexte :
 | --- | --- |
 | Note | Raison pour laquelle le bouton ou les réglages sont inactifs : « Démarrez le cœur avec `--bridge-python <chemin>` (`pnpm setup:python`). » quand le pont est indisponible, ou **Un pont lancé hors de Pantin est connecté.** quand un autre pont tient déjà la place. |
 | Erreur réseau | Le refus du cœur (adresse non privée, liste invalide...) s'affiche en rouge, précédé d'une croix dans un octogone, et force l'ouverture des réglages réseau. |
-| Lignes de modules | Une ligne par module d'E/S : pastille, **clé** du module (`m1`...), adresse `adresse:port` que l'automate doit viser, et statut en texte : **pont arrêté**, **en attente de l'automate** ou **automate connecté**. Pont arrêté : les lignes viennent de la liste d'E/S et l'adresse est celle qu'un démarrage utiliserait. Pont en marche : elles viennent de ce que le cœur rapporte. |
+| Lignes de modules | Une ligne par module d'E/S : pastille, **clé** du module (`m1`...), adresse `adresse:port` que l'automate doit viser, et statut en texte : **pont arrêté**, **en attente de l'automate** ou **automate connecté**. Quand l'automate n'est pas connecté, la raison s'ajoute en toutes lettres (par exemple **connexion fermée par l'automate** ou **l'automate ne répond plus**). Pont arrêté : les lignes viennent de la liste d'E/S et l'adresse est celle qu'un démarrage utiliserait. Pont en marche : elles viennent de ce que le cœur rapporte. |
 | **Aucun module : configurez les E/S** | Remplace les lignes quand la liste d'E/S n'a aucun module. |
 | **Toute modification des E/S arrête le pont.** | Rappel affiché pendant que le pont est en marche. |
 | **n tag(s) forcé(s) : l'automate ne peut pas les écrire** et bouton **Relâcher tout (n)** | Affichés quand le pont est en marche et que des tags sont forcés depuis le viewer. Le bouton les rend tous à l'automate. |
@@ -517,7 +517,7 @@ Trois bascules, groupe **Niveaux affichés**, filtrent par niveau : **Erreur**, 
 | Contrôle | Ce qu'il fait | Grisé quand |
 | --- | --- | --- |
 | **Copier** | Copie tout le fichier brut dans le presse-papiers, y compris les lignes anciennes non affichées ; le bouton dit **Copié**, ou **Copie impossible** si le navigateur refuse. | Jamais |
-| **Télécharger** | Télécharge le fichier brut complet, nommé `<pantinId>-bridge.log`. | Jamais |
+| **Télécharger** | Télécharge le fichier brut complet, nommé `<pantinId>-bridge-<type>.log` (par exemple `m-bridge-modbus_tcp_slave.log`). | Jamais |
 | **Fermer** | Ferme la fenêtre. <kbd>Échap</kbd> fait la même chose. | Jamais |
 
 Messages de la fenêtre : **Lecture du journal…** pendant la lecture ; **Pas encore de journal : il se remplit dès que le pont démarre.** quand le fichier n'existe pas ; **Lecture du journal impossible : …** en cas d'erreur ; **n entrées plus anciennes ne sont pas affichées : téléchargez le journal pour les avoir.** quand le fichier est plus long que la fenêtre.
@@ -526,7 +526,7 @@ Ne confondez pas avec le volet **Journal du pont** du bloc d'échec, qui ne mont
 
 #### Le fichier de journal
 
-Le cœur écrit un fichier par Pantin : `<dossier des Pantins>/.logs/<pantinId>/bridge.log` (option `--logs-dir` du cœur pour changer le dossier `.logs`). Au-delà de 1 Mo, il devient `bridge.log.1` (le précédent est remplacé) et un nouveau fichier commence. Ce dossier ne fait partie d'aucun Pantin : si le dossier des Pantins est un dépôt git, ajoutez `.logs/` à son `.gitignore` (le cœur n'écrit pas ce fichier).
+Le cœur écrit un fichier par Pantin et par transport : `<dossier des Pantins>/.logs/<pantinId>/bridge-<type>.log`, par exemple `bridge-modbus_tcp_slave.log` pour le pont Modbus (option `--logs-dir` du cœur pour changer le dossier `.logs`). Un ancien `bridge.log` d'une version précédente reste tel quel, sans être migré ni lu. Au-delà de 1 Mo, un fichier devient `bridge-<type>.log.1` (le précédent est remplacé) et un nouveau fichier commence. Ce dossier ne fait partie d'aucun Pantin : si le dossier des Pantins est un dépôt git, ajoutez `.logs/` à son `.gitignore` (le cœur n'écrit pas ce fichier).
 
 Chaque ligne commence par l'heure UTC : `CORE INFO …` pour les événements du cœur (demande de démarrage, prêt, arrêt), `CORE ERROR …` pour un échec, `BRIDGE …` pour les lignes écrites par le pont. Le pont Modbus y note les connexions acceptées et fermées (avec la raison et le nombre de requêtes servies et refusées) et chaque requête refusée distincte, par exemple :
 
@@ -534,7 +534,7 @@ Chaque ligne commence par l'heure UTC : `CORE INFO …` pour les événements du
 Module m1 refused a request from 10.0.0.5: unit 2, function 6, address 0, quantity 1 -> GATEWAY_NO_RESPONSE (11); this module answers unit 1.
 ```
 
-Seule la première requête refusée identique est notée par connexion ; le total est dans la ligne de fermeture. Le fichier lui-même est aussi servi par `GET /api/pantins/:pantinId/bridge/log` (avec `?download=1` pour le télécharger) et se lit sans le cœur avec la commande `pnpm pantin bridge-log` (voir [Connecter un automate](/guide/connect-a-plc#lire-le-journal-du-pont)). Un pont lancé hors de Pantin n'a pas de fichier.
+Seule la première requête refusée identique est notée par connexion ; le total est dans la ligne de fermeture. Le fichier lui-même est aussi servi par `GET /api/pantins/:pantinId/bridges/:kind/log` (avec `?download=1` pour le télécharger) et se lit sans le cœur avec la commande `pnpm pantin bridge-log` (voir [Connecter un automate](/guide/connect-a-plc#lire-le-journal-du-pont)). Un pont lancé hors de Pantin n'a pas de fichier.
 
 ## La console
 

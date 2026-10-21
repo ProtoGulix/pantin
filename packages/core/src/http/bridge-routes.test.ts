@@ -1,4 +1,4 @@
-import { type BridgeStatus, BridgeStatusSchema } from "@pantin/protocol";
+import { type BridgeStatus, BridgeStatusSchema, ModbusBridgeStatusSchema } from "@pantin/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createFakeSpawner, type FakeSpawner } from "../test-support/fake-bridge-child.ts";
 import { copyPlcCylinder, freePort, PLC_CYLINDER_ID } from "../test-support/plc-cylinder.ts";
@@ -10,7 +10,7 @@ import {
 } from "../test-support/test-server.ts";
 import type { RunningPantinServer } from "./server.ts";
 
-const BRIDGE_PATH = `/api/pantins/${PLC_CYLINDER_ID}/bridge`;
+const BRIDGE_PATH = `/api/pantins/${PLC_CYLINDER_ID}/bridges/modbus_tcp_slave`;
 const START = { running: true, listen: "127.0.0.1", allow: [] };
 
 let workspace: TestWorkspace;
@@ -35,7 +35,16 @@ async function startServer(spawner?: FakeSpawner): Promise<RunningPantinServer> 
     hostAddresses: () => ["127.0.0.1", "192.168.1.20"],
     ...(spawner === undefined
       ? {}
-      : { bridgePython: "/venv/bin/python", bridgeSpawn: spawner.spawn }),
+      : {
+          bridgeLaunchers: [
+            {
+              kind: "modbus_tcp_slave",
+              command: "/venv/bin/python",
+              args: ["-m", "pantin_bridge"],
+            },
+          ],
+          bridgeSpawn: spawner.spawn,
+        }),
   });
   return server;
 }
@@ -57,15 +66,30 @@ async function call(
   return { status: response.status, json: await response.json() };
 }
 
+// GET .../bridges, the Modbus entry of its list (the one route that reads a status).
+async function getModbusStatus(
+  headers: Record<string, string> = {},
+): Promise<{ status: number; json: unknown }> {
+  const response = await fetch(
+    `http://127.0.0.1:${server?.address.port}/api/pantins/${PLC_CYLINDER_ID}/bridges`,
+    { headers },
+  );
+  const body = (await response.json()) as { bridges?: { transport: string }[] };
+  return {
+    status: response.status,
+    json: body.bridges?.find((bridge) => bridge.transport === "modbus_tcp_slave") ?? body,
+  };
+}
+
 function errorCodeOf(json: unknown): string | undefined {
   return (json as { error?: { code?: string } }).error?.code;
 }
 
 describe("without --bridge-python", () => {
-  it("reports the bridge as unavailable and lists the listen choices", async () => {
+  it("reports the Modbus bridge as unavailable and lists the listen choices", async () => {
     await startServer();
-    const { status, json } = await call("GET");
-    const body = BridgeStatusSchema.parse(json);
+    const { status, json } = await getModbusStatus();
+    const body = ModbusBridgeStatusSchema.parse(json);
     expect(status).toBe(200);
     expect(body).toMatchObject({ availability: "unavailable", state: "stopped", network: null });
     expect(body.listenChoices).toEqual(["127.0.0.1", "192.168.1.20"]);
@@ -93,7 +117,7 @@ describe("with a bridge Python", () => {
     expect(spawner.calls[0]?.args).toContain("--status-lines");
     const stopped = await call("PUT", { running: false });
     expect(BridgeStatusSchema.parse(stopped.json).state).toBe("stopped");
-    expect((await call("GET")).status).toBe(200);
+    expect((await getModbusStatus()).status).toBe(200);
   });
 
   it("starts and stops through the cloudflare exposure (ADR 0050, 2026-10-16 amendment)", async () => {
@@ -103,7 +127,7 @@ describe("with a bridge Python", () => {
     expect((await call("PUT", START, exposed)).status).toBe(200);
     expect(spawner.calls).toHaveLength(1);
     expect((await call("PUT", { running: false }, exposed)).status).toBe(200);
-    expect((await call("GET", undefined, exposed)).status).toBe(200);
+    expect((await getModbusStatus(exposed)).status).toBe(200);
   });
 });
 
@@ -173,11 +197,17 @@ describe("with a bridge Python, refusals", () => {
   it("answers 404 for an unknown Pantin", async () => {
     await startServer(createFakeSpawner());
     const response = await fetch(
-      `http://127.0.0.1:${server?.address.port}/api/pantins/nobody/bridge`,
+      `http://127.0.0.1:${server?.address.port}/api/pantins/nobody/bridges`,
     );
     expect(response.status).toBe(404);
   });
 });
+
+function modbusStates(client: SseClient | undefined): string[] {
+  return (client?.bridges ?? []).flatMap(({ bridges }) =>
+    bridges.filter((status) => status.transport === "modbus_tcp_slave").map(({ state }) => state),
+  );
+}
 
 describe("the bridge event of the pose stream", () => {
   it("is sent when the stream opens and on each change", async () => {
@@ -185,19 +215,21 @@ describe("the bridge event of the pose stream", () => {
     const running = await startServer(spawner);
     stream = await openSse(running.address.port, `/api/pantins/${PLC_CYLINDER_ID}/pose/stream`);
     await stream.waitUntil(() => stream?.bridges.length === 1);
-    expect(stream.bridges[0]?.state).toBe("stopped");
+    expect(stream.bridges[0]?.bridges.map((status) => status.transport)).toEqual([
+      "modbus_tcp_slave",
+      "opcua_client",
+    ]);
+    expect(modbusStates(stream)).toEqual(["stopped"]);
     await call("PUT", START);
     spawner.children[0]?.writeStdout(
-      `${JSON.stringify({ event: "ready", listen: "127.0.0.1", modules: [{ key: "m1", port: 1502 }] })}\n`,
+      `${JSON.stringify({ event: "ready", transport: "modbus_tcp_slave", listen: "127.0.0.1", modules: [{ key: "m1", port: 1502 }] })}\n`,
     );
-    await stream.waitUntil(() => stream?.bridges.at(-1)?.state === "running");
-    const last: BridgeStatus | undefined = stream.bridges.at(-1);
-    expect(last?.modules).toEqual([{ key: "m1", port: 1502, plcConnected: false }]);
-    expect(stream.bridges.map((status) => status.state)).toEqual([
-      "stopped",
-      "starting",
-      "running",
+    await stream.waitUntil(() => modbusStates(stream).at(-1) === "running");
+    const last: BridgeStatus | undefined = stream.bridges.at(-1)?.bridges[0];
+    expect(last?.modules).toEqual([
+      { key: "m1", endpoint: "127.0.0.1:1502", plcConnected: false, reason: null },
     ]);
+    expect(modbusStates(stream)).toEqual(["stopped", "starting", "running"]);
   });
 });
 
@@ -229,14 +261,14 @@ describe("the bridge log route", () => {
 
     const download = await getLog(`${BRIDGE_PATH}/log?download=1`);
     expect(download.headers.get("content-disposition")).toBe(
-      `attachment; filename="${PLC_CYLINDER_ID}-bridge.log"`,
+      `attachment; filename="${PLC_CYLINDER_ID}-bridge-modbus_tcp_slave.log"`,
     );
     expect(await download.text()).toBe(text);
   });
 
   it("answers 404 for an unknown Pantin", async () => {
     await startServer(createFakeSpawner());
-    expect((await getLog("/api/pantins/nobody/bridge/log")).status).toBe(404);
+    expect((await getLog("/api/pantins/nobody/bridges/modbus_tcp_slave/log")).status).toBe(404);
   });
 
   it("keeps the .logs folder out of the Pantin list", async () => {

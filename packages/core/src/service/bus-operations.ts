@@ -1,4 +1,5 @@
-import type { ConsoleEvent, PantinId, PlcModuleLossReason, TransportKind } from "@pantin/protocol";
+import type { ConsoleEvent, PantinId, TransportKind } from "@pantin/protocol";
+import type { PlcModuleState } from "../domain/bridge-status.ts";
 import type { FeedSource } from "../domain/bus-feed.ts";
 import { readConsoleAfter } from "../domain/console-buffer.ts";
 import {
@@ -58,7 +59,7 @@ async function bridgeConnected(
   if (!openPantin.clock.running) {
     events.push(pausedWithBridgeEvent());
   }
-  recordPlcLinkEvents(context, pantinId, openPantin, events);
+  recordPlcLinkEvents(context, pantinId, transport, openPantin, events);
 }
 
 // The bridge's bus connection closed or missed its pongs: the PLC is gone, so the bit
@@ -75,11 +76,13 @@ async function bridgeDisconnected(
   openPantin.connectedPlcTransports.delete(transport);
   openPantin.bridgeConnected = openPantin.connectedPlcTransports.size > 0;
   for (const key of lost.moduleKeys) {
-    openPantin.plcConnectedModules.delete(key);
+    openPantin.plcModules.delete(key);
   }
   const { tagsToZero } = lost;
   zeroBitCommands(openPantin, tagsToZero);
-  recordPlcLinkEvents(context, pantinId, openPantin, [bridgeEvent({ connected: false, reason })]);
+  recordPlcLinkEvents(context, pantinId, transport, openPantin, [
+    bridgeEvent({ connected: false, reason }),
+  ]);
   context.onBridgeActivity(pantinId);
 }
 
@@ -87,18 +90,17 @@ async function bridgeDisconnected(
 async function plcModuleStatus(
   context: ServiceContext,
   pantinId: PantinId,
+  transport: TransportKind,
   module: string,
-  status: { connected: true } | { connected: false; reason: PlcModuleLossReason },
+  status: PlcModuleState,
   tagsToZero: readonly string[],
 ): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
-  if (status.connected) {
-    openPantin.plcConnectedModules.add(module);
-  } else {
-    openPantin.plcConnectedModules.delete(module);
+  openPantin.plcModules.set(module, status);
+  if (!status.connected) {
     zeroBitCommands(openPantin, tagsToZero);
   }
-  recordPlcLinkEvents(context, pantinId, openPantin, [plcModuleEvent(module, status)]);
+  recordPlcLinkEvents(context, pantinId, transport, openPantin, [plcModuleEvent(module, status)]);
   context.onBridgeActivity(pantinId);
 }
 
@@ -117,9 +119,10 @@ export function busOperations(context: ServiceContext) {
     ) => bridgeDisconnected(context, pantinId, transport, reason, lost),
     plcModuleStatus: (
       pantinId: PantinId,
+      transport: TransportKind,
       module: string,
-      status: { connected: true } | { connected: false; reason: PlcModuleLossReason },
+      status: PlcModuleState,
       tagsToZero: readonly string[],
-    ) => plcModuleStatus(context, pantinId, module, status, tagsToZero),
+    ) => plcModuleStatus(context, pantinId, transport, module, status, tagsToZero),
   };
 }

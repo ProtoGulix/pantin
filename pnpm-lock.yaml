@@ -226,6 +226,9 @@ importers:
       '@pantin/drive-types':
         specifier: workspace:*
         version: link:../drive-types
+      '@pantin/network-address':
+        specifier: workspace:*
+        version: link:../network-address
       '@pantin/plc-symbol-formats':
         specifier: workspace:*
         version: link:../plc-symbol-formats
@@ -251,6 +254,12 @@ importers:
 
   packages/drive-types:
     dependencies:
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
+  packages/network-address:
+    devDependencies:
       zod:
         specifier: 4.6.5
         version: 4.6.5

@@ -70,19 +70,44 @@ function watchOutput(child: ChildProcess, handlers: BridgeProcessHandlers): () =
   };
 }
 
+/** What to run: `environment` replaces the inherited one, `stdinLine` is written once. */
+export type BridgeProgram = {
+  command: string;
+  args: readonly string[];
+  environment: Readonly<Record<string, string>> | undefined;
+  // One line for the child's stdin, which is then closed; null leaves stdin unconnected.
+  stdinLine: string | null;
+};
+
+// The child reads one line then EOF (ADR 0065 point 5). A write error means the child is
+// already gone: its exit is reported on its own, so the error only goes to the log, and the
+// message of a write error never holds the text written.
+function handOverStdin(child: ChildProcess, line: string, handlers: BridgeProcessHandlers): void {
+  child.stdin?.on("error", (error) =>
+    handlers.onLogLine(`Cannot write to the bridge's stdin (${error.message}).`),
+  );
+  child.stdin?.end(`${line}\n`);
+}
+
 export function startBridgeProcess(
   spawn: ProcessSpawner,
-  command: string,
-  args: readonly string[],
+  program: BridgeProgram,
   killGraceMs: number,
   handlers: BridgeProcessHandlers,
 ): BridgeProcess {
   let child: ChildProcess;
   try {
-    child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], shell: false });
+    child = spawn(program.command, program.args, {
+      stdio: [program.stdinLine === null ? "ignore" : "pipe", "pipe", "pipe"],
+      shell: false,
+      ...(program.environment === undefined ? {} : { env: program.environment }),
+    });
   } catch (error) {
     handlers.onSpawnError(error instanceof Error ? error : new Error(String(error)));
     return { stop: () => undefined, exited: Promise.resolve() };
+  }
+  if (program.stdinLine !== null) {
+    handOverStdin(child, program.stdinLine, handlers);
   }
   let killTimer: NodeJS.Timeout | undefined;
   const exited = new Promise<void>((resolveExited) => {

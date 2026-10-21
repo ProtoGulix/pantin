@@ -1,7 +1,8 @@
 import type { RuleModule, TransportProblem } from "../rule-types.ts";
 import type { SignalShape } from "../schema-common.ts";
-import { isOpcuaIecTypeAllowed, OPCUA_IEC_TYPES_BY_SIGNAL_TYPE } from "./iec-types.ts";
+import { OPCUA_IEC_TYPES_BY_SIGNAL_TYPE } from "./iec-types.ts";
 import { isExplicitIdentifierValid } from "./rules-identifiers.ts";
+import { isOpcuaIecTypeAllowed } from "./rules-iec-types.ts";
 import { OPCUA_CLIENT_KIND, type OpcuaClientTransport } from "./schema.ts";
 
 // The OPC UA rules of one module (ADR 0065 point 2). `gvl_name_mismatch` compares several

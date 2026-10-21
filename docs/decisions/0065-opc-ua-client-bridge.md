@@ -627,3 +627,53 @@ S2 to S5 rely on them. They add detail and contradict no decision.
 - **Deferred to S2:** the supervisor is still per Pantin and Modbus. `bridgeConnected` (the
   "external bridge" fact) means any transport's bridge, held with a set of connected
   transports. S2 makes it per kind with the supervisor.
+
+## Amendment of 2026-10-21, S2
+
+Written when slice S2 was built (sub-slices S2a network-address, S2b supervisor, routes and
+logs, S2c the core side of an OPC UA start, S2d the viewer). Settled readings, adding detail
+and contradicting no decision.
+
+- **Point 7, `BridgeStatus`:** a union on `transport`. Common fields: `availability`,
+  `state`, `modules: [{key, endpoint, plcConnected, reason}]`, `failure`, `log`,
+  `externalBridgeConnected`. Modbus adds `network: {listen, allow} | null` and
+  `listenChoices`; OPC UA adds `network: {targets} | null` and has no `listenChoices`.
+  `GET .../bridges` lists the kinds in `TRANSPORT_KINDS` order. An unknown `:kind` is a 404
+  that lists the known kinds.
+- **Endpoints:** Modbus `<listen>:<port>`, OPC UA `opc.tcp://<target>:<port><endpointPath>`,
+  IPv6 in brackets. The status endpoints come from the bridge's `ready` line.
+- **Point 4, kind names in the core:** besides `main.ts` (launchers), the status and start
+  plan files (`domain/bridge-kinds.ts`, `domain/bridge-status.ts`) name kinds, since each
+  kind's start request and status part differ. The checks themselves read
+  `TransportRules.network` and `bridgeModules`.
+- **Console and log lines:** core lines carry a transport or null; null goes to the log of
+  every active kind of the Pantin.
+- **Point 7, CLI:** `bridge-log` without any file and without `--transport` is an error, even
+  with `--follow`; following a file not yet written needs `--transport`.
+- **Point 8, scope:** it follows the address. A loopback address is `local` (127.0.0.1 and
+  ::1 only), anything else is `lan`. Through the exposure only exactly 127.0.0.1 and ::1
+  pass; any other target, malformed ones included, gets the 403.
+- **Check order** of an OPC UA start: exposure (403), mapping (409), target keys (400),
+  addresses (400), security (a `user` login with `None` toward a lan target, 400), passwords
+  (400), the `plc` slot, the cap.
+- **Point 7, `clientCertificate`:** the OPC UA `BridgeStatus` carries
+  `clientCertificate: {subject, applicationUri, sha256, sha1} | null`, read from the `ready`
+  line. It is null until a bridge of this core's run was ready once, then it stays after a
+  stop or a failure (and across a restart): the user needs the thumbprints to trust Pantin in
+  the PLC, most of all after a refused connection. The Modbus status has no such field.
+- **Point 9, password bound to target:** a stored password is kept only while its module's
+  target is the one it was given with (compared as typed in the request). A start with
+  another target and no new password for that module forgets the stored one, also when the
+  start is then refused, so a `user` module gets the 400 "needs a password" and the old
+  password never reaches the new target's stdin.
+- **Normalised addresses:** an accepted target is passed in the canonical uncompressed form
+  of `@pantin/network-address` (`::1` becomes `0:0:0:0:0:0:0:1`). The bridge must accept it.
+- **Point 5, stdin:** the password line is written at every OPC UA start, `{"passwords":{}}`
+  when no module logs in. A relative `XDG_STATE_HOME` is ignored for the PKI default.
+- **Point 5, environment:** the allowlist applies to the OPC UA child. The Python child still
+  inherits the core's environment, as before this ADR.
+- **Left for S3:** `pnpm serve` passes `--opcua-bridge` once the entry exists;
+  `PANTIN_OPCUA_BRIDGE` is not read yet; `opcua-bridge` joins `NETWORK_ADDRESS_USERS` in
+  `.dependency-cruiser.cjs`.
+- **NOT VERIFIED:** the stdin write-error path; the PKI "inside the Pantins folder" check on
+  Windows.

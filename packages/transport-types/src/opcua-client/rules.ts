@@ -14,8 +14,8 @@ import type {
   TransportConfig,
   TransportPatch,
 } from "../schemas.ts";
-import { defaultOpcuaIecType, isOpcuaIecTypeAllowed } from "./iec-types.ts";
 import { resolvedIdentifier } from "./rules-identifiers.ts";
+import { defaultOpcuaIecType, isOpcuaIecTypeAllowed } from "./rules-iec-types.ts";
 import { validateOpcuaModule } from "./rules-validation.ts";
 import {
   OPCUA_CLIENT_KIND,

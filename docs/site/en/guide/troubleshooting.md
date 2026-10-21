@@ -88,7 +88,7 @@ restarts on its own.
 | "PLC bridge unavailable: start the core with --bridge-python…" | Same cause, when pressing **Start** | Same |
 | An error message when clicking **Start**, with the first problems of the mapping | The mapping is missing or invalid (the core refuses with a conflict error) | Open **I/O config**, fix the **Problems**, then try again |
 | **Start** greyed out and "A bridge started outside Pantin is connected." | A bridge started by hand already holds the connection of this Pantin | Stop that bridge (Ctrl-C in its terminal) |
-| "This Pantin's bridge is already running or starting." | A bridge of this Pantin is already running | Use **Stop** then **Start** |
+| "This Pantin's Modbus TCP slave bridge is already running or starting." (the name is that of the bridge's transport) | A bridge of this Pantin is already running | Use **Stop** then **Start** |
 | "Module m1 uses 127.0.0.1:4800, where the core itself listens. Change the module's port in io.json." | The port of the module is the one of the core | Change the **Port** of the module in the I/O view |
 | "Module m1 uses … already held by the bridge of Pantin …" | Two Pantins have the same port on the same address | Change the **Port** of one of the modules |
 | "The core already supervises 4 bridges. Stop one first." | Four bridges are already running | Stop one |

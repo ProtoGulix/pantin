@@ -119,6 +119,7 @@ describe("createPoseStreamClient bridge events", () => {
     const { client, sources, bridges, invalid } = setUp();
     client.follow("p");
     const status = {
+      transport: "modbus_tcp_slave",
       availability: "available",
       state: "stopped",
       network: null,
@@ -128,10 +129,23 @@ describe("createPoseStreamClient bridge events", () => {
       externalBridgeConnected: false,
       listenChoices: ["127.0.0.1"],
     };
-    sources[0]?.emit("bridge", JSON.stringify(status));
-    sources[0]?.emit("bridge", JSON.stringify({ ...status, state: "exploded" }));
+    const opcuaStatus = {
+      transport: "opcua_client",
+      availability: "unavailable",
+      state: "stopped",
+      network: null,
+      clientCertificate: null,
+      modules: [],
+      failure: null,
+      log: [],
+      externalBridgeConnected: false,
+    };
+    // The whole list is delivered, every kind: the model picks what the cards show.
+    sources[0]?.emit("bridge", JSON.stringify({ bridges: [status, opcuaStatus] }));
+    sources[0]?.emit("bridge", JSON.stringify({ bridges: [opcuaStatus] }));
+    sources[0]?.emit("bridge", JSON.stringify({ bridges: [{ ...status, state: "exploded" }] }));
     sources[0]?.emit("bridge", "not json");
-    expect(bridges).toEqual([status]);
+    expect(bridges).toEqual([{ bridges: [status, opcuaStatus] }, { bridges: [opcuaStatus] }]);
     expect(invalid).toHaveLength(2);
     expect(invalid[1]).toContain("bridge");
   });

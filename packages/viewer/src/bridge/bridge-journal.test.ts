@@ -73,7 +73,7 @@ describe("journalViewOf", () => {
     const view = journalViewOf({ ...open, text: "a\nb\n" }, "press", t);
     expect([view?.copyText, view?.downloadUrl]).toEqual([
       "a\nb\n",
-      "/api/pantins/press/bridge/log?download=1",
+      "/api/pantins/press/bridges/modbus_tcp_slave/log?download=1",
     ]);
   });
 

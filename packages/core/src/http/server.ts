@@ -3,7 +3,11 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { MAX_IMPORT_BYTES, type PantinId } from "@pantin/protocol";
 import { createBridgeLogFile } from "../bridge/bridge-log-file.ts";
-import { type BridgeSupervisor, createBridgeSupervisor } from "../bridge/bridge-supervisor.ts";
+import {
+  type BridgeLauncher,
+  type BridgeSupervisor,
+  createBridgeSupervisor,
+} from "../bridge/bridge-supervisor.ts";
 import { listHostAddresses } from "../bridge/host-addresses.ts";
 import { nodeLogFileSystem } from "../bridge/node-log-file-system.ts";
 import { type BusEndpoint, createBusEndpoint } from "../bus/bus-endpoint.ts";
@@ -56,9 +60,9 @@ export type PantinServerOptions = {
   // The physics engine (ADR 0043 point 9); main.ts loads Rapier and passes it.
   physicsWorldFactory?: PhysicsWorldFactory;
   stepConverterLimits?: Partial<ProcessLimits>;
-  // Python interpreter of the PLC bridge's environment (ADR 0050 point 1);
-  // without it the bridge routes answer bridge_unavailable.
-  bridgePython?: string;
+  // The program of each kind of PLC bridge the core can start (ADR 0065 point 4);
+  // a kind without one answers bridge_unavailable. Built by main.ts.
+  bridgeLaunchers?: readonly BridgeLauncher[];
   // Starts the bridge child; Node's `spawn` by default, a fake in tests.
   bridgeSpawn?: ProcessSpawner;
   // Delays of the bridge supervisor (ADR 0050 point 3); 15 s and 3 s by default.
@@ -66,7 +70,7 @@ export type PantinServerOptions = {
   bridgeKillGraceMs?: number;
   // The host's interface addresses; `os.networkInterfaces()` by default.
   hostAddresses?: () => readonly string[];
-  // Bridge log files (ADR 0054): <logs dir>/<pantinId>/bridge.log, `.logs` under the Pantins by default.
+  // Bridge log files (ADR 0054): <logs dir>/<pantinId>/bridge-<kind>.log, `.logs` under the Pantins by default.
   logsDirectory?: string;
   // Receives each line the bridge writes, to copy it to the core's stderr.
   reportBridgeLine?: (pantinId: string, line: string) => void;
@@ -119,7 +123,7 @@ function createConfiguredStepConverter(options: PantinServerOptions): StepConver
 
 function poseSourceOf(service: PantinService, bridge: BridgeSupervisor): PoseSource {
   return {
-    bridge: bridge.status,
+    bridges: bridge.statuses,
     stepCount: service.peekStepCount,
     snapshot: service.peekPoseSnapshot,
     clock: service.peekClock,
@@ -149,7 +153,8 @@ function serviceOptionsOf(
         }),
     reportError: options.reportError,
     onBridgeActivity: (pantinId) => bridge().refresh(pantinId),
-    writeBridgeCoreLine: (pantinId, level, text) => bridge().logCoreEvent(pantinId, level, text),
+    writeBridgeCoreLine: (pantinId, transport, level, text) =>
+      bridge().logCoreEvent(pantinId, transport, level, text),
   };
 }
 
@@ -158,7 +163,7 @@ function bridgeSupervisorOf(
   parts: { service: PantinService; server: Server; onChange: (pantinId: PantinId) => void },
 ): BridgeSupervisor {
   return createBridgeSupervisor({
-    pythonPath: options.bridgePython,
+    launchers: options.bridgeLaunchers ?? [],
     spawn: options.bridgeSpawn ?? spawn,
     service: parts.service,
     // listen() on a TCP host and port always yields an AddressInfo, never a string.

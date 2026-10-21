@@ -1,4 +1,4 @@
-import type { BridgeStatus } from "@pantin/protocol";
+import type { ModbusBridgeStatus } from "@pantin/protocol";
 import {
   MODULE_CONNECTION_KEYS,
   moduleConnection,
@@ -59,7 +59,7 @@ function assignTarget(state: ViewerState, t: Translate): { module: string | null
 
 interface TagContext {
   target: ReturnType<typeof assignTarget>;
-  bridgeStatus: BridgeStatus | null;
+  bridgeStatus: ModbusBridgeStatus | null;
   labels: ReadonlyMap<string, string>;
   t: Translate;
 }
@@ -108,7 +108,7 @@ function tagView(tag: ElementTag, context: TagContext): InspectorIoTag {
 export function buildInspectorIoView(
   state: ViewerState,
   t: Translate,
-  bridgeStatus: BridgeStatus | null = null,
+  bridgeStatus: ModbusBridgeStatus | null = null,
   labels: ReadonlyMap<string, string> = new Map(),
 ): InspectorIoView | null {
   const owner = ownerOfSelection(state.selection);

@@ -1,5 +1,6 @@
 import {
   BRIDGE_MAX_LOG_LINE_CHARACTERS,
+  type BridgeNetwork,
   type ConsoleEvent,
   type PlcModuleLossReason,
 } from "@pantin/protocol";
@@ -65,28 +66,36 @@ export function formatBridgeLogLine(time: Date, line: string): string {
 
 export type CoreLogEntry = { level: BridgeLogLevel; text: string };
 
+// The settings of a start, without any password (ADR 0065 point 9: none is in `network`).
+function describeStartSettings(network: BridgeNetwork | null): string {
+  if (network === null) {
+    return "no settings";
+  }
+  if ("targets" in network) {
+    const targets = Object.entries(network.targets).map(([key, target]) => `${key}=${target}`);
+    return `targets ${targets.length === 0 ? "none" : targets.join(", ")}`;
+  }
+  const allow = network.allow.length === 0 ? "none" : network.allow.join(", ");
+  return `listen ${network.listen}, allow ${allow}`;
+}
+
 // What the core says about a change of the bridge's state; undefined when the
 // event changed nothing worth a line (a late event of an old child).
 export function describeBridgeTransition(
   before: BridgeMachineState,
   after: BridgeMachineState,
   event: BridgeEvent,
-  network: { listen: string; allow: readonly string[] } | null,
+  network: BridgeNetwork | null,
 ): CoreLogEntry | undefined {
   if (after.phase === "failed" && before.phase !== "failed") {
     const { kind, message } = after.failure;
     return { level: "error", text: `Bridge failed (${kind}): ${message}` };
   }
   if (event.type === "start_requested" && after.phase === "starting") {
-    const allow =
-      network === null || network.allow.length === 0 ? "none" : network.allow.join(", ");
-    return {
-      level: "info",
-      text: `Start requested: listen ${network?.listen ?? "?"}, allow ${allow}.`,
-    };
+    return { level: "info", text: `Start requested: ${describeStartSettings(network)}.` };
   }
   if (event.type === "ready" && after.phase === "running") {
-    const modules = after.modules.map(({ key, port }) => `${key}:${port}`).join(", ");
+    const modules = after.modules.map(({ key, endpoint }) => `${key} at ${endpoint}`).join(", ");
     return { level: "info", text: `Bridge ready: modules ${modules === "" ? "none" : modules}.` };
   }
   if (event.type === "stop_requested" && after.phase === "stopping") {

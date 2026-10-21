@@ -8,8 +8,12 @@ function bench() {
   const lines: string[] = [];
   const context = {
     wallClock: () => new Date("2026-10-18T10:00:00.000Z"),
-    writeBridgeCoreLine: (pantinId: string, level: string, text: string) =>
-      lines.push(`${pantinId} ${level} ${text}`),
+    writeBridgeCoreLine: (
+      pantinId: string,
+      transport: string | null,
+      level: string,
+      text: string,
+    ) => lines.push(`${pantinId} ${transport ?? "any"} ${level} ${text}`),
   };
   const openPantin = { console: emptyConsole("console-1"), stepCount: 0 };
   return { context, openPantin, lines };
@@ -23,22 +27,22 @@ describe("recordPlcLinkEvents", () => {
       forcedTagWrittenEvent("verin1.verin1.coil_14", 0, 1),
     ];
 
-    recordPlcLinkEvents(context, "axis", openPantin, events);
+    recordPlcLinkEvents(context, "axis", "modbus_tcp_slave", openPantin, events);
 
     expect(openPantin.console.entries.map((entry) => entry.code)).toEqual([
       "plc_connected",
       "forced_tag_written",
     ]);
     expect(lines).toEqual([
-      "axis info PLC connected to module m1.",
-      "axis error PLC write ignored on forced tag verin1.verin1.coil_14 (forced 0, PLC wrote 1).",
+      "axis modbus_tcp_slave info PLC connected to module m1.",
+      "axis modbus_tcp_slave error PLC write ignored on forced tag verin1.verin1.coil_14 (forced 0, PLC wrote 1).",
     ]);
   });
 
   it("leaves the other events out of the bridge log", () => {
     const { context, openPantin, lines } = bench();
 
-    recordPlcLinkEvents(context, "axis", openPantin, [clockEvent(true, false)]);
+    recordPlcLinkEvents(context, "axis", null, openPantin, [clockEvent(true, false)]);
 
     expect(openPantin.console.entries).toHaveLength(1);
     expect(lines).toEqual([]);

@@ -1,5 +1,6 @@
 import {
   BRIDGE_STREAM_EVENT_NAME,
+  type BridgeListResponse,
   type BridgeStatus,
   CLOCK_STREAM_EVENT_NAME,
   type PantinId,
@@ -38,8 +39,8 @@ export type PoseSource = {
   clock(pantinId: PantinId): SimulationClockState | undefined;
   // Cheap: read after every tick, where `clock` builds a whole state.
   isRunning(pantinId: PantinId): boolean | undefined;
-  // The PLC bridge's status (ADR 0050 point 5).
-  bridge(pantinId: PantinId): BridgeStatus;
+  // The PLC bridges' statuses, one per transport kind (ADR 0050 point 5, ADR 0065 point 7).
+  bridges(pantinId: PantinId): BridgeStatus[];
 };
 
 type PoseStream = {
@@ -58,7 +59,7 @@ export type PoseStreamRegistry = {
   // point 9): sends its clock state, and its poses when `withPose` (a step
   // request moves them while no tick sends anything).
   notifyClockChange(pantinId: PantinId, change: { withPose: boolean }): void;
-  // Sends the bridge status of a Pantin to its streams (ADR 0050 point 5).
+  // Sends the bridge statuses of a Pantin to its streams (ADR 0050 point 5).
   notifyBridgeChange(pantinId: PantinId): void;
   openCount(): number;
   closeAll(): void;
@@ -82,7 +83,7 @@ function sendTo(state: StreamState, snapshot: PoseSnapshot, now: number): void {
 
 function encodeEvent(
   name: string,
-  data: PoseSnapshot | SimulationClockState | BridgeStatus,
+  data: PoseSnapshot | SimulationClockState | BridgeListResponse,
 ): string {
   return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
 }
@@ -95,7 +96,9 @@ function sendClockTo(source: PoseSource, state: StreamState): void {
 }
 
 function sendBridgeTo(source: PoseSource, state: StreamState): void {
-  state.sink.write(encodeEvent(BRIDGE_STREAM_EVENT_NAME, source.bridge(state.pantinId)));
+  state.sink.write(
+    encodeEvent(BRIDGE_STREAM_EVENT_NAME, { bridges: source.bridges(state.pantinId) }),
+  );
 }
 
 function sendCurrentPose(source: PoseSource, state: StreamState, now: number): void {

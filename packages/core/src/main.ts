@@ -2,6 +2,9 @@ import { mkdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
+import type { BridgeLauncher } from "./bridge/bridge-supervisor.ts";
+import { resolveOpcuaLauncher } from "./bridge/opcua-launcher.ts";
 import { readBuildVersion } from "./build-version.ts";
 import { defaultPantinsDirectory } from "./domain/default-directories.ts";
 import {
@@ -21,6 +24,7 @@ const USAGE = [
   "  [--examples-dir <path>]",
   "  [--step-converter-python <python of the step-converter venv>]",
   "  [--bridge-python <python of the bridge venv>] [--logs-dir <path>]",
+  "  [--opcua-bridge <entry file of the OPC UA bridge>] [--opcua-pki-dir <path>]",
 ].join("\n");
 
 function parsePort(text: string | undefined): number {
@@ -34,22 +38,25 @@ function parsePort(text: string | undefined): number {
   return port;
 }
 
-async function resolveViewerDirectory(text: string | undefined): Promise<string | undefined> {
-  if (text === undefined) {
-    return undefined;
-  }
-  const directory = resolve(text);
-  const isDirectory = await stat(directory).then(
-    (stats) => stats.isDirectory(),
+// Only a missing path means "not there"; permission or I/O errors must surface as is.
+async function isExisting(path: string, type: "file" | "directory"): Promise<boolean> {
+  return stat(path).then(
+    (stats) => (type === "file" ? stats.isFile() : stats.isDirectory()),
     (error: unknown) => {
-      // Only a missing path means "build first"; permission or I/O errors must surface as is.
       if (error instanceof Error && "code" in error && error.code === "ENOENT") {
         return false;
       }
       throw error;
     },
   );
-  if (!isDirectory) {
+}
+
+async function resolveViewerDirectory(text: string | undefined): Promise<string | undefined> {
+  if (text === undefined) {
+    return undefined;
+  }
+  const directory = resolve(text);
+  if (!(await isExisting(directory, "directory"))) {
     throw new StartupRefusedError(
       `--viewer-dir "${directory}" is not a directory. Build the viewer first: pnpm --filter @pantin/viewer build.`,
     );
@@ -63,16 +70,7 @@ async function resolveExamplesDirectory(text: string | undefined): Promise<strin
     return undefined;
   }
   const directory = resolve(text);
-  const isDirectory = await stat(directory).then(
-    (stats) => stats.isDirectory(),
-    (error: unknown) => {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-        return false;
-      }
-      throw error;
-    },
-  );
-  if (!isDirectory) {
+  if (!(await isExisting(directory, "directory"))) {
     throw new StartupRefusedError(`--examples-dir "${directory}" is not a directory.`);
   }
   return directory;
@@ -85,21 +83,22 @@ async function requireBridgePython(text: string | undefined): Promise<string | u
     return undefined;
   }
   const path = resolve(text);
-  const isFile = await stat(path).then(
-    (stats) => stats.isFile(),
-    (error: unknown) => {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-        return false;
-      }
-      throw error;
-    },
-  );
-  if (!isFile) {
+  if (!(await isExisting(path, "file"))) {
     throw new StartupRefusedError(
       `--bridge-python "${path}" is not a file. Create the bridge environment first: pnpm setup:python.`,
     );
   }
   return path;
+}
+
+// The program of the Modbus bridge: main.ts is the one place that pairs a kind with a
+// program (ADR 0065 point 4). `-I` ignores PYTHON* variables and the user site.
+function modbusLauncherOf(pythonPath: string): BridgeLauncher {
+  return {
+    kind: MODBUS_TCP_SLAVE_KIND,
+    command: pythonPath,
+    args: ["-I", "-u", "-m", "pantin_bridge"],
+  };
 }
 
 function writeLine(stream: NodeJS.WriteStream, line: string): void {
@@ -136,6 +135,7 @@ type StartupSummary = {
   pantinsDirectory: string;
   stepConverterPython: string | undefined;
   bridgePython: string | undefined;
+  opcuaBridge: string | undefined;
   viewerDirectory: string | undefined;
   examplesDirectory: string | undefined;
 };
@@ -159,6 +159,12 @@ function printStartup(running: RunningPantinServer, summary: StartupSummary): vo
   );
   writeLine(
     process.stdout,
+    summary.opcuaBridge === undefined
+      ? "OPC UA bridge disabled (no --opcua-bridge)"
+      : `OPC UA bridge: ${summary.opcuaBridge}`,
+  );
+  writeLine(
+    process.stdout,
     summary.examplesDirectory === undefined
       ? "Examples disabled (no --examples-dir)"
       : `Examples from ${summary.examplesDirectory}`,
@@ -177,6 +183,8 @@ const COMMAND_LINE_OPTIONS = {
   "examples-dir": { type: "string" },
   "step-converter-python": { type: "string" },
   "bridge-python": { type: "string" },
+  "opcua-bridge": { type: "string" },
+  "opcua-pki-dir": { type: "string" },
   "logs-dir": { type: "string" },
 } as const;
 
@@ -185,7 +193,7 @@ interface OptionalSettings {
   viewerDirectory: string | undefined;
   examplesDirectory: string | undefined;
   stepConverterPython: string | undefined;
-  bridgePython: string | undefined;
+  bridgeLaunchers: BridgeLauncher[];
   logsDirectory: string | undefined;
 }
 
@@ -193,13 +201,13 @@ interface OptionalSettings {
 // that the compiler checks each name and type against PantinServerOptions.
 function optionalServerOptions(settings: OptionalSettings): Partial<PantinServerOptions> {
   const { listen, viewerDirectory, examplesDirectory } = settings;
-  const { stepConverterPython, bridgePython, logsDirectory } = settings;
+  const { stepConverterPython, bridgeLaunchers, logsDirectory } = settings;
   return {
     ...(listen === undefined ? {} : { listen }),
     ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
     ...(examplesDirectory === undefined ? {} : { examplesDirectory }),
     ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
-    ...(bridgePython === undefined ? {} : { bridgePython }),
+    ...(bridgeLaunchers.length === 0 ? {} : { bridgeLaunchers }),
     ...(logsDirectory === undefined ? {} : { logsDirectory }),
   };
 }
@@ -214,6 +222,21 @@ async function main(): Promise<void> {
   const stepConverterPython = values["step-converter-python"];
   const bridgePython = await requireBridgePython(values["bridge-python"]);
   await mkdir(pantinsDirectory, { recursive: true });
+  const opcua = await resolveOpcuaLauncher({
+    entryOption: values["opcua-bridge"],
+    pkiOption: values["opcua-pki-dir"],
+    pantinsDirectory,
+    nodePath: process.execPath,
+    environment: process.env,
+    homeDirectory: homedir(),
+  });
+  if (!opcua.ok) {
+    throw new StartupRefusedError(opcua.message);
+  }
+  const bridgeLaunchers = [
+    ...(bridgePython === undefined ? [] : [modbusLauncherOf(bridgePython)]),
+    ...(opcua.launcher === undefined ? [] : [opcua.launcher]),
+  ];
   // Once at start-up (about 73 ms): the WASM module is shared by every Pantin's world.
   const physicsWorldFactory = createPhysicsWorldFactory(await loadRapier());
   const running = await startPantinServer({
@@ -227,7 +250,7 @@ async function main(): Promise<void> {
       viewerDirectory,
       examplesDirectory,
       stepConverterPython,
-      bridgePython,
+      bridgeLaunchers,
       logsDirectory,
     }),
     reportBridgeLine: (pantinId, line) => writeLine(process.stderr, `[bridge ${pantinId}] ${line}`),
@@ -239,6 +262,7 @@ async function main(): Promise<void> {
     pantinsDirectory,
     stepConverterPython,
     bridgePython,
+    opcuaBridge: opcua.launcher?.args[0],
     viewerDirectory,
     examplesDirectory,
   });

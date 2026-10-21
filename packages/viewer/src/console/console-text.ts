@@ -89,7 +89,8 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
     case "physics_rebuilt":
       return { text: t("console.code.physics_rebuilt", entry.params), detail: null };
     case "plc_connected":
-      return { text: t("console.code.plc_connected", entry.params), detail: null };
+    case "opcua_unsecured_lan":
+      return { text: t(`console.code.${entry.code}`, entry.params), detail: null };
     case "bridge_failed":
       return { text: t("console.code.bridge_failed"), detail: entry.params.message };
     case "bridge_log":

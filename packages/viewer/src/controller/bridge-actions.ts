@@ -1,4 +1,8 @@
-import type { BridgeStatus, SetBridgeRequest } from "@pantin/protocol";
+import type {
+  BridgeListResponse,
+  ModbusBridgeStatus,
+  SetModbusBridgeRequest,
+} from "@pantin/protocol";
 import { PantinApiError } from "../api-transport.ts";
 import type { BridgeIntents } from "../bridge/bridge-intents.ts";
 import {
@@ -6,7 +10,7 @@ import {
   type BridgeDraft,
   type BridgeModel,
   bridgeAfterAnswer,
-  bridgeAfterStreamStatus,
+  bridgeAfterStreamList,
   bridgeStartRequest,
   bridgeWithDraft,
   bridgeWithNetworkError,
@@ -36,8 +40,8 @@ function setBridgeModel(store: ViewerStore, next: BridgeModel): void {
 }
 
 /** A bridge event of the stream. */
-export function receiveBridge(store: ViewerStore, status: BridgeStatus): void {
-  setBridgeModel(store, bridgeAfterStreamStatus(store.bridgeModel, status));
+export function receiveBridge(store: ViewerStore, list: BridgeListResponse): void {
+  setBridgeModel(store, bridgeAfterStreamList(store.bridgeModel, list));
   refreshJournalOnStatus(store);
 }
 
@@ -56,7 +60,10 @@ function showFailure(store: ViewerStore, error: unknown): void {
  * A second request while one is in flight is refused (a double click), and an
  * answer for a Pantin that was closed meanwhile touches nothing.
  */
-async function sendBridgeRequest(store: ViewerStore, request: SetBridgeRequest): Promise<boolean> {
+async function sendBridgeRequest(
+  store: ViewerStore,
+  request: SetModbusBridgeRequest,
+): Promise<boolean> {
   const open = store.state.openPantin;
   if (open === null || store.bridgeModel.pending) {
     return false;
@@ -64,7 +71,7 @@ async function sendBridgeRequest(store: ViewerStore, request: SetBridgeRequest):
   const stillOpen = (): boolean => store.state.openPantin?.id === open.id;
   setBridgeModel(store, bridgeWithPending(bridgeWithNetworkError(store.bridgeModel, null), true));
   try {
-    const status: BridgeStatus = await store.ports.api.setBridge(open.id, request);
+    const status: ModbusBridgeStatus = await store.ports.api.setBridge(open.id, request);
     if (stillOpen()) {
       setBridgeModel(store, bridgeAfterAnswer(store.bridgeModel, status));
     }

@@ -2,11 +2,17 @@ import type { ChildProcess } from "node:child_process";
 import type { ProcessOutcome } from "./converter-output.ts";
 
 // Starts a program with an argument array, never through a shell. Injected so
-// tests and callers choose the implementation (node:child_process spawn).
+// tests and callers choose the implementation (node:child_process spawn). stdin is
+// "ignore" unless a caller has something to hand over once (the OPC UA bridge's passwords);
+// `env` replaces the inherited environment when given.
 export type ProcessSpawner = (
   command: string,
   args: readonly string[],
-  options: { stdio: ["ignore", "pipe", "pipe"]; shell: false },
+  options: {
+    stdio: ["ignore" | "pipe", "pipe", "pipe"];
+    shell: false;
+    env?: Readonly<Record<string, string>>;
+  },
 ) => ChildProcess;
 
 export type ProcessLimits = {

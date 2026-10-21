@@ -87,7 +87,7 @@ redémarre jamais seul.
 | « Pont automate indisponible : démarrez le cœur avec --bridge-python… » | Même cause, à l'appui sur **Démarrer** | Idem |
 | Un message d'erreur en cliquant **Démarrer**, avec les premiers problèmes du mapping | Le mapping est absent ou invalide (le cœur refuse avec une erreur de conflit) | Ouvrez **Config E/S**, corrigez les **Problèmes**, puis recommencez |
 | **Démarrer** grisé et « Un pont lancé hors de Pantin est connecté. » | Un pont lancé à la main tient déjà la connexion de ce Pantin | Arrêtez ce pont (Ctrl-C dans son terminal) |
-| « This Pantin's bridge is already running or starting. » | Un pont de ce Pantin tourne déjà | Utilisez **Arrêter** puis **Démarrer** |
+| « This Pantin's Modbus TCP slave bridge is already running or starting. » (le nom est celui du transport du pont) | Un pont de ce Pantin tourne déjà | Utilisez **Arrêter** puis **Démarrer** |
 | « Module m1 uses 127.0.0.1:4800, where the core itself listens. Change the module's port in io.json. » | Le port du module est celui du cœur | Changez le **Port** du module dans la vue E/S |
 | « Module m1 uses … already held by the bridge of Pantin … » | Deux Pantins ont le même port sur la même adresse | Changez le **Port** d'un des modules |
 | « The core already supervises 4 bridges. Stop one first. » | Quatre ponts tournent déjà | Arrêtez-en un |

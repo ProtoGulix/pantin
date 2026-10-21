@@ -1,4 +1,4 @@
-import type { BridgeStatus, SetBridgeRequest } from "@pantin/protocol";
+import type { ModbusBridgeStatus, SetModbusBridgeRequest } from "@pantin/protocol";
 import { bridgeStatusOf } from "../bridge/bridge-fixtures.ts";
 import type { BridgeView } from "../bridge/bridge-view.ts";
 import { consolePantin } from "../console/console-fixtures.ts";
@@ -10,10 +10,10 @@ import { testStore } from "./controller-test-helpers.ts";
 export const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 export function openStore(
-  answer: (request: SetBridgeRequest) => BridgeStatus | Error,
+  answer: (request: SetModbusBridgeRequest) => ModbusBridgeStatus | Error,
   unsavedChanges = false,
 ) {
-  const sent: SetBridgeRequest[] = [];
+  const sent: SetModbusBridgeRequest[] = [];
   const views: (BridgeView | null)[] = [];
   const store = testStore(
     {
@@ -38,5 +38,5 @@ export function openStore(
   return { store, sent, views };
 }
 
-export const accept = (request: SetBridgeRequest) =>
+export const accept = (request: SetModbusBridgeRequest) =>
   bridgeStatusOf({ state: request.running ? "starting" : "stopped" });

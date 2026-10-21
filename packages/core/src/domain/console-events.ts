@@ -258,3 +258,13 @@ export function bridgeLogEvent(message: string): ConsoleEvent {
     params: { message: message.slice(0, MAX_BRIDGE_FAILURE_MESSAGE) },
   };
 }
+
+// ADR 0065 point 8: an OPC UA module with security None reaches a PLC on the private network.
+export function opcuaUnsecuredLanEvent(module: string): ConsoleEvent {
+  return {
+    code: "opcua_unsecured_lan",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { module },
+  };
+}

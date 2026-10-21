@@ -8,6 +8,9 @@ import type { ProcessSpawner } from "../converter/process-runner.ts";
 
 type FakeBridgeChild = {
   signals: string[];
+  // What the core wrote to the child's stdin, and whether it then closed it.
+  stdinText(): string;
+  isStdinClosed(): boolean;
   writeStdout(text: string): void;
   writeStderr(text: string): void;
   end(exitCode: number | null, signal: string | null): void;
@@ -26,6 +29,9 @@ type FakeProcessOptions = {
 };
 
 class FakeProcess extends EventEmitter {
+  readonly stdin = new PassThrough();
+  stdinText = "";
+  isStdinClosed = false;
   readonly stdout = new PassThrough();
   readonly stderr = new PassThrough();
   pid: number | undefined = 4242;
@@ -38,6 +44,13 @@ class FakeProcess extends EventEmitter {
   constructor(behaviour: FakeProcessOptions) {
     super();
     this.behaviour = behaviour;
+    this.stdin.setEncoding("utf8");
+    this.stdin.on("data", (chunk: string) => {
+      this.stdinText += chunk;
+    });
+    this.stdin.on("finish", () => {
+      this.isStdinClosed = true;
+    });
   }
 
   kill(signal: string): boolean {
@@ -63,6 +76,8 @@ export function createFakeSpawner(behaviour: Partial<FakeProcessOptions> = {}): 
     const fake = new FakeProcess({ exitsOnSigterm: behaviour.exitsOnSigterm ?? true });
     children.push({
       signals: fake.signals,
+      stdinText: () => fake.stdinText,
+      isStdinClosed: () => fake.isStdinClosed,
       writeStdout: (text) => fake.stdout.write(text),
       writeStderr: (text) => fake.stderr.write(text),
       end: (exitCode, signal) => fake.end(exitCode, signal),
@@ -73,7 +88,8 @@ export function createFakeSpawner(behaviour: Partial<FakeProcessOptions> = {}): 
       },
     });
     // The supervisor only uses the parts of ChildProcess that FakeProcess
-    // implements (streams, events, pid, exit state, kill).
+    // implements (streams, events, pid, exit state, kill). With stdio "ignore" it would have
+    // no stdin: the fake keeps one so a test can tell that nothing was written.
     return fake as unknown as ChildProcess;
   };
   return { spawn, children, calls };

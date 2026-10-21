@@ -25,11 +25,3 @@ export const OPCUA_DATA_TYPE_BY_IEC_TYPE: Readonly<Record<OpcuaIecType, string>>
   DINT: "Int32",
   LINT: "Int64",
 };
-
-export function defaultOpcuaIecType(signalType: SignalType): OpcuaIecType {
-  return OPCUA_IEC_TYPES_BY_SIGNAL_TYPE[signalType][0];
-}
-
-export function isOpcuaIecTypeAllowed(signalType: SignalType, iecType: OpcuaIecType): boolean {
-  return OPCUA_IEC_TYPES_BY_SIGNAL_TYPE[signalType].includes(iecType);
-}

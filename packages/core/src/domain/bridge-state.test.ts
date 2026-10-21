@@ -7,12 +7,14 @@ import {
   nextBridgeState,
 } from "./bridge-state.ts";
 
-const MODULES = [{ key: "m1", port: 1502 }];
+const MODULES = [{ key: "m1", endpoint: "127.0.0.1:1502" }];
 const CRASH_FAILURE = {
   kind: "crashed",
   message: "The bridge stopped without saying why (exit code 1). See the bridge log.",
   exitCode: 1,
   signal: null,
+  certificate: null,
+  module: null,
 } as const;
 
 const STATES: Record<string, BridgeMachineState> = {
@@ -44,12 +46,16 @@ const SPAWN_FAILURE = {
   message: "ENOENT",
   exitCode: null,
   signal: null,
+  certificate: null,
+  module: null,
 } as const;
 const TIMEOUT_FAILURE = {
   kind: "start_timeout",
   message: "The bridge did not report ready in time. See the bridge log.",
   exitCode: null,
   signal: null,
+  certificate: null,
+  module: null,
 } as const;
 
 // Every (state, event) pair; a pair that is not in the ADR 0050 table keeps the state.
@@ -106,11 +112,52 @@ describe("nextBridgeState", () => {
       type: "exited",
       exitCode: 1,
       signal: null,
-      exiting: { event: "exiting", kind: "mapping_changed", message: "Restart." },
+      exiting: {
+        event: "exiting",
+        kind: "mapping_changed",
+        message: "Restart.",
+        certificate: null,
+        module: null,
+      },
     };
     expect(nextBridgeState({ phase: "running", modules: MODULES }, exited)).toEqual({
       phase: "failed",
-      failure: { kind: "mapping_changed", message: "Restart.", exitCode: 1, signal: null },
+      failure: {
+        kind: "mapping_changed",
+        message: "Restart.",
+        exitCode: 1,
+        signal: null,
+        certificate: null,
+        module: null,
+      },
+    });
+  });
+
+  it("carries the server certificate and the module of a bridge that named them", () => {
+    const certificate = {
+      subject: "CN=PLC",
+      notBefore: "2026-01-01T00:00:00.000Z",
+      notAfter: "2036-01-01T00:00:00.000Z",
+      sha256: "a".repeat(64),
+      sha1: "b".repeat(40),
+      reason: "Not trusted yet",
+    };
+    const failure = failureOfExit({
+      type: "exited",
+      exitCode: 1,
+      signal: null,
+      exiting: {
+        event: "exiting",
+        kind: "untrusted_server_certificate",
+        message: "Trust it?",
+        certificate,
+        module: "plc",
+      },
+    });
+    expect(failure).toMatchObject({
+      kind: "untrusted_server_certificate",
+      certificate,
+      module: "plc",
     });
   });
 });

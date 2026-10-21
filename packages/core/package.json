@@ -15,6 +15,7 @@
     "@dimforge/rapier3d-deterministic-compat": "0.21.0",
     "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
+    "@pantin/network-address": "workspace:*",
     "@pantin/plc-symbol-formats": "workspace:*",
     "@pantin/protocol": "workspace:*",
     "@pantin/sensor-types": "workspace:*",

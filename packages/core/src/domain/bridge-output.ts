@@ -55,26 +55,23 @@ function urlHost(host: string): string {
   return host.includes(":") ? `[${host}]` : host;
 }
 
-// The fixed command (ADR 0050 point 1): only listen and allow come from the
-// request, after the checks. `-I` ignores PYTHON* variables and the user site.
-export function bridgeArguments(options: {
+// The arguments every bridge takes, after the launcher's own (ADR 0050 point 1, ADR 0065
+// point 5): where the core is and which Pantin. The kind's own part comes after them.
+export function commonBridgeArguments(options: {
   core: { host: string; port: number };
   pantinId: string;
-  network: { listen: string; allow: readonly string[] };
 }): string[] {
-  const { core, pantinId, network } = options;
+  const { core, pantinId } = options;
   return [
-    "-I",
-    "-u",
-    "-m",
-    "pantin_bridge",
     "--status-lines",
     "--core",
     `http://${urlHost(core.host)}:${core.port}`,
     "--pantin",
     pantinId,
-    "--listen",
-    network.listen,
-    ...network.allow.flatMap((entry) => ["--allow", entry]),
   ];
+}
+
+// `<host>:<port>`, with an IPv6 host in brackets.
+export function hostAndPort(host: string, port: number): string {
+  return `${urlHost(host)}:${port}`;
 }
