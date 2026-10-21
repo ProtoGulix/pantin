@@ -31,6 +31,7 @@ import type { BridgeCoreLineWriter } from "./console-record.ts";
 import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
 import { exampleOperations } from "./example-operations.ts";
+import { checkExternalEdits, takeStamps } from "./external-edits.ts";
 import { faceOperations } from "./face-operations.ts";
 import { frameOperations } from "./frame-operations.ts";
 import { groupOperations } from "./group-operations.ts";
@@ -47,12 +48,11 @@ import {
   toPoseSnapshot,
   updateJoint,
 } from "./joint-operations.ts";
-import { deleteBody, discardPantin, savePantin } from "./mesh-lifecycle.ts";
+import { deleteBody, discardPantin, runQueued, savePantin } from "./mesh-lifecycle.ts";
 import {
   loadPantin,
   newOpenPantin,
   type OpenPantin,
-  readSavedDocument,
   resetRuntimeState,
   type ServiceContext,
   toResponse,
@@ -61,6 +61,7 @@ import {
 import { orphanMeshOperations } from "./orphan-mesh-cleanup.ts";
 import { disposePhysics } from "./physics-runtime.ts";
 import { redundantJointsOperations } from "./redundant-joints-operations.ts";
+import { readSavedDocument } from "./saved-document.ts";
 import { sensorOperations } from "./sensor-operations.ts";
 import { runSimulationSteps } from "./simulation.ts";
 import type { SimulationTick } from "./simulation-loop.ts";
@@ -112,7 +113,10 @@ async function listPantins(context: ServiceContext): Promise<PantinSummary[]> {
 }
 
 async function getPantin(context: ServiceContext, pantinId: PantinId): Promise<PantinResponse> {
-  return toResponse(pantinId, await loadPantin(context, pantinId));
+  const openPantin = await loadPantin(context, pantinId);
+  // Queued after any save running: a save must not be seen between its write and its stamp.
+  await runQueued(openPantin, () => checkExternalEdits(context, pantinId, openPantin));
+  return toResponse(pantinId, openPantin);
 }
 
 async function createPantin(context: ServiceContext, name: string): Promise<PantinResponse> {
@@ -124,7 +128,13 @@ async function createPantin(context: ServiceContext, name: string): Promise<Pant
   await context.store.createPantinFolder(pantinId);
   const document = createPantinDocument(name);
   await context.store.writeDocumentAtomically(pantinId, serializePantinDocument(document));
-  const openPantin = newOpenPantin(document, context.newConsoleId(), context.physics.createWorld);
+  const openPantin = newOpenPantin(
+    document,
+    context.newConsoleId(),
+    context.physics.createWorld,
+    undefined,
+    await takeStamps(context, pantinId),
+  );
   context.openPantins.set(pantinId, Promise.resolve(openPantin));
   context.loadedPantins.set(pantinId, openPantin);
   return toResponse(pantinId, openPantin);

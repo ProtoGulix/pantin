@@ -492,6 +492,7 @@
   "console.code.diagnostic_cleared": "Diagnostic cleared: {diagnostic}.",
   "console.code.fault_set": "Fault injected: {fault}.",
   "console.code.fault_cleared": "Fault removed: {fault}.",
+  "console.code.file_changed_outside": "{file} modified outside Pantin. Saving will overwrite it.",
   "console.code.migrated": "Document migrated on opening, from version {from} to version {to}.",
   "console.code.migrated.followers": "Bodies with no parent joint now follow their group when it moves: {bodies}.",
   "console.code.clock_paused": "Simulation paused.",
@@ -956,5 +957,14 @@
   "symbols.unused.invalid_reference": "Its name cannot be used as a variable.",
   "symbols.done": "Variables applied: {count}. Change not saved yet.",
   "symbols.skipped.heading": "Rows refused by the core: {count}",
-  "symbols.skipped.line": "{module} / {tag}: {variable} refused. {reason}"
+  "symbols.skipped.line": "{module} / {tag}: {variable} refused. {reason}",
+  "externalEdit.one": "{file} modified outside Pantin. Saving will overwrite it.",
+  "externalEdit.both": "pantin.json and io.json modified outside Pantin. Saving will overwrite them.",
+  "externalEdit.reload.one": "Reload the file",
+  "externalEdit.reload.both": "Reload the files",
+  "externalEdit.glyph": "Warning",
+  "prompt.reload.text.one": "Reloading {file} will discard the unsaved changes of Pantin \"{name}\".",
+  "prompt.reload.text.both": "Reloading the files will discard the unsaved changes of Pantin \"{name}\".",
+  "prompt.reload.confirm": "Reload and discard my changes",
+  "prompt.reload.cancel": "Cancel"
 }

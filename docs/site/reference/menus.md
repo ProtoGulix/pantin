@@ -19,7 +19,7 @@ Termes utilisés dans la colonne « Grisé quand » :
 |---|---|---|---|
 | **Accueil** | | Affiche la fenêtre d'accueil. | Un Pantin est ouvert. |
 | **Ouvrir…** | | Avec un Pantin ouvert, le ferme pour revenir à la fenêtre d'accueil : s'il a des modifications non enregistrées, une question de confirmation s'affiche. La fenêtre d'accueil s'ouvre alors sur le dernier onglet utilisé (**Accueil** au premier affichage). Sans Pantin ouvert, affiche la fenêtre d'accueil sur l'onglet **Tous les Pantins**. | Traitement en cours. |
-| **Enregistrer** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Enregistre le Pantin ouvert. | Pas de Pantin ouvert, aucune modification non enregistrée, ou traitement en cours. |
+| **Enregistrer** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Enregistre le Pantin ouvert. Si `pantin.json` ou `io.json` a changé en dehors de Pantin, le premier enregistrement est refusé avec une explication ; le suivant écrase le disque (voir le [bandeau](/reference/panels#le-bandeau-de-modification-externe)). | Pas de Pantin ouvert, ni modification non enregistrée ni fichier modifié en dehors de Pantin, ou traitement en cours. |
 | **Importer…** | | Ouvre le sélecteur de fichiers pour importer un modèle 3D (GLB, STL, STEP) dans le Pantin ouvert. | Pas de Pantin ouvert, traitement en cours, ou import déjà en cours. |
 | **Nettoyer les fichiers orphelins…** | | Propose de supprimer les fichiers orphelins du dossier meshes du Pantin, que aucun corps n'utilise (après confirmation). | Mêmes conditions que **Importer…**. |
 | séparateur | | | |

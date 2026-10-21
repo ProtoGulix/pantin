@@ -23,7 +23,7 @@ const document = documentOf({
 });
 const source = {
   language: "fr" as const,
-  openPantin: { id: "press", unsavedChanges: false, document },
+  openPantin: { id: "press", unsavedChanges: false, changedOutside: [], document },
 };
 const translate = createTranslator("fr");
 
@@ -80,7 +80,10 @@ describe("a joint between a group and its own body", () => {
       ],
     });
     const tree = buildTree(
-      { language: "fr", openPantin: { id: "press", unsavedChanges: false, document: inner } },
+      {
+        language: "fr",
+        openPantin: { id: "press", unsavedChanges: false, changedOutside: [], document: inner },
+      },
       translate,
     );
     const group = findNode(tree, assemblyNodeId("press", "tool"));

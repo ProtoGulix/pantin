@@ -2,6 +2,7 @@ import { createReadStream, type ReadStream } from "node:fs";
 import { lstat, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
+  type ChangedOutsideFile,
   faceFilePathOf,
   MAX_FACE_FILE_BYTES,
   type MeshFolderFileName,
@@ -10,8 +11,10 @@ import {
   PANTIN_MESHES_DIRECTORY_NAME,
   type PantinId,
 } from "@pantin/protocol";
+import type { DiskStamp, FileStat } from "../domain/disk-stamp.ts";
 import { ApiError } from "../errors.ts";
 import { writeTextAtomically } from "./atomic-write.ts";
+import { readFolderFileStamp, statFolderFile } from "./disk-stamps.ts";
 import { readIoJson, writeIoJson } from "./io-files.ts";
 import { deleteMeshFolderFile, listMeshFolderFiles } from "./mesh-folder-files.ts";
 import { assertRealPathInside, isErrorWithCode, resolveInside } from "./safe-paths.ts";
@@ -60,6 +63,10 @@ export type PantinStore = {
   readIoFile(pantinId: PantinId): Promise<Uint8Array | undefined>;
   // Same atomic write as pantin.json.
   writeIoAtomically(pantinId: PantinId, text: string): Promise<void>;
+  // ADR 0063: the cheap stat of pantin.json or io.json, and the stamp that
+  // also hashes the bytes. A missing file is a value, not an error.
+  statFile(pantinId: PantinId, fileName: ChangedOutsideFile): Promise<FileStat>;
+  readFileStamp(pantinId: PantinId, fileName: ChangedOutsideFile): Promise<DiskStamp>;
   describeDocumentLocation(pantinId: PantinId): string;
 };
 
@@ -71,6 +78,11 @@ function pathInPantin(paths: Paths, pantinId: PantinId, relativePath: string): s
 
 function pantinFolder(paths: Paths, pantinId: PantinId): string {
   return resolveInside(paths.pantinsDirectory, pantinId);
+}
+
+// Where a link of this file may lead: like the readers of the file do.
+function confinementOf(paths: Paths, pantinId: PantinId, fileName: ChangedOutsideFile): string {
+  return fileName === "io.json" ? pantinFolder(paths, pantinId) : paths.pantinsDirectory;
 }
 
 function meshesDirectory(paths: Paths, pantinId: PantinId): string {
@@ -255,6 +267,18 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
     readIoFile: (pantinId) => readIoJson(pantinFolder(paths, pantinId)),
     writeIoAtomically: (pantinId, text) =>
       writeIoJson(paths.pantinsDirectory, pantinFolder(paths, pantinId), text),
+    statFile: (pantinId, fileName) =>
+      statFolderFile(
+        confinementOf(paths, pantinId, fileName),
+        pantinFolder(paths, pantinId),
+        fileName,
+      ),
+    readFileStamp: (pantinId, fileName) =>
+      readFolderFileStamp(
+        confinementOf(paths, pantinId, fileName),
+        pantinFolder(paths, pantinId),
+        fileName,
+      ),
     // Relative to the pantins directory: error messages never reveal absolute paths.
     describeDocumentLocation: (pantinId) => join(pantinId, PANTIN_DOCUMENT_FILE_NAME),
   };

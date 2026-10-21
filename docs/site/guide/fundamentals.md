@@ -81,6 +81,24 @@ Les Pantins sont rangés par défaut dans le dossier `pantin-projects` de votre 
 
 Comme tout est du texte, vous pouvez versionner un Pantin avec git, comparer deux versions ou le partager. Le format est décrit dans le [guide du document Pantin](https://github.com/ProtoGulix/pantin/blob/develop/docs/guides/pantin-document.md).
 
+### Modifier un fichier hors de Pantin
+
+Un Pantin ouvert reste en mémoire dans le cœur. Si vous modifiez `pantin.json` ou `io.json` avec un éditeur de texte, un `git pull` ou `pantin io init --update`, le viewer ne le voit pas tout de suite. Pantin compare alors le disque à ce qu'il a lu, à deux moments seulement :
+
+- quand la fenêtre du navigateur reprend le focus (vous revenez de votre éditeur ou de votre terminal) ;
+- à l'enregistrement.
+
+Un fichier modifié, créé ou supprimé en dehors de Pantin déclenche trois signes : un bandeau d'avertissement en haut de la zone centrale, avec un pictogramme, un texte et une bordure (la couleur n'est jamais le seul signal), un avertissement dans la **Console**, et un premier enregistrement refusé. Le texte du bandeau est **pantin.json modifié en dehors de Pantin. Enregistrer l'écrasera.** (avec `io.json`, ou **pantin.json et io.json modifiés en dehors de Pantin. Enregistrer les écrasera.** pour les deux). Pantin ne recharge rien seul et ne fusionne rien : vous choisissez.
+
+![Le bandeau d'avertissement quand pantin.json a changé sur le disque](/screenshots/fr/external-edit-banner.webp)
+
+- **Relire le fichier** (**Relire les fichiers** pour les deux) abandonne l'état en mémoire et relit le disque. S'il reste des modifications non enregistrées, une question de confirmation s'affiche d'abord.
+- **Enregistrer** écrase la version du disque par celle de Pantin.
+
+Un fichier touché sans que son contenu change (`touch`, ou un `git checkout` qui remet les mêmes octets) ne déclenche rien.
+
+Pantin se fie à la taille et à la date de modification du fichier, puis au contenu quand l'une des deux a changé. Une modification qui garde la même taille et la même date n'est pas vue. La précision de la date sur FAT et sur les partages réseau n'est pas vérifiée.
+
 ## Local par défaut
 
 Au démarrage, le cœur écoute **uniquement sur la machine locale** (`127.0.0.1`). Personne d'autre sur votre réseau ne peut s'y connecter.

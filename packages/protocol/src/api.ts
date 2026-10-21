@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ChangedOutsideFileSchema } from "./console-params.ts";
 import {
   BodyIdSchema,
   DisplayNameSchema,
@@ -115,6 +116,9 @@ export const PantinResponseSchema = z.object({
   id: PantinIdSchema,
   // True when the in-memory document differs from pantin.json on disk.
   unsavedChanges: z.boolean(),
+  // The files of the Pantin folder modified outside Pantin since they were read,
+  // empty when none (ADR 0063 point 3).
+  changedOutside: z.array(ChangedOutsideFileSchema),
   document: PantinDocumentSchema,
 });
 export type PantinResponse = z.infer<typeof PantinResponseSchema>;

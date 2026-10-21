@@ -11,6 +11,7 @@ const t = createTranslator("en");
 const pantin = {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document: documentOf({
     assemblies: ["a"],
     bodies: [bodyOf("s1", "a")],

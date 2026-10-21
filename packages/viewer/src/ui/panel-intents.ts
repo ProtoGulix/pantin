@@ -223,6 +223,8 @@ export interface PanelIntents extends IoIntents, SymbolImportIntents, BridgeInte
 
   togglePropertyGroup(groupId: string): void;
   dismissMessage(): void;
+  // The banner "modified outside Pantin": reads the files again (ADR 0063).
+  reloadFromDisk(): void;
   // Loads again the bodies whose mesh failed to load, and clears the message.
   retryMeshLoad(): void;
   changeLanguage(language: string): void;

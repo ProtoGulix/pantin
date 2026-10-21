@@ -1,4 +1,4 @@
-import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
+import { NO_CLOSE_PROMPT, NO_RELOAD_PROMPT } from "./close-prompt.ts";
 import { devicesOfKind, type PendingDeviceDeletion } from "./pending-device-deletion.ts";
 import type { ViewerState } from "./viewer-state.ts";
 
@@ -34,5 +34,6 @@ export function withDeviceDeleteRequested(
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
   };
 }

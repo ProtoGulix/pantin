@@ -1,4 +1,4 @@
-import { NO_CLOSE_PROMPT } from "../close-prompt.ts";
+import { NO_CLOSE_PROMPT, NO_RELOAD_PROMPT } from "../close-prompt.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import type { GroupingTarget } from "./grouping-model.ts";
 
@@ -26,6 +26,7 @@ export function withGroupRequested(
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
   };
 }
 

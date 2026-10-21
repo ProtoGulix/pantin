@@ -1,8 +1,10 @@
+import { NO_RELOAD_PROMPT } from "../close-prompt.ts";
 import { infoMessage } from "../messages.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import { resumeClock } from "./clock-actions.ts";
 import { sendConsoleVerbosePreference } from "./console-verbose-actions.ts";
+import { readOpenPantinAgain } from "./external-edit-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Pantin and body operations that go through the API. Every edit is followed
@@ -87,10 +89,14 @@ export async function savePantin(store: ViewerStore): Promise<boolean> {
     store.ports.api.savePantin(pantinId),
   );
   if (saved === undefined) {
+    // A refusal may be the first sign of an outside edit (409, ADR 0063 point 4): the
+    // re-read brings the flag, hence the banner. The refusal message stays on screen.
+    await readOpenPantinAgain(store);
     return false;
   }
   store.update({
     ...store.state,
+    ...NO_RELOAD_PROMPT,
     message: infoMessage("message.saved", { name: saved.document.name }),
   });
   return true;

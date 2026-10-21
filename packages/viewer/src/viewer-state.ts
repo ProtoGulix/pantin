@@ -10,7 +10,7 @@ import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
-import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
+import { NO_CLOSE_PROMPT, NO_RELOAD_PROMPT } from "./close-prompt.ts";
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
 import type { ConveyorFormState } from "./conveyors/conveyor-form.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
@@ -39,11 +39,12 @@ import type { SensorFormState } from "./sensors/sensor-form.ts";
 import type { ThemeChoice } from "./theme/theme.ts";
 import { assemblyNodeId, folderNodeId, pantinNodeId } from "./tree/node-ids.ts";
 import { selectionExists, withMultiSelectionPruned } from "./tree/tree-state.ts";
-import type {
-  ContextMenuState,
-  InspectorFocusRequest,
-  PendingAssemblyDeletion,
-  PendingDiagramLink,
+import {
+  type ContextMenuState,
+  type InspectorFocusRequest,
+  NO_DEVICE_FORMS,
+  type PendingAssemblyDeletion,
+  type PendingDiagramLink,
 } from "./viewer-state-parts.ts";
 
 // Everything the viewer shows, as plain data. The core stays the source of
@@ -103,6 +104,8 @@ export interface ViewerState {
   pendingDeleteAssembly: PendingAssemblyDeletion | null;
   // "Grouper…" waiting for the group's name (ADR 0055 point 12).
   pendingGroup: PendingGroup | null;
+  // "Reload the file" waiting for the user to confirm, while unsaved changes would be lost (ADR 0063).
+  pendingReload: boolean;
   // What the core listed for a cleanup, waiting for the user to confirm: orphan
   // mesh files (ADR 0038), then redundant fixed joints (ADR 0060).
   pendingOrphanCleanup: OrphanMeshList | null;
@@ -165,13 +168,6 @@ const NO_FAULTS: FaultsResponse = { jammedJoints: [], unresponsiveDrives: [] };
 // Runtime faults and the I/O mapping belong to the open Pantin: cleared with it.
 const NO_DEVICE_DATA = { faults: NO_FAULTS, io: NO_IO_STATE } as const;
 
-const NO_DEVICE_FORMS = {
-  driveForm: null,
-  actuatorForm: null,
-  sensorForm: null,
-  conveyorForm: null,
-} as const;
-
 // No positioning tool on, no alignment, nothing kept in the placement fields.
 const NO_TOOL_STATE = {
   gizmoMode: null,
@@ -215,6 +211,7 @@ export function initialViewerState(
     about: CLOSED_ABOUT,
     symbolImport: CLOSED_SYMBOL_IMPORT,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteDevice: null,
@@ -260,6 +257,7 @@ function freshEditView(state: ViewerState, openPantin: PantinResponse): ViewerSt
     pendingImport: null,
     importInProgress: false,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteDevice: null,

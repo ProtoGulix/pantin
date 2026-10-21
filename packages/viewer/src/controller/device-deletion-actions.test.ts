@@ -24,7 +24,7 @@ const document = documentOf({
   actuators: [cylinderOf("c1", "a", "v1", ["j1"])],
   sensors: [encoderOf("e1", "a", "j1")],
 });
-const pantin = { id: "press", unsavedChanges: false, document };
+const pantin = { id: "press", unsavedChanges: false, changedOutside: [], document };
 const translate = createTranslator("fr");
 
 function openStore(api: Partial<PantinApiClient>) {

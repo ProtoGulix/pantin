@@ -17,6 +17,7 @@ import { runMenuCommand } from "./menu-commands.ts";
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document: documentOf({
     assemblies: ["a", "b"],
     bodies: [bodyOf("s1", "a"), bodyOf("s2", "b")],

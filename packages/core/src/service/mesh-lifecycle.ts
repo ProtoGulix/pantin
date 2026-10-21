@@ -3,17 +3,23 @@ import { refuseBodyUsedAsFrame } from "../domain/conveyor-rules.ts";
 import { ioTextOf } from "../domain/io-document-text.ts";
 import { findBody, removeBodies, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
+import {
+  checkExternalEdits,
+  externalEditConflict,
+  stampWrittenFile,
+  takeStamps,
+} from "./external-edits.ts";
 import { alignIo } from "./io-alignment.ts";
 import { isMigrated, readIoReading } from "./io-reading.ts";
 import {
   loadPantin,
   meshPathsOf,
   type OpenPantin,
-  readSavedDocument,
   resetRuntimeState,
   type ServiceContext,
   toResponse,
 } from "./open-pantins.ts";
+import { readSavedDocument } from "./saved-document.ts";
 
 // Save and mesh deletion, kept together because their order matters: the
 // disk must never hold a pantin.json that references a missing mesh file.
@@ -138,10 +144,26 @@ async function writeIoIfChanged(
   const text = ioTextOf(openPantin.io);
   // A file migrated on read is written even when its text is unchanged: the
   // file on disk is still in the older version (ADR 0064 point 7).
-  if (text !== null && (text !== openPantin.savedIoText || openPantin.ioFileIsOlder)) {
+  // A file modified outside is overwritten as well (ADR 0063 point 4).
+  const mustWrite =
+    text !== openPantin.savedIoText ||
+    openPantin.ioFileIsOlder ||
+    openPantin.changedOutside.has("io.json");
+  if (text !== null && mustWrite) {
     await context.store.writeIoAtomically(pantinId, text);
+    await stampWrittenFile(context, pantinId, openPantin, "io.json", text);
     openPantin.savedIoText = text;
     openPantin.ioFileIsOlder = false;
+  }
+}
+
+// A save clears the flags of what it overwrote. An io.json it could not write
+// (no mapping in memory) still differs from the disk: only a reload clears it.
+function clearOutsideFlags(openPantin: OpenPantin): void {
+  const ioNotWritten = openPantin.changedOutside.has("io.json") && ioTextOf(openPantin.io) === null;
+  openPantin.changedOutside.clear();
+  if (ioNotWritten) {
+    openPantin.changedOutside.add("io.json");
   }
 }
 
@@ -155,8 +177,15 @@ async function writeDocument(
   const text = serializePantinDocument(document);
   openPantin.writingMeshPaths = meshPathsOf(document);
   try {
+    // The first save to find an outside edit refuses; the next one overwrites.
+    const changedFiles = await checkExternalEdits(context, pantinId, openPantin);
+    if (changedFiles.length > 0) {
+      throw externalEditConflict(changedFiles);
+    }
     await writeIoIfChanged(context, pantinId, openPantin);
     await context.store.writeDocumentAtomically(pantinId, text);
+    await stampWrittenFile(context, pantinId, openPantin, "pantin.json", text);
+    clearOutsideFlags(openPantin);
     openPantin.savedText = text;
     openPantin.savedMeshPaths = openPantin.writingMeshPaths;
   } finally {
@@ -190,6 +219,7 @@ async function reloadDocument(
   pantinId: PantinId,
   openPantin: OpenPantin,
 ): Promise<void> {
+  const diskStamps = await takeStamps(context, pantinId);
   const saved = await readSavedDocument(context, pantinId);
   const io = await readIoReading(context.store, pantinId);
   await waitForImports(openPantin);
@@ -201,6 +231,8 @@ async function reloadDocument(
   ];
   const unsavedMeshes = new Set(candidates.filter((meshPath) => !savedMeshPaths.has(meshPath)));
   openPantin.document = saved;
+  openPantin.diskStamps = diskStamps;
+  openPantin.changedOutside.clear();
   openPantin.savedText = serializePantinDocument(saved);
   openPantin.io = io;
   openPantin.ioAlignedDocument = saved;

@@ -11,6 +11,7 @@ import {
   startViewer,
 } from "./controller/controller.ts";
 import { refreshTagValues } from "./controller/drive-commands.ts";
+import { rereadOnFocus } from "./controller/external-edit-actions.ts";
 import { dragPlacement, finishPlacementDrag } from "./controller/placement-actions.ts";
 import type { StorePorts } from "./controller/store-ports.ts";
 import { ViewerStore } from "./controller/viewer-store.ts";
@@ -32,6 +33,7 @@ import { createScreen, type Screen } from "./ui/screen.ts";
 import { listenToShortcuts } from "./ui/shortcuts.ts";
 import { createThemeController, type ThemeController } from "./ui/theme-controller.ts";
 import { listenToViewListKey } from "./ui/view-list.ts";
+import { listenToWindowFocus } from "./ui/window-focus.ts";
 
 // Composition root: the only place that touches the page, the real fetch and
 // the browser's language settings.
@@ -213,6 +215,7 @@ function startApplication(): void {
   const api = createPantinApiClient((url, init) => fetch(url, init));
   const store = createStore(createScreen(), api);
   startViewer(store);
+  listenToWindowFocus(() => void rereadOnFocus(store, Date.now()));
   window.setInterval(() => {
     void refreshTagValues(store);
     void refreshConsole(store);

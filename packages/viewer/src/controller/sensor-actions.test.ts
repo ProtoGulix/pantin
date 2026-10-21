@@ -39,6 +39,7 @@ describe("addEndSwitches", () => {
     const getPantin = async () => ({
       ...initial,
       unsavedChanges: true,
+      changedOutside: [],
       document: { ...initial.document, sensors: [...kept] },
     });
     const store = storeWith({ createSensor, getPantin, listPantins: async () => [] }, initial);

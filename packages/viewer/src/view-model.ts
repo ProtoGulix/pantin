@@ -3,6 +3,10 @@ import { type CentralLayout, showsIo, showsViewport } from "./central-layout.ts"
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
 import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.ts";
+import {
+  buildExternalEditBanner,
+  type ExternalEditBannerView,
+} from "./external-edits/external-edit-model.ts";
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
 import { buildIoView, type IoView } from "./io/io-view-model.ts";
@@ -70,6 +74,8 @@ export interface PanelView {
   importForm: ImportFormView | null;
   contextMenu: ContextMenuView | null;
   prompt: PromptView | null;
+  // The warning above the central area while a file changed outside Pantin (ADR 0063).
+  externalEdit: ExternalEditBannerView | null;
   message: MessageView | null;
   viewportHint: string;
   // The right-hand panel: the only properties panel (ADR 0030).
@@ -80,6 +86,12 @@ export interface PanelView {
   io: IoView | null;
 }
 
+// A file modified outside Pantin can be overwritten by a save even with no unsaved edit (ADR 0063 point 4).
+function hasSomethingToSave(state: ViewerState): boolean {
+  const open = state.openPantin;
+  return open !== null && (open.unsavedChanges || open.changedOutside.length > 0);
+}
+
 function buildToolbarView(state: ViewerState): ToolbarView {
   const busy = state.pendingRequestCount > 0;
   const hasBodies = (state.openPantin?.document.bodies.length ?? 0) > 0;
@@ -87,7 +99,7 @@ function buildToolbarView(state: ViewerState): ToolbarView {
   return {
     mode: viewModeOf(state),
     busy,
-    saveEnabled: (state.openPantin?.unsavedChanges ?? false) && !busy,
+    saveEnabled: hasSomethingToSave(state) && !busy,
     hasUnsavedChanges: state.openPantin?.unsavedChanges ?? false,
     importEnabled: state.openPantin !== null && !busy && !state.importInProgress,
     // Framing moves the 3D camera, which the diagram alone hides.
@@ -162,6 +174,7 @@ export function buildPanelView(
     importForm: buildImportFormView(state, translate),
     contextMenu: buildContextMenuView(state, translate),
     prompt: buildPromptView(state, translate),
+    externalEdit: buildExternalEditBanner(state.openPantin, translate),
     message: buildMessageView(state, translate),
     viewportHint: translate(
       mode === "list" ? "page.viewportEmpty" : `page.viewportHint.${state.navigation.preset}`,

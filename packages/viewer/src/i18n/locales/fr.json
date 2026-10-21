@@ -492,6 +492,7 @@
   "console.code.diagnostic_cleared": "Diagnostic résolu : {diagnostic}.",
   "console.code.fault_set": "Défaut injecté : {fault}.",
   "console.code.fault_cleared": "Défaut retiré : {fault}.",
+  "console.code.file_changed_outside": "{file} modifié en dehors de Pantin. Enregistrer l'écrasera.",
   "console.code.migrated": "Document migré à l'ouverture, de la version {from} à la version {to}.",
   "console.code.migrated.followers": "Les corps sans liaison parente suivent maintenant leur groupe quand il bouge : {bodies}.",
   "console.code.clock_paused": "Simulation en pause.",
@@ -956,5 +957,14 @@
   "symbols.unused.invalid_reference": "Son nom ne peut pas servir de variable.",
   "symbols.done": "Variables appliquées : {count}. Modification non enregistrée.",
   "symbols.skipped.heading": "Lignes refusées par le cœur : {count}",
-  "symbols.skipped.line": "{module} / {tag} : {variable} refusée. {reason}"
+  "symbols.skipped.line": "{module} / {tag} : {variable} refusée. {reason}",
+  "externalEdit.one": "{file} modifié en dehors de Pantin. Enregistrer l'écrasera.",
+  "externalEdit.both": "pantin.json et io.json modifiés en dehors de Pantin. Enregistrer les écrasera.",
+  "externalEdit.reload.one": "Relire le fichier",
+  "externalEdit.reload.both": "Relire les fichiers",
+  "externalEdit.glyph": "Avertissement",
+  "prompt.reload.text.one": "Relire {file} abandonnera les modifications non enregistrées du Pantin « {name} ».",
+  "prompt.reload.text.both": "Relire les fichiers abandonnera les modifications non enregistrées du Pantin « {name} ».",
+  "prompt.reload.confirm": "Relire et abandonner mes modifications",
+  "prompt.reload.cancel": "Annuler"
 }

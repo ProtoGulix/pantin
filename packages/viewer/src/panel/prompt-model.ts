@@ -4,6 +4,7 @@ import type {
   PantinResponse,
   RedundantJointsList,
 } from "@pantin/protocol";
+import { buildReloadQuestion } from "../external-edits/external-edit-model.ts";
 import type { PendingGroup } from "../grouping/grouping-model.ts";
 import { pluralKey, type Translate } from "../i18n/translate.ts";
 import type { PendingDeviceDeletion } from "../pending-device-deletion.ts";
@@ -23,6 +24,8 @@ export type PromptAction =
   | "stopBridgeAndClose"
   | "closeKeepingBridge"
   | "cancelClose"
+  | "confirmReload"
+  | "cancelReload"
   | "confirmDelete"
   | "cancelDelete"
   | "confirmOrphanCleanup"
@@ -188,6 +191,21 @@ function deviceDeletePrompt(
   return question === null ? null : deletePrompt(question.text, state, t, question.details);
 }
 
+function reloadPrompt(state: ViewerState, open: PantinResponse, t: Translate): PromptView | null {
+  const question = buildReloadQuestion(open, state.pendingReload, t);
+  if (question === null) {
+    return null;
+  }
+  return {
+    text: question,
+    enabled: state.pendingRequestCount === 0,
+    actions: [
+      { action: "confirmReload", label: t("prompt.reload.confirm"), primary: true },
+      { action: "cancelReload", label: t("prompt.reload.cancel"), primary: false },
+    ],
+  };
+}
+
 export function buildPromptView(state: ViewerState, t: Translate): PromptView | null {
   const open = state.openPantin;
   if (open === null) {
@@ -195,6 +213,10 @@ export function buildPromptView(state: ViewerState, t: Translate): PromptView | 
   }
   if (state.closePrompt) {
     return closePromptView(state, open, t);
+  }
+  const reload = reloadPrompt(state, open, t);
+  if (reload !== null) {
+    return reload;
   }
   if (state.pendingGroup !== null) {
     return groupPrompt(state.pendingGroup, open.document, state, t);

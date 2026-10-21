@@ -161,6 +161,7 @@ Une confirmation s'affiche en ligne, au-dessus de la ligne de message, à la pla
 | **Supprimer l'assemblage « nom » et tout son contenu ?** | **Supprimer**, **Annuler**. Une liste dit ce qui disparaît : corps, liaisons de l'assemblage, liaisons avec d'autres assemblages, préactionneurs, actionneurs, capteurs, sous-ensembles, tags supprimés et tags ajoutés, et les assemblages qui perdent leur rattachement. |
 | **Supprimer n fichier(s) orphelin(s) du dossier meshes ?** (menu **Fichier**, **Nettoyer les fichiers orphelins…**) | **Supprimer**, **Annuler**. La liste donne les fichiers et leur taille. |
 | **Remplacer l'alimentation de ... par une alimentation depuis ... ?** (lien tracé dans le schéma) | **Remplacer**, **Annuler** |
+| **Relire pantin.json abandonnera les modifications non enregistrées du Pantin « nom ».** (ou **io.json**, ou **Relire les fichiers abandonnera…**) (bouton **Relire le fichier** du [bandeau](#le-bandeau-de-modification-externe)) | **Relire et abandonner mes modifications**, **Annuler** |
 
 La suppression d'un objet de convoyage (émetteur, bande...) ne demande aucune confirmation.
 
@@ -465,6 +466,19 @@ Quand un alignement est en cours (bouton **Aligner (A)** enfoncé), un bloc **Al
 
 Un pointage refusé affiche la raison dans la ligne de message (par exemple **Cette face n'est pas plane.**).
 
+## Le bandeau de modification externe
+
+![Le bandeau d'avertissement](/screenshots/fr/external-edit-banner.webp)
+
+Il apparaît en haut de la zone centrale, au-dessus de la barre de transport, tant que `pantin.json` ou `io.json` a changé sur le disque en dehors de Pantin. Il porte un pictogramme **Avertissement**, un texte et une bordure basse : la couleur n'est jamais le seul signal. Pantin relit le disque quand la fenêtre reprend le focus et à l'enregistrement ; le principe est dans [Un Pantin, c'est un dossier](/guide/fundamentals#modifier-un-fichier-hors-de-pantin).
+
+| Contrôle | Ce qu'il fait | Absent quand |
+| --- | --- | --- |
+| Texte **pantin.json modifié en dehors de Pantin. Enregistrer l'écrasera.** (ou avec `io.json`) | Dit quel fichier a changé. Pour les deux : **pantin.json et io.json modifiés en dehors de Pantin. Enregistrer les écrasera.** | Aucun fichier n'a changé |
+| **Relire le fichier** (**Relire les fichiers** pour les deux) | Abandonne l'état en mémoire et relit le disque. Avec des modifications non enregistrées, pose d'abord la [question](#les-confirmations) **Relire et abandonner mes modifications** / **Annuler**. | Aucun fichier n'a changé |
+
+Un premier **Enregistrer** qui découvre lui-même le changement est refusé : le message de la ligne de message, en anglais, dit `pantin.json was modified outside Pantin since it was opened. Save again to overwrite it, or reload it.` Le bandeau apparaît alors, et un second **Enregistrer** écrase le disque. Enregistrer ou relire efface le bandeau.
+
 ## La barre de transport
 
 ![La barre de transport : Pause, 1 pas, 10 pas, Remise à zéro, temps simulé et nombre de pas](/screenshots/fr/transport-bar.webp)
@@ -540,7 +554,7 @@ Tout en bas de la zone centrale, une fine barre toujours visible porte le compte
 
 Une ligne dont la source existe encore est cliquable : un clic (ou **Entrée**) sélectionne la source (un préactionneur, une liaison...). Une source supprimée s'affiche **(supprimé)**. Quand rien n'est affiché, la liste dit **Rien à signaler pour ce Pantin.** ou **Aucune ligne pour les niveaux affichés.**
 
-La console rapporte notamment : une écriture de l'automate ignorée sur un tag forcé, une erreur dans un pas de simulation, un diagnostic apparu ou résolu, un défaut injecté ou retiré, un document migré à l'ouverture, une pause ou une reprise, un émetteur bloqué, la limite de produits atteinte, les connexions et déconnexions de l'automate et du pont, et les lignes d'avertissement ou d'erreur du journal du pont, sous la forme `Pont automate : <message>` (les lignes d'information restent dans le fichier de journal).
+La console rapporte notamment : une écriture de l'automate ignorée sur un tag forcé, une erreur dans un pas de simulation, un diagnostic apparu ou résolu, un défaut injecté ou retiré, un document migré à l'ouverture, un fichier modifié en dehors de Pantin (**pantin.json modifié en dehors de Pantin. Enregistrer l'écrasera.**, une seule ligne par nouveau contenu), une pause ou une reprise, un émetteur bloqué, la limite de produits atteinte, les connexions et déconnexions de l'automate et du pont, et les lignes d'avertissement ou d'erreur du journal du pont, sous la forme `Pont automate : <message>` (les lignes d'information restent dans le fichier de journal).
 
 ### Le mode Détaillé
 

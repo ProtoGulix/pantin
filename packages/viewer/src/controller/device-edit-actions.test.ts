@@ -42,7 +42,7 @@ const document = documentOf({
   ],
   sensors: [encoderOf("e1", "a", "j1")],
 });
-const pantin = { id: "press", unsavedChanges: false, document };
+const pantin = { id: "press", unsavedChanges: false, changedOutside: [], document };
 
 function openStore(api: Partial<PantinApiClient>) {
   const store = testStore({ getPantin: async () => pantin, listPantins: async () => [], ...api });

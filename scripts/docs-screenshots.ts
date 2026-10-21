@@ -18,6 +18,7 @@ import {
   captureNewDriveForm,
   captureTreeContextMenu,
 } from "./docs-screenshots/capture-editing.ts";
+import { captureExternalEditBanner } from "./docs-screenshots/capture-external-edit.ts";
 import { captureIoView } from "./docs-screenshots/capture-io.ts";
 import { captureRedundantJointsPrompt } from "./docs-screenshots/capture-redundant.ts";
 import {
@@ -72,6 +73,7 @@ async function captureLanguage(
   baseUrl: string,
   outputRoot: string,
   entry: (typeof LANGUAGES)[number],
+  pantinsDirectory: string,
 ): Promise<string[]> {
   const context = await browser.newContext({
     viewport: { width: 1600, height: 900 },
@@ -116,6 +118,7 @@ async function captureLanguage(
     await captureBridgeCard(session);
     await captureForcedTag(session);
     await captureConsoleVerbose(session);
+    await captureExternalEditBanner(session, pantinsDirectory);
     return session.savedNames;
   } finally {
     await context.close();
@@ -140,7 +143,14 @@ async function captureAllLanguages(
     await cp(join(REPOSITORY_ROOT, "examples/plc-cylinder"), exampleCopy, { recursive: true });
     const core = await startCore({ repositoryRoot: REPOSITORY_ROOT, pantinsDirectory });
     try {
-      const names = await captureLanguage(browser, encoderPage, core.baseUrl, outputRoot, entry);
+      const names = await captureLanguage(
+        browser,
+        encoderPage,
+        core.baseUrl,
+        outputRoot,
+        entry,
+        pantinsDirectory,
+      );
       process.stdout.write(
         `${entry.language}: ${names.length} screenshots (${names.join(", ")})\n`,
       );

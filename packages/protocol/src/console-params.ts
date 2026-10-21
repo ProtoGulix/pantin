@@ -4,6 +4,10 @@ import { BridgeFailureKindSchema } from "./bridge.ts";
 import { EmitterIdSchema, KeySchema } from "./ids.ts";
 import { TagNameSchema } from "./tag.ts";
 
+// The files of a Pantin folder that Pantin watches for outside edits (ADR 0063).
+export const ChangedOutsideFileSchema = z.enum(["pantin.json", "io.json"]);
+export type ChangedOutsideFile = z.infer<typeof ChangedOutsideFileSchema>;
+
 // Params are typed per code, not a loose record: a client's translation of a
 // code knows which placeholders exist, and a new code cannot ship without
 // saying what it carries. Every param is a primitive, so folding compares
@@ -26,6 +30,8 @@ export const ParamsSchemas = {
     to: z.number().int().positive(),
     followers: z.string().max(200).optional(),
   }),
+  // ADR 0063 point 3: the file of the Pantin folder that was modified outside Pantin.
+  file_changed_outside: z.object({ file: ChangedOutsideFileSchema }),
   clock: z.object({}),
   // ADR 0035 point 2: the converter could not prove the face map of this
   // STEP body, so alignment only offers the fallback pick on it. The reason

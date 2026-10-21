@@ -1,5 +1,5 @@
 import type { RedundantJointsDeletionResponse, RedundantJointsList } from "@pantin/protocol";
-import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
+import { NO_CLOSE_PROMPT, NO_RELOAD_PROMPT } from "./close-prompt.ts";
 import { createTranslator, type Language, pluralKey } from "./i18n/translate.ts";
 import { infoMessage, type PanelMessage } from "./messages.ts";
 import { type ViewerState, withOpenPantin } from "./viewer-state.ts";
@@ -38,6 +38,7 @@ export function withRedundantJointsPreview(
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
   };
 }
 

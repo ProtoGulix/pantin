@@ -22,6 +22,7 @@ const document = pantinResponse(true, [railBody, stepBody("rod", "Tige")]).docum
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: true,
+  changedOutside: [],
   document: {
     ...document,
     assemblies: [

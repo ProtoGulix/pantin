@@ -1,0 +1,31 @@
+/* The banner "modified outside Pantin" at the top of the central area (ADR 0063). Tokens in
+   base.css. The warning state colour tints the glyph and the border; the words and the
+   glyph say the same, and the action is an ordinary button. */
+.external-edit-banner {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--state-abnormal-soft);
+  border-bottom: 2px solid var(--state-abnormal);
+}
+
+.external-edit-banner[hidden] {
+  display: none;
+}
+
+.external-edit-banner__glyph {
+  display: flex;
+  color: var(--state-abnormal);
+}
+
+.external-edit-banner__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.external-edit-banner__action {
+  flex: none;
+}

@@ -1,6 +1,7 @@
 import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
 import {
   type BridgeFailureKind,
+  type ChangedOutsideFile,
   type ConsoleEvent,
   type ConsoleSource,
   PANTIN_SCHEMA_VERSION,
@@ -82,6 +83,16 @@ export function migrationEvents(reading: {
       params: { from: reading.migratedFrom, to: PANTIN_SCHEMA_VERSION, ...followers },
     },
   ];
+}
+
+// ADR 0063 point 3: written once for each new content found on disk.
+export function fileChangedOutsideEvent(file: ChangedOutsideFile): ConsoleEvent {
+  return {
+    code: "file_changed_outside",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { file },
+  };
 }
 
 // ADR 0045 point 12: a pause while a bridge is connected is a warning, since

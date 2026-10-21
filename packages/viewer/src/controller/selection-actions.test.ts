@@ -23,6 +23,7 @@ import { openJointEditForm, openJointForm } from "./joint-actions.ts";
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document: documentOf({
     assemblies: ["a"],
     bodies: [bodyOf("s1", "a")],

@@ -161,6 +161,7 @@ A confirmation is shown inline, above the message line, in place of a dialog. It
 | **Delete assembly "name" and all its contents?** | **Delete**, **Cancel**. A list says what disappears: bodies, joints of the assembly, joints with other assemblies, drives, actuators, sensors, sub-assemblies, removed tags and added tags, and the assemblies that lose their attachment. |
 | **Delete n orphan file(s) from the meshes folder?** (**File** menu, **Clean up orphan files…**) | **Delete**, **Cancel**. The list gives the files and their size. |
 | **Replace the feed of ... by one from ...?** (link drawn in the diagram) | **Replace**, **Cancel** |
+| **Reloading pantin.json will discard the unsaved changes of Pantin "name".** (or **io.json**, or **Reloading the files will discard…**) (**Reload the file** button of the [banner](#the-external-edit-banner)) | **Reload and discard my changes**, **Cancel** |
 
 Deleting a conveying object (emitter, belt...) asks for no confirmation.
 
@@ -465,6 +466,19 @@ When an alignment is in progress (**Align (A)** button pressed), an **Align "nam
 
 A refused pick shows the reason in the message line (for example **This face is not plane.**).
 
+## The external-edit banner
+
+![The warning banner](/screenshots/en/external-edit-banner.webp)
+
+It appears at the top of the central area, above the transport bar, while `pantin.json` or `io.json` changed on disk outside Pantin. It has a **Warning** glyph, a text and a bottom border: colour is never the only cue. Pantin reads the disk again when the window gets the focus back and at save; the principle is in [A Pantin is a folder](/en/guide/fundamentals#editing-a-file-outside-pantin).
+
+| Control | What it does | Absent when |
+| --- | --- | --- |
+| Text **pantin.json modified outside Pantin. Saving will overwrite it.** (or with `io.json`) | Says which file changed. For both: **pantin.json and io.json modified outside Pantin. Saving will overwrite them.** | No file changed |
+| **Reload the file** (**Reload the files** for both) | Discards the state in memory and reads the disk again. With unsaved changes, first asks the [question](#confirmations) **Reload and discard my changes** / **Cancel**. | No file changed |
+
+A first **Save** that is itself the one to find the change is refused: the message line shows the core's text, `pantin.json was modified outside Pantin since it was opened. Save again to overwrite it, or reload it.` The banner then appears, and a second **Save** overwrites the disk. Saving or reloading clears the banner.
+
 ## The transport bar
 
 ![The transport bar: Pause, 1 step, 10 steps, Reset, simulated time and step count](/screenshots/en/transport-bar.webp)
@@ -540,7 +554,7 @@ At the very bottom of the central area, a thin always-visible bar holds the cons
 
 A line whose source still exists is clickable: a click (or **Enter**) selects the source (a drive, a joint...). A deleted source is shown as **(deleted)**. When nothing is displayed, the list says **Nothing to report for this Pantin.** or **No line for the levels shown.**
 
-The console reports in particular: a PLC write ignored on a forced tag, an error in a simulation step, a diagnostic that appeared or cleared, a fault injected or removed, a document migrated on opening, a pause or a resume, a blocked emitter, the product limit reached, the connections and disconnections of the PLC and of the bridge, and the warning or error lines of the bridge log, as `PLC bridge: <message>` (information lines stay in the log file).
+The console reports in particular: a PLC write ignored on a forced tag, an error in a simulation step, a diagnostic that appeared or cleared, a fault injected or removed, a document migrated on opening, a file modified outside Pantin (**pantin.json modified outside Pantin. Saving will overwrite it.**, one line for each new content), a pause or a resume, a blocked emitter, the product limit reached, the connections and disconnections of the PLC and of the bridge, and the warning or error lines of the bridge log, as `PLC bridge: <message>` (information lines stay in the log file).
 
 ### Verbose mode
 

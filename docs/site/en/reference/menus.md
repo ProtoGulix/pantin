@@ -19,7 +19,7 @@ Terms used in the "Greyed out when" column:
 |---|---|---|---|
 | **Welcome** | | Shows the welcome window. | A Pantin is open. |
 | **Open…** | | With a Pantin open, closes it to go back to the welcome window: if it has unsaved changes, a confirmation question is shown. The welcome window then opens on the last tab used (**Home** the first time). With no Pantin open, shows the welcome window on the **All Pantins** tab. | Working. |
-| **Save** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Saves the open Pantin. | No Pantin open, no unsaved changes, or working. |
+| **Save** | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Saves the open Pantin. If `pantin.json` or `io.json` changed outside Pantin, the first save is refused with an explanation; the next one overwrites the disk (see the [banner](/en/reference/panels#the-external-edit-banner)). | No Pantin open, neither unsaved changes nor a file modified outside Pantin, or working. |
 | **Import…** | | Opens the file picker to import a 3D model (GLB, STL, STEP) into the open Pantin. | No Pantin open, working, or an import already in progress. |
 | **Clean up orphan files…** | | Offers to delete the orphan files of the Pantin's meshes folder that no body uses (after confirmation). | Same conditions as **Import…**. |
 | separator | | | |

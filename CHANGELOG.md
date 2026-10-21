@@ -40,6 +40,20 @@ All notable changes to Pantin. The format follows
   copy. The section is hidden when the core offers none; a refused copy says what to do.
 - Guide: the Examples section of Home (copy, `--examples-dir`, messages) in the welcome window reference and
   "Install and start", and the tutorials now start from it, in French and English (ADR 0062).
+- External edits (ADR 0063, core and protocol): the core stamps pantin.json and io.json (size,
+  modification time, SHA-256 of the disk bytes) and checks them at `GET /api/pantins/:pantinId` and
+  at save. A file edited, created or deleted outside Pantin is reported in the new
+  `changedOutside` field of the Pantin response and by one `file_changed_outside` console warning
+  for each new content; a touch that keeps the bytes is silent. The first save that finds such an
+  edit answers 409 `conflict`, the next one overwrites; save and discard clear the flag.
+- External edits (ADR 0063, viewer): the window re-reads the open Pantin when it gets the focus
+  back (debounced, skipped while a request runs). While a file changed outside Pantin, a banner
+  with a warning glyph and text sits above the central area, with the action "Reload the file"
+  (`POST .../discard`, confirmed first over unsaved changes). A save refused with 409 shows the
+  core's message and re-reads the Pantin so that the banner appears.
+- Guide: the warning about files edited outside Pantin (ADR 0063), in French and English: fundamentals
+  ("Editing a file outside Pantin"), the banner and its confirmation in "Panels and buttons", the
+  save and screen references, troubleshooting, and a banner screenshot.
 - Guide: a tutorial, in French and English, from the CODESYS symbol export to the closed
   loop on `examples/plc-cylinder` (import window, GVL, command line), linked from
   "Connect a PLC" (ADR 0064 point 17).

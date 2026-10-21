@@ -61,6 +61,7 @@ _CONSOLE_LEVELS: Final = {
     "fault_set": "info",
     "fault_cleared": "info",
     "migrated": "info",
+    "file_changed_outside": "warning",
     "clock_paused": "info",
     "clock_resumed": "info",
     "face_file_missing": "warning",

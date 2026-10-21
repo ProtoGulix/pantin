@@ -18,6 +18,7 @@ import {
 export const consolePantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document: documentOf({
     assemblies: ["a"],
     bodies: [bodyOf("s1", "a")],

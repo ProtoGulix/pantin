@@ -13,6 +13,7 @@ const list = {
 const pantin = {
   id: "press",
   unsavedChanges: true,
+  changedOutside: [],
   document: {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Press",

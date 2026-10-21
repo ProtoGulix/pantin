@@ -33,6 +33,17 @@ describe("toolbar", () => {
     });
   });
 
+  it("enables save, without the unsaved dot, when a file changed outside Pantin", () => {
+    const state = withOpenPantin(opened(false), {
+      ...pantinResponse(false),
+      changedOutside: ["io.json"],
+    });
+    expect(buildPanelView(state).toolbar).toMatchObject({
+      saveEnabled: true,
+      hasUnsavedChanges: false,
+    });
+  });
+
   it("disables save and import while a request is in flight", () => {
     const toolbar = buildPanelView(withRequestStarted(opened(true))).toolbar;
     expect(toolbar).toMatchObject({ saveEnabled: false, importEnabled: false, busy: true });
@@ -142,6 +153,7 @@ describe("message line and language", () => {
       "about",
       "console",
       "contextMenu",
+      "externalEdit",
       "importForm",
       "inspector",
       "io",

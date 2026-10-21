@@ -60,6 +60,7 @@ export function pantinResponse(
   return {
     id,
     unsavedChanges,
+    changedOutside: [],
     document: {
       schema_version: PANTIN_SCHEMA_VERSION,
       name: "Press",

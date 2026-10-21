@@ -42,6 +42,8 @@ It exists only when a Pantin is open. From top to bottom: the toolbar, the impor
 
 It has a top zone and, if you open it, a bottom zone. Each zone shows one view at a time, among **3D**, **Diagram**, **Joints** and **I/O**, chosen with the selector at the top left of the zone. A view is shown in one zone at a time. By default, the 3D view is on top and the diagram below. The **View** menu offers the same choices, and <kbd>F4</kbd> moves the top zone to the next view. With no Pantin open, the 3D view takes up the whole area. See [Central views](/en/reference/views).
 
+When `pantin.json` or `io.json` changed outside Pantin, a warning banner is shown above the area, with the **Reload the file** button. See [Panels and buttons](/en/reference/panels#the-external-edit-banner).
+
 In the 3D view, a view cube lets you choose a standard view with one click.
 
 ## The inspector

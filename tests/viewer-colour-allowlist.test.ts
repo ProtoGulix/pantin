@@ -35,6 +35,9 @@ const ALLOWLIST: Readonly<Record<string, string>> = {
   "console.css :: .console-line--error .console-line__level": "error glyph and level word",
   "console.css :: .console-line--warning": "warning glyph, level word and 3 px left bar",
   "console.css :: .console-line--warning .console-line__level": "warning glyph and level word",
+  "external-edit-banner.css :: .external-edit-banner":
+    "warning glyph and the sentence in words, plus a 2 px bottom border",
+  "external-edit-banner.css :: .external-edit-banner__glyph": "warning glyph beside the sentence",
   "diagram-wiring.css :: .diagram-port.is-lit .diagram-socket":
     "thicker ring on the lit socket, beside the thicker lit edge (width)",
   "diagram-wiring.css :: .diagram-value-input .text-input.is-invalid":

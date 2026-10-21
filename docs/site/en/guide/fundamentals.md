@@ -81,6 +81,24 @@ Pantins are stored by default in the `pantin-projects` folder of your home folde
 
 Since everything is text, you can version a Pantin with git, compare two versions or share it. The format is described in the [Pantin document guide](https://github.com/ProtoGulix/pantin/blob/develop/docs/guides/pantin-document.md).
 
+### Editing a file outside Pantin
+
+An open Pantin stays in the core's memory. If you edit `pantin.json` or `io.json` with a text editor, a `git pull` or `pantin io init --update`, the viewer does not see it at once. Pantin then compares the disk with what it read, at two moments only:
+
+- when the browser window gets the focus back (you return from your editor or your terminal);
+- at save.
+
+A file modified, created or deleted outside Pantin raises three signs: a warning banner at the top of the central area, with a glyph, a text and a border (colour is never the only cue), a warning in the **Console**, and a first save that is refused. The banner text is **pantin.json modified outside Pantin. Saving will overwrite it.** (with `io.json`, or **pantin.json and io.json modified outside Pantin. Saving will overwrite them.** for both). Pantin never reloads on its own and never merges: you choose.
+
+![The warning banner when pantin.json changed on disk](/screenshots/en/external-edit-banner.webp)
+
+- **Reload the file** (**Reload the files** for both) discards the state in memory and reads the disk again. If unsaved changes remain, a confirmation question is shown first.
+- **Save** overwrites the version on disk with Pantin's.
+
+A file that is touched without its content changing (`touch`, or a `git checkout` that restores the same bytes) triggers nothing.
+
+Pantin relies on the size and the modification time of the file, then on the content when either changed. An edit that keeps both the size and the time is not seen. The time precision on FAT and on network shares is not verified.
+
 ## Local by default
 
 On startup, the core listens **only on the local machine** (`127.0.0.1`). Nobody else on your network can connect to it.

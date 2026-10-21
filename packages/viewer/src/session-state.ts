@@ -1,5 +1,5 @@
 import type { AssemblyDeletion, PantinResponse } from "@pantin/protocol";
-import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
+import { NO_CLOSE_PROMPT, NO_RELOAD_PROMPT } from "./close-prompt.ts";
 import { withExamplePromptClosed } from "./example-state.ts";
 import { infoMessage } from "./messages.ts";
 import { NO_PREVIOUS_PLACEMENTS } from "./previous-placement.ts";
@@ -31,6 +31,7 @@ export function withPantinClosed(state: ViewerState): ViewerState {
     pendingImport: null,
     importInProgress: false,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,
     pendingDeleteDevice: null,
@@ -64,6 +65,7 @@ export function withCloseRequested(state: ViewerState, bridgeActive = false): Vi
         pendingDeleteDevice: null,
         pendingDeleteAssembly: null,
         pendingGroup: null,
+        pendingReload: false,
         pendingOrphanCleanup: null,
         pendingRedundantJoints: null,
         pendingFeedReplacement: null,
@@ -84,7 +86,7 @@ export function withCloseStopsBridge(state: ViewerState, stops: boolean): Viewer
 }
 
 export function withCloseCancelled(state: ViewerState): ViewerState {
-  return { ...state, ...NO_CLOSE_PROMPT };
+  return { ...state, ...NO_CLOSE_PROMPT, ...NO_RELOAD_PROMPT };
 }
 
 /** Escape or the close button: the empty workspace, without a half-typed name. */
@@ -137,6 +139,7 @@ export function withDeleteRequested(state: ViewerState, nodeId: string): ViewerS
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
   };
 }
 
@@ -180,6 +183,7 @@ export function withAssemblyDeleteRequested(
     pendingFeedReplacement: null,
     contextMenu: null,
     ...NO_CLOSE_PROMPT,
+    ...NO_RELOAD_PROMPT,
   };
 }
 

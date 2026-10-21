@@ -13,6 +13,7 @@ import { testStore } from "./controller-test-helpers.ts";
 export const PANTIN: PantinResponse = {
   id: "bench",
   unsavedChanges: false,
+  changedOutside: [],
   document: documentOf({
     assemblies: ["a", "block"],
     bodies: [bodyOf("block", "block")],

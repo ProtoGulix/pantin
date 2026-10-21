@@ -21,6 +21,7 @@ import {
 import { stopBridge } from "./bridge-actions.ts";
 import { confirmDeviceDelete } from "./device-deletion-actions.ts";
 import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
+import { cancelReload, confirmReload } from "./external-edit-actions.ts";
 import { cancelGroup, confirmGroup } from "./grouping-actions.ts";
 import { confirmDeleteJoint } from "./joint-actions.ts";
 import { confirmOrphanCleanup } from "./orphan-cleanup-actions.ts";
@@ -151,6 +152,12 @@ function resolveEditPrompt(store: ViewerStore, action: PromptAction): void {
       return;
     case "cancelGroup":
       cancelGroup(store);
+      return;
+    case "confirmReload":
+      void confirmReload(store);
+      return;
+    case "cancelReload":
+      cancelReload(store);
       return;
     default:
       return;

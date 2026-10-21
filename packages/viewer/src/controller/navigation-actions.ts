@@ -81,3 +81,9 @@ export function receiveNormalToPick(store: ViewerStore, click: ViewportPick | nu
   store.update({ ...store.state, normalTo: false, message: null });
   showViewFromDirection(store, normalToDirectionOf(click));
 }
+
+// A failed mesh load is tried again, with the message that reported it cleared.
+export function retryMeshLoad(store: ViewerStore): void {
+  store.update({ ...store.state, message: null });
+  store.ports.viewport().retryFailedBodies();
+}

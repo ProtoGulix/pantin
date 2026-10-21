@@ -14,7 +14,12 @@ import {
   showDiagramHint,
 } from "./diagram-edit-actions.ts";
 
-const pantin: PantinResponse = { id: "press", unsavedChanges: false, document: wiringDocument };
+const pantin: PantinResponse = {
+  id: "press",
+  unsavedChanges: false,
+  changedOutside: [],
+  document: wiringDocument,
+};
 
 // Records the updates the diagram sends; the core's answer is the same Pantin.
 function openStore() {

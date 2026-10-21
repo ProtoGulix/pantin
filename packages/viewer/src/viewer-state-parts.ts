@@ -28,3 +28,11 @@ export interface InspectorFocusRequest {
   key: string;
   serial: number;
 }
+
+// Closed device forms, for a Pantin that was just opened or replaced.
+export const NO_DEVICE_FORMS = {
+  driveForm: null,
+  actuatorForm: null,
+  sensorForm: null,
+  conveyorForm: null,
+} as const;

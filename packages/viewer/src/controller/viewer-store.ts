@@ -62,6 +62,8 @@ export class ViewerStore {
   tagValues: ReadonlyMap<string, number> = new Map();
   // Tags a client wrote and nobody released (ADR 0045 point 5): a PLC cannot write them.
   forcedTags: ReadonlySet<string> = new Set();
+  // When the window last re-read the open Pantin after getting the focus back (ADR 0063).
+  lastFocusRereadAt: number | null = null;
   // One tag read at a time: a slow core must not pile requests up.
   readingTags = false;
   // The dragged placements of the gizmo, one request in flight (ADR 0034 point 4).

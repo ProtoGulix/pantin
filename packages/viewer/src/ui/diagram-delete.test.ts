@@ -16,7 +16,12 @@ const node = (nodeId: string): FocusTarget => ({ nodeId, socketId: null });
 
 function selectedDriveStore() {
   const deleteDrive = vi.fn(async () => wiringPantin);
-  const wiringPantin = { id: "press", unsavedChanges: false, document: wiringDocument };
+  const wiringPantin = {
+    id: "press",
+    unsavedChanges: false,
+    changedOutside: [],
+    document: wiringDocument,
+  };
   const updateActuator = vi.fn(async () => {
     throw new Error("The test does not need the core's answer.");
   });

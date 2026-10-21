@@ -32,6 +32,12 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "drive", id: "v1" },
     params: { fault: "unresponsive" },
   }),
+  file_changed_outside: entryOf(31, {
+    code: "file_changed_outside",
+    level: "warning",
+    source: { kind: "pantin" },
+    params: { file: "io.json" },
+  }),
   migrated: entryOf(7, {
     code: "migrated",
     level: "info",
@@ -139,6 +145,7 @@ const expected = {
     diagnostic_cleared: "Diagnostic résolu : Commandes contradictoires.",
     fault_set: "Défaut injecté : Grippée.",
     fault_cleared: "Défaut retiré : Ne répond plus.",
+    file_changed_outside: "io.json modifié en dehors de Pantin. Enregistrer l'écrasera.",
     migrated: "Document migré à l'ouverture, de la version 1 à la version 2.",
     clock_paused: "Simulation en pause.",
     clock_resumed: "Simulation reprise.",
@@ -170,6 +177,7 @@ const expected = {
     fault_set: "Fault injected: Jammed.",
     fault_cleared: "Fault removed: Not responding.",
     migrated: "Document migrated on opening, from version 1 to version 2.",
+    file_changed_outside: "io.json modified outside Pantin. Saving will overwrite it.",
     clock_paused: "Simulation paused.",
     clock_resumed: "Simulation resumed.",
     face_file_missing:

@@ -1,13 +1,15 @@
 import { z } from "zod";
 import { ParamsSchemas } from "./console-params.ts";
 import {
-  ActuatorIdSchema,
-  BodyIdSchema,
-  DriveIdSchema,
-  JointIdSchema,
-  PresenceSensorIdSchema,
-  SensorIdSchema,
-} from "./ids.ts";
+  BodySourceSchema,
+  ConsoleSourceSchema,
+  DriveSourceSchema,
+  JointOrDriveSourceSchema,
+  PantinSourceSchema,
+  SensorOrPresenceSourceSchema,
+} from "./console-sources.ts";
+
+export { type ChangedOutsideFile, ChangedOutsideFileSchema } from "./console-params.ts";
 
 // The Pantin console (ADR 0031): what happens in the core, per open Pantin,
 // kept in memory (last 1000 entries), never saved.
@@ -45,30 +47,6 @@ export const TRACE_BUDGET_WINDOW_STEPS = 120;
 
 export const ConsoleLevelSchema = z.enum(["error", "warning", "info", "trace"]);
 export type ConsoleLevel = z.infer<typeof ConsoleLevelSchema>;
-
-// The Pantin itself, or one of its elements by id.
-export const ConsoleSourceSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("pantin") }),
-  z.object({ kind: z.literal("drive"), id: DriveIdSchema }),
-  z.object({ kind: z.literal("actuator"), id: ActuatorIdSchema }),
-  z.object({ kind: z.literal("sensor"), id: SensorIdSchema }),
-  z.object({ kind: z.literal("presence_sensor"), id: PresenceSensorIdSchema }),
-  z.object({ kind: z.literal("joint"), id: JointIdSchema }),
-  z.object({ kind: z.literal("body"), id: BodyIdSchema }),
-]);
-export type ConsoleSource = z.infer<typeof ConsoleSourceSchema>;
-
-const DriveSourceSchema = z.object({ kind: z.literal("drive"), id: DriveIdSchema });
-const JointOrDriveSourceSchema = z.discriminatedUnion("kind", [
-  DriveSourceSchema,
-  z.object({ kind: z.literal("joint"), id: JointIdSchema }),
-]);
-const PantinSourceSchema = z.object({ kind: z.literal("pantin") });
-const SensorOrPresenceSourceSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("sensor"), id: SensorIdSchema }),
-  z.object({ kind: z.literal("presence_sensor"), id: PresenceSensorIdSchema }),
-]);
-const BodySourceSchema = z.object({ kind: z.literal("body"), id: BodyIdSchema });
 
 const eventShapes = {
   forcedTagWritten: z.object({
@@ -112,6 +90,12 @@ const eventShapes = {
     level: z.literal("info"),
     source: PantinSourceSchema,
     params: ParamsSchemas.migrated,
+  }),
+  fileChangedOutside: z.object({
+    code: z.literal("file_changed_outside"),
+    level: z.literal("warning"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.file_changed_outside,
   }),
   clockPaused: z.object({
     code: z.literal("clock_paused"),
@@ -217,6 +201,7 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.faultSet,
   eventShapes.faultCleared,
   eventShapes.migrated,
+  eventShapes.fileChangedOutside,
   eventShapes.clockPaused,
   eventShapes.clockResumed,
   eventShapes.faceFileMissing,
@@ -257,6 +242,7 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.faultSet.extend(entryFields),
   eventShapes.faultCleared.extend(entryFields),
   eventShapes.migrated.extend(entryFields),
+  eventShapes.fileChangedOutside.extend(entryFields),
   eventShapes.clockPaused.extend(entryFields),
   eventShapes.clockResumed.extend(entryFields),
   eventShapes.faceFileMissing.extend(entryFields),

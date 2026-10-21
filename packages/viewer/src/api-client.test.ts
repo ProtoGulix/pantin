@@ -7,6 +7,7 @@ import { type FetchFunction, PantinApiError } from "./api-transport.ts";
 const pantin: PantinResponse = {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document: {
     schema_version: PANTIN_SCHEMA_VERSION,
     name: "Press",

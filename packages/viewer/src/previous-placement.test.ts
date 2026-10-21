@@ -26,6 +26,7 @@ const base = documentOf({ assemblies: ["a", "block"], bodies: [bodyOf("block", "
 const pantin = {
   id: "bench",
   unsavedChanges: false,
+  changedOutside: [],
   document: {
     ...base,
     assemblies: base.assemblies.map((assembly) => ({ ...assembly, placement: start })),

@@ -93,6 +93,16 @@ describe("menu bar model", () => {
     expect(enabledCommands(editing(true))).toContain("save");
   });
 
+  it("enables Enregistrer when a file changed outside Pantin, even with nothing unsaved", () => {
+    const state = editing(false);
+    const changed = withOpenPantin(state, {
+      ...pantinResponse(false),
+      changedOutside: ["pantin.json"],
+    });
+    expect(enabledCommands(changed)).toContain("save");
+    expect(enabledCommands({ ...changed, pendingRequestCount: 1 })).not.toContain("save");
+  });
+
   it("enables Supprimer only on a body, Renommer on a Pantin or a body", () => {
     const onBody = withNode(editing(false), bodyNodeId("press", "rail"));
     const onSource = withNode(editing(false), sourceNodeNodeId("press", "rail", 0));

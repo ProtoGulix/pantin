@@ -43,6 +43,7 @@ import { conveyorIntents } from "./conveyor-intents.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
 import { copyExample, loadExamples } from "./example-actions.ts";
+import { externalEditIntents } from "./external-edit-actions.ts";
 import { setGizmoStep, turnToolOff } from "./gizmo-actions.ts";
 import {
   cancelImport,
@@ -65,7 +66,7 @@ import {
   submitJointForm,
 } from "./joint-actions.ts";
 import { runMenuCommand } from "./menu-commands.ts";
-import { showViewFromDirection } from "./navigation-actions.ts";
+import { retryMeshLoad, showViewFromDirection } from "./navigation-actions.ts";
 import {
   createPantin,
   openPantin,
@@ -202,11 +203,8 @@ function jointIntents(store: ViewerStore) {
   };
 }
 
-function retryMeshLoad(store: ViewerStore): void {
-  store.update({ ...store.state, message: null });
-  store.ports.viewport().retryFailedBodies();
-}
-
+// One flat list of the intent groups, with the few that need `changeLanguage` or
+// `intents`: splitting it would scatter them.
 export function createPanelIntents(store: ViewerStore): PanelIntents {
   const changeLanguage = (language: string) => {
     if (isLanguage(language)) {
@@ -226,6 +224,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...sensorIntents(store),
     ...conveyorIntents(store),
     ...consoleIntents(store),
+    ...externalEditIntents(store),
     ...clockIntents(store),
     ...bridgeIntents(store),
     ...ioIntents(store),

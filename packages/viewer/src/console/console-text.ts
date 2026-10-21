@@ -78,6 +78,7 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
     case "bridge_connected":
     case "face_file_missing":
       return { text: t(`console.code.${entry.code}`), detail: null };
+    case "file_changed_outside":
     case "emitter_blocked":
     case "product_limit":
     case "sensor_changed":

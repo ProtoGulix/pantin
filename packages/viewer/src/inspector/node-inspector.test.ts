@@ -47,6 +47,7 @@ const document = documentOf({
 const opened = withOpenPantin(initialViewerState("en"), {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document,
 });
 

@@ -13,6 +13,7 @@ import { CentralArea } from "./central-area.ts";
 import { ConsoleBar } from "./console-bar.ts";
 import { ConsolePanel } from "./console-panel.ts";
 import { DiagramView } from "./diagram-view.ts";
+import { ExternalEditBanner } from "./external-edit-banner.ts";
 import { Inspector } from "./inspector.ts";
 import { IoPanel } from "./io-panel.ts";
 import { JointStarView } from "./joint-star-view.ts";
@@ -144,6 +145,9 @@ export function createScreen(): Screen {
   const symbolImport = new SymbolImportDialog(requireElement("#symbol-import", HTMLElement));
   const { diagram, jointStar, ioPanel, centralArea, zoneBars } = createZoneViews();
   const consolePanel = createConsolePanel();
+  const externalEditBanner = new ExternalEditBanner(
+    requireElement("#external-edit-banner", HTMLElement),
+  );
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
   const inspector = new Inspector(requireElement("#inspector", HTMLElement));
   const viewCube = new ViewCube(requireElement("#view-cube", HTMLElement), canvas);
@@ -165,6 +169,7 @@ export function createScreen(): Screen {
         intents,
       );
       ioPanel.render(view.io, view.translate, view.language, intents);
+      externalEditBanner.render(view.externalEdit, intents);
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
       about.render(view.about, intents);

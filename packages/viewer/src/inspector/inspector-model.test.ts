@@ -30,7 +30,7 @@ const document = documentOf({
   actuators: [cylinderOf("c1", "a", "v1", ["j1"])],
   sensors: [encoderOf("e1", "a", "j1")],
 });
-const pantin = { id: "press", unsavedChanges: false, document };
+const pantin = { id: "press", unsavedChanges: false, changedOutside: [], document };
 const opened = withOpenPantin(initialViewerState("fr"), pantin);
 
 const inspectorOf = (state: ViewerState) => buildInspectorView(state, t, false);

@@ -17,6 +17,8 @@ export interface MenuContext {
   editing: boolean;
   busy: boolean;
   unsavedChanges: boolean;
+  // A file of the Pantin folder was modified outside Pantin: saving overwrites it (ADR 0063).
+  changedOutside: boolean;
   importing: boolean;
   hasBodies: boolean;
   selectedKind: NodeRef["kind"] | DeviceKind | null;
@@ -67,6 +69,7 @@ export function menuContext(state: ViewerState): MenuContext {
     editing: state.openPantin !== null,
     busy: state.pendingRequestCount > 0,
     unsavedChanges: state.openPantin?.unsavedChanges ?? false,
+    changedOutside: (state.openPantin?.changedOutside.length ?? 0) > 0,
     importing: state.importInProgress,
     hasBodies: (state.openPantin?.document.bodies.length ?? 0) > 0,
     selectedKind: selectedKindOf(state.selection),

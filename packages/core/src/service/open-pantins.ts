@@ -6,17 +6,23 @@ import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
 import { allClearedEvents, migrationEvents } from "../domain/console-events.ts";
 import { createInertPhysicsWorld } from "../domain/inert-physics-world.ts";
 import { type IoReading, ioTextOf, MISSING_IO } from "../domain/io-document-text.ts";
-import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
+import { serializePantinDocument } from "../domain/pantin-document.ts";
 import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { EMPTY_TRACE_BUDGET, type TraceBudget } from "../domain/sensor-trace.ts";
 import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
 import type { TagStates } from "../domain/tag-states.ts";
-import { ApiError } from "../errors.ts";
 import type { ExampleStore } from "../store/example-store.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { type BridgeCoreLineWriter, recordConsoleEvents } from "./console-record.ts";
+import {
+  type DiskStamps,
+  NO_STAMPS,
+  type OutsideFlags,
+  takeStamps,
+  WATCHED_FILES,
+} from "./external-edits.ts";
 import { alignIo } from "./io-alignment.ts";
 import { isMigrated, readIoReading } from "./io-reading.ts";
 import {
@@ -26,6 +32,7 @@ import {
   resetPhysics,
   syncPhysicsTo,
 } from "./physics-runtime.ts";
+import { readSavedReading } from "./saved-document.ts";
 
 // In-memory Pantins of one service instance: documents are edited here and
 // written to disk only on save.
@@ -43,6 +50,11 @@ export type OpenPantin = {
   savedIoText: string | null;
   // io.json on disk is in an older version: the next save rewrites it (ADR 0064 point 7).
   ioFileIsOlder: boolean;
+  // What pantin.json and io.json held on disk when Pantin last read or wrote
+  // them (ADR 0063), and the ones found modified outside since: cleared by a
+  // save or a discard. Never saved.
+  diskStamps: DiskStamps;
+  changedOutside: OutsideFlags;
   // The document the mapping was last aligned with, to carry renames over
   // (ADR 0049 point 10): see alignIo.
   ioAlignedDocument: PantinDocument;
@@ -117,6 +129,7 @@ export function newOpenPantin(
   consoleId: string,
   createWorld: PhysicsWorldFactory = createInertPhysicsWorld,
   io: IoReading = MISSING_IO,
+  diskStamps: DiskStamps = NO_STAMPS,
 ): OpenPantin {
   return {
     document,
@@ -124,6 +137,8 @@ export function newOpenPantin(
     io,
     savedIoText: ioTextOf(io),
     ioFileIsOlder: isMigrated(io),
+    diskStamps: { ...diskStamps },
+    changedOutside: new Set(),
     ioAlignedDocument: document,
     savedMeshPaths: meshPathsOf(document),
     writingMeshPaths: new Set(),
@@ -210,6 +225,7 @@ export function toResponse(pantinId: PantinId, openPantin: OpenPantin): PantinRe
   return {
     id: pantinId,
     unsavedChanges: hasUnsavedChanges(openPantin),
+    changedOutside: WATCHED_FILES.filter((file) => openPantin.changedOutside.has(file)),
     document: openPantin.document,
   };
 }
@@ -240,30 +256,11 @@ export function loadPantin(context: ServiceContext, pantinId: PantinId): Promise
   return loading;
 }
 
-// Reads and validates pantin.json without opening the Pantin.
-export async function readSavedDocument(
-  context: ServiceContext,
-  pantinId: PantinId,
-): Promise<PantinDocument> {
-  return (await readSavedReading(context, pantinId)).document;
-}
-
-async function readSavedReading(context: ServiceContext, pantinId: PantinId) {
-  const text = await context.store.readDocumentText(pantinId);
-  if (text === undefined) {
-    throw new ApiError(
-      "not_found",
-      `No Pantin with id "${pantinId}". List them with GET /api/pantins.`,
-    );
-  }
-  const location = context.store.describeDocumentLocation(pantinId);
-  return readValidDocument(text, location);
-}
-
 async function readPantinFromDisk(
   context: ServiceContext,
   pantinId: PantinId,
 ): Promise<OpenPantin> {
+  const diskStamps = await takeStamps(context, pantinId);
   // Compared in canonical form, so a hand formatted file is not "unsaved".
   const reading = await readSavedReading(context, pantinId);
   const io = await readIoReading(context.store, pantinId);
@@ -272,6 +269,7 @@ async function readPantinFromDisk(
     context.newConsoleId(),
     context.physics.createWorld,
     io,
+    diskStamps,
   );
   recordConsoleEvents(context, openPantin, migrationEvents(reading));
   return openPantin;

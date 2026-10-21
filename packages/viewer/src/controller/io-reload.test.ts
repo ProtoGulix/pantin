@@ -66,7 +66,7 @@ describe("the hook after any document change", () => {
         reads += 1;
         return answer("m1");
       },
-      deleteJoint: async () => ({ ...pantin, unsavedChanges: true }),
+      deleteJoint: async () => ({ ...pantin, unsavedChanges: true, changedOutside: [] }),
     });
     reads = 0;
     store.update({ ...store.state, pendingDeleteJointId: slideJoint.id });
@@ -189,7 +189,7 @@ describe("the hook and an I/O edit", () => {
     const { counter, getIoMapping } = countReads();
     const store = await ioStore({
       getIoMapping,
-      deleteBody: async () => ({ ...pantin, unsavedChanges: true }),
+      deleteBody: async () => ({ ...pantin, unsavedChanges: true, changedOutside: [] }),
       createIoModule: async () => answer("m1"),
     });
     counter.reads = 0;

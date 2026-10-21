@@ -13,6 +13,7 @@ import { testStore } from "./controller-test-helpers.ts";
 const pantin = {
   id: "press",
   unsavedChanges: false,
+  changedOutside: [],
   document: documentOf({
     assemblies: ["a"],
     bodies: [bodyOf("s1", "a")],

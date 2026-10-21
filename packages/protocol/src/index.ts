@@ -6,6 +6,7 @@ export * from "./assembly-api.ts";
 export * from "./bridge.ts";
 export * from "./clock.ts";
 export * from "./console.ts";
+export { type ConsoleSource, ConsoleSourceSchema } from "./console-sources.ts";
 export * from "./conveyor-api.ts";
 export * from "./drive.ts";
 export * from "./drive-api.ts";

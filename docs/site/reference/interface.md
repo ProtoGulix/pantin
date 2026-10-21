@@ -42,6 +42,8 @@ Il n'existe que lorsqu'un Pantin est ouvert. De haut en bas : la barre d'outils,
 
 Elle a une zone du haut et, si vous l'ouvrez, une zone du bas. Chaque zone affiche une vue à la fois, parmi **3D**, **Schéma**, **Liaisons** et **E/S**, choisie avec le sélecteur placé en haut à gauche de la zone. Une vue ne s'affiche que dans une zone à la fois. Par défaut, la vue 3D est en haut et le schéma en bas. Le menu **Affichage** propose les mêmes choix, et <kbd>F4</kbd> passe la zone du haut à la vue suivante. Sans Pantin ouvert, la vue 3D occupe toute la zone. Voir [Vues centrales](/reference/views).
 
+Quand `pantin.json` ou `io.json` a changé en dehors de Pantin, un bandeau d'avertissement s'affiche au-dessus de la zone, avec le bouton **Relire le fichier**. Voir [Panneaux et boutons](/reference/panels#le-bandeau-de-modification-externe).
+
 Dans la vue 3D, un cube des vues permet de choisir une vue standard d'un clic.
 
 ## L'inspecteur

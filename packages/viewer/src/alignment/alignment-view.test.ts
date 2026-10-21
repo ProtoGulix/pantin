@@ -20,6 +20,7 @@ function opened(joints: object[] = []) {
   const pantin: PantinResponse = {
     id: "bench",
     unsavedChanges: false,
+    changedOutside: [],
     document: documentOf({
       assemblies: ["a", "block"],
       bodies: [bodyOf("post", "a"), bodyOf("block", "block")],

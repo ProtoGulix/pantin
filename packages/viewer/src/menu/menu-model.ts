@@ -41,7 +41,8 @@ const MENUS: readonly MenuDefinition[] = [
       item(
         "save",
         "menubar.file.save",
-        (context) => context.editing && context.unsavedChanges && !context.busy,
+        (context) =>
+          context.editing && (context.unsavedChanges || context.changedOutside) && !context.busy,
         {
           key: "s",
           primaryModifier: true,
