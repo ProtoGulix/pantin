@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-made symbol file for the screenshot of the symbol import window: a mix of sure matches,
+     a type to check, an unchanged signal, an unmatched signal and unused symbols. -->
+<Symbolconfiguration xmlns="http://www.3s-software.com/schemas/Symbolconfiguration.xsd">
+  <Header>
+    <Version>3.5.14.0</Version>
+    <SymbolConfigObject version="4.7.0.0" runtimeid="3.5.22.10" libversion="4.6.0.0" compiler="3.5.22.0" lmm="3.5.22.10" profile="CODESYS V3.5 SP22 Patch 1+" settings="SupportOPCUA, XmlIncludeComments" />
+    <ProjectInfo name="Cylinder" devicename="Device" appname="Application" />
+  </Header>
+  <TypeList>
+    <TypeSimple name="T_BOOL" size="1" swapsize="0" typeclass="Bool" iecname="BOOL" />
+    <TypeSimple name="T_DINT" size="4" swapsize="4" typeclass="DInt" iecname="DINT" />
+    <TypeSimple name="T_LREAL" size="8" swapsize="8" typeclass="LReal" iecname="LREAL" />
+  </TypeList>
+  <NodeList>
+    <Node name="Application">
+      <Node name="GVL">
+        <Node name="verin1_verin1_coil_12" type="T_BOOL" access="ReadWrite" />
+        <Node name="verin1_verin1_coil_14" type="T_BOOL" access="ReadWrite" />
+        <Node name="verin1_verin_min_state" type="T_BOOL" access="ReadWrite" />
+        <Node name="verin1_verin_position" type="T_LREAL" access="ReadWrite" />
+        <Node name="fin_de_course_sortie" type="T_BOOL" access="ReadWrite" />
+        <Node name="fin_de_course_alt" type="T_BOOL" access="ReadWrite" />
+        <Node name="compteur_cycles" type="T_DINT" access="ReadWrite" />
+      </Node>
+    </Node>
+  </NodeList>
+</Symbolconfiguration>

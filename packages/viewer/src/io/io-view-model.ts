@@ -70,6 +70,8 @@ export interface IoView {
   mode: IoMode;
   gvl: IoFileExport;
   csv: IoFileExport;
+  // Importing PLC symbols needs a readable mapping to match against.
+  symbolImportEnabled: boolean;
   // The last refresh failed: the table shown may be out of date.
   outOfDate: boolean;
   problems: readonly IoProblemItem[];
@@ -158,6 +160,7 @@ export function buildIoView(
     mode: ioModeOf(state),
     gvl: ioGvlExportOf(state),
     csv: ioCsvExportOf(state),
+    symbolImportEnabled: ioModeOf(state) === "editing",
     outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
     modules: (mapping?.modules ?? []).map((module, index) =>

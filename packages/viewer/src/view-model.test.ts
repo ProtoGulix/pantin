@@ -150,6 +150,7 @@ describe("message line and language", () => {
       "message",
       "mode",
       "prompt",
+      "symbolImport",
       "toolbar",
       "translate",
       "treeRows",

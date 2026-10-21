@@ -276,6 +276,16 @@ Dans la console, <kbd>F2</kbd> et <kbd>Suppr</kbd> ne déclenchent pas les racco
 | Apparition de la question | Le focus va sur le bouton principal : <kbd>Entrée</kbd> le choisit. |
 | <kbd>Échap</kbd> | Choisit l'annulation (les choix qui annulent). Sans effet si la question est désactivée par un traitement en cours. |
 
+## Fenêtre Importer des symboles API
+
+La fenêtre est modale : le focus reste dedans (voir [la vue E/S](/reference/views#la-fenetre-importer-des-symboles-api)).
+
+| Geste | Effet |
+|---|---|
+| <kbd>Échap</kbd> | Ferme la fenêtre sans rien envoyer. |
+| <kbd>Tab</kbd> / <kbd>Maj</kbd>+<kbd>Tab</kbd> | Passe au contrôle suivant ou précédent, avec retour à la fin. |
+| <kbd>Espace</kbd> sur une case | Coche ou décoche la ligne. |
+
 ## Fenêtre d'accueil
 
 La fenêtre est modale : le focus reste dedans.

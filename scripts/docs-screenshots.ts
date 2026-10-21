@@ -111,7 +111,7 @@ async function captureLanguage(
     await captureNewDriveForm(session);
     await captureNewActuatorForm(session);
     await captureDiagram(session);
-    await captureIoView(session);
+    await captureIoView(session, REPOSITORY_ROOT);
     await captureBridgeCard(session);
     await captureForcedTag(session);
     return session.savedNames;

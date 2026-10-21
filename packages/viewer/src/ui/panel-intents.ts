@@ -8,6 +8,7 @@ import type { Endpoint } from "../diagram/diagram-wiring.ts";
 import type { Vector3Tuple } from "../frames.ts";
 import type { SnapSteps } from "../gizmo/placement-snapping.ts";
 import type { IoIntents } from "../io/io-intents.ts";
+import type { SymbolImportIntents } from "../io/symbol-import-intents.ts";
 import type { MenuCommand } from "../menu/menu-model.ts";
 import type { PromptAction } from "../panel/prompt-model.ts";
 import type { EditTarget } from "../properties/property-rows.ts";
@@ -16,7 +17,7 @@ import type { WelcomeTab } from "../viewer-state.ts";
 // What the user asks for from the menu bar and the left panel. Components
 // only raise intents; the controller decides what to call and how the state
 // changes. Values from form fields arrive as raw strings, validated there.
-export interface PanelIntents extends IoIntents, BridgeIntents {
+export interface PanelIntents extends IoIntents, SymbolImportIntents, BridgeIntents {
   runMenuCommand(command: MenuCommand): void;
   // The view cube (ADR 0036 point 5): look from this core direction.
   showViewFromDirection(direction: Vector3Tuple): void;

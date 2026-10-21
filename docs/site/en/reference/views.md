@@ -355,6 +355,7 @@ If a read fails while a mapping was already displayed, the view adds **The mappi
 
 | Control | Effect | Greyed out when |
 | --- | --- | --- |
+| **Import PLC symbols…** | Chooses an `.xml` symbol file exported by the PLC software (8 MiB at most) and opens the **Import PLC symbols** window, which proposes variable names for the channels. Nothing changes before **Apply** (see [the window below](#the-import-plc-symbols-window)). | The mapping is not readable (tooltip **Importing symbols needs a readable mapping: create it or fix it (list below).**) or an operation is in progress |
 | **Export GVL** | Downloads the CODESYS GVL of the mapping shown, unsaved changes included. | See below |
 | **Export CSV** | Downloads the mapping as a spreadsheet file (`<Pantin>-io.csv`), one row per channel, with the columns `module`, `transport`, `endpoint`, `tag`, `variable`, `direction`, `address`, `plcType` and `comment` (for example `m1`, `Modbus TCP slave`, `port 1502, unit 1`, `coil 0`, `BOOL`); the text of the transport columns comes from the module's transport. A comment that starts with `=`, `+`, `-` or `@` (or a tab or a carriage return) is written with a leading apostrophe, so that the spreadsheet shows it as text. Read-only: the file is never read back. | Same as **Export GVL** |
 
@@ -367,6 +368,21 @@ The buttons stay visible but inactive (explanatory tooltip) when:
 For **Export CSV**, the tooltip of an inactive button is the same in the three cases: **The mapping is not read yet, is missing or has problems: fix it (list below) to export the CSV.**
 
 Under the buttons, **Problems (n)** lists everything the core finds to complain about. A problem attached to a cell is a button (tooltip **Go to the cell concerned**): it selects the module, scrolls to the cell and gives it the focus. A problem that concerns the whole file is plain text, prefixed **Whole file:**. The list disappears when there are no more.
+
+### The Import PLC symbols window
+
+A modal window, opened by **Import PLC symbols…**. The guide [Connect a PLC](/en/guide/connect-a-plc#reuse-the-plc-s-variable-names) describes it with pictures.
+
+| Element | Effect |
+| --- | --- |
+| **File: …**, **Format recognised: … · n symbols read**, **Project … · device … · application …** | Recap of the file read. **Reader remark: …** is added if the reader has a reservation. |
+| **Sure matches (n)**, **To check (n)**, **Unchanged (n)**, **Signals without a match (n)**, **Unused symbols (n)** | The five sections; **No rows.** when they are empty. |
+| Checkbox **Apply** (followed by the signal and the variable) | Keeps the row. Checked at the start for a sure match, unchecked for a row to check, absent for an incompatible type. |
+| List **Variable for** (followed by the signal) | Chooses the variable of an unmatched signal; **(do not change)** at the start. |
+| **Variables to apply: n** | Number of checked boxes and choices made. |
+| **Apply** | Sends the checked boxes and the choices, as an unsaved change. Greyed when the number is zero. |
+| **Cancel**, **Close** cross, <kbd>Esc</kbd> | Close the window without sending anything. |
+| **Variables applied: n. Change not saved yet.**, **Rows refused by the core: n** | Result after **Apply**, with the refused rows and their reason. |
 
 ### Modules
 

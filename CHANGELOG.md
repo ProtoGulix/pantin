@@ -23,6 +23,16 @@ All notable changes to Pantin. The format follows
   `@pantin/plc-symbol-formats` (no DOCTYPE, no entity but the five predefined ones,
   UTF-8 only, size and depth limits). A function block instance of the PLC program is opened
   into its members.
+- Viewer (ADR 0064 point 14): "Importer des symboles API…" / "Import PLC symbols…" in the I/O
+  view toolbar. It opens a file picker for the symbol file, sends it to the core's preview and
+  shows a window with the sections matched, to check, unchanged, unmatched signals and unused
+  symbols, each with its count. Sure matches start checked, those to check start unchecked, an
+  incompatible type has no checkbox, and an unmatched signal has a picker among the free
+  symbols. Match kinds and warnings are written in words with a triangle, never colour alone.
+  Apply sends exactly the checked rows and the picker choices as one unsaved edit; Cancel,
+  Escape and Close send nothing. A refused file (too large, unknown format, control
+  characters) is explained in the window.
+  The guide (Connect a PLC, the I/O view, shortcuts) and two screenshots per language describe it.
 
 ### Fixed
 

@@ -50,6 +50,7 @@ import {
   createPantinFromFile,
 } from "./import-actions.ts";
 import { ioIntents } from "./io-actions.ts";
+import { symbolImportIntents } from "./io-symbol-actions.ts";
 import {
   cancelJointForm,
   changeJointType,
@@ -224,6 +225,7 @@ export function createPanelIntents(store: ViewerStore): PanelIntents {
     ...clockIntents(store),
     ...bridgeIntents(store),
     ...ioIntents(store),
+    ...symbolImportIntents(store),
     runMenuCommand: (command) => runMenuCommand(store, command, changeLanguage),
     turnToolOff: () => turnToolOff(store),
     restorePreviousPlacement: () => void restorePreviousPlacement(store),

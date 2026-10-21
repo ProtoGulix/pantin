@@ -355,6 +355,7 @@ Si une lecture échoue alors qu'un mapping était déjà affiché, la vue ajoute
 
 | Contrôle | Effet | Grisé quand |
 | --- | --- | --- |
+| **Importer des symboles API…** | Choisit un fichier `.xml` de symboles exporté par le logiciel de l'automate (8 Mio au plus) et ouvre la fenêtre **Importer des symboles API**, qui propose les noms de variables des voies. Rien ne change avant **Appliquer** (voir [la fenêtre ci-dessous](#la-fenetre-importer-des-symboles-api)). | Le mapping n'est pas lisible (info-bulle **Il faut un mapping lisible pour importer des symboles : créez-le ou corrigez-le (liste ci-dessous).**) ou une opération est en cours |
 | **Exporter la GVL** | Télécharge la GVL CODESYS du mapping affiché, modifications non enregistrées comprises. | Voir ci-dessous |
 | **Exporter en CSV** | Télécharge le mapping en fichier de tableur (`<Pantin>-io.csv`), une ligne par voie, avec les colonnes `module`, `transport`, `endpoint`, `tag`, `variable`, `direction`, `address`, `plcType` et `comment` (par exemple `m1`, `Modbus TCP slave`, `port 1502, unit 1`, `coil 0`, `BOOL`) ; le texte des colonnes de transport vient du transport du module. Un commentaire qui commence par `=`, `+`, `-` ou `@` (ou par une tabulation ou un retour chariot) est écrit avec une apostrophe devant, pour que le tableur l'affiche comme du texte. Lecture seule : le fichier n'est jamais relu. | Comme **Exporter la GVL** |
 
@@ -367,6 +368,21 @@ Les boutons restent visibles mais inactifs (info-bulle explicative) quand :
 Pour **Exporter en CSV**, l'info-bulle d'un bouton inactif est la même dans les trois cas : **Le mapping n'est pas encore lu, est absent ou a des problèmes : corrigez-le (liste ci-dessous) pour exporter le CSV.**
 
 Sous les boutons, **Problèmes (n)** liste tout ce que le cœur trouve à redire. Un problème attaché à une cellule est un bouton (info-bulle **Aller à la cellule concernée**) : il sélectionne le module, défile jusqu'à la cellule et lui donne le focus. Un problème qui concerne le fichier entier est un simple texte, préfixé **Fichier entier :**. La liste disparaît quand il n'y en a plus.
+
+### La fenêtre Importer des symboles API
+
+Fenêtre modale, ouverte par **Importer des symboles API…**. Le guide [Connecter un automate](/guide/connect-a-plc#reprendre-les-noms-de-variables-de-l-automate) la décrit avec des images.
+
+| Élément | Effet |
+| --- | --- |
+| **Fichier : …**, **Format reconnu : … · n symboles lus**, **Projet … · appareil … · application …** | Rappel du fichier lu. **Remarque du lecteur : …** s'ajoute si le lecteur a une réserve. |
+| **Correspondances sûres (n)**, **À vérifier (n)**, **Inchangées (n)**, **Signaux sans correspondance (n)**, **Symboles non utilisés (n)** | Les cinq sections ; **Aucune ligne.** quand elles sont vides. |
+| Case **Appliquer** (suivi du signal et de la variable) | Retient la ligne. Cochée au départ pour une correspondance sûre, décochée pour une ligne à vérifier, absente pour un type incompatible. |
+| Liste **Variable pour** (suivi du signal) | Choisit la variable d'un signal sans correspondance ; **(ne pas changer)** au départ. |
+| **Variables à appliquer : n** | Nombre de cases cochées et de choix faits. |
+| **Appliquer** | Envoie les cases cochées et les choix, comme une modification non enregistrée. Grisé quand le nombre est nul. |
+| **Annuler**, croix **Fermer**, <kbd>Échap</kbd> | Ferment la fenêtre sans rien envoyer. |
+| **Variables appliquées : n. Modification non enregistrée.**, **Lignes refusées par le noyau : n** | Bilan après **Appliquer**, avec les lignes refusées et leur raison. |
 
 ### Les modules
 

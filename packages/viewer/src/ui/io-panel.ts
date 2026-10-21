@@ -16,6 +16,9 @@ import { markAsZoneView } from "./zone-view.ts";
 // problems at the top. It is redrawn only when the mapping or the selection
 // changes, so that typing in a cell is never interrupted by something else.
 
+// The CODESYS symbol configuration is an XML file (ADR 0064 point 10).
+const SYMBOL_FILE_ACCEPT = ".xml,application/xml,text/xml";
+
 function statusPage(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement[] {
   if (view.mode === "loading") {
     return [element("p", { className: "io-view__note", text: translate("io.loading") })];
@@ -67,14 +70,40 @@ function exportButton(
   return created;
 }
 
-function exportToolbar(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {
+// aria-disabled like the exports: the tooltip says why, and the focus stays.
+function importSymbolsButton(view: IoView, translate: Translate, pickFile: () => void) {
+  const created = ioButton(
+    translate("symbols.open"),
+    "io-button",
+    !view.symbolImportEnabled || view.busy,
+    "io-import-symbols",
+    pickFile,
+  );
+  created.title = translate(
+    view.symbolImportEnabled ? "symbols.open.title" : "symbols.open.unavailable",
+  );
+  return created;
+}
+
+function exportToolbar(
+  view: IoView,
+  translate: Translate,
+  intents: PanelIntents,
+  pickFile: () => void,
+): HTMLElement {
   return element("div", { className: "io-view__toolbar" }, [
+    importSymbolsButton(view, translate, pickFile),
     exportButton(translate, view.gvl, "io.gvl.export", "io-export-gvl", intents.exportIoGvl),
     exportButton(translate, view.csv, "io.csv.export", "io-export-csv", intents.exportIoCsv),
   ]);
 }
 
-function pageContent(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement[] {
+function pageContent(
+  view: IoView,
+  translate: Translate,
+  intents: PanelIntents,
+  pickFile: () => void,
+): HTMLElement[] {
   const problems = drawProblemList(view, translate, intents);
   const stale = view.outOfDate
     ? [
@@ -87,7 +116,7 @@ function pageContent(view: IoView, translate: Translate, intents: PanelIntents):
       ? [editor(view, translate, intents)]
       : statusPage(view, translate, intents);
   return [
-    exportToolbar(view, translate, intents),
+    exportToolbar(view, translate, intents, pickFile),
     ...stale,
     ...(problems === null ? [] : [problems]),
     ...body,
@@ -97,6 +126,11 @@ function pageContent(view: IoView, translate: Translate, intents: PanelIntents):
 export class IoPanel {
   private readonly host = element("section", { className: "io-view" });
   private readonly content = element("div", { className: "io-view__content" });
+  // Outside the redrawn content, so that a redraw cannot lose the picker's answer.
+  private readonly symbolFileInput = element("input", {
+    attributes: { type: "file", accept: SYMBOL_FILE_ACCEPT, tabindex: "-1", hidden: "" },
+  });
+  private intents: PanelIntents | null = null;
   private shown: IoState | null = null;
   private shownLanguage: Language | null = null;
   private shownBusy = false;
@@ -107,7 +141,8 @@ export class IoPanel {
   constructor(viewport: HTMLElement, before: HTMLElement) {
     markAsZoneView(this.host, "io");
     this.host.hidden = true;
-    this.host.append(this.content);
+    this.host.append(this.content, this.symbolFileInput);
+    this.symbolFileInput.addEventListener("change", () => this.symbolFilePicked());
     viewport.insertBefore(this.host, before);
   }
 
@@ -117,6 +152,7 @@ export class IoPanel {
       this.shown = null;
       return;
     }
+    this.intents = intents;
     this.host.setAttribute("aria-label", translate("io.label"));
     const connections = view.modules.map((module) => module.connection).join();
     if (
@@ -126,7 +162,9 @@ export class IoPanel {
       view.busy !== this.shownBusy
     ) {
       const snapshot = captureFocus(this.content);
-      this.content.replaceChildren(...pageContent(view, translate, intents));
+      this.content.replaceChildren(
+        ...pageContent(view, translate, intents, () => this.symbolFileInput.click()),
+      );
       restoreFocus(this.content, snapshot);
       this.shown = view.source;
       this.shownLanguage = language;
@@ -134,6 +172,15 @@ export class IoPanel {
       this.shownConnections = connections;
     }
     this.focusRequestedCell(view);
+  }
+
+  private symbolFilePicked(): void {
+    const file = this.symbolFileInput.files?.[0];
+    if (file !== undefined) {
+      this.intents?.importIoSymbols(file);
+    }
+    // The same file may be chosen again after a correction.
+    this.symbolFileInput.value = "";
   }
 
   // A problem was clicked: bring its cell into view and focus it, once.

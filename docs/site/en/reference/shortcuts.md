@@ -276,6 +276,16 @@ In the console, <kbd>F2</kbd> and <kbd>Del</kbd> do not fire the window shortcut
 | Question appears | The focus goes to the primary button: <kbd>Enter</kbd> chooses it. |
 | <kbd>Esc</kbd> | Chooses cancel (the choices that cancel). No effect if the question is disabled by a request in progress. |
 
+## Import PLC symbols window
+
+The window is modal: the focus stays inside (see [the I/O view](/en/reference/views#the-import-plc-symbols-window)).
+
+| Gesture | Effect |
+|---|---|
+| <kbd>Esc</kbd> | Closes the window without sending anything. |
+| <kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> | Moves to the next or previous control, wrapping at the end. |
+| <kbd>Space</kbd> on a checkbox | Checks or unchecks the row. |
+
 ## Welcome window
 
 The window is modal: the focus stays inside it.

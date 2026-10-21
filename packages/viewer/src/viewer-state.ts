@@ -19,6 +19,7 @@ import type { PendingGroup } from "./grouping/grouping-model.ts";
 import type { Language } from "./i18n/translate.ts";
 import type { PendingImport } from "./import-options.ts";
 import { type IoState, NO_IO_STATE } from "./io/io-state.ts";
+import { CLOSED_SYMBOL_IMPORT, type SymbolImportState } from "./io/symbol-import-state.ts";
 import type { AxisPickState } from "./joints/axis-pick-state.ts";
 import type { JointFormState } from "./joints/joint-form.ts";
 import {
@@ -82,6 +83,8 @@ export interface ViewerState {
   welcomeFilter: string;
   // The About window of the Help menu (ADR 0058).
   about: AboutState;
+  // The PLC symbol import dialog of the I/O view (ADR 0064 point 14).
+  symbolImport: SymbolImportState;
   // Edit view: closing with unsaved changes waits for the user's choice.
   closePrompt: boolean;
   // The close prompt also says that the PLC bridge keeps running (ADR 0050 point 7).
@@ -213,6 +216,7 @@ export function initialViewerState(
     welcomeTab: "home",
     welcomeFilter: "",
     about: CLOSED_ABOUT,
+    symbolImport: CLOSED_SYMBOL_IMPORT,
     ...NO_CLOSE_PROMPT,
     pendingDeleteBodyId: null,
     pendingDeleteJointId: null,

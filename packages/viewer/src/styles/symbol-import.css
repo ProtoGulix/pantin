@@ -1,0 +1,113 @@
+/* The PLC symbol import window (ADR 0064 point 14), over the central area. Tokens in base.css. */
+.symbol-import {
+  width: 820px;
+}
+
+.symbol-import__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
+.symbol-import__file,
+.symbol-import__info,
+.symbol-import__detail {
+  margin: 0;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Outlined and led by a triangle: the amber is a second cue, not the only one. */
+.symbol-import__status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+}
+
+.symbol-import__status.is-failed {
+  padding: 8px 10px;
+  color: var(--state-abnormal);
+  background: var(--state-abnormal-soft);
+  border: 1px solid var(--state-abnormal);
+  border-radius: 4px;
+}
+
+.symbol-import__footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.symbol-import__summary {
+  margin-right: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.symbol-section__heading {
+  margin: 8px 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.symbol-section__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.symbol-section__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.symbol-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+/* A thick edge as well as the triangle and the words: the shape carries the state. */
+.symbol-row.is-warning {
+  border-left: 4px solid var(--state-abnormal);
+}
+
+.symbol-row__check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.symbol-row__signal {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.symbol-row__detail,
+.symbol-row__note {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.symbol-row__remark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.symbol-row__picker select {
+  max-width: 100%;
+}

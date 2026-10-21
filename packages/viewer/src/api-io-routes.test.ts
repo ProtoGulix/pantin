@@ -177,3 +177,48 @@ describe("PantinApiClient signals", () => {
     expect(requests[0]?.url).toBe("/api/pantins/press/signals");
   });
 });
+describe("PantinApiClient PLC symbol import", () => {
+  const preview = {
+    format: "codesys-symbol-configuration",
+    project: null,
+    symbolCount: 0,
+    warnings: [],
+    proposals: [],
+    unchanged: [],
+    unmatchedSignals: [],
+    unusedSymbols: [],
+  };
+
+  it("posts the symbol file as XML and reads the preview", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(preview));
+    const file = new File(["<xml/>"], "symbols.xml");
+    const answer = await createPantinApiClient(fetchFunction).previewIoSymbols("press", file);
+    expect(answer.format).toBe("codesys-symbol-configuration");
+    expect(requests[0]?.url).toBe("/api/pantins/press/io/symbols/preview");
+    expect(requests[0]?.init?.method).toBe("POST");
+    expect(requests[0]?.init?.headers).toEqual({ "Content-Type": "application/xml" });
+    expect(requests[0]?.init?.body).toBe(file);
+  });
+
+  it("posts the assignments as JSON and reads what was applied and skipped", async () => {
+    const assignment = { module: "m1", tag: "main.valve.extend", variable: "GVL.x" };
+    const { fetchFunction, requests } = fakeFetch(
+      jsonResponse({ ...mapping, applied: [assignment], skipped: [] }),
+    );
+    const answer = await createPantinApiClient(fetchFunction).applyIoVariables("press", {
+      assignments: [assignment],
+    });
+    expect(answer.applied).toEqual([assignment]);
+    expect(requests[0]?.url).toBe("/api/pantins/press/io/variables");
+    expect(JSON.parse(String(requests[0]?.init?.body))).toEqual({ assignments: [assignment] });
+  });
+
+  it("refuses an empty assignment list before sending it", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(mapping));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).applyIoVariables("press", { assignments: [] }),
+    );
+    expect(error.kind).toBe("invalid_input");
+    expect(requests).toEqual([]);
+  });
+});

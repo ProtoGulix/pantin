@@ -195,10 +195,11 @@ The Simulation mode of the IDE cuts all communication, so it is not suitable.
 
 ## Reuse the PLC's variable names
 
-If your CODESYS program already exists, `pantin io import-symbols` reads its
-symbol export and **proposes** the variable names for the signals that are already
-mapped, so you do not retype them. The command creates no channel and **never
-stores the symbols**: only the chosen variable names are written to `io.json`.
+If your CODESYS program already exists, the viewer (the **Import PLC symbols**
+window) or the `pantin io import-symbols` command reads its symbol export and
+**proposes** the variable names for the signals that are already mapped, so you do not
+retype them. The import creates no channel and **never stores the symbols**: only the
+chosen variable names are written to `io.json`.
 
 **Produce the export in CODESYS.** Under the **Application**, add a **Symbol
 configuration** object (the menu is named **Configuration des symboles** in the
@@ -207,7 +208,55 @@ code**. The file `<project>.<device>.<application>.xml` appears in the project
 folder. Menu names may differ by version; the procedure was verified on CODESYS 3.5
 SP22. Other versions and other PLC software are not verified.
 
-**Run the command:**
+**From the viewer.** Open the **I/O** view and click **Import PLC symbols…** in its
+toolbar. The button is greyed, with a tooltip that says why, while the mapping is not
+readable. Choose the `.xml` file (8 MiB at most): the core reads it and the **Import PLC
+symbols** window opens. Nothing changes before **Apply**.
+
+![The symbol import window, with its five sections and the summary at the bottom](/screenshots/en/io-symbols.webp)
+
+At the top, the window repeats the file, the recognised format and the number of
+symbols read, then the project, the device and the application. Five sections follow,
+each with its count in brackets; an empty section shows **No rows.**
+
+| Section | Content | Checkbox |
+| --- | --- | --- |
+| **Sure matches** | Compatible type and no remark from the core, however the symbol was found. | Checked at the start |
+| **To check** | The other matches: a type to check or a remark from the core. | Unchecked at the start |
+| **Unchanged** | The channel already has this name. | None |
+| **Signals without a match** | No symbol fits, or several do: the row says **No variable matches: choose one, or leave it empty.** or **Several variables fit: choose one.** | A drop-down list, on **(do not change)** at the start |
+| **Unused symbols** | The variables with no signal, with the reason (for example **No signal matches this variable.**). | None |
+
+Each row says in words what it proposes: **Current variable**, **Proposed variable**
+and **Match** (**identical name**, **close name (case and separators ignored)** or **end
+of the name recognised (key and member)**). A match whose type is to check is marked by a
+vertical bar on the edge of the row, a warning triangle and a sentence from the core saying what
+differs, for example that the Modbus channel carries REAL while the PLC variable is
+LREAL: the triangle and the sentence are enough, colour is never the only cue. A match of an incompatible type has no
+checkbox: **Incompatible type: this row will not be applied.** The drop-down list of an
+unmatched signal offers the variables the core found ambiguous, then those no signal
+took; if there are none, it says **No free variable to offer.**
+
+A match is **sure** when its type is compatible and the core has no remark. How it was
+found (identical name, close name, end of the name) makes no difference: it is written
+in words on the row.
+
+At the bottom, **Variables to apply: n** counts the checked boxes and the choices made
+in the lists. **Apply** sends exactly those rows and choices, nothing else; it is greyed
+while the count is zero. **Cancel**, the **Escape** key and the cross close the window
+without sending anything.
+
+After **Apply**, the window says **Variables applied: n. Change not saved yet.** It does not detail the applied rows: only the refused rows are listed. If the
+core refused some rows (for example a variable already taken by another tag), they are
+listed under **Rows refused by the core: n**, with the reason. The applied names are an
+edit of the mapping like any other: save it, or undo it with the Pantin.
+
+![The window after Apply: three variables applied, change not saved](/screenshots/en/io-symbols-done.webp)
+
+A file that is too large, of an unknown format, or that contains control characters is
+explained in the window: nothing is changed.
+
+**On the command line.** The same import exists as a command, useful in a script:
 
 ```
 pnpm pantin io import-symbols <Pantin folder> <file.xml> [--format <id>] [--apply] [--accept-warnings]
@@ -252,9 +301,9 @@ skipped (for example a variable already held by another tag), otherwise 0. A dot
 variable name is written to `io.json` but, as always, is not declared in the GVL.
 
 ::: warning Caution
-Like any tool that writes to the folder, run it on a Pantin that no core holds open
-with unsaved edits: a core that has it open sees the change after discarding the
-edits or reopening the Pantin. The viewer has no window for this import yet.
+The command writes to the folder: run it on a Pantin that no core holds open with
+unsaved edits. A core that has it open sees the change after discarding the edits or
+reopening the Pantin. The viewer window has no such problem: it goes through the core.
 :::
 
 ## Network: local or private

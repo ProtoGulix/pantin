@@ -20,6 +20,7 @@ import { JournalDialog } from "./journal-dialog.ts";
 import { MenuBar } from "./menu-bar.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { SidePanel } from "./side-panel.ts";
+import { SymbolImportDialog } from "./symbol-import-dialog.ts";
 import { TransportBar } from "./transport-bar.ts";
 import { ViewCube } from "./view-cube.ts";
 import { WelcomeDialog } from "./welcome-dialog.ts";
@@ -140,6 +141,7 @@ export function createScreen(): Screen {
   const welcome = createWelcomeDialog(sidePanel, canvas);
   const journal = new JournalDialog(requireElement("#journal", HTMLElement));
   const about = new AboutDialog(requireElement("#about", HTMLElement));
+  const symbolImport = new SymbolImportDialog(requireElement("#symbol-import", HTMLElement));
   const { diagram, jointStar, ioPanel, centralArea, zoneBars } = createZoneViews();
   const consolePanel = createConsolePanel();
   const transportBar = new TransportBar(requireElement("#transport", HTMLElement));
@@ -166,6 +168,7 @@ export function createScreen(): Screen {
       consolePanel.render(view.console, view.translate, intents);
       welcome.render(view, intents);
       about.render(view.about, intents);
+      symbolImport.render(view.symbolImport, intents);
       viewCube.render(view, intents);
       inspector.render(view.inspector, view.translate, intents);
     },

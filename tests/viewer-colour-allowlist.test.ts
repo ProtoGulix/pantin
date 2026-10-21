@@ -11,6 +11,10 @@ const STYLES = new URL("../packages/viewer/src/styles/", import.meta.url);
 const ALLOWLIST: Readonly<Record<string, string>> = {
   "about.css :: .about__mismatch":
     "warning glyph in front of the sentence, which names both versions, and a 1 px outline",
+  "symbol-import.css :: .symbol-import__status.is-failed":
+    "warning glyph in front of the sentence, which says what to do, and a 1 px outline",
+  "symbol-import.css :: .symbol-row.is-warning":
+    "warning glyph and the remark in words, plus a 4 px left edge",
   "about.css :: .about__name": "brand: Pantin's own name, written out in the text",
   "about.css :: .about__symbol": "brand: Pantin's own symbol, beside its name in text",
   "base.css :: .button--primary":

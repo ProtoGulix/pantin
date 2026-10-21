@@ -1,4 +1,8 @@
 import {
+  type ApplyIoVariablesRequest,
+  ApplyIoVariablesRequestSchema,
+  type ApplyIoVariablesResponse,
+  ApplyIoVariablesResponseSchema,
   type CreateIoChannelsRequest,
   CreateIoChannelsRequestSchema,
   type CreateIoModuleRequest,
@@ -7,6 +11,8 @@ import {
   IoMappingResponseSchema,
   type SignalListResponse,
   SignalListResponseSchema,
+  type SymbolImportPreview,
+  SymbolImportPreviewSchema,
   type UpdateIoChannelRequest,
   UpdateIoChannelRequestSchema,
   type UpdateIoModuleRequest,
@@ -57,6 +63,12 @@ export interface IoRoutes {
     request: UpdateIoChannelRequest,
   ): Promise<IoMappingResponse>;
   deleteIoChannel(pantinId: string, moduleKey: string, tag: string): Promise<IoMappingResponse>;
+  // The symbol file is sent as it is (bytes), so that the core decides about its encoding.
+  previewIoSymbols(pantinId: string, file: Blob): Promise<SymbolImportPreview>;
+  applyIoVariables(
+    pantinId: string,
+    request: ApplyIoVariablesRequest,
+  ): Promise<ApplyIoVariablesResponse>;
 }
 
 function moduleUrl(pantinId: string, moduleKey: string, suffix = ""): string {
@@ -114,5 +126,19 @@ export function ioRoutes(send: SendJson, fetchFunction: FetchFunction): IoRoutes
     },
     deleteIoChannel: (pantinId, moduleKey, tag) =>
       send(channelUrl(pantinId, moduleKey, tag), jsonRequest("DELETE"), answer),
+    previewIoSymbols: (pantinId, file) =>
+      send(
+        pantinUrl(pantinId, "/io/symbols/preview"),
+        { method: "POST", headers: { "Content-Type": "application/xml" }, body: file },
+        SymbolImportPreviewSchema,
+      ),
+    applyIoVariables: async (pantinId, request) => {
+      const valid = validInputOrThrow(ApplyIoVariablesRequestSchema, request);
+      return send(
+        pantinUrl(pantinId, "/io/variables"),
+        jsonRequest("POST", valid),
+        ApplyIoVariablesResponseSchema,
+      );
+    },
   };
 }

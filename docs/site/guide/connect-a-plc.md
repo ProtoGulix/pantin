@@ -73,7 +73,7 @@ Un module devient « connecté » à la première requête servie. Il redevient
 « déconnecté » quand sa dernière connexion TCP se ferme, ou après la durée du
 chien de garde sans aucune requête. Le cœur remet alors à 0 les **commandes
 booléennes** mappées sur ce module. Les commandes flottantes et entières gardent
-leur valeur. La console écrit « Automate déconnecté du module m1 » avec la raison.
+leur valeur. La console écrit « Automate déconnecté du module m1 » avec la raison (en anglais, pour l'instant, comme les remarques).
 
 ## Configurer l'automate (CODESYS)
 
@@ -201,10 +201,11 @@ Le mode Simulation de l'IDE coupe toute communication : il ne convient pas.
 
 ## Reprendre les noms de variables de l'automate
 
-Si votre programme CODESYS existe déjà, `pantin io import-symbols` lit son export
-de symboles et **propose** les noms de variables pour les signaux déjà mappés,
-au lieu de les retaper. La commande ne crée aucune voie et **ne conserve jamais
-les symboles** : seuls les noms de variables retenus sont écrits dans `io.json`.
+Si votre programme CODESYS existe déjà, le viewer (fenêtre **Importer des symboles
+API**) ou la commande `pantin io import-symbols` lit son export de symboles et
+**propose** les noms de variables pour les signaux déjà mappés, au lieu de les retaper.
+L'import ne crée aucune voie et **ne conserve jamais les symboles** : seuls les noms de
+variables retenus sont écrits dans `io.json`.
 
 **Produire l'export dans CODESYS.** Sous l'**Application**, ajoutez un objet
 **Configuration des symboles**, cochez les variables à exposer, puis lancez
@@ -213,7 +214,58 @@ apparaît dans le dossier du projet. Les noms de menus peuvent différer selon l
 version ; la procédure a été vérifiée sur CODESYS 3.5 SP22. Les autres versions et
 les autres logiciels d'automate ne sont pas vérifiés.
 
-**Lancer la commande :**
+**Depuis le viewer.** Ouvrez la vue **E/S** et cliquez **Importer des symboles API…**
+dans sa barre. Le bouton est grisé, avec une info-bulle qui dit pourquoi, tant que le
+mapping n'est pas lisible. Choisissez le fichier `.xml` (8 Mio au plus) : le cœur le lit
+et la fenêtre **Importer des symboles API** s'ouvre. Rien ne change avant **Appliquer**.
+
+![La fenêtre d'import des symboles, avec ses cinq sections et le résumé en bas](/screenshots/fr/io-symbols.webp)
+
+En haut, la fenêtre rappelle le fichier, le format reconnu et le nombre de symboles
+lus, puis le projet, l'appareil et l'application. Viennent cinq sections, chacune avec
+son nombre entre parenthèses ; une section vide affiche **Aucune ligne.**
+
+| Section | Contenu | Case à cocher |
+| --- | --- | --- |
+| **Correspondances sûres** | Type compatible et aucune remarque du cœur, quelle que soit la façon dont le symbole a été trouvé. | Cochée au départ |
+| **À vérifier** | Les autres correspondances : type à vérifier ou remarque du cœur. | Décochée au départ |
+| **Inchangées** | La voie porte déjà ce nom. | Aucune |
+| **Signaux sans correspondance** | Aucun symbole ne convient, ou plusieurs : la ligne dit **Aucune variable ne correspond : choisissez-en une, ou laissez vide.** ou **Plusieurs variables conviennent : choisissez-en une.** | Une liste déroulante, sur **(ne pas changer)** au départ |
+| **Symboles non utilisés** | Les variables sans signal, avec la raison (par exemple **Aucun signal ne correspond à cette variable.**). | Aucune |
+
+Chaque ligne dit en mots ce qu'elle propose : **Variable actuelle**, **Variable
+proposée** et **Correspondance** (**nom identique**, **nom proche (casse et
+séparateurs ignorés)** ou **fin du nom reconnue (clé et membre)**). Une correspondance
+dont le type est à vérifier est marquée d'un trait vertical sur le bord de la ligne, d'un
+triangle d'avertissement et d'une phrase du cœur (en anglais, pour l'instant, comme les raisons de refus) qui dit ce qui
+diffère, par exemple que la voie Modbus porte un REAL alors que la variable de l'automate
+est un LREAL : le triangle et la phrase suffisent, la couleur n'est jamais le seul signe. Une correspondance de type incompatible n'a pas de case à cocher :
+**Type incompatible : cette ligne ne sera pas appliquée.** La liste déroulante d'un signal
+sans correspondance propose les variables que le cœur a trouvées ambiguës, puis celles
+qu'aucun signal n'a prises ; s'il n'y en a aucune, elle dit **Aucune variable libre à
+proposer.**
+
+Une correspondance est **sûre** quand son type est compatible et que le cœur n'a aucune
+remarque. La façon dont elle a été trouvée (nom identique, nom proche, fin du nom)
+n'y change rien : elle est écrite en mots sur la ligne.
+
+En bas, **Variables à appliquer : n** compte les cases cochées et les choix faits dans les
+listes. **Appliquer** envoie exactement ces lignes et ces choix, et rien d'autre ; il est
+grisé tant que le compte est nul. **Annuler**, la touche **Échap** et la croix ferment la
+fenêtre sans rien envoyer.
+
+Après **Appliquer**, la fenêtre indique **Variables appliquées : n. Modification non
+enregistrée.** Elle ne détaille pas les lignes appliquées : seules les lignes refusées sont listées. Si le cœur a refusé des lignes (par exemple une variable déjà prise par un
+autre tag), elles sont listées sous **Lignes refusées par le cœur : n**, avec la raison (en anglais, pour l'instant, comme les remarques).
+Les noms appliqués sont une modification du mapping comme les autres : enregistrez-la, ou
+annulez-la avec le Pantin.
+
+![La fenêtre après Appliquer : trois variables appliquées, modification non enregistrée](/screenshots/fr/io-symbols-done.webp)
+
+Un fichier trop gros, d'un format inconnu ou qui contient des caractères de contrôle est
+expliqué dans la fenêtre : rien n'est modifié.
+
+**En ligne de commande.** Le même import existe en commande, utile dans un script :
 
 ```
 pnpm pantin io import-symbols <dossier du Pantin> <fichier.xml> [--format <id>] [--apply] [--accept-warnings]
@@ -243,7 +295,7 @@ L'aperçu a cinq parties :
 - **To check (warnings)** : correspondances à vérifier à la main ;
 - **Incompatible** : correspondances de type incompatible, jamais appliquées ;
 - **Unchanged** : la voie porte déjà ce nom ;
-- **Unmatched signals** : signaux sans symbole, et **Unused symbols** : symboles sans signal, avec la raison.
+- **Unmatched signals** : signaux sans symbole, et **Unused symbols** : symboles sans signal, avec la raison (en anglais, pour l'instant, comme les remarques).
 
 **Les trois règles de correspondance**, essayées dans cet ordre :
 
@@ -260,10 +312,10 @@ tag), sinon 0. Une variable en nom pointé est écrite dans `io.json` mais, comm
 toujours, n'est pas déclarée dans la GVL.
 
 ::: warning Attention
-Comme tout outil qui écrit dans le dossier, lancez-la sur un Pantin qu'aucun cœur
-n'a ouvert avec des modifications non enregistrées : un cœur qui l'a ouvert voit le
-changement après avoir abandonné les modifications ou rouvert le Pantin. Le viewer
-n'a pas encore de fenêtre pour cet import.
+La commande écrit dans le dossier : lancez-la sur un Pantin qu'aucun cœur n'a ouvert
+avec des modifications non enregistrées. Un cœur qui l'a ouvert voit le changement
+après avoir abandonné les modifications ou rouvert le Pantin. La fenêtre du viewer n'a
+pas ce souci : elle passe par le cœur.
 :::
 
 ## Réseau : local ou privé

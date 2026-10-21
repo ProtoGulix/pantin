@@ -6,6 +6,7 @@ import { type DeviceRef, deviceName, relatedJointIds } from "./device-selection.
 import { createTranslator, type Language, type Translate } from "./i18n/translate.ts";
 import { buildInspectorView, type InspectorView } from "./inspector/inspector-model.ts";
 import { buildIoView, type IoView } from "./io/io-view-model.ts";
+import { buildSymbolImportView, type SymbolImportView } from "./io/symbol-import-view.ts";
 import { buildMenuBar, type MenuView } from "./menu/menu-model.ts";
 import type { MessageLevel } from "./messages.ts";
 import { type AboutView, buildAboutView } from "./panel/about-model.ts";
@@ -62,6 +63,8 @@ export interface PanelView {
   welcome: WelcomeView;
   // The About window of the Help menu (ADR 0058).
   about: AboutView;
+  // The PLC symbol import dialog (ADR 0064 point 14).
+  symbolImport: SymbolImportView;
   // Edit view only.
   treeRows: TreeRow[];
   importForm: ImportFormView | null;
@@ -150,6 +153,7 @@ export function buildPanelView(
     toolbar: buildToolbarView(state),
     welcome: buildWelcomeView(state, translate),
     about: buildAboutView(state.about, state.language, translate),
+    symbolImport: buildSymbolImportView(state.symbolImport, translate),
     treeRows: flattenTree(
       buildTree({ ...state, tagValues }, translate),
       state,
