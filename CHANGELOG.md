@@ -8,6 +8,13 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- ADR 0065, accepted, and spike 0013 (node-opcua 2.186.17 measured). Decisions only,
+  the slices follow: an OPC UA client bridge in TypeScript, spawned by the core next to the
+  Modbus bridge, with the PLC address chosen at each start and never saved, Sign and
+  encrypt by default, passwords in memory only, no silent certificate trust, and only
+  loopback targets through the remote exposure. The tag bus moves to version 2 (one `plc`
+  connection per transport). CLAUDE.md and ADRs 0001, 0007, 0045, 0046, 0050, 0054 and
+  0064 gain their back-references; the OPC UA backlog note is closed.
 - Guide: a tutorial, in French and English, from the CODESYS symbol export to the closed
   loop on `examples/plc-cylinder` (import window, GVL, command line), linked from
   "Connect a PLC" (ADR 0064 point 17).

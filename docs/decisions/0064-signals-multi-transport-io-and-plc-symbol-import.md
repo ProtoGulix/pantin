@@ -2,6 +2,7 @@
 
 - Status: accepted (user, 2026-10-20)
 - Date: 2026-10-20
+- Point 8 built by: ADR 0065 (one `plc` connection per transport, the OPC UA client)
 - Source: spike 0012 (docs/spikes/0012-codesys-symbol-export.md)
 - Partly supersedes: ADR 0049 (point 1: the file shape and its canonical
   order; point 2: version 1 as the only version; point 4: the channel

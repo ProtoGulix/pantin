@@ -2,6 +2,7 @@
 
 - Status: accepted (user, 2026-10-19; runtime part settled by the spikes, see the amendment at the end)
 - Date: 2026-09-28
+- Partly superseded by: ADR 0065 (asyncua is no longer the OPC UA candidate: a TypeScript client bridge with node-opcua)
 
 ## Context
 

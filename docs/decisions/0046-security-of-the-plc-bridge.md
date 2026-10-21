@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-13
+- Extended by: ADR 0065 (outgoing OPC UA connections, credentials, certificates)
 - Partly superseded by: ADR 0048 (points 1, 2 and 9: the slave is our own asyncio code, so the address, the accept filter and parser faults no longer involve pymodbus; the internal-API test is gone)
 - Answers: ADR 0004 ("What this filter is not": re-evaluation before any
   bridge to a real PLC)

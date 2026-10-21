@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-14
+- Partly superseded by: ADR 0065 (points 1, 4 and 5: one bridge per transport, `.../bridges/:kind` routes, `BridgeStatus` per kind)
 - Extended by: ADR 0064 (point 4: a start needs a Modbus module; ports of Modbus modules only)
 - Applies: ADR 0004 (modes, private ranges), ADR 0046 (bridge security),
   ADR 0009 point 2 (interpreter passed by a flag), ADR 0015 and ADR 0032

@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-28
+- Extended by: ADR 0065 (a second bridge, the OPC UA client, in TypeScript)
 - Partly superseded by: ADR 0048 (points 1, 2 and 3: a hand-written Modbus slave; pymodbus is a test client only)
 - Source: spike 0003 (docs/spikes/0003-plc-bridge-and-modbus-slave.md)
 - Extended by: ADR 0045

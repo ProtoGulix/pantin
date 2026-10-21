@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-13
+- Partly superseded by: ADR 0065 (point 4: `hello` names its transport, one `plc` connection per transport, tag bus version 2)
 - Amended by: ADR 0061 (the console's verbose trace level)
 - Extended by: ADR 0064 (point 9: dotted PLC variable references)
 - Partly superseded by: ADR 0048 (points 3, 10 and 13 P3: a hand-written Modbus slave instead of pymodbus)

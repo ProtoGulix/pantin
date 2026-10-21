@@ -62,7 +62,7 @@ Stack proposée (à confirmer en phase 0) :
 
 1. Coeur : TypeScript sous Node. Physique : Rapier en WASM, @dimforge/rapier3d-deterministic-compat 0.21.0 épinglé, jamais la build SIMD, pour garder la reproductibilité bit à bit utile aux tests et à la remise à zéro (ADR 0005). Utilisé uniquement pour produits, collisions et capteurs de présence. La cinématique des machines n'est PAS de la physique, elle est calculée directement.
 2. Viewer : Babylon.js (Apache 2.0, PBR, inspecteur, WebGPU et WebGL2). Le viewer n'a pas besoin de Havok puisqu'il ne simule rien. La licence d'usage de Havok n'est de toute façon pas vérifiée.
-3. Pont PLC : un sidecar Python (Modbus TCP écrit à la main, ADR 0048 ; asyncua pour OPC UA plus tard), qui parle au coeur via le tag bus en WebSocket. Il ne peut pas importer Zod : il reste fidèle au protocole par des fixtures partagées dans packages/protocol/fixtures (ADR 0045). Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE. L'esclave Modbus TCP est écrit à la main sur asyncio, sans bibliothèque Modbus à l'exécution ; pymodbus ne sert que de client de référence dans les tests (spike 0009, ADR 0048).
+3. Pont PLC : un sidecar Python (Modbus TCP écrit à la main, ADR 0048) ; le client OPC UA est un second pont, en TypeScript (node-opcua, ADR 0065). Le pont Python parle au coeur via le tag bus en WebSocket. Il ne peut pas importer Zod : il reste fidèle au protocole par des fixtures partagées dans packages/protocol/fixtures (ADR 0045). Raison : bibliothèques mûres, isolation des E/S réseau, architecture éprouvée par les projets similaires. Retenu après mesure (spike 0003, ADR 0007) : processus séparé en Python, qui suit les mêmes exigences de propreté que le TypeScript (section 8). jsmodbus est écarté faute de fichier LICENSE. L'esclave Modbus TCP est écrit à la main sur asyncio, sans bibliothèque Modbus à l'exécution ; pymodbus ne sert que de client de référence dans les tests (spike 0009, ADR 0048).
 4. Distribution : docker compose pour le mode serveur, même code lancé en local pour les amateurs.
 
 ## 5. Modèle de données
@@ -165,7 +165,7 @@ Viewer : mêmes règles. La logique d'affichage est séparée des composants d'U
 
 ## 9. Tag bus (protocole coeur, viewer et pont)
 
-WebSocket JSON, versionné. Messages minimaux : abonnement à des tags, écriture d'un tag, forçage et libération d'un tag, snapshot d'état des corps (transformations) pour le viewer, événements (défaut injecté, changement de scène). Spécification : ADR 0045 point 4 et packages/protocol/src/tag-bus.ts. En phase 7 le pont l'utilise, le viewer reste en REST et SSE (ADR 0015) : le snapshot des corps et les événements de défaut et de scène arriveront sur le bus avec le viewer (backlog viewer-on-tag-bus). Sa sécurité est dans l'ADR 0046.
+WebSocket JSON, versionné. Messages minimaux : abonnement à des tags, écriture d'un tag, forçage et libération d'un tag, snapshot d'état des corps (transformations) pour le viewer, événements (défaut injecté, changement de scène). Spécification : ADR 0045 point 4 et packages/protocol/src/tag-bus.ts. En phase 7 le pont l'utilise (avec ADR 0065, les deux ponts l'utilisent ; le hello nomme son transport), le viewer reste en REST et SSE (ADR 0015) : le snapshot des corps et les événements de défaut et de scène arriveront sur le bus avec le viewer (backlog viewer-on-tag-bus). Sa sécurité est dans l'ADR 0046.
 
 ## 10. Import CAO et communications automate
 
@@ -179,7 +179,7 @@ Import CAO :
 Communications automate :
 
 1. Cible de test : CODESYS Control Win V3 (SoftPLC livré avec l'IDE). Le mode Simulation de l'IDE coupe toute communication, il ne convient pas.
-2. Modbus TCP d'abord (le plus simple à câbler), OPC UA ensuite. Deux rôles possibles pour le simulateur : client (il interroge l'automate) ou esclave (il simule des modules d'E/S que l'automate interroge, avec une IP ou un port par module). Le design doit permettre les deux. Priorité : esclave (ADR 0003).
+2. Modbus TCP d'abord (le plus simple à câbler), OPC UA ensuite, en client du serveur de l'automate (ADR 0065). Deux rôles possibles pour le simulateur : client (il interroge l'automate) ou esclave (il simule des modules d'E/S que l'automate interroge, avec une IP ou un port par module). Le design doit permettre les deux. Priorité : esclave (ADR 0003).
 3. Découplage : la simulation ne dépend pas du cycle de l'automate. Échanges de tags visés à 20 à 50 ms, NON VÉRIFIÉ, à mesurer en phase 0.
 
 ## 11. Communauté et sécurité
@@ -223,7 +223,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 4. Drives : discret, position, vitesse, défauts injectables. Sortie : un vérin double effet se comporte comme décrit, y compris sans rappel ressort.
 5. Capteurs de liaison. Sortie : fins de course qui basculent aux bonnes positions.
 6. Produits et capteurs de présence, convoyeur. Sortie : un carton traverse un convoyeur, un capteur le détecte, de façon reproductible.
-7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA repoussé, ADR 0045, 0049). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel a piloté examples/plc-cylinder dans les deux sens le 2026-10-18 (CODESYS Control Win V3 x64, démonstration manuelle de l'utilisateur, réglages dans le guide Connecter un automate).
+7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA client : ADR 0065). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel a piloté examples/plc-cylinder dans les deux sens le 2026-10-18 (CODESYS Control Win V3 x64, démonstration manuelle de l'utilisateur, réglages dans le guide Connecter un automate).
 8. UI d'édition : bibliothèque de pièces, éditeur de scène, éditeur de pièce (import, choix des noeuds, c'est-à-dire découpage en groupes à la main selon l'ADR 0055, type de liaison, limites, aperçu par curseurs, écriture du manifeste), mapping I/O, inspecteur avec forçage de tags. Sortie : on crée une machine complète sans éditer de fichier à la main.
 9. Communauté et multi instance : index de packs dans un dépôt git, CI qui exécute un test de scénario par pièce, documentation, plusieurs instances dans un même coeur. Sortie : une pièce tierce s'installe sans modifier le coeur.
 
@@ -235,7 +235,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 4. Documente chaque décision d'architecture dans docs/decisions, avec l'alternative écartée.
 5. Signale explicitement tout ce qui n'a pas pu être vérifié. Ne présente jamais une supposition comme un fait, et cite la source quand tu t'appuies sur de la documentation.
 6. Ne modifie jamais un schéma publié sans incrémenter schema_version et fournir la migration.
-7. Vérifie les versions actuelles des bibliothèques (Babylon.js, Rapier, asyncua, pymodbus, outils de qualité) dans leur documentation avant de les figer.
+7. Vérifie les versions actuelles des bibliothèques (Babylon.js, Rapier, node-opcua, pymodbus, outils de qualité) dans leur documentation avant de les figer.
 8. Demande l'accord de l'utilisateur avant : d'ajouter ou changer une dépendance, une licence ou un schéma public, de lancer une extraction sémantique Graphify, d'ouvrir le réseau au delà de localhost, ou de contredire un ADR existant.
 9. Branches (ADR 0044) : master ne reçoit que des versions, develop l'intégration. Chaque tranche se fait sur une branche feat/, fix/, docs/... (ADR 0044 point 3) créée depuis develop, puis arrive dans develop en squash après pnpm check vert, avis favorable du reviewer et CHANGELOG à jour. Ne pousse rien sur GitHub sans la demande de l'utilisateur.
 

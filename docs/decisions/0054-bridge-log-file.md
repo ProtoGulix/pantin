@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-17
+- Partly superseded by: ADR 0065 (points 2 and 4: one log file per transport, `.../bridges/:kind/log`)
 
 ## Context
 
