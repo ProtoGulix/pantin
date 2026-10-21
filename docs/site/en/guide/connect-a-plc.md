@@ -201,6 +201,9 @@ window) or the `pantin io import-symbols` command reads its symbol export and
 retype them. The import creates no channel and **never stores the symbols**: only the
 chosen variable names are written to `io.json`.
 
+A complete path, from the CODESYS export to the closed loop, is in the
+[tutorial](/en/guide/tutorial-plc-symbols).
+
 **Produce the export in CODESYS.** Under the **Application**, add a **Symbol
 configuration** object (the menu is named **Configuration des symboles** in the
 French interface), tick the variables to expose, then run **Build > Generate

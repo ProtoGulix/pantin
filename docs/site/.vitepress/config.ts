@@ -35,7 +35,13 @@ const frenchGuide = [
   },
   {
     text: "Connecter un automate",
-    items: [{ text: "Connecter un automate", link: "/guide/connect-a-plc" }],
+    items: [
+      { text: "Connecter un automate", link: "/guide/connect-a-plc" },
+      {
+        text: "Tutoriel : reprendre les variables de l'automate",
+        link: "/guide/tutorial-plc-symbols",
+      },
+    ],
   },
   { text: "Dépannage", items: [{ text: "Dépannage", link: "/guide/troubleshooting" }] },
 ];
@@ -73,7 +79,10 @@ const englishGuide = [
   },
   {
     text: "Connecting a PLC",
-    items: [{ text: "Connecting a PLC", link: "/en/guide/connect-a-plc" }],
+    items: [
+      { text: "Connecting a PLC", link: "/en/guide/connect-a-plc" },
+      { text: "Tutorial: reuse the PLC's variables", link: "/en/guide/tutorial-plc-symbols" },
+    ],
   },
   {
     text: "Troubleshooting",

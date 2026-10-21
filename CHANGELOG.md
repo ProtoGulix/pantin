@@ -8,6 +8,9 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- Guide: a tutorial, in French and English, from the CODESYS symbol export to the closed
+  loop on `examples/plc-cylinder` (import window, GVL, command line), linked from
+  "Connect a PLC" (ADR 0064 point 17).
 - Signals (ADR 0064 points 1 and 2): `GET /api/pantins/:pantinId/signals` and
   `pantin signals <folder> [--json]` list every signal of a Pantin, the static definition
   of a tag, with its type, direction, unit (metre, radian, per second, percent, none or

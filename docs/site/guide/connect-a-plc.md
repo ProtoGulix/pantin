@@ -207,6 +207,9 @@ API**) ou la commande `pantin io import-symbols` lit son export de symboles et
 L'import ne crée aucune voie et **ne conserve jamais les symboles** : seuls les noms de
 variables retenus sont écrits dans `io.json`.
 
+Un parcours complet, de l'export CODESYS à la boucle fermée, est dans le
+[tutoriel](/guide/tutorial-plc-symbols).
+
 **Produire l'export dans CODESYS.** Sous l'**Application**, ajoutez un objet
 **Configuration des symboles**, cochez les variables à exposer, puis lancez
 **Compiler > Générer le code**. Le fichier `<projet>.<appareil>.<application>.xml`
