@@ -8,6 +8,7 @@ import type {
   TransportPatch,
 } from "../schemas.ts";
 import { ioWidthOf, proposeAddress, smallestFreePort, zoneAndTypeOf } from "./rules-allocation.ts";
+import { modbusSymbolWarnings } from "./rules-symbols.ts";
 import { modbusFieldsOf, validateModbusModule } from "./rules-validation.ts";
 import {
   DEFAULT_UNIT_ID,
@@ -136,5 +137,6 @@ export const MODBUS_TCP_SLAVE_RULES: TransportRules = {
   patchChannel,
   orderedChannelFields,
   compareChannels,
+  symbolWarnings: modbusSymbolWarnings,
   validateModule: validateModbusModule,
 };

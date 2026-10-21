@@ -4,6 +4,8 @@ import type { GeneratedText } from "./folder-text.ts";
 import { parseGenerateArguments, writeGeneratedFile } from "./generated-output.ts";
 import { generateGvl } from "./gvl.ts";
 import { exportIoCsv } from "./io-export.ts";
+import { parseImportSymbolsArguments } from "./io-import-arguments.ts";
+import { importSymbols } from "./io-import-symbols.ts";
 import { parseIoInitArguments } from "./io-init-arguments.ts";
 import { ioInit } from "./io-init-command.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
@@ -23,6 +25,10 @@ const USAGE = [
   "                      map the unmapped tags into m1",
   "  io export <folder> [--output <file>]",
   "                      print the I/O mapping as CSV, one row per channel (read-only)",
+  "  io import-symbols <folder> <file> [--format <id>] [--apply] [--accept-warnings]",
+  "                      match the variables of a PLC symbol file (CODESYS XML) to the mapped signals,",
+  "                      print the preview; --apply writes the compatible ones to io.json, and the",
+  "                      ones to check too with --accept-warnings",
   "  gvl <folder> [--output <file>]",
   "                      print the CODESYS global variable list of io.json",
   "  signals <folder> [--json]",
@@ -89,6 +95,19 @@ async function runIoInit(args: readonly string[], streams: Streams): Promise<num
   return report(await ioInit(parsed.folder, parsed.update, parsed.transport), streams);
 }
 
+async function runImportSymbols(args: readonly string[], streams: Streams): Promise<number> {
+  const parsed = parseImportSymbolsArguments(args);
+  if (parsed === undefined) {
+    writeLine(streams.stderr, USAGE);
+    return 2;
+  }
+  if (typeof parsed === "string") {
+    writeLine(streams.stderr, `error: ${parsed}`);
+    return 2;
+  }
+  return report(await importSymbols(parsed), streams);
+}
+
 // With --output the bytes go straight to the file: a shell redirection can
 // re-encode them (Windows PowerShell 5.1, NOT VERIFIED), which would damage the BOM.
 async function runGenerated(
@@ -122,6 +141,9 @@ async function runIo(args: readonly string[], streams: Streams): Promise<number>
   }
   if (subcommand === "export") {
     return runGenerated(rest, exportIoCsv, streams);
+  }
+  if (subcommand === "import-symbols") {
+    return runImportSymbols(rest, streams);
   }
   writeLine(streams.stderr, USAGE);
   return 2;

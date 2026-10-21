@@ -35,7 +35,7 @@ export async function readIo(
 }
 
 // An edit never merges with a source it cannot trust (ADR 0049 point 6).
-function refuseUneditable(openPantin: OpenPantin): void {
+export function refuseUneditable(openPantin: OpenPantin): void {
   if (openPantin.io.kind === "unreadable") {
     throw new ApiError(
       "conflict",
@@ -44,7 +44,7 @@ function refuseUneditable(openPantin: OpenPantin): void {
   }
 }
 
-function requireMapping(openPantin: OpenPantin): IoDocument {
+export function requireMapping(openPantin: OpenPantin): IoDocument {
   if (openPantin.io.kind !== "document") {
     throw new ApiError(
       "not_found",
@@ -54,20 +54,35 @@ function requireMapping(openPantin: OpenPantin): IoDocument {
   return openPantin.io.document;
 }
 
-/** Runs one edit on the open mapping; the edit is all or nothing. */
-async function editIo(
+/**
+ * Runs one edit on the open mapping; the edit is all or nothing. `outcome` is what the
+ * edit wants to tell besides the new mapping, for example the entries it skipped.
+ */
+export async function editIoWithOutcome<Outcome>(
   context: ServiceContext,
   pantinId: PantinId,
-  edit: (openPantin: OpenPantin, tags: IoTag[]) => IoDocument,
-): Promise<IoMappingResponse> {
+  edit: (openPantin: OpenPantin, tags: IoTag[]) => { document: IoDocument; outcome: Outcome },
+): Promise<{ answer: IoMappingResponse; outcome: Outcome }> {
   const openPantin = await loadPantin(context, pantinId);
   refuseUneditable(openPantin);
   // No await from here to the assignment: nobody edits in between.
   alignIo(openPantin);
   const edited = edit(openPantin, ioTagsOf(openPantin.document));
   // Canonical, so that the answer lists the channels in the order of the file.
-  openPantin.io = { kind: "document", document: canonicalIoDocument(edited) };
-  return answerOf(openPantin);
+  openPantin.io = { kind: "document", document: canonicalIoDocument(edited.document) };
+  return { answer: answerOf(openPantin), outcome: edited.outcome };
+}
+
+async function editIo(
+  context: ServiceContext,
+  pantinId: PantinId,
+  edit: (openPantin: OpenPantin, tags: IoTag[]) => IoDocument,
+): Promise<IoMappingResponse> {
+  const { answer } = await editIoWithOutcome(context, pantinId, (open, tags) => ({
+    document: edit(open, tags),
+    outcome: undefined,
+  }));
+  return answer;
 }
 
 export function ioEditOperations(context: ServiceContext) {

@@ -26,6 +26,7 @@ export * from "./redundant-joints-api.ts";
 export * from "./sensor.ts";
 export * from "./sensor-api.ts";
 export * from "./signal.ts";
+export * from "./symbol-import.ts";
 export * from "./tag.ts";
 export * from "./tag-bus.ts";
 export * from "./version.ts";

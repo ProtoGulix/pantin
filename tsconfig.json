@@ -5,6 +5,7 @@
     { "path": "packages/actuator-types" },
     { "path": "packages/sensor-types" },
     { "path": "packages/transport-types" },
+    { "path": "packages/plc-symbol-formats" },
     { "path": "packages/protocol" },
     { "path": "packages/core" },
     { "path": "packages/viewer" },

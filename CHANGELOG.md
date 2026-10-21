@@ -12,6 +12,17 @@ All notable changes to Pantin. The format follows
   `pantin signals <folder> [--json]` list every signal of a Pantin, the static definition
   of a tag, with its type, direction, unit (metre, radian, per second, percent, none or
   unknown), owner and an English description. Derived from the document, never stored.
+- PLC symbol import (ADR 0064 points 10 to 13): `pantin io import-symbols <folder> <file>
+  [--format <id>] [--apply] [--accept-warnings]` and the core routes
+  `POST /api/pantins/:pantinId/io/symbols/preview` and `POST .../io/variables` read the symbol
+  file CODESYS writes at "Generate Code" (V3.5 SP22 verified), match its variables to the
+  mapped signals (exact name, normalised name, tag key and member) and show what would
+  change, what stays and what is left, with a type check. `--apply` writes the compatible
+  variables to io.json; those to check need `--accept-warnings`. Symbols are never stored.
+  The file is read by a hand-written XML subset reader in the new package
+  `@pantin/plc-symbol-formats` (no DOCTYPE, no entity but the five predefined ones,
+  UTF-8 only, size and depth limits). A function block instance of the PLC program is opened
+  into its members.
 
 ### Fixed
 

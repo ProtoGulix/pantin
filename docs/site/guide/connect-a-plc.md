@@ -199,6 +199,73 @@ et `16#3E00`.
 L'automate de test est **CODESYS Control Win V3**, le SoftPLC livré avec l'IDE.
 Le mode Simulation de l'IDE coupe toute communication : il ne convient pas.
 
+## Reprendre les noms de variables de l'automate
+
+Si votre programme CODESYS existe déjà, `pantin io import-symbols` lit son export
+de symboles et **propose** les noms de variables pour les signaux déjà mappés,
+au lieu de les retaper. La commande ne crée aucune voie et **ne conserve jamais
+les symboles** : seuls les noms de variables retenus sont écrits dans `io.json`.
+
+**Produire l'export dans CODESYS.** Sous l'**Application**, ajoutez un objet
+**Configuration des symboles**, cochez les variables à exposer, puis lancez
+**Compiler > Générer le code**. Le fichier `<projet>.<appareil>.<application>.xml`
+apparaît dans le dossier du projet. Les noms de menus peuvent différer selon la
+version ; la procédure a été vérifiée sur CODESYS 3.5 SP22. Les autres versions et
+les autres logiciels d'automate ne sont pas vérifiés.
+
+**Lancer la commande :**
+
+```
+pnpm pantin io import-symbols <dossier du Pantin> <fichier.xml> [--format <id>] [--apply] [--accept-warnings]
+```
+
+Sans `--apply`, elle n'écrit rien et affiche un aperçu. Sur une copie de
+`examples/plc-cylinder` et le fichier d'essai du dépôt, elle écrit (le texte de la
+commande est en anglais) :
+
+```
+Format codesys-symbolconfiguration, project "Untitled" (Application): 61 symbols read.
+Matched: 3
+  [m1] tige.verin-min.state: tige_verin_min_state -> GVL.verin1_verin_min_state (suffix, compatible)
+  ...
+To check (warnings): 0
+Incompatible (never applied): 0
+Unchanged: 2
+  [m1] verin1.verin1.coil_14: verin1_verin1_coil_14 (exact, compatible)
+  ...
+Unmatched signals: 0
+Unused symbols: 56
+```
+
+L'aperçu a cinq parties :
+
+- **Matched** : variables proposées, compatibles avec le type du signal ;
+- **To check (warnings)** : correspondances à vérifier à la main ;
+- **Incompatible** : correspondances de type incompatible, jamais appliquées ;
+- **Unchanged** : la voie porte déjà ce nom ;
+- **Unmatched signals** : signaux sans symbole, et **Unused symbols** : symboles sans signal, avec la raison.
+
+**Les trois règles de correspondance**, essayées dans cet ordre :
+
+1. **exacte** : le symbole porte le nom actuel de la variable ;
+2. **normalisée** : même nom que la variable dérivée du tag (par exemple `tige_verin_position`), une fois la casse, les `_` et les `.` ignorés ;
+3. **suffixe** : le dernier segment du symbole se termine par la clé du tag suivie du membre (par exemple `verin1_verin_min_state`), en coupant aux `_`. Un nom en CamelCase n'a pas de coupure : il ne correspond que s'il est entier.
+
+Une correspondance n'est retenue que si elle est unique des deux côtés.
+
+**Appliquer.** `--apply` écrit dans `io.json` (en version 2) les propositions
+compatibles. `--accept-warnings` y ajoute celles à vérifier. Le code de sortie est
+1 si une entrée a été ignorée (par exemple une variable déjà prise par un autre
+tag), sinon 0. Une variable en nom pointé est écrite dans `io.json` mais, comme
+toujours, n'est pas déclarée dans la GVL.
+
+::: warning Attention
+Comme tout outil qui écrit dans le dossier, lancez-la sur un Pantin qu'aucun cœur
+n'a ouvert avec des modifications non enregistrées : un cœur qui l'a ouvert voit le
+changement après avoir abandonné les modifications ou rouvert le Pantin. Le viewer
+n'a pas encore de fenêtre pour cet import.
+:::
+
 ## Réseau : local ou privé
 
 Dans le bloc **Pont automate**, cliquez la pastille du réseau (**Réseau :

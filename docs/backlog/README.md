@@ -40,6 +40,7 @@ phase.
 - [PLC bridge extras](plc-bridge-extras.md) — feedback forcing, scaled INT, fail-safe values, aliases
 - [OPC UA](opc-ua.md) — second protocol, its own ADR
 - [Viewer on the tag bus](viewer-on-tag-bus.md) — bodies, tags and events pushed, no more polling
+- [Symbol parsing in a worker thread](symbol-parsing-worker-thread.md) — keep the event loop free while a large symbol file is read
 
 ## Spikes and checks
 

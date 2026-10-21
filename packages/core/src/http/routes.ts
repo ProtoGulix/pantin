@@ -15,6 +15,7 @@ import { CLOCK_ROUTES } from "./clock-routes.ts";
 import { CONVEYOR_ROUTES } from "./conveyor-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
 import { IO_ROUTES } from "./io-routes.ts";
+import { IO_SYMBOL_ROUTES } from "./io-symbol-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
 import { ORPHAN_MESH_ROUTES } from "./orphan-mesh-routes.ts";
 import { POSE_STREAM_ROUTES } from "./pose-stream-routes.ts";
@@ -180,6 +181,7 @@ export const ROUTES: readonly Route[] = [
   ...REDUNDANT_JOINT_ROUTES,
   ...TAG_ROUTES,
   ...IO_ROUTES,
+  ...IO_SYMBOL_ROUTES,
   ...BRIDGE_ROUTES,
   ...VERSION_ROUTES,
 ];

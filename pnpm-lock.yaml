@@ -226,6 +226,9 @@ importers:
       '@pantin/drive-types':
         specifier: workspace:*
         version: link:../drive-types
+      '@pantin/plc-symbol-formats':
+        specifier: workspace:*
+        version: link:../plc-symbol-formats
       '@pantin/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -247,6 +250,12 @@ importers:
         version: 8.18.2
 
   packages/drive-types:
+    dependencies:
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
+  packages/plc-symbol-formats:
     dependencies:
       zod:
         specifier: 4.6.5

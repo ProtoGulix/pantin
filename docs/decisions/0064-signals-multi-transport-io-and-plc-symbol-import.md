@@ -575,3 +575,80 @@ Facts checked in the repository on 2026-10-20 (`develop`):
   mapping; Zod 4 nested discriminators; Node having no XML parser;
   fast-xml-parser's licence and behaviour; typical symbol file sizes
   behind the 8 MiB cap.
+
+## Amendment of 2026-10-21: what a real SP22 export showed
+
+Spike 0012 ("Real export, 2026-10-21") read a symbol file exported by CODESYS V3.5 SP22
+Patch 1. It refines point 10 and replaces some of its NOT VERIFIED items. Point 10 above
+is left as written.
+
+- **SP22 still writes the `Symbolconfiguration` format**, in the same namespace
+  (`http://www.3s-software.com/schemas/Symbolconfiguration.xsd`). `Header/Version` is the
+  format version (3.5.14.0), not the product version. The deprecation notice of the
+  classic symbol configuration (spike 0012 point 1) did not change the file.
+- **Access.** The spellings seen are `Read` and `ReadWrite`. `Read` maps to `read`,
+  `ReadWrite` to `read_write`. Any other spelling (`Write` included, which stays NOT
+  VERIFIED) maps to `unknown` with one warning per spelling. A node or member with no
+  access attribute is `unknown` without a warning. The access of a read-only node is
+  inherited by the members it expands into.
+- **Comments** are a child `<Comment>` element, on a `Node` and on a `UserDefElement`.
+  The text starts with a space and may span several lines: it is trimmed at both ends and
+  its newlines stay.
+- **Containers.**
+  - A `Node` without `type` is a container of the tree (application, GVL, program); a
+    typed `Node` is a variable.
+  - A function block instance is opened like a structure: `TypeUserDef` with
+    `pouclass` `STRUCTURE` or `FUNCTION_BLOCK` lists its members as `UserDefElement`
+    (`iecname`, `type`, `vartype`, `access`, `inherited_from`), recursively up to 8
+    levels. A derived function block already lists the members it inherits, so its
+    `basetype` is never walked. The container itself is not a symbol, only its leaves are
+    (`PLC_PRG.fbVerin1.xBobine14`). A container nested deeper than 8 levels is listed as
+    one symbol, with a warning.
+  - A `TypeUserDef` with `typeclass="Enum"` has `UserDefElement` entries that are values,
+    not members: the symbol's `iecType` is the enumeration's name, which the type table
+    treats as incompatible.
+  - Pointers (`POINTER TO ...`, `RTS_IEC_HANDLE`) and `TYPE_REFERENCE` are never opened and
+    are incompatible. Arrays are listed with their `ARRAY [..] OF ...` text and never
+    opened.
+  - An alias type (`XWORD`, `aliasediecname="LWORD"`) uses its own `iecname`, and the model
+    notes the alias in an optional `aliasOf`.
+- **Direct address.** A node of the I/O mapping globals carries `directaddress="%IW1"`.
+  The model keeps it as the optional `directAddress` of `PlcSymbol` (point 10 left room
+  for an address). It is display only and never takes part in a match.
+- **Model and results.** `PlcSymbol` gains the optional `aliasOf` and `directAddress`; the
+  format's list carries `project` (display only) and a list of warnings; `parse` answers
+  `{ ok: true, list }` or `{ ok: false, problems }` rather than a union with an array.
+- **Preview.** Proposals and unchanged entries share one shape. A match to an
+  incompatible type is shown with the compatibility `incompatible` and is never applied. A symbol whose
+  reference is not a valid variable (point 9) takes no part in matching and is listed
+  as unused with the reason `invalid_reference`. The exact rule compares the end of the
+  reference with the whole current variable, so a dotted variable matches a dotted
+  reference.
+- **Still NOT VERIFIED**: the spelling of a write-only access, other CODESYS versions,
+  the IEC Symbol Set Configuration (SP18+), TIA Portal, and whether the CODESYS I/O
+  mapping accepts a dotted reference (point 9).
+
+### Further decisions of the same day, after review
+
+- **Apply and conflicts.** `POST .../io/variables` also refuses an entry whose variable another
+  tag would hold (case-insensitive; the same tag in two modules may share it). The check is
+  on the final state of the batch, so two signals can swap their variables. A refused entry gets
+  its old variable back, which is checked again, so a clash can cascade. A channel named twice
+  in one batch counts once: the second entry is skipped.
+- **CLI.** `pantin io import-symbols --apply` exits 1 when any entry was skipped.
+- **Suffix rule (point 12, rule 3)** is read as: the symbol's last segment ends with
+  `<tag key><member>`, at a boundary. Each trailing run of the `_`-separated parts of the last
+  segment is a key (`verin1_verin_min_state`: `verin1verinminstate`, `verinminstate`,
+  `minstate`, `state`), normalised as in rule 2, and it is compared with the normalised
+  `deriveVariable("<tag key>.<member>")`. It stays unique on both sides. A CamelCase name
+  gives no boundary: only the whole name can match. So `tige.verin-min.state` finds
+  `GVL.verin1_verin_min_state`.
+- **Limits against hostile files.** The reader refuses raw control characters other than tab,
+  line feed and carriage return, and more than 256 attributes on a tag. The expansion of types
+  counts every variable it visits, symbol or not, and refuses a file that needs more than
+  500 000 visits (`too_many_symbols`), so empty containers cannot fan out unboundedly.
+- **No EMQX fixture.** The sample of spike 0012 is not in the repository and was not
+  downloaded; the real SP22 file and a hand-made one are the fixtures.
+- **Synchronous parsing.** The file is read on the core's event loop (about 0.8 s at 7 MiB,
+  measured in review). That is accepted for a localhost user action; a worker thread is in
+  the backlog (`docs/backlog/symbol-parsing-worker-thread.md`).

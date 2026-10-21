@@ -26,6 +26,12 @@ export interface TransportProblem {
   message: string;
 }
 
+/** What a transport needs to know of a PLC variable to judge a channel wired to it. */
+export interface SymbolShape {
+  iecType: string;
+  access: "read" | "write" | "read_write" | "unknown";
+}
+
 /** The transport fields of a new channel, or the sentence that says why there is no room. */
 export type ChannelProposal = { fields: ChannelTransportFields } | { refusal: string };
 
@@ -65,6 +71,12 @@ export interface TransportRules {
   orderedChannelFields(channel: TransportChannel): ChannelTransportFields;
   /** The order of the channels in the canonical text of a module. */
   compareChannels(first: TransportChannel, second: TransportChannel): number;
+  /**
+   * Warnings, as sentences, about wiring `channel` to a PLC variable of this shape
+   * (ADR 0064 point 12). The type table every transport shares is the core's; this adds
+   * what the protocol knows, for example that its wire type differs from the variable's.
+   */
+  symbolWarnings(channel: TransportChannel, symbol: SymbolShape): string[];
   /** The rules of the transport, against the signals of the document. */
   validateModule(module: RuleModule, signals: ReadonlyMap<string, SignalShape>): TransportProblem[];
 }

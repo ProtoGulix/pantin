@@ -193,6 +193,70 @@ units (metres): a cylinder extended to 0.125 m gives the words
 The test PLC is **CODESYS Control Win V3**, the SoftPLC supplied with the IDE.
 The Simulation mode of the IDE cuts all communication, so it is not suitable.
 
+## Reuse the PLC's variable names
+
+If your CODESYS program already exists, `pantin io import-symbols` reads its
+symbol export and **proposes** the variable names for the signals that are already
+mapped, so you do not retype them. The command creates no channel and **never
+stores the symbols**: only the chosen variable names are written to `io.json`.
+
+**Produce the export in CODESYS.** Under the **Application**, add a **Symbol
+configuration** object (the menu is named **Configuration des symboles** in the
+French interface), tick the variables to expose, then run **Build > Generate
+code**. The file `<project>.<device>.<application>.xml` appears in the project
+folder. Menu names may differ by version; the procedure was verified on CODESYS 3.5
+SP22. Other versions and other PLC software are not verified.
+
+**Run the command:**
+
+```
+pnpm pantin io import-symbols <Pantin folder> <file.xml> [--format <id>] [--apply] [--accept-warnings]
+```
+
+Without `--apply` it writes nothing and prints a preview. On a copy of
+`examples/plc-cylinder` and the sample file of the repository, it prints:
+
+```
+Format codesys-symbolconfiguration, project "Untitled" (Application): 61 symbols read.
+Matched: 3
+  [m1] tige.verin-min.state: tige_verin_min_state -> GVL.verin1_verin_min_state (suffix, compatible)
+  ...
+To check (warnings): 0
+Incompatible (never applied): 0
+Unchanged: 2
+  [m1] verin1.verin1.coil_14: verin1_verin1_coil_14 (exact, compatible)
+  ...
+Unmatched signals: 0
+Unused symbols: 56
+```
+
+The preview has five parts:
+
+- **Matched**: proposed variables, compatible with the signal's type;
+- **To check (warnings)**: matches to check by hand;
+- **Incompatible**: matches of an incompatible type, never applied;
+- **Unchanged**: the channel already has this name;
+- **Unmatched signals**: signals with no symbol, and **Unused symbols**: symbols with no signal, with the reason.
+
+**The three matching rules**, tried in this order:
+
+1. **exact**: the symbol has the variable's current name;
+2. **normalised**: the same name as the variable derived from the tag (for example `tige_verin_position`), once case, `_` and `.` are ignored;
+3. **suffix**: the symbol's last segment ends with the tag key followed by the member (for example `verin1_verin_min_state`), cut at `_` boundaries. A CamelCase name has no boundary: it only matches whole.
+
+A match is kept only when it is unique on both sides.
+
+**Apply.** `--apply` writes the compatible proposals to `io.json` (in version 2).
+`--accept-warnings` adds the ones to check. The exit code is 1 when an entry was
+skipped (for example a variable already held by another tag), otherwise 0. A dotted
+variable name is written to `io.json` but, as always, is not declared in the GVL.
+
+::: warning Caution
+Like any tool that writes to the folder, run it on a Pantin that no core holds open
+with unsaved edits: a core that has it open sees the change after discarding the
+edits or reopening the Pantin. The viewer has no window for this import yet.
+:::
+
 ## Network: local or private
 
 In the **PLC bridge** block, click the network pill (**Network: local**) to open

@@ -1,0 +1,311 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Symbolconfiguration xmlns="http://www.3s-software.com/schemas/Symbolconfiguration.xsd">
+  <Header>
+    <Version>3.5.14.0</Version>
+    <SymbolConfigObject version="4.7.0.0" runtimeid="3.5.22.10" libversion="4.6.0.0" compiler="3.5.22.0" lmm="3.5.22.10" profile="CODESYS V3.5 SP22 Patch 1+" settings="SupportOPCUA, XmlIncludeComments, LayoutCalculator=OptimizedClientSideLayoutCalculator" />
+    <ProjectInfo name="Untitled" devicename="Device" appname="Application" />
+  </Header>
+  <TypeList>
+    <TypeUserDef name="T_CAADiagTreeBase" size="0" nativesize="56" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="CAADiagTreeBase" />
+    <TypeUserDef name="T_IoDrvBase" size="0" nativesize="320" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="IoDrvBase" />
+    <TypeUserDef name="T_ModbusSlaveBase" size="0" nativesize="304" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="ModbusSlaveBase" />
+    <TypeSimple name="T_BOOL" size="1" swapsize="0" typeclass="Bool" iecname="BOOL" />
+    <TypeSimple name="T_BYTE" size="1" swapsize="1" typeclass="Byte" iecname="BYTE" />
+    <TypeUserDef name="T_CAADiagDeviceDefault" size="0" nativesize="120" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="CAADiagDeviceDefault" basetype="T_CAADiagTreeBase" />
+    <TypeSimple name="T_DINT" size="4" swapsize="4" typeclass="DInt" iecname="DINT" />
+    <TypeSimple name="T_DWORD" size="4" swapsize="4" typeclass="DWord" iecname="DWORD" />
+    <TypeSimple name="T_INT" size="2" swapsize="2" typeclass="Int" iecname="INT" />
+    <TypeUserDef name="T_IoDrvModbusBase" size="0" nativesize="360" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="IoDrvModbusBase" basetype="T_IoDrvBase" />
+    <TypeSimple name="T_LWORD" size="8" swapsize="8" typeclass="LWord" iecname="LWORD" />
+    <TypeUserDef name="T_ModbusTCPSlaveBase" size="0" nativesize="304" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="ModbusTCPSlaveBase" basetype="T_ModbusSlaveBase" />
+    <TypeSimple name="T_REAL" size="4" swapsize="4" typeclass="Real" iecname="REAL" />
+    <TypeSimple name="T_TIME" size="4" swapsize="4" typeclass="Time" iecname="TIME" />
+    <TypeSimple name="T_UDINT" size="4" swapsize="4" typeclass="UDInt" iecname="UDINT" />
+    <TypeSimple name="T_UINT" size="2" swapsize="2" typeclass="UInt" iecname="UINT" />
+    <TypeSimple name="T_WORD" size="2" swapsize="2" typeclass="Word" iecname="WORD" />
+    <TypeArray name="T_ARRAY__0__3__OF_BYTE" size="4" nativesize="4" typeclass="Array" iecname="ARRAY [0..3] OF BYTE" basetype="T_BYTE">
+      <ArrayDim minrange="0" maxrange="3" />
+    </TypeArray>
+    <TypeArray name="T_ARRAY__0__3__OF_DED_INode" size="32" nativesize="32" typeclass="Array" iecname="ARRAY [0..3] OF DED.INode" basetype="T_TYPE_REFERENCE">
+      <ArrayDim minrange="0" maxrange="3" />
+    </TypeArray>
+    <TypeUserDef name="T_EthernetState" size="2" nativesize="2" swapsize="2" typeclass="Enum" iecname="EthernetState" basetype="T_INT">
+      <UserDefElement type="T_EthernetState" iecname="NOT_CONFIGURED" enumvalue="0" />
+      <UserDefElement type="T_EthernetState" iecname="CONFIGURED" enumvalue="1" />
+      <UserDefElement type="T_EthernetState" iecname="DISCONNECTED" enumvalue="2" />
+      <UserDefElement type="T_EthernetState" iecname="RUNNING" enumvalue="3" />
+      <UserDefElement type="T_EthernetState" iecname="ERROR" enumvalue="4" />
+      <UserDefElement type="T_EthernetState" iecname="SET_IP_ERROR" enumvalue="5" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoDrvModbusTCP" size="4" nativesize="15152" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="IoDrvModbusTCP" basetype="T_IoDrvModbusBase">
+      <UserDefElement iecname="xStop" type="T_BOOL" byteoffset="0" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="xSlaveError" type="T_BOOL" byteoffset="1" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="uiConnectedSlaves" type="T_UINT" byteoffset="2" vartype="VAR_OUTPUT" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_MB_ErrorCodes" size="1" nativesize="1" typeclass="Enum" iecname="MB_ErrorCodes" basetype="T_BYTE">
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_SUCCESS" enumvalue="0">
+        <Comment>Everything OK</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="ILLEGAL_FUNCTION" enumvalue="1">
+        <Comment>Slave does not support the function code</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="ILLEGAL_DATA_ADDRESS" enumvalue="2">
+        <Comment>Slave does not support this register offset</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="ILLEGAL_DATA_VALUE" enumvalue="3">
+        <Comment>The value to be written is not valid</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="SLAVE_DEVICE_FAILURE" enumvalue="4">
+        <Comment>Unrecoverable error while performing the request</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="ACKNOWLEDGE" enumvalue="5">
+        <Comment>Notification of a Slave that a lengthy operation being started</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="SLAVE_DEVICE_BUSY" enumvalue="6">
+        <Comment>Notification of a Slave that a lengthy operation is in progress</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="MEMORY_PARITY_ERROR" enumvalue="8">
+        <Comment>Special error for function code 20, 21</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="GATEWAY_PATH_UNAVAILABLE" enumvalue="10">
+        <Comment>Special error when using devices behind a gateway (Gateway misconfigured/busy)</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="GATEWAY_DEVICE_FAILED_TO_RESPOND" enumvalue="11">
+        <Comment>Special error when using devices behind a gateway (Device does not respond)</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_TIMEOUT" enumvalue="161">
+        <Comment>There was no response in time</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_CRC_FAIL" enumvalue="162">
+        <Comment>The checksum of the response is not correct</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_WRONG_SLAVE" enumvalue="163">
+        <Comment>The response is not from the expected Slave</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_WRONG_FUNCTIONCODE" enumvalue="164">
+        <Comment>The response is not the expected function code</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="TCP_COMMUNICATION_ERROR" enumvalue="165">
+        <Comment>TCP Port error. Request was not sent</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_INVALID_DATA" enumvalue="166">
+        <Comment>The response contains invalid data</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_INVALID_PROTOCOL" enumvalue="167">
+        <Comment>The response is not modbus protocol</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="RESPONSE_INVALID_HEADER" enumvalue="168">
+        <Comment>Any field of Modbus MBAP (Protocoll, Length) header is  invalid</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="INVALID_PARAMETER" enumvalue="169">
+        <Comment>Any input parameter of the operation is invalid (e.g. data-pointer is not set or FC is not supported by Modbus stack</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_MB_ErrorCodes" iecname="UNDEFINED" enumvalue="255">
+        <Comment>The request's result is undefined or not yet known, e.g. initial state</Comment>
+      </UserDefElement>
+    </TypeUserDef>
+    <TypeUserDef name="T_ModbusTCPComState" size="2" nativesize="2" swapsize="2" typeclass="Enum" iecname="ModbusTCPComState" basetype="T_UINT">
+      <UserDefElement type="T_ModbusTCPComState" iecname="OFF" enumvalue="0">
+        <Comment>no action performed on socket, e.g. if slave is disabled.</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_ModbusTCPComState" iecname="CONNECTING" enumvalue="1">
+        <Comment>TCP connect request is currently running</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_ModbusTCPComState" iecname="CONNECTED" enumvalue="2">
+        <Comment>TCP connection is established</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_ModbusTCPComState" iecname="DISCONNECTING" enumvalue="3">
+        <Comment>TCP connection is aborted (by application)</Comment>
+      </UserDefElement>
+      <UserDefElement type="T_ModbusTCPComState" iecname="SOCKET_ERROR" enumvalue="4">
+        <Comment>a TCP socket error occured, e.g. if read/write failed due to a disconnected cable etc.</Comment>
+      </UserDefElement>
+    </TypeUserDef>
+    <TypeSimple name="T_POINTER_TO_BYTE" size="8" swapsize="8" typeclass="Pointer" iecname="POINTER TO BYTE" />
+    <TypeSimple name="T_POINTER_TO_IoConfigChannelMap" size="8" swapsize="8" typeclass="Pointer" iecname="POINTER TO IoConfigChannelMap" />
+    <TypeSimple name="T_POINTER_TO_IoConfigConnector" size="8" swapsize="8" typeclass="Pointer" iecname="POINTER TO IoConfigConnector" />
+    <TypeSimple name="T_POINTER_TO_IoConfigConnectorMap" size="8" swapsize="8" typeclass="Pointer" iecname="POINTER TO IoConfigConnectorMap" />
+    <TypeSimple name="T_POINTER_TO_IoConfigParameter" size="8" swapsize="8" typeclass="Pointer" iecname="POINTER TO IoConfigParameter" />
+    <TypeSimple name="T_POINTER_TO_IoConfigTaskMap" size="8" swapsize="8" typeclass="Pointer" iecname="POINTER TO IoConfigTaskMap" />
+    <TypeUserDef name="T_R_TRIG" size="2" nativesize="16" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="R_TRIG">
+      <UserDefElement iecname="CLK" type="T_BOOL" byteoffset="0" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="Q" type="T_BOOL" byteoffset="1" vartype="VAR_OUTPUT" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_TON" size="16" nativesize="32" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="TON">
+      <UserDefElement iecname="IN" type="T_BOOL" byteoffset="0" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="PT" type="T_TIME" byteoffset="4" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="Q" type="T_BOOL" byteoffset="8" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="ET" type="T_TIME" byteoffset="12" vartype="VAR_OUTPUT" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_VERSION" size="8" nativesize="8" typeclass="Userdef" pouclass="STRUCTURE" iecname="VERSION">
+      <UserDefElement iecname="uiMajor" type="T_UINT" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="uiMinor" type="T_UINT" byteoffset="2" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="uiServicePack" type="T_UINT" byteoffset="4" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="uiPatch" type="T_UINT" byteoffset="6" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeSimple name="T_XWORD" size="8" swapsize="8" typeclass="LWord" iecname="XWORD" aliasedtype="T_LWORD" aliasediecname="LWORD" />
+    <TypeUserDef name="T_FB_CycleVerin" size="42" nativesize="88" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="FB_CycleVerin">
+      <UserDefElement iecname="xMarche" type="T_BOOL" byteoffset="0" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="xReset" type="T_BOOL" byteoffset="1" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="xCapteurMin" type="T_BOOL" byteoffset="2" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="xCapteurMax" type="T_BOOL" byteoffset="3" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="tTimeout" type="T_TIME" byteoffset="4" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="xBobine14" type="T_BOOL" byteoffset="8" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xBobine12" type="T_BOOL" byteoffset="9" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xOccupe" type="T_BOOL" byteoffset="10" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xFini" type="T_BOOL" byteoffset="11" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xDefaut" type="T_BOOL" byteoffset="12" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="iEtat" type="T_INT" byteoffset="14" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="udiNbCycles" type="T_UDINT" byteoffset="16" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="rtMarche" type="T_R_TRIG" byteoffset="20" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="tonTimeout" type="T_TON" byteoffset="24" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="iEtatPrec" type="T_INT" byteoffset="40" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoConfigChannelMap" size="32" nativesize="32" typeclass="Userdef" pouclass="STRUCTURE" iecname="IoConfigChannelMap">
+      <UserDefElement iecname="pParameter" type="T_POINTER_TO_IoConfigParameter" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="pbyIecAddress" type="T_POINTER_TO_BYTE" byteoffset="8" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wParameterBitOffset" type="T_WORD" byteoffset="16" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wIecAddressBitOffset" type="T_WORD" byteoffset="18" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wSize" type="T_WORD" byteoffset="20" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wDummy" type="T_WORD" byteoffset="22" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwDriverSpecific" type="T_XWORD" byteoffset="24" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoConfigConnectorMap" size="32" nativesize="32" typeclass="Userdef" pouclass="STRUCTURE" iecname="IoConfigConnectorMap">
+      <UserDefElement iecname="pConnector" type="T_POINTER_TO_IoConfigConnector" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwIoMgrSpecific" type="T_XWORD" byteoffset="8" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwNumOfChannels" type="T_DWORD" byteoffset="16" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="pChannelMapList" type="T_POINTER_TO_IoConfigChannelMap" byteoffset="24" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoConfigParameter" size="32" nativesize="32" typeclass="Userdef" pouclass="STRUCTURE" iecname="IoConfigParameter">
+      <UserDefElement iecname="dwParameterId" type="T_DWORD" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwValue" type="T_XWORD" byteoffset="8" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wType" type="T_WORD" byteoffset="16" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wLen" type="T_WORD" byteoffset="18" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwFlags" type="T_DWORD" byteoffset="20" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwDriverSpecific" type="T_XWORD" byteoffset="24" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoConfigTaskMap" size="16" nativesize="16" typeclass="Userdef" pouclass="STRUCTURE" iecname="IoConfigTaskMap">
+      <UserDefElement iecname="dwTaskId" type="T_DWORD" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wType" type="T_WORD" byteoffset="4" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wNumOfConnectorMap" type="T_WORD" byteoffset="6" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="pConnectorMapList" type="T_POINTER_TO_IoConfigConnectorMap" byteoffset="8" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoDrvEthernet" size="2" nativesize="904" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="IoDrvEthernet" basetype="T_IoDrvBase">
+      <UserDefElement iecname="eState" type="T_EthernetState" byteoffset="0" vartype="VAR_OUTPUT" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoDrvModbusTCP_Diag" size="4" nativesize="15256" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="IoDrvModbusTCP_Diag" basetype="T_IoDrvModbusTCP">
+      <UserDefElement iecname="xStop" type="T_BOOL" byteoffset="0" vartype="VAR_INPUT" inherited_from="T_IoDrvModbusTCP" access="ReadWrite" />
+      <UserDefElement iecname="xSlaveError" type="T_BOOL" byteoffset="1" vartype="VAR_OUTPUT" inherited_from="T_IoDrvModbusTCP" access="ReadWrite" />
+      <UserDefElement iecname="uiConnectedSlaves" type="T_UINT" byteoffset="2" vartype="VAR_OUTPUT" inherited_from="T_IoDrvModbusTCP" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_ModbusTCPComSettings" size="19" nativesize="20" typeclass="Userdef" pouclass="STRUCTURE" iecname="ModbusTCPComSettings">
+      <UserDefElement iecname="ipAddress" type="T_ARRAY__0__3__OF_BYTE" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="uiPort" type="T_UINT" byteoffset="4" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="xEnableFallback" type="T_BOOL" byteoffset="6" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="FirstAddress" type="T_ARRAY__0__3__OF_BYTE" byteoffset="7" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="SecondAddress" type="T_ARRAY__0__3__OF_BYTE" byteoffset="11" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="uiPreferredLine" type="T_UINT" byteoffset="16" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="xKeepLinesConnectedEnabled" type="T_BOOL" byteoffset="18" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeSimple name="T_RTS_IEC_HANDLE" size="8" swapsize="8" typeclass="Pointer" iecname="RTS_IEC_HANDLE" aliasedtype="T_POINTER_TO_BYTE" aliasediecname="POINTER TO BYTE" />
+    <TypeUserDef name="T_IoConfigConnector" size="40" nativesize="40" typeclass="Userdef" pouclass="STRUCTURE" iecname="IoConfigConnector">
+      <UserDefElement iecname="wType" type="T_WORD" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="wOptions" type="T_WORD" byteoffset="2" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwFlags" type="T_DWORD" byteoffset="4" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="hIoDrv" type="T_RTS_IEC_HANDLE" byteoffset="8" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="dwNumOfParameters" type="T_DWORD" byteoffset="16" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="pParameterList" type="T_POINTER_TO_IoConfigParameter" byteoffset="24" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="pFather" type="T_POINTER_TO_IoConfigConnector" byteoffset="32" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_IoDrvEthernetDiag" size="2" nativesize="1072" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="IoDrvEthernetDiag" basetype="T_IoDrvEthernet">
+      <UserDefElement iecname="eState" type="T_EthernetState" byteoffset="0" vartype="VAR_OUTPUT" inherited_from="T_IoDrvEthernet" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_ModbusTCPSlave" size="32" nativesize="2184" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="ModbusTCPSlave" basetype="T_ModbusTCPSlaveBase">
+      <UserDefElement iecname="xInitDone" type="T_BOOL" byteoffset="0" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xBusy" type="T_BOOL" byteoffset="1" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xDone" type="T_BOOL" byteoffset="2" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xError" type="T_BOOL" byteoffset="3" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="byModbusError" type="T_MB_ErrorCodes" byteoffset="4" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="ComSettings" type="T_ModbusTCPComSettings" byteoffset="6" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="ComState" type="T_ModbusTCPComState" byteoffset="26" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="iChannelIndex" type="T_INT" byteoffset="28" vartype="VAR_OUTPUT" access="ReadWrite" />
+      <UserDefElement iecname="xConfirmError" type="T_BOOL" byteoffset="30" vartype="VAR_INPUT" access="ReadWrite" />
+      <UserDefElement iecname="xDoInit" type="T_BOOL" byteoffset="31" vartype="VAR_INPUT" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_ModbusTCPSlave_Diag" size="32" nativesize="2288" typeclass="Userdef" pouclass="FUNCTION_BLOCK" iecname="ModbusTCPSlave_Diag" basetype="T_ModbusTCPSlave">
+      <UserDefElement iecname="xInitDone" type="T_BOOL" byteoffset="0" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="xBusy" type="T_BOOL" byteoffset="1" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="xDone" type="T_BOOL" byteoffset="2" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="xError" type="T_BOOL" byteoffset="3" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="byModbusError" type="T_MB_ErrorCodes" byteoffset="4" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="ComSettings" type="T_ModbusTCPComSettings" byteoffset="6" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="ComState" type="T_ModbusTCPComState" byteoffset="26" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="iChannelIndex" type="T_INT" byteoffset="28" vartype="VAR_OUTPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="xConfirmError" type="T_BOOL" byteoffset="30" vartype="VAR_INPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+      <UserDefElement iecname="xDoInit" type="T_BOOL" byteoffset="31" vartype="VAR_INPUT" inherited_from="T_ModbusTCPSlave" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeSimple name="T_TYPE_REFERENCE" size="8" swapsize="8" typeclass="Userdef" iecname="TYPE_REFERENCE" />
+  </TypeList>
+  <NodeList>
+    <Node name="Application">
+      <Node name="Constants">
+        <Node name="CompilerVersion" type="T_VERSION" access="Read">
+          <Comment> the compiler version as defined in the build options (not OEM Customized Version!)</Comment>
+        </Node>
+        <Node name="RuntimeVersion" type="T_VERSION" access="Read">
+          <Comment> the runtime version number as defined by the device description.</Comment>
+        </Node>
+      </Node>
+      <Node name="GVL">
+        <Comment> Generated by "pantin gvl" from io.json: do not edit it,
+ change the mapping and generate it again.
+
+ WARNING (ADR 0046 point 10): a PLC trusts Pantin's feedback. The PLC under
+ test must never drive live outputs at the same time: use a SoftPLC, or a
+ controller with its field I/O disconnected.</Comment>
+        <Node name="verin1_verin1_coil_12" type="T_BOOL" access="ReadWrite">
+          <Comment> m1 coil 1, verin1.verin1.coil_12</Comment>
+        </Node>
+        <Node name="verin1_verin1_coil_14" type="T_BOOL" access="ReadWrite">
+          <Comment> m1 coil 0, verin1.verin1.coil_14</Comment>
+        </Node>
+        <Node name="verin1_verin_max_state" type="T_BOOL" access="ReadWrite">
+          <Comment> m1 discrete_input 1, verin1.verin-max.state</Comment>
+        </Node>
+        <Node name="verin1_verin_min_state" type="T_BOOL" access="ReadWrite">
+          <Comment> m1 discrete_input 0, verin1.verin-min.state</Comment>
+        </Node>
+        <Node name="verin1_verin_position" type="T_REAL" access="ReadWrite">
+          <Comment> m1 input_register 0, verin1.verin.position</Comment>
+        </Node>
+      </Node>
+      <Node name="IoConfig_Globals">
+        <Node name="CAADEDTemp" type="T_POINTER_TO_BYTE" access="ReadWrite" />
+        <Node name="Device" type="T_CAADiagDeviceDefault" access="ReadWrite" />
+        <Node name="DeviceNodes" type="T_ARRAY__0__3__OF_DED_INode" access="ReadWrite" />
+        <Node name="Ethernet" type="T_IoDrvEthernetDiag" access="ReadWrite" />
+        <Node name="Modbus_TCP_Client" type="T_IoDrvModbusTCP_Diag" access="ReadWrite" />
+        <Node name="Modbus_TCP_Server" type="T_ModbusTCPSlave_Diag" access="ReadWrite" />
+        <Node name="nIoConfigTaskMapCount" type="T_DINT" access="ReadWrite" />
+        <Node name="pIoConfigTaskMap" type="T_POINTER_TO_IoConfigTaskMap" access="ReadWrite" />
+      </Node>
+      <Node name="IoConfig_Globals_Mapping">
+        <Node name="position_word_0" type="T_WORD" access="Read" directaddress="%IW1">
+          <Comment>Modbus_TCP_Server : 0x0000</Comment>
+        </Node>
+        <Node name="position_word_1" type="T_WORD" access="Read" directaddress="%IW2">
+          <Comment>Modbus_TCP_Server : 0x0001</Comment>
+        </Node>
+      </Node>
+      <Node name="PLC_PRG">
+        <Comment> ===== PLC_PRG =====</Comment>
+        <Node name="fbVerin1" type="T_FB_CycleVerin" access="ReadWrite" />
+        <Node name="rPositionV1" type="T_REAL" access="ReadWrite" />
+        <Node name="xAcquit" type="T_BOOL" access="ReadWrite" />
+        <Node name="xStartCycle" type="T_BOOL" access="ReadWrite">
+          <Comment> TRUE = va-et-vient, FALSE = arrêt en fin de cycle</Comment>
+        </Node>
+      </Node>
+    </Node>
+  </NodeList>
+</Symbolconfiguration>

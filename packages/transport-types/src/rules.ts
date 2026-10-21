@@ -8,6 +8,7 @@ import type { TransportKind } from "./schemas.ts";
 export type {
   ChannelProposal,
   RuleModule,
+  SymbolShape,
   TransportProblem,
   TransportRules,
 } from "./rule-types.ts";

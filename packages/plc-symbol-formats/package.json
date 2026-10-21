@@ -1,0 +1,15 @@
+{
+  "name": "@pantin/plc-symbol-formats",
+  "version": "0.2.0",
+  "private": true,
+  "description": "One folder per PLC symbol file format (CODESYS symbol configuration...): hand-written XML subset reader, neutral symbol model (ADR 0064).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./model": "./src/model.ts",
+    "./formats": "./src/formats.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  }
+}

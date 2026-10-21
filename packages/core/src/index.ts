@@ -16,8 +16,10 @@ export { evaluateIoMapping, ioTagsOf } from "./domain/io-evaluation.ts";
 export { addModule } from "./domain/io-module-edits.ts";
 export { describeIoProblem } from "./domain/io-problem-text.ts";
 export type { IoTag } from "./domain/io-validation.ts";
+export { applyVariableAssignments } from "./domain/io-variable-edits.ts";
 export { type DocumentReading, readPantinDocument } from "./domain/pantin-document.ts";
 export { deriveSignals } from "./domain/signals.ts";
+export { previewSymbolImport } from "./domain/symbol-preview.ts";
 export { ApiError } from "./errors.ts";
 export {
   type PantinServerOptions,

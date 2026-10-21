@@ -34,6 +34,7 @@ import { frameOperations } from "./frame-operations.ts";
 import { groupOperations } from "./group-operations.ts";
 import { importBodies } from "./import-operations.ts";
 import { ioEditOperations } from "./io-operations.ts";
+import { ioSymbolOperations } from "./io-symbol-operations.ts";
 import {
   createJoint,
   deleteJoint,
@@ -180,6 +181,7 @@ function documentObjectOperations(context: ServiceContext) {
     ...sensorOperations(context),
     ...conveyorOperations(context),
     ...ioEditOperations(context),
+    ...ioSymbolOperations(context),
     ...bridgeOperations(context),
   };
 }

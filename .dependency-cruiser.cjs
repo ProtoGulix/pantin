@@ -61,6 +61,22 @@ module.exports = {
       to: { path: "^packages/(?!transport-types/)|^@pantin/" },
     },
     {
+      name: "plc-symbol-formats-has-no-workspace-dependency",
+      comment:
+        "A symbol format folder must be shareable alone: it depends on Zod only (ADR 0064 point 10).",
+      severity: "error",
+      from: { path: "^packages/plc-symbol-formats/" },
+      to: { path: "^packages/(?!plc-symbol-formats/)|^@pantin/" },
+    },
+    {
+      name: "plc-symbol-formats-is-imported-only-by-core",
+      comment:
+        "Only the core reads PLC symbol files: the protocol, the viewer and the command line see the previews the core builds (ADR 0064 point 10).",
+      severity: "error",
+      from: { pathNot: "^packages/(core|plc-symbol-formats)/" },
+      to: { path: "^packages/plc-symbol-formats/|^@pantin/plc-symbol-formats" },
+    },
+    {
       name: "viewer-runs-no-transport-rules",
       comment:
         "The viewer shows what the core decided and imports the schemas, labels and presentation of a transport, never its rules (ADR 0064 point 3).",

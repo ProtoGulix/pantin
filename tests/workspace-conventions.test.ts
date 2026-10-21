@@ -33,6 +33,7 @@ describe("workspace packages", () => {
       "cli",
       "core",
       "drive-types",
+      "plc-symbol-formats",
       "protocol",
       "sensor-types",
       "step-converter",

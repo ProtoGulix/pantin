@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-made file for the cases the real export lacks: a read-only variable, an array, a Write access, an unknown access, a string, a nesting deeper than 8 levels. -->
+<Symbolconfiguration xmlns="http://www.3s-software.com/schemas/Symbolconfiguration.xsd">
+  <Header>
+    <Version>3.5.14.0</Version>
+    <SymbolConfigObject version="4.7.0.0" runtimeid="3.5.22.10" libversion="4.6.0.0" compiler="3.5.22.0" lmm="3.5.22.10" profile="CODESYS V3.5 SP22 Patch 1+" settings="SupportOPCUA, XmlIncludeComments" />
+    <ProjectInfo name="Synthetic" devicename="Device" appname="Application" />
+  </Header>
+  <TypeList>
+    <TypeSimple name="T_BOOL" size="1" swapsize="0" typeclass="Bool" iecname="BOOL" />
+    <TypeSimple name="T_INT" size="2" swapsize="2" typeclass="Int" iecname="INT" />
+    <TypeSimple name="T_REAL" size="4" swapsize="4" typeclass="Real" iecname="REAL" />
+    <TypeSimple name="T_STRING" size="81" swapsize="0" typeclass="String" iecname="STRING" />
+    <TypeArray name="T_ARRAY__0__10__OF_INT" size="22" nativesize="22" typeclass="Array" iecname="ARRAY [0..10] OF INT" basetype="T_INT">
+      <ArrayDim minrange="0" maxrange="10" />
+    </TypeArray>
+    <TypeUserDef name="T_Point" size="8" nativesize="8" typeclass="Userdef" pouclass="STRUCTURE" iecname="Point">
+      <UserDefElement iecname="X" type="T_INT" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="Y" type="T_REAL" byteoffset="4" vartype="VAR" access="Read">
+        <Comment> read-only member</Comment>
+      </UserDefElement>
+    </TypeUserDef>
+    <TypeUserDef name="T_Level1" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level1">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level2" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level2" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level2">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level3" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level3" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level3">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level4" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level4" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level4">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level5" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level5" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level5">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level6" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level6" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level6">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level7" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level7" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level7">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level8" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level8" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level8">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level9" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level9" size="2" nativesize="2" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level9">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+      <UserDefElement iecname="next" type="T_Level10" byteoffset="1" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+    <TypeUserDef name="T_Level10" size="1" nativesize="1" typeclass="Userdef" pouclass="STRUCTURE" iecname="Level10">
+      <UserDefElement iecname="flag" type="T_BOOL" byteoffset="0" vartype="VAR" access="ReadWrite" />
+    </TypeUserDef>
+  </TypeList>
+  <NodeList>
+    <Node name="Application">
+      <Node name="GVL">
+        <Node name="read_only_flag" type="T_BOOL" access="Read">
+          <Comment> set by the program, never written from outside</Comment>
+        </Node>
+        <Node name="write_only_count" type="T_INT" access="Write" />
+        <Node name="odd_access" type="T_BOOL" access="ReadOnly" />
+        <Node name="no_access" type="T_BOOL" />
+        <Node name="samples" type="T_ARRAY__0__10__OF_INT" access="ReadWrite" />
+        <Node name="origin" type="T_Point" access="ReadWrite" />
+        <Node name="frozen_origin" type="T_Point" access="Read" />
+        <Node name="label" type="T_STRING" access="ReadWrite" />
+        <Node name="lost" type="T_Vanished" access="ReadWrite" />
+        <Node name="deep" type="T_Level1" access="ReadWrite" />
+      </Node>
+    </Node>
+  </NodeList>
+</Symbolconfiguration>

@@ -1,0 +1,186 @@
+{
+  "description": "Messages of the PLC symbol import (ADR 0064 point 13): the preview of POST /api/pantins/:pantinId/io/symbols/preview (SymbolImportPreview) and the body of POST /api/pantins/:pantinId/io/variables (ApplyIoVariablesRequest). Every decoder must accept every `valid` entry and refuse every `invalid` one.",
+  "version": 1,
+  "previews": {
+    "valid": [
+      {
+        "name": "an empty preview of a file with no symbol",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 0,
+          "warnings": [],
+          "proposals": [],
+          "unchanged": [],
+          "unmatchedSignals": [],
+          "unusedSymbols": []
+        }
+      },
+      {
+        "name": "one entry in every section",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": { "name": "Demo", "deviceName": "Device", "applicationName": "Application" },
+          "symbolCount": 4,
+          "warnings": ["The access \"Write\" is not known: it is read as unknown."],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "axis_valve_coil_14",
+              "proposedVariable": "PLC_PRG.fbValve.xExtend",
+              "symbol": {
+                "reference": "PLC_PRG.fbValve.xExtend",
+                "path": ["Application", "PLC_PRG", "fbValve", "xExtend"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "normalised",
+              "compatibility": "compatible",
+              "warnings": []
+            }
+          ],
+          "unchanged": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.position",
+              "currentVariable": "axis_stroke_position",
+              "proposedVariable": "axis_stroke_position",
+              "symbol": {
+                "reference": "GVL.axis_stroke_position",
+                "path": ["Application", "GVL", "axis_stroke_position"],
+                "iecType": "LREAL",
+                "access": "read_write",
+                "comment": "feedback"
+              },
+              "rule": "exact",
+              "compatibility": "warning",
+              "warnings": ["The Modbus channel carries REAL but the PLC variable is LREAL."]
+            }
+          ],
+          "unmatchedSignals": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.setpoint",
+              "currentVariable": "axis_stroke_setpoint",
+              "candidates": [
+                {
+                  "reference": "PLC_PRG.rTarget",
+                  "path": ["Application", "PLC_PRG", "rTarget"],
+                  "iecType": "REAL",
+                  "access": "read_write",
+                  "comment": null,
+                  "directAddress": "%QW1"
+                }
+              ]
+            }
+          ],
+          "unusedSymbols": [
+            {
+              "symbol": {
+                "reference": "GVL.sizes",
+                "path": ["Application", "GVL", "sizes"],
+                "iecType": "ARRAY [0..3] OF BYTE",
+                "access": "read",
+                "comment": null
+              },
+              "reason": "incompatible_type"
+            }
+          ]
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "an unknown compatibility",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 1,
+          "warnings": [],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "a",
+              "proposedVariable": "b",
+              "symbol": {
+                "reference": "b",
+                "path": ["Application", "b"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "exact",
+              "compatibility": "maybe",
+              "warnings": []
+            }
+          ],
+          "unchanged": [],
+          "unmatchedSignals": [],
+          "unusedSymbols": []
+        }
+      },
+      {
+        "name": "a missing section",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 0,
+          "warnings": [],
+          "proposals": [],
+          "unchanged": [],
+          "unmatchedSignals": []
+        }
+      },
+      {
+        "name": "an extra key",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 0,
+          "warnings": [],
+          "proposals": [],
+          "unchanged": [],
+          "unmatchedSignals": [],
+          "unusedSymbols": [],
+          "symbols": []
+        }
+      }
+    ]
+  },
+  "applyRequests": {
+    "valid": [
+      {
+        "name": "one assignment",
+        "message": {
+          "assignments": [
+            { "module": "m1", "tag": "axis.valve.coil_14", "variable": "GVL.xExtend" }
+          ]
+        }
+      }
+    ],
+    "invalid": [
+      { "name": "no assignment", "message": { "assignments": [] } },
+      {
+        "name": "an empty variable",
+        "message": {
+          "assignments": [{ "module": "m1", "tag": "axis.valve.coil_14", "variable": "" }]
+        }
+      },
+      {
+        "name": "a tag that is not a tag name",
+        "message": { "assignments": [{ "module": "m1", "tag": "valve", "variable": "x" }] }
+      },
+      {
+        "name": "an extra key on an assignment",
+        "message": {
+          "assignments": [
+            { "module": "m1", "tag": "axis.valve.coil_14", "variable": "x", "zone": "coil" }
+          ]
+        }
+      }
+    ]
+  }
+}
