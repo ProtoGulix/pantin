@@ -1,4 +1,9 @@
-import { type PantinId, TAG_BUS_MAX_CONNECTIONS, TAG_BUS_PING_SECONDS } from "@pantin/protocol";
+import {
+  type PantinId,
+  TAG_BUS_MAX_CONNECTIONS,
+  TAG_BUS_PING_SECONDS,
+  type TransportKind,
+} from "@pantin/protocol";
 import type { IoMappingSource } from "../domain/io-mapping.ts";
 import type { NetworkConfig } from "../domain/network-config.ts";
 import type { SimulationTimer } from "../service/simulation-loop.ts";
@@ -7,7 +12,7 @@ import type { BusService, PlcSlots } from "./bus-session.ts";
 import type { BusSocket } from "./bus-socket.ts";
 
 // The open tag bus connections of one core (ADR 0045 point 4): the cap, the
-// single plc per Pantin, the once-a-second housekeeping and the tick feed.
+// single plc per Pantin and transport, the once-a-second housekeeping and the tick feed.
 // Like the pose stream registry, it runs without any socket library.
 
 export type BusRegistry = {
@@ -32,19 +37,26 @@ export type BusRegistryOptions = {
   reportError: (error: unknown) => void;
 };
 
+// One slot per (Pantin, transport). The id of a Pantin is a key, which has no newline.
+function slotKeyOf(pantinId: PantinId, transport: TransportKind): string {
+  return `${pantinId}\n${transport}`;
+}
+
 function createPlcSlots(): PlcSlots {
-  const owners = new Map<PantinId, object>();
+  const owners = new Map<string, object>();
   return {
-    claim: (pantinId, owner) => {
-      if (owners.has(pantinId)) {
+    claim: (pantinId, transport, owner) => {
+      const key = slotKeyOf(pantinId, transport);
+      if (owners.has(key)) {
         return false;
       }
-      owners.set(pantinId, owner);
+      owners.set(key, owner);
       return true;
     },
-    release: (pantinId, owner) => {
-      if (owners.get(pantinId) === owner) {
-        owners.delete(pantinId);
+    release: (pantinId, transport, owner) => {
+      const key = slotKeyOf(pantinId, transport);
+      if (owners.get(key) === owner) {
+        owners.delete(key);
       }
     },
   };

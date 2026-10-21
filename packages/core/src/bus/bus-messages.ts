@@ -89,11 +89,23 @@ async function handlePlcStatus(
   message: MessageOf<"plc_status">,
 ): Promise<void> {
   const { mapping } = context.session;
+  // A module the connection's projection does not hold (another transport's, or unknown) is
+  // never marked connected: the bridge is told, and nothing changes (ADR 0065 point 7).
+  if (mapping === null || !mapping.moduleKeys.includes(message.module)) {
+    context.send(
+      errorMessage(
+        null,
+        "invalid_request",
+        `plc_status ignored: module "${message.module}" is not a module of this connection's transport.`,
+      ),
+    );
+    return;
+  }
   const status = message.connected
     ? ({ connected: true } as const)
     : // The schema gives a disconnected module a reason; the fallback only satisfies the type.
       ({ connected: false, reason: message.reason ?? "closed" } as const);
-  const tags = message.connected || mapping === null ? [] : watchdogTags(mapping, message.module);
+  const tags = message.connected ? [] : watchdogTags(mapping, message.module);
   await context.deps.service.plcModuleStatus(context.init.pantinId, message.module, status, tags);
 }
 

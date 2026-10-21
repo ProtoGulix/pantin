@@ -20,6 +20,7 @@ from pantin_bridge.bus_messages import (
 from pantin_bridge.core_endpoint import CoreEndpoint, fetch_io_mapping
 from pantin_bridge.errors import BridgeError, MappingChangedError, MappingNotValidError
 from pantin_bridge.io_mapping import IoMapping, IoModule, IoProblem, IoRow, IoStatus, zone_sizes
+from pantin_bridge.io_modbus import MODBUS_TCP_SLAVE_KIND
 from pantin_bridge.modbus_gate import SlaveListener
 from pantin_bridge.modbus_server import ModbusSlave
 from pantin_bridge.module_bridge import ModuleBridge, ModuleServices, Slave
@@ -171,7 +172,7 @@ async def run_bridge(
             skipped.key,
             skipped.kind,
         )
-    bus, _welcome = await BusClient.open(config.endpoint.bus_url, mapping_id)
+    bus, _welcome = await BusClient.open(config.endpoint.bus_url, MODBUS_TCP_SLAVE_KIND, mapping_id)
     background = BackgroundWork()
     services = ModuleServices(bus=bus, background=background)
     modules = [

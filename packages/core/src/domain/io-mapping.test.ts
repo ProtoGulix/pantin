@@ -4,6 +4,7 @@ import { type IoMapping, mappingOf, watchdogTags } from "./io-mapping.ts";
 
 const MAPPING: IoMapping = {
   mappingId: "abc",
+  moduleKeys: ["m1", "m2"],
   rows: [
     { tag: "a.v.coil_1", module: "m1", type: "bit", direction: "command" },
     { tag: "a.v.coil_2", module: "m2", type: "bit", direction: "command" },
@@ -70,6 +71,7 @@ describe("mappingOf", () => {
   it("keeps the tag, module, type and direction of a valid answer, and skips an unknown tag", () => {
     expect(mappingOf(answer)).toEqual({
       mappingId: "abc",
+      moduleKeys: ["m1"],
       rows: [{ tag: "a.v.coil_1", module: "m1", type: "bit", direction: "command" }],
     });
   });

@@ -1,4 +1,8 @@
-import { TRANSPORT_PROBLEM_CODES } from "@pantin/transport-types/schemas";
+import {
+  CHANNEL_MAPPED_SHAPE,
+  TRANSPORT_PROBLEM_CODES,
+  TransportKindSchema,
+} from "@pantin/transport-types/schemas";
 import { z } from "zod";
 import { IoChannelSchema, IoModuleSchema } from "./io-document.ts";
 import { TagDirectionSchema, TagNameSchema, TagTypeSchema } from "./tag.ts";
@@ -8,7 +12,13 @@ import { TagDirectionSchema, TagNameSchema, TagTypeSchema } from "./tag.ts";
 // open mapping, checked against the open document's tags. It mirrors io.json,
 // each channel annotated with what the document says of its tag.
 //
-//   GET /api/pantins/:pantinId/io  -> IoMappingResponse
+//   GET /api/pantins/:pantinId/io                    -> IoMappingResponse
+//   GET /api/pantins/:pantinId/io?transport=<kind>   -> IoMappingResponse, the projection
+//
+// The projection (ADR 0065 point 7) keeps the modules of one transport kind, the problems
+// of those modules (and the whole-file ones), and a mappingId that depends on nothing else:
+// a problem in another kind's module never reaches it. The paths of its problems index its
+// own `modules`. The unfiltered answer is the whole file, as before.
 
 export const IoStatusSchema = z.enum(["valid", "invalid", "missing"]);
 export type IoStatus = z.infer<typeof IoStatusSchema>;
@@ -54,8 +64,11 @@ export type IoTagOwner = z.infer<typeof IoTagOwnerSchema>;
 
 // A channel with what the document says of its tag: all null for an unknown
 // tag (the channel is then also a problem).
+// A transport that resolves something for the client (an OPC UA NodeId) overrides its
+// sub-object (ADR 0065 point 3).
 export const IoMappedChannelSchema = z.object({
   ...IoChannelSchema.shape,
+  ...CHANNEL_MAPPED_SHAPE,
   tagType: TagTypeSchema.nullable(),
   direction: TagDirectionSchema.nullable(),
   owner: IoTagOwnerSchema.nullable(),
@@ -76,11 +89,17 @@ export const IoUnmappedTagSchema = z.object({
 });
 export type IoUnmappedTag = z.infer<typeof IoUnmappedTagSchema>;
 
+/** The query of GET .../io: the transport kind whose projection is wanted, if any. */
+export const IoMappingQuerySchema = z.strictObject({ transport: TransportKindSchema.optional() });
+export type IoMappingQuery = z.infer<typeof IoMappingQuerySchema>;
+
 export const IoMappingResponseSchema = z.object({
   status: IoStatusSchema,
   // SHA-256 (hex) of the canonical text of the open mapping; null when it is
   // missing or unreadable. The bridge sends it in `hello`; the core compares
-  // it with the open mapping and refuses another id (close code 4003).
+  // it with the open mapping and refuses another id (close code 4003). For a
+  // projection it is the SHA-256 of the projection's status, problems, canonical
+  // modules and the type and direction of their tags (ADR 0065 point 7).
   mappingId: z.string().nullable(),
   // Empty when the mapping is missing or unreadable.
   modules: z.array(IoMappingModuleSchema),

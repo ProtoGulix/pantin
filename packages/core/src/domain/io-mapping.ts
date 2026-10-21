@@ -1,4 +1,10 @@
-import type { IoMappingResponse, PantinId, TagDirection, TagType } from "@pantin/protocol";
+import type {
+  IoMappingResponse,
+  PantinId,
+  TagDirection,
+  TagType,
+  TransportKind,
+} from "@pantin/protocol";
 
 // The seam between the tag bus and the I/O mapping (ADR 0045 points 6, 7, 10
 // and 11, ADR 0049 point 7). `IoMappingSource` is implemented over the open
@@ -13,15 +19,17 @@ export type IoMappingRow = {
 };
 
 export type IoMapping = {
-  // SHA-256 of the canonical text of the open mapping, as GET .../io answers it.
+  // The id GET .../io answers: of the whole file, or of a transport's projection (ADR 0065).
   mappingId: string;
+  // The keys of every module of the mapping, channels or not.
+  moduleKeys: readonly string[];
   rows: readonly IoMappingRow[];
 };
 
 export type IoMappingSource = {
-  // The valid open mapping of the Pantin; null when there is none (missing,
-  // unreadable or with problems).
-  read(pantinId: PantinId): Promise<IoMapping | null>;
+  // The valid open mapping of the Pantin, projected on `transport` (ADR 0065 point 7); null
+  // when there is none (missing, unreadable or with problems).
+  read(pantinId: PantinId, transport: TransportKind): Promise<IoMapping | null>;
 };
 
 /**
@@ -55,5 +63,9 @@ export function mappingOf(answer: IoMappingResponse): IoMapping | null {
           ],
     ),
   );
-  return { mappingId: answer.mappingId, rows };
+  return {
+    mappingId: answer.mappingId,
+    moduleKeys: answer.modules.map((module) => module.key),
+    rows,
+  };
 }

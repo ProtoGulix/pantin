@@ -106,12 +106,15 @@ describe("plc_status", () => {
     expect(await tagNamed(axis, COIL_EXTEND)).toMatchObject({ value: 0, forced: false });
   });
 
-  it("does nothing to the tags of a module nothing is mapped on", async () => {
+  it("ignores a module the mapping does not hold: the tags stay, nothing is logged, the plc is told", async () => {
     plc.send({ type: "plc_status", module: "m9", connected: false, reason: "closed" });
-    await plc.barrier();
+    expect((await plc.next("error")).code).toBe("invalid_request");
     expect(await valueOfTag(COIL_EXTEND)).toBe(1);
     expect(await valueOfTag(COIL_RETRACT)).toBe(1);
-    expect(await loudEntries("plc_disconnected")).toHaveLength(1);
+    expect(await loudEntries("plc_disconnected")).toHaveLength(0);
+    plc.send({ type: "plc_status", module: "m9", connected: true, reason: null });
+    await plc.barrier();
+    expect(await loudEntries("plc_connected")).toHaveLength(0);
   });
 });
 

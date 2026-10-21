@@ -1,4 +1,5 @@
 import { MODBUS_TCP_SLAVE_LABELS } from "./modbus-tcp-slave/labels.ts";
+import { OPCUA_CLIENT_LABELS } from "./opcua-client/labels.ts";
 import type { TransportLabels, TransportLanguage } from "./schema-common.ts";
 import type { TransportKind } from "./schemas.ts";
 
@@ -11,4 +12,5 @@ export const TRANSPORT_LABELS: Readonly<
   Record<TransportKind, Readonly<Record<TransportLanguage, TransportKindLabels>>>
 > = {
   modbus_tcp_slave: MODBUS_TCP_SLAVE_LABELS,
+  opcua_client: OPCUA_CLIENT_LABELS,
 };

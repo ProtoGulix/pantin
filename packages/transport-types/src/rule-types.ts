@@ -1,5 +1,6 @@
 import type { SignalShape } from "./schema-common.ts";
 import type {
+  ChannelMappedFields,
   ChannelPatchTransportFields,
   ChannelTransportFields,
   TransportChannel,
@@ -35,8 +36,29 @@ export interface SymbolShape {
 /** The transport fields of a new channel, or the sentence that says why there is no room. */
 export type ChannelProposal = { fields: ChannelTransportFields } | { refusal: string };
 
+/** What a bridge needs to know of one module it serves (ADR 0065 point 4). */
+export interface BridgeModuleFacts {
+  key: string;
+  /** The port the bridge listens on for this module; null when it only connects out. */
+  port: number | null;
+}
+
 export interface TransportRules {
   kind: TransportKind;
+  /**
+   * Whether the bridge of this transport listens for the PLC's connections or connects to
+   * the PLC (ADR 0065 point 4): port claims apply to "listens" only.
+   */
+  network: "listens" | "connects";
+  /** The modules of this transport among `modules`: the ones its bridge serves. */
+  bridgeModules(modules: readonly RuleModule[]): BridgeModuleFacts[];
+  /**
+   * The name of the PLC global variable list the variables without a dot live in; null
+   * for a transport that does not say (ADR 0065 point 3).
+   */
+  variableScope(transport: TransportConfig): string | null;
+  /** What the core adds to the channel's sub-object in its answer, for example a resolved NodeId. */
+  resolvedChannelFields(transport: TransportConfig, channel: TransportChannel): ChannelMappedFields;
   /** False for a (type, direction) pair the transport cannot carry. */
   supportsSignal(signal: SignalShape): boolean;
   /** The port the module listens on; null for a transport that does not listen. */
@@ -76,7 +98,7 @@ export interface TransportRules {
    * (ADR 0064 point 12). The type table every transport shares is the core's; this adds
    * what the protocol knows, for example that its wire type differs from the variable's.
    */
-  symbolWarnings(channel: TransportChannel, symbol: SymbolShape): string[];
+  symbolWarnings(channel: TransportChannel, symbol: SymbolShape, signal: SignalShape): string[];
   /** The rules of the transport, against the signals of the document. */
   validateModule(module: RuleModule, signals: ReadonlyMap<string, SignalShape>): TransportProblem[];
 }

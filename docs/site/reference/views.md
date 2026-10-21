@@ -334,7 +334,7 @@ Sans aucune liaison, la vue affiche **Aucune liaison : tous les corps sont fixes
 La vue E/S est l'éditeur de la liste d'entrées/sorties du Pantin (`io.json`) : quels tags sont donnés à l'automate, sur quel module Modbus, à quelle adresse. Elle remplace la 3D et le schéma. Ce qu'elle écrit est enregistré et annulé avec le Pantin, comme le reste.
 
 ::: info Une liste pour l'automate
-Les modules ici sont ceux que le pont présente à l'automate (voir [Connecter un automate](/guide/connect-a-plc)). Le bouton **Exporter la GVL** produit la liste de variables CODESYS correspondante.
+Les modules ici sont ceux que le pont présente à l'automate (voir [Connecter un automate](/guide/connect-a-plc)). Le bouton **Exporter la GVL** produit la liste de variables CODESYS correspondante. Seul le transport Modbus TCP esclave peut être créé depuis cette vue ; le transport Client OPC UA n'est pas encore proposé.
 :::
 
 ### Les états de la vue

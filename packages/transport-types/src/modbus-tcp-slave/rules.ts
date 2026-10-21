@@ -1,4 +1,4 @@
-import type { RuleModule, TransportRules } from "../rule-types.ts";
+import type { BridgeModuleFacts, RuleModule, TransportRules } from "../rule-types.ts";
 import type { SignalShape } from "../schema-common.ts";
 import type {
   ChannelPatchTransportFields,
@@ -16,6 +16,7 @@ import {
   DEFAULT_WORD_ORDER,
   IO_ZONES,
   MODBUS_TCP_SLAVE_KIND,
+  type ModbusTcpSlavePatch,
   type ModbusTcpSlaveTransport,
 } from "./schema.ts";
 
@@ -58,7 +59,15 @@ function modbusTransportOf(transport: TransportConfig): ModbusTcpSlaveTransport 
   return transport;
 }
 
-function createTransport(patch: TransportPatch, usedPorts: readonly number[]) {
+function modbusPatchOf(patch: TransportPatch): ModbusTcpSlavePatch {
+  if (patch.kind !== MODBUS_TCP_SLAVE_KIND) {
+    throw new Error(`Modbus rules were given a "${patch.kind}" edit.`);
+  }
+  return patch;
+}
+
+function createTransport(request: TransportPatch, usedPorts: readonly number[]) {
+  const patch = modbusPatchOf(request);
   const port = patch.port ?? smallestFreePort(usedPorts);
   if (port === null) {
     return "Every port from 1502 to 65535 is used: remove a module.";
@@ -73,8 +82,9 @@ function createTransport(patch: TransportPatch, usedPorts: readonly number[]) {
 }
 
 // An absent field means "unchanged": spreading `undefined` would erase it.
-function patchTransport(transport: TransportConfig, patch: TransportPatch): TransportConfig {
+function patchTransport(transport: TransportConfig, request: TransportPatch): TransportConfig {
   const current = modbusTransportOf(transport);
+  const patch = modbusPatchOf(request);
   return {
     kind: current.kind,
     port: patch.port ?? current.port,
@@ -124,8 +134,21 @@ function compareChannels(first: TransportChannel, second: TransportChannel): num
   );
 }
 
+function bridgeModules(modules: readonly RuleModule[]): BridgeModuleFacts[] {
+  return modules.flatMap((module) =>
+    module.transport.kind === MODBUS_TCP_SLAVE_KIND
+      ? [{ key: module.key, port: module.transport.port }]
+      : [],
+  );
+}
+
 export const MODBUS_TCP_SLAVE_RULES: TransportRules = {
   kind: MODBUS_TCP_SLAVE_KIND,
+  network: "listens",
+  bridgeModules,
+  // A Modbus channel names no PLC variable list: the variable is the user's business.
+  variableScope: () => null,
+  resolvedChannelFields: () => ({}),
   // Every (type, direction) pair has a zone (ADR 0045 point 8).
   supportsSignal: () => true,
   listenPort: (transport) => modbusTransportOf(transport).port,

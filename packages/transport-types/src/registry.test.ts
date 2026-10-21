@@ -27,6 +27,21 @@ describe.each(TRANSPORT_KINDS)("transport %s", (kind) => {
     }
   });
 
+  it("says whether its bridge listens or connects, and lists only its own modules", () => {
+    const rules = TRANSPORT_RULES[kind];
+    expect(["listens", "connects"]).toContain(rules.network);
+    const settings = rules.createTransport({ kind }, []);
+    if (typeof settings === "string") {
+      throw new Error(settings);
+    }
+    const own = { key: "own", transport: settings, channels: [] };
+    const facts = rules.bridgeModules([own]);
+    expect(facts.map((fact) => fact.key)).toEqual(["own"]);
+    expect(facts.every((fact) => (fact.port === null) === (rules.network === "connects"))).toBe(
+      true,
+    );
+  });
+
   it("has the same label keys in both languages", () => {
     const { en, fr } = TRANSPORT_LABELS[kind];
     expect(Object.keys(fr.settings).sort()).toEqual(Object.keys(en.settings).sort());

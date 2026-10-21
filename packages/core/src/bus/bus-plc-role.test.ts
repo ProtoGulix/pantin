@@ -12,7 +12,13 @@ import type { BusSocket } from "./bus-socket.ts";
 
 // Where the plc role may come from (ADR 0046 point 6).
 
-const HELLO_PLC = { type: "hello", version: 1, role: "plc", mappingId: PLC_MAPPING_ID } as const;
+const HELLO_PLC = {
+  type: "hello",
+  version: 2,
+  role: "plc",
+  transport: "modbus_tcp_slave",
+  mappingId: PLC_MAPPING_ID,
+} as const;
 const mappingSource = fakeMappingSource([]);
 
 let axis: BusAxis | undefined;

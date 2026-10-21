@@ -1,18 +1,38 @@
 {
-  "description": "Tag bus messages of ADR 0045 point 4. Each entry is one JSON text frame: `message` is the decoded frame, `text` a frame that is not JSON at all. Every decoder (the Zod schemas in tag-bus.ts, the Python bridge) must accept every `valid` entry and refuse every `invalid` one.",
-  "version": 1,
+  "description": "Tag bus messages of ADR 0045 point 4, version 2 (ADR 0065 point 7). Each entry is one JSON text frame: `message` is the decoded frame, `text` a frame that is not JSON at all. Every decoder (the Zod schemas in tag-bus.ts, the Python bridge) must accept every `valid` entry and refuse every `invalid` one.",
+  "version": 2,
   "client": {
     "valid": [
       {
         "name": "hello as a client",
         "message": {
           "type": "hello",
-          "version": 1,
+          "version": 2,
           "role": "client"
         }
       },
       {
-        "name": "hello as a plc",
+        "name": "hello as a plc of the modbus_tcp_slave transport",
+        "message": {
+          "type": "hello",
+          "version": 2,
+          "role": "plc",
+          "transport": "modbus_tcp_slave",
+          "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      },
+      {
+        "name": "hello as a plc of the opcua_client transport",
+        "message": {
+          "type": "hello",
+          "version": 2,
+          "role": "plc",
+          "transport": "opcua_client",
+          "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      },
+      {
+        "name": "version 1 plc hello with no transport, still a valid hello (the core refuses its version)",
         "message": {
           "type": "hello",
           "version": 1,
@@ -24,7 +44,7 @@
         "name": "hello with a version the core does not support, still a valid hello",
         "message": {
           "type": "hello",
-          "version": 2,
+          "version": 3,
           "role": "client"
         }
       },
@@ -109,6 +129,24 @@
           "connected": false,
           "reason": "timeout"
         }
+      },
+      {
+        "name": "plc_status disconnected, node_mismatch",
+        "message": {
+          "type": "plc_status",
+          "module": "plc",
+          "connected": false,
+          "reason": "node_mismatch"
+        }
+      },
+      {
+        "name": "plc_status disconnected, certificate_rejected",
+        "message": {
+          "type": "plc_status",
+          "module": "plc",
+          "connected": false,
+          "reason": "certificate_rejected"
+        }
       }
     ],
     "invalid": [
@@ -172,23 +210,52 @@
         "name": "hello with an unknown role",
         "message": {
           "type": "hello",
-          "version": 1,
+          "version": 2,
           "role": "viewer"
+        }
+      },
+      {
+        "name": "plc hello of version 2 without a transport",
+        "message": {
+          "type": "hello",
+          "version": 2,
+          "role": "plc",
+          "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      },
+      {
+        "name": "plc hello with an unknown transport",
+        "message": {
+          "type": "hello",
+          "version": 2,
+          "role": "plc",
+          "transport": "carrier_pigeon",
+          "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      },
+      {
+        "name": "client hello with a transport",
+        "message": {
+          "type": "hello",
+          "version": 2,
+          "role": "client",
+          "transport": "modbus_tcp_slave"
         }
       },
       {
         "name": "plc hello without mappingId",
         "message": {
           "type": "hello",
-          "version": 1,
-          "role": "plc"
+          "version": 2,
+          "role": "plc",
+          "transport": "modbus_tcp_slave"
         }
       },
       {
         "name": "client hello with a mappingId",
         "message": {
           "type": "hello",
-          "version": 1,
+          "version": 2,
           "role": "client",
           "mappingId": "abc"
         }
@@ -197,9 +264,10 @@
         "name": "plc hello with an empty mappingId",
         "message": {
           "type": "hello",
-          "version": 1,
+          "version": 2,
           "role": "plc",
-          "mappingId": ""
+          "mappingId": "",
+          "transport": "modbus_tcp_slave"
         }
       },
       {
@@ -345,7 +413,7 @@
         "name": "welcome",
         "message": {
           "type": "welcome",
-          "version": 1,
+          "version": 2,
           "consoleId": "c-1",
           "clock": {
             "running": true,
@@ -360,7 +428,7 @@
         "name": "welcome of a paused Pantin",
         "message": {
           "type": "welcome",
-          "version": 1,
+          "version": 2,
           "consoleId": "c-1",
           "clock": {
             "running": false,
@@ -615,7 +683,7 @@
         "name": "welcome with another version",
         "message": {
           "type": "welcome",
-          "version": 2,
+          "version": 3,
           "consoleId": "c-1",
           "clock": {
             "running": true,
@@ -630,7 +698,7 @@
         "name": "welcome without clock",
         "message": {
           "type": "welcome",
-          "version": 1,
+          "version": 2,
           "consoleId": "c-1"
         }
       },

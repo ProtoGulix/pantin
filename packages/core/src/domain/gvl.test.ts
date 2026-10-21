@@ -83,3 +83,58 @@ describe("renderGvl", () => {
     expect(text).toContain("//   GVL.x : BOOL // m1 coil 1, g.h.i; m2 coil 4, g.h.i");
   });
 });
+
+function opcuaModule(key: string, gvlName: string, variable: string): Module {
+  return {
+    key,
+    transport: {
+      kind: "opcua_client",
+      port: 4840,
+      endpointPath: "",
+      securityMode: "SignAndEncrypt",
+      securityPolicy: "Basic256Sha256",
+      auth: { kind: "anonymous" },
+      namespaceUri: "urn:plc",
+      nodeIdPrefix: "|var|CODESYS Control Win V3 x64.Application.",
+      gvlName,
+      samplingMilliseconds: 20,
+      publishingMilliseconds: 20,
+      watchdogMilliseconds: 1000,
+    },
+    channels: [
+      {
+        tag: "a.b.c",
+        variable,
+        comment: "",
+        opcua: {
+          identifier: null,
+          iecType: "BOOL",
+          resolvedIdentifier: `s=|var|CODESYS Control Win V3 x64.Application.${gvlName}.${variable}`,
+        },
+        tagType: "bit",
+        direction: "command",
+        owner: null,
+      },
+    ],
+  };
+}
+
+describe("renderGvl for OPC UA modules (ADR 0065 point 3)", () => {
+  it("names the GVL each OPC UA module expects, and warns about explicit identifiers", () => {
+    const text = renderGvl([opcuaModule("plc", "GVL_Sim", "a_b_c")]);
+    expect(text).toContain("// Paste this list into a GVL named GVL_Sim (module plc).");
+    expect(text).toContain("WARNING (ADR 0065 point 8)");
+    expect(text).toContain("  a_b_c : BOOL; // plc derived node, a.b.c");
+  });
+
+  it("lists the modules that share a GVL name on one line", () => {
+    const text = renderGvl([opcuaModule("a", "GVL_Sim", "x"), opcuaModule("b", "GVL_Sim", "y")]);
+    expect(text).toContain("named GVL_Sim (module a, b).");
+  });
+
+  it("writes no GVL note for a Modbus-only mapping", () => {
+    const text = renderGvl([moduleOf("m1", [channel("a.b.c", "a_b_c", 0, "BOOL")])]);
+    expect(text).not.toContain("Paste this list");
+    expect(text).not.toContain("ADR 0065");
+  });
+});

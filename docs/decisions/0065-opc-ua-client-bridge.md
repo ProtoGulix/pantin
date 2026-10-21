@@ -596,3 +596,34 @@ NOT VERIFIED:
   Windows paths and environment, renaming `packages/bridge`, and relaxing
   the exposure rules (a new user decision).
 - NOT VERIFIED: every item of the Context list.
+
+## Amendment of 2026-10-21, S1
+
+Written when slice S1 was built. These are the settled readings of the points above, so that
+S2 to S5 rely on them. They add detail and contradict no decision.
+
+- **Point 4, `bridgeModules`:** the hook is `bridgeModules(modules)`. It takes every module of
+  the mapping and returns `{key, port}` for those of its own kind, with `port` null for a
+  transport that connects out.
+- **Point 3, `gvl_name_mismatch`:** it compares several modules, so a transport's own
+  `validateModule` cannot raise it. The rules expose `variableScope(transport)` (the GVL name
+  for OPC UA, null for Modbus) and the core makes the check. It reports one problem per
+  module, at `modules[i].transport.gvlName`, and compares names without case. The schema
+  checks `gvlName` against the IEC identifier pattern; the reserved-word list stays in the
+  core and is not applied to it.
+- **Point 7, projections:**
+  - The `unmappedTags` of a projection are the document's tags that none of the kind's
+    channels maps.
+  - The problem paths of a projection index its own `modules` array.
+- **Point 7, `io_changed`:** a `plc` connection receives it only when its projection's id
+  changed. A `client` connection keeps following the whole file: the unfiltered id and the tag
+  list.
+- **Point 2, IEC types:** the default integer type is DINT. The list is DINT, INT, LINT.
+- **`plc_status` and symbol access (not in the slice list):**
+  - A `plc_status` for a module that is not in the connection's projection is ignored. The
+    bridge gets an `error` message, and the module is never marked connected.
+  - `symbolWarnings(channel, symbol, signal)` receives the signal's direction. For OPC UA a
+    command needs a readable variable and a feedback a writable one; Modbus ignores the access.
+- **Deferred to S2:** the supervisor is still per Pantin and Modbus. `bridgeConnected` (the
+  "external bridge" fact) means any transport's bridge, held with a set of connected
+  transports. S2 makes it per kind with the supervisor.

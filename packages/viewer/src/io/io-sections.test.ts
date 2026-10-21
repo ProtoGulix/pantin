@@ -128,7 +128,7 @@ describe("the tags offered to a module", () => {
 });
 
 describe("creating a module", () => {
-  it("offers the registry's kinds with their names", () => {
+  it("offers the kinds whose settings the form can fill in, with their names", () => {
     expect(creatableKinds("en")).toEqual([{ kind: "modbus_tcp_slave", label: "Modbus TCP slave" }]);
   });
 });

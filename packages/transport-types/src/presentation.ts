@@ -1,4 +1,5 @@
 import { MODBUS_TCP_SLAVE_PRESENTATION } from "./modbus-tcp-slave/presentation.ts";
+import { OPCUA_CLIENT_PRESENTATION } from "./opcua-client/presentation.ts";
 import type { TransportPresentation } from "./presentation-types.ts";
 import type { TransportKind } from "./schemas.ts";
 
@@ -8,4 +9,5 @@ export type { TransportPresentation } from "./presentation-types.ts";
 
 export const TRANSPORT_PRESENTATION: Readonly<Record<TransportKind, TransportPresentation>> = {
   modbus_tcp_slave: MODBUS_TCP_SLAVE_PRESENTATION,
+  opcua_client: OPCUA_CLIENT_PRESENTATION,
 };

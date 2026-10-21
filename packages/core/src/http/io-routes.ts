@@ -1,6 +1,7 @@
 import {
   CreateIoChannelsRequestSchema,
   CreateIoModuleRequestSchema,
+  IoMappingQuerySchema,
   type IoMappingResponse,
   UpdateIoChannelRequestSchema,
   UpdateIoModuleRequestSchema,
@@ -52,8 +53,15 @@ export const IO_ROUTES: readonly Route[] = [
   {
     method: "GET",
     pattern: IO,
-    handle: async (context) =>
-      sendJson(context.response, 200, await context.service.readIo(pantinIdOf(context))),
+    handle: async (context) => {
+      // `?transport=<kind>` asks for that transport's projection (ADR 0065 point 7).
+      const { transport } = parseWithSchema(
+        IoMappingQuerySchema,
+        Object.fromEntries(context.query),
+        "The query of GET .../io",
+      );
+      sendJson(context.response, 200, await context.service.readIo(pantinIdOf(context), transport));
+    },
   },
   {
     method: "GET",

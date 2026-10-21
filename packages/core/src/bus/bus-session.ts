@@ -1,4 +1,4 @@
-import type { PantinId, TagBusRole, TagBusServerMessage } from "@pantin/protocol";
+import type { PantinId, TagBusRole, TagBusServerMessage, TransportKind } from "@pantin/protocol";
 import type { FeedCursor } from "../domain/bus-feed.ts";
 import type { ConnectionLossReason } from "../domain/console-events.ts";
 import type { IoMapping, IoMappingSource } from "../domain/io-mapping.ts";
@@ -19,10 +19,11 @@ export type BusService = Pick<
   | "plcModuleStatus"
 >;
 
-// At most one `plc` connection per Pantin, held by the registry.
+// At most one `plc` connection per Pantin and transport, held by the registry (ADR 0065
+// point 7): each kind of bridge has its own.
 export type PlcSlots = {
-  claim(pantinId: PantinId, owner: object): boolean;
-  release(pantinId: PantinId, owner: object): void;
+  claim(pantinId: PantinId, transport: TransportKind, owner: object): boolean;
+  release(pantinId: PantinId, transport: TransportKind, owner: object): void;
 };
 
 export type BusConnectionDeps = {
@@ -53,6 +54,8 @@ const POLICY_VIOLATION_CLOSE_CODE = 1008;
 
 type Session = {
   role: TagBusRole | null;
+  // The transport a plc connection serves, set by its hello.
+  transport: TransportKind | null;
   // Something was received: the hello deadline is met, even if it is wrong.
   spoke: boolean;
   lastPongAt: number;
@@ -80,6 +83,7 @@ export type BusContext = {
 export function newBusContext(deps: BusConnectionDeps, init: BusConnectionInit): BusContext {
   const session: Session = {
     role: null,
+    transport: null,
     spoke: false,
     lastPongAt: init.openedAt,
     cursor: null,

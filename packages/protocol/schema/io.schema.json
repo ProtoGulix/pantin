@@ -49,6 +49,124 @@
                 },
                 "required": ["kind", "port", "unitId", "wordOrder", "watchdogMilliseconds"],
                 "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "opcua_client"
+                  },
+                  "port": {
+                    "default": 4840,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "endpointPath": {
+                    "default": "",
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "securityMode": {
+                    "default": "SignAndEncrypt",
+                    "type": "string",
+                    "enum": ["None", "Sign", "SignAndEncrypt"]
+                  },
+                  "securityPolicy": {
+                    "default": "Basic256Sha256",
+                    "type": "string",
+                    "enum": [
+                      "None",
+                      "Basic256Sha256",
+                      "Aes128_Sha256_RsaOaep",
+                      "Aes256_Sha256_RsaPss"
+                    ]
+                  },
+                  "auth": {
+                    "default": {
+                      "kind": "anonymous"
+                    },
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "anonymous"
+                          }
+                        },
+                        "required": ["kind"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "user"
+                          },
+                          "userName": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": ["kind", "userName"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "namespaceUri": {
+                    "default": "",
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "nodeIdPrefix": {
+                    "default": "|var|CODESYS Control Win V3 x64.Application.",
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "gvlName": {
+                    "default": "GVL_Pantin",
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(_[A-Za-z0-9]+)*$"
+                  },
+                  "samplingMilliseconds": {
+                    "default": 20,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "publishingMilliseconds": {
+                    "default": 20,
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 60000
+                  },
+                  "watchdogMilliseconds": {
+                    "default": 1000,
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 3600000
+                  }
+                },
+                "required": [
+                  "kind",
+                  "port",
+                  "endpointPath",
+                  "securityMode",
+                  "securityPolicy",
+                  "auth",
+                  "namespaceUri",
+                  "nodeIdPrefix",
+                  "gvlName",
+                  "samplingMilliseconds",
+                  "publishingMilliseconds",
+                  "watchdogMilliseconds"
+                ],
+                "additionalProperties": false
               }
             ]
           },
@@ -85,6 +203,29 @@
                     }
                   },
                   "required": ["zone", "address", "ioType"],
+                  "additionalProperties": false
+                },
+                "opcua": {
+                  "type": "object",
+                  "properties": {
+                    "identifier": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 255
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "iecType": {
+                      "type": "string",
+                      "enum": ["BOOL", "REAL", "LREAL", "INT", "DINT", "LINT"]
+                    }
+                  },
+                  "required": ["identifier", "iecType"],
                   "additionalProperties": false
                 }
               },

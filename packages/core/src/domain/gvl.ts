@@ -1,6 +1,6 @@
 import type { IoMappedChannel, IoMappingResponse } from "@pantin/protocol";
 import { isDottedVariable } from "./io-identifiers.ts";
-import { presentationOf } from "./io-transports.ts";
+import { presentationOf, rulesOf } from "./io-transports.ts";
 
 // The CODESYS global variable list of a valid mapping (ADR 0045 point 9, ADR
 // 0049 points 9 and 11, ADR 0064 point 9): modules in the order of io.json and
@@ -22,6 +22,31 @@ const HEADER = [
   "// test must never drive live outputs at the same time: use a SoftPLC, or a",
   "// controller with its field I/O disconnected.",
 ];
+
+// The OPC UA modules read their variables in a GVL the user names when pasting this text
+// (ADR 0065 point 3): the header says which name each module expects.
+function scopeNote(modules: IoMappingResponse["modules"]): string[] {
+  const keysByScope = new Map<string, string[]>();
+  for (const module of modules) {
+    const scope = rulesOf(module.transport).variableScope(module.transport);
+    if (scope !== null) {
+      keysByScope.set(scope, [...(keysByScope.get(scope) ?? []), module.key]);
+    }
+  }
+  if (keysByScope.size === 0) {
+    return [];
+  }
+  return [
+    "//",
+    ...[...keysByScope].map(
+      ([scope, keys]) =>
+        `// Paste this list into a GVL named ${scope} (module ${keys.join(", ")}).`,
+    ),
+    "//",
+    "// WARNING (ADR 0065 point 8): an explicit OPC UA identifier can write any writable node of",
+    "// the server, so the target must be a PLC under test.",
+  ];
+}
 
 type Placed = { module: MappingModule; channel: IoMappedChannel };
 
@@ -78,6 +103,7 @@ export function renderGvl(modules: IoMappingResponse["modules"]): string {
   const external = placed.filter(({ channel }) => isDottedVariable(channel.variable));
   return [
     ...HEADER,
+    ...scopeNote(modules),
     ...externalNote(variablesOf(external)),
     "VAR_GLOBAL",
     ...variablesOf(generated).map(declaration),

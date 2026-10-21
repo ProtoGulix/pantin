@@ -1,5 +1,5 @@
 import type { DriveDiagnostic } from "@pantin/drive-types/schemas";
-import type { PantinDocument, PantinId, PantinResponse } from "@pantin/protocol";
+import type { PantinDocument, PantinId, PantinResponse, TransportKind } from "@pantin/protocol";
 import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import type { StepConverter } from "../converter/step-converter.ts";
 import { type ConsoleBuffer, emptyConsole } from "../domain/console-buffer.ts";
@@ -102,8 +102,11 @@ export type OpenPantin = {
   // How many times the runtime was reset or discarded: bus clients that see
   // it change get a new snapshot (ADR 0045 point 5).
   resetCount: number;
-  // A PLC bridge is connected on the tag bus (ADR 0045 point 12), set by the bus.
+  // A PLC bridge is connected on the tag bus (ADR 0045 point 12), set by the bus: true
+  // while any transport's bridge is.
   bridgeConnected: boolean;
+  // The transports whose bridge holds a plc connection (ADR 0065 point 7).
+  connectedPlcTransports: Set<TransportKind>;
   // Modules the PLC is connected to, from `plc_status` (ADR 0050 point 5).
   plcConnectedModules: Set<string>;
   // Simulation steps run since the Pantin was opened.
@@ -163,6 +166,7 @@ export function newOpenPantin(
     tagStatesDocument: document,
     resetCount: 0,
     bridgeConnected: false,
+    connectedPlcTransports: new Set(),
     plcConnectedModules: new Set(),
     stepCount: 0,
     clock: newClockRuntime(),

@@ -31,7 +31,7 @@ _OUTBOX_LIMIT: Final = 4096
 _CLOSE_MEANINGS: Final = {
     CloseCode.INVALID_MESSAGE: "the core refused a message of the bridge (a bug: report it)",
     CloseCode.UNSUPPORTED_VERSION: "the core does not speak this tag bus version",
-    CloseCode.PLC_ALREADY_CONNECTED: "another bridge is already connected to this Pantin",
+    CloseCode.PLC_ALREADY_CONNECTED: "another bridge of this transport is connected to this Pantin",
     CloseCode.MAPPING_MISMATCH: "the io mapping changed since the bridge read it, or is not valid",
     CloseCode.HELLO_TIMEOUT: "the core got no hello in time",
     CloseCode.ROLE_NOT_ACCEPTED: "the core accepts the plc role from its own host only",
@@ -59,8 +59,8 @@ class BusClient:
         self.failed: asyncio.Future[None] = asyncio.get_running_loop().create_future()
 
     @classmethod
-    async def open(cls, url: str, mapping_id: str) -> tuple[BusClient, Welcome]:
-        """Connect as the plc and wait for the welcome."""
+    async def open(cls, url: str, transport: str, mapping_id: str) -> tuple[BusClient, Welcome]:
+        """Connect as the plc of `transport` and wait for the welcome."""
         try:
             # No Origin header is sent by default, which is how the core knows a non-browser
             # client (ADR 0046 point 5). Compression off: frames are tiny and latency matters.
@@ -75,7 +75,7 @@ class BusClient:
             raise CoreUnavailableError(f"Cannot open the tag bus at {url}: {error}") from error
         client = cls(connection)
         try:
-            await connection.send(bus_messages.encode_hello(mapping_id))
+            await connection.send(bus_messages.encode_hello(transport, mapping_id))
             welcome = await client._read_welcome()
         except BaseException:
             await connection.close()

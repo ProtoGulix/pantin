@@ -1,4 +1,8 @@
-import { BRIDGE_MAX_LOG_LINE_CHARACTERS, type ConsoleEvent } from "@pantin/protocol";
+import {
+  BRIDGE_MAX_LOG_LINE_CHARACTERS,
+  type ConsoleEvent,
+  type PlcModuleLossReason,
+} from "@pantin/protocol";
 import type { BridgeEvent, BridgeMachineState } from "./bridge-state.ts";
 
 // The lines of the bridge log file (ADR 0054 point 2) and the level of a line
@@ -97,7 +101,9 @@ export function describeBridgeTransition(
 const LOSS_REASONS = {
   closed: "its connection closed",
   timeout: "no request within its watchdog time",
-};
+  node_mismatch: "its nodes do not match the PLC's",
+  certificate_rejected: "the PLC refused Pantin's certificate",
+} satisfies Record<PlcModuleLossReason, string>;
 
 // What the core says in the bridge log about a console event of the PLC link
 // (ADR 0054, amendment of 2026-10-18). The bridge no longer echoes the core's

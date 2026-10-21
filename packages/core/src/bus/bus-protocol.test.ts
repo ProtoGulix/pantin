@@ -7,8 +7,14 @@ import { fakeMappingSource, PLC_MAPPING_ID } from "../test-support/fake-io-mappi
 // Close codes, roles and liveness of the tag bus (ADR 0045 point 4).
 
 const CLOSE = TAG_BUS_CLOSE_CODES;
-const HELLO_CLIENT = { type: "hello", version: 1, role: "client" } as const;
-const HELLO_PLC = { type: "hello", version: 1, role: "plc", mappingId: PLC_MAPPING_ID } as const;
+const HELLO_CLIENT = { type: "hello", version: 2, role: "client" } as const;
+const HELLO_PLC = {
+  type: "hello",
+  version: 2,
+  role: "plc",
+  transport: "modbus_tcp_slave",
+  mappingId: PLC_MAPPING_ID,
+} as const;
 
 let axis: BusAxis;
 const clients: BusClient[] = [];
@@ -36,7 +42,7 @@ describe("hello", () => {
     const client = await connect();
     client.send(HELLO_CLIENT);
     const welcome = await client.next("welcome");
-    expect(welcome.version).toBe(1);
+    expect(welcome.version).toBe(2);
     expect(welcome.consoleId.length).toBeGreaterThan(0);
     expect(welcome.clock).toMatchObject({ running: true, step: 0, droppedSteps: 0 });
   });
@@ -100,7 +106,7 @@ describe("close 4001: unsupported version", () => {
   it("closes on a version the core does not speak", async () => {
     await startAxis();
     const client = await connect();
-    client.send({ type: "hello", version: 2, role: "client" });
+    client.send({ type: "hello", version: 3, role: "client" });
     expect((await client.closed).code).toBe(CLOSE.unsupportedVersion);
   });
 });

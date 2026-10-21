@@ -350,6 +350,445 @@
         ],
         "unmappedTags": []
       }
+    },
+    {
+      "name": "a valid projection of the opcua_client transport, with the NodeIds the core resolved",
+      "message": {
+        "status": "valid",
+        "mappingId": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+        "modules": [
+          {
+            "key": "plc",
+            "transport": {
+              "kind": "opcua_client",
+              "port": 4840,
+              "endpointPath": "",
+              "securityMode": "SignAndEncrypt",
+              "securityPolicy": "Basic256Sha256",
+              "auth": {
+                "kind": "anonymous"
+              },
+              "namespaceUri": "urn:CODESYSSPControl:PlcWinNT:|var|",
+              "nodeIdPrefix": "|var|CODESYS Control Win V3 x64.Application.",
+              "gvlName": "GVL_Pantin",
+              "samplingMilliseconds": 20,
+              "publishingMilliseconds": 20,
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_Pantin.press_valve_extend"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "GVL_IO.Press.Extended",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_IO.Press.Extended"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "opcua": {
+                  "identifier": "s=Other.Node",
+                  "iecType": "LREAL",
+                  "resolvedIdentifier": "s=Other.Node"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "the unfiltered answer with a Modbus module and an OPC UA module",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "plc",
+            "transport": {
+              "kind": "opcua_client",
+              "port": 4840,
+              "endpointPath": "",
+              "securityMode": "SignAndEncrypt",
+              "securityPolicy": "Basic256Sha256",
+              "auth": {
+                "kind": "anonymous"
+              },
+              "namespaceUri": "urn:CODESYSSPControl:PlcWinNT:|var|",
+              "nodeIdPrefix": "|var|CODESYS Control Win V3 x64.Application.",
+              "gvlName": "GVL_Pantin",
+              "samplingMilliseconds": 20,
+              "publishingMilliseconds": 20,
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_Pantin.press_valve_extend"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "GVL_IO.Press.Extended",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_IO.Press.Extended"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "opcua": {
+                  "identifier": "s=Other.Node",
+                  "iecType": "LREAL",
+                  "resolvedIdentifier": "s=Other.Node"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid OPC UA module reporting namespace_missing, security_mismatch and gvl_name_mismatch",
+      "message": {
+        "status": "invalid",
+        "mappingId": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+        "modules": [
+          {
+            "key": "plc",
+            "transport": {
+              "kind": "opcua_client",
+              "port": 4840,
+              "endpointPath": "",
+              "securityMode": "None",
+              "securityPolicy": "Basic256Sha256",
+              "auth": {
+                "kind": "anonymous"
+              },
+              "namespaceUri": "",
+              "nodeIdPrefix": "|var|CODESYS Control Win V3 x64.Application.",
+              "gvlName": "GVL_Pantin",
+              "samplingMilliseconds": 20,
+              "publishingMilliseconds": 20,
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_Pantin.press_valve_extend"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "GVL_IO.Press.Extended",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_IO.Press.Extended"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "opcua": {
+                  "identifier": "s=Other.Node",
+                  "iecType": "LREAL",
+                  "resolvedIdentifier": "s=Other.Node"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "path": ["modules", 0, "transport", "securityPolicy"],
+            "code": "security_mismatch",
+            "message": "Security mode None and policy Basic256Sha256 do not go together."
+          },
+          {
+            "path": ["modules", 0, "transport", "namespaceUri"],
+            "code": "namespace_missing",
+            "message": "The module has no namespace URI."
+          },
+          {
+            "path": ["modules", 0, "transport", "gvlName"],
+            "code": "gvl_name_mismatch",
+            "message": "Variable press_valve_extend is in GVL_Pantin here and in GVL_Other elsewhere."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid OPC UA module reporting identifier_invalid and iec_type_mismatch",
+      "message": {
+        "status": "invalid",
+        "mappingId": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+        "modules": [
+          {
+            "key": "plc",
+            "transport": {
+              "kind": "opcua_client",
+              "port": 4840,
+              "endpointPath": "",
+              "securityMode": "SignAndEncrypt",
+              "securityPolicy": "Basic256Sha256",
+              "auth": {
+                "kind": "anonymous"
+              },
+              "namespaceUri": "urn:CODESYSSPControl:PlcWinNT:|var|",
+              "nodeIdPrefix": "|var|CODESYS Control Win V3 x64.Application.",
+              "gvlName": "GVL_Pantin",
+              "samplingMilliseconds": 20,
+              "publishingMilliseconds": 20,
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_Pantin.press_valve_extend"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "GVL_IO.Press.Extended",
+                "comment": "",
+                "opcua": {
+                  "identifier": null,
+                  "iecType": "BOOL",
+                  "resolvedIdentifier": "s=|var|CODESYS Control Win V3 x64.Application.GVL_IO.Press.Extended"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "opcua": {
+                  "identifier": "s=Other.Node",
+                  "iecType": "LREAL",
+                  "resolvedIdentifier": "s=Other.Node"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "path": ["modules", 0, "channels", 0, "opcua", "identifier"],
+            "code": "identifier_invalid",
+            "message": "Identifier is not s=<name> or i=<number>."
+          },
+          {
+            "path": ["modules", 0, "channels", 2, "opcua", "iecType"],
+            "code": "iec_type_mismatch",
+            "message": "Tag is a float: its type is REAL or LREAL."
+          }
+        ],
+        "unmappedTags": []
+      }
     }
   ],
   "invalid": [

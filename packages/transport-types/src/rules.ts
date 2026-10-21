@@ -1,4 +1,5 @@
 import { MODBUS_TCP_SLAVE_RULES } from "./modbus-tcp-slave/rules.ts";
+import { OPCUA_CLIENT_RULES } from "./opcua-client/rules.ts";
 import type { TransportRules } from "./rule-types.ts";
 import type { TransportKind } from "./schemas.ts";
 
@@ -6,6 +7,7 @@ import type { TransportKind } from "./schemas.ts";
 // never imports it: it shows what the core decided.
 
 export type {
+  BridgeModuleFacts,
   ChannelProposal,
   RuleModule,
   SymbolShape,
@@ -15,4 +17,5 @@ export type {
 
 export const TRANSPORT_RULES: Readonly<Record<TransportKind, TransportRules>> = {
   modbus_tcp_slave: MODBUS_TCP_SLAVE_RULES,
+  opcua_client: OPCUA_CLIENT_RULES,
 };

@@ -25,7 +25,9 @@ from pantin_bridge.wire_decoding import (
     as_tag_name,
 )
 
-TAG_BUS_VERSION: Final = 1
+# Version 2 (ADR 0065 point 7): the plc hello names its transport and carries the id of that
+# transport's projection of the mapping.
+TAG_BUS_VERSION: Final = 2
 
 
 class CloseCode:
@@ -265,9 +267,15 @@ def _frame(message: JsonObject) -> str:
     return json.dumps(message, allow_nan=False, separators=(",", ":"))
 
 
-def encode_hello(mapping_id: str) -> str:
+def encode_hello(transport: str, mapping_id: str) -> str:
     return _frame(
-        {"type": "hello", "version": TAG_BUS_VERSION, "role": "plc", "mappingId": mapping_id}
+        {
+            "type": "hello",
+            "version": TAG_BUS_VERSION,
+            "role": "plc",
+            "transport": transport,
+            "mappingId": mapping_id,
+        }
     )
 
 

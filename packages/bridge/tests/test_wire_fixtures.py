@@ -112,7 +112,7 @@ def test_refuses_a_bool_in_a_register_zone() -> None:
 def test_the_bridge_builds_messages_the_fixtures_call_valid() -> None:
     sent = {
         "hello": bus_messages.encode_hello(
-            "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+            "modbus_tcp_slave", "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
         ),
         "write": bus_messages.encode_write("w2", "axis.stroke.setpoint", 0.05),
         "plc_status": bus_messages.encode_plc_status("m1", connected=False, reason="timeout"),

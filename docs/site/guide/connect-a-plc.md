@@ -5,6 +5,8 @@ simulateur est l'esclave, l'automate est le maître. Le programme de l'automate
 garde sa configuration d'E/S habituelle et interroge les modules simulés comme il
 interrogerait des modules réels.
 
+Seul Modbus TCP est disponible aujourd'hui. Pantin sait déjà décrire un module « Client OPC UA » dans sa liste d'E/S, mais la vue E/S ne permet pas encore d'en créer un et aucun pont OPC UA n'existe : il n'est pas possible de connecter un automate en OPC UA.
+
 Cette page décrit le pont, le réglage réseau, la GVL et les précautions. Pour
 construire la machine et sa liste d'E/S, suivez le [tutoriel](/guide/tutorial).
 

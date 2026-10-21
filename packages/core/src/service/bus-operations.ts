@@ -1,4 +1,4 @@
-import type { ConsoleEvent, PantinId } from "@pantin/protocol";
+import type { ConsoleEvent, PantinId, PlcModuleLossReason, TransportKind } from "@pantin/protocol";
 import type { FeedSource } from "../domain/bus-feed.ts";
 import { readConsoleAfter } from "../domain/console-buffer.ts";
 import {
@@ -7,12 +7,12 @@ import {
   pausedWithBridgeEvent,
   plcModuleEvent,
 } from "../domain/console-events.ts";
-import { mappingIdOf } from "../domain/io-document-text.ts";
 import { describeTags } from "../domain/tags.ts";
 import { toClockState } from "./clock-operations.ts";
 import { recordPlcLinkEvents } from "./console-record.ts";
 import { alignIo } from "./io-alignment.ts";
 import { readIo } from "./io-operations.ts";
+import { mappingIdOfOpenPantin } from "./io-projection-ids.ts";
 import { loadPantin, type ServiceContext } from "./open-pantins.ts";
 import { syncTagStates, zeroBitCommands } from "./tag-operations.ts";
 
@@ -30,7 +30,7 @@ function peekFeedSource(context: ServiceContext, pantinId: PantinId): FeedSource
   return {
     stepCount: openPantin.stepCount,
     document: openPantin.document,
-    mappingId: mappingIdOf(openPantin.io),
+    mappingId: (transport) => mappingIdOfOpenPantin(openPantin, transport),
     resetCount: openPantin.resetCount,
     consoleId: openPantin.console.id,
     consoleLastSequence: openPantin.console.lastSequence,
@@ -45,9 +45,14 @@ function peekFeedSource(context: ServiceContext, pantinId: PantinId): FeedSource
 
 // The bridge's bus connection opened (ADR 0045 points 11 and 12). A Pantin
 // that is already paused warns at once, as a pause with a bridge would.
-async function bridgeConnected(context: ServiceContext, pantinId: PantinId): Promise<void> {
+async function bridgeConnected(
+  context: ServiceContext,
+  pantinId: PantinId,
+  transport: TransportKind,
+): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
   openPantin.bridgeConnected = true;
+  openPantin.connectedPlcTransports.add(transport);
   context.onBridgeActivity(pantinId);
   const events: ConsoleEvent[] = [bridgeEvent({ connected: true })];
   if (!openPantin.clock.running) {
@@ -56,17 +61,23 @@ async function bridgeConnected(context: ServiceContext, pantinId: PantinId): Pro
   recordPlcLinkEvents(context, pantinId, openPantin, events);
 }
 
-// The bridge's bus connection closed or missed its pongs: the PLC is gone, so
-// the bit commands mapped on any module reset.
+// The bridge's bus connection closed or missed its pongs: the PLC is gone, so the bit
+// commands mapped on that transport's modules reset (ADR 0065 point 6); the other
+// transport's bridge, if any, is not concerned.
 async function bridgeDisconnected(
   context: ServiceContext,
   pantinId: PantinId,
+  transport: TransportKind,
   reason: ConnectionLossReason,
-  tagsToZero: readonly string[],
+  lost: { tagsToZero: readonly string[]; moduleKeys: readonly string[] },
 ): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
-  openPantin.bridgeConnected = false;
-  openPantin.plcConnectedModules.clear();
+  openPantin.connectedPlcTransports.delete(transport);
+  openPantin.bridgeConnected = openPantin.connectedPlcTransports.size > 0;
+  for (const key of lost.moduleKeys) {
+    openPantin.plcConnectedModules.delete(key);
+  }
+  const { tagsToZero } = lost;
   zeroBitCommands(openPantin, tagsToZero);
   recordPlcLinkEvents(context, pantinId, openPantin, [bridgeEvent({ connected: false, reason })]);
   context.onBridgeActivity(pantinId);
@@ -77,7 +88,7 @@ async function plcModuleStatus(
   context: ServiceContext,
   pantinId: PantinId,
   module: string,
-  status: { connected: true } | { connected: false; reason: ConnectionLossReason },
+  status: { connected: true } | { connected: false; reason: PlcModuleLossReason },
   tagsToZero: readonly string[],
 ): Promise<void> {
   const openPantin = await loadPantin(context, pantinId);
@@ -94,18 +105,20 @@ async function plcModuleStatus(
 export function busOperations(context: ServiceContext) {
   return {
     // The mapping the bridge reads at start-up and the core reads at hello.
-    readIo: (pantinId: PantinId) => readIo(context, pantinId),
+    readIo: (pantinId: PantinId, transport?: TransportKind) => readIo(context, pantinId, transport),
     peekFeedSource: (pantinId: PantinId) => peekFeedSource(context, pantinId),
-    bridgeConnected: (pantinId: PantinId) => bridgeConnected(context, pantinId),
+    bridgeConnected: (pantinId: PantinId, transport: TransportKind) =>
+      bridgeConnected(context, pantinId, transport),
     bridgeDisconnected: (
       pantinId: PantinId,
+      transport: TransportKind,
       reason: ConnectionLossReason,
-      tagsToZero: readonly string[],
-    ) => bridgeDisconnected(context, pantinId, reason, tagsToZero),
+      lost: { tagsToZero: readonly string[]; moduleKeys: readonly string[] },
+    ) => bridgeDisconnected(context, pantinId, transport, reason, lost),
     plcModuleStatus: (
       pantinId: PantinId,
       module: string,
-      status: { connected: true } | { connected: false; reason: ConnectionLossReason },
+      status: { connected: true } | { connected: false; reason: PlcModuleLossReason },
       tagsToZero: readonly string[],
     ) => plcModuleStatus(context, pantinId, module, status, tagsToZero),
   };

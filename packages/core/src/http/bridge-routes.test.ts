@@ -107,6 +107,49 @@ describe("with a bridge Python", () => {
   });
 });
 
+describe("the start check reads the Modbus projection of the mapping (ADR 0065 point 7)", () => {
+  it("starts although an OPC UA module is still missing its namespace", async () => {
+    const spawner = createFakeSpawner();
+    const running = await startServer(spawner);
+    const base = `http://127.0.0.1:${running.address.port}/api/pantins/${PLC_CYLINDER_ID}/io`;
+    const added = await fetch(`${base}/modules`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ transport: { kind: "opcua_client" } }),
+    });
+    expect(added.status).toBe(201);
+    const whole = (await (await fetch(base)).json()) as { status: string };
+    expect(whole.status).toBe("invalid");
+
+    const started = await call("PUT", START);
+    expect(started.status).toBe(200);
+    expect(BridgeStatusSchema.parse(started.json).state).toBe("starting");
+    expect(spawner.calls).toHaveLength(1);
+  });
+
+  it("is still refused when a Modbus module is invalid", async () => {
+    const spawner = createFakeSpawner();
+    const running = await startServer(spawner);
+    const base = `http://127.0.0.1:${running.address.port}/api/pantins/${PLC_CYLINDER_ID}/io`;
+    const modules = (await (await fetch(base)).json()) as {
+      modules: { key: string; channels: { tag: string }[] }[];
+    };
+    const first = modules.modules[0];
+    const channel = first?.channels[0];
+    if (first === undefined || channel === undefined) {
+      throw new Error("plc-cylinder maps at least one tag.");
+    }
+    await fetch(`${base}/modules/${first.key}/channels/${channel.tag}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ variable: "1 bad" }),
+    });
+    const refused = await call("PUT", START);
+    expect(refused.status).toBe(409);
+    expect(spawner.calls).toHaveLength(0);
+  });
+});
+
 describe("with a bridge Python, refusals", () => {
   it.each([
     ["an unknown field", { ...START, python: "/bin/sh" }],

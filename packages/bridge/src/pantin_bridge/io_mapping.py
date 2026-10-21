@@ -53,6 +53,11 @@ IO_PROBLEM_CODES = frozenset(
         "address_overlap",
         "invalid_variable",
         "duplicate_variable",
+        "security_mismatch",
+        "namespace_missing",
+        "identifier_invalid",
+        "iec_type_mismatch",
+        "gvl_name_mismatch",
     }
 )
 _TAG_TYPES = frozenset({"bit", "float", "integer"})

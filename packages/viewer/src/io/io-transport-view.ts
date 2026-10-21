@@ -2,7 +2,9 @@ import type { IoMappedChannel, IoMappingModule } from "@pantin/protocol";
 import { TRANSPORT_LABELS } from "@pantin/transport-types/labels";
 import {
   CHANNEL_KEY_BY_KIND,
-  TRANSPORT_KINDS,
+  MODBUS_TCP_SLAVE_KIND,
+  SECURITY_MODES,
+  SECURITY_POLICIES,
   type TransportKind,
   WORD_ORDERS,
 } from "@pantin/transport-types/schemas";
@@ -47,7 +49,28 @@ const TRANSPORT_VIEWS: Readonly<Record<TransportKind, TransportViewSpec>> = {
     placeFields: ["zone", "address"],
     editableChannelFields: ["address"],
   },
+  // The OPC UA settings that are text (namespace, prefix, GVL name) and the authentication have
+  // no input in this form yet: the viewer shows them through the heading and the columns only,
+  // until the OPC UA viewer slice of ADR 0065 (S5).
+  opcua_client: {
+    endpointSettings: ["port", "securityMode", "securityPolicy"],
+    settings: [
+      { name: "port", input: "integer" },
+      { name: "securityMode", input: "choice", options: SECURITY_MODES },
+      { name: "securityPolicy", input: "choice", options: SECURITY_POLICIES },
+      { name: "samplingMilliseconds", input: "integer" },
+      { name: "publishingMilliseconds", input: "integer" },
+      { name: "watchdogMilliseconds", input: "integer" },
+    ],
+    channelFields: ["resolvedIdentifier", "iecType"],
+    placeFields: ["resolvedIdentifier"],
+    editableChannelFields: [],
+  },
 };
+
+// A module of every kind is shown, but only the kinds whose settings this form can fill in are
+// offered when creating one: an OPC UA module needs its namespace, which is text (ADR 0065, S5).
+const KINDS_CREATABLE_HERE: readonly TransportKind[] = [MODBUS_TCP_SLAVE_KIND];
 
 export interface IoSettingView {
   name: string;
@@ -84,9 +107,10 @@ function settingValue(module: IoMappingModule, name: string): string {
 export function moduleSubtitle(module: IoMappingModule, language: Language): string {
   const { kind } = module.transport;
   const labels = labelsOf(kind, language);
-  const endpoint = TRANSPORT_VIEWS[kind].endpointSettings.map(
-    (name) => `${labels.settings[name] ?? name} ${settingValue(module, name)}`,
-  );
+  const endpoint = TRANSPORT_VIEWS[kind].endpointSettings.map((name) => {
+    const value = settingValue(module, name);
+    return `${labels.settings[name] ?? name} ${labels.values[value] ?? value}`;
+  });
   return [labels.name, ...endpoint].join(" · ");
 }
 
@@ -147,7 +171,7 @@ export function channelPlace(
 
 /** What the registry offers when a module is created. */
 export function creatableKinds(language: Language): IoKindChoice[] {
-  return TRANSPORT_KINDS.map((kind) => ({ kind, label: labelsOf(kind, language).name }));
+  return KINDS_CREATABLE_HERE.map((kind) => ({ kind, label: labelsOf(kind, language).name }));
 }
 
 export function settingSpecOf(kind: TransportKind, field: string): SettingSpec | undefined {

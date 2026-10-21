@@ -58,8 +58,14 @@ export async function openRole(
   opened.push(client);
   client.send(
     role === "plc"
-      ? { type: "hello", version: 1, role, mappingId: PLC_MAPPING_ID }
-      : { type: "hello", version: 1, role },
+      ? {
+          type: "hello",
+          version: 2,
+          role,
+          transport: "modbus_tcp_slave",
+          mappingId: PLC_MAPPING_ID,
+        }
+      : { type: "hello", version: 2, role },
   );
   await client.next("welcome");
   return client;

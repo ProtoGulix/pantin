@@ -10,6 +10,7 @@ from urllib.parse import quote, urlsplit
 
 from pantin_bridge.errors import ConfigurationError, CoreUnavailableError, ProtocolError
 from pantin_bridge.io_mapping import IoMapping, decode_io_mapping
+from pantin_bridge.io_modbus import MODBUS_TCP_SLAVE_KIND
 from pantin_bridge.network_address import AddressClass, classify_address
 
 # No proxy, whatever HTTP_PROXY says: the core is on this host (ADR 0046 point 8).
@@ -32,7 +33,10 @@ class CoreEndpoint:
 
     @property
     def io_url(self) -> str:
-        return f"http://{self._authority}/api/pantins/{quote(self.pantin_id, safe='')}/io"
+        # The projection of the mapping on the one transport this bridge serves, so that the
+        # modules of another transport can neither block nor stop it (ADR 0065 point 7).
+        pantin = quote(self.pantin_id, safe="")
+        return f"http://{self._authority}/api/pantins/{pantin}/io?transport={MODBUS_TCP_SLAVE_KIND}"
 
     @property
     def bus_url(self) -> str:

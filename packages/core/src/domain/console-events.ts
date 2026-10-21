@@ -6,6 +6,7 @@ import {
   type ConsoleSource,
   PANTIN_SCHEMA_VERSION,
   type PantinDocument,
+  type PlcModuleLossReason,
 } from "@pantin/protocol";
 import { sortedById } from "./ids.ts";
 
@@ -132,12 +133,13 @@ export function forcedTagWrittenEvent(
   };
 }
 
+// Why the bridge's own bus connection ended; a module's reasons are PlcModuleLossReason.
 export type ConnectionLossReason = "closed" | "timeout";
 
 // ADR 0045 point 11.
 export function plcModuleEvent(
   module: string,
-  status: { connected: true } | { connected: false; reason: ConnectionLossReason },
+  status: { connected: true } | { connected: false; reason: PlcModuleLossReason },
 ): ConsoleEvent {
   const source = { kind: "pantin" } as const;
   return status.connected

@@ -26,8 +26,8 @@ describe("Origin", () => {
   it("accepts a connection with no Origin: a program, not a browser", async () => {
     axis = await startBusAxis();
     const client = await connected();
-    client.send({ type: "hello", version: 1, role: "client" });
-    expect((await client.next("welcome")).version).toBe(1);
+    client.send({ type: "hello", version: 2, role: "client" });
+    expect((await client.next("welcome")).version).toBe(2);
   });
 
   it.each(["http://127.0.0.1", "http://localhost"])(
@@ -35,7 +35,7 @@ describe("Origin", () => {
     async (origin) => {
       axis = await startBusAxis();
       const client = await connected({ Origin: `${origin}:${port()}` });
-      client.send({ type: "hello", version: 1, role: "client" });
+      client.send({ type: "hello", version: 2, role: "client" });
       expect((await client.next("welcome")).type).toBe("welcome");
     },
   );

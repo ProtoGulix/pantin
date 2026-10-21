@@ -10,6 +10,7 @@ import asyncio
 import json
 from http import HTTPStatus
 from types import TracebackType
+from urllib.parse import urlsplit
 
 from websockets.asyncio.server import Server, ServerConnection, serve
 from websockets.datastructures import Headers
@@ -31,6 +32,8 @@ class FakeCore:
         self.io_answer = io_answer
         self.hello_close_code = hello_close_code
         self.received: list[dict[str, object]] = []
+        # The query string of every GET .../io the bridge made.
+        self.io_queries: list[str] = []
         self.handshake_headers: Headers | None = None
         self.tags: dict[str, tuple[float, bool]] = {}
         self._connection: ServerConnection | None = None
@@ -60,7 +63,9 @@ class FakeCore:
         return f"http://127.0.0.1:{self.port}"
 
     def _process_request(self, connection: ServerConnection, request: Request) -> Response | None:
-        if request.path.endswith("/io"):
+        route = urlsplit(request.path)
+        if route.path.endswith("/io"):
+            self.io_queries.append(route.query)
             return connection.respond(HTTPStatus.OK, json.dumps(self.io_answer))
         return None
 
@@ -73,7 +78,7 @@ class FakeCore:
             return
         self._connection = connection
         await connection.send(
-            json.dumps({"type": "welcome", "version": 1, "consoleId": "c-1", "clock": CLOCK})
+            json.dumps({"type": "welcome", "version": 2, "consoleId": "c-1", "clock": CLOCK})
         )
         try:
             async for raw in connection:

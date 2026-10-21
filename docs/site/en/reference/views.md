@@ -334,7 +334,7 @@ With no joint at all, the view says **No joint: every body is fixed in World.**
 The I/O view is the editor of the Pantin's input/output list (`io.json`): which tags are given to the PLC, on which Modbus module, at which address. It replaces the 3D view and the diagram. What it writes is saved and undone with the Pantin, like the rest.
 
 ::: info A list for the PLC
-The modules here are those that the bridge presents to the PLC (see [Connect a PLC](/en/guide/connect-a-plc)). The **Export GVL** button produces the matching CODESYS variable list.
+The modules here are those that the bridge presents to the PLC (see [Connect a PLC](/en/guide/connect-a-plc)). The **Export GVL** button produces the matching CODESYS variable list. Only the Modbus TCP slave transport can be created from this view; the OPC UA client transport is not offered yet.
 :::
 
 ### The states of the view

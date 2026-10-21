@@ -28,15 +28,22 @@ export type BusConnection = {
   closed(): void;
 };
 
-// The PLC is gone: the bit commands mapped on any module reset (point 11).
+// The PLC is gone: the bit commands mapped on this transport's modules reset (point 11).
 async function announceLoss(context: BusContext): Promise<void> {
   const { deps, init, session } = context;
+  const { transport } = session;
+  if (transport === null) {
+    return;
+  }
   if (session.ownsPlcSlot) {
-    deps.plcSlots.release(init.pantinId, context.owner);
+    deps.plcSlots.release(init.pantinId, transport, context.owner);
   }
   if (session.bridgeAnnounced && !deps.isClosing()) {
-    const tags = session.mapping === null ? [] : watchdogTags(session.mapping);
-    await deps.service.bridgeDisconnected(init.pantinId, session.lossReason, tags);
+    const { mapping } = session;
+    await deps.service.bridgeDisconnected(init.pantinId, transport, session.lossReason, {
+      tagsToZero: mapping === null ? [] : watchdogTags(mapping),
+      moduleKeys: mapping === null ? [] : mapping.moduleKeys,
+    });
   }
 }
 

@@ -1,4 +1,9 @@
-import { TAG_BUS_CLOSE_CODES, TAG_BUS_VERSION, type TagBusClientMessage } from "@pantin/protocol";
+import {
+  TAG_BUS_CLOSE_CODES,
+  TAG_BUS_VERSION,
+  type TagBusClientMessage,
+  type TransportKind,
+} from "@pantin/protocol";
 import { initialFeedCursor } from "../domain/bus-feed.ts";
 import { isPlcRoleAccepted } from "../domain/bus-upgrade-rules.ts";
 import type { BusContext } from "./bus-session.ts";
@@ -9,28 +14,36 @@ const CLOSE = TAG_BUS_CLOSE_CODES;
 // WebSocket "internal error" (RFC 6455 section 7.4.1).
 export const INTERNAL_ERROR_CLOSE_CODE = 1011;
 
-// The `plc` role: from the core's host (ADR 0046 point 6), one per Pantin
-// (4002), and with the mapping the bridge started with (4003).
-async function acceptPlc(context: BusContext, mappingId: string | undefined): Promise<boolean> {
+// The `plc` role: from the core's host (ADR 0046 point 6), one per Pantin and transport
+// (4002), and with the projection of the mapping the bridge started with (4003).
+async function acceptPlc(
+  context: BusContext,
+  transport: TransportKind,
+  mappingId: string | undefined,
+): Promise<boolean> {
   const { deps, init, session } = context;
   if (!isPlcRoleAccepted(deps.network, init.remoteAddress)) {
     context.fail(CLOSE.roleNotAccepted, "The plc role is accepted from the core's own host only.");
     return false;
   }
-  if (!deps.plcSlots.claim(init.pantinId, context.owner)) {
+  if (!deps.plcSlots.claim(init.pantinId, transport, context.owner)) {
     context.fail(
       CLOSE.plcAlreadyConnected,
-      "Another plc connection is already open on this Pantin.",
+      `Another plc connection of the ${transport} transport is already open on this Pantin.`,
     );
     return false;
   }
   session.ownsPlcSlot = true;
-  const mapping = await deps.mappingSource.read(init.pantinId);
+  session.transport = transport;
+  const mapping = await deps.mappingSource.read(init.pantinId, transport);
   // ADR 0045 points 7 and 10: the watchdog needs the mapping, and a bridge
   // runs on the mapping it read; with none, or another one, there is nothing
   // for a plc to do.
   if (mapping === null) {
-    context.fail(CLOSE.mappingMismatch, "This Pantin has no valid io mapping.");
+    context.fail(
+      CLOSE.mappingMismatch,
+      `This Pantin has no valid io mapping for the ${transport} transport.`,
+    );
     return false;
   }
   if (mapping.mappingId !== mappingId) {
@@ -57,12 +70,17 @@ export async function handleHello(
     return;
   }
   if (message.role === "plc") {
-    if (!(await acceptPlc(context, message.mappingId))) {
+    // The schema requires the transport of a version 2 plc hello; a missing one is a bug.
+    if (message.transport === undefined) {
+      context.fail(CLOSE.invalidMessage, "A plc hello carries its transport.");
+      return;
+    }
+    if (!(await acceptPlc(context, message.transport, message.mappingId))) {
       return;
     }
     // Before the await: a close during it must still announce the loss.
     session.bridgeAnnounced = true;
-    await deps.service.bridgeConnected(init.pantinId);
+    await deps.service.bridgeConnected(init.pantinId, message.transport);
   }
   const feed = deps.service.peekFeedSource(init.pantinId);
   if (feed === undefined || session.done) {
@@ -70,7 +88,7 @@ export async function handleHello(
     return;
   }
   session.role = message.role;
-  session.cursor = initialFeedCursor(feed, init.openedAt);
+  session.cursor = initialFeedCursor(feed, init.openedAt, session.transport);
   context.send({
     type: "welcome",
     version: TAG_BUS_VERSION,

@@ -11,6 +11,7 @@ import type {
 } from "@pantin/protocol";
 import { variableProblemOf } from "./io-identifiers.ts";
 import { rulesOf } from "./io-transports.ts";
+import { variableScopeProblems } from "./io-variable-scope.ts";
 
 // The rules of ADR 0049 point 6 and ADR 0064 point 5, against the open
 // document's tag list (unsaved edits included): pure, from a mapping already
@@ -198,6 +199,7 @@ export function validateIoDocument(document: IoDocument, tags: readonly IoTag[])
     ...duplicateVariableProblems(placedChannels),
     ...commandMappedTwiceProblems(placedChannels, tagsByName),
     ...listenPortProblems(document),
+    ...variableScopeProblems(document),
     ...transportProblems(document, tagsByName),
   ].sort((a, b) => comparePaths(a.path, b.path));
   const mapped = new Set(placedChannels.map(({ channel }) => channel.tag));

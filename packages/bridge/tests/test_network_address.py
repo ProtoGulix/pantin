@@ -93,7 +93,9 @@ def test_every_class_has_a_fixture() -> None:
 def test_core_endpoint_accepts_a_loopback_or_private_http_url() -> None:
     endpoint = parse_core_endpoint("http://127.0.0.1:4800", "demo")
 
-    assert endpoint.io_url == "http://127.0.0.1:4800/api/pantins/demo/io"
+    assert endpoint.io_url == (
+        "http://127.0.0.1:4800/api/pantins/demo/io?transport=modbus_tcp_slave"
+    )
     assert endpoint.bus_url == "ws://127.0.0.1:4800/api/pantins/demo/bus"
     assert parse_core_endpoint("http://192.168.1.5:4800/", "demo").port == 4800
     assert parse_core_endpoint("http://localhost:4800", "demo").host == "localhost"

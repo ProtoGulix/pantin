@@ -13,7 +13,7 @@ let client: BusClient;
 beforeEach(async () => {
   axis = await startBusAxis();
   client = await connectBus(axis.server);
-  client.send({ type: "hello", version: 1, role: "client" });
+  client.send({ type: "hello", version: 2, role: "client" });
   await client.next("welcome");
 });
 

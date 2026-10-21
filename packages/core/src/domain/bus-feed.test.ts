@@ -1,4 +1,4 @@
-import type { ConsoleEntry, SimulationClockState, Tag } from "@pantin/protocol";
+import type { ConsoleEntry, SimulationClockState, Tag, TransportKind } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { emitter } from "../test-support/conveyor-fixtures.ts";
 import {
@@ -37,12 +37,19 @@ function consoleEntry(sequence: number): ConsoleEntry {
   };
 }
 
-function sourceOf(overrides: Partial<FeedSource> & { tagList?: Tag[] } = {}): FeedSource {
-  const { tagList = [tag("a.b.c", 0)], ...rest } = overrides;
+// `mappingId` is the id of the whole file; `projectionIds` those of the transports' projections.
+function sourceOf(
+  overrides: Partial<Omit<FeedSource, "mappingId">> & {
+    tagList?: Tag[];
+    mappingId?: string | null;
+    projectionIds?: Partial<Record<TransportKind, string | null>>;
+  } = {},
+): FeedSource {
+  const { tagList = [tag("a.b.c", 0)], mappingId = null, projectionIds = {}, ...rest } = overrides;
   return {
     stepCount: 0,
     document: DOCUMENT,
-    mappingId: null,
+    mappingId: (transport) => (transport === null ? mappingId : (projectionIds[transport] ?? null)),
     resetCount: 0,
     consoleId: "console-1",
     consoleLastSequence: 0,
@@ -65,7 +72,7 @@ describe("subscribedTags", () => {
 });
 
 describe("nextFeed tags", () => {
-  const start = initialFeedCursor(sourceOf(), 0);
+  const start = initialFeedCursor(sourceOf(), 0, null);
   const subscribed = subscribedCursor(start, "*", subscribedTags([tag("a.b.c", 0)], "*"));
 
   it("sends nothing for a connection with no subscription", () => {
@@ -100,7 +107,7 @@ describe("nextFeed tags", () => {
 
 describe("nextFeed console", () => {
   it("sends the entries after the last sequence it saw, and not the backlog", () => {
-    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 5 }), 0);
+    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 5 }), 0, null);
     const seen: number[] = [];
     const source = sourceOf({
       consoleLastSequence: 7,
@@ -116,7 +123,7 @@ describe("nextFeed console", () => {
   });
 
   it("reads a console it did not know from the start", () => {
-    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 5 }), 0);
+    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 5 }), 0, null);
     const seen: number[] = [];
     nextFeed(
       cursor,
@@ -135,7 +142,7 @@ describe("nextFeed console", () => {
 
 describe("nextFeed trace entries", () => {
   it("never sends a trace entry (ADR 0061 point 2)", () => {
-    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 0 }), 0);
+    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 0 }), 0, null);
     const trace: ConsoleEntry = {
       code: "sensor_changed",
       level: "trace",
@@ -158,7 +165,7 @@ describe("nextFeed trace entries", () => {
 });
 
 describe("nextFeed clock", () => {
-  const cursor = initialFeedCursor(sourceOf(), 10);
+  const cursor = initialFeedCursor(sourceOf(), 10, null);
 
   it("sends the clock of a running Pantin once a second", () => {
     expect(nextFeed(cursor, sourceOf({ clock: { ...CLOCK, step: 60 } }), 10.5).messages).toEqual(
@@ -192,7 +199,7 @@ describe("nextFeed clock", () => {
 });
 
 describe("nextFeed io_changed", () => {
-  const cursor = initialFeedCursor(sourceOf(), 0);
+  const cursor = initialFeedCursor(sourceOf(), 0, null);
 
   it("is sent once when the tag list changes", () => {
     const withEmitter = { ...DOCUMENT, emitters: [emitter()] };
@@ -204,7 +211,7 @@ describe("nextFeed io_changed", () => {
   it("is sent when a tag is re-keyed", () => {
     const before = { ...DOCUMENT, emitters: [emitter()] };
     const after = { ...DOCUMENT, emitters: [emitter({ tagKey: "feeder" })] };
-    const start = initialFeedCursor(sourceOf({ document: before }), 0);
+    const start = initialFeedCursor(sourceOf({ document: before }), 0, null);
     expect(nextFeed(start, sourceOf({ document: after }), 0).messages).toEqual([
       { type: "io_changed" },
     ]);
@@ -218,7 +225,7 @@ describe("nextFeed io_changed", () => {
 
 describe("nextFeed io_changed on a mapping change", () => {
   it("is sent once when the mapping id changes, and again for each new id", () => {
-    const start = initialFeedCursor(sourceOf({ mappingId: "a" }), 0);
+    const start = initialFeedCursor(sourceOf({ mappingId: "a" }), 0, null);
     const first = nextFeed(start, sourceOf({ mappingId: "b" }), 0);
     expect(first.messages).toEqual([{ type: "io_changed" }]);
     expect(nextFeed(first.cursor, sourceOf({ mappingId: "b" }), 0).messages).toEqual([]);
@@ -228,7 +235,7 @@ describe("nextFeed io_changed on a mapping change", () => {
   });
 
   it("is sent when the mapping appears or goes (id null)", () => {
-    const start = initialFeedCursor(sourceOf(), 0);
+    const start = initialFeedCursor(sourceOf(), 0, null);
     const appeared = nextFeed(start, sourceOf({ mappingId: "a" }), 0);
     expect(appeared.messages).toEqual([{ type: "io_changed" }]);
     expect(nextFeed(appeared.cursor, sourceOf(), 0).messages).toEqual([{ type: "io_changed" }]);
@@ -236,8 +243,55 @@ describe("nextFeed io_changed on a mapping change", () => {
 
   it("is sent once when the tag list and the mapping change together", () => {
     const after = { ...DOCUMENT, emitters: [emitter()] };
-    const start = initialFeedCursor(sourceOf({ mappingId: "a" }), 0);
+    const start = initialFeedCursor(sourceOf({ mappingId: "a" }), 0, null);
     const next = nextFeed(start, sourceOf({ document: after, mappingId: "b" }), 0);
     expect(next.messages).toEqual([{ type: "io_changed" }]);
+  });
+});
+
+describe("nextFeed io_changed for a plc connection (ADR 0065 point 7)", () => {
+  it("is sent when the projection of its own transport changes", () => {
+    const start = initialFeedCursor(
+      sourceOf({ projectionIds: { opcua_client: "a" } }),
+      0,
+      "opcua_client",
+    );
+    const next = nextFeed(start, sourceOf({ projectionIds: { opcua_client: "b" } }), 0);
+    expect(next.messages).toEqual([{ type: "io_changed" }]);
+  });
+
+  it("is not sent when only another transport's projection or the whole file changes", () => {
+    const start = initialFeedCursor(
+      sourceOf({ mappingId: "w", projectionIds: { modbus_tcp_slave: "m", opcua_client: "o" } }),
+      0,
+      "modbus_tcp_slave",
+    );
+    const changed = sourceOf({
+      mappingId: "w2",
+      projectionIds: { modbus_tcp_slave: "m", opcua_client: "o2" },
+    });
+    expect(nextFeed(start, changed, 0).messages).toEqual([]);
+  });
+
+  it("is not sent for a tag list change that leaves its projection as it was", () => {
+    const after = { ...DOCUMENT, emitters: [emitter()] };
+    const start = initialFeedCursor(
+      sourceOf({ projectionIds: { modbus_tcp_slave: "m" } }),
+      0,
+      "modbus_tcp_slave",
+    );
+    const next = nextFeed(
+      start,
+      sourceOf({ document: after, projectionIds: { modbus_tcp_slave: "m" } }),
+      0,
+    );
+    expect(next.messages).toEqual([]);
+  });
+
+  it("goes to a client connection for a change of the whole file", () => {
+    const start = initialFeedCursor(sourceOf({ mappingId: "w" }), 0, null);
+    expect(nextFeed(start, sourceOf({ mappingId: "w2" }), 0).messages).toEqual([
+      { type: "io_changed" },
+    ]);
   });
 });

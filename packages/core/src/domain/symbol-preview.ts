@@ -44,15 +44,20 @@ function summaryOf({ symbol, reference }: ReferencedSymbol): SymbolSummary {
 
 /** The signals that have a channel: one per tag, with all its channels. */
 function mappedSignalsOf(document: IoDocument, tags: readonly IoTag[]): MappedSignal[] {
-  const typeByTag = new Map(tags.map((tag) => [tag.name, tag.type]));
+  const shapeByTag = new Map(tags.map((tag) => [tag.name, tag]));
   const byTag = new Map<string, MappedSignal>();
   for (const module of document.modules) {
     for (const channel of module.channels) {
-      const type = typeByTag.get(channel.tag);
-      if (type === undefined) {
+      const shape = shapeByTag.get(channel.tag);
+      if (shape === undefined) {
         continue;
       }
-      const signal = byTag.get(channel.tag) ?? { tag: channel.tag, type, channels: [] };
+      const signal = byTag.get(channel.tag) ?? {
+        tag: channel.tag,
+        type: shape.type,
+        direction: shape.direction,
+        channels: [],
+      };
       signal.channels.push({ module, channel });
       byTag.set(channel.tag, signal);
     }
@@ -71,7 +76,7 @@ function matchesOfChannels({ signal, symbol, rule }: SignalMatch): SymbolMatch[]
     const transportWarnings =
       assessment.compatibility === "incompatible"
         ? []
-        : rulesOf(module.transport).symbolWarnings(channel, symbol.symbol);
+        : rulesOf(module.transport).symbolWarnings(channel, symbol.symbol, signal);
     const unchanged = rule === "exact" && channelNamesSymbol(channel, symbol);
     return {
       module: module.key,

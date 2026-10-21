@@ -9,5 +9,6 @@ export function fakeMappingSource(
   rows: readonly IoMappingRow[],
   mappingId = PLC_MAPPING_ID,
 ): IoMappingSource {
-  return { read: async () => ({ mappingId, rows }) };
+  const moduleKeys = [...new Set(rows.map((row) => row.module))];
+  return { read: async () => ({ mappingId, moduleKeys, rows }) };
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MODBUS_TCP_SLAVE_RULES } from "./rules.ts";
 import { modbusSymbolWarnings } from "./rules-symbols.ts";
 
 const channel = (ioType: "BOOL" | "REAL" | "DINT") => ({
@@ -31,5 +32,21 @@ describe("modbusSymbolWarnings", () => {
       [],
     );
     expect(modbusSymbolWarnings(channel("DINT"), { iecType: "DINT", access: "read" })).toEqual([]);
+  });
+});
+
+describe("the Modbus rules hook, which is given the direction too", () => {
+  it("answers as modbusSymbolWarnings does, whatever the access and the direction", () => {
+    const real = channel("REAL");
+    for (const access of ["read", "write", "read_write", "unknown"] as const) {
+      for (const direction of ["command", "feedback"] as const) {
+        for (const iecType of ["REAL", "LREAL"]) {
+          const symbol = { iecType, access };
+          expect(
+            MODBUS_TCP_SLAVE_RULES.symbolWarnings(real, symbol, { type: "float", direction }),
+          ).toEqual(modbusSymbolWarnings(real, symbol));
+        }
+      }
+    }
   });
 });

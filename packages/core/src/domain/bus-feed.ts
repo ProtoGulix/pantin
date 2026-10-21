@@ -5,6 +5,7 @@ import type {
   SimulationClockState,
   Tag,
   TagBusServerMessage,
+  TransportKind,
 } from "@pantin/protocol";
 import { tagListSignature } from "./tags.ts";
 
@@ -17,8 +18,9 @@ export type Subscription = "*" | ReadonlySet<string>;
 export type FeedSource = {
   stepCount: number;
   document: PantinDocument;
-  // The open mapping's id (ADR 0049 point 7); null when it is missing or unreadable.
-  mappingId: string | null;
+  // The open mapping's id (ADR 0049 point 7), whole when `transport` is null and projected
+  // on that transport otherwise (ADR 0065 point 7); null when it is missing or unreadable.
+  mappingId(transport: TransportKind | null): string | null;
   // Counts the runtime resets and discards (ADR 0012 point 7).
   resetCount: number;
   consoleId: string;
@@ -30,6 +32,8 @@ export type FeedSource = {
 };
 
 export type FeedCursor = {
+  // The transport a plc connection serves; null for a client, which follows the whole file.
+  transport: TransportKind | null;
   resetCount: number;
   document: PantinDocument;
   mappingId: string | null;
@@ -45,11 +49,16 @@ export type FeedCursor = {
 const CLOCK_MESSAGE_SECONDS = 1;
 
 /** A connection that just said hello sees console entries from now on, not the backlog. */
-export function initialFeedCursor(source: FeedSource, now: number): FeedCursor {
+export function initialFeedCursor(
+  source: FeedSource,
+  now: number,
+  transport: TransportKind | null,
+): FeedCursor {
   return {
+    transport,
     resetCount: source.resetCount,
     document: source.document,
-    mappingId: source.mappingId,
+    mappingId: source.mappingId(transport),
     tagListSignature: tagListSignature(source.document),
     consoleId: source.consoleId,
     consoleSequence: source.consoleLastSequence,
@@ -145,15 +154,18 @@ export function nextFeed(
     source.document === cursor.document
       ? cursor.tagListSignature
       : tagListSignature(source.document);
-  // One message even when the tag list and the mapping both changed: the
-  // bridge exits on the first (ADR 0049 point 7).
-  if (signature !== cursor.tagListSignature || source.mappingId !== cursor.mappingId) {
+  const mappingId = source.mappingId(cursor.transport);
+  // One message even when the tag list and the mapping both changed: the bridge exits on
+  // the first (ADR 0049 point 7). A plc connection hears of its own projection only, which
+  // already holds the type and direction of its tags (ADR 0065 point 7).
+  const tagListChanged = cursor.transport === null && signature !== cursor.tagListSignature;
+  if (tagListChanged || mappingId !== cursor.mappingId) {
     messages.push({ type: "io_changed" });
   }
   next = {
     ...next,
     document: source.document,
-    mappingId: source.mappingId,
+    mappingId,
     tagListSignature: signature,
   };
   const tags = tagMessages(next, source);

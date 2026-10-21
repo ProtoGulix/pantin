@@ -1,5 +1,5 @@
 import type { PlcSymbol } from "@pantin/plc-symbol-formats/model";
-import type { IoChannel, IoModule, SymbolMatchRule, TagType } from "@pantin/protocol";
+import type { IoChannel, IoModule, SymbolMatchRule, TagDirection, TagType } from "@pantin/protocol";
 import { deriveVariable } from "./io-identifiers.ts";
 
 // Matching PLC symbols to mapped signals (ADR 0064 point 12): pure. Candidates are
@@ -11,6 +11,7 @@ import { deriveVariable } from "./io-identifiers.ts";
 export interface MappedSignal {
   tag: string;
   type: TagType;
+  direction: TagDirection;
   channels: { module: IoModule; channel: IoChannel }[];
 }
 

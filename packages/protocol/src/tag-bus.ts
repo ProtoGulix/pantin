@@ -1,8 +1,10 @@
+import { TransportKindSchema } from "@pantin/transport-types/schemas";
 import { z } from "zod";
 import { ApiErrorCodeSchema } from "./api.ts";
 import { SimulationClockStateSchema } from "./clock.ts";
 import { ConsoleEntrySchema } from "./console.ts";
 import { KeySchema } from "./ids.ts";
+import { PlcModuleLossReasonSchema } from "./plc-link.ts";
 import { TagNameSchema, TagValueSchema } from "./tag.ts";
 
 // The tag bus (ADR 0045 point 4, CLAUDE.md section 9): JSON text frames over a
@@ -21,7 +23,9 @@ import { TagNameSchema, TagValueSchema } from "./tag.ts";
 // (ADR 0045 point 4): a `client` connection writes as a client and its writes
 // force their tag, a `plc` connection writes as the PLC.
 
-export const TAG_BUS_VERSION = 1;
+// Version 2 (ADR 0065): a plc `hello` names its transport and carries the id of that
+// transport's projection of the mapping; there is one plc connection per (Pantin, transport).
+export const TAG_BUS_VERSION = 2;
 export const TAG_BUS_MAX_MESSAGE_BYTES = 64 * 1024;
 export const TAG_BUS_MAX_CONNECTIONS = 16;
 export const TAG_BUS_HELLO_TIMEOUT_SECONDS = 5;
@@ -54,18 +58,28 @@ const MappingIdSchema = z.string().min(1).max(128);
 // --- client to core ---------------------------------------------------------
 
 // `version` is any positive integer so that an unsupported one is told apart
-// from a malformed message (close 4001, not 4000). A plc says which mapping it
-// was started with; a client has none.
+// from a malformed message (close 4001, not 4000). A plc says which transport it
+// serves and which projection of the mapping it was started with; a client has
+// neither. A version 1 plc hello has no transport: it is refused by version, not
+// as malformed.
 const HelloSchema = z
   .object({
     type: z.literal("hello"),
     version: z.number().int().positive(),
     role: TagBusRoleSchema,
+    transport: TransportKindSchema.optional(),
     mappingId: MappingIdSchema.optional(),
   })
   .refine((hello) => (hello.role === "plc") === (hello.mappingId !== undefined), {
     message: 'A "plc" hello carries a mappingId, a "client" hello does not.',
-  });
+  })
+  .refine(
+    (hello) =>
+      hello.role === "plc"
+        ? hello.version < TAG_BUS_VERSION || hello.transport !== undefined
+        : hello.transport === undefined,
+    { message: 'A "plc" hello carries a transport, a "client" hello does not.' },
+  );
 
 // Replaces the previous subscription; answered by `snapshot`.
 const SubscribeSchema = z.object({
@@ -93,13 +107,13 @@ const ReleaseSchema = z
   });
 
 // `plc` role only. A module is connected with no reason, disconnected with the
-// reason the bridge saw: its last connection closed, or its watchdog expired.
+// reason the bridge saw.
 const PlcStatusSchema = z
   .object({
     type: z.literal("plc_status"),
     module: KeySchema,
     connected: z.boolean(),
-    reason: z.enum(["closed", "timeout"]).nullable(),
+    reason: PlcModuleLossReasonSchema.nullable(),
   })
   .refine((status) => status.connected === (status.reason === null), {
     message: "A connected module has no reason, a disconnected one has one.",

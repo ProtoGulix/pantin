@@ -124,8 +124,10 @@ def test_a_proxy_environment_is_ignored_for_the_io_call_and_the_bus(
         async with FakeCore(answer) as core:
             await asyncio.to_thread(fetch_io_mapping, parse_core_endpoint(core.url, "demo"))
             client, _welcome = await BusClient.open(
-                f"ws://127.0.0.1:{core.port}/api/pantins/demo/bus", "id"
+                f"ws://127.0.0.1:{core.port}/api/pantins/demo/bus", "modbus_tcp_slave", "id"
             )
+            # The bridge reads the projection of the one transport it serves (ADR 0065).
+            assert core.io_queries == ["transport=modbus_tcp_slave"]
             await client.close()
 
     asyncio.run(scenario())

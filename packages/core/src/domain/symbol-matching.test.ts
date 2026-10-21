@@ -29,7 +29,7 @@ function signal(tag: string, variable: string): MappedSignal {
     comment: "",
     modbus: { zone: "coil", address: 0, ioType: "BOOL" },
   };
-  return { tag, type: "bit", channels: [{ module: MODULE, channel }] };
+  return { tag, type: "bit", direction: "command", channels: [{ module: MODULE, channel }] };
 }
 
 function symbol(...path: string[]): ReferencedSymbol {

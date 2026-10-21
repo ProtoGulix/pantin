@@ -24,6 +24,7 @@ export * from "./pantin.ts";
 export * from "./pantin-conveyors.ts";
 export * from "./pantin-joint-tree.ts";
 export * from "./placement.ts";
+export * from "./plc-link.ts";
 export * from "./redundant-joints-api.ts";
 export * from "./sensor.ts";
 export * from "./sensor-api.ts";

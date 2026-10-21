@@ -512,6 +512,8 @@
   "console.code.clock_paused_with_bridge": "Simulation en pause alors qu'un pont automate est connecté : l'automate voit une machine figée.",
   "console.reason.closed": "connexion fermée",
   "console.reason.timeout": "plus de réponse dans le délai",
+  "console.reason.node_mismatch": "les noeuds de l'automate ne correspondent pas au mapping",
+  "console.reason.certificate_rejected": "l'automate a refusé le certificat de Pantin",
   "message.clockResume": "La simulation de ce Pantin n'a pas pu être reprise à l'ouverture : elle est peut-être en pause. Utilisez le bouton Reprendre de la barre de simulation.",
   "clock.label": "Contrôle de la simulation",
   "clock.run": "Reprendre",

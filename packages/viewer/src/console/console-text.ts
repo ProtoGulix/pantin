@@ -1,4 +1,4 @@
-import type { ConsoleEntry, DriveDiagnostic } from "@pantin/protocol";
+import type { ConsoleEntry, DriveDiagnostic, PlcModuleLossReason } from "@pantin/protocol";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 
 // The wording of a console entry (ADR 0031 point 2): the core sends a code and
@@ -17,7 +17,9 @@ const FAULT_KEYS = {
 const LOSS_REASON_KEYS = {
   closed: "console.reason.closed",
   timeout: "console.reason.timeout",
-} as const satisfies Record<"closed" | "timeout", MessageKey>;
+  node_mismatch: "console.reason.node_mismatch",
+  certificate_rejected: "console.reason.certificate_rejected",
+} as const satisfies Record<PlcModuleLossReason, MessageKey>;
 
 export interface ConsoleWording {
   text: string;

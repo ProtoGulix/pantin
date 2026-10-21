@@ -4,6 +4,7 @@ import type {
   IoDocument,
   IoMappingResponse,
   PantinId,
+  TransportKind,
   UpdateIoChannelRequest,
   UpdateIoModuleRequest,
 } from "@pantin/protocol";
@@ -21,17 +22,19 @@ import { loadPantin, type OpenPantin, type ServiceContext } from "./open-pantins
 // edited in memory like the document, checked against the open document's tags,
 // unsaved edits included.
 
-function answerOf(openPantin: OpenPantin): IoMappingResponse {
-  return evaluateIoMapping(openPantin.io, ioTagsOf(openPantin.document));
+function answerOf(openPantin: OpenPantin, transport?: TransportKind): IoMappingResponse {
+  return evaluateIoMapping(openPantin.io, ioTagsOf(openPantin.document), transport);
 }
 
+/** The mapping, whole or, with a `transport`, projected on that kind (ADR 0065 point 7). */
 export async function readIo(
   context: ServiceContext,
   pantinId: PantinId,
+  transport?: TransportKind,
 ): Promise<IoMappingResponse> {
   const openPantin = await loadPantin(context, pantinId);
   alignIo(openPantin);
-  return answerOf(openPantin);
+  return answerOf(openPantin, transport);
 }
 
 // An edit never merges with a source it cannot trust (ADR 0049 point 6).
@@ -115,12 +118,12 @@ export function ioEditOperations(context: ServiceContext) {
 
 /** The bus's mapping source over the same code as the route: valid, or null. */
 export function serviceMappingSource(service: {
-  readIo(pantinId: PantinId): Promise<IoMappingResponse>;
+  readIo(pantinId: PantinId, transport?: TransportKind): Promise<IoMappingResponse>;
 }): IoMappingSource {
   return {
-    read: async (pantinId) => {
+    read: async (pantinId, transport) => {
       try {
-        return mappingOf(await service.readIo(pantinId));
+        return mappingOf(await service.readIo(pantinId, transport));
       } catch (error) {
         // A Pantin that vanished or went invalid since the upgrade has no mapping.
         if (error instanceof ApiError) {

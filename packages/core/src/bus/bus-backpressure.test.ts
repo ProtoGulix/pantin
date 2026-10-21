@@ -26,6 +26,7 @@ const SERVICE = {
     consoleLastSequence: 0,
     readConsole: () => [],
     clock: CLOCK,
+    mappingId: () => null,
     tags: () => [],
   }),
 } as unknown as BusService; // Only peekFeedSource is reached by a client hello.
@@ -54,7 +55,7 @@ async function helloWithBuffered(bufferedBytes: number): Promise<number[]> {
   });
   registry
     .attach(socket, { pantinId: "axis", remoteAddress: "127.0.0.1" })
-    ?.receive(JSON.stringify({ type: "hello", version: 1, role: "client" }), false);
+    ?.receive(JSON.stringify({ type: "hello", version: 2, role: "client" }), false);
   await new Promise((resolve) => setImmediate(resolve));
   registry.closeAll();
   return closes;

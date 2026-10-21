@@ -2,6 +2,7 @@ import { DRIVE_DIAGNOSTICS } from "@pantin/drive-types/schemas";
 import { z } from "zod";
 import { BridgeFailureKindSchema } from "./bridge.ts";
 import { EmitterIdSchema, KeySchema } from "./ids.ts";
+import { PlcModuleLossReasonSchema } from "./plc-link.ts";
 import { TagNameSchema } from "./tag.ts";
 
 // The files of a Pantin folder that Pantin watches for outside edits (ADR 0063).
@@ -46,7 +47,7 @@ export const ParamsSchemas = {
   // within its watchdog time. The bridge process itself: same reasons, the
   // bus connection closed or missed its pongs.
   plc_module: z.object({ module: KeySchema }),
-  plc_module_lost: z.object({ module: KeySchema, reason: z.enum(["closed", "timeout"]) }),
+  plc_module_lost: z.object({ module: KeySchema, reason: PlcModuleLossReasonSchema }),
   bridge_lost: z.object({ reason: z.enum(["closed", "timeout"]) }),
   // ADR 0050 point 3: the supervised bridge failed; `message` is the bridge's
   // own English text, cut to keep entries small.

@@ -40,7 +40,11 @@ afterEach(async () => {
 });
 
 async function currentMappingId(): Promise<string> {
-  const response = await sendRaw(axis.server, "GET", "/api/pantins/axis/io");
+  const response = await sendRaw(
+    axis.server,
+    "GET",
+    "/api/pantins/axis/io?transport=modbus_tcp_slave",
+  );
   const id = IoMappingResponseSchema.parse(response.json).mappingId;
   if (id === null) {
     throw new Error("The mapping should exist.");
@@ -51,7 +55,7 @@ async function currentMappingId(): Promise<string> {
 async function helloPlc(mappingId: string): Promise<BusClient> {
   const plc = await connectBus(axis.server);
   clients.push(plc);
-  plc.send({ type: "hello", version: 1, role: "plc", mappingId });
+  plc.send({ type: "hello", version: 2, role: "plc", transport: "modbus_tcp_slave", mappingId });
   return plc;
 }
 
@@ -86,7 +90,13 @@ describe("plc hello on the real mapping", () => {
     try {
       const plc = await connectBus(bare.server);
       clients.push(plc);
-      plc.send({ type: "hello", version: 1, role: "plc", mappingId: "anything" });
+      plc.send({
+        type: "hello",
+        version: 2,
+        role: "plc",
+        transport: "modbus_tcp_slave",
+        mappingId: "anything",
+      });
       expect((await plc.closed).code).toBe(TAG_BUS_CLOSE_CODES.mappingMismatch);
     } finally {
       await bare.close();
@@ -96,7 +106,7 @@ describe("plc hello on the real mapping", () => {
   it("stays welcome to a client, which needs no mapping", async () => {
     const client = await connectBus(axis.server);
     clients.push(client);
-    client.send({ type: "hello", version: 1, role: "client" });
+    client.send({ type: "hello", version: 2, role: "client" });
     expect((await client.next("welcome")).type).toBe("welcome");
   });
 });
@@ -149,7 +159,7 @@ describe("io_changed on a mapping change", () => {
   async function connectedClient(): Promise<BusClient> {
     const client = await connectBus(axis.server);
     clients.push(client);
-    client.send({ type: "hello", version: 1, role: "client" });
+    client.send({ type: "hello", version: 2, role: "client" });
     await client.next("welcome");
     return client;
   }

@@ -108,3 +108,27 @@ describe("the commands read a version 1 io.json", () => {
     expect(result.stderr).toBe("");
   });
 });
+
+describe("pantin gvl, OPC UA modules (ADR 0065 point 3)", () => {
+  it("writes the GVL name each OPC UA module expects in the header", async () => {
+    await runCli(["io", "init", folder]);
+    const document = await ioJson();
+    document.modules.push({
+      key: "plc",
+      transport: { kind: "opcua_client", namespaceUri: "urn:plc", gvlName: "GVL_Sim" },
+      channels: [
+        {
+          tag: "axis.stroke.position",
+          variable: "stroke_position",
+          comment: "",
+          opcua: { identifier: null, iecType: "REAL" },
+        },
+      ],
+    });
+    await writeFile(ioPath(), JSON.stringify(document, null, 2));
+    const result = await runCli(["gvl", folder]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("// Paste this list into a GVL named GVL_Sim (module plc).");
+    expect(result.stdout).toContain("  stroke_position : REAL;");
+  });
+});

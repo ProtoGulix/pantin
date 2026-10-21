@@ -4,8 +4,11 @@ import type {
   IoMappingResponse,
   IoProblem,
   PantinDocument,
+  TransportKind,
 } from "@pantin/protocol";
 import { type IoReading, mappingIdOf } from "./io-document-text.ts";
+import { projectMapping } from "./io-projection.ts";
+import { rulesOf } from "./io-transports.ts";
 import { type IoTag, validateIoDocument } from "./io-validation.ts";
 import { type TagOwner, tagEntries } from "./tag-entries.ts";
 
@@ -43,8 +46,11 @@ function annotated(document: IoDocument, tags: readonly IoTag[]): IoMappingRespo
     ...module,
     channels: module.channels.map((channel): IoMappedChannel => {
       const tag = byName.get(channel.tag);
+      // The transport's resolved sub-object replaces the file's, which it extends.
+      const { opcua: _file, ...common } = channel;
       return {
-        ...channel,
+        ...common,
+        ...rulesOf(module.transport).resolvedChannelFields(module.transport, channel),
         tagType: tag?.type ?? null,
         direction: tag?.direction ?? null,
         owner: tag?.owner ?? null,
@@ -61,8 +67,7 @@ function statusOf(problems: readonly IoProblem[]): IoMappingResponse["status"] {
   return problems.length === 0 ? "valid" : "invalid";
 }
 
-/** Checks the open mapping against the tags of the open document. */
-export function evaluateIoMapping(reading: IoReading, tags: readonly IoTag[]): IoMappingResponse {
+function evaluateWholeMapping(reading: IoReading, tags: readonly IoTag[]): IoMappingResponse {
   if (reading.kind === "missing") {
     return {
       status: "missing",
@@ -89,4 +94,17 @@ export function evaluateIoMapping(reading: IoReading, tags: readonly IoTag[]): I
     problems: validation.problems,
     unmappedTags: validation.unmappedTags,
   };
+}
+
+/**
+ * Checks the open mapping against the tags of the open document. With a `transport`, the
+ * answer is the projection on that kind (ADR 0065 point 7).
+ */
+export function evaluateIoMapping(
+  reading: IoReading,
+  tags: readonly IoTag[],
+  transport?: TransportKind,
+): IoMappingResponse {
+  const whole = evaluateWholeMapping(reading, tags);
+  return transport === undefined ? whole : projectMapping(whole, reading, tags, transport);
 }

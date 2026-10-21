@@ -8,6 +8,23 @@ All notable changes to Pantin. The format follows
 
 ### Added
 
+- OPC UA client, slice S1 (ADR 0065): the `opcua_client` transport in
+  `@pantin/transport-types` (settings and defaults, the security pair rule, the IEC type
+  table, channel `opcua: { identifier, iecType }`, problems `security_mismatch`,
+  `namespace_missing`, `identifier_invalid`, `iec_type_mismatch` and `gvl_name_mismatch`),
+  and `TransportRules` gains `network`, `bridgeModules`, `variableScope` and
+  `resolvedChannelFields`. The core derives each channel's NodeId (`opcua.resolvedIdentifier`
+  in `GET .../io`). `GET .../io?transport=<kind>` answers the projection of the mapping on one
+  kind, with its own status, problems and `mappingId`: an invalid OPC UA module no longer
+  blocks or restarts the Modbus bridge, and the bridge start check reads the projection.
+  `pantin gvl` names the GVL each OPC UA module expects. The viewer does not create an OPC UA module yet (S5), and the guide
+  says that OPC UA connection is not available (Connect a PLC, the I/O view reference).
+- Tag bus version 2 (ADR 0065 point 7): a `plc` hello carries its `transport` and the id of that
+  transport's projection, there is one `plc` connection per (Pantin, transport), `io_changed`
+  goes only to the connections whose projection changed, the watchdog zeroes the commands of
+  the lost transport only, and `plc_status.reason` gains `node_mismatch` and
+  `certificate_rejected`. The Python bridge speaks version 2 and reads its projection.
+
 - ADR 0065, accepted, and spike 0013 (node-opcua 2.186.17 measured). Decisions only,
   the slices follow: an OPC UA client bridge in TypeScript, spawned by the core next to the
   Modbus bridge, with the PLC address chosen at each start and never saved, Sign and
@@ -166,6 +183,8 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Breaking (0.2), ADR 0065 S1: the tag bus is at version 2. A version 1 `plc` hello is refused
+  with close code 4001, and a `plc` hello without a transport is a malformed message (4000).
 - Viewer (ADR 0064 point 14): the I/O view is laid out by module. A strip of modules sits on
   top, then one section per module with a text subtitle (for example "Modbus TCP slave · Port
   1502 · Unit id 1"), its settings on a compact row and its channel table (Signal, Unit,

@@ -512,6 +512,8 @@
   "console.code.clock_paused_with_bridge": "Simulation paused while a PLC bridge is connected: the PLC sees a frozen machine.",
   "console.reason.closed": "connection closed",
   "console.reason.timeout": "no answer in time",
+  "console.reason.node_mismatch": "the PLC's nodes do not match the mapping",
+  "console.reason.certificate_rejected": "the PLC refused Pantin's certificate",
   "message.clockResume": "The simulation of this Pantin could not be resumed on opening: it may be paused. Use the Resume button of the simulation bar.",
   "clock.label": "Simulation control",
   "clock.run": "Resume",

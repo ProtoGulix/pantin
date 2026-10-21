@@ -1,4 +1,9 @@
-import type { BridgeNetwork, BridgeStatus, PantinId } from "@pantin/protocol";
+import {
+  type BridgeNetwork,
+  type BridgeStatus,
+  MODBUS_TCP_SLAVE_KIND,
+  type PantinId,
+} from "@pantin/protocol";
 import type { ProcessSpawner } from "../converter/process-runner.ts";
 import {
   checkBridgeStart,
@@ -227,7 +232,9 @@ async function startBridge(
     throw new ApiError("bridge_unavailable", UNAVAILABLE_MESSAGE);
   }
   refuseWhenClosed(context);
-  const mapping = await options.service.readIo(pantinId);
+  // The projection: an OPC UA module still missing its namespace must not block a Modbus
+  // start (ADR 0065 point 7). The supervisor is per Pantin and Modbus until slice S2.
+  const mapping = await options.service.readIo(pantinId, MODBUS_TCP_SLAVE_KIND);
   const modules = modbusModulesOf(mapping.modules);
   refuseWhenClosed(context);
   const result = checkBridgeStart(pantinId, request, {

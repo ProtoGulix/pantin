@@ -16,7 +16,7 @@ afterEach(async () => {
 async function openClient(autoPong: boolean): Promise<void> {
   axis = await startBusAxis();
   client = await connectBus(axis.server, { autoPong });
-  client.send({ type: "hello", version: 1, role: "client" });
+  client.send({ type: "hello", version: 2, role: "client" });
   await client.next("welcome");
 }
 
