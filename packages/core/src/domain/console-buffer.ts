@@ -56,6 +56,18 @@ function foldTargetIndex(entries: readonly ConsoleEntry[], event: ConsoleEvent):
   return -1;
 }
 
+// ADR 0061 point 5: when the buffer is over capacity, the oldest trace entry
+// goes first, so that a flood of sensor lines cannot push out an error. An
+// older entry of another level only goes when no trace entry is left.
+function evictBeyondCapacity(entries: readonly ConsoleEntry[]): readonly ConsoleEntry[] {
+  if (entries.length <= CONSOLE_CAPACITY) {
+    return entries;
+  }
+  const oldestTraceIndex = entries.findIndex((entry) => entry.level === "trace");
+  const evictedIndex = oldestTraceIndex === -1 ? 0 : oldestTraceIndex;
+  return entries.filter((_, index) => index !== evictedIndex);
+}
+
 // A repeat folds into its earlier entry: count + 1, the times of the latest
 // occurrence, and a new sequence, with the entry moving to the end so that
 // order follows sequence and a client reading "after" gets it again.
@@ -80,13 +92,18 @@ export function appendConsoleEvent(
   const entry = { ...event, ...stamp, sequence, firstSequence: sequence, count: 1 } as ConsoleEntry;
   return {
     ...buffer,
-    entries: [...buffer.entries, entry].slice(-CONSOLE_CAPACITY),
+    entries: evictBeyondCapacity([...buffer.entries, entry]),
     lastSequence: sequence,
   };
 }
 
-export function readConsoleAfter(buffer: ConsoleBuffer, after: number): ConsoleResponse {
+export function readConsoleAfter(
+  buffer: ConsoleBuffer,
+  after: number,
+  verbose: boolean,
+): ConsoleResponse {
   return {
+    verbose,
     consoleId: buffer.id,
     entries: buffer.entries.filter((entry) => entry.sequence > after),
     lastSequence: buffer.lastSequence,

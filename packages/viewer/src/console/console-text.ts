@@ -80,6 +80,8 @@ export function consoleWording(entry: ConsoleEntry, t: Translate): ConsoleWordin
       return { text: t(`console.code.${entry.code}`), detail: null };
     case "emitter_blocked":
     case "product_limit":
+    case "sensor_changed":
+    case "trace_dropped":
       return { text: t(`console.code.${entry.code}`, entry.params), detail: null };
     case "physics_rebuilt":
       return { text: t("console.code.physics_rebuilt", entry.params), detail: null };

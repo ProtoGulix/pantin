@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   inspectorOpen: "pantin.viewer.inspectorOpen",
   collapsedGroups: "pantin.viewer.collapsedGroups",
   jointStarLegend: "pantin.viewer.jointStarLegend",
+  consoleVerbose: "pantin.viewer.consoleVerbose",
 } as const;
 
 export function readStoredText(key: string): string | null {

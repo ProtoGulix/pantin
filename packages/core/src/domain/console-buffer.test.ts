@@ -129,15 +129,15 @@ describe("folding alternations in the console buffer", () => {
 describe("reading the console buffer after a sequence", () => {
   it("returns the entries after it, and the last sequence", () => {
     const buffer = appendAll([migrated(1), migrated(2), migrated(3)]);
-    const answer = readConsoleAfter(buffer, 1);
+    const answer = readConsoleAfter(buffer, 1, false);
     expect(answer.entries.map((entry) => entry.sequence)).toEqual([2, 3]);
     expect(answer.lastSequence).toBe(3);
-    expect(readConsoleAfter(buffer, 3).entries).toEqual([]);
+    expect(readConsoleAfter(buffer, 3, false).entries).toEqual([]);
   });
 
   it("returns a folded entry again, so that a client sees its count grow", () => {
     const read = appendAll([migrated(1)]);
     const folded = appendConsoleEvent(read, migrated(1), LATER);
-    expect(readConsoleAfter(folded, read.lastSequence).entries[0]?.count).toBe(2);
+    expect(readConsoleAfter(folded, read.lastSequence, false).entries[0]?.count).toBe(2);
   });
 });

@@ -1,14 +1,18 @@
 import type { ConsoleEntry } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "../i18n/translate.ts";
-import { answerOf, consolePantin, entryOf } from "./console-fixtures.ts";
+import { answerOf, consolePantin, entryOf, traceOf } from "./console-fixtures.ts";
 import {
   type ClientConsole,
   clearConsoleLines,
   EMPTY_CLIENT_CONSOLE,
   mergeConsoleResponse,
 } from "./console-list.ts";
-import { INITIAL_CONSOLE_STATE, withConsoleLevelToggled } from "./console-state.ts";
+import {
+  INITIAL_CONSOLE_STATE,
+  withConsoleLevelToggled,
+  withConsoleVerbose,
+} from "./console-state.ts";
 import { buildConsoleView, consoleCounter } from "./console-view.ts";
 
 const t = createTranslator("fr");
@@ -104,6 +108,38 @@ describe("the console view", () => {
       activatable: false,
       sourceLabel: "gone (supprimé)",
     });
+  });
+});
+
+describe("verbose mode in the console view (ADR 0061)", () => {
+  const list = read(error(1), traceOf(2), traceOf(3, { firstSequence: 3 }));
+  const verbose = withConsoleVerbose(INITIAL_CONSOLE_STATE, true);
+
+  it("hides the trace lines already received while verbose is off", () => {
+    expect(view(list).lines.map((line) => line.level)).toEqual(["error"]);
+    expect(view(list, verbose).lines.map((line) => line.level)).toEqual([
+      "error",
+      "trace",
+      "trace",
+    ]);
+  });
+
+  it("shows the toggle as the core reports it, with its labels", () => {
+    expect(view(list).verbose).toMatchObject({ label: "Détaillé", pressed: false });
+    expect(view(list, verbose).verbose.pressed).toBe(true);
+    const english = buildConsoleView(verbose, list, consolePantin, "en", createTranslator("en"));
+    expect(english?.verbose.label).toBe("Verbose");
+  });
+
+  it("gives a trace line its level label and keeps it out of the counter and the filters", () => {
+    const traces = read(traceOf(1), traceOf(2, { firstSequence: 2 }));
+    expect(view(traces, verbose).lines[0]?.levelLabel).toBe("Trace");
+    expect(consoleCounter(traces, t, "fr")).toMatchObject({ errors: 0, warnings: 0 });
+    expect(view(traces, verbose).filters.map((filter) => filter.level)).not.toContain("trace");
+  });
+
+  it("calls the console empty when only hidden trace lines were received", () => {
+    expect(view(read(traceOf(1))).emptyText).toBe("Rien à signaler pour ce Pantin.");
   });
 });
 

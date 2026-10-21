@@ -74,6 +74,8 @@ _CONSOLE_LEVELS: Final = {
     "bridge_failed": "error",
     "bridge_log": "warning",
     "clock_paused_with_bridge": "warning",
+    "sensor_changed": "trace",
+    "trace_dropped": "info",
 }
 
 

@@ -46,10 +46,30 @@ export function entryOf(sequence: number, overrides: Partial<ConsoleEntry> = {})
   });
 }
 
+/** A trace entry of sensor `e1`; override what a test is about. */
+export function traceOf(
+  sequence: number,
+  overrides: { firstSequence?: number; count?: number } = {},
+): ConsoleEntry {
+  return ConsoleEntrySchema.parse({
+    sequence,
+    firstSequence: sequence,
+    wallTime: "2026-10-01T12:00:00.000Z",
+    simulationTime: 1.5,
+    count: 1,
+    code: "sensor_changed",
+    level: "trace",
+    source: { kind: "sensor", id: "e1" },
+    params: { tag: "press.e1.extended", value: 1 },
+    ...overrides,
+  });
+}
+
 export function answerOf(
   entries: ConsoleEntry[],
   consoleId = "console-1",
   lastSequence = Math.max(0, ...entries.map((entry) => entry.sequence)),
+  verbose = false,
 ): ConsoleResponse {
-  return { entries, consoleId, lastSequence };
+  return { entries, consoleId, lastSequence, verbose };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerOf, entryOf } from "./console-fixtures.ts";
+import { answerOf, entryOf, traceOf } from "./console-fixtures.ts";
 import {
   CONSOLE_CLIENT_LIMIT,
   clearConsoleLines,
@@ -73,6 +73,33 @@ describe("the cap of the client list", () => {
     expect(list.entries).toHaveLength(CONSOLE_CLIENT_LIMIT);
     expect(list.entries.at(-1)?.firstSequence).toBe(500);
     expect(list.entries[0]?.sequence).toBe(1);
+  });
+});
+
+describe("the eviction of the client list (ADR 0061 point 5)", () => {
+  it("drops the oldest trace line before an older error", () => {
+    const entries = [
+      entryOf(1),
+      traceOf(2),
+      traceOf(3),
+      ...Array.from({ length: CONSOLE_CLIENT_LIMIT - 3 }, (_, index) => entryOf(index + 4)),
+      entryOf(CONSOLE_CLIENT_LIMIT + 1),
+    ];
+    const sequences = merged(answerOf(entries)).entries.map((entry) => entry.sequence);
+    expect(sequences).toHaveLength(CONSOLE_CLIENT_LIMIT);
+    expect(sequences).not.toContain(2);
+    expect(sequences).toContain(1);
+    expect(sequences).toContain(3);
+  });
+
+  it("drops the oldest line of any level once no trace line is left", () => {
+    const entries = [
+      traceOf(1),
+      ...Array.from({ length: CONSOLE_CLIENT_LIMIT + 1 }, (_, index) => entryOf(index + 2)),
+    ];
+    const sequences = merged(answerOf(entries)).entries.map((entry) => entry.sequence);
+    expect(sequences).toHaveLength(CONSOLE_CLIENT_LIMIT);
+    expect(sequences[0]).toBe(3);
   });
 });
 

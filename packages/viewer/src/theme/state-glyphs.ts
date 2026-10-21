@@ -15,12 +15,13 @@ export function glyphOfTone(tone: StatusTone): IconName {
   return TONE_GLYPHS[tone];
 }
 
-export type LogLevel = "error" | "warning" | "info";
+export type LogLevel = "error" | "warning" | "info" | "trace";
 
 const LEVEL_GLYPHS: Readonly<Record<LogLevel, IconName>> = {
   error: "error",
   warning: "warning",
   info: "info",
+  trace: "trace",
 };
 
 export function glyphOfLevel(level: LogLevel): IconName {

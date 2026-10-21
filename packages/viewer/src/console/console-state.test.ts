@@ -3,8 +3,10 @@ import { initialViewerState, withOpenPantin } from "../viewer-state.ts";
 import { consolePantin as pantin } from "./console-fixtures.ts";
 import {
   INITIAL_CONSOLE_STATE,
+  parseStoredVerbose,
   withConsoleLevelToggled,
   withConsoleToggled,
+  withConsoleVerbose,
 } from "./console-state.ts";
 
 describe("console state", () => {
@@ -19,6 +21,18 @@ describe("console state", () => {
     const hidden = withConsoleLevelToggled(INITIAL_CONSOLE_STATE, "info");
     expect([...hidden.hiddenLevels]).toEqual(["info"]);
     expect(withConsoleLevelToggled(hidden, "info").hiddenLevels.size).toBe(0);
+  });
+
+  it("is not verbose at the start, and follows what the core reports", () => {
+    expect(INITIAL_CONSOLE_STATE.verbose).toBe(false);
+    const verbose = withConsoleVerbose(INITIAL_CONSOLE_STATE, true);
+    expect(verbose.verbose).toBe(true);
+    expect(withConsoleVerbose(verbose, true)).toBe(verbose);
+  });
+
+  it("reads the stored preference, off unless it says true", () => {
+    expect([parseStoredVerbose("true"), parseStoredVerbose("false")]).toEqual([true, false]);
+    expect([parseStoredVerbose(null), parseStoredVerbose("garbage")]).toEqual([false, false]);
   });
 
   it("keeps the panel's settings when a Pantin opens", () => {

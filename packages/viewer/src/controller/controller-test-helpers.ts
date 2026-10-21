@@ -40,6 +40,7 @@ export function testStore(
       api: {
         getIoMapping: async () => NO_MAPPING,
         listSignals: async () => ({ signals: [] }),
+        setConsoleVerbose: async (_pantinId: string, verbose: boolean) => ({ verbose }),
         ...api,
       } as PantinApiClient,
       renderPanel: () => undefined,
@@ -65,6 +66,8 @@ export function testStore(
       storeNavigation: () => undefined,
       storeInspectorOpen: () => undefined,
       storeCollapsedGroups: () => undefined,
+      readConsoleVerbose: () => false,
+      storeConsoleVerbose: () => undefined,
       ...ports,
     },
     "fr",

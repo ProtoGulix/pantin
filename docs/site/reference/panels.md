@@ -531,7 +531,8 @@ Tout en bas de la zone centrale, une fine barre toujours visible porte le compte
 | Contrôle | Ce qu'il fait | Grisé quand |
 | --- | --- | --- |
 | Titre **Console du Pantin** | Nom du panneau. | Sans objet |
-| **Erreur** / **Avertissement** / **Info** (filtres) | Trois boutons à bascule : montrent ou cachent les lignes de ce niveau. Enfoncé = affiché. | Jamais |
+| **Erreur** / **Avertissement** / **Info** (filtres) | Trois boutons à bascule : montrent ou cachent les lignes de ce niveau. Enfoncé = affiché. Les lignes **Trace** n'ont pas de filtre : elles suivent **Détaillé**. | Jamais |
+| **Détaillé** | Bouton à bascule : écrit une ligne de trace à chaque changement d'un capteur (voir [Le mode Détaillé](#le-mode-detaille)). Enfoncé = activé. Le choix est une préférence du viewer, conservée dans le navigateur. | Jamais |
 | **Effacer** | Masque les lignes lues jusqu'ici, dans ce viewer seulement ; le cœur garde son historique. | Aucune ligne lue (des filtres qui masquent toutes les lignes ne la grisent pas) |
 | **Exporter** | Enregistre les lignes affichées, telles qu'affichées (filtres de niveau et **Effacer** compris), dans un fichier texte `console-<Pantin>.txt`. | Aucune ligne affichée |
 | **Fermer la console** (croix) | Ferme le panneau. | Jamais |
@@ -540,6 +541,19 @@ Tout en bas de la zone centrale, une fine barre toujours visible porte le compte
 Une ligne dont la source existe encore est cliquable : un clic (ou **Entrée**) sélectionne la source (un préactionneur, une liaison...). Une source supprimée s'affiche **(supprimé)**. Quand rien n'est affiché, la liste dit **Rien à signaler pour ce Pantin.** ou **Aucune ligne pour les niveaux affichés.**
 
 La console rapporte notamment : une écriture de l'automate ignorée sur un tag forcé, une erreur dans un pas de simulation, un diagnostic apparu ou résolu, un défaut injecté ou retiré, un document migré à l'ouverture, une pause ou une reprise, un émetteur bloqué, la limite de produits atteinte, les connexions et déconnexions de l'automate et du pont, et les lignes d'avertissement ou d'erreur du journal du pont, sous la forme `Pont automate : <message>` (les lignes d'information restent dans le fichier de journal).
+
+### Le mode Détaillé
+
+![La console en mode Détaillé : deux lignes Trace, un capteur qui retombe à 0 puis l'autre qui passe à 1](/screenshots/fr/console-verbose.webp)
+
+Quand **Détaillé** est enfoncé, chaque changement du bit de retour d'un capteur (un détecteur de plage de liaison ou un capteur de présence) écrit une ligne de niveau **Trace** : « Le tag `<tag>` passe à 0 » ou « … à 1 ». La source est le capteur, et un clic sur la ligne le sélectionne. Un compteur, comme le `count` d'un codeur, n'est pas tracé.
+
+- Une ligne de trace a son propre glyphe (un chevron d'invite suivi de tirets), le mot **Trace** et un bord pointillé : la couleur n'est jamais le seul repère.
+- Les lignes de trace ne sont pas comptées dans le compteur d'erreurs et d'avertissements, et ne sont pas envoyées au pont automate : l'automate a déjà les valeurs des tags.
+- Le mode ne change rien à la simulation. Il fonctionne en marche, en pause et en avançant pas à pas : chaque pas demandé écrit ses lignes de trace.
+- Au plus 120 lignes de trace par fenêtre de 120 pas. Au-delà, les lignes en trop sont omises, et une ligne d'info dit « Mode détaillé : N ligne(s) de trace omise(s), trop de changements de capteurs en peu de pas. »
+- Quand la console est pleine, la plus ancienne ligne de trace part la première, avant toute erreur ou avertissement.
+- Désactivé, **Détaillé** masque aussi les lignes de trace déjà reçues, et le cœur n'en écrit plus ; un compte de lignes omises encore en attente est alors abandonné, sans ligne d'info. Il est désactivé par défaut. Le viewer renvoie son choix au cœur à l'ouverture d'un Pantin.
 
 ## La fenêtre d'accueil
 

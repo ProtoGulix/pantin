@@ -44,7 +44,7 @@ The core advances in fixed steps of **1/120 s** (about 8.3 ms), whatever the fra
 
 The same commands therefore give the same results. The display adapts to the speed of your screen.
 
-The simulation bar of the viewer lets you **Pause**, **Resume**, or advance by **1 step** or **10 steps**.
+The simulation bar of the viewer lets you **Pause**, **Resume**, or advance by **1 step** or **10 steps**. When stepping, the **Verbose** mode of the **Console** writes a line each time a sensor changes: see [Verbose mode](/en/reference/panels#verbose-mode).
 
 ::: tip
 When the simulation is paused and a PLC bridge is connected, the PLC sees a frozen machine. The **Console** tells you so.

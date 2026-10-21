@@ -8,8 +8,7 @@ Small follow-ups that ADRs sent to the backlog and no file held.
 
 ## What
 
-- Console (ADR 0031): codes for sensors (a sensor changing state, as a trace
-  for the PLC program). Diagnostics on the tag bus are in
+- Console (ADR 0031): diagnostics on the tag bus are in
   `viewer-on-tag-bus.md`.
 - Welcome window (ADR 0027): "Open an example" needs an endpoint that copies
   an example into the Pantins folder.

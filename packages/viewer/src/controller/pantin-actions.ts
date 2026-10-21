@@ -2,6 +2,7 @@ import { infoMessage } from "../messages.ts";
 import { parseNodeId } from "../tree/node-ids.ts";
 import { type ViewerState, withOpenPantin } from "../viewer-state.ts";
 import { resumeClock } from "./clock-actions.ts";
+import { sendConsoleVerbosePreference } from "./console-verbose-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // Pantin and body operations that go through the API. Every edit is followed
@@ -29,6 +30,7 @@ export async function openPantin(store: ViewerStore, pantinId: string): Promise<
     store.state.openPantin?.id === pantinId
   ) {
     await resumeClock(store, pantinId);
+    await sendConsoleVerbosePreference(store, pantinId);
   }
 }
 

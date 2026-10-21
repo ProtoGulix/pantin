@@ -15,6 +15,21 @@ All notable changes to Pantin. The format follows
   loopback targets through the remote exposure. The tag bus moves to version 2 (one `plc`
   connection per transport). CLAUDE.md and ADRs 0001, 0007, 0045, 0046, 0050, 0054 and
   0064 gain their back-references; the OPC UA backlog note is closed.
+- Console verbose mode, core side (ADR 0061): `PUT /api/pantins/:pantinId/console`
+  `{ "verbose": true }` answers `{ verbose }` and is idempotent; `ConsoleResponse` gains
+  `verbose`. While on, a bit tag of a joint or presence sensor changing writes a `trace`
+  entry (`sensor_changed`, new `presence_sensor` source), at most 120 per 120 steps, with one
+  `trace_dropped` entry for the rest. A full console drops its oldest trace entry before an
+  error. Trace entries are never sent on the tag bus.
+- Console verbose mode, viewer side (ADR 0061): a "Verbose" toggle in the console head, with its
+  own trace glyph (a prompt chevron and dashes) and a dashed, muted line. The choice is a viewer
+  preference (`pantin.viewer.consoleVerbose`) sent to the core when a Pantin is opened. The
+  toggle shows the core's real state, turning it off hides the trace lines already received,
+  trace lines are not counted in the error and warning counter, and the viewer list drops its
+  oldest trace line first.
+- Guide: the console's "Verbose" mode (ADR 0061), in French and English: a section and a
+  screenshot in the panels reference, a troubleshooting entry, and a pointer in the fixed time step
+  section of the fundamentals.
 - Guide: a tutorial, in French and English, from the CODESYS symbol export to the closed
   loop on `examples/plc-cylinder` (import window, GVL, command line), linked from
   "Connect a PLC" (ADR 0064 point 17).

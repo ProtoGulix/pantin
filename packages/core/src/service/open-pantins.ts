@@ -9,6 +9,7 @@ import { type IoReading, ioTextOf, MISSING_IO } from "../domain/io-document-text
 import { readValidDocument, serializePantinDocument } from "../domain/pantin-document.ts";
 import { emptyPhysicsState, type PhysicsState } from "../domain/physics-state.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
+import { EMPTY_TRACE_BUDGET, type TraceBudget } from "../domain/sensor-trace.ts";
 import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.ts";
 import type { PortStates } from "../domain/simulation-state.ts";
 import type { TagStates } from "../domain/tag-states.ts";
@@ -98,6 +99,10 @@ export type OpenPantin = {
   clock: ClockRuntime;
   // The Pantin console (ADR 0031): runtime only, gone when the Pantin closes.
   console: ConsoleBuffer;
+  // Verbose mode of the console (ADR 0061): sensor changes are traced. Runtime
+  // only, off when the Pantin opens, and the simulation never reads it.
+  verbose: boolean;
+  traceBudget: TraceBudget;
 };
 
 export function meshPathsOf(document: PantinDocument): Set<string> {
@@ -146,6 +151,8 @@ export function newOpenPantin(
     stepCount: 0,
     clock: newClockRuntime(),
     console: emptyConsole(consoleId),
+    verbose: false,
+    traceBudget: EMPTY_TRACE_BUDGET,
   };
 }
 

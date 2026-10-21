@@ -9,6 +9,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type Browser, chromium, type Page } from "playwright-core";
 import { captureBridgeCard } from "./docs-screenshots/capture-bridge.ts";
+import { captureConsoleVerbose } from "./docs-screenshots/capture-console.ts";
 import {
   captureGroupPrompt,
   captureImportForm,
@@ -114,6 +115,7 @@ async function captureLanguage(
     await captureIoView(session, REPOSITORY_ROOT);
     await captureBridgeCard(session);
     await captureForcedTag(session);
+    await captureConsoleVerbose(session);
     return session.savedNames;
   } finally {
     await context.close();

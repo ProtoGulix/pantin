@@ -7,7 +7,7 @@ interface.
 
 To read the history, open the **Console** (**View** menu, **Console**, or F8).
 It keeps the errors, warnings and infos of the open Pantin, with the simulation
-time. The **Export** button saves the lines shown in a text file `console-<Pantin>.txt`, to attach to a report.
+time. The **Verbose** button adds a line each time a sensor changes. The **Export** button saves the lines shown in a text file `console-<Pantin>.txt`, to attach to a report.
 
 ## The viewer and the core
 
@@ -163,6 +163,7 @@ you to each problem.
 | "The simulation of this Pantin could not be resumed on opening" | The automatic resume failed | **Resume** |
 | "Conflicting commands: both coils are on; the spool stays where it is." | Both coils of a 5/3 valve are at 1 | Command only one coil at a time |
 | "Conflicting commands: forward and reverse are both on; the contactor already closed stays closed." | Forward and reverse of a reversing contactor are both at 1 | Command only one direction at a time |
+| A sensor does not switch and you want to know when it changes | No trace by default: the console writes nothing about sensors | Press **Verbose** in the console, then advance by **1 step** or **10 steps**: a **Trace** line "Tag ... changes to 1" appears at each change. With no line, the sensor does not switch: check its range and the joint position. If lines are missing, look for the "Verbose mode: ... trace line(s) left out" line |
 | An active **Fault** (**Not responding**, **Jammed**) | A fault was injected | Turn it off in the **Faults** group of the inspector |
 | "Error in the simulation step: the step is skipped." | An error in a calculation step | Look at the core output and report it with your Pantin |
 

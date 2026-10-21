@@ -162,7 +162,10 @@ export function nextFeed(
   // A new console means the sequences started over (ADR 0031): read it from the start.
   const after = source.consoleId === next.consoleId ? next.consoleSequence : 0;
   for (const entry of source.readConsole(after)) {
-    messages.push({ type: "console", entry });
+    // ADR 0061 point 2: the PLC already has the tag values behind a trace line.
+    if (entry.level !== "trace") {
+      messages.push({ type: "console", entry });
+    }
   }
   next = { ...next, consoleId: source.consoleId, consoleSequence: source.consoleLastSequence };
   if (shouldSendClock(next, source.clock, now)) {

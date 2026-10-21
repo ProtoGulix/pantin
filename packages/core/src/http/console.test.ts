@@ -189,9 +189,31 @@ describe("a Pantin built over REST", () => {
         consoleId: expect.any(String),
         entries: [],
         lastSequence: 0,
+        verbose: false,
       });
     } finally {
       await built.close();
     }
+  });
+});
+
+describe("the verbose switch of the console (ADR 0061 point 6)", () => {
+  const putVerbose = (verbose: unknown) =>
+    sendJsonRequest(axis.server, "PUT", "/api/pantins/axis/console", { verbose });
+
+  it("is off by default, and shown by the console read", async () => {
+    const response = ConsoleResponseSchema.parse((await readConsole()).json);
+    expect(response.verbose).toBe(false);
+  });
+
+  it("is switched by PUT, which answers with the value and accepts the current one", async () => {
+    expect((await putVerbose(true)).json).toEqual({ verbose: true });
+    expect((await putVerbose(true)).json).toEqual({ verbose: true });
+    expect(ConsoleResponseSchema.parse((await readConsole()).json).verbose).toBe(true);
+    expect((await putVerbose(false)).json).toEqual({ verbose: false });
+  });
+
+  it("refuses a body without a boolean", async () => {
+    expect((await putVerbose("yes")).status).toBe(400);
   });
 });

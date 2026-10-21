@@ -86,6 +86,21 @@
   background: var(--surface-3);
 }
 
+.console__verbose {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  color: var(--text-faint);
+}
+
+/* Pressed: full text colour and a filled background, the pressed state is also read from aria-pressed. */
+.console__verbose.is-pressed {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
 .console__list {
   flex: 1;
   min-height: 0;
@@ -147,7 +162,15 @@
   color: var(--state-abnormal);
 }
 
-.console-line--info .console-line__level {
+.console-line--info .console-line__level,
+.console-line--trace .console-line__level {
+  color: var(--text-muted);
+}
+
+/* A trace line is not an event: dashed edge and muted text, besides its own glyph. */
+.console-line--trace {
+  border-left-style: dashed;
+  border-left-color: var(--text-muted);
   color: var(--text-muted);
 }
 

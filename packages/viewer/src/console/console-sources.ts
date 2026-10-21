@@ -7,6 +7,21 @@ import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
 // The source of a console line (ADR 0031 point 2): what it is called in the
 // document, and what a click on the line selects (ADR 0030 point 1).
 
+// The protocol names the source kind in snake case, the selection in camel case.
+function deviceOfSource(source: Extract<ConsoleSource, { id: string }>): DeviceRef | null {
+  switch (source.kind) {
+    case "drive":
+    case "actuator":
+    case "sensor":
+      return { kind: source.kind, id: source.id };
+    case "presence_sensor":
+      return { kind: "presenceSensor", id: source.id };
+    case "joint":
+    case "body":
+      return null;
+  }
+}
+
 function elementName(
   document: PantinDocument,
   source: Exclude<ConsoleSource, { kind: "pantin" }>,
@@ -16,8 +31,10 @@ function elementName(
       return document.joints.find((joint) => joint.id === source.id)?.name;
     case "body":
       return document.bodies.find((body) => body.id === source.id)?.name;
-    default:
-      return deviceName(document, { kind: source.kind, id: source.id });
+    default: {
+      const device = deviceOfSource(source);
+      return device === null ? undefined : deviceName(document, device);
+    }
   }
 }
 
@@ -68,6 +85,8 @@ export function consoleSourceTarget(
       ? null
       : { kind: "node", nodeId: bodyNodeId(pantinId, source.id) };
   }
-  const device: DeviceRef = { kind: source.kind, id: source.id };
-  return deviceName(document, device) === null ? null : { kind: "device", device };
+  const device = deviceOfSource(source);
+  return device === null || deviceName(document, device) === null
+    ? null
+    : { kind: "device", device };
 }

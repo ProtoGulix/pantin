@@ -4,7 +4,7 @@ import type { ConsoleEntry, ConsoleResponse } from "@pantin/protocol";
 // read so far, merged as the core sends them. Pure, so the folding rules of
 // the protocol (console.ts) are tested without a core.
 
-// As many as the core keeps (ADR 0031 point 1): more would only be stale.
+// As many as the core keeps (ADR 0031 point 1, ADR 0061 point 5): more would only be stale.
 export const CONSOLE_CLIENT_LIMIT = 1000;
 
 export interface ClientConsole {
@@ -50,8 +50,27 @@ export function mergeConsoleResponse(
     ...current,
     consoleId: response.consoleId,
     lastSequence: Math.max(current.lastSequence, response.lastSequence),
-    entries: [...kept, ...response.entries].slice(-CONSOLE_CLIENT_LIMIT),
+    entries: withinLimit([...kept, ...response.entries]),
   };
+}
+
+/**
+ * The core's eviction rule (ADR 0061 point 5): the oldest trace line goes
+ * first, and an older error or warning only when no trace line is left.
+ */
+function withinLimit(entries: readonly ConsoleEntry[]): readonly ConsoleEntry[] {
+  let excess = entries.length - CONSOLE_CLIENT_LIMIT;
+  if (excess <= 0) {
+    return entries;
+  }
+  const evicted = new Set<ConsoleEntry>();
+  for (const entry of entries) {
+    if (excess > 0 && entry.level === "trace") {
+      evicted.add(entry);
+      excess -= 1;
+    }
+  }
+  return entries.filter((entry) => !evicted.has(entry)).slice(excess > 0 ? excess : 0);
 }
 
 /** "Effacer": hides every line read so far; a later occurrence shows again. */

@@ -6,7 +6,7 @@ messages du cœur et du pont sont en anglais, ceux du viewer en français.
 
 Pour lire l'historique, ouvrez la **Console** (menu **Affichage**, **Console**, ou
 F8). Elle garde les erreurs, avertissements et infos du Pantin ouvert, avec le
-temps de simulation. Le bouton **Exporter** enregistre les lignes affichées dans un fichier texte `console-<Pantin>.txt`, à joindre à un signalement.
+temps de simulation. Le bouton **Détaillé** y ajoute une ligne à chaque changement d'un capteur. Le bouton **Exporter** enregistre les lignes affichées dans un fichier texte `console-<Pantin>.txt`, à joindre à un signalement.
 
 ## Le viewer et le cœur
 
@@ -162,6 +162,7 @@ mène à chaque problème.
 | « La simulation de ce Pantin n'a pas pu être reprise à l'ouverture » | La reprise automatique a échoué | **Reprendre** |
 | « Commandes contradictoires : les deux bobines sont actives ; le tiroir reste en place. » | Les deux bobines d'un distributeur 5/3 sont à 1 | Ne commandez qu'une bobine à la fois |
 | « Commandes contradictoires : marche avant et arrière commandées ensemble ; le contacteur déjà fermé le reste. » | Marche avant et marche arrière d'un contacteur inverseur sont à 1 ensemble | Ne commandez qu'un sens à la fois |
+| Un capteur ne bascule pas et vous voulez savoir quand il change | Aucune trace par défaut : la console n'écrit rien sur les capteurs | Enfoncez **Détaillé** dans la console, puis avancez de **1 pas** ou de **10 pas** : une ligne **Trace** « Le tag … passe à 1 » apparaît à chaque changement. Sans ligne, le capteur ne bascule pas : vérifiez sa plage et la position de la liaison. Si des lignes manquent, regardez la ligne « Mode détaillé : … ligne(s) de trace omise(s) » |
 | Un **Défaut** actif (**Ne répond plus**, **Grippée**) | Un défaut a été injecté | Désactivez-le dans le groupe **Défauts** de l'inspecteur |
 | « Erreur dans le pas de simulation : le pas est ignoré. » | Une erreur dans un pas de calcul | Regardez la sortie du cœur et signalez-la avec votre Pantin |
 

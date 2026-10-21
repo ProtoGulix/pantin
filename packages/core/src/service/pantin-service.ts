@@ -25,7 +25,7 @@ import { openBodyMesh, renameBodyOf } from "./body-operations.ts";
 import { bridgeOperations } from "./bridge-operations.ts";
 import { busOperations } from "./bus-operations.ts";
 import { clockOperations, toClockState } from "./clock-operations.ts";
-import { readConsole } from "./console-operations.ts";
+import { consoleOperations } from "./console-operations.ts";
 import type { BridgeCoreLineWriter } from "./console-record.ts";
 import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
@@ -267,7 +267,7 @@ export function createPantinService(
     releaseTag: (pantinId: PantinId, tagName: string) => releaseTag(context, pantinId, tagName),
     releaseAllTags: (pantinId: PantinId) => releaseAllTags(context, pantinId),
     ...busOperations(context),
-    readConsole: (pantinId: PantinId, after: number) => readConsole(context, pantinId, after),
+    ...consoleOperations(context),
     ...faceOperations(context),
     runSimulationSteps: (tick: SimulationTick) => runSimulationSteps(context, tick),
     ...clockOperations(context),

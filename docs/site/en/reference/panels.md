@@ -531,7 +531,8 @@ At the very bottom of the central area, a thin always-visible bar holds the cons
 | Control | What it does | Greyed out when |
 | --- | --- | --- |
 | Title **Pantin console** | Name of the panel. | Not applicable |
-| **Error** / **Warning** / **Info** (filters) | Three toggle buttons: show or hide the lines of this level. Pressed = shown. | Never |
+| **Error** / **Warning** / **Info** (filters) | Three toggle buttons: show or hide the lines of this level. Pressed = shown. **Trace** lines have no filter: they follow **Verbose**. | Never |
+| **Verbose** | Toggle button: writes a trace line each time a sensor changes (see [Verbose mode](#verbose-mode)). Pressed = on. The choice is a viewer preference, kept in the browser. | Never |
 | **Clear** | Hides the lines read so far, in this viewer only; the core keeps its history. | No line read (filters that hide every line do not grey it out) |
 | **Export** | Saves the lines shown, as displayed (level filters and **Clear** included), in a text file `console-<Pantin>.txt`. | No line shown |
 | **Close the console** (cross) | Closes the panel. | Never |
@@ -540,6 +541,19 @@ At the very bottom of the central area, a thin always-visible bar holds the cons
 A line whose source still exists is clickable: a click (or **Enter**) selects the source (a drive, a joint...). A deleted source is shown as **(deleted)**. When nothing is displayed, the list says **Nothing to report for this Pantin.** or **No line for the levels shown.**
 
 The console reports in particular: a PLC write ignored on a forced tag, an error in a simulation step, a diagnostic that appeared or cleared, a fault injected or removed, a document migrated on opening, a pause or a resume, a blocked emitter, the product limit reached, the connections and disconnections of the PLC and of the bridge, and the warning or error lines of the bridge log, as `PLC bridge: <message>` (information lines stay in the log file).
+
+### Verbose mode
+
+![The console in Verbose mode: two Trace lines, one sensor dropping to 0 then the other changing to 1](/screenshots/en/console-verbose.webp)
+
+While **Verbose** is pressed, each change of the feedback bit of a sensor (a joint range detector or a presence sensor) writes a line of level **Trace**: "Tag `<tag>` changes to 0" or "... to 1". The source is the sensor, and a click on the line selects it. A counter, such as an encoder's `count`, is not traced.
+
+- A trace line has its own glyph (a prompt chevron followed by dashes), the word **Trace** and a dashed edge: colour is never the only cue.
+- Trace lines are not counted in the error and warning counter, and are not sent to the PLC bridge: the PLC already has the tag values.
+- The mode changes nothing in the simulation. It works while running, paused, or stepping: each step you ask for writes its trace lines.
+- At most 120 trace lines per window of 120 steps. Beyond that, the extra lines are left out, and an info line says "Verbose mode: N trace line(s) left out, too many sensor changes in a few steps."
+- When the console is full, the oldest trace line goes first, before any error or warning.
+- Turned off, **Verbose** also hides the trace lines already received, and the core writes no more; a count of left-out lines still pending is then discarded, with no info line. It is off by default. The viewer sends its choice to the core when a Pantin is opened.
 
 ## The welcome window
 

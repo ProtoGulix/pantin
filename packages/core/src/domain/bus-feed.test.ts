@@ -133,6 +133,30 @@ describe("nextFeed console", () => {
   });
 });
 
+describe("nextFeed trace entries", () => {
+  it("never sends a trace entry (ADR 0061 point 2)", () => {
+    const cursor = initialFeedCursor(sourceOf({ consoleLastSequence: 0 }), 0);
+    const trace: ConsoleEntry = {
+      code: "sensor_changed",
+      level: "trace",
+      source: { kind: "sensor", id: "end" },
+      params: { tag: "main.end.state", value: 1 },
+      sequence: 2,
+      firstSequence: 2,
+      wallTime: "2026-10-13T08:00:00.000Z",
+      simulationTime: 0,
+      count: 1,
+    };
+    const source = sourceOf({
+      consoleLastSequence: 2,
+      readConsole: () => [consoleEntry(1), trace],
+    });
+    const { cursor: next, messages } = nextFeed(cursor, source, 0);
+    expect(messages).toEqual([{ type: "console", entry: consoleEntry(1) }]);
+    expect(next.consoleSequence).toBe(2);
+  });
+});
+
 describe("nextFeed clock", () => {
   const cursor = initialFeedCursor(sourceOf(), 10);
 

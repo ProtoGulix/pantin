@@ -5,6 +5,7 @@ import {
   BodyIdSchema,
   DriveIdSchema,
   JointIdSchema,
+  PresenceSensorIdSchema,
   SensorIdSchema,
 } from "./ids.ts";
 
@@ -26,12 +27,23 @@ import {
 // created with, never changes: it is what a client uses to recognise a line it
 // already shows and update it. A flickering diagnostic is thus two entries.
 //
+// Verbose mode (ADR 0061): a runtime flag of the open Pantin, never saved. While
+// it is on, a sensor bit changing writes a `trace` entry. Set with
+//   PUT /api/pantins/:pantinId/console  SetConsoleVerboseRequest -> { verbose }
+// (the current value is accepted), read in ConsoleResponse. Trace entries are
+// never sent on the tag bus. At most TRACE_BUDGET_ENTRIES are written per
+// TRACE_BUDGET_WINDOW_STEPS steps, then one `trace_dropped` entry counts the
+// rest. A full buffer drops its oldest trace entry first.
+//
 // `consoleId` is one random id per console, made when the Pantin is opened.
 // A client keeps it with its last sequence; when it changes (the core
 // restarted, or the Pantin was closed and opened again) the sequences start
 // over and the client must read from 0 again.
 
-export const ConsoleLevelSchema = z.enum(["error", "warning", "info"]);
+export const TRACE_BUDGET_ENTRIES = 120;
+export const TRACE_BUDGET_WINDOW_STEPS = 120;
+
+export const ConsoleLevelSchema = z.enum(["error", "warning", "info", "trace"]);
 export type ConsoleLevel = z.infer<typeof ConsoleLevelSchema>;
 
 // The Pantin itself, or one of its elements by id.
@@ -40,6 +52,7 @@ export const ConsoleSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("drive"), id: DriveIdSchema }),
   z.object({ kind: z.literal("actuator"), id: ActuatorIdSchema }),
   z.object({ kind: z.literal("sensor"), id: SensorIdSchema }),
+  z.object({ kind: z.literal("presence_sensor"), id: PresenceSensorIdSchema }),
   z.object({ kind: z.literal("joint"), id: JointIdSchema }),
   z.object({ kind: z.literal("body"), id: BodyIdSchema }),
 ]);
@@ -51,6 +64,10 @@ const JointOrDriveSourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("joint"), id: JointIdSchema }),
 ]);
 const PantinSourceSchema = z.object({ kind: z.literal("pantin") });
+const SensorOrPresenceSourceSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("sensor"), id: SensorIdSchema }),
+  z.object({ kind: z.literal("presence_sensor"), id: PresenceSensorIdSchema }),
+]);
 const BodySourceSchema = z.object({ kind: z.literal("body"), id: BodyIdSchema });
 
 const eventShapes = {
@@ -168,6 +185,18 @@ const eventShapes = {
     source: PantinSourceSchema,
     params: ParamsSchemas.bridge_log,
   }),
+  sensorChanged: z.object({
+    code: z.literal("sensor_changed"),
+    level: z.literal("trace"),
+    source: SensorOrPresenceSourceSchema,
+    params: ParamsSchemas.sensor_changed,
+  }),
+  traceDropped: z.object({
+    code: z.literal("trace_dropped"),
+    level: z.literal("info"),
+    source: PantinSourceSchema,
+    params: ParamsSchemas.trace_dropped,
+  }),
   // ADR 0045 point 12: paused while a bridge is connected, which the PLC sees
   // as a frozen machine.
   clockPausedWithBridge: z.object({
@@ -201,6 +230,8 @@ export const ConsoleEventSchema = z.discriminatedUnion("code", [
   eventShapes.bridgeFailed,
   eventShapes.bridgeLog,
   eventShapes.clockPausedWithBridge,
+  eventShapes.sensorChanged,
+  eventShapes.traceDropped,
 ]);
 export type ConsoleEvent = z.infer<typeof ConsoleEventSchema>;
 export type ConsoleCode = ConsoleEvent["code"];
@@ -239,6 +270,8 @@ export const ConsoleEntrySchema = z.discriminatedUnion("code", [
   eventShapes.bridgeFailed.extend(entryFields),
   eventShapes.bridgeLog.extend(entryFields),
   eventShapes.clockPausedWithBridge.extend(entryFields),
+  eventShapes.sensorChanged.extend(entryFields),
+  eventShapes.traceDropped.extend(entryFields),
 ]);
 export type ConsoleEntry = z.infer<typeof ConsoleEntrySchema>;
 
@@ -258,5 +291,10 @@ export const ConsoleResponseSchema = z.object({
   // Highest sequence given so far (0 when none): poll with it as `after`,
   // also when no entry came back.
   lastSequence: z.number().int().nonnegative(),
+  // Whether verbose mode is on now, for a client that did not set it itself.
+  verbose: z.boolean(),
 });
 export type ConsoleResponse = z.infer<typeof ConsoleResponseSchema>;
+
+export const SetConsoleVerboseRequestSchema = z.object({ verbose: z.boolean() });
+export type SetConsoleVerboseRequest = z.infer<typeof SetConsoleVerboseRequestSchema>;

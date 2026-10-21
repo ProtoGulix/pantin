@@ -7,6 +7,7 @@ import { clockTime, consoleWording } from "./console-text.ts";
 
 // The console panel and its toolbar counter as plain data (ADR 0031 point 5).
 
+// No filter for the trace level: the verbose toggle shows and hides it.
 const CONSOLE_LEVELS: readonly ConsoleLevel[] = ["error", "warning", "info"];
 
 export interface ConsoleLineView {
@@ -33,6 +34,12 @@ interface ConsoleFilterView {
   pressed: boolean;
 }
 
+interface ConsoleVerboseView {
+  label: string;
+  hint: string;
+  pressed: boolean;
+}
+
 export interface ConsoleCounterView {
   errors: number;
   warnings: number;
@@ -44,6 +51,8 @@ export interface ConsoleView {
   open: boolean;
   counter: ConsoleCounterView;
   filters: ConsoleFilterView[];
+  // The "Détaillé" toggle: pressed as the core reports verbose mode (ADR 0061).
+  verbose: ConsoleVerboseView;
   lines: ConsoleLineView[];
   canClear: boolean;
   // There is a line to write to a file: what the filters show.
@@ -106,7 +115,8 @@ export function buildConsoleView(
   if (open === null) {
     return null;
   }
-  const kept = linesAfterClear(list);
+  // Turning verbose off hides the trace lines already received (ADR 0061 point 8).
+  const kept = linesAfterClear(list).filter((entry) => state.verbose || entry.level !== "trace");
   const lines = kept
     .filter((entry) => !state.hiddenLevels.has(entry.level))
     .map((entry) => lineView(entry, open.document, open.id, t));
@@ -119,6 +129,11 @@ export function buildConsoleView(
       label: t(`console.level.${level}`),
       pressed: !state.hiddenLevels.has(level),
     })),
+    verbose: {
+      label: t("console.verbose"),
+      hint: t("console.verboseHint"),
+      pressed: state.verbose,
+    },
     lines,
     canClear: kept.length > 0,
     canExport: lines.length > 0,

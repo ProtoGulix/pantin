@@ -34,7 +34,7 @@ function peekFeedSource(context: ServiceContext, pantinId: PantinId): FeedSource
     resetCount: openPantin.resetCount,
     consoleId: openPantin.console.id,
     consoleLastSequence: openPantin.console.lastSequence,
-    readConsole: (after) => readConsoleAfter(openPantin.console, after).entries,
+    readConsole: (after) => readConsoleAfter(openPantin.console, after, openPantin.verbose).entries,
     clock: toClockState(openPantin),
     tags: () => {
       syncTagStates(openPantin);

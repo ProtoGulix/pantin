@@ -10,6 +10,7 @@ import { withConsoleLevelToggled, withConsoleToggled } from "../console/console-
 import { buildConsoleView } from "../console/console-view.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { withRevealedNode } from "../tree/tree-state.ts";
+import { showCoreVerbose, toggleConsoleVerbose } from "./console-verbose-actions.ts";
 import { selectDevice } from "./diagram-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -59,6 +60,8 @@ export async function refreshConsole(store: ViewerStore): Promise<void> {
     if (next !== store.consoleList) {
       showConsoleList(store, next);
     }
+    // Another client may have changed verbose mode: show the real state (ADR 0061 point 6).
+    showCoreVerbose(store, answer.verbose);
   }
 }
 
@@ -109,6 +112,7 @@ export function consoleIntents(store: ViewerStore) {
   return {
     toggleConsole: () => toggleConsole(store),
     toggleConsoleLevel: (level: ConsoleLevel) => toggleConsoleLevel(store, level),
+    toggleConsoleVerbose: () => void toggleConsoleVerbose(store),
     clearConsole: () => clearConsole(store),
     exportConsole: () => exportConsole(store),
     selectConsoleSource: (source: ConsoleSource) => selectConsoleSource(store, source),

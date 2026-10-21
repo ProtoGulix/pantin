@@ -15,6 +15,7 @@ type ToolIcon =
   | "error"
   | "warning"
   | "info"
+  | "trace"
   | "close"
   | "check"
   | "eye"
@@ -104,6 +105,8 @@ const PATHS: Readonly<Record<IconName, string>> = {
   error: "M5.3 1.8h5.4l3.5 3.5v5.4l-3.5 3.5H5.3l-3.5-3.5V5.3Z M5.8 5.8l4.4 4.4 M10.2 5.8l-4.4 4.4",
   warning: "M8 2 14.5 13.5h-13Z M8 6.5v3.5 M8 11.6v.6",
   info: `${CIRCLE} M8 7.2v4 M8 4.8v.7`,
+  // A prompt chevron and a dotted line: a trace line, written only in verbose mode (ADR 0061).
+  trace: "M2.5 4.5 6 8l-3.5 3.5 M8.5 11.5h1 M11 11.5h1",
   close: "M4 4l8 8 M12 4l-8 8",
   check: "M3 8.5 6.5 12 13 4.5",
   // A lightning bolt: a drive moves this joint.

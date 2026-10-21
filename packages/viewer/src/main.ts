@@ -1,5 +1,6 @@
 import { createPantinApiClient, type PantinApiClient } from "./api-client.ts";
 import { parseStoredLayout, serialiseLayout } from "./central-layout.ts";
+import { parseStoredVerbose } from "./console/console-state.ts";
 import { receiveViewportPick } from "./controller/axis-pick-actions.ts";
 import { receiveBridge } from "./controller/bridge-actions.ts";
 import { refreshConsole } from "./controller/console-actions.ts";
@@ -165,6 +166,8 @@ function createPorts(
     storeInspectorOpen: (open) => writeStoredText(STORAGE_KEYS.inspectorOpen, String(open)),
     storeCollapsedGroups: (groups) =>
       writeStoredText(STORAGE_KEYS.collapsedGroups, serializeGroups(groups)),
+    readConsoleVerbose: () => parseStoredVerbose(readStoredText(STORAGE_KEYS.consoleVerbose)),
+    storeConsoleVerbose: (verbose) => writeStoredText(STORAGE_KEYS.consoleVerbose, String(verbose)),
   };
 }
 

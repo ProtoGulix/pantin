@@ -44,7 +44,7 @@ Le cœur avance par pas de **1/120 s** (environ 8,3 ms), quel que soit le taux d
 
 Les mêmes commandes donnent donc les mêmes résultats. L'affichage s'adapte, lui, à la vitesse de votre écran.
 
-La barre de simulation du viewer permet de mettre en **Pause**, de **Reprendre**, d'avancer de **1 pas** ou de **10 pas**.
+La barre de simulation du viewer permet de mettre en **Pause**, de **Reprendre**, d'avancer de **1 pas** ou de **10 pas**. En pas à pas, le mode **Détaillé** de la **Console** écrit une ligne à chaque changement d'un capteur : voir [Le mode Détaillé](/reference/panels#le-mode-detaille).
 
 ::: tip
 Quand la simulation est en pause et qu'un pont automate est connecté, l'automate voit une machine figée. La **Console** vous le signale.

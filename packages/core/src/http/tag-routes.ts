@@ -1,4 +1,8 @@
-import { ConsoleQuerySchema, WriteTagRequestSchema } from "@pantin/protocol";
+import {
+  ConsoleQuerySchema,
+  SetConsoleVerboseRequestSchema,
+  WriteTagRequestSchema,
+} from "@pantin/protocol";
 import { parseWithSchema } from "../domain/validation.ts";
 import { readJsonBody } from "./request-reading.ts";
 import { sendJson } from "./responses.ts";
@@ -34,6 +38,23 @@ export const TAG_ROUTES: readonly Route[] = [
         context.response,
         200,
         await context.service.readConsole(pantinIdOf(context), after ?? 0),
+      );
+    },
+  },
+  {
+    method: "PUT",
+    pattern: ["pantins", ":pantinId", "console"],
+    handle: async (context) => {
+      const body = await readJsonBody(context.request);
+      const { verbose } = parseWithSchema(
+        SetConsoleVerboseRequestSchema,
+        body,
+        "The console request",
+      );
+      sendJson(
+        context.response,
+        200,
+        await context.service.setConsoleVerbose(pantinIdOf(context), verbose),
       );
     },
   },

@@ -11,7 +11,8 @@ describe("the glyph of a status tone", () => {
 
 describe("the glyph of a log level", () => {
   it("gives each level its own shape", () => {
-    const glyphs = (["error", "warning", "info"] as const).map(glyphOfLevel);
-    expect(glyphs).toEqual(["error", "warning", "info"]);
+    const glyphs = (["error", "warning", "info", "trace"] as const).map(glyphOfLevel);
+    expect(glyphs).toEqual(["error", "warning", "info", "trace"]);
+    expect(new Set(glyphs).size).toBe(4);
   });
 });

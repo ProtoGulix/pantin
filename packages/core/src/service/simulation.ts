@@ -1,7 +1,15 @@
 import type { ConsoleEvent } from "@pantin/protocol";
+import type { SensorOutput } from "@pantin/sensor-types/evaluators";
 import { diagnosticEvents, stepErrorEvent } from "../domain/console-events.ts";
 import { STEP_SECONDS } from "../domain/fixed-step.ts";
+import type { PhysicsState } from "../domain/physics-state.ts";
 import { stepSensors } from "../domain/sensor-step.ts";
+import {
+  applyTraceBudget,
+  type SensorTraceSnapshot,
+  sensorChangeEvents,
+  type TraceBudget,
+} from "../domain/sensor-trace.ts";
 import { recordTick } from "../domain/simulation-clock.ts";
 import { stepSimulation } from "../domain/simulation-step.ts";
 import { recordConsoleEvents } from "./console-record.ts";
@@ -12,6 +20,26 @@ import { syncTagStates } from "./tag-operations.ts";
 
 // Simulation steps of the open Pantins (ADR 0012, ADR 0022, ADR 0025, ADR 0028);
 // their tags are in tag-operations.ts.
+
+function traceSnapshotOf(
+  sensorOutputs: ReadonlyMap<string, SensorOutput>,
+  presenceOutputs: PhysicsState["presenceOutputs"],
+): SensorTraceSnapshot {
+  const jointSensors = new Map([...sensorOutputs].map(([id, output]) => [id, output.values]));
+  return { jointSensors, presenceSensors: presenceOutputs };
+}
+
+// Computed from the results of the step before any is stored, so that a throw
+// here leaves the Pantin as it was and never turns an applied step into a
+// step_error (ADR 0061 point 4). Nothing it reads or returns feeds the simulation.
+function traceOf(
+  openPantin: OpenPantin,
+  after: SensorTraceSnapshot,
+): { events: ConsoleEvent[]; budget: TraceBudget } {
+  const before = traceSnapshotOf(openPantin.sensorOutputs, openPantin.physicsState.presenceOutputs);
+  const changes = sensorChangeEvents(openPantin.document, before, after);
+  return applyTraceBudget(openPantin.traceBudget, openPantin.stepCount + 1, changes);
+}
 
 // A step is atomic: everything it computes is read before anything is
 // stored, so a throw leaves the Pantin as it was (ADR 0031 point 3). Returns
@@ -38,6 +66,9 @@ function runStep(context: ServiceContext, openPantin: OpenPantin): ConsoleEvent[
     stepped.jointPositions,
     stepped.jointVelocities,
   );
+  const trace = openPantin.verbose
+    ? traceOf(openPantin, traceSnapshotOf(sensorOutputs, physics.state.presenceOutputs))
+    : { events: [], budget: openPantin.traceBudget };
   openPantin.jointPositions = stepped.jointPositions;
   openPantin.jointVelocities = stepped.jointVelocities;
   openPantin.driveStates = stepped.driveStates;
@@ -46,10 +77,11 @@ function runStep(context: ServiceContext, openPantin: OpenPantin): ConsoleEvent[
   openPantin.driveDiagnostics = stepped.driveDiagnostics;
   openPantin.sensorOutputs = sensorOutputs;
   openPantin.physicsState = physics.state;
+  openPantin.traceBudget = trace.budget;
   // Joint setpoints are consumed by the first step (ADR 0012 point 3).
   openPantin.queuedSetpoints.clear();
   openPantin.stepCount += 1;
-  return [...events, ...physics.events];
+  return [...events, ...physics.events, ...trace.events];
 }
 
 // A failing step is skipped and put in the console; the rest of this tick is

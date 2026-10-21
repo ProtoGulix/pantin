@@ -16,9 +16,26 @@ describe("PantinApiClient console", () => {
     ]);
   });
 
+  it("sets verbose mode with PUT and returns the core's value", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse({ verbose: true }));
+    expect(await createPantinApiClient(fetchFunction).setConsoleVerbose("press", true)).toEqual({
+      verbose: true,
+    });
+    expect([requests[0]?.init?.method, requests[0]?.url, requests[0]?.init?.body]).toEqual([
+      "PUT",
+      "/api/pantins/press/console",
+      JSON.stringify({ verbose: true }),
+    ]);
+  });
+
   it("refuses an answer that does not match the protocol", async () => {
     const { fetchFunction } = fakeFetch(
-      jsonResponse({ entries: [{ code: "unknown" }], consoleId: "c", lastSequence: 1 }),
+      jsonResponse({
+        entries: [{ code: "unknown" }],
+        consoleId: "c",
+        lastSequence: 1,
+        verbose: false,
+      }),
     );
     const error = await captureError(createPantinApiClient(fetchFunction).getConsole("press", 0));
     expect(error.kind).toBe("invalid_response");

@@ -10,11 +10,15 @@ import type { ConsoleLevel } from "@pantin/protocol";
 export interface ConsoleState {
   open: boolean;
   hiddenLevels: ReadonlySet<ConsoleLevel>;
+  // Verbose mode as the core reports it (ADR 0061): trace lines show only while
+  // it is on. The viewer's own preference lives in the browser storage.
+  verbose: boolean;
 }
 
 export const INITIAL_CONSOLE_STATE: ConsoleState = {
   open: false,
   hiddenLevels: new Set(),
+  verbose: false,
 };
 
 export function withConsoleToggled(state: ConsoleState): ConsoleState {
@@ -27,4 +31,13 @@ export function withConsoleLevelToggled(state: ConsoleState, level: ConsoleLevel
     hiddenLevels.add(level);
   }
   return { ...state, hiddenLevels };
+}
+
+export function withConsoleVerbose(state: ConsoleState, verbose: boolean): ConsoleState {
+  return state.verbose === verbose ? state : { ...state, verbose };
+}
+
+/** The stored verbose preference; anything but "true" is off, as at the first start. */
+export function parseStoredVerbose(text: string | null): boolean {
+  return text === "true";
 }

@@ -193,6 +193,8 @@ export interface PanelIntents extends IoIntents, SymbolImportIntents, BridgeInte
   // a click or Enter on a line, which selects its source.
   toggleConsole(): void;
   toggleConsoleLevel(level: ConsoleLevel): void;
+  // The "Détaillé" toggle (ADR 0061): sensor changes as trace lines.
+  toggleConsoleVerbose(): void;
   clearConsole(): void;
   // The lines the console shows, offered as a text file.
   exportConsole(): void;

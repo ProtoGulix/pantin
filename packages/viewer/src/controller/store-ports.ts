@@ -68,4 +68,7 @@ export interface StorePorts {
   storeNavigation(settings: NavigationSettings): void;
   storeInspectorOpen(open: boolean): void;
   storeCollapsedGroups(groups: ReadonlySet<string>): void;
+  // The verbose preference of the console (ADR 0061 point 8), sent to the core on opening.
+  readConsoleVerbose(): boolean;
+  storeConsoleVerbose(verbose: boolean): void;
 }

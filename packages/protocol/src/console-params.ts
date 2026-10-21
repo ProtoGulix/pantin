@@ -48,4 +48,8 @@ export const ParamsSchemas = {
   // ADR 0054 point 4: a WARNING or ERROR line of the supervised bridge's log,
   // as written by the bridge without its timestamp, cut to keep entries small.
   bridge_log: z.object({ message: z.string().max(300) }),
+  // ADR 0061: a bit feedback tag of a sensor changed (verbose mode only), and
+  // how many such entries the budget of a window left out.
+  sensor_changed: z.object({ tag: TagNameSchema, value: z.union([z.literal(0), z.literal(1)]) }),
+  trace_dropped: z.object({ dropped: z.number().int().positive() }),
 };

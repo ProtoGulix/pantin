@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { beamCell } from "../conveyors/conveyor-fixtures.ts";
 import { createTranslator } from "../i18n/translate.ts";
 import { bodyNodeId, jointNodeId, pantinNodeId } from "../tree/node-ids.ts";
 import { consolePantin } from "./console-fixtures.ts";
@@ -6,6 +7,20 @@ import { consoleSourceLabel, consoleSourceTarget } from "./console-sources.ts";
 
 const { document } = consolePantin;
 const t = createTranslator("fr");
+
+const withBeam = { ...document, presenceSensors: [beamCell] };
+
+describe("a presence sensor source", () => {
+  it("is named and selected as the presenceSensor device", () => {
+    const source = { kind: "presence_sensor", id: "cell" } as const;
+    expect(consoleSourceLabel(withBeam, source, t)).toBe("Cell");
+    expect(consoleSourceTarget(withBeam, "press", source)).toEqual({
+      kind: "device",
+      device: { kind: "presenceSensor", id: "cell" },
+    });
+    expect(consoleSourceTarget(document, "press", source)).toBeNull();
+  });
+});
 
 describe("consoleSourceLabel", () => {
   it("names the Pantin, a joint and each kind of device from the document", () => {

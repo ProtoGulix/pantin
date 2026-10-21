@@ -116,6 +116,18 @@ const entries: Record<ConsoleEntry["code"], ConsoleEntry> = {
     source: { kind: "pantin" },
     params: { message: "WARNING refused request: function 3, address 40000" },
   }),
+  sensor_changed: entryOf(21, {
+    code: "sensor_changed",
+    level: "trace",
+    source: { kind: "sensor", id: "e1" },
+    params: { tag: "press.e1.extended", value: 1 },
+  }),
+  trace_dropped: entryOf(22, {
+    code: "trace_dropped",
+    level: "info",
+    source: { kind: "pantin" },
+    params: { dropped: 40 },
+  }),
 };
 
 const expected = {
@@ -145,6 +157,9 @@ const expected = {
       "Simulation en pause alors qu'un pont automate est connecté : l'automate voit une machine figée.",
     bridge_failed: "Le pont automate s'est arrêté sur une erreur (détail ci-dessous).",
     bridge_log: "Pont automate : WARNING refused request: function 3, address 40000",
+    sensor_changed: "Le tag press.e1.extended passe à 1.",
+    trace_dropped:
+      "Mode détaillé : 40 ligne(s) de trace omise(s), trop de changements de capteurs en peu de pas.",
   },
   en: {
     forced_tag_written:
@@ -172,6 +187,9 @@ const expected = {
       "Simulation paused while a PLC bridge is connected: the PLC sees a frozen machine.",
     bridge_failed: "The PLC bridge stopped on an error (detail below).",
     bridge_log: "PLC bridge: WARNING refused request: function 3, address 40000",
+    sensor_changed: "Tag press.e1.extended changes to 1.",
+    trace_dropped:
+      "Verbose mode: 40 trace line(s) left out, too many sensor changes in a few steps.",
   },
 } as const;
 
