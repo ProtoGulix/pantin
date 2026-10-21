@@ -130,7 +130,7 @@ function buildIo(state: ViewerState, bridgeStatus: BridgeStatus | null): IoView 
     return null;
   }
   const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
-  return buildIoView(state.io, names, state.pendingRequestCount > 0, bridgeStatus);
+  return buildIoView(state.io, names, state.language, state.pendingRequestCount > 0, bridgeStatus);
 }
 
 export function buildPanelView(

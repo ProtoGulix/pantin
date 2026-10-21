@@ -1,12 +1,8 @@
-import { type IoMappingResponse, type IoTagOwner, MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
-import { createTranslator, type MessageKey } from "../i18n/translate.ts";
-import {
-  type IoEditParse,
-  type IoNumberField,
-  parseChannelEdit,
-  parseModuleEdit,
-} from "../io/io-edits.ts";
+import type { IoMappingResponse, IoTagOwner } from "@pantin/protocol";
+import { TRANSPORT_KINDS, type TransportKind } from "@pantin/transport-types/schemas";
+import { type IoEditParse, parseChannelEdit, parseModuleEdit } from "../io/io-edits.ts";
 import { withMapping } from "../io/io-state.ts";
+import { fieldLabel } from "../io/io-transport-view.ts";
 import { describeFailure, errorMessage } from "../messages.ts";
 import { selectIoOwner, showDeviceInIo, showTagInIo } from "./io-link-actions.ts";
 import { loadIoMapping, retryIoMapping } from "./io-load.ts";
@@ -84,15 +80,8 @@ function focusProblem(store: ViewerStore, moduleKey: string | null, cellId: stri
 }
 
 // A refused number says so before anything is sent, and the cell shows the core's value again.
-const NUMBER_LABEL_KEYS: Readonly<Record<IoNumberField, MessageKey>> = {
-  port: "io.settings.port",
-  unitId: "io.settings.unitId",
-  watchdogMilliseconds: "io.settings.watchdogMilliseconds",
-  address: "io.column.address",
-};
-
-function reportInvalidNumber(store: ViewerStore, field: IoNumberField): void {
-  const label = createTranslator(store.state.language)(NUMBER_LABEL_KEYS[field]);
+function reportInvalidNumber(store: ViewerStore, kind: TransportKind, field: string): void {
+  const label = fieldLabel(kind, field, store.state.language);
   store.update({
     ...store.state,
     message: errorMessage("message.io.integerExpected", { field: label }),
@@ -100,8 +89,15 @@ function reportInvalidNumber(store: ViewerStore, field: IoNumberField): void {
   void loadIoMapping(store);
 }
 
+// A module's transport kind decides how its fields are read (ADR 0064 point 14).
+function kindOfModule(store: ViewerStore, moduleKey: string): TransportKind | null {
+  const module = store.state.io.mapping?.modules.find((candidate) => candidate.key === moduleKey);
+  return module?.transport.kind ?? null;
+}
+
 function send<Request>(
   store: ViewerStore,
+  kind: TransportKind,
   parsed: IoEditParse<Request>,
   call: (pantinId: string, request: Request) => Promise<IoMappingResponse>,
   selectKey?: string,
@@ -110,15 +106,20 @@ function send<Request>(
     const { request } = parsed;
     void editMapping(store, (id) => call(id, request), selectKey);
   } else if (parsed.kind === "invalidNumber") {
-    reportInvalidNumber(store, parsed.field);
+    reportInvalidNumber(store, kind, parsed.field);
   }
 }
 
 function editModule(store: ViewerStore, moduleKey: string, field: string, text: string): void {
-  const parsed = parseModuleEdit(field, text);
+  const kind = kindOfModule(store, moduleKey);
+  if (kind === null) {
+    return;
+  }
+  const parsed = parseModuleEdit(kind, field, text);
   const renamed = parsed.kind === "request" ? parsed.request.key : undefined;
   send(
     store,
+    kind,
     parsed,
     (id, request) => store.ports.api.updateIoModule(id, moduleKey, request),
     renamed,
@@ -132,10 +133,17 @@ function editChannel(
   field: string,
   text: string,
 ): void {
-  send(store, parseChannelEdit(field, text), (id, request) =>
+  const kind = kindOfModule(store, moduleKey);
+  if (kind === null) {
+    return;
+  }
+  send(store, kind, parseChannelEdit(kind, field, text), (id, request) =>
     store.ports.api.updateIoChannel(id, moduleKey, tag, request),
   );
 }
+
+// The registry never lists zero kinds: a transport folder is what makes a kind exist.
+const defaultKind = (): TransportKind => TRANSPORT_KINDS[0];
 
 export function ioIntents(store: ViewerStore) {
   const api = () => store.ports.api;
@@ -144,10 +152,8 @@ export function ioIntents(store: ViewerStore) {
     focusIoProblem: (moduleKey: string | null, cellId: string) =>
       focusProblem(store, moduleKey, cellId),
     // The first one creates io.json; the core proposes key and port.
-    addIoModule: () =>
-      void editMapping(store, (id) =>
-        api().createIoModule(id, { transport: { kind: MODBUS_TCP_SLAVE_KIND } }),
-      ),
+    addIoModule: (kind: TransportKind = defaultKind()) =>
+      void editMapping(store, (id) => api().createIoModule(id, { transport: { kind } })),
     editIoModule: (moduleKey: string, field: string, text: string) =>
       editModule(store, moduleKey, field, text),
     removeIoModule: (moduleKey: string) =>

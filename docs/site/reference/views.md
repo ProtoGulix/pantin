@@ -370,22 +370,30 @@ Sous les boutons, **Problèmes (n)** liste tout ce que le cœur trouve à redire
 
 ### Les modules
 
-La colonne de gauche, **Modules**, liste les modules. Chaque ligne est un bouton à bascule (le module choisi est enfoncé) qui montre :
+En haut de la vue, la bande **Modules** liste les modules sur une ligne. Chaque module est un bouton à bascule (le module choisi est enfoncé et entouré) qui montre :
 
-- une pastille de connexion (pictogramme) et son texte, écrit sur la ligne du module : **pont arrêté**, **en attente de l'automate** ou **automate connecté** ;
-- la clé du module et son port (`m1`, `:1502`) ;
+- une pastille de connexion (pictogramme) et son texte : **pont arrêté**, **en attente de l'automate** ou **automate connecté** ;
+- la clé du module (`m1`) ;
 - le nombre de voies (**n voies**) et, s'il y en a, de problèmes (**n problèmes**).
 
 | Contrôle | Effet | Grisé quand |
 | --- | --- | --- |
-| Ligne de module | Sélectionne le module : ses réglages et ses voies s'affichent au centre. | Jamais |
+| Bouton de module | Choisit ce module comme **cible** : il reçoit les affectations (voir ci-dessous). | Jamais |
 | **Ajouter un module** | Ajoute un module à la liste. Le cœur choisit sa clé et son port ; vous pouvez les changer ensuite. | Une requête est en cours |
+| **Type de transport du nouveau module** | Liste placée à côté du bouton, qui choisit le transport du module ajouté. Elle n'apparaît que si plusieurs transports sont connus ; aujourd'hui, un seul l'est. | Sans objet |
 
 Sans module : **Aucun module.**
 
+Sous la bande, la vue a une **section par module**, l'une sous l'autre. L'en-tête d'une section porte la clé du module et un sous-titre en texte, écrit par le transport, par exemple **Modbus TCP esclave · Port 1502 · Adresse d'unité 1**. À droite de l'en-tête :
+
+- la section du module cible porte le texte **Reçoit les affectations** et un cadre épais autour d'elle ;
+- chaque autre section porte un bouton **Affecter ici**, qui en fait la cible.
+
+Le texte et le cadre disent la même chose : la cible ne se reconnaît pas à sa seule couleur.
+
 ### Les réglages du module
 
-Au centre, en haut, sous **Réglages du module** pour le module sélectionné. Chaque champ est envoyé tel qu'il est tapé quand on le quitte ; c'est le cœur qui vérifie les plages et les doublons. Un champ en erreur est marqué et son info-bulle donne la raison.
+Dans chaque section, sous l'en-tête, les réglages tiennent sur une rangée compacte. Chaque champ est envoyé tel qu'il est tapé quand on le quitte ; c'est le cœur qui vérifie les plages et les doublons. Un champ en erreur est marqué et son info-bulle donne la raison. Les champs sont ceux du transport du module ; pour **Modbus TCP esclave** :
 
 | Champ | Rôle |
 | --- | --- |
@@ -400,36 +408,45 @@ Les plages autorisées et leurs valeurs par défaut sont dans [Connecter un auto
 
 ### Le tableau des voies
 
-Sous les réglages, **Voies** liste les tags affectés à ce module, un par ligne. Sans voie : **Aucune voie dans ce module.**
+Sous les réglages, chaque section a son tableau de voies, une voie par ligne. Sans voie : **Aucune voie dans ce module.**
 
 | Colonne | Contenu | Modifiable |
 | --- | --- | --- |
-| **Tag** | Le tag du viewer (`assemblage.élément.membre`). Un clic sélectionne l'élément qui le possède (info-bulle **Sélectionner l'élément propriétaire de nom**). Un tag que le Pantin ne connaît plus reste en texte simple. | Non |
+| **Signal** | Le tag du viewer (`assemblage.élément.membre`). Un clic sélectionne l'élément qui le possède (info-bulle **Sélectionner l'élément propriétaire de nom**). Un tag que le Pantin ne connaît plus reste en texte simple. | Non |
+| **Unité** | L'unité du signal : `m`, `rad`, `m/s`, `rad/s` ou `%`. Le tiret **—** veut dire sans unité (un bit, par exemple). | Non |
 | **Variable** | Nom de la variable CODESYS. | Oui |
-| **Zone** | Zone Modbus, affichée telle que le cœur la donne : `coil`, `discrete_input`, `holding_register` ou `input_register` (non traduite). Calculée par le cœur. | Non |
+| **Zone** | Zone Modbus, nommée avec les mots du transport : **Bobine**, **Entrée discrète**, **Registre de maintien** ou **Registre d'entrée**. Calculée par le cœur. | Non |
 | **Adresse** | Adresse dans la zone. | Oui |
 | **Type** | Type de la voie, calculé par le cœur : `BOOL`, `REAL` ou `DINT`. | Non |
 | **Commentaire** | Texte libre repris dans la GVL. | Oui |
 | **Actions** | **Réaffecter** et **Retirer** (voir ci-dessous). | Sans objet |
 
+**Zone**, **Adresse** et **Type** sont les colonnes du transport : elles n'existent que dans un module Modbus. Un transport qui aurait d'autres réglages aurait d'autres colonnes ; **Signal**, **Unité**, **Variable**, **Commentaire** et **Actions** sont communes à tous.
+
 | Bouton | Effet |
 | --- | --- |
 | **Réaffecter** | Recalcule la zone et le type du tag auprès du cœur (**Réaffecter nom : zone et type sont recalculés par le coeur**). Grisé pendant une requête. |
-| **Retirer** | Retire la voie du module ; le tag redevient non affecté (**Retirer la voie nom**). Grisé pendant une requête. |
+| **Retirer** | Retire la voie du module ; le tag n'y est plus affecté (**Retirer la voie nom**). Grisé pendant une requête. |
 
 Une cellule qui a un problème est marquée, et son info-bulle donne le message.
 
-### Les tags non affectés
+### Les signaux à affecter
 
-La colonne de droite, **Tags non affectés (n)**, liste les tags du Pantin que personne n'a encore donnés à l'automate, groupés par assemblage. Sans tag à affecter : **Tous les tags sont affectés.**
+Sous les sections, **Signaux à affecter à module (n)** liste les signaux que le module cible peut prendre, groupés par assemblage. Sans signal à proposer : **Tous les signaux sont affectés à ce module.** Sont proposés :
+
+- les signaux que personne n'a encore donnés à l'automate ;
+- les signaux de retour (capteur, position...) déjà affectés dans un autre module : ils portent la mention **déjà dans : m1** (les modules concernés). La même variable est reprise, déclarée une seule fois ;
+- jamais une commande déjà affectée dans un module : une commande n'est pilotée que par un seul module.
 
 | Contrôle | Effet | Grisé quand |
 | --- | --- | --- |
-| Nom du tag | Sélectionne l'élément propriétaire. | Jamais |
-| **Affecter à module** | Ajoute ce tag au module sélectionné (ou, à défaut, au premier module). | Une requête est en cours, ou il n'y a aucun module (**Ajoutez un module pour affecter des tags.**) |
-| **Affecter tout** | Ajoute en une seule requête tous les tags non affectés au module sélectionné. | Mêmes raisons |
+| Nom du signal | Sélectionne l'élément propriétaire. | Jamais |
+| **Affecter à module** | Ajoute ce signal au module cible. | Une requête est en cours, ou il n'y a aucun module (**Ajoutez un module pour affecter des tags.**) |
+| **Affecter tout** | Ajoute en une seule requête tous les signaux que personne n'a encore affectés au module cible. Les signaux « déjà dans » un autre module se choisissent un par un. | Mêmes raisons, ou aucun signal de ce genre |
 
 Le cœur choisit la zone, le type et l'adresse : vous ne les tapez pas à l'affectation. Vous pouvez ensuite changer l'adresse, le nom de variable et le commentaire dans le tableau.
+
+Dans l'inspecteur, la section **E/S** d'un tag affecté indique le module et la place, par exemple **m1 · Bobine 7** (zone et adresse, avec les mots du transport).
 
 Ces boutons restent visibles quand ils sont inactifs et gardent leur info-bulle : les cliquer ne fait rien, mais le focus clavier n'est pas perdu.
 

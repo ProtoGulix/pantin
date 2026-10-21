@@ -1,5 +1,4 @@
 import {
-  bridgeCard,
   chooseZoneView,
   closeBottomZone,
   diagramCoil,
@@ -83,16 +82,6 @@ export async function captureDiagram(session: Session): Promise<void> {
   const diagram = session.page.getByRole("region", { name: session.label("diagram.label") });
   await diagram.waitFor();
   await saveShot(session, "diagram", diagram);
-}
-
-export async function captureIoView(session: Session): Promise<void> {
-  const { page, label } = session;
-  await bridgeCard(session)
-    .getByRole("button", { name: label("bridge.configureIoShort") })
-    .click(FORCED);
-  await page.getByRole("heading", { name: label("io.modules.title") }).waitFor();
-  await saveShot(session, "io-view");
-  await chooseZoneView(session, "top", "view.diagram");
 }
 
 /** Frames the whole drive node through the whole joint node, inside the diagram's own box. */

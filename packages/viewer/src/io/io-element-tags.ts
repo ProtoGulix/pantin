@@ -1,5 +1,7 @@
 import type { IoMappingResponse, IoTagOwner } from "@pantin/protocol";
+import type { Language } from "../i18n/translate.ts";
 import { cellIdOf } from "./io-problems.ts";
+import { channelPlace } from "./io-transport-view.ts";
 
 // The tags of one element (a device or a joint) with their mapping, read from
 // the core's answer alone: the viewer never works out which tags an element
@@ -10,8 +12,8 @@ export interface ElementTag {
   // Null when no channel maps the tag.
   channel: {
     moduleKey: string;
-    zone: string;
-    address: number;
+    // Where the channel sits in its module, in the transport's own words ("Bobine 7").
+    place: string;
     variable: string;
     // The id of the tag cell in the I/O view, to scroll to.
     cellId: string;
@@ -22,7 +24,11 @@ const sameOwner = (left: IoTagOwner | null, right: IoTagOwner): boolean =>
   left !== null && left.kind === right.kind && left.id === right.id;
 
 /** Mapped tags in module order, then unmapped ones in the core's order. */
-export function tagsOfOwner(mapping: IoMappingResponse | null, owner: IoTagOwner): ElementTag[] {
+export function tagsOfOwner(
+  mapping: IoMappingResponse | null,
+  owner: IoTagOwner,
+  language: Language,
+): ElementTag[] {
   if (mapping === null) {
     return [];
   }
@@ -34,8 +40,7 @@ export function tagsOfOwner(mapping: IoMappingResponse | null, owner: IoTagOwner
               name: channel.tag,
               channel: {
                 moduleKey: module.key,
-                zone: channel.modbus?.zone ?? "",
-                address: channel.modbus?.address ?? 0,
+                place: channelPlace(module.transport.kind, channel, language),
                 variable: channel.variable,
                 cellId: cellIdOf({ moduleIndex, channelIndex, field: "tag" }),
               },

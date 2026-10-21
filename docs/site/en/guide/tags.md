@@ -64,9 +64,9 @@ The `io.json` file links tags to PLC variables and to Modbus addresses. It **nev
 - **modules**, each with its **Key** and its **transport** (the way of talking to the PLC). The only transport available is `modbus_tcp_slave` (**Modbus TCP slave**), whose settings are the **Port**, the **Unit id**, the **Word order** and the **Watchdog (ms)**;
 - **channels**: a **Tag**, a **Variable**, a **Comment** and, for the Modbus transport, a **Zone**, an **Address** and a **Type**.
 
-The file is in version 2: the transport settings are in the module's `transport` object, and the zone, address and type in the channel's `modbus` object. A feedback tag (sensor, position...) can be mapped in several modules, with the same variable, declared once; a command is mapped in one module only. The I/O view does not offer an already mapped tag yet: today the second module is set through the API.
+The file is in version 2: the transport settings are in the module's `transport` object, and the zone, address and type in the channel's `modbus` object. A feedback tag (sensor, position...) can be mapped in several modules, with the same variable, declared once; a command is mapped in one module only. The I/O view offers it: a feedback signal already mapped in another module appears in **Signals to map** with the note **already in: m1**.
 
-Display the **I/O** view in a zone (the zone's selector, or the **View** menu). If the Pantin has no list yet, **Create the mapping**. You can **Add a module**, **Map** the **Unmapped tags** to a module, **Reassign** or **Remove** a channel. Problems appear in **Problems**.
+Display the **I/O** view in a zone (the zone's selector, or the **View** menu). If the Pantin has no list yet, **Create the mapping**. The view shows one section per module, with its channel table. You can **Add a module**, choose the module that **Receives the mappings** (**Map here** button), **Map** the **Signals to map** to that module, **Reassign** or **Remove** a channel. Problems appear in **Problems**.
 
 **Export GVL** downloads the matching CODESYS global variable list. If a tag is renamed, its channel follows; the name of the variable never changes.
 

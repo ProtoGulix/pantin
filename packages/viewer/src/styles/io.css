@@ -39,8 +39,15 @@
 .io-view__body {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) minmax(190px, 260px);
-  gap: 12px;
+  /* One column: the sections get the whole width, the list to map sits below them. */
+  grid-template-areas:
+    "modules"
+    "main"
+    "unmapped";
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  gap: 8px;
+  overflow: auto;
   min-height: 0;
 }
 
@@ -48,10 +55,22 @@
 .io-modules,
 .io-unmapped {
   min-width: 0;
-  overflow: auto;
+}
+
+.io-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  grid-area: modules;
+}
+
+.io-unmapped {
+  grid-area: unmapped;
 }
 
 .io-view__main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -123,14 +142,15 @@
 }
 
 .io-modules__list {
-  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
 }
 
 .io-module {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 8px;
-  width: 100%;
   padding: 4px 6px;
   color: var(--text);
   text-align: left;
@@ -163,7 +183,6 @@
   font-weight: 600;
 }
 
-.io-module__port,
 .io-module__count {
   color: var(--text-muted);
 }
@@ -172,11 +191,22 @@
   color: var(--state-emergency);
 }
 
-.io-settings__fields {
+.io-settings {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
+  align-items: flex-end;
   margin-bottom: 8px;
+}
+
+.io-settings__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.io-settings__fields input {
+  width: 14ch;
 }
 
 .io-field {
@@ -187,47 +217,6 @@
 
 .io-field__label {
   color: var(--text-muted);
-}
-
-.io-table-scroll {
-  overflow: auto;
-}
-
-.io-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.io-table__head {
-  padding: 3px 6px;
-  color: var(--text-muted);
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-.io-cell {
-  padding: 1px 4px;
-  border-bottom: 1px solid var(--surface-2);
-}
-
-.io-cell--derived {
-  padding: 3px 6px;
-  font-family: var(--font-source);
-  color: var(--text-muted);
-}
-
-.io-cell--actions {
-  white-space: nowrap;
-}
-
-.io-cell input {
-  width: 100%;
-  min-width: 70px;
-}
-
-/* Wide enough for a CODESYS variable name such as GVL_Press.xValveExtend. */
-.io-cell--variable input {
-  min-width: 24ch;
 }
 
 /* A problem is marked by an outline as well as by colour. */
@@ -244,6 +233,7 @@
 
 .io-unmapped__tag {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
   justify-content: space-between;

@@ -1,3 +1,4 @@
+import type { TransportKind } from "@pantin/transport-types/schemas";
 import { moduleConnectionTone } from "../bridge/module-connection.ts";
 import type { Translate } from "../i18n/translate.ts";
 import type { IoModuleItem, IoView } from "../io/io-view-model.ts";
@@ -13,9 +14,9 @@ function moduleRow(item: IoModuleItem, translate: Translate, intents: PanelInten
   const status = translate(item.statusKey);
   const summary = translate("io.module.summary", {
     key: item.key,
-    port: item.port,
-    channels: item.channelCount,
-    problems: item.problemCount,
+    subtitle: item.subtitle,
+    channels: translate(item.channelsKey, { count: item.channelCount }),
+    problems: translate(item.problemsKey, { count: item.problemCount }),
   });
   const label = `${summary}, ${status}`;
   const choose = element(
@@ -35,17 +36,16 @@ function moduleRow(item: IoModuleItem, translate: Translate, intents: PanelInten
         element("span", { className: "io-module__status", text: status }),
       ]),
       element("span", { className: "io-module__key", text: item.key }),
-      element("span", { className: "io-module__port", text: `:${item.port}` }),
       element("span", {
         className: "io-module__count",
-        text: translate("io.module.channels", { count: item.channelCount }),
+        text: translate(item.channelsKey, { count: item.channelCount }),
       }),
       item.problemCount === 0
         ? null
         : element(
             "span",
             { className: "io-module__problems" },
-            glyphThenText("error", translate("io.module.problems", { count: item.problemCount })),
+            glyphThenText("error", translate(item.problemsKey, { count: item.problemCount })),
           ),
     ],
   );
@@ -53,17 +53,34 @@ function moduleRow(item: IoModuleItem, translate: Translate, intents: PanelInten
   return element("li", {}, [choose]);
 }
 
+// The transport is asked for only when the registry has a choice: with one kind, the question has
+// no answer but that one.
+function kindChoice(view: IoView, translate: Translate): HTMLSelectElement | null {
+  if (view.creatableKinds.length < 2) {
+    return null;
+  }
+  const select = element("select", {
+    className: "select-input",
+    attributes: { "aria-label": translate("io.module.kind"), "data-focus-key": "io-module-kind" },
+  });
+  for (const choice of view.creatableKinds) {
+    select.append(element("option", { text: choice.label, attributes: { value: choice.kind } }));
+  }
+  return select;
+}
+
+function chosenKind(view: IoView, select: HTMLSelectElement | null): TransportKind | undefined {
+  return view.creatableKinds.find((choice) => choice.kind === select?.value)?.kind;
+}
+
 export function drawModuleList(
   view: IoView,
   translate: Translate,
   intents: PanelIntents,
 ): HTMLElement {
-  const add = ioButton(
-    translate("io.module.add"),
-    "io-button",
-    view.busy,
-    "io-add-module",
-    intents.addIoModule,
+  const kindSelect = kindChoice(view, translate);
+  const add = ioButton(translate("io.module.add"), "io-button", view.busy, "io-add-module", () =>
+    intents.addIoModule(chosenKind(view, kindSelect)),
   );
   return element(
     "nav",
@@ -77,6 +94,7 @@ export function drawModuleList(
             { className: "io-modules__list" },
             view.modules.map((item) => moduleRow(item, translate, intents)),
           ),
+      kindSelect,
       add,
     ],
   );

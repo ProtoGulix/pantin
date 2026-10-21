@@ -70,12 +70,12 @@ function tagView(tag: ElementTag, context: TagContext): InspectorIoTag {
   const { target, bridgeStatus, labels, t } = context;
   const label = labels.get(tag.name) ?? shortName(tag.name);
   if (tag.channel !== null) {
-    const { moduleKey, zone, address, variable } = tag.channel;
+    const { moduleKey, place, variable } = tag.channel;
     const connection = moduleConnection(bridgeStatus, moduleKey);
     return {
       name: tag.name,
       label,
-      status: t("io.section.mapped", { module: moduleKey, zone, address }),
+      status: t("io.section.mapped", { module: moduleKey, place }),
       mapped: true,
       connection: {
         tone: moduleConnectionTone(connection),
@@ -132,7 +132,7 @@ export function buildInspectorIoView(
         }
       : null;
   }
-  const tags = tagsOfOwner(state.io.mapping, owner);
+  const tags = tagsOfOwner(state.io.mapping, owner, state.language);
   if (tags.length === 0) {
     return null;
   }

@@ -1,0 +1,38 @@
+.io-section {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* The selected module is told apart by a thicker outline and by the text of its badge, not by colour. */
+.io-section.is-selected {
+  border: 2px solid var(--selection);
+}
+
+.io-section__header {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.io-section__subtitle {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+}
+
+.io-section__target {
+  font-weight: 600;
+}
+
+.io-unmapped__also {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.io-unmapped__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2px 12px;
+}

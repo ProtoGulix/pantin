@@ -311,6 +311,9 @@ importers:
       '@pantin/sensor-types':
         specifier: workspace:*
         version: link:../sensor-types
+      '@pantin/transport-types':
+        specifier: workspace:*
+        version: link:../transport-types
     devDependencies:
       vite:
         specifier: 8.3.1

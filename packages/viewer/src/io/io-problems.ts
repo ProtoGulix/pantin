@@ -1,4 +1,5 @@
 import type { IoPath, IoProblem } from "@pantin/protocol";
+import { CHANNEL_KEYS } from "@pantin/transport-types/schemas";
 
 // Where a problem shows (ADR 0049 point 11): the core reports a JSON path into
 // io.json, the view finds the cell from it. Pure, so the lookup is unit tested.
@@ -12,7 +13,7 @@ export interface IoCellRef {
 
 // The settings of a module are under `transport`, the transport fields of a channel under the
 // sub-object named after the transport (ADR 0064 point 4): the cell is named by the last part.
-const TRANSPORT_SECTIONS: ReadonlySet<PathPart> = new Set(["modbus"]);
+const TRANSPORT_SECTIONS: ReadonlySet<PathPart> = new Set(CHANNEL_KEYS);
 type PathPart = IoPath[number];
 
 /** The cell a path points at, or null for the whole file or a whole module or channel. */

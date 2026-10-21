@@ -368,9 +368,10 @@ never by hand.
    creates a first empty module, `m1`, on port 1502. Use **Add a module**
    (**Modules** section) only for an additional module: it takes the next free
    key and port (`m2`, 1503).
-4. **Unmapped tags** section: click **Map all** to put all the tags in the
-   module, or **Map to m1** tag by tag.
-5. If needed, set **Module settings**: **Key**, **Port**, **Unit id**,
+4. **Signals to map to m1** section: click **Map all** to put all the signals in the
+   module, or **Map to m1** signal by signal. With several modules, the section
+   marked **Receives the mappings** is the target; **Map here** changes it.
+5. If needed, set the module's settings (the row under its title): **Key**, **Port**, **Unit id**,
    **Word order** (**Low word first** by default) and **Watchdog (ms)**.
 6. Save the Pantin (Ctrl+S).
 
@@ -384,7 +385,7 @@ For a Pantin built with this tutorial, the result should look like this:
 | `tige.verin-max.state` | discrete input | 1 | `tige_verin_max_state` |
 | `tige.verin.position` | input register | 0 (REAL, 2 registers) | `tige_verin_position` |
 
-Each line of **Channels** has a **Tag**, a **Variable**, a **Zone**, an
+Each line of a module's table has a **Signal**, a **Unit**, a **Variable**, a **Zone**, an
 **Address**, a **Type** and a **Comment**. Problems (a tag mapped twice,
 overlapping addresses...) are listed under **Problems**; click **Go to the cell
 concerned** to fix them.

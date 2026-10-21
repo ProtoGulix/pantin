@@ -4,16 +4,15 @@ import type { IoView } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import { ioButton } from "./io-cells.ts";
-import { drawChannelTable } from "./io-channel-table.ts";
-import { drawModuleSettings } from "./io-module-form.ts";
 import { drawModuleList } from "./io-module-list.ts";
+import { drawModuleSection } from "./io-module-section.ts";
 import { drawProblemList } from "./io-problem-list.ts";
 import { drawUnmappedList } from "./io-unmapped-list.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { markAsZoneView } from "./zone-view.ts";
 
-// The I/O view in the central area (ADR 0049 point 11): modules on the left,
-// the selected module's settings and channels, unmapped tags on the right,
+// The I/O view in the central area (ADR 0049 point 11, ADR 0064 point 14): modules on the left,
+// one section per module in the middle, what the selected module can take on the right,
 // problems at the top. It is redrawn only when the mapping or the selection
 // changes, so that typing in a cell is never interrupted by something else.
 
@@ -46,14 +45,11 @@ function statusPage(view: IoView, translate: Translate, intents: PanelIntents): 
 function editor(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {
   return element("div", { className: "io-view__body" }, [
     drawModuleList(view, translate, intents),
-    element("div", { className: "io-view__main" }, [
-      view.selected === null
-        ? null
-        : drawModuleSettings(view.selected, translate, intents, view.busy),
-      view.selected === null
-        ? null
-        : drawChannelTable(view.selected, translate, intents, view.busy),
-    ]),
+    element(
+      "div",
+      { className: "io-view__main" },
+      view.sections.map((section) => drawModuleSection(section, translate, intents, view.busy)),
+    ),
     drawUnmappedList(view, translate, intents),
   ]);
 }

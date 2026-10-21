@@ -159,3 +159,21 @@ describe("PantinApiClient GVL download", () => {
     ]);
   });
 });
+
+describe("PantinApiClient signals", () => {
+  it("reads the signal list, which carries the unit of each tag", async () => {
+    const signal = {
+      name: "main.rod.position",
+      type: "float",
+      direction: "feedback",
+      unit: "metre",
+      owner: { kind: "joint", id: "rod", name: "Rod" },
+      member: "position",
+      description: "Position of the rod",
+    };
+    const { fetchFunction, requests } = fakeFetch(jsonResponse({ signals: [signal] }));
+    const answer = await createPantinApiClient(fetchFunction).listSignals("press");
+    expect(answer.signals[0]?.unit).toBe("metre");
+    expect(requests[0]?.url).toBe("/api/pantins/press/signals");
+  });
+});

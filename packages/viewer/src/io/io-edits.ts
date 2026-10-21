@@ -1,8 +1,6 @@
-import {
-  MODBUS_TCP_SLAVE_KIND,
-  type UpdateIoChannelRequest,
-  type UpdateIoModuleRequest,
-} from "@pantin/protocol";
+import type { UpdateIoChannelRequest, UpdateIoModuleRequest } from "@pantin/protocol";
+import { CHANNEL_KEY_BY_KIND, type TransportKind } from "@pantin/transport-types/schemas";
+import { isEditableChannelField, settingSpecOf } from "./io-transport-view.ts";
 
 // Turns the text of an edited cell into the request body. The text is only
 // parsed: ranges and rules are the protocol's and the core's.
@@ -11,11 +9,8 @@ import {
 // is a field that is not edited here.
 export type IoEditParse<Request> =
   | { kind: "request"; request: Request }
-  | { kind: "invalidNumber"; field: IoNumberField }
+  | { kind: "invalidNumber"; field: string }
   | { kind: "ignored" };
-
-const MODULE_NUMBER_FIELDS = ["port", "unitId", "watchdogMilliseconds"] as const;
-export type IoNumberField = (typeof MODULE_NUMBER_FIELDS)[number] | "address";
 
 const request = <Request>(value: Request): IoEditParse<Request> => ({
   kind: "request",
@@ -29,38 +24,54 @@ function integerOf(text: string): number | null {
   return /^\d+$/.test(trimmed) ? Number(trimmed) : null;
 }
 
-export function parseModuleEdit(field: string, text: string): IoEditParse<UpdateIoModuleRequest> {
+// A setting of the module's transport, whose names are the transport's own. The cast is only for
+// the computed key: the api client validates the body against the Zod schema before sending it.
+function transportSetting(
+  kind: TransportKind,
+  field: string,
+  value: string | number,
+): IoEditParse<UpdateIoModuleRequest> {
+  return request({ transport: { kind, [field]: value } } as UpdateIoModuleRequest);
+}
+
+export function parseModuleEdit(
+  kind: TransportKind,
+  field: string,
+  text: string,
+): IoEditParse<UpdateIoModuleRequest> {
   if (field === "key") {
     return request({ key: text.trim() });
   }
-  if (field === "wordOrder") {
-    return text === "low_word_first" || text === "high_word_first"
-      ? request({ transport: { kind: MODBUS_TCP_SLAVE_KIND, wordOrder: text } })
-      : IGNORED;
-  }
-  const numeric = MODULE_NUMBER_FIELDS.find((name) => name === field);
-  if (numeric === undefined) {
+  const spec = settingSpecOf(kind, field);
+  if (spec === undefined) {
     return IGNORED;
   }
+  if (spec.input === "choice") {
+    return spec.options?.includes(text) === true ? transportSetting(kind, field, text) : IGNORED;
+  }
   const value = integerOf(text);
-  return value === null
-    ? { kind: "invalidNumber", field: numeric }
-    : request({ transport: { kind: MODBUS_TCP_SLAVE_KIND, [numeric]: value } });
+  return value === null ? { kind: "invalidNumber", field } : transportSetting(kind, field, value);
 }
 
-export function parseChannelEdit(field: string, text: string): IoEditParse<UpdateIoChannelRequest> {
+export function parseChannelEdit(
+  kind: TransportKind,
+  field: string,
+  text: string,
+): IoEditParse<UpdateIoChannelRequest> {
   switch (field) {
     case "variable":
       return request({ variable: text.trim() });
     case "comment":
       return request({ comment: text });
-    case "address": {
+    default: {
+      if (!isEditableChannelField(kind, field)) {
+        return IGNORED;
+      }
       const value = integerOf(text);
+      // Same cast: the patch sub-object is named after the transport (ADR 0064 point 4).
       return value === null
         ? { kind: "invalidNumber", field }
-        : request({ modbus: { address: value } });
+        : request({ [CHANNEL_KEY_BY_KIND[kind]]: { [field]: value } } as UpdateIoChannelRequest);
     }
-    default:
-      return IGNORED;
   }
 }

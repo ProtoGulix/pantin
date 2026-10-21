@@ -17,12 +17,12 @@ import {
   captureNewDriveForm,
   captureTreeContextMenu,
 } from "./docs-screenshots/capture-editing.ts";
+import { captureIoView } from "./docs-screenshots/capture-io.ts";
 import { captureRedundantJointsPrompt } from "./docs-screenshots/capture-redundant.ts";
 import {
   captureDiagram,
   captureForcedTag,
   captureHome,
-  captureIoView,
   captureJointView,
   captureOverview,
   captureTransportBar,

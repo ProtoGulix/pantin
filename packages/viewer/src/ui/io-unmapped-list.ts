@@ -1,6 +1,6 @@
-import type { IoUnmappedTag } from "@pantin/protocol";
 import type { Translate } from "../i18n/translate.ts";
 import { unmappedEntryId } from "../io/io-element-tags.ts";
+import type { IoOfferedTag } from "../io/io-unmapped.ts";
 import type { IoView } from "../io/io-view-model.ts";
 import { element } from "./dom.ts";
 import { ioButton, tagLink } from "./io-cells.ts";
@@ -10,7 +10,7 @@ import type { PanelIntents } from "./panel-intents.ts";
 // Each one goes to the selected module; "Map all" sends them in one request.
 
 function tagEntry(
-  tag: IoUnmappedTag,
+  tag: IoOfferedTag,
   target: string | null,
   busy: boolean,
   translate: Translate,
@@ -40,6 +40,12 @@ function tagEntry(
           intents.selectIoOwner,
         ),
       ]),
+      tag.alsoIn.length === 0
+        ? null
+        : element("span", {
+            className: "io-unmapped__also",
+            text: translate("io.unmapped.alsoIn", { modules: tag.alsoIn.join(", ") }),
+          }),
       map,
     ],
   );
@@ -47,11 +53,11 @@ function tagEntry(
 
 function mapAllButton(view: IoView, translate: Translate, intents: PanelIntents): HTMLElement {
   const target = view.targetModuleKey;
-  const all = view.unmapped.flatMap((group) => group.tags.map((tag) => tag.name));
+  const all = view.mapAllTags;
   const created = ioButton(
     translate("io.unmapped.mapAll"),
     "io-button",
-    view.busy || target === null,
+    view.busy || target === null || all.length === 0,
     "io-map-all",
     () => target !== null && intents.mapIoTags(target, all),
   );
@@ -65,12 +71,18 @@ export function drawUnmappedList(
   intents: PanelIntents,
 ): HTMLElement {
   const count = view.unmapped.reduce((total, group) => total + group.tags.length, 0);
-  const title = translate("io.unmapped.title", { count });
   const target = view.targetModuleKey;
+  const title =
+    target === null
+      ? translate("io.unmapped.titleNoModule", { count })
+      : translate("io.unmapped.title", { count, module: target });
   return element("aside", { className: "io-unmapped", attributes: { "aria-label": title } }, [
     element("h2", { className: "io-view__title", text: title }),
     count === 0
-      ? element("p", { className: "io-view__note", text: translate("io.unmapped.none") })
+      ? element("p", {
+          className: "io-view__note",
+          text: translate(target === null ? "io.unmapped.noneNoModule" : "io.unmapped.none"),
+        })
       : mapAllButton(view, translate, intents),
     target === null
       ? element("p", { className: "io-view__note", text: translate("io.unmapped.noModule") })

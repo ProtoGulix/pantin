@@ -231,3 +231,22 @@ describe("one read at a time, and the freshest answer wins", () => {
     expect(store.state.io.mapping?.modules[0]?.key).toBe("edited");
   });
 });
+
+describe("the units of the I/O view", () => {
+  it("come from the signal list read with the mapping", async () => {
+    const signal = {
+      name: "a.s.up",
+      type: "float" as const,
+      direction: "feedback" as const,
+      unit: "metre" as const,
+      owner: { kind: "sensor" as const, id: "s", name: "S" },
+      member: "value",
+      description: "value",
+    };
+    const store = await ioStore({
+      getIoMapping: async () => answer("m1"),
+      listSignals: async () => ({ signals: [signal] }),
+    });
+    expect(store.state.io.units.get("a.s.up")).toBe("metre");
+  });
+});

@@ -60,7 +60,7 @@ describe("the inspector I/O section, rows", () => {
     const view = buildInspectorIoView(stateWith(mapping([module("m1", [mapped])])), t);
     expect(view?.tags.map((tag) => tag.name)).toEqual(["a.v1.extend", "a.v1.retract"]);
     expect(view?.tags[0]).toMatchObject({
-      status: "m1 · coil 4",
+      status: "m1 · Coil 4",
       mapped: true,
       title: "a.v1.extend · GVL.ext",
       label: "extend",

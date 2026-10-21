@@ -387,9 +387,11 @@ le viewer, jamais à la main.
    Cliquez-le : il crée un premier module vide, `m1`, sur le port 1502.
    N'utilisez **Ajouter un module** (section **Modules**) que pour un module
    supplémentaire : il prend la clé et le port libres suivants (`m2`, 1503).
-4. Section **Tags non affectés** : cliquez **Affecter tout** pour ranger tous
-   les tags dans le module, ou **Affecter à m1** tag par tag.
-5. Réglez, si besoin, **Réglages du module** : **Clé**, **Port**, **Adresse
+4. Section **Signaux à affecter à m1** : cliquez **Affecter tout** pour ranger tous
+   les signaux dans le module, ou **Affecter à m1** signal par signal. Avec
+   plusieurs modules, la section marquée **Reçoit les affectations** est la
+   cible ; **Affecter ici** change de cible.
+5. Réglez, si besoin, les réglages du module (rangée sous son titre) : **Clé**, **Port**, **Adresse
    d'unité**, **Ordre des mots** (**Mot faible en premier** par défaut) et
    **Chien de garde (ms)**.
 6. Enregistrez le Pantin (Ctrl+S).
@@ -404,7 +406,7 @@ Pour un Pantin construit avec ce tutoriel, le résultat doit ressembler à ceci 
 | `tige.verin-max.state` | discrete input | 1 | `tige_verin_max_state` |
 | `tige.verin.position` | input register | 0 (REAL, 2 registres) | `tige_verin_position` |
 
-Chaque ligne de **Voies** porte un **Tag**, une **Variable**, une **Zone**, une
+Chaque ligne du tableau d'un module porte un **Signal**, une **Unité**, une **Variable**, une **Zone**, une
 **Adresse**, un **Type** et un **Commentaire**. Les problèmes (tag affecté deux
 fois, adresses qui se chevauchent...) sont listés sous **Problèmes** ; cliquez
 **Aller à la cellule concernée** pour les corriger.

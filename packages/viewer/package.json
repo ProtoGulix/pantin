@@ -16,7 +16,8 @@
     "@pantin/actuator-types": "workspace:*",
     "@pantin/drive-types": "workspace:*",
     "@pantin/protocol": "workspace:*",
-    "@pantin/sensor-types": "workspace:*"
+    "@pantin/sensor-types": "workspace:*",
+    "@pantin/transport-types": "workspace:*"
   },
   "devDependencies": {
     "vite": "8.3.1"

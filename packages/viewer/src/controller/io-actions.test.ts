@@ -94,6 +94,8 @@ describe("the I/O view actions", () => {
   it("reassigns with a PATCH that carries the tag and sends typed addresses as numbers", async () => {
     const calls: string[] = [];
     const store = openStore(calls);
+    // A cell is edited by the rules of its module's transport, so the mapping is read first.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     ioIntents(store).reassignIoChannel("m1", "a.v.x");
     ioIntents(store).editIoChannel("m1", "a.v.x", "address", "4");
     await new Promise((resolve) => setTimeout(resolve, 0));

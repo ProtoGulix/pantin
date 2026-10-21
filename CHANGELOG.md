@@ -107,6 +107,14 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Viewer (ADR 0064 point 14): the I/O view is laid out by module. A strip of modules sits on
+  top, then one section per module with a text subtitle (for example "Modbus TCP slave · Port
+  1502 · Unit id 1"), its settings on a compact row and its channel table (Signal, Unit,
+  Variable, then the transport's own columns, Comment, Actions). The target module says
+  "Receives the mappings" and is outlined; the others offer "Map here". The list "Signals to
+  map to <module>" also offers the feedback signals already mapped in another module ("already
+  in: m1"), so a second module is set from the view. The inspector shows "m1 · Coil 7". The
+  user guide (reference, tags, tutorial) and its screenshots follow, in French and English.
 - Core, protocol, CLI and bridge (ADR 0064, slice S2): io.json is version 2 and carries
   its modules per transport. A module is `{ key, transport, channels }`, the settings of the
   Modbus slave (port, unit id, word order, watchdog) moved into `transport` with

@@ -1,4 +1,5 @@
 import type { IoTagOwner } from "@pantin/protocol";
+import type { TransportKind } from "@pantin/transport-types/schemas";
 
 // What the I/O view asks of the controller (ADR 0049 point 11). Field texts
 // arrive raw, as typed; the controller parses them (io-edits.ts).
@@ -7,8 +8,8 @@ export interface IoIntents {
   // A problem of the list was clicked: show its module and focus its cell
   // (`moduleKey` is null for a problem that has no module).
   focusIoProblem(moduleKey: string | null, cellId: string): void;
-  // The first one creates io.json.
-  addIoModule(): void;
+  // The first one creates io.json. Without a kind, the registry's first one.
+  addIoModule(kind?: TransportKind): void;
   editIoModule(moduleKey: string, field: string, text: string): void;
   removeIoModule(moduleKey: string): void;
   mapIoTags(moduleKey: string, tags: readonly string[]): void;

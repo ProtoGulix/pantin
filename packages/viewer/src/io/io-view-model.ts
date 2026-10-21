@@ -1,27 +1,22 @@
-import type {
-  BridgeStatus,
-  IoMappedChannel,
-  IoMappingModule,
-  IoProblemCode,
-} from "@pantin/protocol";
+import type { BridgeStatus, IoMappingModule, IoProblemCode } from "@pantin/protocol";
 import {
   MODULE_CONNECTION_KEYS,
   type ModuleConnection,
   moduleConnection,
 } from "../bridge/module-connection.ts";
-import type { MessageKey } from "../i18n/translate.ts";
+import { type Language, type MessageKey, pluralKey } from "../i18n/translate.ts";
 import { ioCsvExportOf } from "./io-csv-export.ts";
 import { type IoFileExport, ioGvlExportOf } from "./io-gvl-export.ts";
-import {
-  cellIdOf,
-  cellOfPath,
-  type IoCellRef,
-  moduleIndexOfPath,
-  problemCountByModule,
-  problemMessagesByCell,
-} from "./io-problems.ts";
+import { cellIdOf, cellOfPath, moduleIndexOfPath, problemCountByModule } from "./io-problems.ts";
+import { type IoModuleSection, sectionsOf } from "./io-sections.ts";
 import { effectiveModuleKey, type IoFocusRequest, type IoState } from "./io-state.ts";
-import { groupUnmappedTags, type UnmappedGroup } from "./io-unmapped.ts";
+import { creatableKinds, type IoKindChoice, moduleSubtitle } from "./io-transport-view.ts";
+import {
+  groupUnmappedTags,
+  mapAllTagNames,
+  offeredTagsFor,
+  type UnmappedGroup,
+} from "./io-unmapped.ts";
 
 // Display logic of the I/O view (ADR 0049 point 11), as plain data. The viewer
 // computes nothing: zone, type, address and variable are the core's.
@@ -50,7 +45,8 @@ export interface IoProblemItem {
 
 export interface IoModuleItem {
   key: string;
-  port: number;
+  // The transport's name and endpoint, in the user's language.
+  subtitle: string;
   channelCount: number;
   problemCount: number;
   selected: boolean;
@@ -58,22 +54,9 @@ export interface IoModuleItem {
   connection: ModuleConnection;
   // The status word written next to the glyph: a tooltip alone is not a cue.
   statusKey: MessageKey;
-}
-
-export interface IoChannelRow {
-  channel: IoMappedChannel;
-  moduleIndex: number;
-  channelIndex: number;
-  // Problem messages by column field.
-  problems: ReadonlyMap<string, readonly string[]>;
-}
-
-export interface IoSelectedModule {
-  module: IoMappingModule;
-  moduleIndex: number;
-  // Problem messages by setting field.
-  problems: ReadonlyMap<string, readonly string[]>;
-  rows: readonly IoChannelRow[];
+  // Singular or plural wording of the counts, by the language's own rule.
+  channelsKey: MessageKey;
+  problemsKey: MessageKey;
 }
 
 export interface IoView {
@@ -91,8 +74,14 @@ export interface IoView {
   outOfDate: boolean;
   problems: readonly IoProblemItem[];
   modules: readonly IoModuleItem[];
-  selected: IoSelectedModule | null;
+  // One section per module, in the file's order.
+  sections: readonly IoModuleSection[];
+  // What the selected module can take: tags no module maps, and feedbacks of other modules.
   unmapped: readonly UnmappedGroup[];
+  // What "Map all" sends to the selected module.
+  mapAllTags: readonly string[];
+  // Offered when a module is created; the choice is hidden while there is only one.
+  creatableKinds: readonly IoKindChoice[];
   // Where "Map to" and "Map all" send the tags: the selected module.
   targetModuleKey: string | null;
 }
@@ -116,48 +105,6 @@ function ioIsOutOfDate(state: IoState): boolean {
   return state.mapping !== null && state.failedFor !== null && state.readFor !== state.failedFor;
 }
 
-function fieldProblems(
-  byCell: ReadonlyMap<string, readonly string[]>,
-  moduleIndex: number,
-  channelIndex: number | null,
-  fields: readonly string[],
-): ReadonlyMap<string, readonly string[]> {
-  const found = new Map<string, readonly string[]>();
-  for (const field of fields) {
-    const cell: IoCellRef = { moduleIndex, channelIndex, field };
-    const messages = byCell.get(cellIdOf(cell));
-    if (messages !== undefined) {
-      found.set(field, messages);
-    }
-  }
-  return found;
-}
-
-const MODULE_FIELDS = ["key", "port", "unitId", "wordOrder", "watchdogMilliseconds"];
-const CHANNEL_FIELDS = ["tag", "variable", "zone", "address", "ioType", "comment"];
-
-function selectedModuleOf(state: IoState): IoSelectedModule | null {
-  const modules = state.mapping?.modules ?? [];
-  const key = effectiveModuleKey(state);
-  const moduleIndex = modules.findIndex((module) => module.key === key);
-  const module = modules[moduleIndex];
-  if (module === undefined || state.mapping === null) {
-    return null;
-  }
-  const byCell = problemMessagesByCell(state.mapping.problems);
-  return {
-    module,
-    moduleIndex,
-    problems: fieldProblems(byCell, moduleIndex, null, MODULE_FIELDS),
-    rows: module.channels.map((channel, channelIndex) => ({
-      channel,
-      moduleIndex,
-      channelIndex,
-      problems: fieldProblems(byCell, moduleIndex, channelIndex, CHANNEL_FIELDS),
-    })),
-  };
-}
-
 function problemItems(state: IoState): IoProblemItem[] {
   const mapping = state.mapping;
   return (mapping?.problems ?? []).map((problem) => {
@@ -176,28 +123,34 @@ function moduleItemOf(
   problemCount: number,
   selected: boolean,
   bridgeStatus: BridgeStatus | null,
+  language: Language,
 ): IoModuleItem {
   const connection = moduleConnection(bridgeStatus, module.key);
   return {
     key: module.key,
-    port: module.transport.port,
+    subtitle: moduleSubtitle(module, language),
     channelCount: module.channels.length,
     problemCount,
     selected,
     connection,
     statusKey: MODULE_CONNECTION_KEYS[connection],
+    channelsKey: pluralKey("io.module.channels", module.channels.length, language),
+    problemsKey: pluralKey("io.module.problems", problemCount, language),
   };
 }
 
 export function buildIoView(
   state: IoState,
   assemblyNames: ReadonlyMap<string, string>,
+  language: Language,
   busy = false,
   bridgeStatus: BridgeStatus | null = null,
 ): IoView {
   const mapping = state.mapping;
   const counts = problemCountByModule(mapping?.problems ?? []);
   const key = effectiveModuleKey(state);
+  const unmapped =
+    mapping === null ? [] : groupUnmappedTags(offeredTagsFor(mapping, key), assemblyNames);
   return {
     source: state,
     focus: state.focus,
@@ -208,10 +161,12 @@ export function buildIoView(
     outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
     modules: (mapping?.modules ?? []).map((module, index) =>
-      moduleItemOf(module, counts.get(index) ?? 0, module.key === key, bridgeStatus),
+      moduleItemOf(module, counts.get(index) ?? 0, module.key === key, bridgeStatus, language),
     ),
-    selected: selectedModuleOf(state),
-    unmapped: groupUnmappedTags(mapping?.unmappedTags ?? [], assemblyNames),
+    sections: sectionsOf(state, key, language),
+    unmapped,
+    mapAllTags: mapAllTagNames(unmapped),
+    creatableKinds: creatableKinds(language),
     targetModuleKey: key,
   };
 }

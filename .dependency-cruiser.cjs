@@ -82,7 +82,10 @@ module.exports = {
         "The viewer shows what the core decided and imports the schemas, labels and presentation of a transport, never its rules (ADR 0064 point 3).",
       severity: "error",
       from: { path: "^packages/viewer/" },
-      to: { path: "^packages/transport-types/src/(rules|rule-types|[^/]+/rules[a-z-]*)\\.ts$" },
+      to: {
+        path: "^packages/transport-types/src/(rules|rule-types|[^/]+/rules[a-z-]*)\\.ts$",
+        reachable: true,
+      },
     },
     {
       name: "transport-type-schemas-hold-no-logic",

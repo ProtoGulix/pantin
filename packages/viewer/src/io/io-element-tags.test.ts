@@ -39,13 +39,12 @@ const mapping: IoMappingResponse = {
 
 describe("tagsOfOwner", () => {
   it("lists the mapped tags of the owner, then its unmapped ones", () => {
-    expect(tagsOfOwner(mapping, owner)).toEqual([
+    expect(tagsOfOwner(mapping, owner, "fr")).toEqual([
       {
         name: "a.d1.extend",
         channel: {
           moduleKey: "m2",
-          zone: "coil",
-          address: 7,
+          place: "Bobine 7",
           variable: "GVL.a.d1.extend",
           cellId: "io-cell-1-0-tag",
         },
@@ -55,7 +54,7 @@ describe("tagsOfOwner", () => {
   });
 
   it("is empty without a mapping or for an element without tags", () => {
-    expect(tagsOfOwner(null, owner)).toEqual([]);
-    expect(tagsOfOwner(mapping, { kind: "sensor", id: "none" })).toEqual([]);
+    expect(tagsOfOwner(null, owner, "fr")).toEqual([]);
+    expect(tagsOfOwner(mapping, { kind: "sensor", id: "none" }, "fr")).toEqual([]);
   });
 });

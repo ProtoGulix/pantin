@@ -62,7 +62,8 @@ export async function showTagInIo(store: ViewerStore, tagName: string): Promise<
   // The place is worked out after the read, which may come after the click.
   await ensureIoMapping(store);
   const owner = ownerOfSelection(store.state.selection);
-  const tags = owner === null ? [] : tagsOfOwner(currentMapping(store), owner);
+  const tags =
+    owner === null ? [] : tagsOfOwner(currentMapping(store), owner, store.state.language);
   showPlace(store, placeOfTag(tags, tagName));
 }
 
@@ -72,5 +73,10 @@ export async function showDeviceInIo(store: ViewerStore, nodeId: string): Promis
   const device = ref?.kind === "device" ? { kind: ref.deviceKind, id: ref.id } : null;
   const owner = device === null ? null : ownerOfDevice(device);
   await ensureIoMapping(store);
-  showPlace(store, owner === null ? null : firstPlace(tagsOfOwner(currentMapping(store), owner)));
+  showPlace(
+    store,
+    owner === null
+      ? null
+      : firstPlace(tagsOfOwner(currentMapping(store), owner, store.state.language)),
+  );
 }

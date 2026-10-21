@@ -37,7 +37,11 @@ export function testStore(
       // Only the calls a test makes: the others would fail loudly as undefined.
       // The mapping is read whenever a Pantin is opened or changed (io-load.ts), so
       // a test that does not care about it gets an answer for no io.json.
-      api: { getIoMapping: async () => NO_MAPPING, ...api } as PantinApiClient,
+      api: {
+        getIoMapping: async () => NO_MAPPING,
+        listSignals: async () => ({ signals: [] }),
+        ...api,
+      } as PantinApiClient,
       renderPanel: () => undefined,
       showJointPositions: () => undefined,
       showInspectorLive: () => undefined,

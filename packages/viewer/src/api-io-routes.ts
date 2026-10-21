@@ -5,6 +5,8 @@ import {
   CreateIoModuleRequestSchema,
   type IoMappingResponse,
   IoMappingResponseSchema,
+  type SignalListResponse,
+  SignalListResponseSchema,
   type UpdateIoChannelRequest,
   UpdateIoChannelRequestSchema,
   type UpdateIoModuleRequest,
@@ -34,6 +36,8 @@ export interface IoRoutes {
   // The CSV keeps its byte order mark, which Excel needs to read accents.
   fetchIoCsv(pantinId: string): Promise<TextFile>;
   getIoMapping(pantinId: string): Promise<IoMappingResponse>;
+  // The signals carry the unit of each tag (ADR 0064 point 2); the I/O view shows it.
+  listSignals(pantinId: string): Promise<SignalListResponse>;
   createIoModule(pantinId: string, request: CreateIoModuleRequest): Promise<IoMappingResponse>;
   updateIoModule(
     pantinId: string,
@@ -88,6 +92,8 @@ export function ioRoutes(send: SendJson, fetchFunction: FetchFunction): IoRoutes
       return { fileName: `${pantinId}-io.csv`, text: decoder.decode(await response.arrayBuffer()) };
     },
     getIoMapping: (pantinId) => send(pantinUrl(pantinId, "/io"), jsonRequest("GET"), answer),
+    listSignals: (pantinId) =>
+      send(pantinUrl(pantinId, "/signals"), jsonRequest("GET"), SignalListResponseSchema),
     createIoModule: async (pantinId, request) => {
       const valid = validInputOrThrow(CreateIoModuleRequestSchema, request);
       return send(pantinUrl(pantinId, "/io/modules"), jsonRequest("POST", valid), answer);

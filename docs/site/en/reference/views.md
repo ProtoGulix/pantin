@@ -370,22 +370,30 @@ Under the buttons, **Problems (n)** lists everything the core finds to complain 
 
 ### Modules
 
-The left column, **Modules**, lists the modules. Each row is a toggle button (the chosen module is pressed) that shows:
+At the top of the view, the **Modules** strip lists the modules on one line. Each module is a toggle button (the chosen module is pressed and outlined) that shows:
 
-- a connection dot (glyph) and its text, written on the module row: **bridge stopped**, **waiting for the PLC** or **PLC connected**;
-- the module's key and its port (`m1`, `:1502`);
+- a connection dot (glyph) and its text: **bridge stopped**, **waiting for the PLC** or **PLC connected**;
+- the module's key (`m1`);
 - the number of channels (**n channels**) and, if there are any, of problems (**n problems**).
 
 | Control | Effect | Greyed out when |
 | --- | --- | --- |
-| Module row | Selects the module: its settings and its channels are displayed in the centre. | Never |
+| Module button | Chooses this module as the **target**: it receives the mappings (see below). | Never |
 | **Add a module** | Adds a module to the list. The core chooses its key and port; you can change them afterwards. | A request is in progress |
+| **Transport of the new module** | A list next to the button that chooses the transport of the added module. It appears only when several transports are known; today, only one is. | Not applicable |
 
 With no module: **No module.**
 
+Under the strip, the view has **one section per module**, one under the other. The header of a section carries the module's key and a text subtitle, written by the transport, for example **Modbus TCP slave · Port 1502 · Unit id 1**. To the right of the header:
+
+- the target module's section carries the text **Receives the mappings** and a thick outline around it;
+- every other section carries a **Map here** button, which makes it the target.
+
+The text and the outline say the same thing: the target is not recognised by colour alone.
+
 ### Module settings
 
-In the centre, at the top, under **Module settings** for the selected module. Each field is sent as typed when you leave it; the core checks the ranges and the duplicates. A field in error is marked and its tooltip gives the reason.
+In each section, under the header, the settings fit on one compact row. Each field is sent as typed when you leave it; the core checks the ranges and the duplicates. A field in error is marked and its tooltip gives the reason. The fields are those of the module's transport; for **Modbus TCP slave**:
 
 | Field | Role |
 | --- | --- |
@@ -400,36 +408,45 @@ The allowed ranges and their default values are in [Connect a PLC](/en/guide/con
 
 ### The channel table
 
-Under the settings, **Channels** lists the tags mapped to this module, one per row. With no channel: **No channel in this module.**
+Under the settings, each section has its channel table, one channel per row. With no channel: **No channel in this module.**
 
 | Column | Content | Editable |
 | --- | --- | --- |
-| **Tag** | The viewer's tag (`assembly.element.member`). A click selects the element that owns it (tooltip **Select the element that owns name**). A tag the Pantin no longer knows stays as plain text. | No |
+| **Signal** | The viewer's tag (`assembly.element.member`). A click selects the element that owns it (tooltip **Select the element that owns name**). A tag the Pantin no longer knows stays as plain text. | No |
+| **Unit** | The signal's unit: `m`, `rad`, `m/s`, `rad/s` or `%`. The dash **—** means no unit (a bit, for example). | No |
 | **Variable** | Name of the CODESYS variable. | Yes |
-| **Zone** | Modbus zone, shown as the core gives it: `coil`, `discrete_input`, `holding_register` or `input_register` (not translated). Computed by the core. | No |
+| **Zone** | Modbus zone, named with the transport's words: **Coil**, **Discrete input**, **Holding register** or **Input register**. Computed by the core. | No |
 | **Address** | Address in the zone. | Yes |
 | **Type** | Type of the channel, computed by the core: `BOOL`, `REAL` or `DINT`. | No |
 | **Comment** | Free text carried over into the GVL. | Yes |
 | **Actions** | **Reassign** and **Remove** (see below). | Not applicable |
 
+**Zone**, **Address** and **Type** are the transport's columns: they exist only in a Modbus module. A transport with other settings would have other columns; **Signal**, **Unit**, **Variable**, **Comment** and **Actions** are common to all.
+
 | Button | Effect |
 | --- | --- |
 | **Reassign** | Recomputes the tag's zone and type with the core (**Reassign name: the core derives zone and type again**). Greyed out during a request. |
-| **Remove** | Removes the channel from the module; the tag becomes unmapped again (**Remove the channel name**). Greyed out during a request. |
+| **Remove** | Removes the channel from the module; the tag is no longer mapped there (**Remove the channel name**). Greyed out during a request. |
 
 A cell that has a problem is marked, and its tooltip gives the message.
 
-### Unmapped tags
+### Signals to map
 
-The right column, **Unmapped tags (n)**, lists the Pantin's tags that nobody has given to the PLC yet, grouped by assembly. With no tag to map: **Every tag is mapped.**
+Under the sections, **Signals to map to module (n)** lists the signals the target module can take, grouped by assembly. With no signal to offer: **Every signal is mapped to this module.** The list offers:
+
+- the signals nobody has given to the PLC yet;
+- the feedback signals (sensor, position...) already mapped in another module: they carry the note **already in: m1** (the modules concerned). The same variable is reused, declared once;
+- never a command already mapped in a module: a command is driven by one module only.
 
 | Control | Effect | Greyed out when |
 | --- | --- | --- |
-| Tag name | Selects the owning element. | Never |
-| **Map to module** | Adds this tag to the selected module (or, failing that, to the first module). | A request is in progress, or there is no module (**Add a module to map tags.**) |
-| **Map all** | Adds all the unmapped tags to the selected module in a single request. | Same reasons |
+| Signal name | Selects the owning element. | Never |
+| **Map to module** | Adds this signal to the target module. | A request is in progress, or there is no module (**Add a module to map tags.**) |
+| **Map all** | Adds all the signals nobody has mapped yet to the target module in a single request. The signals "already in" another module are chosen one at a time. | Same reasons, or no signal of that kind |
 
 The core chooses the zone, the type and the address: you do not type them when mapping. You can then change the address, the variable name and the comment in the table.
+
+In the inspector, the **I/O** section of a mapped tag shows the module and the place, for example **m1 · Coil 7** (zone and address, in the transport's words).
 
 These buttons stay visible when inactive and keep their tooltip: clicking them does nothing, but the keyboard focus is not lost.
 

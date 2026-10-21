@@ -1,4 +1,4 @@
-import type { IoMappingResponse, PantinResponse } from "@pantin/protocol";
+import type { IoMappingResponse, PantinResponse, SignalUnit } from "@pantin/protocol";
 
 // The state of the I/O view (ADR 0049 point 11): the core's last mapping
 // answer and what the user selected. Display state apart from the mapping,
@@ -23,6 +23,8 @@ export interface IoState {
   failedFor: PantinResponse | null;
   // Counts the answers applied, so that a late read never overwrites a fresher one.
   version: number;
+  // The unit of each tag, from the signal list: only the document changes it, so an I/O edit keeps it.
+  units: ReadonlyMap<string, SignalUnit>;
   selectedModuleKey: string | null;
   focus: IoFocusRequest | null;
 }
@@ -33,6 +35,7 @@ export const NO_IO_STATE: IoState = {
   readFor: null,
   failedFor: null,
   version: 0,
+  units: new Map(),
   selectedModuleKey: null,
   focus: null,
 };
@@ -57,6 +60,7 @@ export function withMapping(
   state: IoState,
   pantin: PantinResponse,
   mapping: IoMappingResponse,
+  units: ReadonlyMap<string, SignalUnit> = state.units,
 ): IoState {
   const sameModule = state.pantinId === pantin.id ? state.selectedModuleKey : null;
   const stillThere = mapping.modules.some((module) => module.key === sameModule);
@@ -64,6 +68,7 @@ export function withMapping(
     ...state,
     pantinId: pantin.id,
     mapping,
+    units,
     readFor: pantin,
     failedFor: null,
     version: state.version + 1,

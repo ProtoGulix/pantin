@@ -146,7 +146,7 @@ in the log.
 | **Export GVL** greyed out | Mapping missing, not read yet, or invalid: the tooltip says which | Create the mapping, or fix the **Problems** |
 | `pantin gvl`: "The mapping is invalid, so no GVL is generated: …" | Same cause, on the command line | Fix `io.json` from the viewer, run the command again |
 | `pantin gvl`: "No io.json in this folder: run "pantin io init" first." | No `io.json` | `pnpm pantin io init <folder>` or **Create the mapping** |
-| PLC tags that do not appear in the GVL | **Unmapped** tags are not in it | Map them in **Unmapped tags**. `pnpm pantin gvl` writes "note: N tag(s) are not mapped and not in the GVL" |
+| PLC tags that do not appear in the GVL | **Unmapped** tags are not in it | Map them in **Signals to map**. `pnpm pantin gvl` writes "note: N tag(s) are not mapped and not in the GVL" |
 | "io.json is in version N, written by a newer Pantin: this one reads up to version 2. Update Pantin." | The file was written by a newer Pantin | Update Pantin; do not edit the file |
 | "Command "…" is already mapped in module "…": a command is mapped once, in one module." (`command_mapped_twice`) | A command is mapped in two modules (only feedback tags can be) | Remove the channel from one of the modules |
 | "Port N is already used by module "…": each module listens on its own port." (`listen_port_used_twice`) | Two modules listen on the same port | Change the **Port** of one module |

@@ -8,7 +8,7 @@ import type { ViewerState } from "../viewer-state.ts";
 // not import the store, which calls it after every state change.
 export interface IoLoadStore {
   state: ViewerState;
-  ports: { api: Pick<PantinApiClient, "getIoMapping"> };
+  ports: { api: Pick<PantinApiClient, "getIoMapping" | "listSignals"> };
   update(next: ViewerState): void;
   // The read in flight, so that every caller of one Pantin version shares it.
   ioRead: { pantin: PantinResponse; done: Promise<void> } | null;
@@ -27,12 +27,16 @@ async function readQuietly(
   version: number,
 ): Promise<void> {
   try {
-    const mapping = await store.ports.api.getIoMapping(open.id);
+    const [mapping, signals] = await Promise.all([
+      store.ports.api.getIoMapping(open.id),
+      store.ports.api.listSignals(open.id),
+    ]);
+    const units = new Map(signals.signals.map((signal) => [signal.name, signal.unit]));
     const { state } = store;
     // Dropped when the Pantin changed meanwhile (a newer read follows) or an
     // answer, an I/O edit's or a newer read's, was applied since this one began.
     if (state.openPantin === open && state.io.version === version) {
-      store.update({ ...state, io: withMapping(state.io, open, mapping) });
+      store.update({ ...state, io: withMapping(state.io, open, mapping, units) });
     }
   } catch (error) {
     // Marked in the same update as the message: the hook it runs must not read again.

@@ -1,0 +1,54 @@
+/* The channel tables of the I/O view (ADR 0064 point 14). */
+.io-table-scroll {
+  /* Always shown: a cut table must say that there is more to see. */
+  overflow-x: scroll;
+  /* Shadows at the edges that hide columns, as a second cue next to the scroll bar. */
+  background:
+    linear-gradient(to right, var(--viewport-background) 30%, transparent) left center / 24px 100%
+    no-repeat local,
+    linear-gradient(to left, var(--viewport-background) 30%, transparent) right center / 24px 100%
+    no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 35%), transparent) left center / 10px 100%
+    no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 35%), transparent) right center / 10px
+    100% no-repeat scroll;
+}
+
+.io-table {
+  width: 100%;
+  white-space: nowrap;
+  border-collapse: collapse;
+}
+
+.io-table__head {
+  padding: 3px 6px;
+  color: var(--text-muted);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.io-cell {
+  padding: 1px 4px;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.io-cell--derived {
+  padding: 3px 6px;
+  font-family: var(--font-source);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.io-cell--actions {
+  white-space: normal;
+}
+
+.io-cell input {
+  width: 100%;
+  min-width: 6ch;
+}
+
+/* Wide enough for a CODESYS variable name such as GVL_Press.xValveExtend. */
+.io-cell--variable input {
+  min-width: 22ch;
+}
