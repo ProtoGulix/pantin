@@ -14,6 +14,7 @@ import { type ClockRuntime, newClockRuntime } from "../domain/simulation-clock.t
 import type { PortStates } from "../domain/simulation-state.ts";
 import type { TagStates } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
+import type { ExampleStore } from "../store/example-store.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { type BridgeCoreLineWriter, recordConsoleEvents } from "./console-record.ts";
 import { alignIo } from "./io-alignment.ts";
@@ -183,6 +184,8 @@ export function resetRuntimeState(context: ServiceContext, openPantin: OpenPanti
 // one load, hence one OpenPantin object that both edit.
 export type ServiceContext = {
   store: PantinStore;
+  // Undefined when the core was started without --examples-dir (ADR 0062).
+  exampleStore: ExampleStore | undefined;
   openPantins: Map<PantinId, Promise<OpenPantin>>;
   // The same Pantins once loaded, for the simulation loop, which cannot wait.
   loadedPantins: Map<PantinId, OpenPantin>;

@@ -1,6 +1,7 @@
-import type { PantinSummary } from "@pantin/protocol";
+import type { ExampleSummary, PantinSummary } from "@pantin/protocol";
 import { VIEWER_VERSION } from "../build-version.ts";
 import { diagramShortcuts } from "../diagram/diagram-texts.ts";
+import { exampleBeingCopied } from "../example-state.ts";
 import { type Language, pluralKey, type Translate } from "../i18n/translate.ts";
 import { listShortcuts, type ShortcutListing } from "../menu/menu-model.ts";
 import { viewModeOf } from "../session-state.ts";
@@ -25,12 +26,32 @@ export interface RecentCardView {
   modified: string;
 }
 
+export interface ExampleCardView {
+  id: string;
+  name: string;
+  bodies: string;
+  // The word "Example", so the card is told apart from a recent Pantin by text, not by look.
+  badge: string;
+  // The name prompt of this example is open.
+  asking: boolean;
+}
+
+// The name prompt of an example: its label and the name it starts with (ADR 0062 point 6).
+export interface ExamplePromptView {
+  exampleId: string;
+  label: string;
+  initialName: string;
+}
+
 export interface WelcomeView {
   visible: boolean;
   tab: WelcomeTab;
   // The name prompt of "Pantin vide" is open.
   creating: boolean;
   recents: RecentCardView[];
+  // Empty when the core offers none: the section is then hidden.
+  examples: ExampleCardView[];
+  examplePrompt: ExamplePromptView | null;
   rows: PantinListRowView[];
   filter: string;
   // Why "All Pantins" shows nothing, or null when it shows rows.
@@ -102,7 +123,11 @@ export function nextFocusIndex(count: number, current: number, backwards: boolea
   return (current + (backwards ? count - 1 : 1)) % count;
 }
 
-function bodiesLabel(summary: PantinSummary, t: Translate, language: Language): string {
+function bodiesLabel(
+  summary: Pick<PantinSummary, "bodyCount">,
+  t: Translate,
+  language: Language,
+): string {
   const key = pluralKey("tree.bodyCount", summary.bodyCount, language);
   return t(key, { count: summary.bodyCount });
 }
@@ -132,6 +157,27 @@ function buildRecents(state: ViewerState, t: Translate): RecentCardView[] {
     }));
 }
 
+function buildExamples(state: ViewerState, t: Translate): ExampleCardView[] {
+  return state.examples.offered.map((example: ExampleSummary) => ({
+    id: example.id,
+    name: example.name,
+    bodies: bodiesLabel(example, t, state.language),
+    badge: t("welcome.examples.badge"),
+    asking: example.id === state.examples.copyingId,
+  }));
+}
+
+function buildExamplePrompt(state: ViewerState, t: Translate): ExamplePromptView | null {
+  const example = exampleBeingCopied(state);
+  return example === undefined
+    ? null
+    : {
+        exampleId: example.id,
+        label: t("welcome.examples.promptLabel", { name: example.name }),
+        initialName: example.name,
+      };
+}
+
 function emptyText(state: ViewerState, rows: readonly PantinListRowView[], t: Translate) {
   if (rows.length > 0) {
     return null;
@@ -147,6 +193,8 @@ export function buildWelcomeView(state: ViewerState, t: Translate): WelcomeView 
     tab: state.welcomeTab,
     creating: state.creatingPantin,
     recents: visible ? buildRecents(state, t) : [],
+    examples: visible ? buildExamples(state, t) : [],
+    examplePrompt: visible ? buildExamplePrompt(state, t) : null,
     rows,
     filter: state.welcomeFilter,
     emptyText: visible ? emptyText(state, rows, t) : null,

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createServer, type Server } from "node:http";
-import type { AddressInfo, Socket } from "node:net";
+import type { AddressInfo } from "node:net";
 import { MAX_IMPORT_BYTES, type PantinId } from "@pantin/protocol";
 import { createBridgeLogFile } from "../bridge/bridge-log-file.ts";
 import { type BridgeSupervisor, createBridgeSupervisor } from "../bridge/bridge-supervisor.ts";
@@ -11,11 +11,7 @@ import type { ProcessLimits, ProcessSpawner } from "../converter/process-runner.
 import { createStepConverter, type StepConverter } from "../converter/step-converter.ts";
 import { defaultLogsDirectory } from "../domain/default-directories.ts";
 import type { IoMappingSource } from "../domain/io-mapping.ts";
-import {
-  isSourceAccepted,
-  type NetworkConfig,
-  resolveNetworkConfig,
-} from "../domain/network-config.ts";
+import { type NetworkConfig, resolveNetworkConfig } from "../domain/network-config.ts";
 import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { serviceMappingSource } from "../service/io-operations.ts";
 import {
@@ -29,6 +25,7 @@ import {
   type SimulationTimer,
   startSimulationLoop,
 } from "../service/simulation-loop.ts";
+import { createExampleStore } from "../store/example-store.ts";
 import { createPantinStore } from "../store/pantin-store.ts";
 import { listen } from "./listen.ts";
 import {
@@ -37,6 +34,7 @@ import {
   type PoseStreamRegistry,
 } from "./pose-stream-registry.ts";
 import { createRequestHandler } from "./request-handler.ts";
+import { closeServer, installSourceFilter } from "./server-lifecycle.ts";
 
 export type PantinServerOptions = {
   pantinsDirectory: string;
@@ -47,6 +45,8 @@ export type PantinServerOptions = {
   allow?: readonly string[];
   // Built viewer to serve next to /api (ADR 0008).
   viewerDirectory?: string;
+  // Folder of the example Pantins offered for copy (ADR 0062); none by default.
+  examplesDirectory?: string;
   maxImportBytes?: number;
   // The core's build version (ADR 0058), read once by main.ts and served on /api/version.
   buildVersion: string;
@@ -105,17 +105,6 @@ export class StartupRefusedError extends Error {
   }
 }
 
-// Registered before Node's own HTTP listener, and destroying synchronously:
-// a rejected socket is closed before a single byte of it is read.
-function installSourceFilter(server: Server, options: PantinServerOptions, network: NetworkConfig) {
-  server.prependListener("connection", (socket: Socket) => {
-    if (!isSourceAccepted(network, socket.remoteAddress)) {
-      socket.destroy();
-      options.reportRejectedSource(socket.remoteAddress ?? "unknown");
-    }
-  });
-}
-
 function createConfiguredStepConverter(options: PantinServerOptions): StepConverter | undefined {
   if (options.stepConverterPython === undefined) {
     return undefined;
@@ -150,6 +139,14 @@ function serviceOptionsOf(
       : { physicsWorldFactory: options.physicsWorldFactory }),
     ...(options.wallClock === undefined ? {} : { wallClock: options.wallClock }),
     ...(options.newConsoleId === undefined ? {} : { newConsoleId: options.newConsoleId }),
+    ...(options.examplesDirectory === undefined
+      ? {}
+      : {
+          exampleStore: createExampleStore(
+            options.examplesDirectory,
+            options.maxImportBytes ?? MAX_IMPORT_BYTES,
+          ),
+        }),
     reportError: options.reportError,
     onBridgeActivity: (pantinId) => bridge().refresh(pantinId),
     writeBridgeCoreLine: (pantinId, level, text) => bridge().logCoreEvent(pantinId, level, text),
@@ -208,15 +205,6 @@ function runTick(
   parts.bus.notifyTick();
 }
 
-// `stopWork` releases what runs inside the server before its connections are cut.
-function closeServer(server: Server, stopWork: () => void): Promise<void> {
-  return new Promise<void>((resolveClose, rejectClose) => {
-    stopWork();
-    server.close((error) => (error === undefined ? resolveClose() : rejectClose(error)));
-    server.closeAllConnections();
-  });
-}
-
 type ServerParts = {
   server: Server;
   service: PantinService;
@@ -270,7 +258,7 @@ export async function startPantinServer(
   const { server, service, poseStreams, bridge } = createParts(options, network);
   const bus = busEndpointOf(options, network, service);
   server.on("upgrade", (request, socket, head) => bus.handleUpgrade(request, socket, head));
-  installSourceFilter(server, options, network);
+  installSourceFilter(server, network, options.reportRejectedSource);
   await listen(server, options.port, network.listenAddress);
   const loop = startSimulationLoop(
     options.simulationTimer ?? createRealSimulationTimer(),

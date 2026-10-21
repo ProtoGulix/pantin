@@ -227,6 +227,23 @@
   color: var(--text-faint);
 }
 
+.welcome-section[hidden] {
+  display: none;
+}
+
+.welcome-card--example[aria-pressed="true"] {
+  border-color: var(--selection);
+  outline: 1px solid var(--selection);
+}
+
+.welcome-card__badge {
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
 .welcome-links,
 .welcome-shortcuts {
   display: flex;

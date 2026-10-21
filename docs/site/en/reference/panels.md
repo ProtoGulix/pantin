@@ -567,6 +567,7 @@ It is displayed when no Pantin is open. It is a modal window above the empty 3D 
 | --- | --- |
 | **Empty Pantin** | Opens a **Name of the new Pantin** field. **Enter** or the **Create** button (tick) creates and opens the Pantin; **Cancel** (cross) or **Esc** closes the field. |
 | **From a 3D file** | Opens the file picker, creates a Pantin bearing the file's name, then opens the [import form](#the-import-form). |
+| **Examples** | One card per example the core offers: its name, its body count and the word **Example**. A click opens a **Name of your copy of** followed by the example's name field, filled with the example's name. **Enter** or the **Create** button (tick) copies the example into the Pantins folder and opens the copy; **Cancel** (cross) or **Esc** closes the field. A second click on the card closes the field too. The section is hidden when the core offers none (see below). |
 | **Recent** | Up to six cards (name, body count, modification date), most recent first. A click opens the Pantin. With no Pantin: **No Pantin yet. Create one above.** |
 | **Resources** | Links that open in a new tab: **Project repository**, **Guides**, **Design decisions**. |
 | **Keyboard shortcuts** | Reminder of the main shortcuts. |
@@ -578,6 +579,14 @@ It is displayed when no Pantin is open. It is a modal window above the empty 3D 
 | **Filter by name or id** | Search field, case-insensitive. Empty: everything is kept. |
 | **Pantin list** | One row per Pantin: name, identifier, body count and date. A click selects; a double-click, **Enter** or the **Open** button opens. The arrows, **Home** and **End** move the selection. |
 | Empty texts | **No Pantin yet. Create one from the Home tab.**; **No Pantin matches the filter.** |
+
+#### Copying an example
+
+- The original example is never changed: the viewer works on a copy, stored in the Pantins folder like a created Pantin. A second copy of the same example gets a different identifier (`plc-cylinder`, then `plc-cylinder-2`).
+- The copy holds `pantin.json`, the meshes (`meshes/`) and `io.json` if there is one. The example's `README` and any other file are not copied.
+- The core offers valid examples only. An invalid example folder (unreadable document, unreadable `io.json`, a mesh that is missing, too large or outside the folder, a symbolic link) is not listed; the reason is written to the core's log.
+- The section appears only if the core is started with `--examples-dir <folder>`. `pnpm serve` adds it; see [Install and start](/en/guide/fundamentals#install-and-start).
+- If the copy fails, the field stays open with the typed name and the message line says what to do: **The core no longer offers this example. Reload the page to refresh the list.** (example removed or section disabled); **The example could not be copied because of a conflict. Choose another name and try again.** A copy that fails while being written leaves no folder behind.
 
 The window's errors (unsupported file, unreachable core...) are shown in the window's message line.
 

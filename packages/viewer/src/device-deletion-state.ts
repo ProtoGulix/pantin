@@ -1,5 +1,6 @@
+import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
 import { devicesOfKind, type PendingDeviceDeletion } from "./pending-device-deletion.ts";
-import { NO_CLOSE_PROMPT, type ViewerState } from "./viewer-state.ts";
+import type { ViewerState } from "./viewer-state.ts";
 
 // Deleting a drive, an actuator or a sensor asks first, like a body or a joint.
 // Pure state changes; the question is built in panel/device-deletion-prompt.ts.

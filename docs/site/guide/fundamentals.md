@@ -114,7 +114,17 @@ Le cœur affiche une ligne du type `Pantin core (local mode) on http://127.0.0.1
 
 Pour connaître la version utilisée, ouvrez **Aide**, **À propos de Pantin…** : la fenêtre donne la version du viewer et celle du cœur. La version du guide est affichée dans son en-tête, avec un lien vers l'historique des changements.
 
-L'écran d'**Accueil** propose de créer un Pantin (**Pantin vide** ou **Depuis un fichier 3D**) ou d'en ouvrir un existant.
+L'écran d'**Accueil** propose de créer un Pantin (**Pantin vide** ou **Depuis un fichier 3D**), de copier un des **Exemples** ou d'ouvrir un Pantin existant.
+
+### Les exemples
+
+La section **Exemples** de l'Accueil n'apparaît que si le cœur connaît le dossier des exemples. `pnpm serve` lui donne le dossier `examples` du dépôt avec l'option `--examples-dir`. Un cœur lancé sans cette option n'affiche pas la section :
+
+```
+node packages/core/src/main.ts --examples-dir examples
+```
+
+Au démarrage, le cœur écrit `Examples from <dossier>` ou `Examples disabled (no --examples-dir)`. Il refuse de démarrer si le chemin donné n'est pas un dossier.
 
 ## Et ensuite
 

@@ -66,6 +66,9 @@ export async function startCore(options: CoreOptions): Promise<RunningCore> {
       pantinsDirectory,
       "--viewer-dir",
       "packages/viewer/dist",
+      // The Home tab lists the examples only when the core is given their folder (ADR 0062).
+      "--examples-dir",
+      "examples",
       "--bridge-python",
       "packages/bridge/.venv/bin/python",
       "--step-converter-python",

@@ -7,7 +7,7 @@ the CODESYS symbol export. At the end the loop is closed: the program drives the
 cylinder and reads its sensors.
 
 It assumes you followed the [cylinder tutorial](/en/guide/tutorial) (or copied
-`examples/plc-cylinder`) and know the settings of
+the `plc-cylinder` example from the **Examples** section of Home) and know the settings of
 [Connect a PLC](/en/guide/connect-a-plc). The import window is described in detail in
 [Reuse the PLC's variable names](/en/guide/connect-a-plc#reuse-the-plc-s-variable-names);
 its buttons and fields are listed in the [I/O view](/en/reference/views#the-import-plc-symbols-window).
@@ -53,7 +53,7 @@ des symboles**, and **Build > Generate Code** probably **Compiler > Générer le
 
 ![The I/O view with module m1, its settings and the channel table](/screenshots/en/io-view.webp)
 
-1. Open `plc-cylinder` in the viewer. In the **PLC bridge** block, click **I/O
+1. If you have no copy yet, click the **plc-cylinder** card in the **Examples** section of Home, keep the proposed name and click **Create**; otherwise open your copy. In the **PLC bridge** block, click **I/O
    config**: the **I/O** view is displayed.
 2. Click **Import PLC symbols…** in the toolbar of the view. If the button is greyed, the
    mapping is not readable: read the tooltip and the problems listed under the table.

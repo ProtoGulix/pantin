@@ -30,6 +30,16 @@ All notable changes to Pantin. The format follows
 - Guide: the console's "Verbose" mode (ADR 0061), in French and English: a section and a
   screenshot in the panels reference, a troubleshooting entry, and a pointer in the fixed time step
   section of the fundamentals.
+- Open an example (ADR 0062, core): `--examples-dir <path>` (passed by `pnpm serve`), `GET /api/examples` and
+  `POST /api/examples/:exampleId/copy` list the example Pantins that pass every check (no link, mesh
+  inside its folder, size limit, valid io.json) and copy one into the Pantins folder, open like a
+  created Pantin. Without the flag the list is empty and a copy answers 404.
+- Open an example (ADR 0062, viewer): the Home tab has an "Examples" section between New and
+  Recent, with a card per example (name, body count, an "Example" label). A click asks for a name,
+  prefilled with the example's name, like "Empty Pantin", then copies the example and opens the
+  copy. The section is hidden when the core offers none; a refused copy says what to do.
+- Guide: the Examples section of Home (copy, `--examples-dir`, messages) in the welcome window reference and
+  "Install and start", and the tutorials now start from it, in French and English (ADR 0062).
 - Guide: a tutorial, in French and English, from the CODESYS symbol export to the closed
   loop on `examples/plc-cylinder` (import window, GVL, command line), linked from
   "Connect a PLC" (ADR 0064 point 17).

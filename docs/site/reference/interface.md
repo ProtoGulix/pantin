@@ -68,7 +68,7 @@ Dans le panneau de gauche, une question de confirmation (fermer avec des modific
 
 Tant qu'aucun Pantin n'est ouvert, une fenêtre modale **Bienvenue — Pantin** s'affiche au centre de la vue 3D. Elle a deux onglets :
 
-- **Accueil** : créer un Pantin (**Pantin vide** ou **Depuis un fichier 3D**), la liste des **Récents**, les **Ressources** et les **Raccourcis clavier** du menu ;
+- **Accueil** : créer un Pantin (**Pantin vide** ou **Depuis un fichier 3D**), copier un des **Exemples** (si le cœur en propose), la liste des **Récents**, les **Ressources** et les **Raccourcis clavier** du menu ;
 - **Tous les Pantins** : la liste complète, avec un champ de filtre par nom ou identifiant, et un bouton d'ouverture par ligne.
 
 Son pied de page indique la version du viewer (**Pantin** suivi du numéro). Elle se ferme par son bouton ou par <kbd>Échap</kbd>. **Fichier** puis **Accueil** la rouvre, sur le dernier onglet utilisé (**Accueil** par défaut). **Fichier** puis **Ouvrir…** ferme le Pantin ouvert s'il y en a un, et la fenêtre s'ouvre alors sur le dernier onglet utilisé ; sans Pantin ouvert, elle s'ouvre sur **Tous les Pantins**. Voir [Panneaux et boutons](/reference/panels).

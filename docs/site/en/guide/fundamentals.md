@@ -114,7 +114,17 @@ The core prints a line like `Pantin core (local mode) on http://127.0.0.1:4800`.
 
 To know which version you run, open **Help**, **About Pantin…**: the window gives the viewer version and the core version. The version of the guide is shown in its header, with a link to the change history.
 
-The **Home** screen offers to create a Pantin (**Empty Pantin** or **From a 3D file**) or to open an existing one.
+The **Home** screen offers to create a Pantin (**Empty Pantin** or **From a 3D file**), to copy one of the **Examples**, or to open an existing Pantin.
+
+### The examples
+
+The **Examples** section of Home appears only if the core knows the examples folder. `pnpm serve` gives it the `examples` folder of the repository with the `--examples-dir` option. A core started without this option does not show the section:
+
+```
+node packages/core/src/main.ts --examples-dir examples
+```
+
+At start-up, the core prints `Examples from <folder>` or `Examples disabled (no --examples-dir)`. It refuses to start if the given path is not a folder.
 
 ## What next
 

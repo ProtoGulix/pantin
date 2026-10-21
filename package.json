@@ -18,7 +18,7 @@
     "boundaries": "depcruise packages tests",
     "deadcode": "knip",
     "setup:python": "packages/step-converter/setup.sh && packages/bridge/setup.sh",
-    "serve": "pnpm --filter @pantin/viewer build && node packages/core/src/main.ts --viewer-dir packages/viewer/dist --step-converter-python packages/step-converter/.venv/bin/python --bridge-python packages/bridge/.venv/bin/python",
+    "serve": "pnpm --filter @pantin/viewer build && node packages/core/src/main.ts --viewer-dir packages/viewer/dist --examples-dir examples --step-converter-python packages/step-converter/.venv/bin/python --bridge-python packages/bridge/.venv/bin/python",
     "pantin": "node packages/cli/src/main.ts",
     "schema:generate": "node packages/cli/src/main.ts schema > packages/protocol/schema/pantin.schema.json && node packages/cli/src/main.ts schema io > packages/protocol/schema/io.schema.json && biome format --write packages/protocol/schema",
     "docs:dev": "vitepress dev docs/site",

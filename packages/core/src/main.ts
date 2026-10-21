@@ -4,7 +4,12 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { readBuildVersion } from "./build-version.ts";
 import { defaultPantinsDirectory } from "./domain/default-directories.ts";
-import { type RunningPantinServer, StartupRefusedError, startPantinServer } from "./http/server.ts";
+import {
+  type PantinServerOptions,
+  type RunningPantinServer,
+  StartupRefusedError,
+  startPantinServer,
+} from "./http/server.ts";
 import { createPhysicsWorldFactory, loadRapier } from "./physics/rapier-world.ts";
 
 const DEFAULT_PORT = 4800;
@@ -13,6 +18,7 @@ const REPOSITORY_ROOT = resolve(import.meta.dirname, "..", "..", "..");
 const USAGE = [
   "Usage: node packages/core/src/main.ts [--pantins-dir <path>] [--port <0-65535>]",
   "  [--listen <127.0.0.1 or one private address>] [--allow <ip or cidr>]... [--viewer-dir <path>]",
+  "  [--examples-dir <path>]",
   "  [--step-converter-python <python of the step-converter venv>]",
   "  [--bridge-python <python of the bridge venv>] [--logs-dir <path>]",
 ].join("\n");
@@ -47,6 +53,27 @@ async function resolveViewerDirectory(text: string | undefined): Promise<string 
     throw new StartupRefusedError(
       `--viewer-dir "${directory}" is not a directory. Build the viewer first: pnpm --filter @pantin/viewer build.`,
     );
+  }
+  return directory;
+}
+
+// Like --viewer-dir: an explicit folder, never a guessed layout (ADR 0062 point 1).
+async function resolveExamplesDirectory(text: string | undefined): Promise<string | undefined> {
+  if (text === undefined) {
+    return undefined;
+  }
+  const directory = resolve(text);
+  const isDirectory = await stat(directory).then(
+    (stats) => stats.isDirectory(),
+    (error: unknown) => {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+        return false;
+      }
+      throw error;
+    },
+  );
+  if (!isDirectory) {
+    throw new StartupRefusedError(`--examples-dir "${directory}" is not a directory.`);
   }
   return directory;
 }
@@ -110,6 +137,7 @@ type StartupSummary = {
   stepConverterPython: string | undefined;
   bridgePython: string | undefined;
   viewerDirectory: string | undefined;
+  examplesDirectory: string | undefined;
 };
 
 function printStartup(running: RunningPantinServer, summary: StartupSummary): void {
@@ -129,29 +157,60 @@ function printStartup(running: RunningPantinServer, summary: StartupSummary): vo
       ? "PLC bridge disabled (no --bridge-python)"
       : `PLC bridge: ${summary.bridgePython}`,
   );
+  writeLine(
+    process.stdout,
+    summary.examplesDirectory === undefined
+      ? "Examples disabled (no --examples-dir)"
+      : `Examples from ${summary.examplesDirectory}`,
+  );
   if (summary.viewerDirectory !== undefined) {
     writeLine(process.stdout, `Viewer served from ${summary.viewerDirectory}`);
   }
 }
 
+const COMMAND_LINE_OPTIONS = {
+  "pantins-dir": { type: "string" },
+  port: { type: "string" },
+  listen: { type: "string" },
+  allow: { type: "string", multiple: true },
+  "viewer-dir": { type: "string" },
+  "examples-dir": { type: "string" },
+  "step-converter-python": { type: "string" },
+  "bridge-python": { type: "string" },
+  "logs-dir": { type: "string" },
+} as const;
+
+interface OptionalSettings {
+  listen: string | undefined;
+  viewerDirectory: string | undefined;
+  examplesDirectory: string | undefined;
+  stepConverterPython: string | undefined;
+  bridgePython: string | undefined;
+  logsDirectory: string | undefined;
+}
+
+// Only the options the user gave: the server tells "not given" from "empty". Spelled out so
+// that the compiler checks each name and type against PantinServerOptions.
+function optionalServerOptions(settings: OptionalSettings): Partial<PantinServerOptions> {
+  const { listen, viewerDirectory, examplesDirectory } = settings;
+  const { stepConverterPython, bridgePython, logsDirectory } = settings;
+  return {
+    ...(listen === undefined ? {} : { listen }),
+    ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
+    ...(examplesDirectory === undefined ? {} : { examplesDirectory }),
+    ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
+    ...(bridgePython === undefined ? {} : { bridgePython }),
+    ...(logsDirectory === undefined ? {} : { logsDirectory }),
+  };
+}
+
 async function main(): Promise<void> {
-  const { values } = parseArgs({
-    options: {
-      "pantins-dir": { type: "string" },
-      port: { type: "string" },
-      listen: { type: "string" },
-      allow: { type: "string", multiple: true },
-      "viewer-dir": { type: "string" },
-      "step-converter-python": { type: "string" },
-      "bridge-python": { type: "string" },
-      "logs-dir": { type: "string" },
-    },
-    strict: true,
-  });
+  const { values } = parseArgs({ options: COMMAND_LINE_OPTIONS, strict: true });
   const pantinsDirectory = resolve(values["pantins-dir"] ?? defaultPantinsDirectory(homedir()));
   const logsDirectory = values["logs-dir"] === undefined ? undefined : resolve(values["logs-dir"]);
   const port = parsePort(values.port);
   const viewerDirectory = await resolveViewerDirectory(values["viewer-dir"]);
+  const examplesDirectory = await resolveExamplesDirectory(values["examples-dir"]);
   const stepConverterPython = values["step-converter-python"];
   const bridgePython = await requireBridgePython(values["bridge-python"]);
   await mkdir(pantinsDirectory, { recursive: true });
@@ -161,19 +220,28 @@ async function main(): Promise<void> {
     pantinsDirectory,
     port,
     buildVersion: readBuildVersion(REPOSITORY_ROOT),
-    ...(values.listen === undefined ? {} : { listen: values.listen }),
     allow: values.allow ?? [],
     physicsWorldFactory,
-    ...(viewerDirectory === undefined ? {} : { viewerDirectory }),
-    ...(stepConverterPython === undefined ? {} : { stepConverterPython }),
-    ...(bridgePython === undefined ? {} : { bridgePython }),
-    ...(logsDirectory === undefined ? {} : { logsDirectory }),
+    ...optionalServerOptions({
+      listen: values.listen,
+      viewerDirectory,
+      examplesDirectory,
+      stepConverterPython,
+      bridgePython,
+      logsDirectory,
+    }),
     reportBridgeLine: (pantinId, line) => writeLine(process.stderr, `[bridge ${pantinId}] ${line}`),
     reportError,
     reportRejectedSource: (source) =>
       writeLine(process.stderr, `Rejected connection from ${source}`),
   });
-  printStartup(running, { pantinsDirectory, stepConverterPython, bridgePython, viewerDirectory });
+  printStartup(running, {
+    pantinsDirectory,
+    stepConverterPython,
+    bridgePython,
+    viewerDirectory,
+    examplesDirectory,
+  });
   closeOnSignals(running.close);
 }
 

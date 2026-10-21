@@ -567,6 +567,7 @@ Elle s'affiche quand aucun Pantin n'est ouvert. C'est une fenêtre modale au-des
 | --- | --- |
 | **Pantin vide** | Ouvre un champ **Nom du nouveau Pantin**. **Entrée** ou le bouton **Créer** (coche) crée et ouvre le Pantin ; **Annuler** (croix) ou **Échap** referme le champ. |
 | **Depuis un fichier 3D** | Ouvre le sélecteur de fichiers, crée un Pantin portant le nom du fichier, puis ouvre le [formulaire d'import](#le-formulaire-d-import). |
+| **Exemples** | Une carte par exemple proposé par le cœur : son nom, son nombre de corps et le mot **Exemple**. Un clic ouvre le champ **Nom de votre copie de** suivi du nom de l'exemple, prérempli avec le nom de l'exemple. **Entrée** ou le bouton **Créer** (coche) copie l'exemple dans le dossier des Pantins et ouvre la copie ; **Annuler** (croix) ou **Échap** referme le champ. Un deuxième clic sur la carte referme aussi le champ. La section est masquée quand le cœur n'en propose aucun (voir ci-dessous). |
 | **Récents** | Jusqu'à six cartes (nom, nombre de corps, date de modification), les plus récentes d'abord. Un clic ouvre le Pantin. Sans Pantin : **Aucun Pantin pour l'instant. Créez-en un ci-dessus.** |
 | **Ressources** | Liens qui s'ouvrent dans un nouvel onglet : **Dépôt du projet**, **Guides**, **Décisions de conception**. |
 | **Raccourcis clavier** | Rappel des raccourcis principaux. |
@@ -578,6 +579,14 @@ Elle s'affiche quand aucun Pantin n'est ouvert. C'est une fenêtre modale au-des
 | **Filtrer par nom ou identifiant** | Champ de recherche, insensible à la casse. Vide : tout est gardé. |
 | Liste **Liste des Pantins** | Une ligne par Pantin : nom, identifiant, nombre de corps et date. Un clic sélectionne ; un double-clic, **Entrée** ou le bouton **Ouvrir** ouvre. Les flèches, **Début** et **Fin** déplacent la sélection. |
 | Textes vides | **Aucun Pantin. Créez-en un depuis l'onglet Accueil.** ; **Aucun Pantin ne correspond au filtre.** |
+
+#### Copier un exemple
+
+- L'exemple d'origine n'est jamais modifié : le viewer travaille sur une copie, rangée dans le dossier des Pantins comme un Pantin créé. Une deuxième copie du même exemple reçoit un identifiant différent (`plc-cylinder`, puis `plc-cylinder-2`).
+- La copie contient `pantin.json`, les maillages (`meshes/`) et `io.json` s'il existe. Le `README` de l'exemple et les autres fichiers ne sont pas copiés.
+- Le cœur ne propose que les exemples valides. Un dossier d'exemple invalide (document illisible, `io.json` illisible, maillage absent, trop gros ou hors du dossier, lien symbolique) n'est pas listé ; la raison est écrite dans le journal du cœur.
+- La section n'apparaît que si le cœur est lancé avec `--examples-dir <dossier>`. `pnpm serve` l'ajoute ; voir [Installer et démarrer](/guide/fundamentals#installer-et-demarrer).
+- Si la copie échoue, le champ reste ouvert avec le nom saisi et la ligne de message dit quoi faire : **Le cœur ne propose plus cet exemple. Rechargez la page pour actualiser la liste.** (exemple retiré ou section désactivée) ; **L'exemple n'a pas pu être copié à cause d'un conflit. Choisissez un autre nom et réessayez.** Une copie qui échoue en cours d'écriture ne laisse pas de dossier.
 
 Les erreurs de la fenêtre (fichier non pris en charge, cœur injoignable...) s'affichent dans la ligne de message de la fenêtre.
 

@@ -68,7 +68,7 @@ In the left panel, a confirmation question (closing with unsaved changes, deleti
 
 As long as no Pantin is open, a modal window **Welcome — Pantin** is displayed in the centre of the 3D view. It has two tabs:
 
-- **Home**: create a Pantin (**Empty Pantin** or **From a 3D file**), the **Recent** list, the **Resources** and the **Keyboard shortcuts** of the menu;
+- **Home**: create a Pantin (**Empty Pantin** or **From a 3D file**), copy one of the **Examples** (if the core offers any), the **Recent** list, the **Resources** and the **Keyboard shortcuts** of the menu;
 - **All Pantins**: the full list, with a filter field by name or identifier, and one open button per row.
 
 Its footer shows the viewer version (**Pantin** followed by the number). It closes with its button or with <kbd>Esc</kbd>. **File** then **Welcome** reopens it on the last tab used (**Home** by default). **File** then **Open…** closes the open Pantin, if there is one, and the window then opens on the last tab used; with no Pantin open, it opens on **All Pantins**. See [Panels and buttons](/en/reference/panels).

@@ -10,9 +10,11 @@ import type { ActuatorFormState } from "./actuators/actuator-form.ts";
 import type { AlignmentSession } from "./alignment/alignment-session.ts";
 import { type AssemblyDisplay, NO_ASSEMBLY_DISPLAY } from "./assembly-display.ts";
 import { type CentralLayout, DEFAULT_CENTRAL_LAYOUT } from "./central-layout.ts";
+import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
 import { type ConsoleState, INITIAL_CONSOLE_STATE } from "./console/console-state.ts";
 import type { ConveyorFormState } from "./conveyors/conveyor-form.ts";
 import type { DriveFormState } from "./drives/drive-form.ts";
+import { type ExamplesState, NO_EXAMPLES } from "./examples-offer.ts";
 import type { GizmoSpace } from "./gizmo/gizmo-space.ts";
 import { DEFAULT_SNAP_STEPS, type DragKind, type SnapSteps } from "./gizmo/placement-snapping.ts";
 import type { PendingGroup } from "./grouping/grouping-model.ts";
@@ -66,6 +68,7 @@ export interface ViewerState {
   // grid, although it is still along X, Y or Z: display state only.
   customAxisJointIds: ReadonlySet<string>;
   creatingPantin: boolean;
+  examples: ExamplesState;
   contextMenu: ContextMenuState | null;
   pendingImport: PendingImport | null;
   // True from the click on Import until the core answers; a STEP conversion
@@ -169,13 +172,6 @@ const NO_DEVICE_FORMS = {
   conveyorForm: null,
 } as const;
 
-// The close question is not asked (ADR 0050 point 7 for the bridge notice).
-export const NO_CLOSE_PROMPT = {
-  closePrompt: false,
-  closeBridgeNotice: false,
-  closeStopsBridge: false,
-} as const;
-
 // No positioning tool on, no alignment, nothing kept in the placement fields.
 const NO_TOOL_STATE = {
   gizmoMode: null,
@@ -206,6 +202,7 @@ export function initialViewerState(
     ...preferencesState(inspector),
     customAxisJointIds: new Set(),
     creatingPantin: false,
+    examples: NO_EXAMPLES,
     contextMenu: null,
     pendingImport: null,
     importInProgress: false,

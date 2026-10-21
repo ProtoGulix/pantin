@@ -12,8 +12,9 @@ Read them first if these words are new to you.
 
 ::: tip To compare
 The `examples/plc-cylinder` folder holds the machine this tutorial builds, with
-the same names. Copy it into the Pantins folder of the core to open it and
-compare.
+the same names. To open it and compare, click the **plc-cylinder** card in the
+**Examples** section of Home: the viewer opens a copy of it (see
+[The welcome window](/en/reference/panels#the-welcome-window)).
 :::
 
 ## What you need

@@ -1,12 +1,21 @@
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
 import { REPOSITORY_URL } from "../links.ts";
-import type { RecentCardView, WelcomeView } from "../panel/welcome-model.ts";
-import { committingTextInput, element, iconButton } from "./dom.ts";
+import type { WelcomeView } from "../panel/welcome-model.ts";
+import { element } from "./dom.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
+import {
+  cardElement,
+  createPrompt,
+  type ExamplesParts,
+  examplesParts,
+  showExamples,
+  showNamePrompt,
+  updateCards,
+} from "./welcome-parts.ts";
 
-// The "Home" tab of the welcome dialog: New, Recent, Resources (ADR 0027).
+// The "Home" tab of the welcome dialog: New, Examples, Recent, Resources (ADR 0027).
 // Built once and redrawn in place; a recent card is kept across redraws (a
 // card rebuilt between the press and the release would lose the click), and
 // clicks are handled by delegation.
@@ -40,42 +49,6 @@ function tile(action: string, iconName: "plus" | "import"): HTMLButtonElement {
   );
 }
 
-function renderCreatePantinForm(translate: Translate, intents: PanelIntents): HTMLElement {
-  const input = committingTextInput("", {
-    label: translate("create.label"),
-    focusKey: "create-pantin",
-    onCommit: (name) => intents.createPantin(name),
-    onCancel: () => intents.toggleCreatePantin(),
-    commitOnBlur: false,
-  });
-  input.placeholder = translate("create.label");
-  return element(
-    "div",
-    {
-      className: "inline-form inline-form--row welcome-create",
-      attributes: { role: "group", "aria-label": translate("welcome.new.empty") },
-    },
-    [
-      input,
-      iconButton("check", translate("create.confirm"), () => intents.createPantin(input.value)),
-      iconButton("close", translate("create.cancel"), intents.toggleCreatePantin),
-    ],
-  );
-}
-
-function cardElement(card: RecentCardView): HTMLElement {
-  return element(
-    "button",
-    { className: "welcome-card", attributes: { type: "button", "data-pantin-id": card.id } },
-    [
-      icon("pantin", "icon welcome-card__icon"),
-      element("span", { className: "welcome-card__name", text: card.name }),
-      element("span", { className: "welcome-card__detail", text: card.bodies }),
-      element("span", { className: "welcome-card__detail", text: card.modified }),
-    ],
-  );
-}
-
 // Two spans, whose texts are set in place: the link itself is never rebuilt.
 function linkElement(href: string): HTMLAnchorElement {
   return element(
@@ -95,6 +68,7 @@ interface Parts {
   fileTile: HTMLButtonElement;
   fileInput: HTMLInputElement;
   formHost: HTMLElement;
+  examples: ExamplesParts;
   recentTitle: HTMLElement;
   cards: HTMLElement;
   recentEmpty: HTMLElement;
@@ -113,6 +87,7 @@ function assemble(parts: Omit<Parts, "root">): HTMLElement {
       parts.formHost,
       parts.fileInput,
     ]),
+    parts.examples.section,
     element("div", { className: "welcome-lower" }, [
       element("section", { className: "welcome-section" }, [
         parts.recentTitle,
@@ -130,7 +105,9 @@ function assemble(parts: Omit<Parts, "root">): HTMLElement {
 }
 
 function buildParts(): Parts {
+  const examples = examplesParts();
   const parts = {
+    examples,
     newTitle: sectionTitle(),
     emptyTile: tile("new-empty", "plus"),
     fileTile: tile("new-file", "import"),
@@ -154,9 +131,12 @@ function listen(parts: Parts, current: { intents: PanelIntents | null }): void {
   const { root, fileInput } = parts;
   root.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
+    const exampleId = target?.closest("[data-example-id]")?.getAttribute("data-example-id");
     const pantinId = target?.closest("[data-pantin-id]")?.getAttribute("data-pantin-id");
     const action = target?.closest("[data-action]")?.getAttribute("data-action");
-    if (pantinId) {
+    if (exampleId) {
+      current.intents?.toggleExamplePrompt(exampleId);
+    } else if (pantinId) {
       current.intents?.openPantin(pantinId);
     } else if (action === "new-empty") {
       current.intents?.toggleCreatePantin();
@@ -182,51 +162,6 @@ function setTileLabel(tileButton: HTMLElement, text: string): void {
   }
 }
 
-// The name prompt lives as long as the question is open, so typing survives redraws.
-function showCreateForm(
-  host: HTMLElement,
-  tile: HTMLElement,
-  creating: boolean,
-  translate: Translate,
-  intents: PanelIntents,
-): void {
-  if (!creating) {
-    // The field held the focus (Escape, Create): it goes back to the tile
-    // that opened it rather than to the page.
-    const hadFocus = host.contains(document.activeElement);
-    host.replaceChildren();
-    if (hadFocus) {
-      tile.focus();
-    }
-  } else if (host.childElementCount === 0) {
-    const form = renderCreatePantinForm(translate, intents);
-    host.append(form);
-    form.querySelector("input")?.focus();
-  }
-}
-
-// Cards by what they show: an unchanged card is the same element as before.
-function updateCards(
-  container: HTMLElement,
-  kept: ReadonlyMap<string, HTMLElement>,
-  recents: readonly RecentCardView[],
-): Map<string, HTMLElement> {
-  const next = new Map<string, HTMLElement>();
-  const ordered = recents.map((card) => {
-    const signature = JSON.stringify(card);
-    const cardButton = kept.get(signature) ?? cardElement(card);
-    next.set(signature, cardButton);
-    return cardButton;
-  });
-  const unchanged =
-    ordered.length === container.children.length &&
-    ordered.every((cardButton, index) => container.children[index] === cardButton);
-  if (!unchanged) {
-    container.replaceChildren(...ordered);
-  }
-  return next;
-}
-
 function renderLink(link: HTMLAnchorElement, label: string, newTab: string): void {
   const [text, hint] = link.children;
   if (text !== undefined && hint !== undefined) {
@@ -246,6 +181,7 @@ export function createWelcomeHome(): WelcomeHome {
   const parts = buildParts();
   const current: { intents: PanelIntents | null } = { intents: null };
   let kept = new Map<string, HTMLElement>();
+  let keptExamples = new Map<string, HTMLElement>();
   listen(parts, current);
   return {
     element: parts.root,
@@ -256,11 +192,24 @@ export function createWelcomeHome(): WelcomeHome {
       setTileLabel(parts.fileTile, translate("welcome.new.fromFile"));
       parts.emptyTile.setAttribute("aria-pressed", String(view.creating));
       parts.fileInput.setAttribute("aria-label", translate("welcome.new.fromFile"));
-      showCreateForm(parts.formHost, parts.emptyTile, view.creating, translate, intents);
+      showNamePrompt(
+        parts.formHost,
+        parts.emptyTile,
+        view.creating ? { key: "create", prompt: createPrompt(translate, intents) } : null,
+        translate,
+      );
+      keptExamples = showExamples(
+        parts.examples,
+        keptExamples,
+        view,
+        translate,
+        intents,
+        parts.emptyTile,
+      );
       parts.recentTitle.textContent = translate("welcome.recent");
       parts.recentEmpty.textContent = translate("welcome.recent.empty");
       parts.recentEmpty.hidden = view.recents.length > 0;
-      kept = updateCards(parts.cards, kept, view.recents);
+      kept = updateCards(parts.cards, kept, view.recents, cardElement);
       parts.resourcesTitle.textContent = translate("welcome.resources");
       for (const { label, anchor } of parts.links) {
         renderLink(anchor, translate(label), translate("welcome.link.newTab"));

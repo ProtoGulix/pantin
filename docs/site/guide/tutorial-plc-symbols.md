@@ -7,7 +7,7 @@ les lisez dans l'export de symboles de CODESYS. À la fin, la boucle est fermée
 programme pilote le vérin et lit ses capteurs.
 
 Il suppose que vous avez suivi le [tutoriel du vérin](/guide/tutorial) (ou que vous
-avez copié `examples/plc-cylinder`) et que vous connaissez les réglages de
+avez copié l'exemple `plc-cylinder` depuis la section **Exemples** de l'Accueil) et que vous connaissez les réglages de
 [Connecter un automate](/guide/connect-a-plc). La fenêtre d'import est décrite en
 détail dans [Reprendre les noms de variables de l'automate](/guide/connect-a-plc#reprendre-les-noms-de-variables-de-l-automate) ;
 ses boutons et ses champs sont listés dans la [vue E/S](/reference/views#la-fenetre-importer-des-symboles-api).
@@ -53,7 +53,7 @@ l'objet « IEC Symbol Set Configuration » des versions récentes ne sont pas v�
 
 ![La vue E/S avec le module m1, ses réglages et le tableau des voies](/screenshots/fr/io-view.webp)
 
-1. Ouvrez `plc-cylinder` dans le viewer. Dans le bloc **Pont automate**, cliquez
+1. Si vous n'avez pas votre copie, cliquez la carte **plc-cylinder** de la section **Exemples** de l'Accueil, gardez le nom proposé et cliquez **Créer** ; sinon ouvrez votre copie. Dans le bloc **Pont automate**, cliquez
    **Config E/S** : la vue **E/S** s'affiche.
 2. Cliquez **Importer des symboles API…** dans la barre de la vue. Si le bouton est
    grisé, le mapping n'est pas lisible : lisez l'info-bulle et les problèmes listés

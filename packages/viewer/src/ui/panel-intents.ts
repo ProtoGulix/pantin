@@ -27,6 +27,10 @@ export interface PanelIntents extends IoIntents, SymbolImportIntents, BridgeInte
   openPantin(pantinId: string): void;
   toggleCreatePantin(): void;
   createPantin(name: string): void;
+  // An example card of the Home tab (ADR 0062): opens or closes its name prompt.
+  toggleExamplePrompt(exampleId: string): void;
+  // Copies the example whose prompt is open under this name, then opens the copy.
+  copyExample(name: string): void;
   // Creates a Pantin named after the file, then starts importing it.
   createPantinFromFile(file: File): void;
   hideWelcome(): void;

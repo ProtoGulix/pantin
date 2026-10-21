@@ -25,6 +25,9 @@ export type MeshFile = { stream: ReadStream; sizeInBytes: number };
 export type PantinStore = {
   listFolderNames(): Promise<string[]>;
   createPantinFolder(pantinId: PantinId): Promise<void>;
+  // Removes a folder with everything in it. Only for the folder a request has
+  // just created itself, to undo a copy that failed halfway (ADR 0062 point 4).
+  removeCreatedPantinFolder(pantinId: PantinId): Promise<void>;
   readDocumentText(pantinId: PantinId): Promise<string | undefined>;
   // When pantin.json last changed on disk; undefined when there is none.
   readDocumentModifiedAt(pantinId: PantinId): Promise<Date | undefined>;
@@ -89,6 +92,10 @@ async function createPantinFolder(paths: Paths, pantinId: PantinId): Promise<voi
     throw error;
   }
   await mkdir(meshesDirectory(paths, pantinId));
+}
+
+async function removeCreatedPantinFolder(paths: Paths, pantinId: PantinId): Promise<void> {
+  await rm(pantinFolder(paths, pantinId), { recursive: true, force: true });
 }
 
 async function readDocumentText(paths: Paths, pantinId: PantinId): Promise<string | undefined> {
@@ -225,6 +232,7 @@ export function createPantinStore(pantinsDirectory: string): PantinStore {
   return {
     listFolderNames: () => listFolderNames(paths),
     createPantinFolder: (pantinId) => createPantinFolder(paths, pantinId),
+    removeCreatedPantinFolder: (pantinId) => removeCreatedPantinFolder(paths, pantinId),
     readDocumentText: (pantinId) => readDocumentText(paths, pantinId),
     readDocumentModifiedAt: (pantinId) => readDocumentModifiedAt(paths, pantinId),
     writeDocumentAtomically: (pantinId, text) => writeDocumentAtomically(paths, pantinId, text),

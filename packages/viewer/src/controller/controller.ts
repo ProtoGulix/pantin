@@ -1,6 +1,7 @@
 import { pickedNodeId } from "../assembly-display.ts";
 import type { ConveyorKind } from "../conveyors/conveyor-kinds.ts";
 import type { DeviceRef } from "../device-selection.ts";
+import { withCreatePromptToggled, withExamplePromptToggled } from "../example-state.ts";
 import { isToolOn } from "../gizmo/tool-rules.ts";
 import { withGroupNameEdited } from "../grouping/grouping-state.ts";
 import { isLanguage } from "../i18n/translate.ts";
@@ -41,6 +42,7 @@ import { consoleIntents } from "./console-actions.ts";
 import { conveyorIntents } from "./conveyor-intents.ts";
 import { diagramIntents, selectDevice } from "./diagram-actions.ts";
 import { driveIntents } from "./drive-intents.ts";
+import { copyExample, loadExamples } from "./example-actions.ts";
 import { setGizmoStep, turnToolOff } from "./gizmo-actions.ts";
 import {
   cancelImport,
@@ -107,8 +109,10 @@ function listIntents(store: ViewerStore) {
   return {
     selectListPantin: (pantinId: string) => store.update(withListSelection(store.state, pantinId)),
     openPantin: (pantinId: string) => void openPantin(store, pantinId),
-    toggleCreatePantin: () =>
-      store.update({ ...store.state, creatingPantin: !store.state.creatingPantin }),
+    toggleCreatePantin: () => store.update(withCreatePromptToggled(store.state)),
+    toggleExamplePrompt: (exampleId: string) =>
+      store.update(withExamplePromptToggled(store.state, exampleId)),
+    copyExample: (name: string) => void copyExample(store, name),
     createPantin: (name: string) => void createPantin(store, name),
     createPantinFromFile: (file: File) => void createPantinFromFile(store, file),
     hideWelcome: () => store.update(withWelcomeHidden(store.state)),
@@ -299,4 +303,5 @@ export function selectConveyorFromViewport(
 export function startViewer(store: ViewerStore): void {
   store.update(store.state);
   void refreshPantinList(store);
+  void loadExamples(store);
 }

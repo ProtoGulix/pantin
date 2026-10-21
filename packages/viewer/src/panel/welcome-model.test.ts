@@ -148,3 +148,50 @@ describe("welcome view", () => {
     expect(view.shortcuts.map((entry) => entry.keys)).toEqual(SHORTCUT_KEYS);
   });
 });
+
+describe("buildWelcomeView examples (ADR 0062)", () => {
+  const examples = [
+    { id: "axis", name: "Axis", bodyCount: 2 },
+    { id: "plc-cylinder", name: "PLC cylinder", bodyCount: 3 },
+  ];
+  const withExamples: ViewerState = {
+    ...listing,
+    examples: { offered: examples, copyingId: null },
+  };
+
+  it("has no example card, hence no section, when the core offers none", () => {
+    expect(buildWelcomeView(listing, t).examples).toEqual([]);
+    expect(buildWelcomeView(listing, t).examplePrompt).toBeNull();
+  });
+
+  it("shows a card per example with its name, body count and a text badge", () => {
+    expect(buildWelcomeView(withExamples, t).examples).toEqual([
+      { id: "axis", name: "Axis", bodies: "2 corps", badge: "Exemple", asking: false },
+      {
+        id: "plc-cylinder",
+        name: "PLC cylinder",
+        bodies: "3 corps",
+        badge: "Exemple",
+        asking: false,
+      },
+    ]);
+  });
+
+  it("opens the prompt of the clicked example, prefilled with its name", () => {
+    const view = buildWelcomeView(
+      { ...withExamples, examples: { offered: examples, copyingId: "axis" } },
+      t,
+    );
+    expect(view.examplePrompt).toMatchObject({ exampleId: "axis", initialName: "Axis" });
+    expect(view.examples.map((card) => card.asking)).toEqual([true, false]);
+  });
+
+  it("shows no prompt for an example that left the list, or while the dialog is hidden", () => {
+    expect(
+      buildWelcomeView({ ...withExamples, examples: { offered: examples, copyingId: "gone" } }, t)
+        .examplePrompt,
+    ).toBeNull();
+    const hidden = buildWelcomeView(withWelcomeHidden({ ...withExamples }), t);
+    expect(hidden.examples).toEqual([]);
+  });
+});

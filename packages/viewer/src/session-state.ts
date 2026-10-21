@@ -1,15 +1,12 @@
 import type { AssemblyDeletion, PantinResponse } from "@pantin/protocol";
+import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
+import { withExamplePromptClosed } from "./example-state.ts";
 import { infoMessage } from "./messages.ts";
 import { NO_PREVIOUS_PLACEMENTS } from "./previous-placement.ts";
 import { nodeSelection } from "./selection.ts";
 import { assemblyNodeId, pantinNodeId, parseNodeId } from "./tree/node-ids.ts";
 import { withSelection } from "./tree/tree-state.ts";
-import {
-  NO_CLOSE_PROMPT,
-  type ViewerState,
-  type WelcomeTab,
-  withOpenPantin,
-} from "./viewer-state.ts";
+import { type ViewerState, type WelcomeTab, withOpenPantin } from "./viewer-state.ts";
 
 // The two views and their transitions, as pure functions. List view: no
 // Pantin open (openPantin null; the welcome dialog, ADR 0027). Edit view:
@@ -92,7 +89,7 @@ export function withCloseCancelled(state: ViewerState): ViewerState {
 
 /** Escape or the close button: the empty workspace, without a half-typed name. */
 export function withWelcomeHidden(state: ViewerState): ViewerState {
-  return { ...state, welcomeHidden: true, creatingPantin: false };
+  return { ...withExamplePromptClosed(state), welcomeHidden: true, creatingPantin: false };
 }
 
 /** File > Welcome (or Open… with nothing open): the dialog, on the given tab if any. */

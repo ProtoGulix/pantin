@@ -14,6 +14,7 @@ import { BRIDGE_ROUTES } from "./bridge-routes.ts";
 import { CLOCK_ROUTES } from "./clock-routes.ts";
 import { CONVEYOR_ROUTES } from "./conveyor-routes.ts";
 import { DRIVE_ROUTES } from "./drive-routes.ts";
+import { EXAMPLE_ROUTES } from "./example-routes.ts";
 import { IO_ROUTES } from "./io-routes.ts";
 import { IO_SYMBOL_ROUTES } from "./io-symbol-routes.ts";
 import { JOINT_ROUTES } from "./joint-routes.ts";
@@ -169,6 +170,7 @@ const PANTIN_ROUTES: readonly Route[] = [
 
 export const ROUTES: readonly Route[] = [
   ...PANTIN_ROUTES,
+  ...EXAMPLE_ROUTES,
   ...JOINT_ROUTES,
   ...ASSEMBLY_ROUTES,
   ...DRIVE_ROUTES,

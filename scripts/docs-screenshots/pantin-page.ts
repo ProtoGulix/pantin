@@ -71,7 +71,11 @@ export async function openExample(session: Session): Promise<void> {
   const meshesLoaded = Promise.all(
     [1, 2, 3].map(() => page.waitForResponse((response) => response.url().endsWith(".glb"))),
   );
-  await page.getByRole("button", { name: /^plc-cylinder/ }).click(FORCED);
+  // The Home tab also offers an "Examples" card of the same name: this one is the Recent card.
+  await page
+    .locator("button.welcome-card:not(.welcome-card--example)")
+    .filter({ hasText: /^plc-cylinder/ })
+    .click(FORCED);
   await meshesLoaded;
   await assemblyRow(page).waitFor();
   await page.waitForTimeout(FIRST_FRAMES_DELAY_MS);

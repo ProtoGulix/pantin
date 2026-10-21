@@ -18,6 +18,7 @@ import type { PhysicsWorldFactory } from "../domain/physics-world.ts";
 import { PRODUCT_LIMIT } from "../domain/spawn-planning.ts";
 import type { WriteSource } from "../domain/tag-states.ts";
 import { ApiError } from "../errors.ts";
+import type { ExampleStore } from "../store/example-store.ts";
 import type { PantinStore } from "../store/pantin-store.ts";
 import { actuatorOperations } from "./actuator-operations.ts";
 import { assemblyOperations } from "./assembly-operations.ts";
@@ -29,6 +30,7 @@ import { consoleOperations } from "./console-operations.ts";
 import type { BridgeCoreLineWriter } from "./console-record.ts";
 import { conveyorOperations } from "./conveyor-operations.ts";
 import { driveOperations } from "./drive-operations.ts";
+import { exampleOperations } from "./example-operations.ts";
 import { faceOperations } from "./face-operations.ts";
 import { frameOperations } from "./frame-operations.ts";
 import { groupOperations } from "./group-operations.ts";
@@ -198,6 +200,8 @@ export type ServiceOptions = {
   reportError?: (error: unknown) => void;
   onBridgeActivity?: (pantinId: PantinId) => void;
   writeBridgeCoreLine?: BridgeCoreLineWriter;
+  // The read-only examples folder (ADR 0062); without it there are no examples.
+  exampleStore?: ExampleStore;
 };
 
 export function createServiceContext(
@@ -207,6 +211,7 @@ export function createServiceContext(
 ): ServiceContext {
   return {
     store,
+    exampleStore: options.exampleStore,
     openPantins: new Map(),
     loadedPantins: new Map(),
     stepConverter,
@@ -241,6 +246,7 @@ export function createPantinService(
       updateDocument(context, pantinId, (document) => renamePantinDocument(document, name)),
     savePantin: (pantinId: PantinId) => savePantin(context, pantinId),
     discardPantin: (pantinId: PantinId) => discardPantin(context, pantinId),
+    ...exampleOperations(context),
     ...lifecycleOperations(context),
     deleteBody: (pantinId: PantinId, bodyId: string) => deleteBody(context, pantinId, bodyId),
     importBodies: (pantinId: PantinId, query: ImportBodyQuery, bytes: Uint8Array) =>

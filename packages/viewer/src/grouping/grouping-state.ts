@@ -1,4 +1,5 @@
-import { NO_CLOSE_PROMPT, type ViewerState } from "../viewer-state.ts";
+import { NO_CLOSE_PROMPT } from "../close-prompt.ts";
+import type { ViewerState } from "../viewer-state.ts";
 import type { GroupingTarget } from "./grouping-model.ts";
 
 // The "Grouper…" question as plain state: the members the user chose and the

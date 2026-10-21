@@ -13,8 +13,9 @@ d'abord si ces mots sont nouveaux.
 
 ::: tip Pour comparer
 Le dossier `examples/plc-cylinder` contient la machine construite par ce
-tutoriel, avec les mêmes noms. Copiez-le dans le dossier des Pantins du cœur pour
-l'ouvrir et comparer.
+tutoriel, avec les mêmes noms. Pour l'ouvrir et comparer, cliquez la carte
+**plc-cylinder** de la section **Exemples** de l'Accueil : le viewer en ouvre une
+copie (voir [La fenêtre d'accueil](/reference/panels#la-fenetre-d-accueil)).
 :::
 
 ## Ce qu'il vous faut

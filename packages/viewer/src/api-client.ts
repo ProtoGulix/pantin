@@ -23,6 +23,7 @@ import { type ClockRoutes, clockRoutes } from "./api-clock-routes.ts";
 import { type ConsoleRoutes, consoleRoutes } from "./api-console-routes.ts";
 import { type ConveyorRoutes, conveyorRoutes } from "./api-conveyor-routes.ts";
 import { type DriveRoutes, driveRoutes } from "./api-drive-routes.ts";
+import { type ExampleRoutes, exampleRoutes } from "./api-example-routes.ts";
 import { type GroupRoutes, groupRoutes } from "./api-group-routes.ts";
 import { type IoRoutes, ioRoutes } from "./api-io-routes.ts";
 import { type JointRoutes, jointRoutes } from "./api-joint-routes.ts";
@@ -57,6 +58,7 @@ export interface PantinApiClient
     ClockRoutes,
     BridgeRoutes,
     IoRoutes,
+    ExampleRoutes,
     OrphanMeshRoutes,
     RedundantJointRoutes,
     VersionRoutes {
@@ -203,6 +205,7 @@ export function createPantinApiClient(fetchFunction: FetchFunction): PantinApiCl
     ...conveyorRoutes(send),
     ...consoleRoutes(send),
     ...clockRoutes(send),
+    ...exampleRoutes(send),
     ...bridgeRoutes(send, fetchFunction),
     ...ioRoutes(send, fetchFunction),
     ...orphanMeshRoutes(send),

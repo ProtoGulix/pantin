@@ -1,7 +1,8 @@
 import type { RedundantJointsDeletionResponse, RedundantJointsList } from "@pantin/protocol";
+import { NO_CLOSE_PROMPT } from "./close-prompt.ts";
 import { createTranslator, type Language, pluralKey } from "./i18n/translate.ts";
 import { infoMessage, type PanelMessage } from "./messages.ts";
-import { NO_CLOSE_PROMPT, type ViewerState, withOpenPantin } from "./viewer-state.ts";
+import { type ViewerState, withOpenPantin } from "./viewer-state.ts";
 
 // State changes of "Supprimer les liaisons fixes redondantes…" (ADR 0060
 // point 5), as pure functions.
