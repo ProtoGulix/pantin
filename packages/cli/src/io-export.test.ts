@@ -30,8 +30,12 @@ describe("pantin io export", () => {
     expect(result.code).toBe(0);
     expect(result.stderr).toBe("");
     const lines = result.stdout.split("\r\n");
-    expect(lines[0]).toBe("﻿module,port,unitId,tag,variable,zone,address,ioType,direction,comment");
-    expect(lines[1]).toBe("m1,1502,1,axis.valve.coil_14,axis_valve_coil_14,coil,0,BOOL,command,");
+    expect(lines[0]).toBe(
+      "﻿module,transport,endpoint,tag,variable,direction,address,plcType,comment",
+    );
+    expect(lines[1]).toBe(
+      'm1,Modbus TCP slave,"port 1502, unit 1",axis.valve.coil_14,axis_valve_coil_14,command,coil 0,BOOL,',
+    );
     expect(lines).toHaveLength(CHANNEL_COUNT + 2);
   });
 

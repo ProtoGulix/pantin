@@ -25,7 +25,7 @@ function wordOrderSelect(
       text: translate(`io.settings.wordOrder.${value}`),
       attributes: { value },
     });
-    option.selected = value === selected.module.wordOrder;
+    option.selected = value === selected.module.transport.wordOrder;
     select.append(option);
   }
   select.addEventListener("change", () =>
@@ -48,7 +48,7 @@ export function drawModuleSettings(
     settingField(
       cellId(name),
       translate(`io.settings.${name}`),
-      String(module[name]),
+      name === "key" ? module.key : String(module.transport[name]),
       problems.get(name),
       (text) => intents.editIoModule(module.key, name, text),
     );

@@ -48,18 +48,19 @@ export interface IoRoutes {
   ): Promise<IoMappingResponse>;
   updateIoChannel(
     pantinId: string,
+    moduleKey: string,
     tag: string,
     request: UpdateIoChannelRequest,
   ): Promise<IoMappingResponse>;
-  deleteIoChannel(pantinId: string, tag: string): Promise<IoMappingResponse>;
+  deleteIoChannel(pantinId: string, moduleKey: string, tag: string): Promise<IoMappingResponse>;
 }
 
 function moduleUrl(pantinId: string, moduleKey: string, suffix = ""): string {
   return pantinUrl(pantinId, `/io/modules/${encodeURIComponent(moduleKey)}${suffix}`);
 }
 
-function channelUrl(pantinId: string, tag: string): string {
-  return pantinUrl(pantinId, `/io/channels/${encodeURIComponent(tag)}`);
+function channelUrl(pantinId: string, moduleKey: string, tag: string): string {
+  return moduleUrl(pantinId, moduleKey, `/channels/${encodeURIComponent(tag)}`);
 }
 
 export function ioRoutes(send: SendJson, fetchFunction: FetchFunction): IoRoutes {
@@ -101,11 +102,11 @@ export function ioRoutes(send: SendJson, fetchFunction: FetchFunction): IoRoutes
       const valid = validInputOrThrow(CreateIoChannelsRequestSchema, request);
       return send(moduleUrl(pantinId, moduleKey, "/channels"), jsonRequest("POST", valid), answer);
     },
-    updateIoChannel: async (pantinId, tag, request) => {
+    updateIoChannel: async (pantinId, moduleKey, tag, request) => {
       const valid = validInputOrThrow(UpdateIoChannelRequestSchema, request);
-      return send(channelUrl(pantinId, tag), jsonRequest("PATCH", valid), answer);
+      return send(channelUrl(pantinId, moduleKey, tag), jsonRequest("PATCH", valid), answer);
     },
-    deleteIoChannel: (pantinId, tag) =>
-      send(channelUrl(pantinId, tag), jsonRequest("DELETE"), answer),
+    deleteIoChannel: (pantinId, moduleKey, tag) =>
+      send(channelUrl(pantinId, moduleKey, tag), jsonRequest("DELETE"), answer),
   };
 }

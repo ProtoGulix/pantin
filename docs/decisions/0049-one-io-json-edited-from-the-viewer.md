@@ -433,3 +433,14 @@ export of the amendment of 2026-10-14:
 
 Import stays rejected, as the "whole-file `PUT .../io`" alternative above: a
 file edited in a spreadsheet and read back would bring a second source of truth.
+
+## Amendment of 2026-10-20, by ADR 0064
+
+The columns of the CSV export become: module, transport, endpoint, tag,
+variable, direction, address, PLC type and comment (`plcType` in the header
+row). The transport, endpoint, address and PLC type cells are text from the
+presentation registry of `@pantin/transport-types` (for example `Modbus TCP
+slave`, `port 1502, unit 1`, `coil 0`, `BOOL`), so a transport adds its own
+text without changing the renderer. The rest of the amendment of 2026-10-20 stands:
+RFC 4180 quoting, UTF-8 with a byte order mark, the formula guard on the
+comment, and no import.

@@ -10,9 +10,7 @@ import { buildIoView } from "./io-view-model.ts";
 const channel = (tag: string, address: number) => ({
   tag,
   variable: tag.replaceAll(".", "_"),
-  zone: "coil" as const,
-  address,
-  ioType: "BOOL" as const,
+  modbus: { zone: "coil" as const, address, ioType: "BOOL" as const },
   comment: "",
   tagType: "bit" as const,
   direction: "command" as const,
@@ -21,10 +19,13 @@ const channel = (tag: string, address: number) => ({
 
 const moduleOf = (key: string, port: number, tags: string[]) => ({
   key,
-  port,
-  unitId: 1,
-  wordOrder: "low_word_first" as const,
-  watchdogMilliseconds: 1000,
+  transport: {
+    kind: "modbus_tcp_slave" as const,
+    port,
+    unitId: 1,
+    wordOrder: "low_word_first" as const,
+    watchdogMilliseconds: 1000,
+  },
   channels: tags.map((tag, index) => channel(tag, index)),
 });
 
@@ -33,8 +34,12 @@ const mapping: IoMappingResponse = {
   mappingId: "id",
   modules: [moduleOf("m1", 1502, ["a.v.x", "a.v.y"]), moduleOf("m2", 1503, ["b.v.z"])],
   problems: [
-    { path: ["modules", 0, "channels", 1, "address"], code: "address_overlap", message: "overlap" },
-    { path: ["modules", 1, "port"], code: "address_out_of_range", message: "port" },
+    {
+      path: ["modules", 0, "channels", 1, "modbus", "address"],
+      code: "address_overlap",
+      message: "overlap",
+    },
+    { path: ["modules", 1, "transport", "port"], code: "listen_port_used_twice", message: "port" },
     { path: [], code: "unknown_tag", message: "whole" },
   ],
   unmappedTags: [
@@ -54,24 +59,34 @@ const PRESS = pantinResponse(false);
 
 describe("cellOfPath", () => {
   it("finds the cell of a channel field and of a module setting", () => {
-    expect(cellOfPath(["modules", 0, "channels", 3, "address"])).toEqual({
+    expect(cellOfPath(["modules", 0, "channels", 3, "modbus", "address"])).toEqual({
       moduleIndex: 0,
       channelIndex: 3,
       field: "address",
     });
-    expect(cellOfPath(["modules", 2, "port"])).toEqual({
+    expect(cellOfPath(["modules", 0, "channels", 3, "variable"])).toEqual({
+      moduleIndex: 0,
+      channelIndex: 3,
+      field: "variable",
+    });
+    expect(cellOfPath(["modules", 2, "transport", "port"])).toEqual({
       moduleIndex: 2,
       channelIndex: null,
       field: "port",
     });
+    expect(cellOfPath(["modules", 2, "key"])).toEqual({
+      moduleIndex: 2,
+      channelIndex: null,
+      field: "key",
+    });
   });
 
   it("has no cell for the whole file, a module or a channel", () => {
-    expect([[], ["modules", 1], ["modules", 1, "channels", 0]].map(cellOfPath)).toEqual([
-      null,
-      null,
-      null,
-    ]);
+    expect(
+      [[], ["modules", 1], ["modules", 1, "channels", 0], ["modules", 1, "transport"]].map(
+        cellOfPath,
+      ),
+    ).toEqual([null, null, null, null]);
   });
 
   it("builds distinct ids for a setting and a channel field", () => {

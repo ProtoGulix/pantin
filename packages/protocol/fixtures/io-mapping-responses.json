@@ -1,6 +1,6 @@
 {
-  "description": "Responses of GET /api/pantins/:pantinId/io (IoMappingResponse, ADR 0049 point 5), shared by the core's Zod schema and the Python bridge's decoder. Each `message` is a decoded JSON answer. Every decoder must accept every `valid` entry and refuse every `invalid` one. The pairing of a zone with an io type is checked by the core's validation, not by the schema, so no entry here depends on it.",
-  "version": 1,
+  "description": "Responses of GET /api/pantins/:pantinId/io (IoMappingResponse version 2, ADR 0049 point 5 and ADR 0064 point 6), shared by the core's Zod schema and the Python bridge's decoder. Each `message` is a decoded JSON answer. Every decoder must accept every `valid` entry and refuse every `invalid` one. The pairing of a zone with an io type is checked by the core's validation, not by the schema, so no entry here depends on it. A module with a transport kind the decoder does not know is not in the invalid list on purpose: the core only produces the kinds it knows, and the Python bridge skips the kinds it does not serve (ADR 0064 point 8).",
+  "version": 2,
   "valid": [
     {
       "name": "a valid mapping with two modules and every zone",
@@ -10,18 +10,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -32,10 +37,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -46,10 +53,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -60,10 +69,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -74,10 +85,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -89,18 +102,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -143,18 +161,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "x.y.z",
                 "variable": "x_y_z",
-                "zone": "coil",
-                "address": 3,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 3,
+                  "ioType": "BOOL"
+                },
                 "tagType": null,
                 "direction": null,
                 "owner": null
@@ -185,7 +208,7 @@
             "message": "io.json cannot be read."
           },
           {
-            "path": ["modules", 0, "port"],
+            "path": ["modules", 0, "transport", "port"],
             "code": "schema_invalid",
             "message": "Bad port."
           }
@@ -201,18 +224,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -242,6 +270,86 @@
           }
         ]
       }
+    },
+    {
+      "name": "an invalid mapping reporting newer_schema_version",
+      "message": {
+        "status": "invalid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [],
+        "problems": [
+          {
+            "path": [],
+            "code": "newer_schema_version",
+            "message": "io.json was written by a newer Pantin."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping reporting command_mapped_twice",
+      "message": {
+        "status": "invalid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [],
+        "problems": [
+          {
+            "path": ["modules", 1, "channels", 0, "tag"],
+            "code": "command_mapped_twice",
+            "message": "Command mapped twice."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping reporting unsupported_signal",
+      "message": {
+        "status": "invalid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [],
+        "problems": [
+          {
+            "path": ["modules", 0, "channels", 0, "tag"],
+            "code": "unsupported_signal",
+            "message": "Signal not carried."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping reporting listen_port_used_twice",
+      "message": {
+        "status": "invalid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [],
+        "problems": [
+          {
+            "path": ["modules", 1, "transport", "port"],
+            "code": "listen_port_used_twice",
+            "message": "Port used twice."
+          }
+        ],
+        "unmappedTags": []
+      }
+    },
+    {
+      "name": "an invalid mapping reporting address_overlap",
+      "message": {
+        "status": "invalid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [],
+        "problems": [
+          {
+            "path": ["modules", 0, "channels", 1, "modbus", "address"],
+            "code": "address_overlap",
+            "message": "Overlap."
+          }
+        ],
+        "unmappedTags": []
+      }
     }
   ],
   "invalid": [
@@ -257,18 +365,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -279,10 +392,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -293,10 +408,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -307,10 +424,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -321,10 +440,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -336,18 +457,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -379,18 +505,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -401,10 +532,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -415,10 +548,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -429,10 +564,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -443,10 +580,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -458,18 +597,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -502,18 +646,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -524,10 +673,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -538,10 +689,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -552,10 +705,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -566,10 +721,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -581,18 +738,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -684,18 +846,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -706,10 +873,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -720,10 +889,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -734,10 +905,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -748,10 +921,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -763,18 +938,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -797,18 +977,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -819,10 +1004,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -833,10 +1020,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -847,10 +1036,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -861,10 +1052,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -876,18 +1069,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -920,18 +1118,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -942,10 +1145,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -956,10 +1161,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -970,10 +1177,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -984,10 +1193,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -999,18 +1210,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1039,18 +1255,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": "1502",
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": "1502",
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1061,10 +1282,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1075,10 +1298,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1089,10 +1314,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1103,10 +1330,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1118,18 +1347,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1162,18 +1396,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1023,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1023,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1184,10 +1423,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1198,10 +1439,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1212,10 +1455,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1226,10 +1471,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1241,18 +1488,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1285,18 +1537,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "big",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "big",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1307,10 +1564,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1321,10 +1580,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1335,10 +1596,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1349,10 +1612,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1364,18 +1629,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1408,18 +1678,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 0,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 0,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1430,10 +1705,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1444,10 +1721,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1458,10 +1737,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1472,10 +1753,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1487,18 +1770,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1531,18 +1819,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 99,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 99
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1553,10 +1846,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1567,10 +1862,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1581,10 +1878,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1595,10 +1894,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1610,18 +1911,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1654,18 +1960,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1676,10 +1987,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1690,10 +2003,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1704,10 +2019,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1718,10 +2035,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1734,18 +2053,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1778,18 +2102,23 @@
         "modules": [
           {
             "key": "M1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1800,10 +2129,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1814,10 +2145,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -1828,10 +2161,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -1842,10 +2177,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -1857,18 +2194,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1901,25 +2243,33 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            }
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -1952,18 +2302,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "holding",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "holding",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1974,10 +2329,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -1988,10 +2345,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2002,10 +2361,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2016,10 +2377,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2031,18 +2394,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2075,18 +2443,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "INT",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "INT"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2097,10 +2470,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2111,10 +2486,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2125,10 +2502,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2139,10 +2518,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2154,18 +2535,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2198,18 +2584,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 1.5,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1.5,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2220,10 +2611,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2234,10 +2627,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2248,10 +2643,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2262,10 +2659,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2277,18 +2676,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2321,18 +2725,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": -1,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": -1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2343,10 +2752,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2357,10 +2768,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2371,10 +2784,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2385,10 +2800,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2400,18 +2817,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2444,17 +2866,22 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2465,10 +2892,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2479,10 +2908,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2493,10 +2924,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2507,10 +2940,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2522,18 +2957,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2566,28 +3006,35 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command"
               },
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2598,10 +3045,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2612,10 +3061,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2626,10 +3077,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2641,18 +3094,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2685,18 +3143,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2707,10 +3170,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2721,10 +3186,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2735,10 +3202,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2749,10 +3218,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2764,18 +3235,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2808,18 +3284,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2830,10 +3311,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2844,10 +3327,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2858,10 +3343,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -2872,10 +3359,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -2887,18 +3376,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -2937,18 +3431,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2959,10 +3458,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -2973,10 +3474,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -2987,10 +3490,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -3001,10 +3506,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -3016,18 +3523,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -3066,18 +3578,23 @@
         "modules": [
           {
             "key": "m1",
-            "port": 1502,
-            "unitId": 1,
-            "wordOrder": "low_word_first",
-            "watchdogMilliseconds": 1000,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
             "channels": [
               {
                 "tag": "press.valve.extend",
                 "variable": "press_valve_extend",
-                "zone": "coil",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -3088,10 +3605,12 @@
               {
                 "tag": "press.valve.retract",
                 "variable": "press_valve_retract",
-                "zone": "coil",
-                "address": 1,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "command",
                 "owner": {
@@ -3102,10 +3621,12 @@
               {
                 "tag": "press.ext.state",
                 "variable": "press_ext_state",
-                "zone": "discrete_input",
-                "address": 0,
-                "ioType": "BOOL",
                 "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
                 "tagType": "bit",
                 "direction": "feedback",
                 "owner": {
@@ -3116,10 +3637,12 @@
               {
                 "tag": "axis.stroke.setpoint",
                 "variable": "axis_stroke_setpoint",
-                "zone": "holding_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "command",
                 "owner": {
@@ -3130,10 +3653,12 @@
               {
                 "tag": "axis.stroke.position",
                 "variable": "axis_stroke_position",
-                "zone": "input_register",
-                "address": 0,
-                "ioType": "REAL",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
                 "tagType": "float",
                 "direction": "feedback",
                 "owner": {
@@ -3145,18 +3670,23 @@
           },
           {
             "key": "m2",
-            "port": 1503,
-            "unitId": 7,
-            "wordOrder": "high_word_first",
-            "watchdogMilliseconds": 250,
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
             "channels": [
               {
                 "tag": "axis.encoder.count",
                 "variable": "axis_encoder_count",
-                "zone": "input_register",
-                "address": 4,
-                "ioType": "DINT",
                 "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
                 "tagType": "integer",
                 "direction": "feedback",
                 "owner": {
@@ -3176,6 +3706,422 @@
             "message": ""
           }
         ],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module without a transport",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module transport without a kind",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "transport": {
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ]
+          },
+          {
+            "key": "m2",
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
+        "unmappedTags": [
+          {
+            "name": "press.cylinder.position",
+            "type": "float",
+            "direction": "feedback",
+            "owner": {
+              "kind": "joint",
+              "id": "cylinder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "module with the version 1 port at its top level",
+      "message": {
+        "status": "valid",
+        "mappingId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "modules": [
+          {
+            "key": "m1",
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1502,
+              "unitId": 1,
+              "wordOrder": "low_word_first",
+              "watchdogMilliseconds": 1000
+            },
+            "channels": [
+              {
+                "tag": "press.valve.extend",
+                "variable": "press_valve_extend",
+                "comment": "extend coil",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.valve.retract",
+                "variable": "press_valve_retract",
+                "comment": "",
+                "modbus": {
+                  "zone": "coil",
+                  "address": 1,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "command",
+                "owner": {
+                  "kind": "drive",
+                  "id": "valve"
+                }
+              },
+              {
+                "tag": "press.ext.state",
+                "variable": "press_ext_state",
+                "comment": "",
+                "modbus": {
+                  "zone": "discrete_input",
+                  "address": 0,
+                  "ioType": "BOOL"
+                },
+                "tagType": "bit",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "ext"
+                }
+              },
+              {
+                "tag": "axis.stroke.setpoint",
+                "variable": "axis_stroke_setpoint",
+                "comment": "",
+                "modbus": {
+                  "zone": "holding_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "command",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              },
+              {
+                "tag": "axis.stroke.position",
+                "variable": "axis_stroke_position",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 0,
+                  "ioType": "REAL"
+                },
+                "tagType": "float",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "joint",
+                  "id": "stroke"
+                }
+              }
+            ],
+            "port": 1502
+          },
+          {
+            "key": "m2",
+            "transport": {
+              "kind": "modbus_tcp_slave",
+              "port": 1503,
+              "unitId": 7,
+              "wordOrder": "high_word_first",
+              "watchdogMilliseconds": 250
+            },
+            "channels": [
+              {
+                "tag": "axis.encoder.count",
+                "variable": "axis_encoder_count",
+                "comment": "",
+                "modbus": {
+                  "zone": "input_register",
+                  "address": 4,
+                  "ioType": "DINT"
+                },
+                "tagType": "integer",
+                "direction": "feedback",
+                "owner": {
+                  "kind": "sensor",
+                  "id": "encoder"
+                }
+              }
+            ]
+          }
+        ],
+        "problems": [],
         "unmappedTags": [
           {
             "name": "press.cylinder.position",

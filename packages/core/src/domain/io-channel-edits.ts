@@ -1,19 +1,17 @@
 import type { IoChannel, IoDocument, IoModule, UpdateIoChannelRequest } from "@pantin/protocol";
+import type { ChannelProposal } from "@pantin/transport-types/rules";
 import { ApiError } from "../errors.ts";
-import { allocateVariable, proposeAddress, zoneAndTypeOf } from "./io-allocation.ts";
+import { allocateVariable } from "./io-allocation.ts";
 import { requireModule } from "./io-module-edits.ts";
-import { ioWidthOf } from "./io-rules.ts";
+import { rulesOf } from "./io-transports.ts";
 import type { IoTag } from "./io-validation.ts";
 
-// The channel edits of ADR 0049 point 4, on a mapping already parsed: pure.
-// The client never sends a zone or a PLC type, the tag gives them.
+// The channel edits of ADR 0049 point 4 and ADR 0064 point 6, on a mapping already
+// parsed: pure. The client never sends transport fields the tag decides (a zone,
+// a PLC type): the transport's rules derive them.
 
 const allChannels = (document: IoDocument): IoChannel[] =>
   document.modules.flatMap((module) => module.channels);
-
-function findChannel(document: IoDocument, tagName: string): IoChannel | undefined {
-  return allChannels(document).find((channel) => channel.tag === tagName);
-}
 
 function requireDocumentTag(tags: readonly IoTag[], tagName: string): IoTag {
   const tag = tags.find((candidate) => candidate.name === tagName);
@@ -26,20 +24,40 @@ function requireDocumentTag(tags: readonly IoTag[], tagName: string): IoTag {
   return tag;
 }
 
-function requireUnmapped(document: IoDocument, tagName: string): void {
-  if (findChannel(document, tagName) !== undefined) {
+// `ignoring` is the channel being edited, which does not conflict with itself.
+function requireMappable(
+  document: IoDocument,
+  module: IoModule,
+  tag: IoTag,
+  ignoring?: IoChannel,
+): void {
+  const others = (channels: readonly IoChannel[]) =>
+    channels.filter((channel) => channel !== ignoring && channel.tag === tag.name);
+  if (others(module.channels).length > 0) {
     throw new ApiError(
       "conflict",
-      `Tag "${tagName}" is already mapped: a tag is mapped once. Edit its channel instead.`,
+      `Tag "${tag.name}" is already mapped in module "${module.key}": a tag is mapped once per module. Edit its channel instead.`,
+    );
+  }
+  if (tag.direction === "command" && others(allChannels(document)).length > 0) {
+    throw new ApiError(
+      "conflict",
+      `Command "${tag.name}" is already mapped in another module: a command is mapped once.`,
+    );
+  }
+  if (!rulesOf(module.transport).supportsSignal(tag)) {
+    throw new ApiError(
+      "invalid_request",
+      `Tag "${tag.name}" (a ${tag.type} ${tag.direction}) cannot be carried by the ${module.transport.kind} transport of module "${module.key}": use a module of another transport.`,
     );
   }
 }
 
-function noFreeAddress(zone: string, moduleKey: string): ApiError {
-  return new ApiError(
-    "conflict",
-    `Module "${moduleKey}" has no free address left in zone ${zone}: use another module.`,
-  );
+function requireFields(proposal: ChannelProposal) {
+  if ("refusal" in proposal) {
+    throw new ApiError("conflict", proposal.refusal);
+  }
+  return proposal.fields;
 }
 
 function withModule(document: IoDocument, module: IoModule): IoDocument {
@@ -49,17 +67,21 @@ function withModule(document: IoDocument, module: IoModule): IoDocument {
   };
 }
 
-function newChannel(document: IoDocument, module: IoModule, tag: IoTag): IoChannel {
-  const { zone, ioType } = zoneAndTypeOf(tag.type, tag.direction);
-  const address = proposeAddress(module.channels, zone, ioType);
-  if (address === null) {
-    throw noFreeAddress(zone, module.key);
-  }
-  const variable = allocateVariable(
-    tag.name,
-    allChannels(document).map((channel) => channel.variable),
+// The same tag in another module is one PLC variable fed by both: it keeps the name.
+function variableFor(document: IoDocument, tagName: string): string {
+  const mapped = allChannels(document).find((channel) => channel.tag === tagName);
+  return (
+    mapped?.variable ??
+    allocateVariable(
+      tagName,
+      allChannels(document).map((channel) => channel.variable),
+    )
   );
-  return { tag: tag.name, variable, zone, address, ioType, comment: "" };
+}
+
+function newChannel(document: IoDocument, module: IoModule, tag: IoTag): IoChannel {
+  const fields = requireFields(rulesOf(module.transport).proposeChannel(module, tag));
+  return { tag: tag.name, variable: variableFor(document, tag.name), comment: "", ...fields };
 }
 
 /** Maps each tag into the module; nothing is added if one tag is refused. */
@@ -69,63 +91,48 @@ export function addChannels(
   tagNames: readonly string[],
   tags: readonly IoTag[],
 ): IoDocument {
-  requireModule(document, moduleKey);
+  const module = requireModule(document, moduleKey);
   // Every tag is checked first: a refused request changes nothing.
   const wanted = tagNames.map((name) => requireDocumentTag(tags, name));
-  for (const name of tagNames) {
-    requireUnmapped(document, name);
+  for (const tag of wanted) {
+    requireMappable(document, module, tag);
   }
   return wanted.reduce((edited, tag) => {
-    const module = requireModule(edited, moduleKey);
-    const channel = newChannel(edited, module, tag);
-    return withModule(edited, { ...module, channels: [...module.channels, channel] });
+    const current = requireModule(edited, moduleKey);
+    const channel = newChannel(edited, current, tag);
+    return withModule(edited, { ...current, channels: [...current.channels, channel] });
   }, document);
 }
 
-/** Unmaps a tag. */
-export function removeChannel(document: IoDocument, tagName: string): IoDocument {
-  requireChannel(document, tagName);
-  return {
-    ...document,
-    modules: document.modules.map((module) => ({
-      ...module,
-      channels: module.channels.filter((channel) => channel.tag !== tagName),
-    })),
-  };
-}
-
 /** The channel a path names, or the 404 of the route. */
-function requireChannel(document: IoDocument, tagName: string): IoChannel {
-  const channel = findChannel(document, tagName);
+function requireChannel(module: IoModule, tagName: string): IoChannel {
+  const channel = module.channels.find((candidate) => candidate.tag === tagName);
   if (channel === undefined) {
     throw new ApiError(
       "not_found",
-      `Tag "${tagName}" is not mapped. List the channels with GET /api/pantins/<id>/io.`,
+      `Tag "${tagName}" is not mapped in module "${module.key}". List the channels with GET /api/pantins/<id>/io.`,
     );
   }
   return channel;
 }
 
-// A `tag` in the request, even unchanged, derives the zone and type again.
-function targetTag(
+/** Unmaps a tag from one module. */
+export function removeChannel(
   document: IoDocument,
-  channel: IoChannel,
-  request: UpdateIoChannelRequest,
-  tags: readonly IoTag[],
-): IoTag | null {
-  if (request.tag === undefined) {
-    return null;
-  }
-  const tag = requireDocumentTag(tags, request.tag);
-  if (tag.name !== channel.tag) {
-    requireUnmapped(document, tag.name);
-  }
-  return tag;
+  moduleKey: string,
+  tagName: string,
+): IoDocument {
+  const module = requireModule(document, moduleKey);
+  const channel = requireChannel(module, tagName);
+  return withModule(document, {
+    ...module,
+    channels: module.channels.filter((candidate) => candidate !== channel),
+  });
 }
 
-function targetModule(document: IoDocument, from: IoModule, request: UpdateIoChannelRequest) {
+function targetModule(document: IoDocument, source: IoModule, request: UpdateIoChannelRequest) {
   if (request.module === undefined) {
-    return from;
+    return source;
   }
   const module = document.modules.find((candidate) => candidate.key === request.module);
   if (module === undefined) {
@@ -137,38 +144,51 @@ function targetModule(document: IoDocument, from: IoModule, request: UpdateIoCha
   return module;
 }
 
-/** Edits a channel; a new address is proposed when the zone, width or module changes. */
+// A `tag` in the request, even unchanged, derives the transport fields again, and so
+// does a move; a plain variable or comment edit derives nothing.
+function tagToDerive(
+  document: IoDocument,
+  channel: IoChannel,
+  target: IoModule,
+  moved: boolean,
+  request: UpdateIoChannelRequest,
+  tags: readonly IoTag[],
+): IoTag | null {
+  if (request.tag === undefined && !moved) {
+    return null;
+  }
+  const tag = requireDocumentTag(tags, request.tag ?? channel.tag);
+  if (moved || tag.name !== channel.tag) {
+    requireMappable(document, target, tag, channel);
+  }
+  return tag;
+}
+
+/** Edits a channel; the transport fields are derived again when the tag or the module changes. */
 export function updateChannel(
   document: IoDocument,
+  moduleKey: string,
   tagName: string,
   request: UpdateIoChannelRequest,
   tags: readonly IoTag[],
 ): IoDocument {
-  const channel = requireChannel(document, tagName);
-  const source = document.modules.find((module) => module.channels.includes(channel));
-  if (source === undefined) {
-    throw new Error(`Channel "${tagName}" belongs to no module.`);
-  }
-  const tag = targetTag(document, channel, request, tags);
+  const source = requireModule(document, moduleKey);
+  const channel = requireChannel(source, tagName);
   const target = targetModule(document, source, request);
-  const derived =
-    tag === null ? channel : { ...channel, ...zoneAndTypeOf(tag.type, tag.direction) };
   const moved = target.key !== source.key;
-  const reshaped =
-    derived.zone !== channel.zone || ioWidthOf(derived.ioType) !== ioWidthOf(channel.ioType);
-  const others = target.channels.filter((candidate) => candidate !== channel);
-  const address =
-    request.address ??
-    (moved || reshaped ? proposeAddress(others, derived.zone, derived.ioType) : channel.address);
-  if (address === null) {
-    throw noFreeAddress(derived.zone, target.key);
-  }
+  const tag = tagToDerive(document, channel, target, moved, request, tags);
+  const rules = rulesOf(target.transport);
+  const others = { ...target, channels: target.channels.filter((other) => other !== channel) };
+  const derived =
+    tag === null
+      ? channel
+      : { ...channel, ...requireFields(rules.reshapeChannel(others, channel, tag, moved)) };
+  const { tag: _tag, variable, comment, module: _module, ...transportPatch } = request;
   const edited: IoChannel = {
-    ...derived,
     tag: tag?.name ?? channel.tag,
-    variable: request.variable ?? channel.variable,
-    comment: request.comment ?? channel.comment,
-    address,
+    variable: variable ?? channel.variable,
+    comment: comment ?? channel.comment,
+    ...rules.patchChannel(derived, transportPatch),
   };
   return replaceChannel(document, channel, edited, target.key);
 }

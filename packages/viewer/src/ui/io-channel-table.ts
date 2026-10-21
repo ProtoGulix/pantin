@@ -30,6 +30,7 @@ function rowButton(
 }
 
 function channelRow(
+  moduleKey: string,
   row: IoChannelRow,
   translate: Translate,
   intents: PanelIntents,
@@ -43,7 +44,7 @@ function channelRow(
       `${translate(`io.column.${field}`)} ${channel.tag}`,
       value,
       problems.get(field),
-      (text) => intents.editIoChannel(channel.tag, field, text),
+      (text) => intents.editIoChannel(moduleKey, channel.tag, field, text),
       field === "variable" ? "io-cell--variable" : "",
     );
   return element("tr", { className: "io-row" }, [
@@ -56,22 +57,22 @@ function channelRow(
       intents.selectIoOwner,
     ),
     edit("variable", channel.variable),
-    readOnlyCell(id("zone"), channel.zone, problems.get("zone")),
-    edit("address", String(channel.address)),
-    readOnlyCell(id("ioType"), channel.ioType, problems.get("ioType")),
+    readOnlyCell(id("zone"), channel.modbus?.zone ?? "", problems.get("zone")),
+    edit("address", String(channel.modbus?.address ?? "")),
+    readOnlyCell(id("ioType"), channel.modbus?.ioType ?? "", problems.get("ioType")),
     edit("comment", channel.comment),
     element("td", { className: "io-cell io-cell--actions" }, [
       rowButton(
         translate("io.channel.reassign"),
         translate("io.channel.reassignTitle", { tag: channel.tag }),
         [busy, `io-reassign-${channel.tag}`],
-        () => intents.reassignIoChannel(channel.tag),
+        () => intents.reassignIoChannel(moduleKey, channel.tag),
       ),
       rowButton(
         translate("io.channel.remove"),
         translate("io.channel.removeTitle", { tag: channel.tag }),
         [busy, `io-remove-${channel.tag}`],
-        () => intents.unmapIoChannel(channel.tag),
+        () => intents.unmapIoChannel(moduleKey, channel.tag),
       ),
     ]),
   ]);
@@ -105,7 +106,9 @@ export function drawChannelTable(
         element(
           "tbody",
           {},
-          selected.rows.map((row) => channelRow(row, translate, intents, busy)),
+          selected.rows.map((row) =>
+            channelRow(selected.module.key, row, translate, intents, busy),
+          ),
         ),
       ]),
     ]),

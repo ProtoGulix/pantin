@@ -31,7 +31,7 @@ describe("GET .../io/csv", () => {
     expect(response.status).toBe(200);
     expect(response.contentType).toBe("text/csv; charset=utf-8");
     expect(response.contentDisposition).toBe('attachment; filename="axis-io.csv"');
-    expect(response.body.startsWith("﻿module,port,")).toBe(true);
+    expect(response.body.startsWith("﻿module,transport,")).toBe(true);
     for (const tag of tags) {
       expect(response.body).toContain(`,${tag.name},`);
     }

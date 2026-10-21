@@ -232,6 +232,9 @@ importers:
       '@pantin/sensor-types':
         specifier: workspace:*
         version: link:../sensor-types
+      '@pantin/transport-types':
+        specifier: workspace:*
+        version: link:../transport-types
       ws:
         specifier: 8.22.0
         version: 8.22.0
@@ -260,11 +263,20 @@ importers:
       '@pantin/sensor-types':
         specifier: workspace:*
         version: link:../sensor-types
+      '@pantin/transport-types':
+        specifier: workspace:*
+        version: link:../transport-types
       zod:
         specifier: 4.6.5
         version: 4.6.5
 
   packages/sensor-types:
+    dependencies:
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+
+  packages/transport-types:
     dependencies:
       zod:
         specifier: 4.6.5

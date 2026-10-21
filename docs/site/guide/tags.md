@@ -61,12 +61,20 @@ Les défauts et les produits sont effacés par **Remise à zéro de la simulatio
 
 Le fichier `io.json` relie les tags aux variables de l'automate et aux adresses Modbus. Il **ne définit jamais** un tag : les tags viennent du Pantin. Il ne contient que :
 
-- des **modules** Modbus, chacun avec sa **Clé**, son **Port**, son **Adresse d'unité**, son **Ordre des mots** et son **Chien de garde (ms)** ;
-- des **voies** : un **Tag**, une **Variable**, une **Zone**, une **Adresse** et un **Type**.
+- des **modules**, chacun avec sa **Clé** et son **transport** (le moyen de parler à l'automate). Le seul transport disponible est `modbus_tcp_slave` (**Modbus TCP esclave**), dont les réglages sont le **Port**, l'**Adresse d'unité**, l'**Ordre des mots** et le **Chien de garde (ms)** ;
+- des **voies** : un **Tag**, une **Variable**, un **Commentaire** et, pour le transport Modbus, une **Zone**, une **Adresse** et un **Type**.
+
+Le fichier est en version 2 : les réglages du transport sont dans l'objet `transport` du module, et la zone, l'adresse et le type dans l'objet `modbus` de la voie. Un tag de retour (capteur, position...) peut être affecté à plusieurs modules, avec la même variable, déclarée une seule fois ; une commande n'est affectée qu'à un seul module. La vue E/S ne propose pas encore un tag déjà affecté : ce second module se règle aujourd'hui par l'API.
 
 Affichez la vue **E/S** dans une zone (sélecteur de la zone, ou menu **Affichage**). Si le Pantin n'a pas encore de liste, **Créer le mapping**. Vous pouvez **Ajouter un module**, **Affecter** les **Tags non affectés** à un module, **Réaffecter** ou **Retirer** une voie. Les problèmes apparaissent dans **Problèmes**.
 
 **Exporter la GVL** télécharge la liste de variables globales CODESYS correspondante. Si un tag est renommé, sa voie suit ; le nom de la variable ne change jamais.
+
+Une **Variable** peut être un nom pointé de 1 à 8 identifiants, comme `GVL_IO.Verin1.FinCourseSortie` : c'est alors une variable que **votre** programme déclare déjà. La GVL générée ne la déclare pas et la liste dans son en-tête. Que CODESYS accepte un tel nom dans l'affectation d'un canal Modbus, membres de structure compris, n'est pas vérifié.
+
+### Fichiers de version 1
+
+Un `io.json` de version 1 (sans objet `transport`) s'ouvre normalement : le cœur le convertit à la lecture et le réécrit en version 2 au prochain enregistrement. L'ouverture ne marque pas le Pantin comme modifié. Les adresses, les variables et la GVL ne changent pas : le projet CODESYS n'a rien à changer. Un fichier d'une version plus récente que celle que Pantin sait lire est refusé (voir [Dépannage](/guide/troubleshooting)).
 
 La suite, pour brancher réellement l'automate, est dans [Connecter un automate](/guide/connect-a-plc).
 

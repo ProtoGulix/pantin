@@ -1,53 +1,67 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "modules": [
     {
       "key": "m1",
-      "port": 1502,
-      "unitId": 1,
-      "wordOrder": "low_word_first",
-      "watchdogMilliseconds": 1000,
+      "transport": {
+        "kind": "modbus_tcp_slave",
+        "port": 1502,
+        "unitId": 1,
+        "wordOrder": "low_word_first",
+        "watchdogMilliseconds": 1000
+      },
       "channels": [
         {
           "tag": "axis.valve.coil_14",
           "variable": "axis_valve_coil_14",
-          "zone": "coil",
-          "address": 0,
-          "ioType": "BOOL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL"
+          }
         },
         {
           "tag": "axis.valve.coil_12",
           "variable": "axis_valve_coil_12",
-          "zone": "coil",
-          "address": 1,
-          "ioType": "BOOL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL"
+          }
         },
         {
           "tag": "axis.stroke.setpoint",
           "variable": "axis_stroke_setpoint",
-          "zone": "holding_register",
-          "address": 0,
-          "ioType": "REAL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "holding_register",
+            "address": 0,
+            "ioType": "REAL"
+          }
         }
       ]
     },
     {
       "key": "m2",
-      "port": 1503,
-      "unitId": 1,
-      "wordOrder": "low_word_first",
-      "watchdogMilliseconds": 1000,
+      "transport": {
+        "kind": "modbus_tcp_slave",
+        "port": 1503,
+        "unitId": 1,
+        "wordOrder": "low_word_first",
+        "watchdogMilliseconds": 1000
+      },
       "channels": [
         {
           "tag": "axis.stroke.position",
           "variable": "axis_stroke_position",
-          "zone": "input_register",
-          "address": 0,
-          "ioType": "REAL",
-          "comment": "feedback"
+          "comment": "feedback",
+          "modbus": {
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL"
+          }
         }
       ]
     }

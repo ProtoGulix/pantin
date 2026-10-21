@@ -168,7 +168,7 @@ describeWithBridge("the real PLC bridge, a full run", () => {
       requireServer(),
       "PATCH",
       `/api/pantins/${PLC_CYLINDER_ID}/io/modules/m1`,
-      { watchdogMilliseconds: 2000 },
+      { transport: { kind: "modbus_tcp_slave", watchdogMilliseconds: 2000 } },
     );
     expect(edit.status).toBe(200);
     const failed = await waitForState("failed");

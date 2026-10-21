@@ -34,7 +34,7 @@ async function mapValveAndSetpoint() {
 describe("a renamed tag", () => {
   it("keeps its channel under the new name, with its variable, address and comment", async () => {
     await mapValveAndSetpoint();
-    await io.call("PATCH", `/channels/${COIL}`, { comment: "extend" });
+    await io.call("PATCH", `/modules/m1/channels/${COIL}`, { comment: "extend" });
     const before = (await io.call("GET", "")).answer;
     expect((await renameValve("distributeur")).status).toBe(200);
     const after = await io.call("GET", "");
@@ -42,7 +42,7 @@ describe("a renamed tag", () => {
     expect(channelOf(after, COIL)).toBeUndefined();
     expect(channelOf(after, NEW_COIL)).toMatchObject({
       variable: "carriage_valve_coil_14",
-      address: 0,
+      modbus: { address: 0 },
       comment: "extend",
       owner: { kind: "drive", id: "valve" },
     });
@@ -68,7 +68,7 @@ describe("renames in a row", () => {
   it("is carried by an edit route, which reads the mapping first", async () => {
     await mapValveAndSetpoint();
     await renameValve("distributeur");
-    const call = await io.call("PATCH", `/channels/${NEW_COIL}`, { comment: "ok" });
+    const call = await io.call("PATCH", `/modules/m1/channels/${NEW_COIL}`, { comment: "ok" });
     expect(call.status).toBe(200);
     expect(channelOf(call, NEW_COIL)?.comment).toBe("ok");
   });
@@ -103,7 +103,7 @@ describe("a deleted tag", () => {
     expect(call.answer.status).toBe("invalid");
     expect(channelOf(call, SETPOINT_TAG)).toMatchObject({ tagType: null, owner: null });
     expect(call.answer.problems.map((problem) => problem.code)).toEqual(["unknown_tag"]);
-    const removed = await io.call("DELETE", `/channels/${SETPOINT_TAG}`);
+    const removed = await io.call("DELETE", `/modules/m1/channels/${SETPOINT_TAG}`);
     expect(removed.answer.status).toBe("valid");
   });
 });

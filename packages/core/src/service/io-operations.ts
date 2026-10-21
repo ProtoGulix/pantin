@@ -84,12 +84,17 @@ export function ioEditOperations(context: ServiceContext) {
       editIo(context, pantinId, (open, tags) =>
         addChannels(requireMapping(open), moduleKey, request.tags, tags),
       ),
-    updateIoChannel: (pantinId: PantinId, tagName: string, request: UpdateIoChannelRequest) =>
+    updateIoChannel: (
+      pantinId: PantinId,
+      moduleKey: string,
+      tagName: string,
+      request: UpdateIoChannelRequest,
+    ) =>
       editIo(context, pantinId, (open, tags) =>
-        updateChannel(requireMapping(open), tagName, request, tags),
+        updateChannel(requireMapping(open), moduleKey, tagName, request, tags),
       ),
-    deleteIoChannel: (pantinId: PantinId, tagName: string) =>
-      editIo(context, pantinId, (open) => removeChannel(requireMapping(open), tagName)),
+    deleteIoChannel: (pantinId: PantinId, moduleKey: string, tagName: string) =>
+      editIo(context, pantinId, (open) => removeChannel(requireMapping(open), moduleKey, tagName)),
   };
 }
 

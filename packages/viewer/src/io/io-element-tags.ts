@@ -34,8 +34,8 @@ export function tagsOfOwner(mapping: IoMappingResponse | null, owner: IoTagOwner
               name: channel.tag,
               channel: {
                 moduleKey: module.key,
-                zone: channel.zone,
-                address: channel.address,
+                zone: channel.modbus?.zone ?? "",
+                address: channel.modbus?.address ?? 0,
                 variable: channel.variable,
                 cellId: cellIdOf({ moduleIndex, channelIndex, field: "tag" }),
               },

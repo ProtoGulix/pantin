@@ -6,10 +6,15 @@ import {
   serializeIoDocument,
   writeTextAtomically,
 } from "@pantin/core";
-import { IO_JSON_FILE_NAME, type IoDocument } from "@pantin/protocol";
+import { IO_JSON_FILE_NAME, type IoDocument, type TransportKind } from "@pantin/protocol";
 import { type CommandResult, done, refused } from "./command-result.ts";
 import { readFolderIoReading } from "./io-folder.ts";
-import { freshIoDocument, INIT_MODULE_KEY, mapTagsIntoFirstModule } from "./io-init.ts";
+import {
+  DEFAULT_INIT_TRANSPORT,
+  freshIoDocument,
+  INIT_MODULE_KEY,
+  mapTagsIntoFirstModule,
+} from "./io-init.ts";
 import { readFolderDocument } from "./validate-folder.ts";
 
 // `pantin io init <folder> [--update]` (ADR 0049 point 9). Without --update it
@@ -39,7 +44,11 @@ async function startOf(folder: string, update: boolean): Promise<Start> {
   return { existing: reading.kind === "document" ? reading.document : null, canonical };
 }
 
-export async function ioInit(folder: string, update: boolean): Promise<CommandResult> {
+export async function ioInit(
+  folder: string,
+  update: boolean,
+  transport?: TransportKind,
+): Promise<CommandResult> {
   const read = await readFolderDocument(folder);
   if ("problems" in read) {
     return refused(read.problems);
@@ -49,9 +58,17 @@ export async function ioInit(folder: string, update: boolean): Promise<CommandRe
     return refused(start.refusal);
   }
   const { existing, canonical } = start;
+  if (existing !== null && transport !== undefined) {
+    return refused([
+      `--transport applies to a new ${IO_JSON_FILE_NAME} only: module "${INIT_MODULE_KEY}" keeps its transport.`,
+    ]);
+  }
   const mapped = new Set(existing?.modules.flatMap((module) => module.channels.map((c) => c.tag)));
   const unmapped = ioTagsOf(read.document).filter((tag) => !mapped.has(tag.name));
-  const updated = mapTagsIntoFirstModule(existing ?? freshIoDocument(), unmapped);
+  const updated = mapTagsIntoFirstModule(
+    existing ?? freshIoDocument(transport ?? DEFAULT_INIT_TRANSPORT),
+    unmapped,
+  );
   if (typeof updated === "string") {
     return refused([updated]);
   }

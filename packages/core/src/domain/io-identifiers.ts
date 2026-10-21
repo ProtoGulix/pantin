@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
-// The CODESYS variable name rules of ADR 0045 point 9. NOT VERIFIED: they are
+// The CODESYS variable name rules of ADR 0045 point 9, with the dotted
+// references of ADR 0064 point 9. NOT VERIFIED: they are
 // IEC 61131-3 as commonly summarised, nobody read the standard or the CODESYS
 // documentation for them.
 
@@ -136,8 +137,42 @@ const RESERVED_NAMES: ReadonlySet<string> = new Set([
   "ENUM",
 ]);
 
-/** Why a name cannot be a variable, as a sentence; null when it can. */
+const REFERENCE_MAX_LENGTH = 255;
+const REFERENCE_MAX_SEGMENTS = 8;
+
+/**
+ * A dotted reference names something the PLC program declares already
+ * (`GVL_IO.Verin1.FinCourseSortie`): Pantin's generated GVL leaves it out
+ * (ADR 0064 point 9).
+ */
+export function isDottedVariable(variable: string): boolean {
+  return variable.includes(".");
+}
+
+/**
+ * Why a name cannot be a PLC variable reference, as a sentence; null when it
+ * can: 1 to 8 identifiers joined by ".", at most 255 characters in total (ADR
+ * 0064 point 9). A name without a dot is one identifier, as before.
+ */
 export function variableProblemOf(name: string): string | null {
+  const segments = name.split(".");
+  if (segments.length > REFERENCE_MAX_SEGMENTS) {
+    return `Variable "${name}" has more than ${REFERENCE_MAX_SEGMENTS} dotted parts.`;
+  }
+  if (name.length > REFERENCE_MAX_LENGTH) {
+    return `Variable "${name}" is longer than ${REFERENCE_MAX_LENGTH} characters.`;
+  }
+  for (const segment of segments) {
+    const problem = identifierProblemOf(segment);
+    if (problem !== null) {
+      return segments.length === 1 ? problem : `${problem} (a part of "${name}")`;
+    }
+  }
+  return null;
+}
+
+/** Why a name cannot be one identifier, as a sentence; null when it can. */
+function identifierProblemOf(name: string): string | null {
   if (name.length > VARIABLE_MAX_LENGTH) {
     return `Variable "${name}" is longer than ${VARIABLE_MAX_LENGTH} characters.`;
   }

@@ -1,4 +1,4 @@
-import type { IoMappingResponse, IoTagOwner } from "@pantin/protocol";
+import { type IoMappingResponse, type IoTagOwner, MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
 import { createTranslator, type MessageKey } from "../i18n/translate.ts";
 import {
   type IoEditParse,
@@ -125,9 +125,15 @@ function editModule(store: ViewerStore, moduleKey: string, field: string, text: 
   );
 }
 
-function editChannel(store: ViewerStore, tag: string, field: string, text: string): void {
+function editChannel(
+  store: ViewerStore,
+  moduleKey: string,
+  tag: string,
+  field: string,
+  text: string,
+): void {
   send(store, parseChannelEdit(field, text), (id, request) =>
-    store.ports.api.updateIoChannel(id, tag, request),
+    store.ports.api.updateIoChannel(id, moduleKey, tag, request),
   );
 }
 
@@ -138,20 +144,23 @@ export function ioIntents(store: ViewerStore) {
     focusIoProblem: (moduleKey: string | null, cellId: string) =>
       focusProblem(store, moduleKey, cellId),
     // The first one creates io.json; the core proposes key and port.
-    addIoModule: () => void editMapping(store, (id) => api().createIoModule(id, {})),
+    addIoModule: () =>
+      void editMapping(store, (id) =>
+        api().createIoModule(id, { transport: { kind: MODBUS_TCP_SLAVE_KIND } }),
+      ),
     editIoModule: (moduleKey: string, field: string, text: string) =>
       editModule(store, moduleKey, field, text),
     removeIoModule: (moduleKey: string) =>
       void editMapping(store, (id) => api().deleteIoModule(id, moduleKey)),
     mapIoTags: (moduleKey: string, tags: readonly string[]) =>
       void editMapping(store, (id) => api().createIoChannels(id, moduleKey, { tags: [...tags] })),
-    editIoChannel: (tag: string, field: string, text: string) =>
-      editChannel(store, tag, field, text),
-    // A PATCH with `tag` derives zone and type again (ADR 0049 point 4).
-    reassignIoChannel: (tag: string) =>
-      void editMapping(store, (id) => api().updateIoChannel(id, tag, { tag })),
-    unmapIoChannel: (tag: string) =>
-      void editMapping(store, (id) => api().deleteIoChannel(id, tag)),
+    editIoChannel: (moduleKey: string, tag: string, field: string, text: string) =>
+      editChannel(store, moduleKey, tag, field, text),
+    // A PATCH with `tag` derives the transport fields again (ADR 0049 point 4).
+    reassignIoChannel: (moduleKey: string, tag: string) =>
+      void editMapping(store, (id) => api().updateIoChannel(id, moduleKey, tag, { tag })),
+    unmapIoChannel: (moduleKey: string, tag: string) =>
+      void editMapping(store, (id) => api().deleteIoChannel(id, moduleKey, tag)),
     exportIoGvl: () => void exportMappingFile(store, (id) => store.ports.api.fetchIoGvl(id)),
     exportIoCsv: () => void exportMappingFile(store, (id) => store.ports.api.fetchIoCsv(id)),
     retryIoMapping: () => void retryIoMapping(store),

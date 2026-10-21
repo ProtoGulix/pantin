@@ -88,15 +88,20 @@ are those of the French interface of CODESYS.
    `verin1_verin1_coil_14 : BOOL;`, followed by a comment with the module, the
    zone, the address and the tag. It has **no `AT` addresses**: it is in the
    CODESYS device tree that you link each Modbus channel to these variables.
-   Do not edit it: it is regenerated.
+   Do not edit it: it is regenerated. A channel whose variable is a dotted name
+   (`GVL_IO.Verin1.FinCourseSortie`) is not declared there: it is a variable that
+   your program already declares, and the header of the GVL lists it. A feedback
+   tag mapped in two modules appears once.
 
    To review the mapping with an electrician or paste it into a wiring
    document, export it as a spreadsheet file: **I/O** view, **Export CSV**
    button, or `pnpm pantin io export <Pantin folder> --output mapping.csv`
    (prefer `--output` to a `>` redirection: in Windows PowerShell 5.1 a
    redirection re-encodes the file, NOT VERIFIED). `pantin gvl` accepts
-   `--output` too. The file has one row per channel (module, port, unit id,
-   tag, variable, zone, address, type, direction, comment), comma-separated, in
+   `--output` too. The file has one row per channel (columns `module`,
+   `transport`, `endpoint`, `tag`, `variable`, `direction`, `address`, `plcType`,
+   `comment`; for Modbus, for example `Modbus TCP slave`, `port 1502, unit 1`,
+   `coil 0`, `BOOL`), comma-separated, in
    UTF-8 with a byte order mark so that spreadsheets read accents correctly. A
    comment that starts with `=`, `+`, `-` or `@` (or a tab or a carriage
    return), such as `-B12`, is written with a leading apostrophe so that the

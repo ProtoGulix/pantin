@@ -143,7 +143,7 @@ describe("POST .../ungroup", () => {
 describe("io.json after grouping", () => {
   it("follows the renamed tags and is written by save", async () => {
     await patchJoint("rod", SLIDER);
-    await post("/io/modules", {});
+    await post("/io/modules", { transport: { kind: "modbus_tcp_slave" } });
     await post("/io/modules/m1/channels", { tags: ["machine.rod.setpoint"] });
     await post(GROUPS, { name: "Slide", bodies: ["rod"], assemblies: [] });
     const mapping = IoMappingResponseSchema.parse(

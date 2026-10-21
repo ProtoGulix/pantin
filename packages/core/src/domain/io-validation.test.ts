@@ -1,9 +1,11 @@
-import type { IoChannel, IoDocument } from "@pantin/protocol";
-import { describe, expect, it } from "vitest";
+import type { IoChannel, IoDocument, IoModule } from "@pantin/protocol";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { variableProblemOf } from "./io-identifiers.ts";
+import { rulesOf } from "./io-transports.ts";
 import { type IoTag, validateIoDocument } from "./io-validation.ts";
 
-// The rules of ADR 0049 point 6, with paths into io.json.
+// The rules common to every transport (ADR 0049 point 6, ADR 0064 point 5),
+// with paths into io.json. The Modbus rules are tested in @pantin/transport-types.
 
 const OWNER = { kind: "drive", id: "valve" } as const;
 const TAGS: IoTag[] = [
@@ -11,7 +13,6 @@ const TAGS: IoTag[] = [
   { name: "a.sw.state", type: "bit", direction: "feedback", owner: OWNER },
   { name: "a.axis.setpoint", type: "float", direction: "command", owner: OWNER },
   { name: "a.axis.position", type: "float", direction: "feedback", owner: OWNER },
-  { name: "a.enc.count", type: "integer", direction: "feedback", owner: OWNER },
 ];
 
 let counter = 0;
@@ -20,78 +21,69 @@ function channel(overrides: Partial<IoChannel> = {}): IoChannel {
   return {
     tag: "a.valve.coil_14",
     variable: `var_${counter}`,
-    zone: "coil",
-    address: 0,
-    ioType: "BOOL",
     comment: "",
+    modbus: { zone: "coil", address: counter, ioType: "BOOL" },
     ...overrides,
   };
 }
 
-const settings = { unitId: 1, wordOrder: "low_word_first", watchdogMilliseconds: 1000 } as const;
+const feedback = (overrides: Partial<IoChannel> = {}) =>
+  channel({
+    tag: "a.sw.state",
+    modbus: { zone: "discrete_input", address: counter, ioType: "BOOL" },
+    ...overrides,
+  });
 
-function document(...modules: IoChannel[][]): IoDocument {
+function moduleOf(index: number, channels: IoChannel[], port = 1502 + index): IoModule {
   return {
-    schema_version: 1,
-    modules: modules.map((channels, index) => ({
-      key: `m${index + 1}`,
-      port: 1502 + index,
-      ...settings,
-      channels,
-    })),
+    key: `m${index + 1}`,
+    transport: {
+      kind: "modbus_tcp_slave",
+      port,
+      unitId: 1,
+      wordOrder: "low_word_first",
+      watchdogMilliseconds: 1000,
+    },
+    channels,
   };
 }
 
-function problemsOf(...modules: IoChannel[][]) {
-  return validateIoDocument(document(...modules), TAGS).problems;
+function document(...modules: IoChannel[][]): IoDocument {
+  return { schema_version: 2, modules: modules.map((channels, i) => moduleOf(i, channels)) };
 }
 
+const problemsOf = (...modules: IoChannel[][]) =>
+  validateIoDocument(document(...modules), TAGS).problems;
 const codesOf = (...modules: IoChannel[][]) => problemsOf(...modules).map((p) => p.code);
 
-describe("validateIoDocument consistent tags", () => {
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("validateIoDocument tags", () => {
   it("accepts one consistent channel per tag", () => {
     const channels = [
       channel(),
-      channel({ tag: "a.sw.state", zone: "discrete_input" }),
-      channel({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "REAL" }),
-      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL" }),
-      channel({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address: 2 }),
+      feedback(),
+      channel({
+        tag: "a.axis.setpoint",
+        modbus: { zone: "holding_register", address: 0, ioType: "REAL" },
+      }),
+      channel({
+        tag: "a.axis.position",
+        modbus: { zone: "input_register", address: 0, ioType: "REAL" },
+      }),
     ];
     expect(validateIoDocument(document(channels), TAGS)).toEqual({
       problems: [],
       unmappedTags: [],
     });
   });
-});
 
-describe("validateIoDocument tags", () => {
   it("reports an unknown tag at its tag path", () => {
-    expect(problemsOf([channel(), channel({ tag: "a.ghost.coil", address: 1 })])).toMatchObject([
+    expect(problemsOf([channel(), channel({ tag: "a.ghost.coil" })])).toMatchObject([
       { path: ["modules", 0, "channels", 1, "tag"], code: "unknown_tag" },
     ]);
-  });
-
-  it("reports a zone the direction does not allow, at the zone path", () => {
-    const wrong = channel({ tag: "a.sw.state", zone: "coil" });
-    expect(problemsOf([wrong])).toMatchObject([
-      { path: ["modules", 0, "channels", 0, "zone"], code: "zone_direction_mismatch" },
-    ]);
-  });
-
-  it("reports an io type the tag type does not give, at the ioType path", () => {
-    const wrong = channel({ tag: "a.axis.setpoint", zone: "holding_register", ioType: "DINT" });
-    expect(problemsOf([wrong])).toMatchObject([
-      { path: ["modules", 0, "channels", 0, "ioType"], code: "type_mismatch" },
-    ]);
-  });
-
-  it("reports a BOOL in a register zone and a REAL in a bit zone as type_zone_mismatch", () => {
-    const wrong = [
-      channel({ zone: "holding_register", address: 0 }),
-      channel({ tag: "a.axis.setpoint", zone: "coil", ioType: "REAL", address: 4 }),
-    ];
-    expect(codesOf(wrong)).toContain("type_zone_mismatch");
-    expect(problemsOf(wrong).filter((p) => p.code === "type_zone_mismatch")).toHaveLength(2);
   });
 
   it("lists as unmapped the tags no channel maps, with type, direction and owner", () => {
@@ -100,7 +92,6 @@ describe("validateIoDocument tags", () => {
       "a.sw.state",
       "a.axis.setpoint",
       "a.axis.position",
-      "a.enc.count",
     ]);
     expect(unmappedTags[0]).toEqual({
       name: "a.sw.state",
@@ -109,37 +100,42 @@ describe("validateIoDocument tags", () => {
       owner: OWNER,
     });
   });
+
+  it("asks the transport's rules, and prefixes their paths with the module", () => {
+    const wrong = feedback({ modbus: { zone: "coil", address: 0, ioType: "BOOL" } });
+    expect(problemsOf([channel()], [wrong])).toMatchObject([
+      { path: ["modules", 1, "channels", 0, "modbus", "zone"], code: "zone_direction_mismatch" },
+    ]);
+  });
+
+  it("reports a signal the transport cannot carry as unsupported_signal", () => {
+    const modbusRules = rulesOf({ kind: "modbus_tcp_slave" });
+    vi.spyOn(modbusRules, "supportsSignal").mockReturnValue(false);
+    expect(problemsOf([channel()])).toMatchObject([
+      { path: ["modules", 0, "channels", 0, "tag"], code: "unsupported_signal" },
+    ]);
+  });
 });
 
-describe("validateIoDocument addresses", () => {
-  it("reports a REAL whose second register runs past 65535, and only that", () => {
-    const at = (address: number) =>
-      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address });
-    expect(codesOf([at(65534)])).toEqual([]);
-    expect(problemsOf([at(65535)])).toMatchObject([
-      { path: ["modules", 0, "channels", 0, "address"], code: "address_out_of_range" },
+describe("validateIoDocument across modules", () => {
+  it("accepts a feedback in two modules", () => {
+    expect(codesOf([feedback()], [feedback()])).toEqual([]);
+  });
+
+  it("reports a command in two modules, on the later channel", () => {
+    expect(problemsOf([channel()], [channel()])).toMatchObject([
+      { path: ["modules", 1, "channels", 0, "tag"], code: "command_mapped_twice" },
     ]);
   });
 
-  it("reports an overlap on the later channel, per module and zone", () => {
-    const position = (address: number) =>
-      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address });
-    const count = (address: number) =>
-      channel({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address });
-    expect(problemsOf([position(0), count(1)])).toMatchObject([
-      { path: ["modules", 0, "channels", 1, "address"], code: "address_overlap" },
+  it("reports a port two modules listen on, at the later module's port", () => {
+    const shared: IoDocument = {
+      schema_version: 2,
+      modules: [moduleOf(0, [], 1502), moduleOf(1, [], 1502)],
+    };
+    expect(validateIoDocument(shared, TAGS).problems).toMatchObject([
+      { path: ["modules", 1, "transport", "port"], code: "listen_port_used_twice" },
     ]);
-    expect(codesOf([position(0), count(2)])).toEqual([]);
-    // Another module has its own address space.
-    expect(codesOf([position(0)], [count(0)])).toEqual([]);
-  });
-
-  it("does not count a channel past the end as overlapping", () => {
-    const channels = [
-      channel({ tag: "a.axis.position", zone: "input_register", ioType: "REAL", address: 65535 }),
-      channel({ tag: "a.enc.count", zone: "input_register", ioType: "DINT", address: 65534 }),
-    ];
-    expect(codesOf(channels)).not.toContain("address_overlap");
   });
 });
 
@@ -152,20 +148,31 @@ describe("validateIoDocument variables", () => {
     expect(problems[0]?.message).toBe(variableProblemOf("BOOL"));
   });
 
+  it("accepts a dotted reference to a variable the PLC program declares", () => {
+    expect(codesOf([channel({ variable: "GVL_IO.Verin1.FinCourseSortie" })])).toEqual([]);
+  });
+
   it("reports a duplicate variable ignoring case, on the later channel, across modules", () => {
-    const first = channel({ variable: "Valve" });
-    const second = channel({ tag: "a.sw.state", zone: "discrete_input", variable: "valve" });
-    const problems = problemsOf([first], [second]);
+    const problems = problemsOf(
+      [channel({ variable: "Valve" })],
+      [feedback({ variable: "valve" })],
+    );
     expect(problems).toMatchObject([
       { path: ["modules", 1, "channels", 0, "variable"], code: "duplicate_variable" },
     ]);
     expect(problems[0]?.message).toContain('"a.valve.coil_14"');
   });
 
+  it("lets the same tag in two modules share its variable", () => {
+    expect(codesOf([feedback({ variable: "limit" })], [feedback({ variable: "LIMIT" })])).toEqual(
+      [],
+    );
+  });
+
   it("sorts problems by path", () => {
     const problems = problemsOf(
-      [channel({ variable: "BOOL" }), channel({ tag: "a.ghost.x", address: 1 })],
-      [channel({ variable: "INT", tag: "a.sw.state", zone: "discrete_input" })],
+      [channel({ variable: "BOOL" }), channel({ tag: "a.ghost.x" })],
+      [feedback({ variable: "INT" })],
     );
     expect(problems.map((p) => p.path.join("."))).toEqual([
       "modules.0.channels.0.variable",

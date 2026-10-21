@@ -4,6 +4,7 @@ import type { GeneratedText } from "./folder-text.ts";
 import { parseGenerateArguments, writeGeneratedFile } from "./generated-output.ts";
 import { generateGvl } from "./gvl.ts";
 import { exportIoCsv } from "./io-export.ts";
+import { parseIoInitArguments } from "./io-init-arguments.ts";
 import { ioInit } from "./io-init-command.ts";
 import { ioJsonSchemaText, pantinJsonSchemaText } from "./json-schema.ts";
 import { realEnvironment } from "./real-environment.ts";
@@ -17,8 +18,9 @@ const USAGE = [
   "Usage: pnpm pantin <command>",
   "  validate <folder>   check a Pantin folder: pantin.json and its mesh files",
   "  schema [io]         print the JSON Schema of pantin.json, or of io.json with io",
-  "  io init <folder> [--update]",
-  "                      write io.json, or with --update map the unmapped tags into m1",
+  "  io init <folder> [--update] [--transport <kind>]",
+  "                      write io.json (transport modbus_tcp_slave by default), or with --update",
+  "                      map the unmapped tags into m1",
   "  io export <folder> [--output <file>]",
   "                      print the I/O mapping as CSV, one row per channel (read-only)",
   "  gvl <folder> [--output <file>]",
@@ -75,13 +77,16 @@ async function runSignals(args: readonly string[], streams: Streams): Promise<nu
 }
 
 async function runIoInit(args: readonly string[], streams: Streams): Promise<number> {
-  const folders = args.filter((arg) => arg !== "--update");
-  const [folder] = folders;
-  if (folder === undefined || folders.length > 1 || args.length - folders.length > 1) {
+  const parsed = parseIoInitArguments(args);
+  if (parsed === undefined) {
     writeLine(streams.stderr, USAGE);
     return 2;
   }
-  return report(await ioInit(folder, args.includes("--update")), streams);
+  if (typeof parsed === "string") {
+    writeLine(streams.stderr, `error: ${parsed}`);
+    return 2;
+  }
+  return report(await ioInit(parsed.folder, parsed.update, parsed.transport), streams);
 }
 
 // With --output the bytes go straight to the file: a shell redirection can

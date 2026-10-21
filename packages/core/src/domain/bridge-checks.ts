@@ -1,4 +1,9 @@
-import type { BridgeNetwork, IoStatus } from "@pantin/protocol";
+import {
+  type BridgeNetwork,
+  type IoMappingResponse,
+  type IoStatus,
+  MODBUS_TCP_SLAVE_KIND,
+} from "@pantin/protocol";
 import {
   type AddressClass,
   type Cidr,
@@ -38,6 +43,7 @@ export type BridgeStartFacts = {
   hostAddresses: readonly string[];
   mapping: {
     status: IoStatus;
+    // The Modbus TCP slave modules only: this bridge serves no other transport (ADR 0064 point 8).
     modules: readonly { key: string; port: number }[];
     // The first problems, already worded.
     problems: readonly string[];
@@ -139,7 +145,13 @@ function checkAllow(allow: readonly string[]): BridgeRefusal | undefined {
 
 function checkMapping(mapping: BridgeStartFacts["mapping"]): BridgeRefusal | undefined {
   if (mapping.status === "valid") {
-    return undefined;
+    return mapping.modules.length > 0
+      ? undefined
+      : {
+          code: "conflict",
+          message:
+            "io.json has no Modbus TCP slave module, and this bridge serves only those. Add one in the I/O view before starting the bridge.",
+        };
   }
   const detail =
     mapping.status === "missing"
@@ -179,6 +191,15 @@ function checkPorts(listen: string, facts: BridgeStartFacts): BridgeRefusal | un
     }
   }
   return undefined;
+}
+
+// This bridge is the Modbus one: the other modules belong to other bridges (ADR 0064 point 8).
+export function modbusModulesOf(modules: IoMappingResponse["modules"]) {
+  return modules.flatMap((module) =>
+    module.transport.kind === MODBUS_TCP_SLAVE_KIND
+      ? [{ key: module.key, port: module.transport.port }]
+      : [],
+  );
 }
 
 export function checkBridgeStart(

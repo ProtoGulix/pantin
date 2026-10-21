@@ -60,7 +60,7 @@ def prepare_pantins_directory(directory: Path, modbus_port: int) -> None:
     shutil.copytree(EXAMPLE, folder)
     io_path = folder / "io.json"
     document = json.loads(io_path.read_text(encoding="utf-8"))
-    document["modules"][0]["port"] = modbus_port
+    document["modules"][0]["transport"]["port"] = modbus_port
     io_path.write_text(json.dumps(document, indent=2), encoding="utf-8")
 
 

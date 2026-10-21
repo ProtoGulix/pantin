@@ -20,10 +20,8 @@ def channel(tag: str, zone: str, address: int, io_type: str) -> dict[str, object
     return {
         "tag": tag,
         "variable": tag.replace(".", "_"),
-        "zone": zone,
-        "address": address,
-        "ioType": io_type,
         "comment": "",
+        "modbus": {"zone": zone, "address": address, "ioType": io_type},
         "tagType": "bit" if io_type == "BOOL" else "float",
         "direction": direction,
         "owner": {"kind": "drive", "id": "valve"},
@@ -33,10 +31,13 @@ def channel(tag: str, zone: str, address: int, io_type: str) -> dict[str, object
 def io_answer(port: int, word_order: str = "low_word_first") -> dict[str, object]:
     module = {
         "key": "m1",
-        "port": port,
-        "unitId": 1,
-        "wordOrder": word_order,
-        "watchdogMilliseconds": 200,
+        "transport": {
+            "kind": "modbus_tcp_slave",
+            "port": port,
+            "unitId": 1,
+            "wordOrder": word_order,
+            "watchdogMilliseconds": 200,
+        },
         "channels": [
             channel("press.valve.extend", "coil", 0, "BOOL"),
             channel("press.ext.state", "discrete_input", 0, "BOOL"),

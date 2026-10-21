@@ -41,6 +41,7 @@ Monorepo :
     packages/drive-types un dossier par type de préactionneur (distributeur, contacteur, variateur) : schéma, comportement, libellés (ADR 0022, 0028)
     packages/actuator-types un dossier par type d'actionneur (vérin, moteur) : schéma, comportement, libellés (ADR 0028)
     packages/sensor-types un dossier par type de capteur : schéma, évaluation, libellés (ADR 0023)
+    packages/transport-types un dossier par transport d'E/S (Modbus TCP esclave, plus tard OPC UA) : schéma, règles, libellés, présentation (ADR 0064)
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
     packages/bridge      pont vers les automates (Python, esclave Modbus TCP écrit à la main, processus séparé lancé par le coeur à la demande, ADR 0007, 0045, 0048, 0050)
@@ -54,7 +55,7 @@ Monorepo :
 
 Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/cli ; le pont est un paquet Python non publié, pantin-bridge, ADR 0045) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
 
-Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer et cli ; le pont, en Python, lui reste fidèle par les fixtures de packages/protocol/fixtures (ADR 0045). core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types et sensor-types (sans logique), jamais leurs comportements ni leurs évaluations (ADR 0022, 0023, 0028). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028).
+Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer et cli ; le pont, en Python, lui reste fidèle par les fixtures de packages/protocol/fixtures (ADR 0045). core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types, sensor-types et transport-types (sans logique), jamais leurs comportements, leurs évaluations ni leurs règles (ADR 0022, 0023, 0028, 0064). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028).
 
 Stack proposée (à confirmer en phase 0) :
 
@@ -109,7 +110,7 @@ Exemple de manifeste de pièce (à valider contre le schéma en phase 1) :
       ]
     }
 
-Liste d'E/S : un fichier io.json par Pantin, qui porte les modules et leurs voies (ADR 0045, 0049). Il est édité depuis le viewer, enregistré et annulé avec le Pantin, jamais à la main. Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus, et suit leurs renommages. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS. Jamais de tag défini à la main à deux endroits.
+Liste d'E/S : un fichier io.json par Pantin, qui porte les modules, chacun avec son transport, et leurs voies (ADR 0045, 0049, 0064). Il est édité depuis le viewer, enregistré et annulé avec le Pantin, jamais à la main. Il ne définit pas les tags, que le coeur dérive du document : il les relie aux variables CODESYS et aux adresses Modbus, et suit leurs renommages. pantin io init le pré-remplit, pantin gvl en génère la GVL CODESYS. Jamais de tag défini à la main à deux endroits.
 
 ## 6. Économie de tokens (obligatoire)
 

@@ -1,7 +1,8 @@
 import type { IoMappingResponse } from "@pantin/protocol";
+import { presentationOf } from "./io-transports.ts";
 
 // The I/O mapping as a spreadsheet, one row per channel (ADR 0049 amendment of
-// 2026-10-20): read-only, for review with an electrician or a wiring document.
+// 2026-10-20, columns amended by ADR 0064): read-only, for review with an electrician or a wiring document.
 // One renderer serves `pantin io export` and the GET .../io/csv route.
 //
 // Separator: a comma, with a UTF-8 byte order mark. Nothing in this repository
@@ -15,16 +16,16 @@ type MappingModule = IoMappingResponse["modules"][number];
 const BYTE_ORDER_MARK = "\uFEFF";
 const LINE_BREAK = "\r\n";
 
+// The text of the transport columns comes from the transport's presentation.
 const IO_CSV_COLUMNS = [
   "module",
-  "port",
-  "unitId",
+  "transport",
+  "endpoint",
   "tag",
   "variable",
-  "zone",
-  "address",
-  "ioType",
   "direction",
+  "address",
+  "plcType",
   "comment",
 ] as const;
 
@@ -44,16 +45,16 @@ function quoted(cell: string): string {
 }
 
 function moduleRows(module: MappingModule): string[][] {
+  const presentation = presentationOf(module.transport);
   return module.channels.map((channel) => [
     module.key,
-    String(module.port),
-    String(module.unitId),
+    presentation.transportText(module.transport),
+    presentation.endpointText(module.transport),
     channel.tag,
     channel.variable,
-    channel.zone,
-    String(channel.address),
-    channel.ioType,
     channel.direction ?? "",
+    presentation.addressText(channel),
+    presentation.plcTypeText(channel),
     asText(channel.comment),
   ]);
 }

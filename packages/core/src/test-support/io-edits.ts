@@ -47,7 +47,8 @@ export const POSITION_TAG = "carriage.stroke.position";
 
 export type IoEditHarness = {
   axis: () => BusAxis;
-  addModule(body?: unknown): Promise<IoCall>;
+  // The settings go in the module's modbus_tcp_slave transport; `extra` is beside it (a key).
+  addModule(settings?: Record<string, unknown>, extra?: Record<string, unknown>): Promise<IoCall>;
   mapTags(names: string[], module?: string): Promise<IoCall>;
   call(method: string, path: string, body?: unknown): Promise<IoCall>;
 };
@@ -69,7 +70,11 @@ export function useIoAxis(): IoEditHarness {
   };
   return {
     axis,
-    addModule: (body = {}) => callIo(axis(), "POST", "/modules", body),
+    addModule: (settings = {}, extra = {}) =>
+      callIo(axis(), "POST", "/modules", {
+        ...extra,
+        transport: { kind: "modbus_tcp_slave", ...settings },
+      }),
     mapTags: (names, module = "m1") =>
       callIo(axis(), "POST", `/modules/${module}/channels`, { tags: names }),
     call: (method, path, body) => callIo(axis(), method, path, body),

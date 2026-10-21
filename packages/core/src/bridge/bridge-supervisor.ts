@@ -3,6 +3,7 @@ import type { ProcessSpawner } from "../converter/process-runner.ts";
 import {
   checkBridgeStart,
   listenChoicesOf,
+  modbusModulesOf,
   type SupervisedBridgeClaim,
 } from "../domain/bridge-checks.ts";
 import type { BridgeLogLevel } from "../domain/bridge-log-lines.ts";
@@ -227,12 +228,13 @@ async function startBridge(
   }
   refuseWhenClosed(context);
   const mapping = await options.service.readIo(pantinId);
+  const modules = modbusModulesOf(mapping.modules);
   refuseWhenClosed(context);
   const result = checkBridgeStart(pantinId, request, {
     hostAddresses: options.hostAddresses(),
     mapping: {
       status: mapping.status,
-      modules: mapping.modules,
+      modules,
       problems: mapping.problems.slice(0, FIRST_PROBLEMS).map(describeIoProblem),
     },
     externalBridgeConnected: statusOf(context, pantinId).externalBridgeConnected,
@@ -246,7 +248,7 @@ async function startBridge(
   context.entries.set(pantinId, entry);
   Object.assign(entry, {
     network: result.network,
-    ports: mapping.modules.map(({ port }) => port),
+    ports: modules.map(({ port }) => port),
     log: [],
     exiting: undefined,
   });

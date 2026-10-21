@@ -1,4 +1,8 @@
-"""The I/O mapping the core serves at GET /api/pantins/:pantinId/io (ADR 0049 point 5)."""
+"""The I/O mapping the core serves at GET /api/pantins/:pantinId/io (ADR 0049 point 5, ADR 0064).
+
+This bridge serves the modules of the `modbus_tcp_slave` transport. A module of another kind is
+not an error: it belongs to another bridge, so it is skipped and reported (ADR 0064 point 8).
+"""
 
 from __future__ import annotations
 
@@ -6,6 +10,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from pantin_bridge.errors import ProtocolError
+from pantin_bridge.io_modbus import (
+    MODBUS_TCP_SLAVE_KIND,
+    IoModule,
+    IoRow,
+    IoType,
+    IoZone,
+    WordOrder,
+    decode_modbus_channel,
+    decode_modbus_transport,
+)
 from pantin_bridge.wire_decoding import (
     JsonObject,
     as_enum,
@@ -18,7 +32,8 @@ from pantin_bridge.wire_decoding import (
     reject_unknown_fields,
 )
 
-# The codes of IO_PROBLEM_CODES (packages/protocol/src/io-mapping.ts).
+# The codes of IO_PROBLEM_CODES (packages/protocol/src/io-mapping.ts): the common ones, then
+# those of the transports (packages/transport-types).
 IO_PROBLEM_CODES = frozenset(
     {
         "file_too_large",
@@ -26,7 +41,11 @@ IO_PROBLEM_CODES = frozenset(
         "invalid_json",
         "unreadable_file",
         "schema_invalid",
+        "newer_schema_version",
         "unknown_tag",
+        "command_mapped_twice",
+        "unsupported_signal",
+        "listen_port_used_twice",
         "zone_direction_mismatch",
         "type_mismatch",
         "type_zone_mismatch",
@@ -39,34 +58,6 @@ IO_PROBLEM_CODES = frozenset(
 _TAG_TYPES = frozenset({"bit", "float", "integer"})
 _DIRECTIONS = frozenset({"command", "feedback"})
 _OWNER_KINDS = frozenset({"joint", "drive", "sensor", "emitter", "presenceSensor"})
-_MAX_ADDRESS = 65535
-
-
-class IoZone(StrEnum):
-    COIL = "coil"
-    DISCRETE_INPUT = "discrete_input"
-    HOLDING_REGISTER = "holding_register"
-    INPUT_REGISTER = "input_register"
-
-    @property
-    def is_bit_zone(self) -> bool:
-        return self in (IoZone.COIL, IoZone.DISCRETE_INPUT)
-
-    @property
-    def is_command(self) -> bool:
-        """The PLC writes coils and holding registers; it reads the other two zones."""
-        return self in (IoZone.COIL, IoZone.HOLDING_REGISTER)
-
-
-class IoType(StrEnum):
-    BOOL = "BOOL"
-    REAL = "REAL"
-    DINT = "DINT"
-
-    @property
-    def register_count(self) -> int:
-        """REAL and DINT take two registers, BOOL takes one coil or input."""
-        return 1 if self is IoType.BOOL else 2
 
 
 class IoStatus(StrEnum):
@@ -75,31 +66,12 @@ class IoStatus(StrEnum):
     MISSING = "missing"
 
 
-class WordOrder(StrEnum):
-    LOW_WORD_FIRST = "low_word_first"
-    HIGH_WORD_FIRST = "high_word_first"
-
-
 @dataclass(frozen=True)
-class IoModule:
+class SkippedModule:
+    """A module of a transport this bridge does not serve."""
+
     key: str
-    port: int
-    unit_id: int
-    word_order: WordOrder
-    watchdog_milliseconds: int
-
-
-@dataclass(frozen=True)
-class IoRow:
-    tag: str
-    module: str
-    zone: IoZone
-    address: int
-    io_type: IoType
-
-    @property
-    def width(self) -> int:
-        return self.io_type.register_count
+    kind: str
 
 
 @dataclass(frozen=True)
@@ -114,68 +86,17 @@ class IoProblem:
 class IoMapping:
     status: IoStatus
     mapping_id: str | None
+    # The Modbus TCP slave modules only: the ones this bridge serves.
     modules: tuple[IoModule, ...]
     rows: tuple[IoRow, ...]
     problems: tuple[IoProblem, ...]
+    skipped_modules: tuple[SkippedModule, ...] = ()
 
     def rows_of(self, module_key: str) -> tuple[IoRow, ...]:
         return tuple(row for row in self.rows if row.module == module_key)
 
 
-_MODULE_FIELDS = frozenset({"key", "port", "unitId", "wordOrder", "watchdogMilliseconds"})
-# The bounds of IoModuleSchema (packages/protocol/src/io-mapping.ts).
-_PORTS = (1024, 65535)
-_UNIT_IDS = (1, 247)
-_WATCHDOG_MILLISECONDS = (100, 3_600_000)
-
-
-def _in_range(value: int, bounds: tuple[int, int], where: str) -> int:
-    if not bounds[0] <= value <= bounds[1]:
-        raise ProtocolError(f"{where} must be from {bounds[0]} to {bounds[1]}.")
-    return value
-
-
-def _decode_module(raw: object, where: str) -> IoModule:
-    item = as_object(raw, where)
-    reject_unknown_fields(item, _MODULE_FIELDS, where)
-    return IoModule(
-        key=as_key(item.get("key"), f"{where}.key"),
-        port=_in_range(as_integer(item.get("port"), f"{where}.port"), _PORTS, f"{where}.port"),
-        unit_id=_in_range(
-            as_integer(item.get("unitId"), f"{where}.unitId"), _UNIT_IDS, f"{where}.unitId"
-        ),
-        word_order=as_enum(item.get("wordOrder"), WordOrder, f"{where}.wordOrder"),
-        watchdog_milliseconds=_in_range(
-            as_integer(item.get("watchdogMilliseconds"), f"{where}.watchdogMilliseconds"),
-            _WATCHDOG_MILLISECONDS,
-            f"{where}.watchdogMilliseconds",
-        ),
-    )
-
-
-def _decode_channel(raw: object, module_key: str, where: str) -> IoRow:
-    item = as_object(raw, where)
-    zone = as_enum(item.get("zone"), IoZone, f"{where}.zone")
-    io_type = as_enum(item.get("ioType"), IoType, f"{where}.ioType")
-    # The core validates this pairing; a bridge that trusted a wrong one would encode a
-    # bit as registers, so the cheap check stays.
-    if zone.is_bit_zone != (io_type is IoType.BOOL):
-        raise ProtocolError(f"{where}: a {io_type.value} cannot sit in the {zone.value} zone.")
-    _check_annotations(item, where)
-    # Empty is accepted by the schema and reported by the core as invalid_variable.
-    as_string(item.get("variable"), f"{where}.variable", allow_empty=True)
-    as_string(item.get("comment"), f"{where}.comment", allow_empty=True)
-    return IoRow(
-        tag=as_tag_name(item.get("tag"), f"{where}.tag"),
-        module=module_key,
-        zone=zone,
-        address=_in_range(
-            as_integer(item.get("address"), f"{where}.address", minimum=0),
-            (0, _MAX_ADDRESS),
-            f"{where}.address",
-        ),
-        io_type=io_type,
-    )
+_MODULE_FIELDS = frozenset({"key", "transport", "channels"})
 
 
 def _one_of(value: object, allowed: frozenset[str], where: str) -> None:
@@ -206,15 +127,24 @@ def _decode_owner(raw: object, where: str) -> None:
     as_string(owner.get("id"), f"{where}.id")
 
 
-def _decode_module_channels(raw: object, where: str) -> tuple[IoModule, tuple[IoRow, ...]]:
+def _decode_module_channels(
+    raw: object, where: str
+) -> tuple[IoModule, tuple[IoRow, ...]] | SkippedModule:
     item = as_object(raw, where)
-    settings = {name: value for name, value in item.items() if name != "channels"}
-    module = _decode_module(settings, where)
-    channels = tuple(
-        _decode_channel(channel, module.key, f"{where}.channels[{index}]")
-        for index, channel in enumerate(as_list(item.get("channels"), f"{where}.channels"))
+    reject_unknown_fields(item, _MODULE_FIELDS, where)
+    key = as_key(item.get("key"), f"{where}.key")
+    transport = as_object(item.get("transport"), f"{where}.transport")
+    kind = as_string(transport.get("kind"), f"{where}.transport.kind")
+    channels = as_list(item.get("channels"), f"{where}.channels")
+    if kind != MODBUS_TCP_SLAVE_KIND:
+        # The channels of another transport carry fields this bridge does not know.
+        return SkippedModule(key=key, kind=kind)
+    module = decode_modbus_transport(key, transport, f"{where}.transport")
+    rows = tuple(
+        _decode_channel(channel, key, f"{where}.channels[{index}]")
+        for index, channel in enumerate(channels)
     )
-    return module, channels
+    return module, rows
 
 
 def _decode_path(raw: object, where: str) -> tuple[str | int, ...]:
@@ -259,6 +189,8 @@ def decode_io_mapping(document: object) -> IoMapping:
         _decode_module_channels(item, f"modules[{index}]")
         for index, item in enumerate(as_list(body.get("modules"), "modules"))
     ]
+    served = [item for item in decoded if not isinstance(item, SkippedModule)]
+    skipped = tuple(item for item in decoded if isinstance(item, SkippedModule))
     problems = tuple(
         _decode_problem(item, f"problems[{index}]")
         for index, item in enumerate(as_list(body.get("problems"), "problems"))
@@ -268,9 +200,10 @@ def decode_io_mapping(document: object) -> IoMapping:
     return IoMapping(
         status=as_enum(body.get("status"), IoStatus, "status"),
         mapping_id=_decode_mapping_id(body.get("mappingId")),
-        modules=tuple(module for module, _channels in decoded),
-        rows=tuple(row for _module, channels in decoded for row in channels),
+        modules=tuple(module for module, _channels in served),
+        rows=tuple(row for _module, channels in served for row in channels),
         problems=problems,
+        skipped_modules=skipped,
     )
 
 
@@ -284,3 +217,30 @@ def zone_sizes(rows: tuple[IoRow, ...]) -> dict[IoZone, int]:
     for row in rows:
         sizes[row.zone] = max(sizes[row.zone], row.address + row.width)
     return sizes
+
+
+def _decode_channel(raw: object, module_key: str, where: str) -> IoRow:
+    item = as_object(raw, where)
+    tag = as_tag_name(item.get("tag"), f"{where}.tag")
+    row = decode_modbus_channel(item, tag, module_key, where)
+    _check_annotations(item, where)
+    # Empty is accepted by the schema and reported by the core as invalid_variable.
+    as_string(item.get("variable"), f"{where}.variable", allow_empty=True)
+    as_string(item.get("comment"), f"{where}.comment", allow_empty=True)
+    return row
+
+
+# Names other modules import from here; the Modbus ones are defined in io_modbus.py.
+__all__ = [
+    "IoMapping",
+    "IoModule",
+    "IoProblem",
+    "IoRow",
+    "IoStatus",
+    "IoType",
+    "IoZone",
+    "SkippedModule",
+    "WordOrder",
+    "decode_io_mapping",
+    "zone_sizes",
+]

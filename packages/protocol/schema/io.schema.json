@@ -4,7 +4,7 @@
   "properties": {
     "schema_version": {
       "type": "number",
-      "const": 1
+      "const": 2
     },
     "modules": {
       "type": "array",
@@ -15,27 +15,42 @@
             "type": "string",
             "pattern": "^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$"
           },
-          "port": {
-            "type": "integer",
-            "minimum": 1024,
-            "maximum": 65535
-          },
-          "unitId": {
-            "default": 1,
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 247
-          },
-          "wordOrder": {
-            "default": "low_word_first",
-            "type": "string",
-            "enum": ["low_word_first", "high_word_first"]
-          },
-          "watchdogMilliseconds": {
-            "default": 1000,
-            "type": "integer",
-            "minimum": 100,
-            "maximum": 3600000
+          "transport": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "modbus_tcp_slave"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "minimum": 1024,
+                    "maximum": 65535
+                  },
+                  "unitId": {
+                    "default": 1,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 247
+                  },
+                  "wordOrder": {
+                    "default": "low_word_first",
+                    "type": "string",
+                    "enum": ["low_word_first", "high_word_first"]
+                  },
+                  "watchdogMilliseconds": {
+                    "default": 1000,
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 3600000
+                  }
+                },
+                "required": ["kind", "port", "unitId", "wordOrder", "watchdogMilliseconds"],
+                "additionalProperties": false
+              }
+            ]
           },
           "channels": {
             "type": "array",
@@ -49,29 +64,36 @@
                 "variable": {
                   "type": "string"
                 },
-                "zone": {
-                  "type": "string",
-                  "enum": ["coil", "discrete_input", "holding_register", "input_register"]
-                },
-                "address": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 65535
-                },
-                "ioType": {
-                  "type": "string",
-                  "enum": ["BOOL", "REAL", "DINT"]
-                },
                 "comment": {
                   "type": "string"
+                },
+                "modbus": {
+                  "type": "object",
+                  "properties": {
+                    "zone": {
+                      "type": "string",
+                      "enum": ["coil", "discrete_input", "holding_register", "input_register"]
+                    },
+                    "address": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    },
+                    "ioType": {
+                      "type": "string",
+                      "enum": ["BOOL", "REAL", "DINT"]
+                    }
+                  },
+                  "required": ["zone", "address", "ioType"],
+                  "additionalProperties": false
                 }
               },
-              "required": ["tag", "variable", "zone", "address", "ioType", "comment"],
+              "required": ["tag", "variable", "comment"],
               "additionalProperties": false
             }
           }
         },
-        "required": ["key", "port", "unitId", "wordOrder", "watchdogMilliseconds", "channels"],
+        "required": ["key", "transport", "channels"],
         "additionalProperties": false
       }
     }

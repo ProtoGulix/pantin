@@ -91,16 +91,20 @@ de menus sont ceux de l'interface française de CODESYS.
    `verin1_verin1_coil_14 : BOOL;`, suivie en commentaire du module, de la zone,
    de l'adresse et du tag. Elle **n'a pas d'adresses `AT`** : c'est dans l'arbre
    des appareils CODESYS que vous reliez chaque canal Modbus à ces variables.
-   Ne la modifiez pas : elle est régénérée.
+   Ne la modifiez pas : elle est régénérée. Une voie dont la variable est un nom
+   pointé (`GVL_IO.Verin1.FinCourseSortie`) n'y est pas déclarée : c'est une
+   variable que votre programme déclare déjà, et l'en-tête de la GVL la liste.
+   Un tag de retour affecté à deux modules n'y figure qu'une fois.
 
    Pour relire le mapping avec un électricien ou le coller dans un dossier de
    câblage, exportez-le en fichier de tableur : vue **E/S**, bouton
    **Exporter en CSV**, ou `pnpm pantin io export <dossier du Pantin> --output mapping.csv`
    (préférez `--output` à une redirection `>` : dans Windows PowerShell 5.1,
    une redirection ré-encode le fichier, NON VÉRIFIÉ). `pantin gvl` accepte
-   aussi `--output`. Le fichier a une ligne par voie (module, port,
-   identifiant d'unité (unit id), tag, variable, zone, adresse, type, sens,
-   commentaire), séparée par des virgules, en UTF-8 avec une marque d'ordre des
+   aussi `--output`. Le fichier a une ligne par voie (colonnes `module`,
+   `transport`, `endpoint`, `tag`, `variable`, `direction`, `address`, `plcType`,
+   `comment` ; pour Modbus, par exemple `Modbus TCP slave`, `port 1502, unit 1`,
+   `coil 0`, `BOOL`), séparée par des virgules, en UTF-8 avec une marque d'ordre des
    octets pour que les tableurs lisent bien les accents. Un commentaire qui
    commence par `=`, `+`, `-` ou `@` (ou par une tabulation ou un retour chariot),
    comme `-B12`, est écrit avec une apostrophe devant pour que le tableur

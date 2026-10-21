@@ -9,7 +9,14 @@ import pytest
 from fixture_files import FixtureCase, bus_cases, io_cases, load_json, message_of
 from pantin_bridge import bus_messages
 from pantin_bridge.errors import ProtocolError
-from pantin_bridge.io_mapping import IoStatus, IoType, IoZone, WordOrder, decode_io_mapping
+from pantin_bridge.io_mapping import (
+    IoStatus,
+    IoType,
+    IoZone,
+    SkippedModule,
+    WordOrder,
+    decode_io_mapping,
+)
 
 
 def _ids(cases: list[FixtureCase]) -> list[str]:
@@ -82,7 +89,10 @@ def test_decodes_the_fields_the_bridge_uses() -> None:
 def test_decodes_the_path_of_a_problem_and_nests_channels_under_their_module() -> None:
     unreadable = decode_io_mapping(json.loads(io_cases("valid")[3].frame))
 
-    assert [problem.path for problem in unreadable.problems] == [(), ("modules", 0, "port")]
+    assert [problem.path for problem in unreadable.problems] == [
+        (),
+        ("modules", 0, "transport", "port"),
+    ]
     assert [problem.code for problem in unreadable.problems] == [
         "unreadable_file",
         "schema_invalid",
@@ -93,7 +103,7 @@ def test_decodes_the_path_of_a_problem_and_nests_channels_under_their_module() -
 
 def test_refuses_a_bool_in_a_register_zone() -> None:
     document = json.loads(io_cases("valid")[0].frame)
-    document["modules"][0]["channels"][0]["zone"] = "holding_register"
+    document["modules"][0]["channels"][0]["modbus"]["zone"] = "holding_register"
 
     with pytest.raises(ProtocolError, match="cannot sit in"):
         decode_io_mapping(document)
@@ -119,3 +129,32 @@ def test_the_bridge_builds_messages_the_fixtures_call_valid() -> None:
 def test_console_levels_equal_the_shared_fixture() -> None:
     # The fixture is checked against the Zod schema by the protocol tests (ADR 0045 point 2).
     assert dict(bus_messages._CONSOLE_LEVELS) == load_json("console-codes.json")
+
+
+def _module_of_another_transport() -> dict[str, object]:
+    return {
+        "key": "far",
+        "transport": {"kind": "carrier_pigeon", "loft": "north"},
+        "channels": [{"tag": "press.valve.extend", "pigeon": {"ring": 3}}],
+    }
+
+
+def test_skips_a_module_of_a_transport_it_does_not_serve_and_keeps_the_others() -> None:
+    document = json.loads(io_cases("valid")[0].frame)
+    document["modules"].append(_module_of_another_transport())
+
+    mapping = decode_io_mapping(document)
+
+    assert [module.key for module in mapping.modules] == ["m1", "m2"]
+    assert mapping.skipped_modules == (SkippedModule(key="far", kind="carrier_pigeon"),)
+    assert all(row.module != "far" for row in mapping.rows)
+
+
+def test_still_refuses_a_module_of_another_transport_without_a_key_or_channels_list() -> None:
+    document = json.loads(io_cases("valid")[0].frame)
+    broken = _module_of_another_transport()
+    del broken["channels"]
+    document["modules"].append(broken)
+
+    with pytest.raises(ProtocolError):
+        decode_io_mapping(document)

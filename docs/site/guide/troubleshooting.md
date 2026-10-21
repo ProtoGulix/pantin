@@ -146,6 +146,10 @@ journal.
 | `pantin gvl` : « The mapping is invalid, so no GVL is generated: … » | Même cause, en ligne de commande | Corrigez `io.json` depuis le viewer, relancez la commande |
 | `pantin gvl` : « No io.json in this folder: run "pantin io init" first. » | Pas de `io.json` | `pnpm pantin io init <dossier>` ou **Créer le mapping** |
 | Des tags de l'automate qui n'apparaissent pas dans la GVL | Les tags **non affectés** n'y sont pas | Affectez-les dans **Tags non affectés**. `pnpm pantin gvl` écrit « note: N tag(s) are not mapped and not in the GVL » |
+| « io.json is in version N, written by a newer Pantin: this one reads up to version 2. Update Pantin. » | Le fichier a été écrit par un Pantin plus récent | Mettez Pantin à jour ; ne modifiez pas le fichier |
+| « Command "…" is already mapped in module "…": a command is mapped once, in one module. » (`command_mapped_twice`) | Une commande est affectée à deux modules (seuls les tags de retour peuvent l'être) | Retirez la voie de l'un des modules |
+| « Port N is already used by module "…": each module listens on its own port. » (`listen_port_used_twice`) | Deux modules écoutent sur le même port | Changez le **Port** de l'un des modules |
+| « Tag "…" (a … …) cannot be carried by the … transport of module "…": map it in a module of another transport. » (`unsupported_signal`) | Le transport du module ne peut pas porter ce tag | Affectez-le à un module d'un autre transport (aucun tag n'est refusé par Modbus) |
 
 Dans la vue E/S, l'icône **Aller à la cellule concernée** (sous **Problèmes**)
 mène à chaque problème.

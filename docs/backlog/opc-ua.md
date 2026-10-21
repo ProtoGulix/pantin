@@ -13,3 +13,7 @@ Chantier 2, after ADR 0064 (io.json version 2 already fits an `opcua_client`
 module): its own ADR, an OPC UA client bridge as a separate process spawned by
 the core, in TypeScript (node-opcua to evaluate) instead of asyncua, and one
 `plc` connection per transport (ADR 0064 point 8).
+
+With chantier 2, the bridge supervisor's Modbus filter (`modbusModulesOf` in
+`packages/core/src/domain/bridge-checks.ts`) moves to a registry property, "which kind a
+bridge serves", so that the core stops naming a kind there (ADR 0064 point 8).

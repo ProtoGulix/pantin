@@ -434,7 +434,7 @@ pnpm pantin gvl examples/plc-cylinder
 
 La commande imprime la GVL sur la sortie standard. Elle refuse un mapping
 invalide et énumère les problèmes. Pour un Pantin sans `io.json`, la ligne de
-commande `pnpm pantin io init <dossier>` crée un mapping pré-rempli : le module
+commande `pnpm pantin io init <dossier>` (option `--transport <type>`, `modbus_tcp_slave` par défaut) crée un mapping pré-rempli : le module
 `m1`, sur le port 1502, avec tous les tags déjà affectés. **Créer le mapping**,
 dans le viewer, crée `m1` vide ; **Affecter tout** fait ensuite le reste.
 

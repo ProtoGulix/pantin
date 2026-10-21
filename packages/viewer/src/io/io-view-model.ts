@@ -34,6 +34,7 @@ const BLOCKING_CODES: ReadonlySet<IoProblemCode> = new Set([
   "invalid_json",
   "unreadable_file",
   "schema_invalid",
+  "newer_schema_version",
 ]);
 
 // loading: no answer yet; failed: the read failed and nothing is known; missing: no io.json, "Create the mapping";
@@ -179,7 +180,7 @@ function moduleItemOf(
   const connection = moduleConnection(bridgeStatus, module.key);
   return {
     key: module.key,
-    port: module.port,
+    port: module.transport.port,
     channelCount: module.channels.length,
     problemCount,
     selected,

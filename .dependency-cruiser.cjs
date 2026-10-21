@@ -36,13 +36,13 @@ module.exports = {
     {
       name: "protocol-has-no-workspace-dependency",
       comment:
-        "protocol is the shared contract: it imports no other Pantin package, but the drive, actuator and sensor type schemas (ADR 0022, 0023, 0028).",
+        "protocol is the shared contract: it imports no other Pantin package, but the drive, actuator, sensor and transport type schemas (ADR 0022, 0023, 0028, 0064).",
       severity: "error",
       from: { path: "^packages/protocol/" },
       to: {
         path: "^packages/(?!protocol/)|^@pantin/(?!protocol$)",
         pathNot:
-          "^packages/(drive|actuator|sensor)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(schemas|ports)\\.ts$",
+          "^packages/(drive|actuator|sensor|transport)-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$|^packages/drive-types/src/(schemas|ports)\\.ts$",
       },
     },
     {
@@ -51,6 +51,33 @@ module.exports = {
       severity: "error",
       from: { path: "^packages/drive-types/" },
       to: { path: "^packages/(?!drive-types/)|^@pantin/" },
+    },
+    {
+      name: "transport-types-has-no-workspace-dependency",
+      comment:
+        "A transport folder must be shareable alone: it depends on Zod only (ADR 0064 point 3).",
+      severity: "error",
+      from: { path: "^packages/transport-types/" },
+      to: { path: "^packages/(?!transport-types/)|^@pantin/" },
+    },
+    {
+      name: "viewer-runs-no-transport-rules",
+      comment:
+        "The viewer shows what the core decided and imports the schemas, labels and presentation of a transport, never its rules (ADR 0064 point 3).",
+      severity: "error",
+      from: { path: "^packages/viewer/" },
+      to: { path: "^packages/transport-types/src/(rules|rule-types|[^/]+/rules[a-z-]*)\\.ts$" },
+    },
+    {
+      name: "transport-type-schemas-hold-no-logic",
+      comment:
+        "The protocol imports the schemas: they must never reach the rules, through any chain of imports (ADR 0064 point 3).",
+      severity: "error",
+      from: { path: "^packages/transport-types/src/(schemas|schema-common|[^/]+/schema)\\.ts$" },
+      to: {
+        path: "^packages/transport-types/src/(rules|rule-types|[^/]+/rules[a-z-]*)\\.ts$",
+        reachable: true,
+      },
     },
     {
       name: "viewer-runs-no-drive-behaviour",

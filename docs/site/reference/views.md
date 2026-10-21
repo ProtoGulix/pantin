@@ -349,14 +349,14 @@ Les modules ici sont ceux que le pont présente à l'automate (voir [Connecter u
 
 Si une lecture échoue alors qu'un mapping était déjà affiché, la vue ajoute **Le mapping affiché peut être périmé : la dernière lecture a échoué.** avec **Réessayer**.
 
-**Créer le mapping** crée la liste d'E/S en ajoutant un premier module, choisi par le cœur. En ligne de commande, `pantin io init` crée le fichier et le pré-remplit.
+**Créer le mapping** crée la liste d'E/S en ajoutant un premier module, choisi par le cœur. En ligne de commande, `pantin io init <dossier> [--update] [--transport <type>]` crée le fichier et le pré-remplit ; `--transport` choisit le transport du module créé (`modbus_tcp_slave` par défaut, le seul connu) et ne s'applique qu'à un nouveau fichier. `--update` écrit toujours en version 2.
 
 ### La barre et la liste des problèmes
 
 | Contrôle | Effet | Grisé quand |
 | --- | --- | --- |
 | **Exporter la GVL** | Télécharge la GVL CODESYS du mapping affiché, modifications non enregistrées comprises. | Voir ci-dessous |
-| **Exporter en CSV** | Télécharge le mapping en fichier de tableur (`<Pantin>-io.csv`), une ligne par voie : module, port, identifiant d'unité (unit id), tag, variable, zone, adresse, type, sens, commentaire. Un commentaire qui commence par `=`, `+`, `-` ou `@` (ou par une tabulation ou un retour chariot) est écrit avec une apostrophe devant, pour que le tableur l'affiche comme du texte. Lecture seule : le fichier n'est jamais relu. | Comme **Exporter la GVL** |
+| **Exporter en CSV** | Télécharge le mapping en fichier de tableur (`<Pantin>-io.csv`), une ligne par voie, avec les colonnes `module`, `transport`, `endpoint`, `tag`, `variable`, `direction`, `address`, `plcType` et `comment` (par exemple `m1`, `Modbus TCP slave`, `port 1502, unit 1`, `coil 0`, `BOOL`) ; le texte des colonnes de transport vient du transport du module. Un commentaire qui commence par `=`, `+`, `-` ou `@` (ou par une tabulation ou un retour chariot) est écrit avec une apostrophe devant, pour que le tableur l'affiche comme du texte. Lecture seule : le fichier n'est jamais relu. | Comme **Exporter la GVL** |
 
 Les boutons restent visibles mais inactifs (info-bulle explicative) quand :
 

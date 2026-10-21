@@ -96,6 +96,23 @@ All notable changes to Pantin. The format follows
 
 ### Changed
 
+- Core, protocol, CLI and bridge (ADR 0064, slice S2): io.json is version 2 and carries
+  its modules per transport. A module is `{ key, transport, channels }`, the settings of the
+  Modbus slave (port, unit id, word order, watchdog) moved into `transport` with
+  `kind: "modbus_tcp_slave"`, and a channel keeps its Modbus fields in a `modbus` object.
+  **Version 1 files migrate on read** and are written in version 2 by the next save
+  (opening one is not an unsaved change); `examples/plc-cylinder/io.json` is migrated. The
+  Modbus code moved into the new package `@pantin/transport-types`, one folder per
+  transport (`docs/guides/adding-a-transport.md`). The channel routes are now under their
+  module (`PATCH` and `DELETE .../io/modules/:moduleKey/channels/:tag`; the old
+  `.../io/channels/:tag` is removed), a feedback may be mapped in several modules, a command in
+  one only, and a port used by two modules is a problem (`listen_port_used_twice`) instead of
+  an unreadable file. `variable` accepts a dotted reference to something the PLC program
+  declares; the generated GVL leaves it out and lists it in its header. The CSV export has
+  the columns module, transport, endpoint, tag, variable, direction, address, plcType and
+  comment. `pantin io init` takes `--transport <kind>`. The Modbus bridge keeps its
+  modules and skips the others with an INFO line, and the core refuses to start it (409)
+  when io.json has no Modbus TCP slave module.
 - Backlog: an on-hold note on a desktop app study (Electron, a core without Python);
   duplicate notes merged and done items removed.
 

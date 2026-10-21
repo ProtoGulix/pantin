@@ -18,8 +18,8 @@ describe("edits while the mapping cannot be edited", () => {
     expect((await io.call("PATCH", "/modules/m1", {})).status).toBe(409);
     expect((await io.call("DELETE", "/modules/m1")).status).toBe(409);
     expect((await io.mapTags([COIL])).status).toBe(409);
-    expect((await io.call("PATCH", `/channels/${COIL}`, {})).status).toBe(409);
-    expect((await io.call("DELETE", `/channels/${COIL}`)).status).toBe(409);
+    expect((await io.call("PATCH", `/modules/m1/channels/${COIL}`, {})).status).toBe(409);
+    expect((await io.call("DELETE", `/modules/m1/channels/${COIL}`)).status).toBe(409);
     expect((await io.call("GET", "")).answer.problems[0]?.code).toBe("invalid_json");
   });
 
@@ -27,7 +27,7 @@ describe("edits while the mapping cannot be edited", () => {
     expect((await io.call("PATCH", "/modules/m1", {})).status).toBe(404);
     expect((await io.call("DELETE", "/modules/m1")).status).toBe(404);
     expect((await io.mapTags([COIL])).status).toBe(404);
-    expect((await io.call("DELETE", `/channels/${COIL}`)).status).toBe(404);
+    expect((await io.call("DELETE", `/modules/m1/channels/${COIL}`)).status).toBe(404);
   });
 });
 

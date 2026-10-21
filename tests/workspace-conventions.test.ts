@@ -36,6 +36,7 @@ describe("workspace packages", () => {
       "protocol",
       "sensor-types",
       "step-converter",
+      "transport-types",
       "viewer",
     ]);
   });

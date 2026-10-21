@@ -349,14 +349,14 @@ The modules here are those that the bridge presents to the PLC (see [Connect a P
 
 If a read fails while a mapping was already displayed, the view adds **The mapping shown may be out of date: the last refresh failed.** with **Retry**.
 
-**Create the mapping** creates the I/O list by adding a first module, chosen by the core. On the command line, `pantin io init` creates the file and pre-fills it.
+**Create the mapping** creates the I/O list by adding a first module, chosen by the core. On the command line, `pantin io init <folder> [--update] [--transport <kind>]` creates the file and pre-fills it; `--transport` chooses the transport of the module it creates (`modbus_tcp_slave` by default, the only known one) and applies to a new file only. `--update` always writes version 2.
 
 ### The bar and the problem list
 
 | Control | Effect | Greyed out when |
 | --- | --- | --- |
 | **Export GVL** | Downloads the CODESYS GVL of the mapping shown, unsaved changes included. | See below |
-| **Export CSV** | Downloads the mapping as a spreadsheet file (`<Pantin>-io.csv`), one row per channel: module, port, unit id, tag, variable, zone, address, type, direction, comment. A comment that starts with `=`, `+`, `-` or `@` (or a tab or a carriage return) is written with a leading apostrophe, so that the spreadsheet shows it as text. Read-only: the file is never read back. | Same as **Export GVL** |
+| **Export CSV** | Downloads the mapping as a spreadsheet file (`<Pantin>-io.csv`), one row per channel, with the columns `module`, `transport`, `endpoint`, `tag`, `variable`, `direction`, `address`, `plcType` and `comment` (for example `m1`, `Modbus TCP slave`, `port 1502, unit 1`, `coil 0`, `BOOL`); the text of the transport columns comes from the module's transport. A comment that starts with `=`, `+`, `-` or `@` (or a tab or a carriage return) is written with a leading apostrophe, so that the spreadsheet shows it as text. Read-only: the file is never read back. | Same as **Export GVL** |
 
 The buttons stay visible but inactive (explanatory tooltip) when:
 

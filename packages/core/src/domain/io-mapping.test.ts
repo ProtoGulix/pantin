@@ -34,18 +34,19 @@ describe("mappingOf", () => {
     modules: [
       {
         key: "m1",
-        port: 1502,
-        unitId: 1,
-        wordOrder: "low_word_first",
-        watchdogMilliseconds: 1000,
+        transport: {
+          kind: "modbus_tcp_slave",
+          port: 1502,
+          unitId: 1,
+          wordOrder: "low_word_first",
+          watchdogMilliseconds: 1000,
+        },
         channels: [
           {
             tag: "a.v.coil_1",
             variable: "v",
-            zone: "coil",
-            address: 0,
-            ioType: "BOOL",
             comment: "",
+            modbus: { zone: "coil", address: 0, ioType: "BOOL" },
             tagType: "bit",
             direction: "command",
             owner: { kind: "drive", id: "v" },
@@ -53,10 +54,8 @@ describe("mappingOf", () => {
           {
             tag: "a.gone",
             variable: "gone",
-            zone: "coil",
-            address: 1,
-            ioType: "BOOL",
             comment: "",
+            modbus: { zone: "coil", address: 1, ioType: "BOOL" },
             tagType: null,
             direction: null,
             owner: null,

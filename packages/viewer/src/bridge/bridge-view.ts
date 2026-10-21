@@ -1,4 +1,10 @@
-import type { BridgeFailureKind, BridgeState, BridgeStatus } from "@pantin/protocol";
+import type {
+  BridgeFailureKind,
+  BridgeState,
+  BridgeStatus,
+  IoMappingResponse,
+} from "@pantin/protocol";
+import { MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
 import { type CentralLayout, showsIo } from "../central-layout.ts";
 import { createTranslator, type MessageKey, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
@@ -253,6 +259,19 @@ export function bridgeRedrawKey(view: BridgeView): string {
   return JSON.stringify({ ...view, allowText: "" });
 }
 
+// This card is the Modbus bridge's (ADR 0064 point 8): the other transports' modules are not its lines.
+function modbusModulesOf(
+  modules: IoMappingResponse["modules"] | null,
+): BridgeMappingModule[] | null {
+  return (
+    modules?.flatMap((module) =>
+      module.transport.kind === MODBUS_TCP_SLAVE_KIND
+        ? [{ key: module.key, port: module.transport.port }]
+        : [],
+    ) ?? null
+  );
+}
+
 /** The block of the open Pantin; none while no Pantin is open. */
 export function bridgeViewOf(
   model: BridgeModel,
@@ -265,7 +284,7 @@ export function bridgeViewOf(
         model,
         createTranslator(state.language),
         state.centralLayout,
-        state.io.mapping?.modules ?? null,
+        modbusModulesOf(state.io.mapping?.modules ?? null),
         forcedCount,
       );
 }

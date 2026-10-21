@@ -1,52 +1,65 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "modules": [
     {
       "key": "m1",
-      "port": 1502,
-      "unitId": 1,
-      "wordOrder": "low_word_first",
-      "watchdogMilliseconds": 1000,
+      "transport": {
+        "kind": "modbus_tcp_slave",
+        "port": 1502,
+        "unitId": 1,
+        "wordOrder": "low_word_first",
+        "watchdogMilliseconds": 1000
+      },
       "channels": [
         {
           "tag": "verin1.verin1.coil_14",
           "variable": "verin1_verin1_coil_14",
-          "zone": "coil",
-          "address": 0,
-          "ioType": "BOOL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL"
+          }
         },
         {
           "tag": "verin1.verin1.coil_12",
           "variable": "verin1_verin1_coil_12",
-          "zone": "coil",
-          "address": 1,
-          "ioType": "BOOL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "coil",
+            "address": 1,
+            "ioType": "BOOL"
+          }
         },
         {
           "tag": "tige.verin-min.state",
           "variable": "tige_verin_min_state",
-          "zone": "discrete_input",
-          "address": 0,
-          "ioType": "BOOL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "discrete_input",
+            "address": 0,
+            "ioType": "BOOL"
+          }
         },
         {
           "tag": "tige.verin-max.state",
           "variable": "tige_verin_max_state",
-          "zone": "discrete_input",
-          "address": 1,
-          "ioType": "BOOL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "discrete_input",
+            "address": 1,
+            "ioType": "BOOL"
+          }
         },
         {
           "tag": "tige.verin.position",
           "variable": "tige_verin_position",
-          "zone": "input_register",
-          "address": 0,
-          "ioType": "REAL",
-          "comment": ""
+          "comment": "",
+          "modbus": {
+            "zone": "input_register",
+            "address": 0,
+            "ioType": "REAL"
+          }
         }
       ]
     }

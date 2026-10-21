@@ -125,7 +125,7 @@ describe("io.json", () => {
         sendJsonRequest(axis.server, method, `${url}${path}`, body);
       await send("POST", "/presence-sensors", { ...CELL, assembly: "carriage" });
       await send("POST", "/emitters", { ...EMITTER, assembly: "carriage" });
-      await callIo(axis, "POST", "/modules", {});
+      await callIo(axis, "POST", "/modules", { transport: { kind: "modbus_tcp_slave" } });
       await callIo(axis, "POST", "/modules/m1/channels", {
         tags: ["carriage.cell.state", "carriage.source.spawn"],
       });

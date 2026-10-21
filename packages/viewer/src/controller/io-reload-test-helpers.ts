@@ -8,10 +8,13 @@ import { testStore } from "./controller-test-helpers.ts";
 
 const module = (key: string) => ({
   key,
-  port: 1502,
-  unitId: 1,
-  wordOrder: "low_word_first" as const,
-  watchdogMilliseconds: 1000,
+  transport: {
+    kind: "modbus_tcp_slave" as const,
+    port: 1502,
+    unitId: 1,
+    wordOrder: "low_word_first" as const,
+    watchdogMilliseconds: 1000,
+  },
   channels: [],
 });
 export const answer = (key: string): IoMappingResponse => ({

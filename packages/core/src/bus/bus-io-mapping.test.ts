@@ -68,7 +68,7 @@ describe("plc hello on the real mapping", () => {
     if (second === undefined) {
       throw new Error("The test mapping has two modules.");
     }
-    second.port = 1600;
+    second.transport.port = 1600;
     await loadIo(axis, JSON.stringify(changed));
     const plc = await helloPlc(stale);
     expect((await plc.closed).code).toBe(TAG_BUS_CLOSE_CODES.mappingMismatch);

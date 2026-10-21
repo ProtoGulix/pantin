@@ -12,10 +12,11 @@ export interface IoIntents {
   editIoModule(moduleKey: string, field: string, text: string): void;
   removeIoModule(moduleKey: string): void;
   mapIoTags(moduleKey: string, tags: readonly string[]): void;
-  editIoChannel(tag: string, field: string, text: string): void;
-  // Derives zone and type of the channel again from its tag.
-  reassignIoChannel(tag: string): void;
-  unmapIoChannel(tag: string): void;
+  // A channel is named by its module and its tag: a feedback may be in several modules.
+  editIoChannel(moduleKey: string, tag: string, field: string, text: string): void;
+  // Derives the transport fields of the channel again from its tag.
+  reassignIoChannel(moduleKey: string, tag: string): void;
+  unmapIoChannel(moduleKey: string, tag: string): void;
   // Downloads the CODESYS GVL the core generates from the mapping.
   exportIoGvl(): void;
   // Downloads the CSV of the mapping the core generates (read-only export).

@@ -1,5 +1,6 @@
+import { TRANSPORT_PROBLEM_CODES } from "@pantin/transport-types/schemas";
 import { describe, expect, it } from "vitest";
-import { IoMappingResponseSchema } from "./io-mapping.ts";
+import { IO_PROBLEM_CODES, IoMappingResponseSchema } from "./io-mapping.ts";
 
 describe("IoMappingResponseSchema", () => {
   it("accepts the answer for a missing mapping", () => {
@@ -37,5 +38,49 @@ describe("IoMappingResponseSchema", () => {
         false,
       );
     }
+  });
+});
+
+describe("IoMappingResponseSchema, version 2 (ADR 0064)", () => {
+  const base = { mappingId: null, modules: [], unmappedTags: [] };
+  const withCode = (code: string) => ({
+    ...base,
+    status: "invalid",
+    problems: [{ path: [], code, message: "" }],
+  });
+
+  it.each([
+    "newer_schema_version",
+    "command_mapped_twice",
+    "unsupported_signal",
+    "listen_port_used_twice",
+    "zone_direction_mismatch",
+    "address_overlap",
+  ])("accepts the problem code %s: the common codes and those of the transports", (code) => {
+    expect(IoMappingResponseSchema.safeParse(withCode(code)).success).toBe(true);
+  });
+
+  it("lists every code of the transports among the codes it accepts", () => {
+    for (const code of TRANSPORT_PROBLEM_CODES) {
+      expect(IO_PROBLEM_CODES).toContain(code);
+    }
+  });
+
+  it("describes a module by its transport, and refuses the version 1 top level settings", () => {
+    const channel = {
+      tag: "a.b.c",
+      variable: "a_b_c",
+      comment: "",
+      modbus: { zone: "coil", address: 0, ioType: "BOOL" },
+      tagType: "bit",
+      direction: "command",
+      owner: null,
+    };
+    const transport = { kind: "modbus_tcp_slave", port: 1502 };
+    const valid = { ...base, status: "valid", problems: [] };
+    const module = { key: "m1", transport, channels: [channel] };
+    expect(IoMappingResponseSchema.safeParse({ ...valid, modules: [module] }).success).toBe(true);
+    const flat = { key: "m1", port: 1502, channels: [] };
+    expect(IoMappingResponseSchema.safeParse({ ...valid, modules: [flat] }).success).toBe(false);
   });
 });

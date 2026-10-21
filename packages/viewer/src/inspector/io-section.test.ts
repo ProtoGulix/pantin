@@ -21,9 +21,7 @@ const owner = { kind: "drive", id: "v1" } as const;
 const mapped = {
   tag: "a.v1.extend",
   variable: "GVL.ext",
-  zone: "coil" as const,
-  address: 4,
-  ioType: "BOOL" as const,
+  modbus: { zone: "coil" as const, address: 4, ioType: "BOOL" as const },
   comment: "",
   tagType: "bit" as const,
   direction: "command" as const,
@@ -38,10 +36,13 @@ const mapping = (modules: IoMappingResponse["modules"]): IoMappingResponse => ({
 });
 const module = (key: string, channels: IoMappingResponse["modules"][0]["channels"]) => ({
   key,
-  port: 1502,
-  unitId: 1,
-  wordOrder: "low_word_first" as const,
-  watchdogMilliseconds: 1000,
+  transport: {
+    kind: "modbus_tcp_slave" as const,
+    port: 1502,
+    unitId: 1,
+    wordOrder: "low_word_first" as const,
+    watchdogMilliseconds: 1000,
+  },
   channels,
 });
 

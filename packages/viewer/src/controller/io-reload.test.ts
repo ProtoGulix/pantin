@@ -32,7 +32,7 @@ describe("the I/O view after edits", () => {
     });
     reads = 0;
     const before = store.state.io;
-    ioIntents(store).editIoChannel("a.v.x", "variable", "clash");
+    ioIntents(store).editIoChannel("m1", "a.v.x", "variable", "clash");
     await settle();
     expect(reads).toBe(1);
     expect(store.state.io).not.toBe(before);

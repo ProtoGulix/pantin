@@ -10,18 +10,19 @@ const mapping = {
   modules: [
     {
       key: "m1",
-      port: 1502,
-      unitId: 1,
-      wordOrder: "low_word_first",
-      watchdogMilliseconds: 1000,
+      transport: {
+        kind: "modbus_tcp_slave" as const,
+        port: 1502,
+        unitId: 1,
+        wordOrder: "low_word_first" as const,
+        watchdogMilliseconds: 1000,
+      },
       channels: [
         {
           tag: "main.valve.extend",
           variable: "valve_extend",
-          zone: "coil",
-          address: 0,
-          ioType: "BOOL",
           comment: "",
+          modbus: { zone: "coil", address: 0, ioType: "BOOL" },
           tagType: "bit",
           direction: "command",
           owner: { kind: "drive", id: "valve" },
@@ -52,12 +53,12 @@ describe("PantinApiClient I/O mapping", () => {
 
   it("adds a module with POST", async () => {
     const { method, url, body } = await sent((client) =>
-      client.createIoModule("press", { port: 1503 }),
+      client.createIoModule("press", { transport: { kind: "modbus_tcp_slave", port: 1503 } }),
     );
     expect([method, url, body]).toEqual([
       "POST",
       "/api/pantins/press/io/modules",
-      JSON.stringify({ port: 1503 }),
+      JSON.stringify({ transport: { kind: "modbus_tcp_slave", port: 1503 } }),
     ]);
   });
 
@@ -83,12 +84,14 @@ describe("PantinApiClient I/O mapping", () => {
 describe("PantinApiClient I/O channels", () => {
   it("edits and unmaps a channel by tag", async () => {
     const edit = await sent((client) =>
-      client.updateIoChannel("press", "main.valve.extend", { tag: "main.valve.extend" }),
+      client.updateIoChannel("press", "m1", "main.valve.extend", { tag: "main.valve.extend" }),
     );
-    const removal = await sent((client) => client.deleteIoChannel("press", "main.valve.extend"));
+    const removal = await sent((client) =>
+      client.deleteIoChannel("press", "m1", "main.valve.extend"),
+    );
     expect([edit.method, edit.url]).toEqual([
       "PATCH",
-      "/api/pantins/press/io/channels/main.valve.extend",
+      "/api/pantins/press/io/modules/m1/channels/main.valve.extend",
     ]);
     expect(removal.method).toBe("DELETE");
   });

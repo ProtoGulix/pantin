@@ -27,7 +27,7 @@ describe("io_changed on a route edit", () => {
     axis.runSeconds(1);
     await client.barrier();
     expect(client.received.filter((message) => message.type === "io_changed")).toEqual([]);
-    await callIo(axis, "POST", "/modules", {});
+    await callIo(axis, "POST", "/modules", { transport: { kind: "modbus_tcp_slave" } });
     axis.runSeconds(1);
     await client.next("io_changed");
     await callIo(axis, "POST", "/modules/m1/channels", { tags: [COIL] });
@@ -36,7 +36,7 @@ describe("io_changed on a route edit", () => {
   });
 
   it("is sent after a rename, whose mappingId changes with the carried channel", async () => {
-    await callIo(axis, "POST", "/modules", {});
+    await callIo(axis, "POST", "/modules", { transport: { kind: "modbus_tcp_slave" } });
     await callIo(axis, "POST", "/modules/m1/channels", { tags: [COIL] });
     axis.runSeconds(1);
     await client.next("io_changed");

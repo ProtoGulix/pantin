@@ -15,16 +15,27 @@ import { createServiceContext } from "./pantin-service.ts";
 const ID = "axis" as PantinId;
 const MODULE: IoModule = {
   key: "m1",
-  port: 1502,
-  unitId: 1,
-  wordOrder: "low_word_first",
-  watchdogMilliseconds: 1000,
+  transport: {
+    kind: "modbus_tcp_slave",
+    port: 1502,
+    unitId: 1,
+    wordOrder: "low_word_first",
+    watchdogMilliseconds: 1000,
+  },
   channels: [
-    { tag: "a.b.c", variable: "a_b_c", zone: "coil", address: 0, ioType: "BOOL", comment: "" },
+    {
+      tag: "a.b.c",
+      variable: "a_b_c",
+      comment: "",
+      modbus: { zone: "coil", address: 0, ioType: "BOOL" },
+    },
   ],
 };
-const MAPPING: IoDocument = { schema_version: 1, modules: [MODULE] };
-const OTHER: IoDocument = { schema_version: 1, modules: [{ ...MODULE, port: 1600 }] };
+const MAPPING: IoDocument = { schema_version: 2, modules: [MODULE] };
+const OTHER: IoDocument = {
+  schema_version: 2,
+  modules: [{ ...MODULE, transport: { ...MODULE.transport, port: 1600 } }],
+};
 
 let directory: string;
 let writes: string[];
@@ -176,5 +187,41 @@ describe("discarding", () => {
     await rm(ioPath());
     await discardPantin(context, ID);
     expect(pantin.io).toEqual({ kind: "missing" });
+  });
+});
+
+describe("a version 1 io.json (ADR 0064 point 7)", () => {
+  const versionOne = () =>
+    readFile(new URL("../../fixtures/io-v1/plc-cylinder.io.json", import.meta.url), "utf8");
+  const versionTwo = () =>
+    readFile(new URL("../../../../examples/plc-cylinder/io.json", import.meta.url), "utf8");
+
+  it("is read migrated, and opening it is not an unsaved change", async () => {
+    await writeFile(ioPath(), await versionOne());
+    const pantin = await loadPantin(open(), ID);
+    expect(pantin.io).toMatchObject({ kind: "document", migratedFrom: 1 });
+    expect(toResponse(ID, pantin).unsavedChanges).toBe(false);
+    expect(await readFile(ioPath(), "utf8")).toBe(await versionOne());
+  });
+
+  it("is rewritten in version 2 by the next save, once, byte for byte", async () => {
+    await writeFile(ioPath(), await versionOne());
+    const context = open();
+    await loadPantin(context, ID);
+    await savePantin(context, ID);
+    expect(writes).toEqual(["io.json", "pantin.json"]);
+    expect(await readFile(ioPath(), "utf8")).toBe(await versionTwo());
+    await savePantin(context, ID);
+    expect(writes).toEqual(["io.json", "pantin.json", "pantin.json"]);
+  });
+
+  it("stays flagged after a discard, until a save writes it", async () => {
+    await writeFile(ioPath(), await versionOne());
+    const context = open();
+    const pantin = await loadPantin(context, ID);
+    await discardPantin(context, ID);
+    expect(pantin.ioFileIsOlder).toBe(true);
+    await savePantin(context, ID);
+    expect(pantin.ioFileIsOlder).toBe(false);
   });
 });

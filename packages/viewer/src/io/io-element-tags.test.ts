@@ -6,9 +6,7 @@ const owner: IoTagOwner = { kind: "drive", id: "d1" };
 const channel = (tag: string, address: number, who: IoTagOwner | null) => ({
   tag,
   variable: `GVL.${tag}`,
-  zone: "coil" as const,
-  address,
-  ioType: "BOOL" as const,
+  modbus: { zone: "coil" as const, address, ioType: "BOOL" as const },
   comment: "",
   tagType: "bit" as const,
   direction: "command" as const,
@@ -16,10 +14,13 @@ const channel = (tag: string, address: number, who: IoTagOwner | null) => ({
 });
 const module = (key: string, channels: ReturnType<typeof channel>[]) => ({
   key,
-  port: 1502,
-  unitId: 1,
-  wordOrder: "low_word_first" as const,
-  watchdogMilliseconds: 1000,
+  transport: {
+    kind: "modbus_tcp_slave" as const,
+    port: 1502,
+    unitId: 1,
+    wordOrder: "low_word_first" as const,
+    watchdogMilliseconds: 1000,
+  },
   channels,
 });
 const mapping: IoMappingResponse = {

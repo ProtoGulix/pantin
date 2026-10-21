@@ -10,17 +10,26 @@ export interface IoCellRef {
   field: string;
 }
 
+// The settings of a module are under `transport`, the transport fields of a channel under the
+// sub-object named after the transport (ADR 0064 point 4): the cell is named by the last part.
+const TRANSPORT_SECTIONS: ReadonlySet<PathPart> = new Set(["modbus"]);
+type PathPart = IoPath[number];
+
 /** The cell a path points at, or null for the whole file or a whole module or channel. */
 export function cellOfPath(path: IoPath): IoCellRef | null {
-  const [root, moduleIndex, section, third, fourth] = path;
+  const [root, moduleIndex, section, third, fourth, fifth] = path;
   if (root !== "modules" || typeof moduleIndex !== "number") {
     return null;
   }
-  if (typeof section === "string" && section !== "channels") {
+  if (section === "transport" && typeof third === "string") {
+    return { moduleIndex, channelIndex: null, field: third };
+  }
+  if (typeof section === "string" && section !== "channels" && section !== "transport") {
     return { moduleIndex, channelIndex: null, field: section };
   }
-  if (section === "channels" && typeof third === "number" && typeof fourth === "string") {
-    return { moduleIndex, channelIndex: third, field: fourth };
+  if (section === "channels" && typeof third === "number") {
+    const field = TRANSPORT_SECTIONS.has(fourth ?? "") ? fifth : fourth;
+    return typeof field === "string" ? { moduleIndex, channelIndex: third, field } : null;
   }
   return null;
 }

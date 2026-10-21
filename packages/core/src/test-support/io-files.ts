@@ -1,6 +1,12 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { IO_JSON_FILE_NAME, type IoDocument, type IoZone, type Tag } from "@pantin/protocol";
+import {
+  IO_JSON_FILE_NAME,
+  IO_SCHEMA_VERSION,
+  type IoDocument,
+  type IoZone,
+  type Tag,
+} from "@pantin/protocol";
 import { serializeIoDocument } from "../domain/io-document-text.ts";
 import type { BusAxis } from "./bus-axis.ts";
 import { sendRaw } from "./test-server.ts";
@@ -27,23 +33,32 @@ export function ioDocumentOf(specs: readonly ChannelSpec[]): IoDocument {
       .map(({ tag }, index) => ({
         tag: tag.name,
         variable: tag.name.replaceAll(".", "_"),
-        zone: zoneOf(tag),
-        // Two apart: a REAL or a DINT takes two registers.
-        address: index * 2,
-        ioType:
-          tag.type === "bit"
-            ? ("BOOL" as const)
-            : tag.type === "float"
-              ? ("REAL" as const)
-              : ("DINT" as const),
         comment: "",
+        modbus: {
+          zone: zoneOf(tag),
+          // Two apart: a REAL or a DINT takes two registers.
+          address: index * 2,
+          ioType:
+            tag.type === "bit"
+              ? ("BOOL" as const)
+              : tag.type === "float"
+                ? ("REAL" as const)
+                : ("DINT" as const),
+        },
       }));
-  const settings = { unitId: 1, wordOrder: "low_word_first", watchdogMilliseconds: 1000 } as const;
+  const transport = (port: number) =>
+    ({
+      kind: "modbus_tcp_slave",
+      port,
+      unitId: 1,
+      wordOrder: "low_word_first",
+      watchdogMilliseconds: 1000,
+    }) as const;
   return {
-    schema_version: 1,
+    schema_version: IO_SCHEMA_VERSION,
     modules: [
-      { key: "m1", port: 1502, ...settings, channels: channelsOf("m1") },
-      { key: "m2", port: 1503, ...settings, channels: channelsOf("m2") },
+      { key: "m1", transport: transport(1502), channels: channelsOf("m1") },
+      { key: "m2", transport: transport(1503), channels: channelsOf("m2") },
     ],
   };
 }

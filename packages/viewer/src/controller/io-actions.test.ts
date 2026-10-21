@@ -15,10 +15,13 @@ const mapping: IoMappingResponse = {
   modules: [
     {
       key: "m1",
-      port: 1502,
-      unitId: 1,
-      wordOrder: "low_word_first",
-      watchdogMilliseconds: 1000,
+      transport: {
+        kind: "modbus_tcp_slave" as const,
+        port: 1502,
+        unitId: 1,
+        wordOrder: "low_word_first" as const,
+        watchdogMilliseconds: 1000,
+      },
       channels: [],
     },
   ],
@@ -46,8 +49,8 @@ function openStore(calls: string[]) {
       calls.push(`map ${moduleKey} ${request.tags.join(",")}`);
       return mapping;
     },
-    updateIoChannel: async (_id, tag, request) => {
-      calls.push(`patch ${tag} ${JSON.stringify(request)}`);
+    updateIoChannel: async (_id, moduleKey, tag, request) => {
+      calls.push(`patch ${moduleKey} ${tag} ${JSON.stringify(request)}`);
       return mapping;
     },
   });
@@ -91,10 +94,13 @@ describe("the I/O view actions", () => {
   it("reassigns with a PATCH that carries the tag and sends typed addresses as numbers", async () => {
     const calls: string[] = [];
     const store = openStore(calls);
-    ioIntents(store).reassignIoChannel("a.v.x");
-    ioIntents(store).editIoChannel("a.v.x", "address", "4");
+    ioIntents(store).reassignIoChannel("m1", "a.v.x");
+    ioIntents(store).editIoChannel("m1", "a.v.x", "address", "4");
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(calls.sort()).toEqual(['patch a.v.x {"address":4}', 'patch a.v.x {"tag":"a.v.x"}']);
+    expect(calls.sort()).toEqual([
+      'patch m1 a.v.x {"modbus":{"address":4}}',
+      'patch m1 a.v.x {"tag":"a.v.x"}',
+    ]);
   });
 });
 

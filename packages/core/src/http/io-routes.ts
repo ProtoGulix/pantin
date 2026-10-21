@@ -25,7 +25,7 @@ import {
 
 const IO = ["pantins", ":pantinId", "io"];
 const MODULE = [...IO, "modules", ":moduleKey"];
-const CHANNEL = [...IO, "channels", ":tagName"];
+const CHANNEL = [...MODULE, "channels", ":tagName"];
 
 async function bodyOf<Output>(
   context: RouteContext,
@@ -132,6 +132,7 @@ export const IO_ROUTES: readonly Route[] = [
       const request = await bodyOf(context, UpdateIoChannelRequestSchema, "The channel");
       const answer = await context.service.updateIoChannel(
         pantinIdOf(context),
+        moduleKeyOf(context),
         tagNameOf(context),
         request,
       );
@@ -145,7 +146,11 @@ export const IO_ROUTES: readonly Route[] = [
       sendJson(
         context.response,
         200,
-        await context.service.deleteIoChannel(pantinIdOf(context), tagNameOf(context)),
+        await context.service.deleteIoChannel(
+          pantinIdOf(context),
+          moduleKeyOf(context),
+          tagNameOf(context),
+        ),
       ),
   },
 ];

@@ -6,10 +6,12 @@ import type {
 } from "@pantin/protocol";
 import { IO_SCHEMA_VERSION } from "@pantin/protocol";
 import { ApiError } from "../errors.ts";
-import { nextModuleKey, smallestFreePort } from "./io-allocation.ts";
+import { nextModuleKey } from "./io-allocation.ts";
+import { rulesOf } from "./io-transports.ts";
 
-// The module edits of ADR 0049 point 4, on a mapping already parsed: pure,
-// they return a new mapping or throw the ApiError the route answers with.
+// The module edits of ADR 0049 point 4 and ADR 0064 point 6, on a mapping
+// already parsed: pure, they return a new mapping or throw the ApiError the
+// route answers with.
 
 const EMPTY_MAPPING: IoDocument = { schema_version: IO_SCHEMA_VERSION, modules: [] };
 
@@ -25,9 +27,19 @@ export function requireModule(document: IoDocument, moduleKey: string): IoModule
   return module;
 }
 
-function requirePortFree(modules: readonly IoModule[], port: number, moduleKey?: string): void {
-  const owner = modules.find((module) => module.port === port && module.key !== moduleKey);
-  if (owner !== undefined) {
+function listenPortsOf(modules: readonly IoModule[]): number[] {
+  return modules.flatMap((module) => {
+    const port = rulesOf(module.transport).listenPort(module.transport);
+    return port === null ? [] : [port];
+  });
+}
+
+function requirePortFree(modules: readonly IoModule[], port: number | null, moduleKey?: string) {
+  const owner = modules.find(
+    (module) =>
+      module.key !== moduleKey && rulesOf(module.transport).listenPort(module.transport) === port,
+  );
+  if (port !== null && owner !== undefined) {
     throw new ApiError(
       "conflict",
       `Port ${port} is already used by module "${owner.key}": each module listens on its own port.`,
@@ -35,51 +47,65 @@ function requirePortFree(modules: readonly IoModule[], port: number, moduleKey?:
   }
 }
 
-/** Adds a module with the smallest free key and port, and the ADR 0045 defaults. */
+function requireKeyFree(modules: readonly IoModule[], key: string): void {
+  if (modules.some((module) => module.key === key)) {
+    throw new ApiError("conflict", `Module key "${key}" is already used.`);
+  }
+}
+
+/** Adds a module with the smallest free key and port, and the transport's defaults. */
 export function addModule(document: IoDocument | null, request: CreateIoModuleRequest): IoDocument {
   const base = document ?? EMPTY_MAPPING;
-  const port = request.port ?? smallestFreePort(base.modules.map((module) => module.port));
-  if (port === null) {
-    throw new ApiError("conflict", "Every port from 1502 to 65535 is used: remove a module.");
+  if (request.key !== undefined) {
+    requireKeyFree(base.modules, request.key);
   }
-  requirePortFree(base.modules, port);
+  const transport = rulesOf(request.transport).createTransport(
+    request.transport,
+    listenPortsOf(base.modules),
+  );
+  if (typeof transport === "string") {
+    throw new ApiError("conflict", transport);
+  }
+  requirePortFree(base.modules, rulesOf(transport).listenPort(transport));
   const module: IoModule = {
-    key: nextModuleKey(base.modules.map((existing) => existing.key)),
-    port,
-    unitId: request.unitId ?? 1,
-    wordOrder: request.wordOrder ?? "low_word_first",
-    watchdogMilliseconds: request.watchdogMilliseconds ?? 1000,
+    key: request.key ?? nextModuleKey(base.modules.map((existing) => existing.key)),
+    transport,
     channels: [],
   };
   return { ...base, modules: [...base.modules, module] };
 }
 
-/** Edits or renames a module; the key and the port stay unique. */
+// A module keeps its transport: a channel's sub-object belongs to it.
+function editedTransport(module: IoModule, request: UpdateIoModuleRequest): IoModule["transport"] {
+  if (request.transport === undefined) {
+    return module.transport;
+  }
+  if (request.transport.kind !== module.transport.kind) {
+    throw new ApiError(
+      "invalid_request",
+      `Module "${module.key}" is a ${module.transport.kind} module: its transport cannot become ${request.transport.kind}. Create another module instead.`,
+    );
+  }
+  return rulesOf(module.transport).patchTransport(module.transport, request.transport);
+}
+
+/** Edits or renames a module; the key and the listen port stay unique. */
 export function updateModule(
   document: IoDocument,
   moduleKey: string,
   request: UpdateIoModuleRequest,
 ): IoDocument {
-  requireModule(document, moduleKey);
+  const module = requireModule(document, moduleKey);
   if (request.key !== undefined && request.key !== moduleKey) {
-    if (document.modules.some((module) => module.key === request.key)) {
-      throw new ApiError("conflict", `Module key "${request.key}" is already used.`);
-    }
+    requireKeyFree(document.modules, request.key);
   }
-  if (request.port !== undefined) {
-    requirePortFree(document.modules, request.port, moduleKey);
-  }
+  const transport = editedTransport(module, request);
+  requirePortFree(document.modules, rulesOf(transport).listenPort(transport), moduleKey);
+  const edited: IoModule = { ...module, key: request.key ?? module.key, transport };
   return {
     ...document,
-    modules: document.modules.map((module) =>
-      module.key === moduleKey ? { ...module, ...definedFields(request) } : module,
-    ),
+    modules: document.modules.map((existing) => (existing === module ? edited : existing)),
   };
-}
-
-// An absent field means "unchanged": spreading `undefined` would erase it.
-function definedFields(request: UpdateIoModuleRequest): Partial<IoModule> {
-  return Object.fromEntries(Object.entries(request).filter(([, value]) => value !== undefined));
 }
 
 /** Removes a module and its channels. */

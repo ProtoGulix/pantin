@@ -4,11 +4,11 @@ import { ioTextOf } from "../domain/io-document-text.ts";
 import { findBody, removeBodies, serializePantinDocument } from "../domain/pantin-document.ts";
 import { ApiError } from "../errors.ts";
 import { alignIo } from "./io-alignment.ts";
+import { isMigrated, readIoReading } from "./io-reading.ts";
 import {
   loadPantin,
   meshPathsOf,
   type OpenPantin,
-  readIoReading,
   readSavedDocument,
   resetRuntimeState,
   type ServiceContext,
@@ -136,9 +136,12 @@ async function writeIoIfChanged(
   // The renames made since the last read are written with the document.
   alignIo(openPantin);
   const text = ioTextOf(openPantin.io);
-  if (text !== null && text !== openPantin.savedIoText) {
+  // A file migrated on read is written even when its text is unchanged: the
+  // file on disk is still in the older version (ADR 0064 point 7).
+  if (text !== null && (text !== openPantin.savedIoText || openPantin.ioFileIsOlder)) {
     await context.store.writeIoAtomically(pantinId, text);
     openPantin.savedIoText = text;
+    openPantin.ioFileIsOlder = false;
   }
 }
 
@@ -188,7 +191,7 @@ async function reloadDocument(
   openPantin: OpenPantin,
 ): Promise<void> {
   const saved = await readSavedDocument(context, pantinId);
-  const io = await readIoReading(context, pantinId);
+  const io = await readIoReading(context.store, pantinId);
   await waitForImports(openPantin);
   // From here to the reset, no await: no import can slip in between.
   const savedMeshPaths = meshPathsOf(saved);
@@ -202,6 +205,7 @@ async function reloadDocument(
   openPantin.io = io;
   openPantin.ioAlignedDocument = saved;
   openPantin.savedIoText = ioTextOf(io);
+  openPantin.ioFileIsOlder = isMigrated(io);
   openPantin.savedMeshPaths = savedMeshPaths;
   openPantin.pendingMeshDeletions.clear();
   resetRuntimeState(context, openPantin);

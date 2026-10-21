@@ -114,37 +114,82 @@ describe("GET .../io unreadable file", () => {
   });
 
   it("is invalid with one schema_invalid problem per Zod issue, at its path", async () => {
+    const transport = { kind: "modbus_tcp_slave", port: 1502 };
     const document = {
-      schema_version: 1,
+      schema_version: 2,
       modules: [
-        { key: "m1", port: 1502, channels: [] },
-        { key: "m2", port: 1502, unitId: 0, channels: [] },
+        { key: "m1", transport, channels: [] },
+        { key: "m2", transport: { ...transport, port: 1503, unitId: 0 }, channels: [] },
+        { key: "m2", transport: { ...transport, port: 1504 }, channels: [] },
       ],
     };
     await loadIo(axis, JSON.stringify(document));
     const { answer } = await readIo();
     expect(answer.problems.map((problem) => [problem.code, problem.path])).toEqual([
-      ["schema_invalid", ["modules", 1, "unitId"]],
-      ["schema_invalid", ["modules", 1, "port"]],
+      ["schema_invalid", ["modules", 1, "transport", "unitId"]],
+      ["schema_invalid", ["modules", 2, "key"]],
     ]);
-    expect(answer.problems[1]?.message).toContain("Port 1502 is used by two modules");
+    expect(answer.problems[1]?.message).toContain('"m2" is used twice');
+  });
+});
+
+describe("GET .../io cross-module problems", () => {
+  it("reports a port two modules listen on as a problem, not as an unreadable file", async () => {
+    const transport = { kind: "modbus_tcp_slave", port: 1502 };
+    const document = {
+      schema_version: 2,
+      modules: [
+        { key: "m1", transport, channels: [] },
+        { key: "m2", transport, channels: [] },
+      ],
+    };
+    await loadIo(axis, JSON.stringify(document));
+    const { answer } = await readIo();
+    expect(answer.modules).toHaveLength(2);
+    expect(answer.problems).toMatchObject([
+      { path: ["modules", 1, "transport", "port"], code: "listen_port_used_twice" },
+    ]);
+    expect(answer.problems[0]?.message).toContain("Port 1502");
   });
 
-  it("reports a tag mapped twice at the second channel", async () => {
+  it("reports a command mapped in two modules at the second channel", async () => {
+    const command = tags.find((tag) => tag.direction === "command");
     const document = ioDocumentOf(ALL());
-    const first = document.modules[0]?.channels[0];
+    const first = document.modules[0]?.channels.find((channel) => channel.tag === command?.name);
     const second = document.modules[1];
     if (first === undefined || second === undefined) {
-      throw new Error("The axis should have a tag.");
+      throw new Error("The axis should have a command.");
     }
-    second.channels.push({ ...first, address: 40, variable: "again" });
+    second.channels.push({ ...first, variable: "again" });
     await loadIo(axis, JSON.stringify(document));
     const { answer } = await readIo();
     expect(answer.problems).toMatchObject([
-      { path: ["modules", 1, "channels", 0, "tag"], code: "schema_invalid" },
+      { path: ["modules", 1, "channels", 0, "tag"], code: "command_mapped_twice" },
     ]);
   });
 
+  it("reports a tag mapped twice in one module as a schema problem at the second channel", async () => {
+    const document = ioDocumentOf(ALL());
+    const first = document.modules[0]?.channels[0];
+    if (first === undefined) {
+      throw new Error("The axis should have a tag.");
+    }
+    document.modules[0]?.channels.push({ ...first, variable: "again" });
+    await loadIo(axis, JSON.stringify(document));
+    const { answer } = await readIo();
+    expect(answer.problems).toMatchObject([{ code: "schema_invalid" }]);
+    expect(answer.problems[0]?.message).toContain("once per module");
+  });
+
+  it("refuses a file written by a newer Pantin by name", async () => {
+    await loadIo(axis, JSON.stringify({ schema_version: 3, modules: [] }));
+    const { answer } = await readIo();
+    expect(answer.problems).toMatchObject([{ path: [], code: "newer_schema_version" }]);
+    expect(answer.problems[0]?.message).toContain("newer Pantin");
+  });
+});
+
+describe("GET .../io unreadable bytes", () => {
   it("is invalid for bytes that are not UTF-8", async () => {
     await loadIo(axis, "{}");
     await writeFile(join(axis.workspace.pantinsDirectory, "axis", "io.json"), Uint8Array.of(0xff));

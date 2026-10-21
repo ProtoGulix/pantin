@@ -32,7 +32,8 @@ describe("committed io JSON Schema", () => {
   });
 
   it("describes what the Zod schema accepts: an example validates, a typo does not", () => {
-    const example = { schema_version: 1, modules: [{ key: "m1", port: 1502, channels: [] }] };
+    const transport = { kind: "modbus_tcp_slave", port: 1502 };
+    const example = { schema_version: 2, modules: [{ key: "m1", transport, channels: [] }] };
     expect(IoDocumentSchema.safeParse(example).success).toBe(true);
     expect(IoDocumentSchema.safeParse({ ...example, modulez: [] }).success).toBe(false);
   });

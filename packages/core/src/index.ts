@@ -4,7 +4,7 @@
 export { BRIDGE_LOG_FILE_NAME, BRIDGE_LOG_ROTATED_FILE_NAME } from "./bridge/bridge-log-file.ts";
 export { defaultLogsDirectory, defaultPantinsDirectory } from "./domain/default-directories.ts";
 export { renderGvl } from "./domain/gvl.ts";
-export { allocateVariable, proposeAddress, zoneAndTypeOf } from "./domain/io-allocation.ts";
+export { addChannels } from "./domain/io-channel-edits.ts";
 export { renderIoCsv } from "./domain/io-csv.ts";
 export {
   type IoReading,
@@ -13,7 +13,9 @@ export {
   unreadableFile,
 } from "./domain/io-document-text.ts";
 export { evaluateIoMapping, ioTagsOf } from "./domain/io-evaluation.ts";
+export { addModule } from "./domain/io-module-edits.ts";
 export { describeIoProblem } from "./domain/io-problem-text.ts";
+export type { IoTag } from "./domain/io-validation.ts";
 export { type DocumentReading, readPantinDocument } from "./domain/pantin-document.ts";
 export { deriveSignals } from "./domain/signals.ts";
 export { ApiError } from "./errors.ts";

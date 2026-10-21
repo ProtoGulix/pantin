@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { type IoDocument, IoDocumentSchema } from "@pantin/protocol";
+import { type IoDocument, IoDocumentSchema, type IoZone } from "@pantin/protocol";
 import { describe, expect, it } from "vitest";
 import {
   canonicalIoDocument,
@@ -11,30 +11,28 @@ import {
 
 // The canonical text of io.json (ADR 0049 points 1 and 7).
 
-const channel = (
-  tag: string,
-  zone: IoDocument["modules"][number]["channels"][number]["zone"],
-  address: number,
-) => ({
+const channel = (tag: string, zone: IoZone, address: number) => ({
   tag,
   variable: tag.replaceAll(".", "_"),
-  zone,
-  address,
-  ioType: zone === "coil" || zone === "discrete_input" ? ("BOOL" as const) : ("REAL" as const),
   comment: "",
+  modbus: {
+    zone,
+    address,
+    ioType: zone === "coil" || zone === "discrete_input" ? ("BOOL" as const) : ("REAL" as const),
+  },
 });
 
 const settings = { unitId: 1, wordOrder: "low_word_first", watchdogMilliseconds: 1000 } as const;
+const transport = (port: number) => ({ kind: "modbus_tcp_slave", port, ...settings }) as const;
 
-const EMPTY_MODULE = { key: "m0", port: 1503, ...settings, channels: [] };
+const EMPTY_MODULE = { key: "m0", transport: transport(1503), channels: [] };
 
 const SHUFFLED: IoDocument = {
-  schema_version: 1,
+  schema_version: 2,
   modules: [
     {
       key: "m1",
-      port: 1502,
-      ...settings,
+      transport: transport(1502),
       channels: [
         channel("b.in.state", "input_register", 0),
         channel("z.c.coil", "coil", 3),
@@ -68,19 +66,47 @@ describe("serializeIoDocument", () => {
 describe("serializeIoDocument text", () => {
   it("uses 2-space indentation, a final newline and the key order of the ADR", () => {
     const text = serializeIoDocument({
-      schema_version: 1,
-      modules: [EMPTY_MODULE],
+      schema_version: 2,
+      modules: [
+        EMPTY_MODULE,
+        { key: "m1", transport: transport(1502), channels: [channel("a.b.c", "coil", 0)] },
+      ],
     });
     expect(text).toBe(`{
-  "schema_version": 1,
+  "schema_version": 2,
   "modules": [
     {
       "key": "m0",
-      "port": 1503,
-      "unitId": 1,
-      "wordOrder": "low_word_first",
-      "watchdogMilliseconds": 1000,
+      "transport": {
+        "kind": "modbus_tcp_slave",
+        "port": 1503,
+        "unitId": 1,
+        "wordOrder": "low_word_first",
+        "watchdogMilliseconds": 1000
+      },
       "channels": []
+    },
+    {
+      "key": "m1",
+      "transport": {
+        "kind": "modbus_tcp_slave",
+        "port": 1502,
+        "unitId": 1,
+        "wordOrder": "low_word_first",
+        "watchdogMilliseconds": 1000
+      },
+      "channels": [
+        {
+          "tag": "a.b.c",
+          "variable": "a_b_c",
+          "comment": "",
+          "modbus": {
+            "zone": "coil",
+            "address": 0,
+            "ioType": "BOOL"
+          }
+        }
+      ]
     }
   ]
 }
@@ -93,16 +119,19 @@ describe("serializeIoDocument text", () => {
         "schema_version",
         "modules",
         "channels",
-        "comment",
+        "modbus",
         "ioType",
         "address",
         "zone",
+        "comment",
         "variable",
         "tag",
+        "transport",
         "watchdogMilliseconds",
         "wordOrder",
         "unitId",
         "port",
+        "kind",
         "key",
       ]),
     );
@@ -176,12 +205,18 @@ describe("readIoDocument", () => {
 
   it("gives the Zod path of each schema issue", () => {
     const bad = {
-      schema_version: 1,
-      modules: [{ key: "m1", port: 80, channels: [{ tag: "a.b.c" }] }],
+      schema_version: 2,
+      modules: [
+        {
+          key: "m1",
+          transport: { kind: "modbus_tcp_slave", port: 80 },
+          channels: [{ tag: "a.b.c" }],
+        },
+      ],
     };
     const reading = readIoDocument(encode(JSON.stringify(bad)));
     const paths = reading.kind === "unreadable" ? reading.problems.map((p) => p.path) : [];
-    expect(paths).toContainEqual(["modules", 0, "port"]);
+    expect(paths).toContainEqual(["modules", 0, "transport", "port"]);
     expect(paths).toContainEqual(["modules", 0, "channels", 0, "variable"]);
   });
 });

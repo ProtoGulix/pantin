@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   IO_FILE_MAX_BYTES,
-  IO_ZONES,
+  IO_SCHEMA_VERSION,
   type IoChannel,
   type IoDocument,
   IoDocumentSchema,
@@ -9,8 +9,12 @@ import {
   type IoPath,
   type IoProblem,
 } from "@pantin/protocol";
+import { migrateIoJson } from "./io-migrations.ts";
+import { rulesOf } from "./io-transports.ts";
+import { isJsonObject } from "./json-object.ts";
 
-// io.json as the core reads, orders and writes it (ADR 0049 points 1 and 3):
+// io.json as the core reads, orders and writes it (ADR 0049 points 1 and 3,
+// ADR 0064 points 4 and 7):
 // pure, the file is read by the caller. The canonical text is the one
 // `unsavedChanges` compares, the one a save writes and the one `mappingId`
 // hashes, so a hand formatted file is never "unsaved" by itself.
@@ -18,46 +22,31 @@ import {
 /** What the bytes of io.json make: nothing, a document, or the reasons it is unreadable. */
 export type IoReading =
   | { kind: "missing" }
-  | { kind: "document"; document: IoDocument }
+  // `migratedFrom` is the version the file was written in when it was migrated on read.
+  | { kind: "document"; document: IoDocument; migratedFrom?: number }
   | { kind: "unreadable"; problems: IoProblem[] };
 
 export const MISSING_IO: IoReading = { kind: "missing" };
 
-function compareText(first: string, second: string): number {
-  // Code units, not a locale: the order must be the same on every machine.
-  return first < second ? -1 : first > second ? 1 : 0;
-}
-
-/** Zone (order of IO_ZONES), then address, then tag. */
-function compareChannels(first: IoChannel, second: IoChannel): number {
-  return (
-    IO_ZONES.indexOf(first.zone) - IO_ZONES.indexOf(second.zone) ||
-    first.address - second.address ||
-    compareText(first.tag, second.tag)
-  );
-}
-
 // Keys are listed one by one so that the text does not depend on how the
-// object was built.
-function orderedChannel(channel: IoChannel): IoChannel {
+// object was built: the common fields, then the transport's own.
+function orderedChannel(module: IoModule, channel: IoChannel): IoChannel {
   return {
     tag: channel.tag,
     variable: channel.variable,
-    zone: channel.zone,
-    address: channel.address,
-    ioType: channel.ioType,
     comment: channel.comment,
+    ...rulesOf(module.transport).orderedChannelFields(channel),
   };
 }
 
 function orderedModule(module: IoModule): IoModule {
+  const rules = rulesOf(module.transport);
   return {
     key: module.key,
-    port: module.port,
-    unitId: module.unitId,
-    wordOrder: module.wordOrder,
-    watchdogMilliseconds: module.watchdogMilliseconds,
-    channels: module.channels.toSorted(compareChannels).map(orderedChannel),
+    transport: rules.orderedTransport(module.transport),
+    channels: module.channels
+      .toSorted(rules.compareChannels)
+      .map((channel) => orderedChannel(module, channel)),
   };
 }
 
@@ -140,18 +129,47 @@ export function readIoDocument(bytes: Uint8Array | undefined): IoReading {
     const reason = error instanceof Error ? error.message : String(error);
     return unreadable("invalid_json", `io.json is not valid JSON (${reason}).`);
   }
-  const result = IoDocumentSchema.safeParse(json);
+  return readParsedJson(json);
+}
+
+// A file written by a newer Pantin is refused by name, not as a puzzling schema error.
+function newerVersionOf(json: unknown): number | null {
+  const version = isJsonObject(json) ? json.schema_version : undefined;
+  return typeof version === "number" && version > IO_SCHEMA_VERSION ? version : null;
+}
+
+function readParsedJson(json: unknown): IoReading {
+  const newer = newerVersionOf(json);
+  if (newer !== null) {
+    return unreadable(
+      "newer_schema_version",
+      `io.json is in version ${newer}, written by a newer Pantin: this one reads up to version ${IO_SCHEMA_VERSION}. Update Pantin.`,
+    );
+  }
+  // The chain runs before the schema, so the problems of an old file point into the migrated shape.
+  const migration = isJsonObject(json)
+    ? migrateIoJson(json, IO_SCHEMA_VERSION)
+    : { document: json, migratedFrom: null };
+  const result = IoDocumentSchema.safeParse(migration.document);
+  const note = migration.migratedFrom === null ? "" : migratedNote(migration.migratedFrom);
   if (!result.success) {
     return {
       kind: "unreadable",
       problems: result.error.issues.map((issue) => ({
         path: pathOf(issue.path),
         code: "schema_invalid",
-        message: issue.message,
+        message: issue.message + note,
       })),
     };
   }
   // Sorted here: validation paths index this order, while the schema_invalid
   // paths above index the raw file (matters to `pantin validate`, slice P3).
-  return { kind: "document", document: canonicalIoDocument(result.data) };
+  const document = canonicalIoDocument(result.data);
+  return migration.migratedFrom === null
+    ? { kind: "document", document }
+    : { kind: "document", document, migratedFrom: migration.migratedFrom };
+}
+
+function migratedNote(version: number): string {
+  return ` (the path is in the file as migrated from version ${version})`;
 }

@@ -2,19 +2,23 @@ import { describe, expect, it } from "vitest";
 import { parseChannelEdit, parseModuleEdit } from "./io-edits.ts";
 
 const request = (value: object) => ({ kind: "request", request: value });
+// The settings of a module go in its transport, whose kind is always sent (ADR 0064 point 6).
+const transport = (settings: object) => ({
+  transport: { kind: "modbus_tcp_slave", ...settings },
+});
 
 describe("parseModuleEdit", () => {
   it("parses whole numbers and keeps the other settings untouched", () => {
-    expect(parseModuleEdit("port", "1503")).toEqual(request({ port: 1503 }));
+    expect(parseModuleEdit("port", "1503")).toEqual(request(transport({ port: 1503 })));
     expect(parseModuleEdit("watchdogMilliseconds", " 500 ")).toEqual(
-      request({ watchdogMilliseconds: 500 }),
+      request(transport({ watchdogMilliseconds: 500 })),
     );
   });
 
   it("trims a key and accepts only the two word orders", () => {
     expect(parseModuleEdit("key", " plc ")).toEqual(request({ key: "plc" }));
     expect(parseModuleEdit("wordOrder", "high_word_first")).toEqual(
-      request({ wordOrder: "high_word_first" }),
+      request(transport({ wordOrder: "high_word_first" })),
     );
     expect(parseModuleEdit("wordOrder", "other")).toEqual({ kind: "ignored" });
   });
@@ -33,7 +37,7 @@ describe("parseModuleEdit", () => {
 describe("parseChannelEdit", () => {
   it("edits variable, address and comment", () => {
     expect(parseChannelEdit("variable", " valve ")).toEqual(request({ variable: "valve" }));
-    expect(parseChannelEdit("address", "12")).toEqual(request({ address: 12 }));
+    expect(parseChannelEdit("address", "12")).toEqual(request({ modbus: { address: 12 } }));
     expect(parseChannelEdit("comment", " note ")).toEqual(request({ comment: " note " }));
     expect(parseChannelEdit("address", "x")).toEqual({ kind: "invalidNumber", field: "address" });
   });

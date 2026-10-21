@@ -61,12 +61,20 @@ Faults and products are cleared by **Reset the simulation** (**Edit** menu). Uns
 
 The `io.json` file links tags to PLC variables and to Modbus addresses. It **never defines** a tag: tags come from the Pantin. It only contains:
 
-- Modbus **modules**, each with its **Key**, its **Port**, its **Unit id**, its **Word order** and its **Watchdog (ms)**;
-- **channels**: a **Tag**, a **Variable**, a **Zone**, an **Address** and a **Type**.
+- **modules**, each with its **Key** and its **transport** (the way of talking to the PLC). The only transport available is `modbus_tcp_slave` (**Modbus TCP slave**), whose settings are the **Port**, the **Unit id**, the **Word order** and the **Watchdog (ms)**;
+- **channels**: a **Tag**, a **Variable**, a **Comment** and, for the Modbus transport, a **Zone**, an **Address** and a **Type**.
+
+The file is in version 2: the transport settings are in the module's `transport` object, and the zone, address and type in the channel's `modbus` object. A feedback tag (sensor, position...) can be mapped in several modules, with the same variable, declared once; a command is mapped in one module only. The I/O view does not offer an already mapped tag yet: today the second module is set through the API.
 
 Display the **I/O** view in a zone (the zone's selector, or the **View** menu). If the Pantin has no list yet, **Create the mapping**. You can **Add a module**, **Map** the **Unmapped tags** to a module, **Reassign** or **Remove** a channel. Problems appear in **Problems**.
 
 **Export GVL** downloads the matching CODESYS global variable list. If a tag is renamed, its channel follows; the name of the variable never changes.
+
+A **Variable** can be a dotted name of 1 to 8 identifiers, such as `GVL_IO.Verin1.FinCourseSortie`: it is then a variable that **your** program already declares. The generated GVL does not declare it and lists it in its header. Whether CODESYS accepts such a name in the mapping of a Modbus channel, structure members included, is not verified.
+
+### Version 1 files
+
+An `io.json` in version 1 (without a `transport` object) opens normally: the core converts it when reading and rewrites it in version 2 at the next save. Opening it does not mark the Pantin as modified. Addresses, variables and the GVL do not change, so the CODESYS project needs no change. A file in a version newer than the one Pantin can read is refused (see [Troubleshooting](/en/guide/troubleshooting)).
 
 What comes next, to actually connect the PLC, is in [Connect a PLC](/en/guide/connect-a-plc).
 

@@ -30,6 +30,7 @@ export async function copyPlcCylinder(pantinsDirectory: string, modbusPort: numb
   if (module === undefined || others.length > 0) {
     throw new Error("Expected examples/plc-cylinder to hold exactly one module.");
   }
-  const moved = { ...document, modules: [{ ...module, port: modbusPort }] };
+  const transport = { ...module.transport, port: modbusPort };
+  const moved = { ...document, modules: [{ ...module, transport }] };
   await writeFile(ioPath, JSON.stringify(moved, null, 2), "utf8");
 }

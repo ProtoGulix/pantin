@@ -7,7 +7,7 @@ import { IoMappingResponseSchema } from "./io-mapping.ts";
 // decodes the same file with a hand-written decoder.
 const CaseSchema = z.object({ name: z.string(), message: z.unknown() });
 const FixtureFileSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   valid: z.array(CaseSchema),
   invalid: z.array(CaseSchema),
 });

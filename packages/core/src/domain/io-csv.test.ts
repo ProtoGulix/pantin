@@ -5,16 +5,14 @@ import { renderIoCsv } from "./io-csv.ts";
 type Module = IoMappingResponse["modules"][number];
 type Channel = Module["channels"][number];
 
-const HEADER = "module,port,unitId,tag,variable,zone,address,ioType,direction,comment";
+const HEADER = "module,transport,endpoint,tag,variable,direction,address,plcType,comment";
 
 function channel(tag: string, comment = ""): Channel {
   return {
     tag,
     variable: tag.replaceAll(".", "_"),
-    zone: "coil",
-    address: 3,
-    ioType: "BOOL",
     comment,
+    modbus: { zone: "coil", address: 3, ioType: "BOOL" },
     tagType: "bit",
     direction: "command",
     owner: null,
@@ -24,10 +22,13 @@ function channel(tag: string, comment = ""): Channel {
 function moduleOf(key: string, channels: Channel[]): Module {
   return {
     key,
-    port: 1502,
-    unitId: 2,
-    wordOrder: "low_word_first",
-    watchdogMilliseconds: 1000,
+    transport: {
+      kind: "modbus_tcp_slave",
+      port: 1502,
+      unitId: 2,
+      wordOrder: "low_word_first",
+      watchdogMilliseconds: 1000,
+    },
     channels,
   };
 }
@@ -46,8 +47,8 @@ describe("renderIoCsv", () => {
       renderIoCsv([moduleOf("m2", [channel("a.b.c")]), moduleOf("m1", [channel("d.e.f")])]),
     );
     expect(rows.slice(1, 3)).toEqual([
-      "m2,1502,2,a.b.c,a_b_c,coil,3,BOOL,command,",
-      "m1,1502,2,d.e.f,d_e_f,coil,3,BOOL,command,",
+      'm2,Modbus TCP slave,"port 1502, unit 2",a.b.c,a_b_c,command,coil 3,BOOL,',
+      'm1,Modbus TCP slave,"port 1502, unit 2",d.e.f,d_e_f,command,coil 3,BOOL,',
     ]);
   });
 
@@ -83,6 +84,8 @@ describe("renderIoCsv", () => {
   it("never prefixes the other columns", () => {
     const odd: Channel = { ...channel("-a.b", "x"), variable: "+v" };
     const text = renderIoCsv([moduleOf("m1", [odd])]);
-    expect(rowsOf(text)[1]).toBe("m1,1502,2,-a.b,+v,coil,3,BOOL,command,x");
+    expect(rowsOf(text)[1]).toBe(
+      'm1,Modbus TCP slave,"port 1502, unit 2",-a.b,+v,command,coil 3,BOOL,x',
+    );
   });
 });

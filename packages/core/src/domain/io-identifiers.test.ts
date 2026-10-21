@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { deriveVariable, variableProblemOf } from "./io-identifiers.ts";
+import { deriveVariable, isDottedVariable, variableProblemOf } from "./io-identifiers.ts";
 
 // The derivation of a CODESYS variable from a tag name (ADR 0045 point 9).
 
@@ -48,5 +48,43 @@ describe("deriveVariable", () => {
       const problem = variableProblemOf(deriveVariable(tag));
       expect(problem === null || problem.includes("keyword")).toBe(true);
     }
+  });
+});
+
+describe("variableProblemOf, dotted references (ADR 0064 point 9)", () => {
+  it.each(["GVL_IO.Verin1.FinCourseSortie", "PLC_PRG.ok", "a.b.c.d.e.f.g.h"])(
+    "accepts %s",
+    (reference) => {
+      expect(variableProblemOf(reference)).toBeNull();
+    },
+  );
+
+  it.each([
+    ["a.b.c.d.e.f.g.h.i", "more than 8"],
+    ["GVL.", "must start with a letter"],
+    [".a", "must start with a letter"],
+    ["a..b", "must start with a letter"],
+    ["a.1b", "must start with a letter"],
+    ["GVL.BOOL", "keyword"],
+    ["a.b__c", "double underscore"],
+  ])("refuses %s, naming the rule", (reference, fragment) => {
+    expect(variableProblemOf(reference)).toContain(fragment);
+  });
+
+  it("refuses a reference over 255 characters, and an identifier over 64 inside it", () => {
+    const part = "a".repeat(60);
+    expect(variableProblemOf([part, part, part, part, part].join("."))).toContain("255");
+    expect(variableProblemOf(`${"b".repeat(65)}.c`)).toContain("64");
+  });
+
+  it("keeps the message of a plain identifier unchanged", () => {
+    expect(variableProblemOf("BOOL")).toBe(
+      'Variable "BOOL" is an IEC 61131-3 keyword or type name.',
+    );
+  });
+
+  it("tells a dotted reference from a variable Pantin declares", () => {
+    expect(isDottedVariable("GVL_IO.Verin1")).toBe(true);
+    expect(isDottedVariable("verin1_sortie")).toBe(false);
   });
 });

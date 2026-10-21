@@ -1,4 +1,8 @@
-import type { UpdateIoChannelRequest, UpdateIoModuleRequest } from "@pantin/protocol";
+import {
+  MODBUS_TCP_SLAVE_KIND,
+  type UpdateIoChannelRequest,
+  type UpdateIoModuleRequest,
+} from "@pantin/protocol";
 
 // Turns the text of an edited cell into the request body. The text is only
 // parsed: ranges and rules are the protocol's and the core's.
@@ -31,7 +35,7 @@ export function parseModuleEdit(field: string, text: string): IoEditParse<Update
   }
   if (field === "wordOrder") {
     return text === "low_word_first" || text === "high_word_first"
-      ? request({ wordOrder: text })
+      ? request({ transport: { kind: MODBUS_TCP_SLAVE_KIND, wordOrder: text } })
       : IGNORED;
   }
   const numeric = MODULE_NUMBER_FIELDS.find((name) => name === field);
@@ -39,7 +43,9 @@ export function parseModuleEdit(field: string, text: string): IoEditParse<Update
     return IGNORED;
   }
   const value = integerOf(text);
-  return value === null ? { kind: "invalidNumber", field: numeric } : request({ [numeric]: value });
+  return value === null
+    ? { kind: "invalidNumber", field: numeric }
+    : request({ transport: { kind: MODBUS_TCP_SLAVE_KIND, [numeric]: value } });
 }
 
 export function parseChannelEdit(field: string, text: string): IoEditParse<UpdateIoChannelRequest> {
@@ -50,7 +56,9 @@ export function parseChannelEdit(field: string, text: string): IoEditParse<Updat
       return request({ comment: text });
     case "address": {
       const value = integerOf(text);
-      return value === null ? { kind: "invalidNumber", field } : request({ address: value });
+      return value === null
+        ? { kind: "invalidNumber", field }
+        : request({ modbus: { address: value } });
     }
     default:
       return IGNORED;

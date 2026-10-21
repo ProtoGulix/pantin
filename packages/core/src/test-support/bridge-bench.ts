@@ -24,10 +24,13 @@ function mappingWith(ports: number[]): IoMappingResponse {
     mappingId: "abc",
     modules: ports.map((port, index) => ({
       key: `m${index + 1}`,
-      port,
-      unitId: 1,
-      wordOrder: "low_word_first",
-      watchdogMilliseconds: 1000,
+      transport: {
+        kind: "modbus_tcp_slave",
+        port,
+        unitId: 1,
+        wordOrder: "low_word_first",
+        watchdogMilliseconds: 1000,
+      },
       channels: [],
     })),
     problems: [],

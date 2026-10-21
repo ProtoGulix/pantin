@@ -4,6 +4,7 @@ import {
   checkBridgeStart,
   listenChoicesOf,
   MAX_SUPERVISED_BRIDGES,
+  modbusModulesOf,
 } from "./bridge-checks.ts";
 
 const FACTS: BridgeStartFacts = {
@@ -166,5 +167,40 @@ describe("listenChoicesOf", () => {
       "192.168.1.20",
       "fd00:0:0:0:0:0:0:5",
     ]);
+  });
+});
+
+describe("checkBridgeStart, Modbus modules (ADR 0064 point 8)", () => {
+  it("refuses with a 409 when a valid mapping has no Modbus TCP slave module", () => {
+    const refusal = refusalOf("127.0.0.1", [], {
+      mapping: { status: "valid", modules: [], problems: [] },
+    });
+    expect(refusal.code).toBe("conflict");
+    expect(refusal.message).toContain("no Modbus TCP slave module");
+  });
+});
+
+describe("modbusModulesOf", () => {
+  const transport = {
+    kind: "modbus_tcp_slave" as const,
+    port: 1502,
+    unitId: 1,
+    wordOrder: "low_word_first" as const,
+    watchdogMilliseconds: 1000,
+  };
+
+  it("keeps the key and the port of the Modbus modules", () => {
+    const modules = [
+      { key: "m1", transport, channels: [] },
+      { key: "m2", transport: { ...transport, port: 1503 }, channels: [] },
+    ];
+    expect(modbusModulesOf(modules)).toEqual([
+      { key: "m1", port: 1502 },
+      { key: "m2", port: 1503 },
+    ]);
+  });
+
+  it("is empty for no module", () => {
+    expect(modbusModulesOf([])).toEqual([]);
   });
 });

@@ -17,6 +17,7 @@
     "@pantin/drive-types": "workspace:*",
     "@pantin/protocol": "workspace:*",
     "@pantin/sensor-types": "workspace:*",
+    "@pantin/transport-types": "workspace:*",
     "ws": "8.22.0",
     "zod": "4.6.5"
   },

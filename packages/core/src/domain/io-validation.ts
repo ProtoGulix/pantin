@@ -1,20 +1,22 @@
-import {
-  type IoChannel,
-  type IoDocument,
-  type IoPath,
-  type IoProblem,
-  type IoTagOwner,
-  type IoUnmappedTag,
-  MODBUS_MAX_ADDRESS,
-  type TagDirection,
-  type TagType,
+import type {
+  IoChannel,
+  IoDocument,
+  IoModule,
+  IoPath,
+  IoProblem,
+  IoTagOwner,
+  IoUnmappedTag,
+  TagDirection,
+  TagType,
 } from "@pantin/protocol";
 import { variableProblemOf } from "./io-identifiers.ts";
-import { BIT_ZONES, IO_TYPE_BY_TAG_TYPE, ioWidthOf, ZONES_BY_DIRECTION } from "./io-rules.ts";
+import { rulesOf } from "./io-transports.ts";
 
-// The rules of ADR 0049 point 6 that the schema cannot hold, against the open
+// The rules of ADR 0049 point 6 and ADR 0064 point 5, against the open
 // document's tag list (unsaved edits included): pure, from a mapping already
-// parsed. Unmapped tags are a warning, not a problem.
+// parsed. The rules common to every transport are here; each transport's own
+// rules come from its folder through the registry. Unmapped tags are a
+// warning, not a problem.
 
 export type IoTag = {
   name: string;
@@ -26,18 +28,18 @@ export type IoTag = {
 export type IoValidation = { problems: IoProblem[]; unmappedTags: IoUnmappedTag[] };
 
 /** A channel with the place it has in the mapping, to name it in a problem. */
-type Placed = { channel: IoChannel; moduleIndex: number; channelIndex: number };
+type Placed = { channel: IoChannel; module: IoModule; moduleIndex: number; channelIndex: number };
 
-function at(placed: Placed, field: keyof IoChannel): IoPath {
+function channelPath(placed: Placed, field: string): IoPath {
   return ["modules", placed.moduleIndex, "channels", placed.channelIndex, field];
 }
 
-function problem(placed: Placed, field: keyof IoChannel, code: IoProblem["code"], message: string) {
-  return { path: at(placed, field), code, message } satisfies IoProblem;
+function problem(placed: Placed, field: string, code: IoProblem["code"], message: string) {
+  return { path: channelPath(placed, field), code, message } satisfies IoProblem;
 }
 
-function tagProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
-  const { channel } = placed;
+function signalProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
+  const { channel, module } = placed;
   if (tag === undefined) {
     return [
       problem(
@@ -48,82 +50,30 @@ function tagProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
       ),
     ];
   }
-  const problems: IoProblem[] = [];
-  if (!ZONES_BY_DIRECTION[tag.direction].includes(channel.zone)) {
-    const wanted = ZONES_BY_DIRECTION[tag.direction].join(" or ");
-    problems.push(
+  if (!rulesOf(module.transport).supportsSignal(tag)) {
+    return [
       problem(
         placed,
-        "zone",
-        "zone_direction_mismatch",
-        `Tag "${channel.tag}" is a ${tag.direction}: its zone is ${wanted}, not ${channel.zone}.`,
+        "tag",
+        "unsupported_signal",
+        `Tag "${channel.tag}" (a ${tag.type} ${tag.direction}) cannot be carried by the ${module.transport.kind} transport of module "${module.key}": map it in a module of another transport.`,
       ),
-    );
+    ];
   }
-  if (channel.ioType !== IO_TYPE_BY_TAG_TYPE[tag.type]) {
-    problems.push(
-      problem(
-        placed,
-        "ioType",
-        "type_mismatch",
-        `Tag "${channel.tag}" is a ${tag.type}: its type is ${IO_TYPE_BY_TAG_TYPE[tag.type]}, not ${channel.ioType}.`,
-      ),
-    );
-  }
-  return problems;
-}
-
-// BOOL lives in a bit zone, REAL and DINT in a register zone, whatever the tag.
-function typeZoneProblems(placed: Placed): IoProblem[] {
-  const { channel } = placed;
-  if ((channel.ioType === "BOOL") === BIT_ZONES.includes(channel.zone)) {
-    return [];
-  }
-  const wanted =
-    channel.ioType === "BOOL" ? "a coil or a discrete input" : "a holding or an input register";
-  return [
-    problem(
-      placed,
-      "zone",
-      "type_zone_mismatch",
-      `A ${channel.ioType} goes to ${wanted}, not to ${channel.zone}.`,
-    ),
-  ];
-}
-
-// The schema holds the start address in 0..65535; a REAL or DINT may still run past the end.
-function lastAddressOf(channel: IoChannel): number {
-  return channel.address + ioWidthOf(channel.ioType) - 1;
-}
-
-function rangeProblems(placed: Placed): IoProblem[] {
-  const { channel } = placed;
-  const last = lastAddressOf(channel);
-  if (last <= MODBUS_MAX_ADDRESS) {
-    return [];
-  }
-  return [
-    problem(
-      placed,
-      "address",
-      "address_out_of_range",
-      `Address ${channel.address} is out of 0..${MODBUS_MAX_ADDRESS} (a ${channel.ioType} takes ${ioWidthOf(channel.ioType)} registers, up to ${last}).`,
-    ),
-  ];
+  return [];
 }
 
 function channelProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
   const variable = variableProblemOf(placed.channel.variable);
   return [
-    ...tagProblems(placed, tag),
-    ...typeZoneProblems(placed),
-    ...rangeProblems(placed),
+    ...signalProblems(placed, tag),
     ...(variable === null ? [] : [problem(placed, "variable", "invalid_variable", variable)]),
   ];
 }
 
 // The second and later channels with the same variable are the problem; the
-// message names the first. IEC 61131-3 names ignore case.
+// message names the first. IEC 61131-3 names ignore case. The same tag in two
+// modules may share its variable: it is one PLC variable fed by both.
 function duplicateVariableProblems(placedChannels: readonly Placed[]): IoProblem[] {
   const firstTags = new Map<string, string>();
   const problems: IoProblem[] = [];
@@ -132,7 +82,7 @@ function duplicateVariableProblems(placedChannels: readonly Placed[]): IoProblem
     const first = firstTags.get(key);
     if (first === undefined) {
       firstTags.set(key, placed.channel.tag);
-    } else {
+    } else if (first !== placed.channel.tag) {
       problems.push(
         problem(
           placed,
@@ -146,42 +96,67 @@ function duplicateVariableProblems(placedChannels: readonly Placed[]): IoProblem
   return problems;
 }
 
-function overlapProblems(placedChannels: readonly Placed[]): IoProblem[] {
-  const groups = new Map<string, Placed[]>();
-  for (const placed of placedChannels.filter(
-    (candidate) => rangeProblems(candidate).length === 0,
-  )) {
-    const key = `${placed.moduleIndex}\u0000${placed.channel.zone}`;
-    groups.set(key, [...(groups.get(key) ?? []), placed]);
-  }
-  return [...groups.values()].flatMap(overlapsInGroup);
-}
-
-// Channels of one module and zone, by address then position: each one that
-// starts before the furthest reach so far overlaps the channel that reaches it.
-function overlapsInGroup(group: readonly Placed[]): IoProblem[] {
-  const sorted = group.toSorted(
-    (a, b) => a.channel.address - b.channel.address || a.channelIndex - b.channelIndex,
-  );
+// A feedback may be read through several modules, a command is written by one
+// PLC input only: the second and later channels of a command are the problem.
+function commandMappedTwiceProblems(
+  placedChannels: readonly Placed[],
+  tagsByName: ReadonlyMap<string, IoTag>,
+): IoProblem[] {
+  const firstModules = new Map<string, string>();
   const problems: IoProblem[] = [];
-  let reaching: Placed | undefined;
-  for (const placed of sorted) {
-    const reach = reaching === undefined ? 0 : lastAddressOf(reaching.channel) + 1;
-    if (reaching !== undefined && placed.channel.address < reach) {
+  for (const placed of placedChannels) {
+    const tag = tagsByName.get(placed.channel.tag);
+    if (tag?.direction !== "command") {
+      continue;
+    }
+    const first = firstModules.get(tag.name);
+    if (first === undefined) {
+      firstModules.set(tag.name, placed.module.key);
+    } else {
       problems.push(
         problem(
           placed,
-          "address",
-          "address_overlap",
-          `Address ${placed.channel.address} in zone ${placed.channel.zone} overlaps tag "${reaching.channel.tag}" (${reaching.channel.address}..${reach - 1}).`,
+          "tag",
+          "command_mapped_twice",
+          `Command "${tag.name}" is already mapped in module "${first}": a command is mapped once, in one module.`,
         ),
       );
     }
-    if (reaching === undefined || lastAddressOf(placed.channel) + 1 > reach) {
-      reaching = placed;
-    }
   }
   return problems;
+}
+
+function listenPortProblems(document: IoDocument): IoProblem[] {
+  const owners = new Map<number, string>();
+  const problems: IoProblem[] = [];
+  document.modules.forEach((module, moduleIndex) => {
+    const port = rulesOf(module.transport).listenPort(module.transport);
+    if (port === null) {
+      return;
+    }
+    const owner = owners.get(port);
+    if (owner === undefined) {
+      owners.set(port, module.key);
+    } else {
+      problems.push({
+        path: ["modules", moduleIndex, "transport", "port"],
+        code: "listen_port_used_twice",
+        message: `Port ${port} is already used by module "${owner}": each module listens on its own port.`,
+      });
+    }
+  });
+  return problems;
+}
+
+function transportProblems(
+  document: IoDocument,
+  tagsByName: ReadonlyMap<string, IoTag>,
+): IoProblem[] {
+  return document.modules.flatMap((module, moduleIndex) =>
+    rulesOf(module.transport)
+      .validateModule(module, tagsByName)
+      .map((found) => ({ ...found, path: ["modules", moduleIndex, ...found.path] })),
+  );
 }
 
 function comparePaths(first: IoPath, second: IoPath): number {
@@ -203,7 +178,12 @@ function comparePaths(first: IoPath, second: IoPath): number {
 
 function placedChannelsOf(document: IoDocument): Placed[] {
   return document.modules.flatMap((module, moduleIndex) =>
-    module.channels.map((channel, channelIndex) => ({ channel, moduleIndex, channelIndex })),
+    module.channels.map((channel, channelIndex) => ({
+      channel,
+      module,
+      moduleIndex,
+      channelIndex,
+    })),
   );
 }
 
@@ -216,7 +196,9 @@ export function validateIoDocument(document: IoDocument, tags: readonly IoTag[])
       channelProblems(placed, tagsByName.get(placed.channel.tag)),
     ),
     ...duplicateVariableProblems(placedChannels),
-    ...overlapProblems(placedChannels),
+    ...commandMappedTwiceProblems(placedChannels, tagsByName),
+    ...listenPortProblems(document),
+    ...transportProblems(document, tagsByName),
   ].sort((a, b) => comparePaths(a.path, b.path));
   const mapped = new Set(placedChannels.map(({ channel }) => channel.tag));
   const unmappedTags = tags

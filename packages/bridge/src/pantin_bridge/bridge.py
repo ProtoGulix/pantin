@@ -165,6 +165,12 @@ async def run_bridge(
     # urllib blocks; this runs once, before anything else needs the loop.
     mapping = await asyncio.to_thread(fetch_io_mapping, config.endpoint)
     mapping_id = require_valid_mapping(mapping)
+    for skipped in mapping.skipped_modules:
+        _log.info(
+            "Module %s is a %s module, served by another bridge: skipped.",
+            skipped.key,
+            skipped.kind,
+        )
     bus, _welcome = await BusClient.open(config.endpoint.bus_url, mapping_id)
     background = BackgroundWork()
     services = ModuleServices(bus=bus, background=background)

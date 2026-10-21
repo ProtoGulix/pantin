@@ -226,33 +226,63 @@ nothing: a migrated file is reported, not saved (ADR 0021 point 3).
 ## 7. Where io.json fits
 
 `io.json` is not part of `pantin.json`. It sits beside it and maps tag names to
-CODESYS variables and Modbus addresses, and holds the settings of each Modbus
-module (ADR 0049). The document defines the tags, and `io.json` only points at
-them, so a tag is never defined in two places. Its schema is
-`IoDocumentSchema` in `packages/protocol/src/io-document.ts`, with its JSON
-Schema printed by `pantin schema io`.
+PLC variables and to what a transport needs (a Modbus zone and address, for
+example), and holds the settings of each module (ADR 0049, ADR 0064). The
+document defines the tags, and `io.json` only points at them, so a tag is never
+defined in two places. Its schema is `IoDocumentSchema` in
+`packages/protocol/src/io-document.ts`, with its JSON Schema printed by
+`pantin schema io`. The schema of each transport lives in its own folder of
+`packages/transport-types` ([adding a transport](adding-a-transport.md)).
 
-    { "schema_version": 1,
-      "modules": [ { "key": "m1", "port": 1502, "unitId": 1,
-        "wordOrder": "low_word_first", "watchdogMilliseconds": 1000,
+Version 2 (ADR 0064) carries its modules per transport. A module is
+`{ key, transport, channels }`; `transport` is an object told apart by its
+`kind` (today `modbus_tcp_slave`) that holds the settings of that kind, and each
+channel carries the object named after its module's transport (`modbus`) beside
+the common fields `tag`, `variable` and `comment`:
+
+    { "schema_version": 2,
+      "modules": [ { "key": "m1",
+        "transport": { "kind": "modbus_tcp_slave", "port": 1502, "unitId": 1,
+          "wordOrder": "low_word_first", "watchdogMilliseconds": 1000 },
         "channels": [ { "tag": "pince.valve.coil_a", "variable": "pince_valve_coil_a",
-          "zone": "coil", "address": 0, "ioType": "BOOL", "comment": "" } ] } ] }
+          "comment": "", "modbus": { "zone": "coil", "address": 0, "ioType": "BOOL" } } ] } ] }
 
-Nobody edits it by hand: the viewer (editor: ADR 0049 slice P5, not yet there) creates and edits modules and channels,
+- A module key is unique in the file. A tag is mapped once per module: a
+  feedback may be in several modules (one per transport, for example), a command
+  in one only (`command_mapped_twice`). Two modules that listen cannot share a
+  port (`listen_port_used_twice`).
+- `variable` is an IEC reference of 1 to 8 identifiers joined by `.`. One
+  identifier is a variable the generated GVL declares. A dotted reference
+  (`GVL_IO.Verin1.FinCourseSortie`) names something the PLC program declares
+  already: the GVL leaves it out and lists it in its header comment. NOT
+  VERIFIED: that the CODESYS I/O mapping accepts such a reference.
+- A feedback mapped in two modules shares one variable, declared once in the GVL. NOT
+  VERIFIED: that CODESYS accepts one variable on two input channels of the device tree.
+- **Version 1 files migrate on read** (`core/src/domain/io-migrations.ts`): the
+  Modbus settings move into `transport` and the Modbus fields of a channel into
+  `modbus`. The file on disk stays in version 1 until the next save, and opening
+  it is not an unsaved change. A file in a version above 2 is refused as written
+  by a newer Pantin (`newer_schema_version`).
+
+Nobody edits it by hand: the viewer creates and edits modules and channels,
 proposes addresses and shows the problems, and the core writes the file in
-canonical form on save (channels sorted by zone, address, tag). A rename of a
-tag carries over to its channel; the variable never changes.
+canonical form on save (modules in file order, channels sorted by the
+transport's key, which for Modbus is zone, address, tag). A rename of a tag
+carries over to its channel; the variable never changes.
 
 From the command line:
 
-- `pantin io init <folder>` writes a first `io.json` with every tag in module
-  `m1`; `--update` maps the tags not yet mapped.
+- `pantin io init <folder> [--transport <kind>]` writes a first `io.json` with
+  every tag in module `m1` (`modbus_tcp_slave` by default); `--update` maps the
+  tags not yet mapped, and writes version 2 whatever version the file had.
 - `pantin gvl <folder>` prints the CODESYS global variable list of a valid
-  mapping.
+  mapping, and `pantin io export <folder>` its CSV (module, transport, endpoint,
+  tag, variable, direction, address, plcType, comment). Both read version 1 and
+  version 2 files.
 - `pantin validate <folder>` prints the mapping's problems as
-  `io.json: modules[0].channels[3].address: message`. Channel numbers count the
-  channels in canonical order, which is the file's order unless the file was
-  edited by hand (validate then says so).
+  `io.json: modules[0].channels[3].modbus.address: message`. Channel numbers
+  count the channels in canonical order, which is the file's order unless the
+  file was edited by hand (validate then says so).
 
 ## 8. A minimal example
 
