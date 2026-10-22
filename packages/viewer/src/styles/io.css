@@ -209,6 +209,12 @@
   width: 14ch;
 }
 
+/* A namespace URI or a NodeId prefix is checked by reading it whole. */
+.io-settings__fields .io-field--wide input {
+  width: 46ch;
+  max-width: 100%;
+}
+
 .io-field {
   display: flex;
   flex-direction: column;

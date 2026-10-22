@@ -20,6 +20,7 @@ import {
 } from "./docs-screenshots/capture-editing.ts";
 import { captureExternalEditBanner } from "./docs-screenshots/capture-external-edit.ts";
 import { captureIoView } from "./docs-screenshots/capture-io.ts";
+import { captureOpcua } from "./docs-screenshots/capture-opcua.ts";
 import { captureRedundantJointsPrompt } from "./docs-screenshots/capture-redundant.ts";
 import {
   captureDiagram,
@@ -116,6 +117,7 @@ async function captureLanguage(
     await captureDiagram(session);
     await captureIoView(session, REPOSITORY_ROOT);
     await captureBridgeCard(session);
+    await captureOpcua(session, REPOSITORY_ROOT);
     await captureForcedTag(session);
     await captureConsoleVerbose(session);
     await captureExternalEditBanner(session, pantinsDirectory);

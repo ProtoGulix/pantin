@@ -38,6 +38,7 @@ export interface IoSettingView {
   value: string;
   input: SettingInput;
   options: readonly { value: string; label: string }[];
+  wide: boolean;
 }
 
 export interface IoColumnView {
@@ -49,6 +50,7 @@ export interface IoChannelCell {
   field: string;
   text: string;
   editable: boolean;
+  long: boolean;
 }
 
 export interface IoKindChoice {
@@ -90,6 +92,7 @@ export function moduleSettings(module: IoMappingModule, language: Language): IoS
     value: settingValue(module, spec.name),
     input: spec.input,
     options: (spec.options ?? []).map((value) => ({ value, label: labels.values[value] ?? value })),
+    wide: spec.wide === true,
   }));
 }
 
@@ -119,6 +122,7 @@ export function channelCells(
       field,
       text: labels.values[raw] ?? raw,
       editable: spec.editableChannelFields.includes(field),
+      long: spec.longChannelFields?.includes(field) === true,
     };
   });
 }

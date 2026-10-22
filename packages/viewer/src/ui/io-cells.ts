@@ -36,9 +36,14 @@ function markProblems(target: HTMLElement, messages: readonly string[] | undefin
 }
 
 /** A cell the user cannot type in; focusable so that a problem can lead to it. */
-export function readOnlyCell(id: string, text: string, messages?: readonly string[]): HTMLElement {
+export function readOnlyCell(
+  id: string,
+  text: string,
+  messages?: readonly string[],
+  long = false,
+): HTMLElement {
   const cell = element("td", {
-    className: "io-cell io-cell--derived",
+    className: long ? "io-cell io-cell--derived io-cell--long" : "io-cell io-cell--derived",
     text,
     attributes: { id, tabindex: "-1" },
   });
@@ -67,13 +72,17 @@ export function settingField(
   value: string,
   messages: readonly string[] | undefined,
   onCommit: (text: string) => void,
+  wide = false,
 ): HTMLElement {
   const input = committingTextInput(value, { label, focusKey: id, onCommit });
   input.id = id;
   markProblems(input, messages);
   const caption = element("label", { className: "io-field__label", text: label });
   caption.htmlFor = id;
-  return element("div", { className: "io-field" }, [caption, input]);
+  return element("div", { className: wide ? "io-field io-field--wide" : "io-field" }, [
+    caption,
+    input,
+  ]);
 }
 
 /**

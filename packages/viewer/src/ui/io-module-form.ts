@@ -55,6 +55,7 @@ export function drawModuleSettings(
           setting.value,
           problems.get(setting.name),
           commit(setting.name),
+          setting.wide,
         ),
   );
   const remove = ioButton(

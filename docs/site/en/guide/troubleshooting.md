@@ -131,6 +131,19 @@ in the log.
 | On each connection: a refused request "ILLEGAL_ADDRESS (2)", then "PLC disconnected … watchdog", in a loop | A command of the **Init serveur Modbus** tab targets a zone the module does not have (for example function 16 on `m1`); CODESYS stops after that refusal | Empty the **Init serveur Modbus** tab, or make it target a zone of the module. See [Connect a PLC](/en/guide/connect-a-plc#configure-the-plc-codesys) |
 | In CODESYS, **Valeur actuelle** shows "Pas actualisé (vérifier l'info-bulle)" | The lines are not linked to variables, or unused variables are not refreshed | Link each line to a variable (**ModbusTCPServer Mappage E/S** tab) and set **Toujours actualiser les variables** to "Activé 2 (toujours dans la tâche du cycle de bus)". Offline only |
 
+### The OPC UA bridge
+
+The OPC UA bridge has its own card, **PLC bridge · OPC UA client**. The details are in [Connect a PLC over OPC UA](/en/guide/connect-a-plc-opcua); it has not been tried against a real PLC yet.
+
+| What you see | Cause | What to do |
+| --- | --- | --- |
+| **The PLC's certificate is not trusted** | First contact with this certificate | Compare the thumbprints, then **Trust and restart** (trust applies to every Pantin on the machine) |
+| **The PLC's certificate is not valid** | Expired, not yet valid, or different application URI | Renew it in the PLC: Pantin never overrides it |
+| The module says **the PLC rejected Pantin's certificate** | The PLC does not trust Pantin yet | Trust it with the thumbprints of the **Pantin's certificate** block; Pantin retries every 10 s |
+| **The PLC refused the login** | Wrong user name or password, or the anonymous login refused | Check the name, type the password again, restart |
+| The module says **the PLC does not have the expected variables** | NodeId prefix, GVL name, type or access rights | Read the log: one error line per problem |
+| The module says **the PLC stopped answering** | Silence beyond the **Watchdog (ms)** | Check the network and the PLC program |
+
 ## Forced tags
 
 | What you see | Cause | What to do |

@@ -39,6 +39,13 @@
   color: var(--text-muted);
 }
 
+/* A long value (an OPC UA NodeId) wraps rather than pushing the other columns away. */
+.io-cell--long {
+  min-width: 28ch;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .io-cell--actions {
   white-space: normal;
 }

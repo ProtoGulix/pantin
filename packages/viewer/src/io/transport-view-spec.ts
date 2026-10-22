@@ -14,6 +14,8 @@ export interface SettingSpec {
   // reads and writes itself.
   readFrom?: (transport: TransportConfig) => string;
   patchOf?: (text: string) => Record<string, unknown>;
+  // A long value the user must read whole to check it (a namespace URI, a NodeId prefix).
+  wide?: boolean;
 }
 
 export interface TransportViewSpec {
@@ -26,6 +28,8 @@ export interface TransportViewSpec {
   placeFields: readonly string[];
   // The channel fields typed in place: the others are derived by the core from the tag.
   editableChannelFields: readonly string[];
+  // The channel fields whose value can be long enough to wrap in its cell (an OPC UA NodeId).
+  longChannelFields?: readonly string[];
   // The label key of a channel field value when the raw value is not its own words
   // (the OPC UA identifier: null reads "derived", a NodeId reads "explicit").
   channelValueKey?: (field: string, value: unknown) => string | undefined;

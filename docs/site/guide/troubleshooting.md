@@ -130,6 +130,19 @@ journal.
 | À chaque connexion : une requête refusée « ILLEGAL_ADDRESS (2) », puis « PLC disconnected … watchdog », en boucle | Une commande de l'onglet **Init serveur Modbus** vise une zone que le module n'a pas (par exemple la fonction 16 sur `m1`) ; CODESYS s'arrête après ce refus | Videz l'onglet **Init serveur Modbus**, ou faites-le viser une zone du module. Voir [Connecter un automate](/guide/connect-a-plc#configurer-l-automate-codesys) |
 | Dans CODESYS, **Valeur actuelle** affiche « Pas actualisé (vérifier l'info-bulle) » | Les lignes ne sont pas reliées à des variables, ou les variables inutilisées ne sont pas actualisées | Reliez chaque ligne à une variable (onglet **ModbusTCPServer Mappage E/S**) et réglez **Toujours actualiser les variables** sur « Activé 2 (toujours dans la tâche du cycle de bus) ». Hors ligne seulement |
 
+### Le pont OPC UA
+
+Le pont OPC UA a sa carte, **Pont automate · Client OPC UA**. Le détail est dans [Connecter un automate en OPC UA](/guide/connect-a-plc-opcua) ; il n'a pas encore été essayé contre un vrai automate.
+
+| Ce que vous voyez | Cause | Que faire |
+| --- | --- | --- |
+| **Le certificat de l'automate n'est pas approuvé** | Premier contact avec ce certificat | Comparez les empreintes, puis **Faire confiance et redémarrer** (la confiance vaut pour tous les Pantin de la machine) |
+| **Le certificat de l'automate n'est pas valide** | Certificat expiré, pas encore valide, ou URI d'application différente | Renouvelez-le dans l'automate : Pantin ne passe jamais outre |
+| Le module dit **l'automate a rejeté le certificat de Pantin** | L'automate ne fait pas encore confiance à Pantin | Faites-lui confiance avec les empreintes du bloc **Certificat de Pantin** ; Pantin réessaie toutes les 10 s |
+| **L'automate a refusé l'identification** | Mauvais nom d'utilisateur ou mot de passe, ou connexion anonyme refusée | Vérifiez le nom, saisissez de nouveau le mot de passe, redémarrez |
+| Le module dit **l'automate n'a pas les variables attendues** | Préfixe du NodeId, nom de la GVL, type ou droits d'accès | Lisez le journal : une ligne d'erreur par problème |
+| Le module dit **l'automate ne répond plus** | Silence au-delà du **Chien de garde (ms)** | Vérifiez le réseau et le programme de l'automate |
+
 ## Tags forcés
 
 | Ce que vous voyez | Cause | Que faire |

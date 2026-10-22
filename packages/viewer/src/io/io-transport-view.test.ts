@@ -72,9 +72,9 @@ describe("an OPC UA module in the I/O view", () => {
       "Type",
     ]);
     expect(channelCells("opcua_client", channel, "fr")).toEqual([
-      { field: "resolvedIdentifier", text: "s=GVL_Pantin.extend", editable: false },
-      { field: "identifier", text: "dérivé", editable: false },
-      { field: "iecType", text: "BOOL", editable: false },
+      { field: "resolvedIdentifier", text: "s=GVL_Pantin.extend", editable: false, long: true },
+      { field: "identifier", text: "dérivé", editable: false, long: false },
+      { field: "iecType", text: "BOOL", editable: false, long: false },
     ]);
     const explicit = {
       ...channel,
@@ -110,6 +110,11 @@ describe("an OPC UA module in the I/O view", () => {
     expect(moduleSettings(user, "en").find((setting) => setting.name === "userName")?.value).toBe(
       "bob",
     );
+  });
+
+  it("gives the namespace URI and the NodeId prefix a wide field, to be read whole", () => {
+    const wide = moduleSettings(module, "en").filter((setting) => setting.wide);
+    expect(wide.map((setting) => setting.name)).toEqual(["namespaceUri", "nodeIdPrefix"]);
   });
 
   it("is offered when creating a module", () => {

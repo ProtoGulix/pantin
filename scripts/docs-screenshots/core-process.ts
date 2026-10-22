@@ -69,6 +69,8 @@ export async function startCore(options: CoreOptions): Promise<RunningCore> {
       // The Home tab lists the examples only when the core is given their folder (ADR 0062).
       "--examples-dir",
       "examples",
+      "--opcua-bridge",
+      "packages/opcua-bridge/src/main.ts",
       "--bridge-python",
       "packages/bridge/.venv/bin/python",
       "--step-converter-python",

@@ -31,8 +31,8 @@ export const OPCUA_VIEW: TransportViewSpec = {
     { name: "securityMode", input: "choice", options: SECURITY_MODES },
     { name: "securityPolicy", input: "choice", options: SECURITY_POLICIES },
     { name: "userName", input: "text", readFrom: userNameOf, patchOf: authPatchOf },
-    { name: "namespaceUri", input: "text" },
-    { name: "nodeIdPrefix", input: "text" },
+    { name: "namespaceUri", input: "text", wide: true },
+    { name: "nodeIdPrefix", input: "text", wide: true },
     { name: "gvlName", input: "text" },
     { name: "samplingMilliseconds", input: "integer" },
     { name: "publishingMilliseconds", input: "integer" },
@@ -41,6 +41,7 @@ export const OPCUA_VIEW: TransportViewSpec = {
   channelFields: ["resolvedIdentifier", "identifier", "iecType"],
   placeFields: ["resolvedIdentifier"],
   editableChannelFields: [],
+  longChannelFields: ["resolvedIdentifier"],
   channelValueKey: (field, value) =>
     field === "identifier" ? (value === null ? "derived" : "explicit") : undefined,
 };

@@ -86,9 +86,9 @@ describe("the transport columns", () => {
     ]);
     const first = mapping.modules[0]?.channels[0] as IoMappedChannel;
     expect(channelCells("modbus_tcp_slave", first, "fr")).toEqual([
-      { field: "zone", text: "Bobine", editable: false },
-      { field: "address", text: "0", editable: true },
-      { field: "ioType", text: "BOOL", editable: false },
+      { field: "zone", text: "Bobine", editable: false, long: false },
+      { field: "address", text: "0", editable: true, long: false },
+      { field: "ioType", text: "BOOL", editable: false, long: false },
     ]);
   });
 

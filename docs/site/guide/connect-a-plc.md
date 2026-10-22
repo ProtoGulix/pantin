@@ -5,7 +5,7 @@ simulateur est l'esclave, l'automate est le maître. Le programme de l'automate
 garde sa configuration d'E/S habituelle et interroge les modules simulés comme il
 interrogerait des modules réels.
 
-Cette page décrit la connexion Modbus TCP. La vue E/S sait aussi créer un module « Client OPC UA » et le panneau de gauche a alors une seconde carte, **Pont automate · Client OPC UA** ; la connexion OPC UA n'est pas encore décrite ici.
+Cette page décrit la connexion Modbus TCP. La vue E/S sait aussi créer un module « Client OPC UA » et le panneau de gauche a alors une seconde carte, **Pont automate · Client OPC UA** ; la connexion OPC UA est décrite dans [Connecter un automate en OPC UA](/guide/connect-a-plc-opcua).
 
 Cette page décrit le pont, le réglage réseau, la GVL et les précautions. Pour
 construire la machine et sa liste d'E/S, suivez le [tutoriel](/guide/tutorial).

@@ -48,6 +48,19 @@ All notable changes to Pantin. The format follows
   import dialog shows a proposed NodeId prefix per OPC UA module, marked "à vérifier", with its own
   apply button. Closing a Pantin with "stop the bridge" stops every running bridge. The guide pages (French and English) describe the new panels, columns, dialog
   block and card titles; the page on connecting over OPC UA is the next slice (S6).
+- Guide "Connecter un automate en OPC UA" / "Connecting a PLC over OPC UA", slice S6 (ADR 0065), in
+  French and English, in the sidebar next to "Connecter un automate" and linked from it. It covers
+  Modbus or OPC UA, the CODESYS side (written from public documentation and marked NOT VERIFIED:
+  the OPC UA path is tested against Pantin's own OPC UA test server, not yet against a real
+  CODESYS PLC, which is S7), the module settings, the NodeId prefix proposed by the symbol import,
+  the target address and password at start, the allowed addresses, the two-sided certificate trust
+  ("Faire confiance et redémarrer", then Pantin's certificate in the PLC), the reasons in words and
+  a troubleshooting table. The troubleshooting page gains an OPC UA section. Three new pictures
+  (the OPC UA card, the I/O view with an OPC UA module, the symbol import with a prefix proposal),
+  taken with no OPC UA server; the trust prompt has no picture. The screenshot script starts its
+  core with `--opcua-bridge`. In the I/O view, a long OPC UA NodeId wraps in its cell instead of
+  pushing the other columns off-screen, and the namespace URI and NodeId prefix fields are wide
+  enough to read whole.
 - Tag bus version 2 (ADR 0065 point 7): a `plc` hello carries its `transport` and the id of that
   transport's projection, there is one `plc` connection per (Pantin, transport), `io_changed`
   goes only to the connections whose projection changed, the watchdog zeroes the commands of

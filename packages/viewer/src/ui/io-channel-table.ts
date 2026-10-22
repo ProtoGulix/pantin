@@ -70,7 +70,7 @@ function transportCells({ row, id, edit }: RowContext): HTMLElement[] {
   return row.cells.map((cell) =>
     cell.editable
       ? edit(cell.field, cell.text)
-      : readOnlyCell(id(cell.field), cell.text, row.problems.get(cell.field)),
+      : readOnlyCell(id(cell.field), cell.text, row.problems.get(cell.field), cell.long),
   );
 }
 

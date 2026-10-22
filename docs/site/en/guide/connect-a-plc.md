@@ -4,7 +4,7 @@ Pantin presents itself to the PLC as **Modbus TCP I/O modules**: the simulator i
 the slave, the PLC is the master. The PLC program keeps its usual I/O
 configuration and queries the simulated modules as it would query real modules.
 
-This page describes the Modbus TCP connection. The I/O view can also create an "OPC UA client" module, and the left panel then has a second card, **PLC bridge · OPC UA client**; the OPC UA connection is not described here yet.
+This page describes the Modbus TCP connection. The I/O view can also create an "OPC UA client" module, and the left panel then has a second card, **PLC bridge · OPC UA client**; the OPC UA connection is described in [Connect a PLC over OPC UA](/en/guide/connect-a-plc-opcua).
 
 This page describes the bridge, the network setting, the GVL and the
 precautions. To build the machine and its I/O list, follow the

@@ -37,6 +37,7 @@ const frenchGuide = [
     text: "Connecter un automate",
     items: [
       { text: "Connecter un automate", link: "/guide/connect-a-plc" },
+      { text: "Connecter un automate en OPC UA", link: "/guide/connect-a-plc-opcua" },
       {
         text: "Tutoriel : reprendre les variables de l'automate",
         link: "/guide/tutorial-plc-symbols",
@@ -81,6 +82,7 @@ const englishGuide = [
     text: "Connecting a PLC",
     items: [
       { text: "Connecting a PLC", link: "/en/guide/connect-a-plc" },
+      { text: "Connecting a PLC over OPC UA", link: "/en/guide/connect-a-plc-opcua" },
       { text: "Tutorial: reuse the PLC's variables", link: "/en/guide/tutorial-plc-symbols" },
     ],
   },
