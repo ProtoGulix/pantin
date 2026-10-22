@@ -1,5 +1,6 @@
 packages:
   - packages/*
+  - tests/closed-loop
 allowBuilds:
   # The platform binary comes from an optional dependency: its install script only checks it.
   esbuild: false

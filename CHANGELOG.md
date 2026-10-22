@@ -30,6 +30,14 @@ All notable changes to Pantin. The format follows
   end it (`server_certificate_invalid`); a PLC that refuses Pantin's certificate is retried
   every 10 s. stdout carries status lines only, and the bridge opens no listening socket.
   Not reachable from the viewer yet (S5).
+- Closed loop of both bridges, slice S4 (ADR 0065): the private package
+  `@pantin/closed-loop-tests` in `tests/closed-loop/`, run by `pnpm check`. It spawns the real
+  core, the Modbus bridge and the OPC UA bridge on a copy of `plc-cylinder` with one module of
+  each kind, an in-process OPC UA server for the PLC and a raw Modbus client. A command written
+  on the OPC UA server extends and retracts the cylinder, and the feedback comes back on both
+  links; the OPC UA start goes through the trust flow on both sides (the server certificate is
+  trusted by Pantin, then Pantin's certificate by the PLC after its rejection). A dependency rule
+  keeps the package to the protocol.
 - Tag bus version 2 (ADR 0065 point 7): a `plc` hello carries its `transport` and the id of that
   transport's projection, there is one `plc` connection per (Pantin, transport), `io_changed`
   goes only to the connections whose projection changed, the watchdog zeroes the commands of

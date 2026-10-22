@@ -13,6 +13,7 @@
     { "path": "packages/viewer" },
     { "path": "packages/cli" },
     { "path": "tests" },
+    { "path": "tests/closed-loop" },
     { "path": "scripts" }
   ]
 }

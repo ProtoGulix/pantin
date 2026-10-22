@@ -14,10 +14,11 @@ module.exports = [
   {
     name: "node-opcua-only-in-the-opcua-folder",
     comment:
-      "node-opcua is imported by the files of opcua-bridge/src/opcua/ alone, so the library stays behind one adapter folder (ADR 0065 point 1, S3 amendment). Tests and their support files may import it.",
+      "node-opcua is imported by the files of opcua-bridge/src/opcua/ alone, so the library stays behind one adapter folder (ADR 0065 point 1, S3 amendment). Tests and their support files may import it, and so may the PLC server of the closed-loop test.",
     severity: "error",
     from: {
-      pathNot: "^packages/opcua-bridge/src/opcua/|\\.test\\.ts$|/test-support/",
+      pathNot:
+        "^packages/opcua-bridge/src/opcua/|^tests/closed-loop/support/plc-server\\.ts$|\\.test\\.ts$|/test-support/",
     },
     to: { path: "node-opcua" },
   },

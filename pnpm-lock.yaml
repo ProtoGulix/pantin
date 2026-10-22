@@ -353,6 +353,19 @@ importers:
         specifier: 8.3.1
         version: 8.3.1(@types/node@24.19.0)(jiti@2.7.0)(yaml@2.9.1)
 
+  tests/closed-loop:
+    dependencies:
+      '@pantin/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
+    devDependencies:
+      node-opcua-certificate-manager:
+        specifier: 2.186.17
+        version: 2.186.17
+      node-opcua-server:
+        specifier: 2.186.17
+        version: 2.186.17
+
 packages:
 
   '@algolia/abtesting@1.26.0':

@@ -50,6 +50,7 @@ Monorepo :
     packages/opcua-bridge pont client OPC UA (TypeScript, node-opcua, processus séparé lancé par le coeur à la demande, ADR 0065)
     packages/cli         validateur, générateur de variables CODESYS
     packages/step-converter  conversion STEP vers GLB (Python, OpenCascade, processus séparé, ADR 0009)
+    tests/closed-loop    test en boucle fermée des deux ponts (ADR 0065)
     parts/               pièces incluses (dossiers autonomes)
     examples/            projets de démonstration complets
     docs/decisions       une note courte par décision d'architecture (ADR)
@@ -225,7 +226,7 @@ Ne passe à la phase suivante que si le critère de sortie est validé par un te
 4. Drives : discret, position, vitesse, défauts injectables. Sortie : un vérin double effet se comporte comme décrit, y compris sans rappel ressort.
 5. Capteurs de liaison. Sortie : fins de course qui basculent aux bonnes positions.
 6. Produits et capteurs de présence, convoyeur. Sortie : un carton traverse un convoyeur, un capteur le détecte, de façon reproductible.
-7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA client : ADR 0065). Sortie : un test automatique en boucle fermée, un client Modbus jouant l'automate, dans pnpm check ; un programme CODESYS réel a piloté examples/plc-cylinder dans les deux sens le 2026-10-18 (CODESYS Control Win V3 x64, démonstration manuelle de l'utilisateur, réglages dans le guide Connecter un automate).
+7. Pont PLC : Modbus TCP, générateur de variables CODESYS depuis io.json (OPC UA client : ADR 0065). Sortie : un test automatique en boucle fermée dans pnpm check, un client Modbus jouant l'automate (ADR 0045), et un serveur OPC UA jouant l'automate face aux deux ponts (tests/closed-loop, ADR 0065) ; un programme CODESYS réel a piloté examples/plc-cylinder en Modbus dans les deux sens le 2026-10-18 (CODESYS Control Win V3 x64, démonstration manuelle de l'utilisateur, réglages dans le guide Connecter un automate).
 8. UI d'édition : bibliothèque de pièces, éditeur de scène, éditeur de pièce (import, choix des noeuds, c'est-à-dire découpage en groupes à la main selon l'ADR 0055, type de liaison, limites, aperçu par curseurs, écriture du manifeste), mapping I/O, inspecteur avec forçage de tags. Sortie : on crée une machine complète sans éditer de fichier à la main.
 9. Communauté et multi instance : index de packs dans un dépôt git, CI qui exécute un test de scénario par pièce, documentation, plusieurs instances dans un même coeur. Sortie : une pièce tierce s'installe sans modifier le coeur.
 

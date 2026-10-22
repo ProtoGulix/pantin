@@ -67,3 +67,30 @@ describe("workspace packages", () => {
     });
   });
 });
+
+describe("the closed-loop test package", () => {
+  const folder = join(repositoryRoot, "tests", "closed-loop");
+
+  it("is a private workspace package listed in the workspace file and the root project", () => {
+    expect(readJson(join(folder, "package.json"))).toMatchObject({
+      name: "@pantin/closed-loop-tests",
+      private: true,
+      license: "Apache-2.0",
+      type: "module",
+    });
+    expect(readFileSync(join(repositoryRoot, "pnpm-workspace.yaml"), "utf8")).toContain(
+      "tests/closed-loop",
+    );
+    expect(readJson(join(repositoryRoot, "tsconfig.json"))).toMatchObject({
+      references: expect.arrayContaining([{ path: "tests/closed-loop" }]),
+    });
+  });
+
+  it("depends on the protocol alone among the workspace packages", () => {
+    const manifest = readJson(join(folder, "package.json")) as {
+      dependencies: Record<string, string>;
+    }; // Our own manifest, read in a test: the shape is checked by the assertions below.
+
+    expect(Object.keys(manifest.dependencies)).toEqual(["@pantin/protocol"]);
+  });
+});

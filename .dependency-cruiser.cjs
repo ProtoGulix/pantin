@@ -34,6 +34,14 @@ module.exports = {
     ...isolationRules,
     ...opcuaBridgeRules,
     {
+      name: "closed-loop-tests-import-only-protocol",
+      comment:
+        "The closed-loop test spawns the core and the bridges as processes: among the workspace packages it imports the protocol only, never a core or a bridge (ADR 0065 point 14).",
+      severity: "error",
+      from: { path: "^tests/closed-loop/" },
+      to: { path: "^packages/(?!protocol/)|^@pantin/(?!protocol$)" },
+    },
+    {
       name: "viewer-config-imports-only-build-version",
       comment:
         "The viewer's vite.config.ts may import core's build-version module and nothing else of core.",

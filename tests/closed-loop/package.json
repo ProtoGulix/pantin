@@ -1,0 +1,15 @@
+{
+  "name": "@pantin/closed-loop-tests",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Closed-loop test of the two PLC bridges: the real core and bridges as processes, a PLC stood in for by an OPC UA server and a Modbus client (ADR 0065).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@pantin/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "node-opcua-certificate-manager": "2.186.17",
+    "node-opcua-server": "2.186.17"
+  }
+}

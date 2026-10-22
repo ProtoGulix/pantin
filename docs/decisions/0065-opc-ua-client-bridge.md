@@ -736,3 +736,49 @@ server, not against CODESYS.
     link; the loser reads the winner's file.
 - **Point 14:** no listening socket is checked on Linux through `/proc`. `PANTIN_OPCUA_BRIDGE`
   is set by `pnpm test` and read by the closed loop of S4.
+
+## Amendment of 2026-10-22, S4
+
+Written when slice S4 was built. Settled readings, adding detail and contradicting no decision;
+the items marked NOT VERIFIED were not measured.
+
+- **Point 14, the package:** `tests/closed-loop/` holds the test file and a `support/` folder
+  (core process, HTTP API client, PLC server, raw Modbus client, the Pantin copy). The root
+  `vitest.config.ts` already matched `tests/**/*.test.ts`, so `pnpm test` runs it with the
+  viewer colour tests. The `tests/` TypeScript project excludes the folder, which has its own.
+  A dependency-cruiser rule (`closed-loop-tests-import-only-protocol`) keeps it to protocol;
+  `plc-server.ts` is the one file outside the bridge allowed to import node-opcua.
+- **How io is prepared:** the test copies `examples/plc-cylinder` into a temporary Pantins
+  folder and writes its `io.json` before the core starts, since the OPC UA port is only known
+  once the server listens. The core is then driven through its HTTP API alone. Modbus carries
+  the two switches and the position as feedback; OPC UA carries both commands and the extended
+  switch and the position, so a feedback is mapped in both modules (a tag is mapped once per
+  module, a command once overall). The variables are named differently per module (a variable
+  is unique across modules).
+- **How trust is done:** the test exercises the real flow, on both sides.
+  1. The first OPC UA start fails with `untrusted_server_certificate`: the server's certificate
+     is unknown to Pantin.
+  2. The restart passes the failure's `certificate.sha256` as `trust`. The test server now
+     rejects Pantin's certificate, and the module reports `certificate_rejected` (read through
+     `GET .../bridges`).
+  3. The test plays the operator: it takes the rejected certificate whose sha256 matches the
+     status's `clientCertificate`, and trusts it on the server (`trustCertificate`).
+  4. The bridge retries by itself and the module connects.
+
+  The server has its own PKI in a temporary folder (`serverCertificateManager` with
+  `rootFolder` and `automaticallyAcceptUnknownCertificate: false`, and a second one for
+  `userCertificateManager`), so a run writes nothing to the user's configuration directory.
+  This needs `node-opcua-certificate-manager` 2.186.17 (same pin as opcua-bridge), added as a
+  devDependency of the test package with the user's approval of 2026-10-22. The security is
+  `SignAndEncrypt` with Basic256Sha256.
+- **Modbus connected:** a raw client counts as a PLC from its first request, as in
+  `bridge-real.test.ts`.
+- **Runtime and skips:** about 20 s for the file, of which about 10 s is the wait for the retry after
+  `certificate_rejected`: the interval (ADR point 10) is not configurable in the bridge, and
+  no test-only knob was added. Waits are polls to a deadline or server
+  events. The describe is skipped, with the reason in its title only then, when `PANTIN_BRIDGE_PYTHON` or
+  `PANTIN_OPCUA_BRIDGE` is missing. Each child is stopped in `afterAll`: the only direct
+  child is the core: SIGTERM, which makes it stop its bridges, then SIGKILL after 10 s. If the
+  core had to be killed, its bridges could be orphaned (NOT VERIFIED).
+- **NOT VERIFIED:** Windows (the paths, SIGTERM); CODESYS itself, which stays the manual
+  stage 2.
