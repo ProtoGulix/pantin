@@ -1,6 +1,7 @@
 import type { DriveRuntime } from "@pantin/protocol";
 import type { JournalView } from "../bridge/bridge-journal.ts";
 import type { BridgeView } from "../bridge/bridge-view.ts";
+import type { OpcuaBridgeView } from "../bridge/opcua-view.ts";
 import { effectiveLayout } from "../central-layout.ts";
 import type { ClockView } from "../clock/clock-model.ts";
 import type { ConsoleView } from "../console/console-view.ts";
@@ -56,6 +57,7 @@ export interface Screen {
   showConsoleLive(view: ConsoleView | null): void;
   showClock(view: ClockView, intents: PanelIntents): void;
   showBridge(view: BridgeView | null, intents: PanelIntents): void;
+  showOpcuaBridge(view: OpcuaBridgeView | null, intents: PanelIntents): void;
   showBridgeJournal(view: JournalView | null, intents: PanelIntents): void;
   showCameraOrientation(alpha: number, beta: number): void;
   /** The theme changed: what the screen draws as data colours follows. */
@@ -185,6 +187,7 @@ export function createScreen(): Screen {
     showConsoleLive: (view) => consolePanel.showLive(view),
     showClock: (view, intents) => transportBar.render(view, intents),
     showBridge: (view, intents) => sidePanel.showBridge(view, intents),
+    showOpcuaBridge: (view, intents) => sidePanel.showOpcuaBridge(view, intents),
     showBridgeJournal: (view, intents) => journal.render(view, intents),
     showCameraOrientation: (alpha, beta) => viewCube.showOrientation(alpha, beta),
     setTheme: (theme) => viewCube.setTheme(theme),

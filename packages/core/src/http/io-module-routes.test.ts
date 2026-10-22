@@ -157,3 +157,21 @@ describe("DELETE .../io/modules/:moduleKey", () => {
     expect((await io.call("DELETE", "/modules/m2")).status).toBe(404);
   });
 });
+
+describe("PATCH .../io/modules/:moduleKey nodeIdPrefix (ADR 0065 point 12)", () => {
+  it("sets the NodeId prefix of an OPC UA module and keeps its other settings", async () => {
+    const created = await io.call("POST", "/modules", {
+      transport: { kind: "opcua_client", namespaceUri: "urn:test" },
+    });
+    expect(created.status).toBe(201);
+    const call = await io.call("PATCH", "/modules/m1", {
+      transport: { kind: "opcua_client", nodeIdPrefix: "|var|Device.Application." },
+    });
+    expect(call.status).toBe(200);
+    expect(call.answer.modules[0]?.transport).toMatchObject({
+      kind: "opcua_client",
+      nodeIdPrefix: "|var|Device.Application.",
+      namespaceUri: "urn:test",
+    });
+  });
+});

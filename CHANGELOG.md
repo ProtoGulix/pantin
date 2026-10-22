@@ -38,6 +38,16 @@ All notable changes to Pantin. The format follows
   links; the OPC UA start goes through the trust flow on both sides (the server certificate is
   trusted by Pantin, then Pantin's certificate by the PLC after its rejection). A dependency rule
   keeps the package to the protocol.
+- OPC UA client in the viewer, slice S5 (ADR 0065): the I/O view creates and edits OPC UA client
+  modules (transport choice at creation, heading "Client OPC UA · port 4840 · Signer et chiffrer ·
+  Basic256Sha256 · anonyme", columns Noeud, Identifiant dérivé or explicite, Type). A second bridge
+  card, "Pont automate · Client OPC UA" (the Modbus card is now "Pont automate · Modbus TCP"),
+  has a target address per module, a password field for user logins, Pantin's certificate
+  thumbprints, the "Faire confiance et redémarrer" trust prompt on an unknown server
+  certificate and the reasons in words. `SymbolImportPreview` gains `moduleProposals` (core): the
+  import dialog shows a proposed NodeId prefix per OPC UA module, marked "à vérifier", with its own
+  apply button. Closing a Pantin with "stop the bridge" stops every running bridge. The guide pages (French and English) describe the new panels, columns, dialog
+  block and card titles; the page on connecting over OPC UA is the next slice (S6).
 - Tag bus version 2 (ADR 0065 point 7): a `plc` hello carries its `transport` and the id of that
   transport's projection, there is one `plc` connection per (Pantin, transport), `io_changed`
   goes only to the connections whose projection changed, the watchdog zeroes the commands of

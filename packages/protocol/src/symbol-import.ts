@@ -89,6 +89,22 @@ export const UnusedSymbolSchema = z.strictObject({
 });
 export type UnusedSymbol = z.infer<typeof UnusedSymbolSchema>;
 
+// Why the core proposes a module setting. One code today; the client translates it.
+export const MODULE_PROPOSAL_REASONS = ["from_project_info"] as const;
+export const ModuleProposalReasonSchema = z.enum(MODULE_PROPOSAL_REASONS);
+export type ModuleProposalReason = z.infer<typeof ModuleProposalReasonSchema>;
+
+// A hint for an OPC UA module: the NodeId prefix the symbol file suggests. It is "to
+// check" (the NodeId may use the runtime name, not the device name of the file), so the
+// core never applies it: the user does, with PATCH .../io/modules/:key and
+// `transport.nodeIdPrefix`, a request apart from POST .../io/variables.
+export const ModuleProposalSchema = z.strictObject({
+  module: KeySchema,
+  nodeIdPrefix: z.string().min(1).max(255),
+  reason: ModuleProposalReasonSchema,
+});
+export type ModuleProposal = z.infer<typeof ModuleProposalSchema>;
+
 export const SymbolImportPreviewSchema = z.strictObject({
   // The id of the format that read the file.
   format: z.string().min(1),
@@ -103,6 +119,8 @@ export const SymbolImportPreviewSchema = z.strictObject({
   unchanged: z.array(SymbolMatchSchema),
   unmatchedSignals: z.array(UnmatchedSignalSchema),
   unusedSymbols: z.array(UnusedSymbolSchema),
+  // Only OPC UA modules whose prefix differs from the one the file suggests.
+  moduleProposals: z.array(ModuleProposalSchema),
 });
 export type SymbolImportPreview = z.infer<typeof SymbolImportPreviewSchema>;
 

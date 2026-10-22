@@ -61,8 +61,8 @@ Les défauts et les produits sont effacés par **Remise à zéro de la simulatio
 
 Le fichier `io.json` relie les tags aux variables de l'automate et aux adresses Modbus. Il **ne définit jamais** un tag : les tags viennent du Pantin. Il ne contient que :
 
-- des **modules**, chacun avec sa **Clé** et son **transport** (le moyen de parler à l'automate). Le seul transport disponible est `modbus_tcp_slave` (**Modbus TCP esclave**), dont les réglages sont le **Port**, l'**Adresse d'unité**, l'**Ordre des mots** et le **Chien de garde (ms)** ;
-- des **voies** : un **Tag**, une **Variable**, un **Commentaire** et, pour le transport Modbus, une **Zone**, une **Adresse** et un **Type**.
+- des **modules**, chacun avec sa **Clé** et son **transport** (le moyen de parler à l'automate). Deux transports sont proposés : `modbus_tcp_slave` (**Modbus TCP esclave**), dont les réglages sont le **Port**, l'**Adresse d'unité**, l'**Ordre des mots** et le **Chien de garde (ms)**, et `opcua_client` (**Client OPC UA**), dont les réglages sont notamment le **Port**, le **Mode de sécurité**, la **Politique de sécurité**, le **Nom d'utilisateur**, le **Préfixe du NodeId** et le **Nom de la GVL** ;
+- des **voies** : un **Tag**, une **Variable**, un **Commentaire** et, pour le transport Modbus, une **Zone**, une **Adresse** et un **Type**, et pour le transport OPC UA, un **Identifiant** (facultatif) et un **Type**.
 
 Le fichier est en version 2 : les réglages du transport sont dans l'objet `transport` du module, et la zone, l'adresse et le type dans l'objet `modbus` de la voie. Un tag de retour (capteur, position...) peut être affecté à plusieurs modules, avec la même variable, déclarée une seule fois ; une commande n'est affectée qu'à un seul module. La vue E/S le propose : un signal de retour déjà affecté dans un autre module apparaît dans **Signaux à affecter** avec la mention **déjà dans : m1**.
 

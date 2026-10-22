@@ -18,7 +18,7 @@ import {
   deleteAssembly,
   requestAssemblyDeletion,
 } from "./assembly-actions.ts";
-import { stopBridge } from "./bridge-actions.ts";
+import { stopAllBridges } from "./bridge-actions.ts";
 import { confirmDeviceDelete } from "./device-deletion-actions.ts";
 import { cancelFeedReplacement, confirmFeedReplacement } from "./diagram-edit-actions.ts";
 import { cancelReload, confirmReload } from "./external-edit-actions.ts";
@@ -70,7 +70,7 @@ async function confirmDelete(store: ViewerStore): Promise<void> {
 // anything else, and a refusal leaves the prompt open with the error shown.
 async function stopBridgeIfAsked(store: ViewerStore): Promise<boolean> {
   const { closeBridgeNotice, closeStopsBridge } = store.state;
-  return !(closeBridgeNotice && closeStopsBridge) || (await stopBridge(store));
+  return !(closeBridgeNotice && closeStopsBridge) || (await stopAllBridges(store));
 }
 
 export function setCloseStopsBridge(store: ViewerStore, stops: boolean): void {
@@ -98,7 +98,7 @@ async function discardThenClose(store: ViewerStore): Promise<void> {
 // The bridge is stopped first: if the core refuses, the prompt stays and the
 // message line says why, instead of leaving a bridge nobody can reach.
 async function stopBridgeThenClose(store: ViewerStore): Promise<void> {
-  if (await stopBridge(store)) {
+  if (await stopAllBridges(store)) {
     closeNow(store);
   }
 }

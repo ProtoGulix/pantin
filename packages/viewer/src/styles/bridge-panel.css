@@ -179,3 +179,46 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+
+/* The OPC UA card (ADR 0065 point 13): a block per module, thumbprints as selectable text. */
+.opcua-modules {
+  gap: 8px;
+}
+
+.opcua-module {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.opcua-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.opcua-field__label {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.opcua-thumbprint {
+  display: flex;
+  flex-direction: column;
+  margin: 2px 0;
+}
+
+.opcua-thumbprint__label {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.opcua-thumbprint__value {
+  font-family: var(--font-source);
+  word-break: break-all;
+  user-select: all;
+}
+
+.bridge-panel__certificate summary {
+  cursor: pointer;
+}

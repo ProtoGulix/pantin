@@ -1,4 +1,4 @@
-import type { BridgeView } from "../bridge/bridge-view.ts";
+import type { BridgeFailureView } from "../bridge/bridge-failure-view.ts";
 import { element } from "./dom.ts";
 import { glyphThenText } from "./state-glyph.ts";
 
@@ -6,7 +6,7 @@ import { glyphThenText } from "./state-glyph.ts";
 // the message, and the log of the bridge process folded away.
 
 export function bridgeFailureBlock(
-  view: BridgeView,
+  view: { failure: BridgeFailureView | null },
   onToggle: (open: boolean) => void,
   logOpen: boolean,
 ) {

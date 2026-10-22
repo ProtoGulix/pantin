@@ -53,7 +53,7 @@ l'objet « IEC Symbol Set Configuration » des versions récentes ne sont pas v�
 
 ![La vue E/S avec le module m1, ses réglages et le tableau des voies](/screenshots/fr/io-view.webp)
 
-1. Si vous n'avez pas votre copie, cliquez la carte **plc-cylinder** de la section **Exemples** de l'Accueil, gardez le nom proposé et cliquez **Créer** ; sinon ouvrez votre copie. Dans le bloc **Pont automate**, cliquez
+1. Si vous n'avez pas votre copie, cliquez la carte **plc-cylinder** de la section **Exemples** de l'Accueil, gardez le nom proposé et cliquez **Créer** ; sinon ouvrez votre copie. Dans le bloc **Pont automate · Modbus TCP**, cliquez
    **Config E/S** : la vue **E/S** s'affiche.
 2. Cliquez **Importer des symboles API…** dans la barre de la vue. Si le bouton est
    grisé, le mapping n'est pas lisible : lisez l'info-bulle et les problèmes listés
@@ -164,7 +164,7 @@ colonne **Variable** de l'onglet **ModbusTCPServer Mappage E/S** :
    de la nouvelle GVL.
 2. Compilez, connectez-vous à l'automate (**En ligne**), puis démarrez le programme.
 3. Dans Pantin, enregistrez, vérifiez que la vue **E/S** n'a aucun problème, puis
-   cliquez **Démarrer** dans le bloc **Pont automate**. L'état passe à **En marche**,
+   cliquez **Démarrer** dans le bloc **Pont automate · Modbus TCP**. L'état passe à **En marche**,
    puis le module affiche **automate connecté** dès que CODESYS l'interroge.
 4. Vérifiez la boucle : activez dans votre programme la commande qui fait sortir le
    vérin. Il sort à l'écran en 2,5 s environ, et le capteur de fin de course sortie

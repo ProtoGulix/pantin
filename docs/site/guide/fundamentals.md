@@ -32,7 +32,7 @@ Pantin se compose de trois processus. Ils communiquent par le réseau local de v
 
 - **Le cœur** contient toute la simulation : liaisons, préactionneurs, capteurs, produits, physique, tags. Il lit et écrit les fichiers du Pantin. Il tourne sans fenêtre ouverte.
 - **Le viewer** est la page web que vous ouvrez dans le navigateur. Il affiche l'état envoyé par le cœur et sert d'interface d'édition. Il ne calcule rien de la simulation.
-- **Le pont automate** est un petit processus Python que le cœur lance à la demande (bouton **Démarrer** de la carte **Pont automate**). Il se présente à l'automate comme des modules d'entrées/sorties Modbus TCP.
+- **Le pont automate** est un petit processus Python que le cœur lance à la demande (bouton **Démarrer** de la carte **Pont automate · Modbus TCP**). Il se présente à l'automate comme des modules d'entrées/sorties Modbus TCP.
 
 ### La simulation ne dépend pas du navigateur
 
@@ -110,7 +110,7 @@ Ouvrir le réseau est un choix explicite, limité au réseau local privé :
 - toute connexion dont l'adresse source est hors des plages privées est fermée avant la moindre lecture ;
 - une liste d'adresses autorisées (`--allow`) peut seulement restreindre l'accès, jamais l'élargir.
 
-Pour le pont automate, la carte **Pont automate** propose le même choix : **Local uniquement (127.0.0.1)** ou **Réseau privé**, avec une **Adresse d'écoute** et la liste des **Automates autorisés (IP ou CIDR, séparés par des virgules)**. La marche à suivre est dans [Connecter un automate](/guide/connect-a-plc).
+Pour le pont automate, la carte **Pont automate · Modbus TCP** propose le même choix : **Local uniquement (127.0.0.1)** ou **Réseau privé**, avec une **Adresse d'écoute** et la liste des **Automates autorisés (IP ou CIDR, séparés par des virgules)**. La marche à suivre est dans [Connecter un automate](/guide/connect-a-plc).
 
 ## Installer et démarrer
 

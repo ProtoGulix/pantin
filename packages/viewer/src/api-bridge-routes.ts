@@ -2,8 +2,12 @@ import {
   BridgeListResponseSchema,
   type ModbusBridgeStatus,
   ModbusBridgeStatusSchema,
+  type OpcuaBridgeStatus,
+  OpcuaBridgeStatusSchema,
   type SetModbusBridgeRequest,
   SetModbusBridgeRequestSchema,
+  type SetOpcuaBridgeRequest,
+  SetOpcuaBridgeRequestSchema,
 } from "@pantin/protocol";
 import {
   type FetchFunction,
@@ -17,7 +21,7 @@ import {
 import { modbusStatusOf } from "./bridge/modbus-status.ts";
 
 // The PLC bridge routes of the API client (ADR 0050 point 5, ADR 0065 point 7), for the
-// Modbus bridge: the one the viewer's card drives until the card per kind (slice S2d).
+// Modbus bridge (get, set, log) and the OPC UA bridge (set; its status arrives on the stream).
 // Every answer is the bridge status after the call.
 
 export interface BridgeRoutes {
@@ -25,6 +29,9 @@ export interface BridgeRoutes {
   // Start with a network, or stop. Starting answers `starting`; the final state
   // arrives on the pose stream.
   setBridge(pantinId: string, request: SetModbusBridgeRequest): Promise<ModbusBridgeStatus>;
+  // Start with targets, passwords and certificates to trust, or stop. The passwords are sent
+  // here and nowhere else (ADR 0065 point 9).
+  setOpcuaBridge(pantinId: string, request: SetOpcuaBridgeRequest): Promise<OpcuaBridgeStatus>;
   // The bridge log file as text, empty while there is none (ADR 0054 point 4).
   getBridgeLog(pantinId: string): Promise<string>;
 }
@@ -54,6 +61,14 @@ export function bridgeRoutes(send: SendJson, fetchFunction: FetchFunction): Brid
         pantinUrl(pantinId, "/bridges/modbus_tcp_slave"),
         jsonRequest("PUT", checked),
         ModbusBridgeStatusSchema,
+      );
+    },
+    setOpcuaBridge: async (pantinId, request) => {
+      const checked = validInputOrThrow(SetOpcuaBridgeRequestSchema, request);
+      return send(
+        pantinUrl(pantinId, "/bridges/opcua_client"),
+        jsonRequest("PUT", checked),
+        OpcuaBridgeStatusSchema,
       );
     },
     // Plain text, not JSON: only the error answers are validated.

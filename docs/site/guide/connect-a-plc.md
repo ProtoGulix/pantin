@@ -5,7 +5,7 @@ simulateur est l'esclave, l'automate est le maître. Le programme de l'automate
 garde sa configuration d'E/S habituelle et interroge les modules simulés comme il
 interrogerait des modules réels.
 
-Seul Modbus TCP est disponible aujourd'hui. Pantin sait déjà décrire un module « Client OPC UA » dans sa liste d'E/S, mais la vue E/S ne permet pas encore d'en créer un et aucun pont OPC UA n'existe : il n'est pas possible de connecter un automate en OPC UA.
+Cette page décrit la connexion Modbus TCP. La vue E/S sait aussi créer un module « Client OPC UA » et le panneau de gauche a alors une seconde carte, **Pont automate · Client OPC UA** ; la connexion OPC UA n'est pas encore décrite ici.
 
 Cette page décrit le pont, le réglage réseau, la GVL et les précautions. Pour
 construire la machine et sa liste d'E/S, suivez le [tutoriel](/guide/tutorial).
@@ -325,7 +325,7 @@ pas ce souci : elle passe par le cœur.
 
 ## Réseau : local ou privé
 
-Dans le bloc **Pont automate**, cliquez la pastille du réseau (**Réseau :
+Dans le bloc **Pont automate · Modbus TCP**, cliquez la pastille du réseau (**Réseau :
 local**) pour ouvrir le choix. Il y en a deux, et seulement deux.
 
 | Mode | Libellé | Effet |
@@ -374,7 +374,7 @@ connection from » suivie de l'adresse, pour chaque connexion refusée.
 ## Démarrer, arrêter, redémarrer
 
 1. Enregistrez le Pantin ; son mapping doit être valide.
-2. Dans le bloc **Pont automate**, cliquez **Démarrer**. L'état passe de
+2. Dans le bloc **Pont automate · Modbus TCP**, cliquez **Démarrer**. L'état passe de
    **Démarrage…** à **En marche** quand tous les esclaves sont ouverts.
 3. Chaque module s'affiche avec son adresse et son état : **en attente de
    l'automate**, **automate connecté** ou **pont arrêté**.
@@ -403,7 +403,7 @@ Sans le viewer, le pont se lance à la main (voir
 
 Quand l'automate se connecte mais que rien ne marche, le journal du pont dit ce que l'automate a demandé et pourquoi le pont l'a refusé.
 
-- Dans le bloc **Pont automate**, cliquez **Journal** : la fenêtre **Journal du pont automate** s'ouvre et se met à jour toute seule, en colonnes (heure, source **Cœur** ou **Pont**, niveau), avec des bascules **Erreur**, **Avertissement** et **Info** pour filtrer. **Copier** et **Télécharger** servent à joindre le journal à une demande d'aide.
+- Dans le bloc **Pont automate · Modbus TCP**, cliquez **Journal** : la fenêtre **Journal du pont automate** s'ouvre et se met à jour toute seule, en colonnes (heure, source **Cœur** ou **Pont**, niveau), avec des bascules **Erreur**, **Avertissement** et **Info** pour filtrer. **Copier** et **Télécharger** servent à joindre le journal à une demande d'aide.
 - Les lignes d'avertissement et d'erreur arrivent aussi dans la console : « Pont automate : … ».
 - Sans le viewer, et même cœur arrêté : `pnpm pantin bridge-log <pantinId>`, avec `--transport <type>` (par exemple `modbus_tcp_slave`) quand plusieurs fichiers existent, `--logs-dir <dossier>` si le cœur a été lancé avec cette option, `--pantins-dir <dossier>` si les Pantins ne sont pas dans le dossier par défaut, et `--follow` pour suivre le fichier en direct.
 
@@ -423,7 +423,7 @@ Réglez l'**Unit-ID** sur l'**Adresse d'unité** du module, puis chargez de nouv
 
 Une commande écrite depuis le viewer **force** le tag : l'automate ne peut plus
 l'écrire. La console l'écrit : « Écriture de l'automate ignorée sur le tag forcé
-… ». Le bloc **Pont automate** affiche « N tag(s) forcé(s) : l'automate ne peut
+… ». Le bloc **Pont automate · Modbus TCP** affiche « N tag(s) forcé(s) : l'automate ne peut
 pas les écrire » avec un bouton **Relâcher tout**.
 Relâchez avant de passer la main à
 l'automate. C'est la cause habituelle de « l'automate écrit mais rien ne bouge »

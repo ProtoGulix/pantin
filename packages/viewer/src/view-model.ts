@@ -1,4 +1,4 @@
-import type { ModbusBridgeStatus } from "@pantin/protocol";
+import type { BridgeStatus } from "@pantin/protocol";
 import { type CentralLayout, showsIo, showsViewport } from "./central-layout.ts";
 import type { ClientConsole } from "./console/console-list.ts";
 import { buildConsoleView, type ConsoleView } from "./console/console-view.ts";
@@ -139,13 +139,19 @@ function relatedJointsOf(state: ViewerState): ReadonlySet<string> {
   return document === undefined || device === null ? new Set() : relatedJointIds(document, device);
 }
 
-function buildIo(state: ViewerState, bridgeStatus: ModbusBridgeStatus | null): IoView | null {
+function buildIo(state: ViewerState, bridgeStatuses: readonly BridgeStatus[]): IoView | null {
   const document = state.openPantin?.document;
   if (document === undefined || !showsIo(state.centralLayout)) {
     return null;
   }
   const names = new Map(document.assemblies.map((assembly) => [assembly.key, assembly.name]));
-  return buildIoView(state.io, names, state.language, state.pendingRequestCount > 0, bridgeStatus);
+  return buildIoView(
+    state.io,
+    names,
+    state.language,
+    state.pendingRequestCount > 0,
+    bridgeStatuses,
+  );
 }
 
 export function buildPanelView(
@@ -153,7 +159,7 @@ export function buildPanelView(
   consoleList: ClientConsole,
   clockRunning: boolean,
   tagValues: TagValues = NO_TAG_VALUES,
-  bridgeStatus: ModbusBridgeStatus | null = null,
+  bridgeStatuses: readonly BridgeStatus[] = [],
 ): PanelView {
   const translate = createTranslator(state.language);
   const mode = viewModeOf(state);
@@ -179,7 +185,7 @@ export function buildPanelView(
     viewportHint: translate(
       mode === "list" ? "page.viewportEmpty" : `page.viewportHint.${state.navigation.preset}`,
     ),
-    inspector: buildInspectorView(state, translate, clockRunning, bridgeStatus),
+    inspector: buildInspectorView(state, translate, clockRunning, bridgeStatuses),
     console: buildConsoleView(
       state.console,
       consoleList,
@@ -187,6 +193,6 @@ export function buildPanelView(
       state.language,
       translate,
     ),
-    io: buildIo(state, bridgeStatus),
+    io: buildIo(state, bridgeStatuses),
   };
 }

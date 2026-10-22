@@ -33,10 +33,10 @@ Elle est en haut de la colonne de gauche, quand un Pantin est ouvert. Elle réun
 
 ## Le panneau latéral gauche
 
-Il n'existe que lorsqu'un Pantin est ouvert. De haut en bas : la barre d'outils, le formulaire d'import, l'**arborescence des Pantins**, la carte **Pont automate**, puis la question de confirmation et la ligne de message quand il y en a. Les autres formulaires (liaison, actionneur, capteur...) s'ouvrent dans l'inspecteur.
+Il n'existe que lorsqu'un Pantin est ouvert. De haut en bas : la barre d'outils, le formulaire d'import, l'**arborescence des Pantins**, les cartes **Pont automate · Modbus TCP** et **Pont automate · Client OPC UA**, puis la question de confirmation et la ligne de message quand il y en a. Les autres formulaires (liaison, actionneur, capteur...) s'ouvrent dans l'inspecteur.
 
 - L'arborescence liste le Pantin, ses assemblages, ses corps, ses liaisons et les éléments de la chaîne d'action. Un clic droit ouvre le menu de l'élément (voir [Menus](/reference/menus#menu-contextuel-de-l-arborescence)).
-- La carte **Pont automate** montre l'état du pont Modbus et de ses modules. Voir [Connecter un automate](/guide/connect-a-plc).
+- La carte **Pont automate · Modbus TCP** montre l'état du pont Modbus et de ses modules ; la carte **Pont automate · Client OPC UA**, présente seulement si le Pantin a un module OPC UA, fait de même pour le pont OPC UA. Voir [Connecter un automate](/guide/connect-a-plc).
 
 ## La vue centrale
 
@@ -62,7 +62,7 @@ Sous la vue centrale, elle s'affiche et se masque avec **Affichage** puis **Cons
 
 ## La ligne de question et la ligne de message
 
-Dans le panneau de gauche, une question de confirmation (fermer avec des modifications non enregistrées, supprimer un corps, une liaison, un préactionneur, un actionneur ou un capteur) s'affiche sous la carte **Pont automate**. Elle prend le clavier : <kbd>Entrée</kbd> choisit le bouton principal, <kbd>Échap</kbd> annule. La ligne de message juste dessous affiche les erreurs et les confirmations.
+Dans le panneau de gauche, une question de confirmation (fermer avec des modifications non enregistrées, supprimer un corps, une liaison, un préactionneur, un actionneur ou un capteur) s'affiche sous les cartes **Pont automate**. Elle prend le clavier : <kbd>Entrée</kbd> choisit le bouton principal, <kbd>Échap</kbd> annule. La ligne de message juste dessous affiche les erreurs et les confirmations.
 
 ## La fenêtre d'accueil
 

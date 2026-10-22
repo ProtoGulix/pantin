@@ -59,6 +59,7 @@ export function testStore(
       showConsoleLive: () => undefined,
       showClock: () => undefined,
       showBridge: () => undefined,
+      showOpcuaBridge: () => undefined,
       showBridgeJournal: () => undefined,
       storeCentralLayout,
       storeGizmoSteps: () => undefined,

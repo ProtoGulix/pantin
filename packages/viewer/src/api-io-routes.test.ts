@@ -187,6 +187,7 @@ describe("PantinApiClient PLC symbol import", () => {
     unchanged: [],
     unmatchedSignals: [],
     unusedSymbols: [],
+    moduleProposals: [],
   };
 
   it("posts the symbol file as XML and reads the preview", async () => {

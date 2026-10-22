@@ -1,4 +1,4 @@
-import type { ModbusBridgeStatus } from "@pantin/protocol";
+import type { BridgeStatus } from "@pantin/protocol";
 import {
   MODULE_CONNECTION_KEYS,
   moduleConnection,
@@ -59,7 +59,7 @@ function assignTarget(state: ViewerState, t: Translate): { module: string | null
 
 interface TagContext {
   target: ReturnType<typeof assignTarget>;
-  bridgeStatus: ModbusBridgeStatus | null;
+  bridgeStatuses: readonly BridgeStatus[];
   labels: ReadonlyMap<string, string>;
   t: Translate;
 }
@@ -67,11 +67,11 @@ interface TagContext {
 const shortName = (name: string): string => name.slice(name.lastIndexOf(".") + 1);
 
 function tagView(tag: ElementTag, context: TagContext): InspectorIoTag {
-  const { target, bridgeStatus, labels, t } = context;
+  const { target, bridgeStatuses, labels, t } = context;
   const label = labels.get(tag.name) ?? shortName(tag.name);
   if (tag.channel !== null) {
     const { moduleKey, place, variable } = tag.channel;
-    const connection = moduleConnection(bridgeStatus, moduleKey);
+    const connection = moduleConnection(bridgeStatuses, moduleKey);
     return {
       name: tag.name,
       label,
@@ -108,7 +108,7 @@ function tagView(tag: ElementTag, context: TagContext): InspectorIoTag {
 export function buildInspectorIoView(
   state: ViewerState,
   t: Translate,
-  bridgeStatus: ModbusBridgeStatus | null = null,
+  bridgeStatuses: readonly BridgeStatus[] = [],
   labels: ReadonlyMap<string, string> = new Map(),
 ): InspectorIoView | null {
   const owner = ownerOfSelection(state.selection);
@@ -136,6 +136,6 @@ export function buildInspectorIoView(
   if (tags.length === 0) {
     return null;
   }
-  const context = { target: assignTarget(state, t), bridgeStatus, labels, t };
+  const context = { target: assignTarget(state, t), bridgeStatuses, labels, t };
   return { ...base, busy, unavailable: null, tags: tags.map((tag) => tagView(tag, context)) };
 }

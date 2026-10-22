@@ -334,7 +334,7 @@ Sans aucune liaison, la vue affiche **Aucune liaison : tous les corps sont fixes
 La vue E/S est l'éditeur de la liste d'entrées/sorties du Pantin (`io.json`) : quels tags sont donnés à l'automate, sur quel module Modbus, à quelle adresse. Elle remplace la 3D et le schéma. Ce qu'elle écrit est enregistré et annulé avec le Pantin, comme le reste.
 
 ::: info Une liste pour l'automate
-Les modules ici sont ceux que le pont présente à l'automate (voir [Connecter un automate](/guide/connect-a-plc)). Le bouton **Exporter la GVL** produit la liste de variables CODESYS correspondante. Seul le transport Modbus TCP esclave peut être créé depuis cette vue ; le transport Client OPC UA n'est pas encore proposé.
+Les modules ici sont ceux que le pont présente à l'automate (voir [Connecter un automate](/guide/connect-a-plc)). Le bouton **Exporter la GVL** produit la liste de variables CODESYS correspondante. Cette vue crée des modules **Modbus TCP esclave** et **Client OPC UA**.
 :::
 
 ### Les états de la vue
@@ -376,6 +376,7 @@ Fenêtre modale, ouverte par **Importer des symboles API…**. Le guide [Connect
 | Élément | Effet |
 | --- | --- |
 | **Fichier : …**, **Format reconnu : … · n symboles lus**, **Projet … · appareil … · application …** | Rappel du fichier lu. **Remarque du lecteur : …** s'ajoute si le lecteur a une réserve. |
+| **Modules OPC UA : préfixe du NodeId proposé (n)** | Bloc placé avant les cinq sections, présent quand le fichier nomme l'appareil et l'application et qu'au moins un module OPC UA a un autre préfixe. Une ligne par module : **Module m2**, **Préfixe du NodeId proposé : …**, la raison (**Construit avec l'appareil « … » et l'application « … » du fichier.**) et la mention **À vérifier** avec son triangle d'avertissement. Son bouton **Appliquer ce préfixe au module m2** est à part du bouton **Appliquer** de la fenêtre et écrit le préfixe du module comme une modification non enregistrée ; **Préfixe refusé.** s'affiche si le cœur le refuse. |
 | **Correspondances sûres (n)**, **À vérifier (n)**, **Inchangées (n)**, **Signaux sans correspondance (n)**, **Symboles non utilisés (n)** | Les cinq sections ; **Aucune ligne.** quand elles sont vides. |
 | Case **Appliquer** (suivi du signal et de la variable) | Retient la ligne. Cochée au départ pour une correspondance sûre, décochée pour une ligne à vérifier, absente pour un type incompatible. |
 | Liste **Variable pour** (suivi du signal) | Choisit la variable d'un signal sans correspondance ; **(ne pas changer)** au départ. |
@@ -396,11 +397,11 @@ En haut de la vue, la bande **Modules** liste les modules sur une ligne. Chaque 
 | --- | --- | --- |
 | Bouton de module | Choisit ce module comme **cible** : il reçoit les affectations (voir ci-dessous). | Jamais |
 | **Ajouter un module** | Ajoute un module à la liste. Le cœur choisit sa clé et son port ; vous pouvez les changer ensuite. | Une requête est en cours |
-| **Type de transport du nouveau module** | Liste placée à côté du bouton, qui choisit le transport du module ajouté. Elle n'apparaît que si plusieurs transports sont connus ; aujourd'hui, un seul l'est. | Sans objet |
+| **Type de transport du nouveau module** | Liste placée à côté du bouton, qui choisit le transport du module ajouté : **Modbus TCP esclave** ou **Client OPC UA**. Elle n'apparaît que si plusieurs transports sont connus. | Sans objet |
 
 Sans module : **Aucun module.**
 
-Sous la bande, la vue a une **section par module**, l'une sous l'autre. L'en-tête d'une section porte la clé du module et un sous-titre en texte, écrit par le transport, par exemple **Modbus TCP esclave · Port 1502 · Adresse d'unité 1**. À droite de l'en-tête :
+Sous la bande, la vue a une **section par module**, l'une sous l'autre. L'en-tête d'une section porte la clé du module et un sous-titre en texte, écrit par le transport, par exemple **Modbus TCP esclave · Port 1502 · Adresse d'unité 1** ou, pour un module OPC UA, **Client OPC UA · port 4840 · Signer et chiffrer · Basic256Sha256 · anonyme** (**sans sécurité** quand le mode est **Aucune**). À droite de l'en-tête :
 
 - la section du module cible porte le texte **Reçoit les affectations** et un cadre épais autour d'elle ;
 - chaque autre section porte un bouton **Affecter ici**, qui en fait la cible.
@@ -414,7 +415,7 @@ Dans chaque section, sous l'en-tête, les réglages tiennent sur une rangée com
 | Champ | Rôle |
 | --- | --- |
 | **Clé** | Nom du module. Unique. |
-| **Port** | Port Modbus TCP du module. |
+| **Port** | Port Modbus TCP du module (ou port du serveur OPC UA de l'automate, pour un module OPC UA). |
 | **Adresse d'unité** | Identifiant de l'unité Modbus. |
 | **Ordre des mots** | **Mot faible en premier** ou **Mot fort en premier**, pour les valeurs sur 32 bits. |
 | **Chien de garde (ms)** | Délai de surveillance du module (par défaut 1000 ms, voir [Connecter un automate](/guide/connect-a-plc)). |
@@ -437,7 +438,7 @@ Sous les réglages, chaque section a son tableau de voies, une voie par ligne. S
 | **Commentaire** | Texte libre repris dans la GVL. | Oui |
 | **Actions** | **Réaffecter** et **Retirer** (voir ci-dessous). | Sans objet |
 
-**Zone**, **Adresse** et **Type** sont les colonnes du transport : elles n'existent que dans un module Modbus. Un transport qui aurait d'autres réglages aurait d'autres colonnes ; **Signal**, **Unité**, **Variable**, **Commentaire** et **Actions** sont communes à tous.
+**Zone**, **Adresse** et **Type** sont les colonnes du transport : elles n'existent que dans un module Modbus. Un module **Client OPC UA** a les siennes, à la place : **Noeud** (le NodeId déduit par le cœur, en lecture seule), **Identifiant** (le mot **dérivé** ou **explicite** dit d'où vient le NodeId) et **Type** (le type IEC, `BOOL`, `REAL`, `LREAL`, `INT`, `DINT` ou `LINT`). **Signal**, **Unité**, **Variable**, **Commentaire** et **Actions** sont communes à tous.
 
 | Bouton | Effet |
 | --- | --- |

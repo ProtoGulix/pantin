@@ -5,6 +5,7 @@ import { captureFocus, restoreFocus } from "./focus.ts";
 import { icon } from "./icons.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { glyphThenText } from "./state-glyph.ts";
+import { drawModuleProposals } from "./symbol-import-proposals.ts";
 import { drawSymbolSection } from "./symbol-import-sections.ts";
 
 // The PLC symbol import window of the I/O view (ADR 0064 point 14): a modal over the central
@@ -49,6 +50,7 @@ function body(view: SymbolImportView, intents: Intents): HTMLElement {
       ? null
       : element("p", { className: "symbol-import__detail", text: view.detail }),
     ...view.infoLines.map((line) => element("p", { className: "symbol-import__info", text: line })),
+    view.moduleProposals === null ? null : drawModuleProposals(view.moduleProposals, intents),
     ...view.sections.map((section) => drawSymbolSection(section, intents)),
     ...skipped,
   ]);

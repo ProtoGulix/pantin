@@ -205,3 +205,30 @@ describe("POST .../io/variables", () => {
     expect(response.status).toBe(404);
   });
 });
+
+describe("POST .../io/symbols/preview module proposals (ADR 0065 point 12)", () => {
+  const OPCUA_MODULE = { transport: { kind: "opcua_client", namespaceUri: "urn:test" } };
+  const SUGGESTED = "|var|Device.Application.";
+
+  it("proposes the prefix of the file for an OPC UA module, then nothing once it is applied", async () => {
+    await io.addModule();
+    await io.call("POST", "/modules", OPCUA_MODULE);
+    const before = (await io.call("GET", "")).answer.mappingId;
+    const response = await sendRaw(io.axis().server, "POST", PREVIEW, xmlBody(AXIS_SYMBOL_FILE));
+    expect(previewOf(response).moduleProposals).toEqual([
+      { module: "m2", nodeIdPrefix: SUGGESTED, reason: "from_project_info" },
+    ]);
+    expect((await io.call("GET", "")).answer.mappingId).toBe(before);
+
+    const patch = { transport: { kind: "opcua_client", nodeIdPrefix: SUGGESTED } };
+    expect((await io.call("PATCH", "/modules/m2", patch)).status).toBe(200);
+    const again = await sendRaw(io.axis().server, "POST", PREVIEW, xmlBody(AXIS_SYMBOL_FILE));
+    expect(previewOf(again).moduleProposals).toEqual([]);
+  });
+
+  it("proposes nothing for a Modbus module", async () => {
+    await mapThreeTags();
+    const response = await sendRaw(io.axis().server, "POST", PREVIEW, xmlBody(AXIS_SYMBOL_FILE));
+    expect(previewOf(response).moduleProposals).toEqual([]);
+  });
+});

@@ -16,3 +16,8 @@ done by ADR 0049 (io.json follows renames). The rest is open.
 - One listen address per module (IP aliases) instead of one for all modules.
 - Accept unit id "any" (broadcast-style match) in the slave.
 - Diagnostics (ADR 0031 point 4) on the tag bus: see `viewer-on-tag-bus.md`.
+- OPC UA in the viewer, left by ADR 0065 S5: the bridge log window for OPC UA
+  (today its log shows only in the failure block), editing the explicit NodeId
+  in the I/O table, the forced tags warning on the OPC UA card, a translated
+  `certificate.reason` (today the bridge's English text), and the proposed
+  NodeId prefixes in the CLI import preview.

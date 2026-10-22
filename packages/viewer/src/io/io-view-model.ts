@@ -1,4 +1,4 @@
-import type { IoMappingModule, IoProblemCode, ModbusBridgeStatus } from "@pantin/protocol";
+import type { BridgeStatus, IoMappingModule, IoProblemCode } from "@pantin/protocol";
 import {
   MODULE_CONNECTION_KEYS,
   type ModuleConnection,
@@ -124,10 +124,10 @@ function moduleItemOf(
   module: IoMappingModule,
   problemCount: number,
   selected: boolean,
-  bridgeStatus: ModbusBridgeStatus | null,
+  bridgeStatuses: readonly BridgeStatus[],
   language: Language,
 ): IoModuleItem {
-  const connection = moduleConnection(bridgeStatus, module.key);
+  const connection = moduleConnection(bridgeStatuses, module.key);
   return {
     key: module.key,
     subtitle: moduleSubtitle(module, language),
@@ -146,7 +146,7 @@ export function buildIoView(
   assemblyNames: ReadonlyMap<string, string>,
   language: Language,
   busy = false,
-  bridgeStatus: ModbusBridgeStatus | null = null,
+  bridgeStatuses: readonly BridgeStatus[] = [],
 ): IoView {
   const mapping = state.mapping;
   const counts = problemCountByModule(mapping?.problems ?? []);
@@ -164,7 +164,7 @@ export function buildIoView(
     outOfDate: ioIsOutOfDate(state),
     problems: problemItems(state),
     modules: (mapping?.modules ?? []).map((module, index) =>
-      moduleItemOf(module, counts.get(index) ?? 0, module.key === key, bridgeStatus, language),
+      moduleItemOf(module, counts.get(index) ?? 0, module.key === key, bridgeStatuses, language),
     ),
     sections: sectionsOf(state, key, language),
     unmapped,

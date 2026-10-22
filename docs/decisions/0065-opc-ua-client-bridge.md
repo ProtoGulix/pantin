@@ -782,3 +782,24 @@ the items marked NOT VERIFIED were not measured.
   core had to be killed, its bridges could be orphaned (NOT VERIFIED).
 - **NOT VERIFIED:** Windows (the paths, SIGTERM); CODESYS itself, which stays the manual
   stage 2.
+
+## Amendment of 2026-10-22, S5
+
+Written when slice S5 was built (S5a core and protocol, S5b viewer). Settled readings, adding
+detail and contradicting no decision.
+
+- **Point 12, `moduleProposals`:** each entry is `{module, nodeIdPrefix, reason}`, with `reason`
+  an enum the viewer translates, today only `from_project_info`. The core proposes nothing
+  without project info, with an empty device or application name, for a prefix over 255
+  characters, or when the module already has that prefix. Modbus modules never get one.
+- **Point 13, security:** the viewer offers the security mode and the policy as two
+  independent choices and never pairs them; a mismatch shows as the core's problem.
+- **Point 13, the card:** the OPC UA card is hidden while the Pantin has no OPC UA module and
+  its bridge is stopped. The Modbus card is titled with its transport. Targets are kept in the
+  viewer's memory for the session and refilled from `network.targets`; passwords live only in
+  the card's inputs and are cleared once a start request leaves, refused or not.
+- **Closing a Pantin** with "stop the bridge" stops every running bridge of the Pantin.
+- **Left for later:** the bridge log window is still Modbus only (OPC UA shows its log in the
+  failure block); the explicit NodeId is not editable in the table; the forced tags warning is
+  not on the OPC UA card; `certificate.reason` is the bridge's own English text; the CLI import
+  preview does not print the proposals. No screenshot shows the OPC UA card (S6).

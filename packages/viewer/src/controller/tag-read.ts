@@ -1,10 +1,12 @@
 import type { DriveRuntime, PantinDocument, Tag } from "@pantin/protocol";
 import type { BridgeModel } from "../bridge/bridge-model.ts";
-import { type BridgeView, bridgeViewOf } from "../bridge/bridge-view.ts";
+import type { BridgeView } from "../bridge/bridge-view.ts";
+import type { OpcuaBridgeView } from "../bridge/opcua-view.ts";
 import type { ClockView } from "../clock/clock-model.ts";
 import type { Viewport } from "../scene/viewport.ts";
 import { stateMarksKey } from "../tree/device-state.ts";
 import type { ViewerState } from "../viewer-state.ts";
+import { showBridgeCards } from "./bridge-cards.ts";
 
 // What one read of the tags changes on screen: values and forced tags reach the
 // live cells without a redraw, the panel is redrawn only when a mark flips.
@@ -58,6 +60,7 @@ interface TagReadTarget {
     ): void;
     showClock(view: ClockView): void;
     showBridge(view: BridgeView | null): void;
+    showOpcuaBridge(view: OpcuaBridgeView | null): void;
     viewport(): Pick<Viewport, "showTagStates">;
   };
   renderPanel(): void;
@@ -86,6 +89,6 @@ export function showTagRead(
   // The transport bar and the bridge card count the forced tags.
   if (changes.forced) {
     ports.showClock(target.clockView());
-    ports.showBridge(bridgeViewOf(target.bridgeModel, target.state, forced.size));
+    showBridgeCards(ports, target.bridgeModel, target.state, forced.size);
   }
 }

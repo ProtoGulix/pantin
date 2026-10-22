@@ -82,7 +82,7 @@ describe("the inspector I/O section, rows", () => {
     const view = buildInspectorIoView(
       stateWith(mapping([module("m1", [mapped])])),
       t,
-      RUNNING_STATUS,
+      [RUNNING_STATUS],
       labels,
     );
     expect(view?.tags[0]).toMatchObject({ label: "Extend coil", connection: { tone: "ok" } });

@@ -27,7 +27,7 @@ La barre d'outils n'a pas de bouton de vue : chaque zone de la zone centrale a s
 
 ## Le panneau de gauche
 
-De haut en bas : la barre d'outils, le formulaire d'import (seulement pendant un import), l'arborescence, la carte **Pont automate**, la ligne de confirmation, la ligne de message. Une poignée entre le panneau et la zone centrale permet de le redimensionner (**Redimensionner le panneau**).
+De haut en bas : la barre d'outils, le formulaire d'import (seulement pendant un import), l'arborescence, les cartes **Pont automate · Modbus TCP** et **Pont automate · Client OPC UA**, la ligne de confirmation, la ligne de message. Une poignée entre le panneau et la zone centrale permet de le redimensionner (**Redimensionner le panneau**).
 
 ### L'arborescence
 
@@ -101,7 +101,9 @@ Il s'ouvre sous la barre d'outils après le choix d'un fichier (**Fichier 3D à 
 
 Pendant l'import, le formulaire affiche **Import en cours…**. Pour un STEP : **Conversion STEP en cours… Jusqu'à 2 minutes ; gardez cette page ouverte.**
 
-### La carte Pont automate
+### Les cartes Pont automate
+
+Le panneau a une carte par transport : **Pont automate · Modbus TCP** (décrite ci-dessous) et **Pont automate · Client OPC UA** (après elle), qui n'apparaît que lorsque le Pantin a un module OPC UA. Les captures montrent la première.
 
 ![La carte Pont automate, pont arrêté](/screenshots/fr/bridge-stopped.webp)
 
@@ -143,6 +145,23 @@ Sous la ligne d'état, selon le contexte :
 | Bloc d'échec (rôle alerte) | Quand l'état est **En échec** : un titre (**Le pont refuse sa configuration**, **Le pont ne joint pas le cœur**, **La liste d'E/S n'est pas valide**, **Les E/S ont changé : redémarrez le pont**, **Le pont a perdu la liaison avec le cœur**, **Erreur de protocole entre le pont et le cœur**, **Erreur inattendue du pont**, **Le pont n'a pas pu être lancé**, **Le pont n'a pas démarré à temps**, **Le pont s'est arrêté brutalement**), le message du pont (en anglais) et un volet **Journal du pont**. **Les E/S ont changé** s'affiche en avertissement, pas en erreur : rien n'est cassé. |
 
 Fermer le Pantin pendant que le pont tourne ajoute une question à la [confirmation](#les-confirmations) : **Le pont automate continue de tourner quand le Pantin est fermé.**
+
+### La carte Pont automate · Client OPC UA
+
+Deuxième carte du panneau de gauche, pour les modules **Client OPC UA** de la liste d'E/S ; elle n'est affichée que lorsque le Pantin en a un. Elle a la même ligne d'état, les mêmes boutons **Démarrer** / **Arrêter** / **Redémarrer** et la même pastille que la carte Modbus ; ce qui suit est propre à OPC UA. Ici, Pantin est le client : il se connecte au serveur OPC UA de l'automate.
+
+| Zone | Contenu |
+| --- | --- |
+| Lignes de modules | Une ligne par module OPC UA : la clé, le port (**port 4840**) et le statut en texte. |
+| **Adresse de l'automate pour le module m2** | Champ de saisie, un par module : l'adresse de l'automate. **Saisissez l'adresse de l'automate de chaque module OPC UA avant de démarrer.** s'affiche tant qu'il en manque une. |
+| **Connexion : anonyme** / **Connexion : utilisateur et mot de passe (nom)** | Rappel du mode de connexion du module. |
+| **Mot de passe du module m2** | Champ présent pour un module à connexion par utilisateur. **Gardé en mémoire par le cœur jusqu'à son arrêt, jamais écrit sur disque. Laissé vide, il garde le mot de passe déjà envoyé.** |
+| **Certificat de Pantin** | Le sujet, l'**URI de l'application** et les empreintes **SHA-256** et **SHA-1** du certificat de Pantin, à comparer dans les réglages de sécurité OPC UA de l'automate. Avant le premier démarrage : **Le certificat de Pantin et ses empreintes apparaissent au premier démarrage du pont.** |
+| **L'automate a refusé le certificat de Pantin…** | Quand l'automate ne fait pas encore confiance à Pantin ; Pantin réessaie toutes les 10 s. |
+| **Certificat de l'automate inconnu** et bouton **Faire confiance et redémarrer** | Quand le certificat du serveur est inconnu : les empreintes du certificat et sa période de validité (**Valide du … au …**) sont affichées pour comparaison. La confiance vaut pour tous les Pantin de la machine. |
+| **Raison : …** | Un certificat du serveur expiré, pas encore valide ou dont l'URI d'application ne correspond pas n'est jamais accepté ; la raison est écrite en toutes lettres. |
+| Refus de connexion | Texte qui invite à vérifier le nom d'utilisateur du module, à saisir de nouveau son mot de passe puis à redémarrer. |
+| Note | **Démarrez le cœur avec `--opcua-bridge <fichier>` (`pnpm serve` l'ajoute).** quand le cœur n'a pas de pont OPC UA. |
 
 ### Les confirmations
 

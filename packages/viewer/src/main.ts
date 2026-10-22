@@ -137,6 +137,7 @@ function createPorts(
     showConsoleLive: (view) => screen.showConsoleLive(view),
     showClock: (view) => withIntents((intents) => screen.showClock(view, intents)),
     showBridge: (view) => withIntents((intents) => screen.showBridge(view, intents)),
+    showOpcuaBridge: (view) => withIntents((intents) => screen.showOpcuaBridge(view, intents)),
     // A draw dropped here is not retried (showJournal skips unchanged inputs); none is,
     // since the window only opens through the intents.
     showBridgeJournal: (view) => withIntents((intents) => screen.showBridgeJournal(view, intents)),

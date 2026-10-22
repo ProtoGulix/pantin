@@ -362,7 +362,7 @@ The PLC does not see the tags directly: it reads and writes Modbus coils and
 registers. The I/O list (`io.json`) makes the link. It is edited in the viewer,
 never by hand.
 
-1. At the bottom of the left panel, find the **PLC bridge** block.
+1. At the bottom of the left panel, find the **PLC bridge · Modbus TCP** block.
 2. Click **I/O config**. The **I/O** view is displayed in the top zone (if it was in no zone yet).
 3. If the Pantin has no I/O list, the message "This Pantin has no I/O list
    (io.json) yet" appears with the **Create the mapping** button. Click it: it
@@ -430,7 +430,7 @@ links the Modbus channels to these variables. The page
 
 1. Save the Pantin and check, in **I/O config**, that the mapping has no
    problem.
-2. In the **PLC bridge** block, the pill shows the state (**Stopped**). The round
+2. In the **PLC bridge · Modbus TCP** block, the pill shows the state (**Stopped**). The round
    button on the title line is **Start**.
 3. The network is **Local only (127.0.0.1)** by default. Click the network pill
    to change it, see [Connect a PLC](/en/guide/connect-a-plc).

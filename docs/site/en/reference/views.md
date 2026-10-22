@@ -334,7 +334,7 @@ With no joint at all, the view says **No joint: every body is fixed in World.**
 The I/O view is the editor of the Pantin's input/output list (`io.json`): which tags are given to the PLC, on which Modbus module, at which address. It replaces the 3D view and the diagram. What it writes is saved and undone with the Pantin, like the rest.
 
 ::: info A list for the PLC
-The modules here are those that the bridge presents to the PLC (see [Connect a PLC](/en/guide/connect-a-plc)). The **Export GVL** button produces the matching CODESYS variable list. Only the Modbus TCP slave transport can be created from this view; the OPC UA client transport is not offered yet.
+The modules here are those that the bridge presents to the PLC (see [Connect a PLC](/en/guide/connect-a-plc)). The **Export GVL** button produces the matching CODESYS variable list. This view creates **Modbus TCP slave** and **OPC UA client** modules.
 :::
 
 ### The states of the view
@@ -376,6 +376,7 @@ A modal window, opened by **Import PLC symbols…**. The guide [Connect a PLC](/
 | Element | Effect |
 | --- | --- |
 | **File: …**, **Format recognised: … · n symbols read**, **Project … · device … · application …** | Recap of the file read. **Reader remark: …** is added if the reader has a reservation. |
+| **OPC UA modules: proposed NodeId prefix (n)** | Block placed before the five sections, present when the file names the device and the application and at least one OPC UA module has another prefix. One row per module: **Module m2**, **Proposed NodeId prefix: …**, the reason (**Built from the device "…" and the application "…" of the file.**) and the **To check** remark with its warning triangle. Its **Apply this prefix to module m2** button is separate from the window's **Apply** button and writes the module's prefix as an unsaved change; **Prefix refused.** shows if the core refuses it. |
 | **Sure matches (n)**, **To check (n)**, **Unchanged (n)**, **Signals without a match (n)**, **Unused symbols (n)** | The five sections; **No rows.** when they are empty. |
 | Checkbox **Apply** (followed by the signal and the variable) | Keeps the row. Checked at the start for a sure match, unchecked for a row to check, absent for an incompatible type. |
 | List **Variable for** (followed by the signal) | Chooses the variable of an unmatched signal; **(do not change)** at the start. |
@@ -396,11 +397,11 @@ At the top of the view, the **Modules** strip lists the modules on one line. Eac
 | --- | --- | --- |
 | Module button | Chooses this module as the **target**: it receives the mappings (see below). | Never |
 | **Add a module** | Adds a module to the list. The core chooses its key and port; you can change them afterwards. | A request is in progress |
-| **Transport of the new module** | A list next to the button that chooses the transport of the added module. It appears only when several transports are known; today, only one is. | Not applicable |
+| **Transport of the new module** | A list next to the button that chooses the transport of the added module: **Modbus TCP slave** or **OPC UA client**. It appears only when several transports are known. | Not applicable |
 
 With no module: **No module.**
 
-Under the strip, the view has **one section per module**, one under the other. The header of a section carries the module's key and a text subtitle, written by the transport, for example **Modbus TCP slave · Port 1502 · Unit id 1**. To the right of the header:
+Under the strip, the view has **one section per module**, one under the other. The header of a section carries the module's key and a text subtitle, written by the transport, for example **Modbus TCP slave · Port 1502 · Unit id 1** or, for an OPC UA module, **OPC UA client · port 4840 · Sign and encrypt · Basic256Sha256 · anonymous** (**no security** when the mode is **None**). To the right of the header:
 
 - the target module's section carries the text **Receives the mappings** and a thick outline around it;
 - every other section carries a **Map here** button, which makes it the target.
@@ -414,7 +415,7 @@ In each section, under the header, the settings fit on one compact row. Each fie
 | Field | Role |
 | --- | --- |
 | **Key** | Name of the module. Unique. |
-| **Port** | Modbus TCP port of the module. |
+| **Port** | Modbus TCP port of the module (or the port of the PLC's OPC UA server, for an OPC UA module). |
 | **Unit id** | Identifier of the Modbus unit. |
 | **Word order** | **Low word first** or **High word first**, for 32-bit values. |
 | **Watchdog (ms)** | Monitoring delay of the module (default 1000 ms, see [Connect a PLC](/en/guide/connect-a-plc)). |
@@ -437,7 +438,7 @@ Under the settings, each section has its channel table, one channel per row. Wit
 | **Comment** | Free text carried over into the GVL. | Yes |
 | **Actions** | **Reassign** and **Remove** (see below). | Not applicable |
 
-**Zone**, **Address** and **Type** are the transport's columns: they exist only in a Modbus module. A transport with other settings would have other columns; **Signal**, **Unit**, **Variable**, **Comment** and **Actions** are common to all.
+**Zone**, **Address** and **Type** are the transport's columns: they exist only in a Modbus module. An **OPC UA client** module has its own instead: **Node** (the NodeId derived by the core, read-only), **Identifier** (the word **derived** or **explicit** says where the NodeId comes from) and **Type** (the IEC type, `BOOL`, `REAL`, `LREAL`, `INT`, `DINT` or `LINT`). **Signal**, **Unit**, **Variable**, **Comment** and **Actions** are common to all.
 
 | Button | Effect |
 | --- | --- |

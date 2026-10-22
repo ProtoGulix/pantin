@@ -9,7 +9,6 @@ import type {
 import { isAligning } from "../alignment/alignment-view.ts";
 import { CLOSED_JOURNAL, type JournalModel } from "../bridge/bridge-journal.ts";
 import { type BridgeModel, INITIAL_BRIDGE_MODEL } from "../bridge/bridge-model.ts";
-import { bridgeViewOf } from "../bridge/bridge-view.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import {
   buildClockView,
@@ -39,6 +38,7 @@ import type { Viewport } from "../scene/viewport.ts";
 import type { ThemeChoice } from "../theme/theme.ts";
 import { buildPanelView } from "../view-model.ts";
 import { initialViewerState, type ViewerState, withOpenPantin } from "../viewer-state.ts";
+import { showBridgeCards } from "./bridge-cards.ts";
 import { reloadIoAfterDocumentChange } from "./io-load.ts";
 import { type JournalInputs, showJournal } from "./journal-actions.ts";
 import type { StorePorts } from "./store-ports.ts";
@@ -144,7 +144,7 @@ export class ViewerStore {
     this.ports.showDiagramLive(this.tagValues, this.driveRuntime, this.forcedTags);
     // After followPoses too: a Pantin just opened starts from a fresh clock.
     this.ports.showClock(this.clockView());
-    this.ports.showBridge(bridgeViewOf(this.bridgeModel, next, this.forcedTags.size));
+    showBridgeCards(this.ports, this.bridgeModel, next, this.forcedTags.size);
     showJournal(this);
     showViewportState(viewport, next, this.chainLinksOf);
     // Last, after every draw: the read it starts re-enters update(), and a
@@ -199,7 +199,7 @@ export class ViewerStore {
         this.consoleList,
         this.clockModel.state?.running === true,
         this.tagValues,
-        this.bridgeModel.status,
+        this.bridgeModel.statuses,
       ),
     );
   }

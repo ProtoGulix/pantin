@@ -7,6 +7,12 @@ import type {
 } from "@pantin/protocol";
 import { MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
 import { modbusStatusOf } from "./modbus-status.ts";
+import {
+  INITIAL_OPCUA_MODEL,
+  isOpcuaActive,
+  type OpcuaBridgeModel,
+  opcuaAfterStreamList,
+} from "./opcua-model.ts";
 
 // What the bridge block knows (ADR 0050 point 8): the status the core pushed and
 // what the user typed. The viewer decides nothing about the network: the core
@@ -27,11 +33,13 @@ export interface BridgeDraft {
 
 export interface BridgeModel {
   // Every transport's status as the core last sent them (ADR 0065 point 7); empty until the
-  // first `bridge` event. The OPC UA card will read its entry here.
+  // first `bridge` event.
   readonly statuses: readonly BridgeStatus[];
-  // The Modbus entry of `statuses`, the only card shown for now. Null until the first
-  // `bridge` event; the unavailable status when the core's list has no Modbus entry.
+  // The Modbus entry of `statuses`. Null until the first `bridge` event; the unavailable
+  // status when the core's list has no Modbus entry.
   readonly status: ModbusBridgeStatus | null;
+  // The OPC UA card's own status, targets and request state.
+  readonly opcua: OpcuaBridgeModel;
   readonly draft: BridgeDraft;
   // The core's 400 message about the address or the allow list.
   readonly networkError: string | null;
@@ -45,6 +53,7 @@ export interface BridgeModel {
 export const INITIAL_BRIDGE_MODEL: BridgeModel = {
   statuses: [],
   status: null,
+  opcua: INITIAL_OPCUA_MODEL,
   draft: { mode: "local", listen: "", allowText: "" },
   networkError: null,
   pending: false,
@@ -111,7 +120,11 @@ export function bridgeAfterStreamList(model: BridgeModel, list: BridgeListRespon
     { ...model, statuses: list.bridges },
     modbusStatusOf(list) ?? MISSING_MODBUS_STATUS,
   );
-  return { ...next, streamedWhilePending: model.pending };
+  return {
+    ...next,
+    opcua: opcuaAfterStreamList(model.opcua, list),
+    streamedWhilePending: model.pending,
+  };
 }
 
 /**
@@ -154,8 +167,12 @@ export function bridgeStartRequest(model: BridgeModel): SetModbusBridgeRequest {
 
 export const BRIDGE_STOP_REQUEST: SetModbusBridgeRequest = { running: false };
 
-/** The bridge goes on after the Pantin is closed unless it is stopped (ADR 0050 point 7). */
+/** A bridge of any kind goes on after the Pantin is closed unless it is stopped (ADR 0050 point 7). */
 export function isBridgeActive(model: BridgeModel): boolean {
+  return isModbusActive(model) || isOpcuaActive(model.opcua);
+}
+
+export function isModbusActive(model: BridgeModel): boolean {
   const state = model.status?.state;
   return state === "starting" || state === "running";
 }

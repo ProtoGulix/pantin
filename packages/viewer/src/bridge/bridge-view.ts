@@ -6,7 +6,7 @@ import type {
 } from "@pantin/protocol";
 import { MODBUS_TCP_SLAVE_KIND } from "@pantin/protocol";
 import { type CentralLayout, showsIo } from "../central-layout.ts";
-import { createTranslator, type MessageKey, type Translate } from "../i18n/translate.ts";
+import { createTranslator, type Translate } from "../i18n/translate.ts";
 import type { ViewerState } from "../viewer-state.ts";
 import { type BridgeFailureView, failureViewOf } from "./bridge-failure-view.ts";
 import {
@@ -16,6 +16,14 @@ import {
   lanListenOf,
 } from "./bridge-model.ts";
 import {
+  type BridgeButtonKind,
+  BUTTON_KEYS,
+  buttonKindOf,
+  REASON_KEYS,
+  STATE_KEYS,
+  STATE_TONES,
+} from "./bridge-state-texts.ts";
+import {
   MODULE_CONNECTION_KEYS,
   type ModuleConnection,
   moduleConnection,
@@ -24,8 +32,6 @@ import {
 
 // The bridge block of the side panel as plain data (ADR 0050 point 8): status in, texts out. No
 // network rule is computed here; the core validates and the viewer shows.
-
-type BridgeButtonKind = "start" | "stop" | "restart";
 
 // A module of the I/O mapping: the lines of the card exist before the bridge runs.
 export interface BridgeMappingModule {
@@ -83,49 +89,13 @@ export interface BridgeView {
   failure: BridgeFailureView | null;
 }
 
-const STATE_KEYS: Record<BridgeState, MessageKey> = {
-  stopped: "bridge.state.stopped",
-  starting: "bridge.state.starting",
-  running: "bridge.state.running",
-  stopping: "bridge.state.stopping",
-  failed: "bridge.state.failed",
-};
-
-const STATE_TONES: Record<BridgeState, StatusTone> = {
-  stopped: "idle",
-  starting: "busy",
-  running: "ok",
-  stopping: "busy",
-  failed: "error",
-};
-
-const REASON_KEYS: Record<PlcModuleLossReason, MessageKey> = {
-  closed: "bridge.module.reason.closed",
-  timeout: "bridge.module.reason.timeout",
-  node_mismatch: "bridge.module.reason.node_mismatch",
-  certificate_rejected: "bridge.module.reason.certificate_rejected",
-};
-
-const BUTTON_KEYS: Record<BridgeButtonKind, MessageKey> = {
-  start: "bridge.action.start",
-  stop: "bridge.action.stop",
-  restart: "bridge.action.restart",
-};
-
-function buttonKindOf(state: BridgeState): BridgeButtonKind {
-  if (state === "failed") {
-    return "restart";
-  }
-  return state === "stopped" ? "start" : "stop";
-}
-
 function lineOf(
   module: { key: string; reason?: PlcModuleLossReason | null },
   address: string,
   status: ModbusBridgeStatus,
   t: Translate,
 ): BridgeModuleLine {
-  const connection = moduleConnection(status, module.key);
+  const connection = moduleConnection([status], module.key);
   return {
     key: module.key,
     address,

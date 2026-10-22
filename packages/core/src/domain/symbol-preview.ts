@@ -26,6 +26,7 @@ import {
   referencedSymbol,
   type SignalMatch,
 } from "./symbol-matching.ts";
+import { moduleProposalsOf } from "./symbol-module-proposals.ts";
 
 // From a PLC symbol file and the open mapping to the preview of an import
 // (ADR 0064 point 13): pure, nothing is stored and nothing changes.
@@ -144,6 +145,7 @@ function buildSymbolPreview(input: SymbolPreviewInput): SymbolImportPreview {
     unusedSymbols: symbols
       .filter((symbol) => !used.has(symbol))
       .map((symbol) => ({ symbol: summaryOf(symbol), reason: unusedReasonOf(symbol) })),
+    moduleProposals: moduleProposalsOf(input.list.project, input.document),
   };
 }
 

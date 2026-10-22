@@ -4,6 +4,7 @@ import type { PanelMessage } from "../messages.ts";
 import { buildAssignments } from "./symbol-import-rows.ts";
 import { readySections, type SymbolSectionView } from "./symbol-import-rows-view.ts";
 import { CLOSED_SYMBOL_IMPORT, type SymbolImportState } from "./symbol-import-state.ts";
+import { type ModuleProposalsView, moduleProposalsViewOf } from "./symbol-module-proposals-view.ts";
 
 // The PLC symbol import dialog as plain data (ADR 0064 point 14): every text is written
 // here, in words, so that colour is never the only cue. The viewer matches nothing.
@@ -28,6 +29,8 @@ export interface SymbolImportView {
   infoLines: readonly string[];
   summary: string;
   sections: readonly SymbolSectionView[];
+  // Proposals for the OPC UA modules, apart from the variables (ADR 0065 point 12).
+  moduleProposals: ModuleProposalsView | null;
   applyLabel: string;
   applyEnabled: boolean;
   cancelLabel: string;
@@ -47,6 +50,7 @@ const HIDDEN_SYMBOL_IMPORT: SymbolImportView = {
   infoLines: [],
   summary: "",
   sections: [],
+  moduleProposals: null,
   applyLabel: "",
   applyEnabled: false,
   cancelLabel: "",
@@ -147,6 +151,7 @@ export function buildSymbolImportView(
         infoLines: infoLinesOf(state, translate),
         summary: translate("symbols.summary", { count }),
         sections: readySections(state, translate),
+        moduleProposals: moduleProposalsViewOf(state, translate),
         applyEnabled: count > 0 && !state.applying,
       };
     }

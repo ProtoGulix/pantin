@@ -66,4 +66,5 @@ export const SYMBOL_PREVIEW: SymbolImportPreview = {
     { symbol: symbolOf("GVL.spare_input"), reason: "no_signal" },
     { symbol: symbolOf("GVL.@odd"), reason: "invalid_reference" },
   ],
+  moduleProposals: [],
 };

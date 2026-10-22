@@ -1,4 +1,5 @@
 import type { BridgeView } from "../bridge/bridge-view.ts";
+import type { OpcuaBridgeView } from "../bridge/opcua-view.ts";
 import { IMPORT_FILE_ACCEPT } from "../import-options.ts";
 import type { PanelView } from "../view-model.ts";
 import { BridgePanel } from "./bridge-panel.ts";
@@ -7,6 +8,7 @@ import { element } from "./dom.ts";
 import { captureFocus, restoreFocus } from "./focus.ts";
 import { renderImportForm } from "./import-form.ts";
 import { renderMessageLine } from "./message-line.ts";
+import { OpcuaBridgePanel } from "./opcua-bridge-panel.ts";
 import { type PaneLayout, setUpPaneLayout } from "./pane-layout.ts";
 import type { PanelIntents } from "./panel-intents.ts";
 import { renderPromptLine } from "./prompt-line.ts";
@@ -27,6 +29,7 @@ export class SidePanel {
   private readonly treeView: TreeView = createTreeView();
   // Written in place by showBridge: a status arrives without a panel render.
   private readonly bridgePanel = new BridgePanel();
+  private readonly opcuaPanel = new OpcuaBridgePanel();
   private readonly promptHost = element("div", { className: "prompt-host" });
   private readonly messageHost = element("div", { className: "message-host" });
   private readonly menuHost = element("div", { className: "menu-host" });
@@ -58,6 +61,7 @@ export class SidePanel {
       this.formHost,
       treePane,
       this.bridgePanel.element,
+      this.opcuaPanel.element,
       this.promptHost,
       this.messageHost,
       this.menuHost,
@@ -88,6 +92,10 @@ export class SidePanel {
 
   showBridge(view: BridgeView | null, intents: PanelIntents): void {
     this.bridgePanel.render(view, intents);
+  }
+
+  showOpcuaBridge(view: OpcuaBridgeView | null, intents: PanelIntents): void {
+    this.opcuaPanel.render(view, intents);
   }
 
   focusTree(): void {

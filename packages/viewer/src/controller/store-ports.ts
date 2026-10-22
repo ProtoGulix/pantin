@@ -2,6 +2,7 @@ import type { DriveRuntime } from "@pantin/protocol";
 import type { PantinApiClient } from "../api-client.ts";
 import type { JournalView } from "../bridge/bridge-journal.ts";
 import type { BridgeView } from "../bridge/bridge-view.ts";
+import type { OpcuaBridgeView } from "../bridge/opcua-view.ts";
 import type { CentralLayout } from "../central-layout.ts";
 import type { ClockView } from "../clock/clock-model.ts";
 import type { ConsoleView } from "../console/console-view.ts";
@@ -49,6 +50,8 @@ export interface StorePorts {
   showClock(view: ClockView): void;
   // The bridge block of the side panel (ADR 0050 point 8), written in place too.
   showBridge(view: BridgeView | null): void;
+  // The OPC UA card, next to it (ADR 0065 point 13).
+  showOpcuaBridge(view: OpcuaBridgeView | null): void;
   // The bridge log window (ADR 0054 point 5), null while it is closed.
   showBridgeJournal(view: JournalView | null): void;
   // A getter because the viewport is created after the store: its callbacks

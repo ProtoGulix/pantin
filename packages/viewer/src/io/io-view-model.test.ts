@@ -105,7 +105,7 @@ describe("cellOfPath", () => {
 describe("buildIoView connections", () => {
   it("gives each module the connection the bridge reports for it", () => {
     const state = withMapping(NO_IO_STATE, PRESS, mapping);
-    const running = buildIoView(state, names, "fr", false, RUNNING_STATUS);
+    const running = buildIoView(state, names, "fr", false, [RUNNING_STATUS]);
     expect(running.modules.map((module) => module.connection)).toEqual(["connected", "waiting"]);
     expect(running.modules.map((module) => module.statusKey)).toEqual([
       "bridge.module.connected",

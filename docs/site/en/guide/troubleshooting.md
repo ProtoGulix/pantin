@@ -75,7 +75,7 @@ The core refuses without changing anything, and the viewer shows its sentence wo
 
 ## The PLC bridge
 
-The **PLC bridge** block, at the bottom of the left panel, shows the state and,
+The **PLC bridge · Modbus TCP** block, at the bottom of the left panel, shows the state and,
 in case of failure, a bold title, the message of the bridge and a **Bridge log**
 (the last lines of its output). The button becomes **Restart**. The bridge never
 restarts on its own.
@@ -120,7 +120,7 @@ in the log.
 | --- | --- | --- |
 | The module stays on **waiting for the PLC** | No request has arrived | Check the IP address, the **Port** and the **Unit id** of the Modbus master of the PLC |
 | The module stays waiting, with the PLC on a virtual machine | The source is refused: in NAT, it can come from the host, and the `100.64.0.0/10` space is refused | Read the bridge log ("Module m1 refused a connection from …"). Switch the virtual machine to bridged networking, or adapt the list of allowed PLCs. See [Connect a PLC](/en/guide/connect-a-plc) |
-| The PLC connects then the connection drops; the log says "no request for 5.0 s" | The bridge refuses the PLC's requests (unexpected unit, function or address) then closes the idle connection | Open **Log** in the **PLC bridge** block and look for "refused a request": it gives the unit asked and the one the module expects. The CODESYS master's unit ID must equal the module's **Unit id**. See [Connect a PLC](/en/guide/connect-a-plc#reading-the-bridge-log) |
+| The PLC connects then the connection drops; the log says "no request for 5.0 s" | The bridge refuses the PLC's requests (unexpected unit, function or address) then closes the idle connection | Open **Log** in the **PLC bridge · Modbus TCP** block and look for "refused a request": it gives the unit asked and the one the module expects. The CODESYS master's unit ID must equal the module's **Unit id**. See [Connect a PLC](/en/guide/connect-a-plc#reading-the-bridge-log) |
 | The console: "PLC disconnected from module m1 (no answer in time)" | No request during the **Watchdog (ms)** duration | Increase the watchdog, or check that the PLC does query the module. Boolean commands are reset to 0 |
 | The console: "PLC disconnected… (connection closed)" | The PLC closed its connection | Same thing: boolean commands are reset to 0 |
 | The console: "PLC bridge disconnected… the mapped bit commands are reset to 0" | The bridge stopped or lost the core | Restart the bridge |
@@ -136,7 +136,7 @@ in the log.
 | What you see | Cause | What to do |
 | --- | --- | --- |
 | A **forced** badge on a tag, and the console: "PLC write ignored on forced tag …: forced to …, the PLC wrote …" | You wrote this tag from the viewer: the write forces the tag, and the PLC can no longer change it | **Release** the tag, or **Release all** (simulation bar, or **Edit**, **Release all forced tags**) |
-| "N forced tag(s): the PLC cannot write them" in the **PLC bridge** block | Same | **Release all** button of the block |
+| "N forced tag(s): the PLC cannot write them" in the **PLC bridge · Modbus TCP** block | Same | **Release all** button of the block |
 | A command stays stuck at a value while the PLC writes something else | The tag is forced | Release it. The core then applies the last value written by the PLC |
 
 ## I/O list

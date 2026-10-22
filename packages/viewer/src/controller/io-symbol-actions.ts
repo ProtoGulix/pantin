@@ -8,6 +8,7 @@ import {
   withSymbolPicked,
 } from "../io/symbol-import-state.ts";
 import { describeFailure, errorMessage, type PanelMessage } from "../messages.ts";
+import { applyModuleProposal } from "./io-module-proposal.ts";
 import { applyChecked } from "./io-symbol-apply.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
@@ -58,6 +59,7 @@ export function symbolImportIntents(store: ViewerStore): SymbolImportIntents {
     pickSymbol: (rowKey, reference) =>
       show(store, withSymbolPicked(store.state.symbolImport, rowKey, reference)),
     applySymbolImport: () => void applyChecked(store),
+    applyModuleProposal: (moduleKey) => void applyModuleProposal(store, moduleKey),
     closeSymbolImport: () => show(store, CLOSED_SYMBOL_IMPORT),
   };
 }

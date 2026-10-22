@@ -4,7 +4,7 @@ Pantin presents itself to the PLC as **Modbus TCP I/O modules**: the simulator i
 the slave, the PLC is the master. The PLC program keeps its usual I/O
 configuration and queries the simulated modules as it would query real modules.
 
-Only Modbus TCP is available today. Pantin can already describe an "OPC UA client" module in its I/O list, but the I/O view cannot create one yet and there is no OPC UA bridge: connecting a PLC over OPC UA is not possible.
+This page describes the Modbus TCP connection. The I/O view can also create an "OPC UA client" module, and the left panel then has a second card, **PLC bridge · OPC UA client**; the OPC UA connection is not described here yet.
 
 This page describes the bridge, the network setting, the GVL and the
 precautions. To build the machine and its I/O list, follow the
@@ -23,7 +23,7 @@ PLC (CODESYS)  <--Modbus TCP-->  bridge (Python)  <--tag bus-->  core  <--REST/S
 - The **bridge** is a separate process. It opens one Modbus TCP slave **per
   module** of `io.json` and copies the tags into its registers, and the other
   way round.
-- The core starts and stops the bridge on demand, from the **PLC bridge** block
+- The core starts and stops the bridge on demand, from the **PLC bridge · Modbus TCP** block
   of the viewer. This requires the `--bridge-python` option, which
   `pnpm serve` provides.
 
@@ -313,7 +313,7 @@ reopening the Pantin. The viewer window has no such problem: it goes through the
 
 ## Network: local or private
 
-In the **PLC bridge** block, click the network pill (**Network: local**) to open
+In the **PLC bridge · Modbus TCP** block, click the network pill (**Network: local**) to open
 the choice. There are two, and only two.
 
 | Mode | Label | Effect |
@@ -362,7 +362,7 @@ address, for each refused connection.
 ## Start, stop, restart
 
 1. Save the Pantin; its mapping must be valid.
-2. In the **PLC bridge** block, click **Start**. The state goes from
+2. In the **PLC bridge · Modbus TCP** block, click **Start**. The state goes from
    **Starting…** to **Running** when all the slaves are open.
 3. Each module shows its address and its state: **waiting for the PLC**,
    **PLC connected** or **bridge stopped**.
@@ -392,7 +392,7 @@ Without the viewer, the bridge is started by hand (see
 
 When the PLC connects but nothing works, the bridge log says what the PLC asked and why the bridge refused it.
 
-- In the **PLC bridge** block, click **Log**: the **PLC bridge log** window opens and refreshes by itself, as columns (time, source **Core** or **Bridge**, level), with **Error**, **Warning** and **Info** toggles to filter. **Copy** and **Download** let you attach the log to a request for help.
+- In the **PLC bridge · Modbus TCP** block, click **Log**: the **PLC bridge log** window opens and refreshes by itself, as columns (time, source **Core** or **Bridge**, level), with **Error**, **Warning** and **Info** toggles to filter. **Copy** and **Download** let you attach the log to a request for help.
 - Warning and error lines also reach the console: "PLC bridge: …".
 - Without the viewer, and even with the core stopped: `pnpm pantin bridge-log <pantinId>`, with `--transport <kind>` (for example `modbus_tcp_slave`) when several files exist, `--logs-dir <folder>` if the core was started with that option, `--pantins-dir <folder>` if the Pantins are not in the default folder, and `--follow` to follow the file live.
 

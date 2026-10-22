@@ -28,10 +28,9 @@ function integerOf(text: string): number | null {
 // the computed key: the api client validates the body against the Zod schema before sending it.
 function transportSetting(
   kind: TransportKind,
-  field: string,
-  value: string | number,
+  fields: Record<string, unknown>,
 ): IoEditParse<UpdateIoModuleRequest> {
-  return request({ transport: { kind, [field]: value } } as UpdateIoModuleRequest);
+  return request({ transport: { kind, ...fields } } as UpdateIoModuleRequest);
 }
 
 export function parseModuleEdit(
@@ -47,10 +46,17 @@ export function parseModuleEdit(
     return IGNORED;
   }
   if (spec.input === "choice") {
-    return spec.options?.includes(text) === true ? transportSetting(kind, field, text) : IGNORED;
+    return spec.options?.includes(text) === true
+      ? transportSetting(kind, { [field]: text })
+      : IGNORED;
+  }
+  if (spec.input === "text") {
+    return transportSetting(kind, spec.patchOf?.(text) ?? { [field]: text });
   }
   const value = integerOf(text);
-  return value === null ? { kind: "invalidNumber", field } : transportSetting(kind, field, value);
+  return value === null
+    ? { kind: "invalidNumber", field }
+    : transportSetting(kind, { [field]: value });
 }
 
 export function parseChannelEdit(

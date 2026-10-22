@@ -381,7 +381,7 @@ L'automate ne voit pas les tags directement : il lit et écrit des coils et des
 registres Modbus. La liste d'E/S (`io.json`) fait le lien. Elle est modifiée dans
 le viewer, jamais à la main.
 
-1. Au bas du panneau de gauche, trouvez le bloc **Pont automate**.
+1. Au bas du panneau de gauche, trouvez le bloc **Pont automate · Modbus TCP**.
 2. Cliquez **Config E/S**. La vue **E/S** s'affiche dans la zone du haut (si elle n'était déjà dans aucune zone).
 3. Si le Pantin n'a pas de liste d'E/S, le message « Ce Pantin n'a pas encore de
    liste d'E/S (io.json) » apparaît avec le bouton **Créer le mapping**.
@@ -452,7 +452,7 @@ projet CODESYS qui relie les canaux Modbus à ces variables. La page
 
 1. Enregistrez le Pantin et vérifiez, dans **Config E/S**, que le mapping n'a
    aucun problème.
-2. Dans le bloc **Pont automate**, la pastille indique l'état (**Arrêté**). Le
+2. Dans le bloc **Pont automate · Modbus TCP**, la pastille indique l'état (**Arrêté**). Le
    bouton rond de la ligne de titre est **Démarrer**.
 3. Le réseau est **Local uniquement (127.0.0.1)** par défaut. Cliquez la pastille
    du réseau pour changer, voir [Connecter un automate](/guide/connect-a-plc).

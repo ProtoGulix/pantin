@@ -1,4 +1,4 @@
-import type { ModbusBridgeStatus, PantinResponse } from "@pantin/protocol";
+import type { BridgeStatus, PantinResponse } from "@pantin/protocol";
 import { movableJoints } from "../actuators/actuator-joints.ts";
 import type { DeviceRef } from "../device-selection.ts";
 import type { Translate } from "../i18n/translate.ts";
@@ -188,7 +188,7 @@ export function buildInspectorView(
   state: ViewerState,
   t: Translate,
   clockRunning: boolean,
-  bridgeStatus: ModbusBridgeStatus | null = null,
+  bridgeStatuses: readonly BridgeStatus[] = [],
 ): InspectorView {
   const pantin = state.openPantin;
   if (pantin === null || !state.inspectorOpen) {
@@ -220,7 +220,7 @@ export function buildInspectorView(
     sensorForm: buildSensorFormView(state, document, t),
     conveyorForm: buildConveyorFormView(state, document, t),
     positioning: buildPositioningView(state, t, clockRunning),
-    io: buildInspectorIoView(state, t, bridgeStatus, tagLabelsOf(groups)),
+    io: buildInspectorIoView(state, t, bridgeStatuses, tagLabelsOf(groups)),
     groups,
     note: groups.length === 0 && content.hints.length === 0 ? t("inspector.empty") : null,
     hints: content.hints.map((hint) => t(hint)),

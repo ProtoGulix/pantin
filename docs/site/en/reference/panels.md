@@ -27,7 +27,7 @@ The toolbar has no view button: each zone of the central area has its own select
 
 ## The left panel
 
-From top to bottom: the toolbar, the import form (only during an import), the tree, the **PLC bridge** card, the confirmation line, the message line. A handle between the panel and the central area lets you resize it (**Resize the panel**).
+From top to bottom: the toolbar, the import form (only during an import), the tree, the **PLC bridge · Modbus TCP** and **PLC bridge · OPC UA client** cards, the confirmation line, the message line. A handle between the panel and the central area lets you resize it (**Resize the panel**).
 
 ### The tree
 
@@ -101,7 +101,9 @@ It opens under the toolbar after a file is chosen (**3D file to import**) throug
 
 During the import, the form shows **Importing…**. For a STEP: **Converting STEP… Up to 2 minutes; keep this page open.**
 
-### The PLC bridge card
+### The PLC bridge cards
+
+The panel has one card per transport: **PLC bridge · Modbus TCP** (described below) and **PLC bridge · OPC UA client** (after it), which shows only when the Pantin has an OPC UA module. The pictures show the first.
 
 ![The PLC bridge card, bridge stopped](/screenshots/en/bridge-stopped.webp)
 
@@ -143,6 +145,23 @@ Under the status line, depending on the context:
 | Failure block (alert role) | When the state is **Failed**: a title (**The bridge refuses its configuration**, **The bridge cannot reach the core**, **The I/O list is not valid**, **The I/O changed: restart the bridge**, **The bridge lost its link to the core**, **Protocol error between the bridge and the core**, **Unexpected bridge error**, **The bridge could not be launched**, **The bridge did not start in time**, **The bridge stopped abruptly**), the bridge's message (in English) and a **Bridge log** pane. **The I/O changed** is shown as a warning, not an error: nothing is broken. |
 
 Closing the Pantin while the bridge is running adds a question to the [confirmation](#confirmations): **The PLC bridge keeps running when the Pantin is closed.**
+
+### The PLC bridge · OPC UA client card
+
+Second card of the left panel, for the **OPC UA client** modules of the I/O list; it shows only when the Pantin has one. It has the same status line, the same **Start** / **Stop** / **Restart** buttons and the same pill as the Modbus card; what follows is specific to OPC UA. Here Pantin is the client: it connects to the PLC's OPC UA server.
+
+| Area | Content |
+| --- | --- |
+| Module lines | One line per OPC UA module: the key, the port (**port 4840**) and the status in text. |
+| **PLC address for module m2** | Input field, one per module: the PLC's address. **Enter the PLC address of every OPC UA module before starting.** shows while one is missing. |
+| **Login: anonymous** / **Login: user and password (name)** | Reminder of the module's login mode. |
+| **Password of module m2** | Field present for a module with a user login. **Kept in memory by the core until it stops, never written to disk. Left empty, it keeps the password already sent.** |
+| **Pantin's certificate** | The subject, the **Application URI** and the **SHA-256** and **SHA-1 thumbprint** of Pantin's certificate, to compare in the PLC's OPC UA security settings. Before the first start: **Pantin's certificate and its thumbprints appear at the first start of the bridge.** |
+| **The PLC refused Pantin's certificate…** | When the PLC does not trust Pantin yet; Pantin retries every 10 s. |
+| **Unknown PLC certificate** and the **Trust and restart** button | When the server's certificate is unknown: its thumbprints and validity (**Valid from … to …**) are shown for comparison. Trust applies to every Pantin on the machine. |
+| **Reason: …** | A server certificate that is expired, not yet valid or whose application URI does not match is never accepted; the reason is written in words. |
+| Login refused | Text that asks you to check the module's user name, type its password again, then restart. |
+| Note | **Start the core with `--opcua-bridge <file>` (`pnpm serve` adds it).** when the core has no OPC UA bridge. |
 
 ### Confirmations
 

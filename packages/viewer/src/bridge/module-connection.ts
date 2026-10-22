@@ -1,4 +1,4 @@
-import type { ModbusBridgeStatus } from "@pantin/protocol";
+import type { BridgeStatus } from "@pantin/protocol";
 import type { MessageKey } from "../i18n/translate.ts";
 
 // What one simulated module is doing, from the bridge status (ADR 0050): shown
@@ -26,14 +26,14 @@ export function moduleConnectionTone(connection: ModuleConnection): StatusTone {
 }
 
 /**
- * The status of the module with this key. The core lists modules only while the
- * bridge runs: any other state, a missing status or an unknown key reads as stopped.
+ * The status of the module with this key, in whichever bridge holds it. The core lists modules
+ * only while their bridge runs: any other state, no status or an unknown key reads as stopped.
  */
-export function moduleConnection(status: ModbusBridgeStatus | null, key: string): ModuleConnection {
-  if (status === null || status.state !== "running") {
-    return "stopped";
-  }
-  const module = status.modules.find((candidate) => candidate.key === key);
+export function moduleConnection(statuses: readonly BridgeStatus[], key: string): ModuleConnection {
+  const module = statuses
+    .filter((status) => status.state === "running")
+    .flatMap((status) => status.modules)
+    .find((candidate) => candidate.key === key);
   if (module === undefined) {
     return "stopped";
   }

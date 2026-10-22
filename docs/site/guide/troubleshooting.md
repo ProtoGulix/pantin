@@ -74,7 +74,7 @@ Le cœur refuse sans rien changer, et le viewer affiche sa phrase telle quelle (
 
 ## Le pont automate
 
-Le bloc **Pont automate**, en bas du panneau de gauche, montre l'état et, en cas
+Le bloc **Pont automate · Modbus TCP**, en bas du panneau de gauche, montre l'état et, en cas
 d'échec, un titre en gras, le message du pont et un **Journal du pont** (les
 dernières lignes de sa sortie). Le bouton devient **Redémarrer**. Le pont ne
 redémarre jamais seul.
@@ -119,7 +119,7 @@ journal.
 | --- | --- | --- |
 | Le module reste sur **en attente de l'automate** | Aucune requête n'est arrivée | Vérifiez l'adresse IP, le **Port** et l'**Adresse d'unité** du maître Modbus de l'automate |
 | Le module reste en attente, avec l'automate sur une machine virtuelle | La source est refusée : en NAT, elle peut arriver de l'hôte, et l'espace `100.64.0.0/10` est refusé | Lisez le journal du pont (« Module m1 refused a connection from … »). Passez la machine virtuelle en réseau en pont, ou adaptez la liste des automates autorisés. Voir [Connecter un automate](/guide/connect-a-plc) |
-| L'automate se connecte puis la connexion tombe ; le journal dit « no request for 5.0 s » | Le pont refuse les requêtes de l'automate (unité, fonction ou adresse inattendues) puis ferme la connexion inactive | Ouvrez **Journal** dans le bloc **Pont automate** et cherchez « refused a request » : il donne l'unité demandée et celle que le module attend. L'ID d'unité du maître CODESYS doit égaler l'**Adresse d'unité** du module. Voir [Connecter un automate](/guide/connect-a-plc#lire-le-journal-du-pont) |
+| L'automate se connecte puis la connexion tombe ; le journal dit « no request for 5.0 s » | Le pont refuse les requêtes de l'automate (unité, fonction ou adresse inattendues) puis ferme la connexion inactive | Ouvrez **Journal** dans le bloc **Pont automate · Modbus TCP** et cherchez « refused a request » : il donne l'unité demandée et celle que le module attend. L'ID d'unité du maître CODESYS doit égaler l'**Adresse d'unité** du module. Voir [Connecter un automate](/guide/connect-a-plc#lire-le-journal-du-pont) |
 | La console : « Automate déconnecté du module m1 (plus de réponse dans le délai) » | Aucune requête pendant la durée du **Chien de garde (ms)** | Augmentez le chien de garde, ou vérifiez que l'automate interroge bien le module. Les commandes booléennes sont remises à 0 |
 | La console : « Automate déconnecté… (connexion fermée) » | L'automate a fermé sa connexion | Même chose : les commandes booléennes sont remises à 0 |
 | La console : « Pont automate déconnecté… les commandes booléennes mappées sont remises à 0 » | Le pont s'est arrêté ou a perdu le cœur | Redémarrez le pont |
@@ -135,7 +135,7 @@ journal.
 | Ce que vous voyez | Cause | Que faire |
 | --- | --- | --- |
 | Un badge **forcé** sur un tag, et la console : « Écriture de l'automate ignorée sur le tag forcé … : forcé à …, l'automate a écrit … » | Vous avez écrit ce tag depuis le viewer : l'écriture force le tag, et l'automate ne peut plus le changer | **Relâcher** le tag, ou **Relâcher tout** (barre de simulation, ou **Édition**, **Relâcher tous les tags forcés**) |
-| « N tag(s) forcé(s) : l'automate ne peut pas les écrire » dans le bloc **Pont automate** | Idem | Bouton **Relâcher tout** du bloc |
+| « N tag(s) forcé(s) : l'automate ne peut pas les écrire » dans le bloc **Pont automate · Modbus TCP** | Idem | Bouton **Relâcher tout** du bloc |
 | Une commande reste bloquée à une valeur alors que l'automate écrit autre chose | Le tag est forcé | Relâchez-le. Le cœur applique alors la dernière valeur écrite par l'automate |
 
 ## Liste d'E/S

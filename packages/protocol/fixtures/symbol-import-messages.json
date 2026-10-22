@@ -13,7 +13,8 @@
           "proposals": [],
           "unchanged": [],
           "unmatchedSignals": [],
-          "unusedSymbols": []
+          "unusedSymbols": [],
+          "moduleProposals": []
         }
       },
       {
@@ -87,11 +88,61 @@
               },
               "reason": "incompatible_type"
             }
+          ],
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|Device.Application.",
+              "reason": "from_project_info"
+            }
           ]
         }
       }
     ],
     "invalid": [
+      {
+        "name": "a module proposal with an unknown reason",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 0,
+          "warnings": [],
+          "proposals": [],
+          "unchanged": [],
+          "unmatchedSignals": [],
+          "unusedSymbols": [],
+          "moduleProposals": [{ "module": "plc", "nodeIdPrefix": "|var|D.A.", "reason": "guess" }]
+        }
+      },
+      {
+        "name": "a module proposal with an empty prefix",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 0,
+          "warnings": [],
+          "proposals": [],
+          "unchanged": [],
+          "unmatchedSignals": [],
+          "unusedSymbols": [],
+          "moduleProposals": [
+            { "module": "plc", "nodeIdPrefix": "", "reason": "from_project_info" }
+          ]
+        }
+      },
+      {
+        "name": "a missing module proposals section",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": null,
+          "symbolCount": 0,
+          "warnings": [],
+          "proposals": [],
+          "unchanged": [],
+          "unmatchedSignals": [],
+          "unusedSymbols": []
+        }
+      },
       {
         "name": "an unknown compatibility",
         "message": {
@@ -119,7 +170,8 @@
           ],
           "unchanged": [],
           "unmatchedSignals": [],
-          "unusedSymbols": []
+          "unusedSymbols": [],
+          "moduleProposals": []
         }
       },
       {
@@ -131,7 +183,8 @@
           "warnings": [],
           "proposals": [],
           "unchanged": [],
-          "unmatchedSignals": []
+          "unmatchedSignals": [],
+          "moduleProposals": []
         }
       },
       {
@@ -145,6 +198,7 @@
           "unchanged": [],
           "unmatchedSignals": [],
           "unusedSymbols": [],
+          "moduleProposals": [],
           "symbols": []
         }
       }

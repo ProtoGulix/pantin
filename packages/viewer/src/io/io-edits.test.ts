@@ -38,6 +38,35 @@ describe("parseModuleEdit", () => {
   });
 });
 
+describe("parseModuleEdit for an OPC UA module", () => {
+  const OPCUA = "opcua_client";
+  const opcua = (settings: object) => request({ transport: { kind: OPCUA, ...settings } });
+
+  it("sends text settings as typed", () => {
+    expect(parseModuleEdit(OPCUA, "nodeIdPrefix", "|var|PLC.Application.")).toEqual(
+      opcua({ nodeIdPrefix: "|var|PLC.Application." }),
+    );
+    expect(parseModuleEdit(OPCUA, "endpointPath", "")).toEqual(opcua({ endpointPath: "" }));
+    expect(parseModuleEdit(OPCUA, "gvlName", "GVL_Pantin")).toEqual(
+      opcua({ gvlName: "GVL_Pantin" }),
+    );
+  });
+
+  it("accepts the security choices of the transport only", () => {
+    expect(parseModuleEdit(OPCUA, "securityMode", "Sign")).toEqual(opcua({ securityMode: "Sign" }));
+    expect(parseModuleEdit(OPCUA, "securityPolicy", "Basic256")).toEqual({ kind: "ignored" });
+  });
+
+  it("turns the user name into a login, and an empty one into the anonymous login", () => {
+    expect(parseModuleEdit(OPCUA, "userName", " operator ")).toEqual(
+      opcua({ auth: { kind: "user", userName: "operator" } }),
+    );
+    expect(parseModuleEdit(OPCUA, "userName", "  ")).toEqual(
+      opcua({ auth: { kind: "anonymous" } }),
+    );
+  });
+});
+
 describe("parseChannelEdit", () => {
   it("edits variable, address and comment", () => {
     expect(parseChannelEdit(KIND, "variable", " valve ")).toEqual(request({ variable: "valve" }));

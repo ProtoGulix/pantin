@@ -8,36 +8,30 @@ import type { BridgeIntents } from "../bridge/bridge-intents.ts";
 import {
   BRIDGE_STOP_REQUEST,
   type BridgeDraft,
-  type BridgeModel,
   bridgeAfterAnswer,
   bridgeAfterStreamList,
   bridgeStartRequest,
   bridgeWithDraft,
   bridgeWithNetworkError,
   bridgeWithPending,
+  isModbusActive,
   lanListenOf,
 } from "../bridge/bridge-model.ts";
-import { bridgeViewOf } from "../bridge/bridge-view.ts";
+import { isOpcuaActive } from "../bridge/opcua-model.ts";
 import { describeFailure } from "../messages.ts";
+import { setBridgeModel } from "./bridge-model-store.ts";
 import {
   closeJournal,
   openJournal,
   refreshJournalOnStatus,
   toggleJournalLevel,
 } from "./journal-actions.ts";
+import { opcuaBridgeIntents, stopOpcuaBridge } from "./opcua-bridge-actions.ts";
 import type { ViewerStore } from "./viewer-store.ts";
 
 // The PLC bridge of the open Pantin (ADR 0050 point 8). The core starts and
 // stops the process; these actions only send the wanted state. Like the clock,
 // none uses store.run: the status arrives on the stream and is written in place.
-
-/** The bar shows the new model in place; it is the only reader of the draft. */
-function setBridgeModel(store: ViewerStore, next: BridgeModel): void {
-  store.bridgeModel = next;
-  store.ports.showBridge(bridgeViewOf(next, store.state));
-  // The I/O view's module list shows each module's connection.
-  store.renderPanel();
-}
 
 /** A bridge event of the stream. */
 export function receiveBridge(store: ViewerStore, list: BridgeListResponse): void {
@@ -93,7 +87,7 @@ async function startBridge(store: ViewerStore): Promise<void> {
 }
 
 /** True when the core accepted the stop (also when the bridge was already stopped). */
-export function stopBridge(store: ViewerStore): Promise<boolean> {
+function stopBridge(store: ViewerStore): Promise<boolean> {
   return sendBridgeRequest(store, BRIDGE_STOP_REQUEST);
 }
 
@@ -102,8 +96,19 @@ function changeDraft(store: ViewerStore, change: (draft: BridgeDraft) => BridgeD
   setBridgeModel(store, bridgeWithDraft(model, change(model.draft)));
 }
 
+/** Stops every bridge that runs, for closing the Pantin: true when the core accepted all. */
+export async function stopAllBridges(store: ViewerStore): Promise<boolean> {
+  const opcuaActive = isOpcuaActive(store.bridgeModel.opcua);
+  // A Modbus bridge that cannot start would refuse the stop: leave it out when only OPC UA runs.
+  const skipModbus = opcuaActive && !isModbusActive(store.bridgeModel);
+  const modbusStopped = skipModbus || (await stopBridge(store));
+  const opcuaStopped = opcuaActive ? await stopOpcuaBridge(store) : true;
+  return modbusStopped && opcuaStopped;
+}
+
 export function bridgeIntents(store: ViewerStore): BridgeIntents {
   return {
+    ...opcuaBridgeIntents(store),
     startBridge: () => void startBridge(store),
     stopBridge: () => void stopBridge(store),
     chooseBridgeNetwork: (mode) =>

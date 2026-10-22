@@ -33,10 +33,10 @@ It is at the top of the left column, when a Pantin is open. It gathers the quick
 
 ## The left side panel
 
-It exists only when a Pantin is open. From top to bottom: the toolbar, the import form, the **Pantin tree**, the **PLC bridge** card, then the confirmation question and the message line when there are any. The other forms (joint, actuator, sensor...) open in the inspector.
+It exists only when a Pantin is open. From top to bottom: the toolbar, the import form, the **Pantin tree**, the **PLC bridge · Modbus TCP** and **PLC bridge · OPC UA client** cards, then the confirmation question and the message line when there are any. The other forms (joint, actuator, sensor...) open in the inspector.
 
 - The tree lists the Pantin, its assemblies, its bodies, its joints and the elements of the action chain. A right-click opens the element's menu (see [Menus](/en/reference/menus#tree-context-menu)).
-- The **PLC bridge** card shows the state of the Modbus bridge and of its modules. See [Connect a PLC](/en/guide/connect-a-plc).
+- The **PLC bridge · Modbus TCP** card shows the state of the Modbus bridge and of its modules; the **PLC bridge · OPC UA client** card, present only if the Pantin has an OPC UA module, does the same for the OPC UA bridge. See [Connect a PLC](/en/guide/connect-a-plc).
 
 ## The central view
 
@@ -62,7 +62,7 @@ Under the central view, it is shown and hidden with **View** then **Console**, o
 
 ## The question line and the message line
 
-In the left panel, a confirmation question (closing with unsaved changes, deleting a body, a joint, a drive, an actuator or a sensor) is shown under the **PLC bridge** card. It takes the keyboard: <kbd>Enter</kbd> chooses the primary button, <kbd>Esc</kbd> cancels. The message line just below shows errors and confirmations.
+In the left panel, a confirmation question (closing with unsaved changes, deleting a body, a joint, a drive, an actuator or a sensor) is shown under the **PLC bridge** cards. It takes the keyboard: <kbd>Enter</kbd> chooses the primary button, <kbd>Esc</kbd> cancels. The message line just below shows errors and confirmations.
 
 ## The welcome window
 

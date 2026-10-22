@@ -21,6 +21,9 @@ export type SymbolImportState =
       applying: boolean;
       // The core refused the whole batch: shown in the dialog, the choices stay.
       applyError: PanelMessage | null;
+      // A module proposal (ADR 0065 point 12) is applied on its own, one request per module.
+      applyingProposal: string | null;
+      proposalError: PanelMessage | null;
     }
   | {
       status: "done";
@@ -43,6 +46,8 @@ export function symbolImportReady(
     picks: new Map(),
     applying: false,
     applyError: null,
+    applyingProposal: null,
+    proposalError: null,
   };
 }
 
@@ -78,4 +83,34 @@ export function withSymbolPicked(
     picks.set(rowKey, reference);
   }
   return { ...state, picks };
+}
+
+/** A module proposal is being sent (a module key), or its request ended (null). */
+export function withProposalApplying(
+  state: SymbolImportState,
+  module: string | null,
+): SymbolImportState {
+  return state.status === "ready"
+    ? {
+        ...state,
+        applyingProposal: module,
+        proposalError: module === null ? state.proposalError : null,
+      }
+    : state;
+}
+
+/** The core accepted the proposal: it is no longer offered. */
+export function withProposalApplied(state: SymbolImportState, module: string): SymbolImportState {
+  if (state.status !== "ready") {
+    return state;
+  }
+  const moduleProposals = state.preview.moduleProposals.filter((found) => found.module !== module);
+  return { ...state, preview: { ...state.preview, moduleProposals }, applyingProposal: null };
+}
+
+export function withProposalRefused(
+  state: SymbolImportState,
+  proposalError: PanelMessage,
+): SymbolImportState {
+  return state.status === "ready" ? { ...state, applyingProposal: null, proposalError } : state;
 }

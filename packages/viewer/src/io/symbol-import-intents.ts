@@ -7,6 +7,8 @@ export interface SymbolImportIntents {
   pickSymbol(rowKey: string, reference: string): void;
   // Sends exactly the checked rows and the picker choices.
   applySymbolImport(): void;
+  // Sends the NodeId prefix proposed for an OPC UA module (a request apart from the variables).
+  applyModuleProposal(moduleKey: string): void;
   // Cancel, Close and Escape: sends nothing.
   closeSymbolImport(): void;
 }

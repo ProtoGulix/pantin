@@ -16,9 +16,14 @@ export async function captureExternalEditBanner(
   const { page, label } = session;
   // A trailing newline keeps the JSON valid and changes the bytes, hence the hash.
   await appendFile(join(pantinsDirectory, "plc-cylinder", "pantin.json"), "\n");
-  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   const banner = page.locator(BANNER_SELECTOR);
-  await banner.waitFor({ state: "visible" });
+  // A focus event that arrives while a request is in flight is ignored by design, so it is sent
+  // again until the banner shows.
+  for (let attempt = 0; attempt < 30 && (await banner.isHidden()); attempt += 1) {
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await page.waitForTimeout(1000);
+  }
+  await banner.waitFor({ state: "visible", timeout: 5000 });
   await saveShot(session, "external-edit-banner", banner);
   await banner
     .getByRole("button", { name: label("externalEdit.reload.one"), exact: true })

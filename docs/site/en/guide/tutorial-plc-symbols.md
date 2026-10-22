@@ -53,7 +53,7 @@ des symboles**, and **Build > Generate Code** probably **Compiler > Générer le
 
 ![The I/O view with module m1, its settings and the channel table](/screenshots/en/io-view.webp)
 
-1. If you have no copy yet, click the **plc-cylinder** card in the **Examples** section of Home, keep the proposed name and click **Create**; otherwise open your copy. In the **PLC bridge** block, click **I/O
+1. If you have no copy yet, click the **plc-cylinder** card in the **Examples** section of Home, keep the proposed name and click **Create**; otherwise open your copy. In the **PLC bridge · Modbus TCP** block, click **I/O
    config**: the **I/O** view is displayed.
 2. Click **Import PLC symbols…** in the toolbar of the view. If the button is greyed, the
    mapping is not readable: read the tooltip and the problems listed under the table.
@@ -157,7 +157,7 @@ one **Modbus_TCP_Server** per module, the channels, then the I/O mapping. Here, 
 2. Build, log in to the controller (**En ligne**, the menu name of the French
    interface), then start the program.
 3. In Pantin, save, check that the **I/O** view has no problem, then click **Start** in
-   the **PLC bridge** block. The state goes to **Running**, then the module shows **PLC
+   the **PLC bridge · Modbus TCP** block. The state goes to **Running**, then the module shows **PLC
    connected** as soon as CODESYS queries it.
 4. Check the loop: in your program, switch on the command that extends the cylinder. It
    extends on screen in about 2.5 s, and the extended-end sensor

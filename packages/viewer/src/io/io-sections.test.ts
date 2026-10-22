@@ -128,8 +128,11 @@ describe("the tags offered to a module", () => {
 });
 
 describe("creating a module", () => {
-  it("offers the kinds whose settings the form can fill in, with their names", () => {
-    expect(creatableKinds("en")).toEqual([{ kind: "modbus_tcp_slave", label: "Modbus TCP slave" }]);
+  it("offers every kind of the registry, with its name", () => {
+    expect(creatableKinds("en")).toEqual([
+      { kind: "modbus_tcp_slave", label: "Modbus TCP slave" },
+      { kind: "opcua_client", label: "OPC UA client" },
+    ]);
   });
 });
 

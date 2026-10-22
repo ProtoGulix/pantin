@@ -1,4 +1,4 @@
-import type { BridgeListResponse, ModbusBridgeStatus } from "@pantin/protocol";
+import type { BridgeListResponse, ModbusBridgeStatus, OpcuaBridgeStatus } from "@pantin/protocol";
 
 // Statuses for the tests of the bridge block.
 
@@ -21,6 +21,28 @@ export function bridgeStatusOf(overrides: Partial<ModbusBridgeStatus> = {}): Mod
     ...overrides,
   };
 }
+
+export function opcuaStatusOf(overrides: Partial<OpcuaBridgeStatus> = {}): OpcuaBridgeStatus {
+  return {
+    transport: "opcua_client",
+    availability: "available",
+    state: "stopped",
+    network: null,
+    clientCertificate: null,
+    modules: [],
+    failure: null,
+    log: [],
+    externalBridgeConnected: false,
+    ...overrides,
+  };
+}
+
+export const CLIENT_CERTIFICATE = {
+  subject: "CN=Pantin OPC UA client",
+  applicationUri: "urn:pantin:host:opcua-bridge",
+  sha256: "ab".repeat(32),
+  sha1: "cd".repeat(20),
+};
 
 export const RUNNING_STATUS = bridgeStatusOf({
   state: "running",

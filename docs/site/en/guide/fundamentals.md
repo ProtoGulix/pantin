@@ -32,7 +32,7 @@ Pantin is made of three processes. They talk to each other over the local networ
 
 - **The core** contains the whole simulation: joints, drives, sensors, products, physics, tags. It reads and writes the files of the Pantin. It runs without a window open.
 - **The viewer** is the web page you open in the browser. It displays the state sent by the core and serves as the editing interface. It computes nothing of the simulation.
-- **The PLC bridge** is a small Python process, started by the core on demand (the **Start** button of the **PLC bridge** card). It presents itself to the PLC as Modbus TCP input/output modules.
+- **The PLC bridge** is a small Python process, started by the core on demand (the **Start** button of the **PLC bridge · Modbus TCP** card). It presents itself to the PLC as Modbus TCP input/output modules.
 
 ### The simulation does not depend on the browser
 
@@ -110,7 +110,7 @@ Opening the network is an explicit choice, limited to the private local network:
 - any connection whose source address is outside the private ranges is closed before anything is read;
 - a list of allowed addresses (`--allow`) can only restrict access, never widen it.
 
-For the PLC bridge, the **PLC bridge** card offers the same choice: **Local only (127.0.0.1)** or **Private network**, with a **Listen address** and the list of **Allowed PLCs (IPs or CIDRs, comma separated)**. The procedure is in [Connect a PLC](/en/guide/connect-a-plc).
+For the PLC bridge, the **PLC bridge · Modbus TCP** card offers the same choice: **Local only (127.0.0.1)** or **Private network**, with a **Listen address** and the list of **Allowed PLCs (IPs or CIDRs, comma separated)**. The procedure is in [Connect a PLC](/en/guide/connect-a-plc).
 
 ## Install and start
 

@@ -1,4 +1,4 @@
-import type { BridgeFailure, BridgeFailureKind, ModbusBridgeStatus } from "@pantin/protocol";
+import type { BridgeFailure, BridgeFailureKind, BridgeStatus } from "@pantin/protocol";
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 
 // The failure block of the bridge card as plain data: the headline in words, the bridge's
@@ -42,7 +42,7 @@ function failureDetailsOf(failure: BridgeFailure, t: Translate): string[] {
   ];
 }
 
-export function failureViewOf(status: ModbusBridgeStatus, t: Translate): BridgeFailureView | null {
+export function failureViewOf(status: BridgeStatus, t: Translate): BridgeFailureView | null {
   const { failure } = status;
   if (status.state !== "failed" || failure === null) {
     return null;

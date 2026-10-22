@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { bridgeLogDownloadUrl } from "./api-bridge-routes.ts";
 import { createPantinApiClient } from "./api-client.ts";
 import { captureError, fakeFetch, jsonResponse } from "./api-test-helpers.ts";
-import { bridgeStatusOf } from "./bridge/bridge-fixtures.ts";
+import { bridgeStatusOf, opcuaStatusOf } from "./bridge/bridge-fixtures.ts";
 
 // The bridge routes (ADR 0050 point 5).
 
@@ -40,6 +40,40 @@ describe("PantinApiClient bridge", () => {
       "/api/pantins/press/bridges/modbus_tcp_slave",
       '{"running":false}',
     ]);
+  });
+
+  it("starts the OPC UA bridge with PUT { running, targets, passwords, trust }", async () => {
+    const status = opcuaStatusOf();
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(status));
+    const answer = await createPantinApiClient(fetchFunction).setOpcuaBridge("press", {
+      running: true,
+      targets: { plc: "192.168.56.10" },
+      passwords: { plc: "secret" },
+      trust: ["a".repeat(64)],
+    });
+    expect(answer).toEqual(status);
+    expect(sent(requests[0])).toEqual([
+      "PUT",
+      "/api/pantins/press/bridges/opcua_client",
+      JSON.stringify({
+        running: true,
+        targets: { plc: "192.168.56.10" },
+        passwords: { plc: "secret" },
+        trust: ["a".repeat(64)],
+      }),
+    ]);
+  });
+
+  it("refuses an OPC UA trust that is not a SHA-256, without a request", async () => {
+    const { fetchFunction, requests } = fakeFetch(jsonResponse(opcuaStatusOf()));
+    const error = await captureError(
+      createPantinApiClient(fetchFunction).setOpcuaBridge("press", {
+        running: true,
+        targets: {},
+        trust: ["abc"],
+      }),
+    );
+    expect([error.kind, requests]).toEqual(["invalid_input", []]);
   });
 
   it("refuses a start the protocol forbids, without a request", async () => {

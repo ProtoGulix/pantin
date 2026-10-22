@@ -61,8 +61,8 @@ Faults and products are cleared by **Reset the simulation** (**Edit** menu). Uns
 
 The `io.json` file links tags to PLC variables and to Modbus addresses. It **never defines** a tag: tags come from the Pantin. It only contains:
 
-- **modules**, each with its **Key** and its **transport** (the way of talking to the PLC). The only transport available is `modbus_tcp_slave` (**Modbus TCP slave**), whose settings are the **Port**, the **Unit id**, the **Word order** and the **Watchdog (ms)**;
-- **channels**: a **Tag**, a **Variable**, a **Comment** and, for the Modbus transport, a **Zone**, an **Address** and a **Type**.
+- **modules**, each with its **Key** and its **transport** (the way of talking to the PLC). Two transports are offered: `modbus_tcp_slave` (**Modbus TCP slave**), whose settings are the **Port**, the **Unit id**, the **Word order** and the **Watchdog (ms)**, and `opcua_client` (**OPC UA client**), whose settings include the **Port**, the **Security mode**, the **Security policy**, the **User name**, the **NodeId prefix** and the **GVL name**;
+- **channels**: a **Tag**, a **Variable**, a **Comment** and, for the Modbus transport, a **Zone**, an **Address** and a **Type**, and for the OPC UA transport, an optional **Identifier** and a **Type**.
 
 The file is in version 2: the transport settings are in the module's `transport` object, and the zone, address and type in the channel's `modbus` object. A feedback tag (sensor, position...) can be mapped in several modules, with the same variable, declared once; a command is mapped in one module only. The I/O view offers it: a feedback signal already mapped in another module appears in **Signals to map** with the note **already in: m1**.
 
