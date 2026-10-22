@@ -57,8 +57,16 @@ describe("applyVariableAssignments", () => {
       assignment("GVL.ok", "a.v.coil_2"),
     ]);
     expect(outcome.skipped.map((entry) => entry.reason)).toEqual([
-      expect.stringContaining('no module "m9"'),
-      expect.stringContaining('"a.v.coil_9" is not mapped in module "m1"'),
+      {
+        code: "module_not_found",
+        values: { module: "m9" },
+        message: expect.stringContaining('no module "m9"'),
+      },
+      {
+        code: "tag_not_mapped",
+        values: { tag: "a.v.coil_9", module: "m1" },
+        message: expect.stringContaining('"a.v.coil_9" is not mapped in module "m1"'),
+      },
     ]);
     expect(outcome.applied).toEqual([assignment("GVL.ok", "a.v.coil_2")]);
   });
@@ -71,13 +79,22 @@ describe("applyVariableAssignments", () => {
     ]);
     expect(outcome.applied).toEqual([]);
     expect(outcome.skipped).toHaveLength(3);
-    expect(outcome.skipped[0]?.reason).toContain("keyword");
+    expect(outcome.skipped.map((entry) => entry.reason.code)).toEqual([
+      "variable_reserved_name",
+      "variable_invalid_name",
+      "variable_too_many_parts",
+    ]);
+    expect(outcome.skipped[0]?.reason.message).toContain("keyword");
   });
 
   it("skips a variable another signal holds, ignoring case", () => {
     const outcome = applyVariableAssignments(document, [assignment("TWO")]);
     expect(outcome.applied).toEqual([]);
-    expect(outcome.skipped[0]?.reason).toContain("a.v.coil_2");
+    expect(outcome.skipped[0]?.reason).toMatchObject({
+      code: "variable_shared",
+      values: { variable: "TWO", otherTag: "a.v.coil_2" },
+    });
+    expect(outcome.skipped[0]?.reason.message).toContain("a.v.coil_2");
   });
 
   it("lets the same signal in two modules share its variable", () => {
@@ -144,6 +161,9 @@ describe("applyVariableAssignments", () => {
     const outcome = applyVariableAssignments(document, [assignment("first"), assignment("second")]);
     expect(outcome.applied).toEqual([assignment("first")]);
     expect(outcome.skipped).toHaveLength(1);
-    expect(outcome.skipped[0]?.reason).toContain("twice");
+    expect(outcome.skipped[0]?.reason).toMatchObject({
+      code: "channel_assigned_twice",
+      values: {},
+    });
   });
 });

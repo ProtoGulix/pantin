@@ -22,9 +22,13 @@ describe("modbusSymbolWarnings", () => {
       iecType: "LREAL",
       access: "read_write",
     });
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain("REAL");
-    expect(warnings[0]).toContain("LREAL");
+    expect(warnings).toEqual([
+      {
+        code: "modbus_wire_type_differs",
+        values: { wireType: "REAL", iecType: "LREAL" },
+        message: expect.stringContaining("carries REAL but the PLC variable is LREAL"),
+      },
+    ]);
   });
 
   it("ignores the access of the variable", () => {

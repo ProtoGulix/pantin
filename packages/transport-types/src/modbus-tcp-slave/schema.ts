@@ -82,6 +82,9 @@ export const ModbusChannelPatchSchema = z.strictObject({
 });
 export type ModbusChannelPatch = z.infer<typeof ModbusChannelPatchSchema>;
 
+// Codes of the remarks about wiring a channel to a PLC variable (ADR 0064 point 12).
+export const MODBUS_SYMBOL_WARNING_CODES = ["modbus_wire_type_differs"] as const;
+
 export const MODBUS_PROBLEM_CODES = [
   "zone_direction_mismatch",
   "type_mismatch",

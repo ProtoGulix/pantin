@@ -653,3 +653,12 @@ is left as written.
 - **Synchronous parsing.** The file is read on the core's event loop (about 0.8 s at 7 MiB,
   measured in review). That is accepted for a localhost user action; a worker thread is in
   the backlog (`docs/backlog/symbol-parsing-worker-thread.md`).
+
+## Amendment of 2026-10-22, translatable warnings
+
+Point 13 sent warnings and refusal reasons as English sentences, which the French viewer showed
+as they came. Each one is now `{code, values, message}`: `code` from a closed list
+(`SYMBOL_WARNING_CODES`, which includes each transport's `symbolWarnings` codes, and
+`SKIP_REASON_CODES`), `values` the strings the sentence interpolates, `message` the English
+sentence the CLI prints. The viewer translates the code; a code without a label falls back to `message`.
+The codes are a closed list, so a core with new codes needs a matching viewer. The symbol import fixture moves to version 2. No decision changes.

@@ -120,8 +120,10 @@ describe("the preview of the real export", () => {
     const cycles = preview().unchanged.find((match) => match.tag === "verin1.verin1.cycles");
     expect(cycles?.compatibility).toBe("warning");
     expect(cycles?.warnings).toHaveLength(2);
-    expect(cycles?.warnings.join(" ")).toContain("UDINT");
-    expect(cycles?.warnings.join(" ")).toContain("DINT");
+    expect(cycles?.warnings.map((warning) => [warning.code, warning.values])).toEqual([
+      ["integer_may_not_fit", { iecType: "UDINT" }],
+      ["modbus_wire_type_differs", { wireType: "DINT", iecType: "UDINT" }],
+    ]);
   });
 
   it("lists an ambiguous signal as unmatched, with its candidates", () => {

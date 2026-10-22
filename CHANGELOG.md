@@ -144,6 +144,12 @@ All notable changes to Pantin. The format follows
 
 ### Fixed
 
+- The PLC symbol import speaks the viewer's language: its warnings and the reasons an
+  assignment is refused were English sentences, and the French import window showed them as
+  they came. Each one is now `{code, values, message}` in the protocol (`SymbolMatch.warnings`,
+  `SymbolImportPreview.warnings`, `SkippedAssignment.reason`; fixture version 2); the viewer
+  translates the code, the CLI keeps printing the English message. The OPC UA type mismatch now
+  says to give the PLC variable the channel's type, since the channel's type is not editable.
 - Core (ADR 0043 point 3): a belt carried by a moving frame (a shuttle, a transfer
   carriage) now adds the frame's velocity to its surface velocity, so a box rides along
   instead of the belt sliding under it. The velocity comes from two consecutive poses of

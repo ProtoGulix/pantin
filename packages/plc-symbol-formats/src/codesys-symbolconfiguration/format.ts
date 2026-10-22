@@ -49,7 +49,7 @@ function parseSymbolConfiguration(root: XmlElement): ParseResult {
   const state: WalkState = {
     types: readTypeList(firstChildNamed(root, "TypeList")),
     symbols: [],
-    warnings: new Set(),
+    warnings: new Map(),
     visited: 0,
   };
   try {
@@ -65,7 +65,11 @@ function parseSymbolConfiguration(root: XmlElement): ParseResult {
   }
   return {
     ok: true,
-    list: { project: projectOf(root), symbols: state.symbols, warnings: [...state.warnings] },
+    list: {
+      project: projectOf(root),
+      symbols: state.symbols,
+      warnings: [...state.warnings.values()],
+    },
   };
 }
 

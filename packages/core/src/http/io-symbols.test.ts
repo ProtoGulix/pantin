@@ -170,7 +170,7 @@ describe("POST .../io/variables", () => {
     const answer = ApplyIoVariablesResponseSchema.parse(response.json);
     expect(answer.applied.map((entry) => entry.variable)).toEqual(["GVL.fine"]);
     expect(answer.skipped.map((entry) => entry.variable)).toEqual(["TYPE", "x", "someone"]);
-    expect(answer.skipped.every((entry) => entry.reason.length > 0)).toBe(true);
+    expect(answer.skipped.every((entry) => entry.reason.message.length > 0)).toBe(true);
   });
 
   it("refuses more than 4000 entries and a body over 1 MiB", async () => {

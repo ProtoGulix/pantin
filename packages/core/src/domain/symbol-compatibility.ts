@@ -1,4 +1,4 @@
-import type { SymbolCompatibility, TagType } from "@pantin/protocol";
+import type { SymbolCompatibility, SymbolWarning, TagType } from "@pantin/protocol";
 
 // The type table every transport shares (ADR 0064 point 12): which IEC types can
 // carry a signal of each type. A transport adds its own warnings on top
@@ -27,7 +27,7 @@ const NARROWER_INTEGER_TYPES: ReadonlySet<string> = new Set([
 
 export interface TypeAssessment {
   compatibility: SymbolCompatibility;
-  warnings: string[];
+  warnings: SymbolWarning[];
 }
 
 // IEC names are case-insensitive.
@@ -43,7 +43,11 @@ export function assessTypeCompatibility(signalType: TagType, iecType: string): T
     return {
       compatibility: "warning",
       warnings: [
-        `${iecType} is not a signed 32 or 64 bit integer: a value of the signal may not fit (range or sign).`,
+        {
+          code: "integer_may_not_fit",
+          values: { iecType },
+          message: `${iecType} is not a signed 32 or 64 bit integer: a value of the signal may not fit (range or sign).`,
+        },
       ],
     };
   }

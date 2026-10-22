@@ -46,7 +46,7 @@ describe("deriveVariable", () => {
       `${"k".repeat(64)}.${"k".repeat(64)}.member`,
     ]) {
       const problem = variableProblemOf(deriveVariable(tag));
-      expect(problem === null || problem.includes("keyword")).toBe(true);
+      expect(problem === null || problem.code === "variable_reserved_name").toBe(true);
     }
   });
 });
@@ -60,25 +60,40 @@ describe("variableProblemOf, dotted references (ADR 0064 point 9)", () => {
   );
 
   it.each([
-    ["a.b.c.d.e.f.g.h.i", "more than 8"],
-    ["GVL.", "must start with a letter"],
-    [".a", "must start with a letter"],
-    ["a..b", "must start with a letter"],
-    ["a.1b", "must start with a letter"],
-    ["GVL.BOOL", "keyword"],
-    ["a.b__c", "double underscore"],
-  ])("refuses %s, naming the rule", (reference, fragment) => {
-    expect(variableProblemOf(reference)).toContain(fragment);
+    ["a.b.c.d.e.f.g.h.i", "variable_too_many_parts", "more than 8"],
+    ["GVL.", "variable_invalid_name", "must start with a letter"],
+    [".a", "variable_invalid_name", "must start with a letter"],
+    ["a..b", "variable_invalid_name", "must start with a letter"],
+    ["a.1b", "variable_invalid_name", "must start with a letter"],
+    ["GVL.BOOL", "variable_reserved_name", "keyword"],
+    ["a.b__c", "variable_invalid_name", "double underscore"],
+  ])("refuses %s, naming the rule", (reference, code, fragment) => {
+    const problem = variableProblemOf(reference);
+    expect(problem?.code).toBe(code);
+    expect(problem?.message).toContain(fragment);
+  });
+
+  it("gives the whole reference and the part at fault as values", () => {
+    expect(variableProblemOf("GVL.BOOL")?.values).toEqual({
+      variable: "BOOL",
+      reference: "GVL.BOOL",
+    });
   });
 
   it("refuses a reference over 255 characters, and an identifier over 64 inside it", () => {
     const part = "a".repeat(60);
-    expect(variableProblemOf([part, part, part, part, part].join("."))).toContain("255");
-    expect(variableProblemOf(`${"b".repeat(65)}.c`)).toContain("64");
+    expect(variableProblemOf([part, part, part, part, part].join("."))).toMatchObject({
+      code: "variable_too_long",
+      values: { max: "255" },
+    });
+    expect(variableProblemOf(`${"b".repeat(65)}.c`)).toMatchObject({
+      code: "variable_too_long",
+      values: { max: "64" },
+    });
   });
 
   it("keeps the message of a plain identifier unchanged", () => {
-    expect(variableProblemOf("BOOL")).toBe(
+    expect(variableProblemOf("BOOL")?.message).toBe(
       'Variable "BOOL" is an IEC 61131-3 keyword or type name.',
     );
   });

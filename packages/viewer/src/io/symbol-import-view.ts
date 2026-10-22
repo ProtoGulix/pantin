@@ -5,6 +5,7 @@ import { buildAssignments } from "./symbol-import-rows.ts";
 import { readySections, type SymbolSectionView } from "./symbol-import-rows-view.ts";
 import { CLOSED_SYMBOL_IMPORT, type SymbolImportState } from "./symbol-import-state.ts";
 import { type ModuleProposalsView, moduleProposalsViewOf } from "./symbol-module-proposals-view.ts";
+import { skipReasonText, symbolWarningText } from "./symbol-notice-text.ts";
 
 // The PLC symbol import dialog as plain data (ADR 0064 point 14): every text is written
 // here, in words, so that colour is never the only cue. The viewer matches nothing.
@@ -74,7 +75,7 @@ function infoLinesOf(
           }),
         ];
   const readerWarnings = preview.warnings.map((warning) =>
-    translate("symbols.readerWarning", { text: warning }),
+    translate("symbols.readerWarning", { text: symbolWarningText(warning, translate) }),
   );
   return [
     translate("symbols.format", { format: preview.format, count: preview.symbolCount }),
@@ -88,7 +89,7 @@ function skippedLine(skipped: SkippedAssignment, translate: Translate): string {
     module: skipped.module,
     tag: skipped.tag,
     variable: skipped.variable,
-    reason: skipped.reason,
+    reason: skipReasonText(skipped.reason, translate),
   });
 }
 

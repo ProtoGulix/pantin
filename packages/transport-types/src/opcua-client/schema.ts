@@ -125,6 +125,13 @@ export const OpcuaChannelPatchSchema = z.strictObject({
 });
 export type OpcuaChannelPatch = z.infer<typeof OpcuaChannelPatchSchema>;
 
+// Codes of the remarks about wiring a channel to a PLC variable (ADR 0064 point 12).
+export const OPCUA_SYMBOL_WARNING_CODES = [
+  "opcua_type_differs",
+  "opcua_command_not_readable",
+  "opcua_feedback_not_writable",
+] as const;
+
 export const OPCUA_PROBLEM_CODES = [
   "security_mismatch",
   "namespace_missing",

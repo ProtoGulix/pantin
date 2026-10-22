@@ -138,8 +138,10 @@ describe("the synthetic file", () => {
   it("reads Write and an unseen spelling as unknown, with one warning each", () => {
     expect(byPath(list, "Application.GVL.write_only_count")?.access).toBe("unknown");
     expect(byPath(list, "Application.GVL.odd_access")?.access).toBe("unknown");
-    expect(list.warnings.filter((warning) => warning.includes('"Write"'))).toHaveLength(1);
-    expect(list.warnings.filter((warning) => warning.includes('"ReadOnly"'))).toHaveLength(1);
+    expect(list.warnings.filter((warning) => warning.values["access"] === "Write")).toHaveLength(1);
+    expect(list.warnings.filter((warning) => warning.values["access"] === "ReadOnly")).toHaveLength(
+      1,
+    );
   });
 
   it("lists an array and a string as symbols of their type", () => {
@@ -158,7 +160,12 @@ describe("the synthetic file", () => {
 
   it("lists a variable of an undefined type with that name, and warns", () => {
     expect(byPath(list, "Application.GVL.lost")?.iecType).toBe("T_Vanished");
-    expect(list.warnings.some((warning) => warning.includes("T_Vanished"))).toBe(true);
+    expect(list.warnings).toContainEqual(
+      expect.objectContaining({
+        code: "type_undefined",
+        values: { path: "Application.GVL.lost", typeName: "T_Vanished" },
+      }),
+    );
   });
 
   it("opens 8 levels of nesting and lists the ninth as one symbol, with a warning", () => {
@@ -168,9 +175,7 @@ describe("the synthetic file", () => {
     const unopened = list.symbols.find((symbol) => symbol.iecType === "Level9");
     expect(unopened?.path).toEqual(nexts(8));
     expect(list.symbols.some((symbol) => symbol.iecType === "Level10")).toBe(false);
-    expect(list.warnings.some((warning) => warning.includes("nested more than 8 levels"))).toBe(
-      true,
-    );
+    expect(list.warnings.some((warning) => warning.code === "nesting_too_deep")).toBe(true);
   });
 });
 
@@ -259,8 +264,6 @@ describe("types that expand without end", () => {
     const text = `${FILE_HEAD}${container("T_L0", `${member("self", "T_L0")}${member("flag", "T_BOOL")}`)}${FILE_TAIL}`;
     const list = listOf(text);
     expect(list.symbols.filter((symbol) => symbol.path.at(-1) === "flag")).toHaveLength(8);
-    expect(list.warnings.some((warning) => warning.includes("nested more than 8 levels"))).toBe(
-      true,
-    );
+    expect(list.warnings.some((warning) => warning.code === "nesting_too_deep")).toBe(true);
   });
 });

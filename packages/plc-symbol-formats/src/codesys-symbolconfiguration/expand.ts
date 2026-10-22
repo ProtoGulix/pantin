@@ -1,4 +1,9 @@
-import { MAX_SYMBOLS, type PlcSymbol, type PlcSymbolAccess } from "../model.ts";
+import {
+  MAX_SYMBOLS,
+  type PlcSymbol,
+  type PlcSymbolAccess,
+  type PlcSymbolWarning,
+} from "../model.ts";
 import { attributeOf, childrenNamed, type XmlElement } from "../xml-tree.ts";
 import { commentOf, type SymbolType } from "./type-list.ts";
 
@@ -14,6 +19,11 @@ const MAX_EXPANSION_DEPTH = 8;
 // hold ten members of the next one emits nothing yet fans out 10^k calls.
 const MAX_WORK = 10 * MAX_SYMBOLS;
 
+// Keyed by the sentence, so that the same doubt met again is not repeated.
+function warn(state: WalkState, warning: PlcSymbolWarning): void {
+  state.warnings.set(warning.message, warning);
+}
+
 /** Raised when the file lists, or would expand into, more than Pantin reads. */
 export class TooManySymbolsError extends Error {}
 
@@ -21,7 +31,7 @@ export interface WalkState {
   types: ReadonlyMap<string, SymbolType>;
   symbols: PlcSymbol[];
   // A set, so that a doubtful spelling used a thousand times is said once.
-  warnings: Set<string>;
+  warnings: Map<string, PlcSymbolWarning>;
   // Variables visited so far, against MAX_WORK.
   visited: number;
 }
@@ -45,9 +55,11 @@ function accessOf(text: string | undefined, state: WalkState): PlcSymbolAccess {
     return "read";
   }
   if (text !== undefined) {
-    state.warnings.add(
-      `The access "${text}" is not known: only Read and ReadWrite have been seen in a real file, so it is read as unknown.`,
-    );
+    warn(state, {
+      code: "access_unknown",
+      values: { access: text },
+      message: `The access "${text}" is not known: only Read and ReadWrite have been seen in a real file, so it is read as unknown.`,
+    });
   }
   return "unknown";
 }
@@ -81,9 +93,15 @@ function addContainerMembers(
   depth: number,
 ): void {
   if (depth >= MAX_EXPANSION_DEPTH) {
-    state.warnings.add(
-      `${facts.path.join(".")} (${type.iecType}) is nested more than ${MAX_EXPANSION_DEPTH} levels deep: it is listed as one symbol, its members are not read.`,
-    );
+    warn(state, {
+      code: "nesting_too_deep",
+      values: {
+        path: facts.path.join("."),
+        iecType: type.iecType,
+        maxDepth: String(MAX_EXPANSION_DEPTH),
+      },
+      message: `${facts.path.join(".")} (${type.iecType}) is nested more than ${MAX_EXPANSION_DEPTH} levels deep: it is listed as one symbol, its members are not read.`,
+    });
     addSymbol(state, facts, type.iecType);
     return;
   }
@@ -109,9 +127,11 @@ function addVariable(state: WalkState, facts: VariableFacts, depth: number): voi
   }
   const type = state.types.get(facts.typeName);
   if (type === undefined) {
-    state.warnings.add(
-      `${facts.path.join(".")} has the type "${facts.typeName}", which the type list does not define: it is listed with that name.`,
-    );
+    warn(state, {
+      code: "type_undefined",
+      values: { path: facts.path.join("."), typeName: facts.typeName },
+      message: `${facts.path.join(".")} has the type "${facts.typeName}", which the type list does not define: it is listed with that name.`,
+    });
     addSymbol(state, facts, facts.typeName);
   } else if (type.kind === "container") {
     addContainerMembers(state, facts, type, depth);
@@ -125,7 +145,11 @@ export function walkNodes(state: WalkState, parent: XmlElement, path: readonly s
   for (const node of childrenNamed(parent, "Node")) {
     const name = attributeOf(node, "name");
     if (name === undefined || name === "") {
-      state.warnings.add("A node without a name was skipped.");
+      warn(state, {
+        code: "node_without_name",
+        values: {},
+        message: "A node without a name was skipped.",
+      });
       continue;
     }
     const nodePath = [...path, name];

@@ -3,6 +3,7 @@ import type {
   IoDocument,
   IoVariableAssignment,
   SkippedAssignment,
+  SkipReason,
 } from "@pantin/protocol";
 import { variableProblemOf } from "./io-identifiers.ts";
 
@@ -26,14 +27,22 @@ interface Pending {
 function findChannel(
   modules: IoDocument["modules"],
   assignment: IoVariableAssignment,
-): IoChannel | string {
+): IoChannel | SkipReason {
   const module = modules.find((candidate) => candidate.key === assignment.module);
   if (module === undefined) {
-    return `The mapping has no module "${assignment.module}".`;
+    return {
+      code: "module_not_found",
+      values: { module: assignment.module },
+      message: `The mapping has no module "${assignment.module}".`,
+    };
   }
   const channel = module.channels.find((candidate) => candidate.tag === assignment.tag);
   return (
-    channel ?? `Tag "${assignment.tag}" is not mapped in module "${assignment.module}" any more.`
+    channel ?? {
+      code: "tag_not_mapped",
+      values: { tag: assignment.tag, module: assignment.module },
+      message: `Tag "${assignment.tag}" is not mapped in module "${assignment.module}" any more.`,
+    }
   );
 }
 
@@ -69,7 +78,11 @@ function dropConflicts(modules: IoDocument["modules"], pending: Pending[]): Skip
       );
       skipped.push({
         ...entry.assignment,
-        reason: `Variable "${entry.assignment.variable}" would be the variable of "${other}" too: one PLC variable carries one signal.`,
+        reason: {
+          code: "variable_shared",
+          values: { variable: entry.assignment.variable, otherTag: other ?? "" },
+          message: `Variable "${entry.assignment.variable}" would be the variable of "${other}" too: one PLC variable carries one signal.`,
+        },
       });
       // Putting the old name back may clash in turn: the loop checks again.
       entry.channel.variable = entry.previousVariable;
@@ -78,9 +91,13 @@ function dropConflicts(modules: IoDocument["modules"], pending: Pending[]): Skip
   }
 }
 
-function repeatedChannel(pending: readonly Pending[], channel: IoChannel): string | null {
+function repeatedChannel(pending: readonly Pending[], channel: IoChannel): SkipReason | null {
   return pending.some((entry) => entry.channel === channel)
-    ? "The batch assigns this channel twice: only the first entry counts."
+    ? {
+        code: "channel_assigned_twice",
+        values: {},
+        message: "The batch assigns this channel twice: only the first entry counts.",
+      }
     : null;
 }
 
@@ -98,12 +115,14 @@ export function applyVariableAssignments(
   const pending: Pending[] = [];
   for (const assignment of assignments) {
     const found = findChannel(modules, assignment);
-    const refusal =
-      typeof found === "string"
-        ? found
-        : (variableProblemOf(assignment.variable) ?? repeatedChannel(pending, found));
-    if (typeof found === "string" || refusal !== null) {
-      skipped.push({ ...assignment, reason: refusal ?? "" });
+    // A channel has no `code` field; a refusal always has.
+    if ("code" in found) {
+      skipped.push({ ...assignment, reason: found });
+      continue;
+    }
+    const refusal = variableProblemOf(assignment.variable) ?? repeatedChannel(pending, found);
+    if (refusal !== null) {
+      skipped.push({ ...assignment, reason: refusal });
     } else {
       pending.push({ assignment, channel: found, previousVariable: found.variable });
       found.variable = assignment.variable;

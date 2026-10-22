@@ -23,7 +23,7 @@ function matchRow(match: SymbolMatch): string {
     match.proposedVariable === match.currentVariable
       ? match.currentVariable
       : `${match.currentVariable} -> ${match.proposedVariable}`;
-  const notes = match.warnings.map((warning) => `\n      warning: ${warning}`).join("");
+  const notes = match.warnings.map((warning) => `\n      warning: ${warning.message}`).join("");
   return `[${match.module}] ${match.tag}: ${change} (${match.rule}, ${match.compatibility})${notes}`;
 }
 
@@ -36,7 +36,7 @@ export function renderSymbolPreview(preview: SymbolImportPreview): string {
   const where = project === null ? "" : `, project "${project.name}" (${project.applicationName})`;
   const lines = [
     `Format ${preview.format}${where}: ${preview.symbolCount} symbols read.`,
-    ...preview.warnings.map((warning) => `note: ${warning}`),
+    ...preview.warnings.map((warning) => `note: ${warning.message}`),
     ...rows("Matched", byCompatibility(preview.proposals, "compatible")),
     ...rows("To check (warnings)", byCompatibility(preview.proposals, "warning")),
     ...rows("Incompatible (never applied)", byCompatibility(preview.proposals, "incompatible")),

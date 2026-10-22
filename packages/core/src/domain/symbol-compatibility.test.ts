@@ -23,7 +23,11 @@ describe("assessTypeCompatibility", () => {
       const assessment = assessTypeCompatibility("integer", iecType);
       expect(assessment.compatibility).toBe("warning");
       expect(assessment.warnings).toHaveLength(1);
-      expect(assessment.warnings[0]).toContain(iecType);
+      expect(assessment.warnings[0]).toMatchObject({
+        code: "integer_may_not_fit",
+        values: { iecType },
+      });
+      expect(assessment.warnings[0]?.message).toContain(iecType);
     },
   );
 

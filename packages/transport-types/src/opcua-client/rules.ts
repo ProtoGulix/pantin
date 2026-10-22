@@ -4,6 +4,7 @@ import type {
   RuleModule,
   SymbolShape,
   TransportRules,
+  TransportSymbolWarning,
 } from "../rule-types.ts";
 import type { SignalShape } from "../schema-common.ts";
 import type {
@@ -156,18 +157,26 @@ function compareChannels(first: TransportChannel, second: TransportChannel): num
 // ADR 0065 point 12: Pantin reads a command from the PLC and writes a feedback to it, so a
 // command needs a readable variable and a feedback a writable one. An unknown access is not
 // judged.
-function accessWarnings(signal: SignalShape, symbol: SymbolShape): string[] {
+function accessWarnings(signal: SignalShape, symbol: SymbolShape): TransportSymbolWarning[] {
   const { access } = symbol;
   const canRead = access === "read" || access === "read_write";
   const canWrite = access === "write" || access === "read_write";
   if (signal.direction === "command" && access !== "unknown" && !canRead) {
     return [
-      `The PLC variable is ${access} only, but Pantin reads this command from it: make it readable.`,
+      {
+        code: "opcua_command_not_readable",
+        values: { access },
+        message: `The PLC variable is ${access} only, but Pantin reads this command from it: make it readable.`,
+      },
     ];
   }
   if (signal.direction === "feedback" && access !== "unknown" && !canWrite) {
     return [
-      `The PLC variable is ${access} only, but Pantin writes this feedback to it: make it writable.`,
+      {
+        code: "opcua_feedback_not_writable",
+        values: { access },
+        message: `The PLC variable is ${access} only, but Pantin writes this feedback to it: make it writable.`,
+      },
     ];
   }
   return [];
@@ -177,13 +186,17 @@ function symbolWarnings(
   channel: TransportChannel,
   symbol: SymbolShape,
   signal: SignalShape,
-): string[] {
+): TransportSymbolWarning[] {
   const iecType = channel.opcua?.iecType;
-  const typeWarnings =
+  const typeWarnings: TransportSymbolWarning[] =
     iecType === undefined || symbol.iecType.trim().toUpperCase() === iecType
       ? []
       : [
-          `The OPC UA channel is ${iecType} but the PLC variable is ${symbol.iecType}: change the channel's type or the variable.`,
+          {
+            code: "opcua_type_differs",
+            values: { channelType: iecType, variableType: symbol.iecType },
+            message: `The OPC UA channel is ${iecType} but the PLC variable is ${symbol.iecType}: change the type of the PLC variable to ${iecType}.`,
+          },
         ];
   return [...typeWarnings, ...accessWarnings(signal, symbol)];
 }

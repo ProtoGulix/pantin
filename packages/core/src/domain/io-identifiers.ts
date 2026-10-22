@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { SkipReason } from "@pantin/protocol";
 
 // The CODESYS variable name rules of ADR 0045 point 9, with the dotted
 // references of ADR 0064 point 9. NOT VERIFIED: they are
@@ -150,37 +151,61 @@ export function isDottedVariable(variable: string): boolean {
 }
 
 /**
- * Why a name cannot be a PLC variable reference, as a sentence; null when it
- * can: 1 to 8 identifiers joined by ".", at most 255 characters in total (ADR
- * 0064 point 9). A name without a dot is one identifier, as before.
+ * Why a name cannot be a PLC variable reference; null when it can: 1 to 8 identifiers
+ * joined by ".", at most 255 characters in total (ADR 0064 point 9). A name without a dot
+ * is one identifier, as before. `values.reference` is always the whole name; `values.variable`
+ * is the part at fault (the whole name when it has no dot).
  */
-export function variableProblemOf(name: string): string | null {
+export function variableProblemOf(name: string): SkipReason | null {
   const segments = name.split(".");
   if (segments.length > REFERENCE_MAX_SEGMENTS) {
-    return `Variable "${name}" has more than ${REFERENCE_MAX_SEGMENTS} dotted parts.`;
+    return {
+      code: "variable_too_many_parts",
+      values: { variable: name, reference: name, max: String(REFERENCE_MAX_SEGMENTS) },
+      message: `Variable "${name}" has more than ${REFERENCE_MAX_SEGMENTS} dotted parts.`,
+    };
   }
   if (name.length > REFERENCE_MAX_LENGTH) {
-    return `Variable "${name}" is longer than ${REFERENCE_MAX_LENGTH} characters.`;
+    return {
+      code: "variable_too_long",
+      values: { variable: name, reference: name, max: String(REFERENCE_MAX_LENGTH) },
+      message: `Variable "${name}" is longer than ${REFERENCE_MAX_LENGTH} characters.`,
+    };
   }
   for (const segment of segments) {
-    const problem = identifierProblemOf(segment);
+    const problem = identifierProblemOf(segment, name);
     if (problem !== null) {
-      return segments.length === 1 ? problem : `${problem} (a part of "${name}")`;
+      return segments.length === 1
+        ? problem
+        : { ...problem, message: `${problem.message} (a part of "${name}")` };
     }
   }
   return null;
 }
 
-/** Why a name cannot be one identifier, as a sentence; null when it can. */
-function identifierProblemOf(name: string): string | null {
+/** Why a name cannot be one identifier; null when it can. */
+function identifierProblemOf(name: string, reference: string): SkipReason | null {
+  const values = { variable: name, reference };
   if (name.length > VARIABLE_MAX_LENGTH) {
-    return `Variable "${name}" is longer than ${VARIABLE_MAX_LENGTH} characters.`;
+    return {
+      code: "variable_too_long",
+      values: { ...values, max: String(VARIABLE_MAX_LENGTH) },
+      message: `Variable "${name}" is longer than ${VARIABLE_MAX_LENGTH} characters.`,
+    };
   }
   if (!VARIABLE_PATTERN.test(name)) {
-    return `Variable "${name}" must start with a letter, then hold letters, digits and single underscores, with no leading, trailing or double underscore.`;
+    return {
+      code: "variable_invalid_name",
+      values,
+      message: `Variable "${name}" must start with a letter, then hold letters, digits and single underscores, with no leading, trailing or double underscore.`,
+    };
   }
   if (RESERVED_NAMES.has(name.toUpperCase())) {
-    return `Variable "${name}" is an IEC 61131-3 keyword or type name.`;
+    return {
+      code: "variable_reserved_name",
+      values,
+      message: `Variable "${name}" is an IEC 61131-3 keyword or type name.`,
+    };
   }
   return null;
 }

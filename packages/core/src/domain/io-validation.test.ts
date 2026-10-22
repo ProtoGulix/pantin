@@ -145,7 +145,7 @@ describe("validateIoDocument variables", () => {
     expect(problems).toMatchObject([
       { path: ["modules", 0, "channels", 0, "variable"], code: "invalid_variable" },
     ]);
-    expect(problems[0]?.message).toBe(variableProblemOf("BOOL"));
+    expect(problems[0]?.message).toBe(variableProblemOf("BOOL")?.message);
   });
 
   it("accepts a dotted reference to a variable the PLC program declares", () => {

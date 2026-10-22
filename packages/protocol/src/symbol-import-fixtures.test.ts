@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
   ApplyIoVariablesRequestSchema,
+  ApplyIoVariablesResponseSchema,
   IO_VARIABLES_MAX_ENTRIES,
   SymbolImportPreviewSchema,
 } from "./symbol-import.ts";
@@ -10,9 +11,10 @@ import {
 const CaseSchema = z.object({ name: z.string(), message: z.unknown() });
 const CasesSchema = z.object({ valid: z.array(CaseSchema), invalid: z.array(CaseSchema) });
 const FixtureFileSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   previews: CasesSchema,
   applyRequests: CasesSchema,
+  applyResponses: CasesSchema,
 });
 
 const fixtures = FixtureFileSchema.parse(
@@ -28,6 +30,7 @@ function entries(cases: z.infer<typeof CaseSchema>[]) {
 describe.each([
   ["preview", SymbolImportPreviewSchema, fixtures.previews],
   ["apply request", ApplyIoVariablesRequestSchema, fixtures.applyRequests],
+  ["apply response", ApplyIoVariablesResponseSchema, fixtures.applyResponses],
 ] as const)("symbol import %s fixtures", (_label, schema, cases) => {
   it.each(entries(cases.valid))("accepts: %s", (_name, message) => {
     expect(schema.safeParse(message).success).toBe(true);

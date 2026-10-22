@@ -31,12 +31,29 @@ export const PlcProjectInfoSchema = z.strictObject({
 });
 export type PlcProjectInfo = z.infer<typeof PlcProjectInfoSchema>;
 
+// Something the reader doubted: a code the client translates, the strings the English
+// sentence interpolates, and that sentence for logs and the command line. The codes repeat
+// part of the protocol's list, since this package depends on no other: the core passes these
+// warnings on as the protocol's type, so the type checker keeps the two lists in step.
+export const PLC_SYMBOL_WARNING_CODES = [
+  "access_unknown",
+  "nesting_too_deep",
+  "type_undefined",
+  "node_without_name",
+] as const;
+export const PlcSymbolWarningSchema = z.strictObject({
+  code: z.enum(PLC_SYMBOL_WARNING_CODES),
+  values: z.record(z.string(), z.string()),
+  message: z.string().min(1),
+});
+export type PlcSymbolWarning = z.infer<typeof PlcSymbolWarningSchema>;
+
 export const PlcSymbolListSchema = z.strictObject({
   // For display only; null when the file does not say.
   project: PlcProjectInfoSchema.nullable(),
   symbols: z.array(PlcSymbolSchema),
   // What was read with a doubt (an access spelling nobody has seen, a nesting too deep).
-  warnings: z.array(z.string()),
+  warnings: z.array(PlcSymbolWarningSchema),
 });
 export type PlcSymbolList = z.infer<typeof PlcSymbolListSchema>;
 

@@ -38,7 +38,13 @@ export const SURE_TWO = matchOf("main.valve.retract", "GVL.valve_retract", { rul
 export const TO_CHECK = matchOf("main.rod.position", "GVL.rod_position", {
   rule: "suffix",
   compatibility: "warning",
-  warnings: ["The variable is an INT and the channel a REAL."],
+  warnings: [
+    {
+      code: "opcua_type_differs",
+      values: { channelType: "REAL", variableType: "INT" },
+      message: "The variable is an INT and the channel a REAL.",
+    },
+  ],
 });
 export const INCOMPATIBLE = matchOf("main.rod.speed", "GVL.rod_speed", {
   rule: "normalised",

@@ -68,7 +68,9 @@ function channelProblems(placed: Placed, tag: IoTag | undefined): IoProblem[] {
   const variable = variableProblemOf(placed.channel.variable);
   return [
     ...signalProblems(placed, tag),
-    ...(variable === null ? [] : [problem(placed, "variable", "invalid_variable", variable)]),
+    ...(variable === null
+      ? []
+      : [problem(placed, "variable", "invalid_variable", variable.message)]),
   ];
 }
 

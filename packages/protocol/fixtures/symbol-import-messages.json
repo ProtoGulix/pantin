@@ -1,6 +1,6 @@
 {
-  "description": "Messages of the PLC symbol import (ADR 0064 point 13): the preview of POST /api/pantins/:pantinId/io/symbols/preview (SymbolImportPreview) and the body of POST /api/pantins/:pantinId/io/variables (ApplyIoVariablesRequest). Every decoder must accept every `valid` entry and refuse every `invalid` one.",
-  "version": 1,
+  "description": "Messages of the PLC symbol import (ADR 0064 point 13): the preview of POST /api/pantins/:pantinId/io/symbols/preview (SymbolImportPreview) the body of POST /api/pantins/:pantinId/io/variables (ApplyIoVariablesRequest) and its answer (ApplyIoVariablesResponse). Every decoder must accept every `valid` entry and refuse every `invalid` one.",
+  "version": 2,
   "previews": {
     "valid": [
       {
@@ -21,9 +21,21 @@
         "name": "one entry in every section",
         "message": {
           "format": "codesys-symbolconfiguration",
-          "project": { "name": "Demo", "deviceName": "Device", "applicationName": "Application" },
+          "project": {
+            "name": "Demo",
+            "deviceName": "Device",
+            "applicationName": "Application"
+          },
           "symbolCount": 4,
-          "warnings": ["The access \"Write\" is not known: it is read as unknown."],
+          "warnings": [
+            {
+              "code": "access_unknown",
+              "values": {
+                "access": "Write"
+              },
+              "message": "The access \"Write\" is not known: it is read as unknown."
+            }
+          ],
           "proposals": [
             {
               "module": "m1",
@@ -57,7 +69,16 @@
               },
               "rule": "exact",
               "compatibility": "warning",
-              "warnings": ["The Modbus channel carries REAL but the PLC variable is LREAL."]
+              "warnings": [
+                {
+                  "code": "modbus_wire_type_differs",
+                  "values": {
+                    "wireType": "REAL",
+                    "iecType": "LREAL"
+                  },
+                  "message": "The Modbus channel carries REAL but the PLC variable is LREAL."
+                }
+              ]
             }
           ],
           "unmatchedSignals": [
@@ -111,7 +132,13 @@
           "unchanged": [],
           "unmatchedSignals": [],
           "unusedSymbols": [],
-          "moduleProposals": [{ "module": "plc", "nodeIdPrefix": "|var|D.A.", "reason": "guess" }]
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|D.A.",
+              "reason": "guess"
+            }
+          ]
         }
       },
       {
@@ -126,7 +153,11 @@
           "unmatchedSignals": [],
           "unusedSymbols": [],
           "moduleProposals": [
-            { "module": "plc", "nodeIdPrefix": "", "reason": "from_project_info" }
+            {
+              "module": "plc",
+              "nodeIdPrefix": "",
+              "reason": "from_project_info"
+            }
           ]
         }
       },
@@ -201,6 +232,498 @@
           "moduleProposals": [],
           "symbols": []
         }
+      },
+      {
+        "name": "a reader warning with an unknown code",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": {
+            "name": "Demo",
+            "deviceName": "Device",
+            "applicationName": "Application"
+          },
+          "symbolCount": 4,
+          "warnings": [
+            {
+              "code": "guess",
+              "values": {},
+              "message": "x"
+            }
+          ],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "axis_valve_coil_14",
+              "proposedVariable": "PLC_PRG.fbValve.xExtend",
+              "symbol": {
+                "reference": "PLC_PRG.fbValve.xExtend",
+                "path": ["Application", "PLC_PRG", "fbValve", "xExtend"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "normalised",
+              "compatibility": "compatible",
+              "warnings": []
+            }
+          ],
+          "unchanged": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.position",
+              "currentVariable": "axis_stroke_position",
+              "proposedVariable": "axis_stroke_position",
+              "symbol": {
+                "reference": "GVL.axis_stroke_position",
+                "path": ["Application", "GVL", "axis_stroke_position"],
+                "iecType": "LREAL",
+                "access": "read_write",
+                "comment": "feedback"
+              },
+              "rule": "exact",
+              "compatibility": "warning",
+              "warnings": [
+                {
+                  "code": "modbus_wire_type_differs",
+                  "values": {
+                    "wireType": "REAL",
+                    "iecType": "LREAL"
+                  },
+                  "message": "The Modbus channel carries REAL but the PLC variable is LREAL."
+                }
+              ]
+            }
+          ],
+          "unmatchedSignals": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.setpoint",
+              "currentVariable": "axis_stroke_setpoint",
+              "candidates": [
+                {
+                  "reference": "PLC_PRG.rTarget",
+                  "path": ["Application", "PLC_PRG", "rTarget"],
+                  "iecType": "REAL",
+                  "access": "read_write",
+                  "comment": null,
+                  "directAddress": "%QW1"
+                }
+              ]
+            }
+          ],
+          "unusedSymbols": [
+            {
+              "symbol": {
+                "reference": "GVL.sizes",
+                "path": ["Application", "GVL", "sizes"],
+                "iecType": "ARRAY [0..3] OF BYTE",
+                "access": "read",
+                "comment": null
+              },
+              "reason": "incompatible_type"
+            }
+          ],
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|Device.Application.",
+              "reason": "from_project_info"
+            }
+          ]
+        }
+      },
+      {
+        "name": "a match warning with no values",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": {
+            "name": "Demo",
+            "deviceName": "Device",
+            "applicationName": "Application"
+          },
+          "symbolCount": 4,
+          "warnings": [
+            {
+              "code": "access_unknown",
+              "values": {
+                "access": "Write"
+              },
+              "message": "The access \"Write\" is not known: it is read as unknown."
+            }
+          ],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "axis_valve_coil_14",
+              "proposedVariable": "PLC_PRG.fbValve.xExtend",
+              "symbol": {
+                "reference": "PLC_PRG.fbValve.xExtend",
+                "path": ["Application", "PLC_PRG", "fbValve", "xExtend"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "normalised",
+              "compatibility": "compatible",
+              "warnings": []
+            }
+          ],
+          "unchanged": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.position",
+              "currentVariable": "axis_stroke_position",
+              "proposedVariable": "axis_stroke_position",
+              "symbol": {
+                "reference": "GVL.axis_stroke_position",
+                "path": ["Application", "GVL", "axis_stroke_position"],
+                "iecType": "LREAL",
+                "access": "read_write",
+                "comment": "feedback"
+              },
+              "rule": "exact",
+              "compatibility": "warning",
+              "warnings": [
+                {
+                  "code": "opcua_type_differs",
+                  "message": "x"
+                }
+              ]
+            }
+          ],
+          "unmatchedSignals": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.setpoint",
+              "currentVariable": "axis_stroke_setpoint",
+              "candidates": [
+                {
+                  "reference": "PLC_PRG.rTarget",
+                  "path": ["Application", "PLC_PRG", "rTarget"],
+                  "iecType": "REAL",
+                  "access": "read_write",
+                  "comment": null,
+                  "directAddress": "%QW1"
+                }
+              ]
+            }
+          ],
+          "unusedSymbols": [
+            {
+              "symbol": {
+                "reference": "GVL.sizes",
+                "path": ["Application", "GVL", "sizes"],
+                "iecType": "ARRAY [0..3] OF BYTE",
+                "access": "read",
+                "comment": null
+              },
+              "reason": "incompatible_type"
+            }
+          ],
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|Device.Application.",
+              "reason": "from_project_info"
+            }
+          ]
+        }
+      },
+      {
+        "name": "a match warning with a value that is not a string",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": {
+            "name": "Demo",
+            "deviceName": "Device",
+            "applicationName": "Application"
+          },
+          "symbolCount": 4,
+          "warnings": [
+            {
+              "code": "access_unknown",
+              "values": {
+                "access": "Write"
+              },
+              "message": "The access \"Write\" is not known: it is read as unknown."
+            }
+          ],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "axis_valve_coil_14",
+              "proposedVariable": "PLC_PRG.fbValve.xExtend",
+              "symbol": {
+                "reference": "PLC_PRG.fbValve.xExtend",
+                "path": ["Application", "PLC_PRG", "fbValve", "xExtend"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "normalised",
+              "compatibility": "compatible",
+              "warnings": []
+            }
+          ],
+          "unchanged": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.position",
+              "currentVariable": "axis_stroke_position",
+              "proposedVariable": "axis_stroke_position",
+              "symbol": {
+                "reference": "GVL.axis_stroke_position",
+                "path": ["Application", "GVL", "axis_stroke_position"],
+                "iecType": "LREAL",
+                "access": "read_write",
+                "comment": "feedback"
+              },
+              "rule": "exact",
+              "compatibility": "warning",
+              "warnings": [
+                {
+                  "code": "opcua_type_differs",
+                  "values": {
+                    "channelType": 1
+                  },
+                  "message": "x"
+                }
+              ]
+            }
+          ],
+          "unmatchedSignals": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.setpoint",
+              "currentVariable": "axis_stroke_setpoint",
+              "candidates": [
+                {
+                  "reference": "PLC_PRG.rTarget",
+                  "path": ["Application", "PLC_PRG", "rTarget"],
+                  "iecType": "REAL",
+                  "access": "read_write",
+                  "comment": null,
+                  "directAddress": "%QW1"
+                }
+              ]
+            }
+          ],
+          "unusedSymbols": [
+            {
+              "symbol": {
+                "reference": "GVL.sizes",
+                "path": ["Application", "GVL", "sizes"],
+                "iecType": "ARRAY [0..3] OF BYTE",
+                "access": "read",
+                "comment": null
+              },
+              "reason": "incompatible_type"
+            }
+          ],
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|Device.Application.",
+              "reason": "from_project_info"
+            }
+          ]
+        }
+      },
+      {
+        "name": "a match warning with an empty message",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": {
+            "name": "Demo",
+            "deviceName": "Device",
+            "applicationName": "Application"
+          },
+          "symbolCount": 4,
+          "warnings": [
+            {
+              "code": "access_unknown",
+              "values": {
+                "access": "Write"
+              },
+              "message": "The access \"Write\" is not known: it is read as unknown."
+            }
+          ],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "axis_valve_coil_14",
+              "proposedVariable": "PLC_PRG.fbValve.xExtend",
+              "symbol": {
+                "reference": "PLC_PRG.fbValve.xExtend",
+                "path": ["Application", "PLC_PRG", "fbValve", "xExtend"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "normalised",
+              "compatibility": "compatible",
+              "warnings": []
+            }
+          ],
+          "unchanged": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.position",
+              "currentVariable": "axis_stroke_position",
+              "proposedVariable": "axis_stroke_position",
+              "symbol": {
+                "reference": "GVL.axis_stroke_position",
+                "path": ["Application", "GVL", "axis_stroke_position"],
+                "iecType": "LREAL",
+                "access": "read_write",
+                "comment": "feedback"
+              },
+              "rule": "exact",
+              "compatibility": "warning",
+              "warnings": [
+                {
+                  "code": "opcua_type_differs",
+                  "values": {},
+                  "message": ""
+                }
+              ]
+            }
+          ],
+          "unmatchedSignals": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.setpoint",
+              "currentVariable": "axis_stroke_setpoint",
+              "candidates": [
+                {
+                  "reference": "PLC_PRG.rTarget",
+                  "path": ["Application", "PLC_PRG", "rTarget"],
+                  "iecType": "REAL",
+                  "access": "read_write",
+                  "comment": null,
+                  "directAddress": "%QW1"
+                }
+              ]
+            }
+          ],
+          "unusedSymbols": [
+            {
+              "symbol": {
+                "reference": "GVL.sizes",
+                "path": ["Application", "GVL", "sizes"],
+                "iecType": "ARRAY [0..3] OF BYTE",
+                "access": "read",
+                "comment": null
+              },
+              "reason": "incompatible_type"
+            }
+          ],
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|Device.Application.",
+              "reason": "from_project_info"
+            }
+          ]
+        }
+      },
+      {
+        "name": "a warning that is still a bare sentence",
+        "message": {
+          "format": "codesys-symbolconfiguration",
+          "project": {
+            "name": "Demo",
+            "deviceName": "Device",
+            "applicationName": "Application"
+          },
+          "symbolCount": 4,
+          "warnings": ["The access is not known."],
+          "proposals": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "currentVariable": "axis_valve_coil_14",
+              "proposedVariable": "PLC_PRG.fbValve.xExtend",
+              "symbol": {
+                "reference": "PLC_PRG.fbValve.xExtend",
+                "path": ["Application", "PLC_PRG", "fbValve", "xExtend"],
+                "iecType": "BOOL",
+                "access": "read_write",
+                "comment": null
+              },
+              "rule": "normalised",
+              "compatibility": "compatible",
+              "warnings": []
+            }
+          ],
+          "unchanged": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.position",
+              "currentVariable": "axis_stroke_position",
+              "proposedVariable": "axis_stroke_position",
+              "symbol": {
+                "reference": "GVL.axis_stroke_position",
+                "path": ["Application", "GVL", "axis_stroke_position"],
+                "iecType": "LREAL",
+                "access": "read_write",
+                "comment": "feedback"
+              },
+              "rule": "exact",
+              "compatibility": "warning",
+              "warnings": [
+                {
+                  "code": "modbus_wire_type_differs",
+                  "values": {
+                    "wireType": "REAL",
+                    "iecType": "LREAL"
+                  },
+                  "message": "The Modbus channel carries REAL but the PLC variable is LREAL."
+                }
+              ]
+            }
+          ],
+          "unmatchedSignals": [
+            {
+              "module": "m1",
+              "tag": "axis.stroke.setpoint",
+              "currentVariable": "axis_stroke_setpoint",
+              "candidates": [
+                {
+                  "reference": "PLC_PRG.rTarget",
+                  "path": ["Application", "PLC_PRG", "rTarget"],
+                  "iecType": "REAL",
+                  "access": "read_write",
+                  "comment": null,
+                  "directAddress": "%QW1"
+                }
+              ]
+            }
+          ],
+          "unusedSymbols": [
+            {
+              "symbol": {
+                "reference": "GVL.sizes",
+                "path": ["Application", "GVL", "sizes"],
+                "iecType": "ARRAY [0..3] OF BYTE",
+                "access": "read",
+                "comment": null
+              },
+              "reason": "incompatible_type"
+            }
+          ],
+          "moduleProposals": [
+            {
+              "module": "plc",
+              "nodeIdPrefix": "|var|Device.Application.",
+              "reason": "from_project_info"
+            }
+          ]
+        }
       }
     ]
   },
@@ -210,28 +733,176 @@
         "name": "one assignment",
         "message": {
           "assignments": [
-            { "module": "m1", "tag": "axis.valve.coil_14", "variable": "GVL.xExtend" }
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": "GVL.xExtend"
+            }
           ]
         }
       }
     ],
     "invalid": [
-      { "name": "no assignment", "message": { "assignments": [] } },
+      {
+        "name": "no assignment",
+        "message": {
+          "assignments": []
+        }
+      },
       {
         "name": "an empty variable",
         "message": {
-          "assignments": [{ "module": "m1", "tag": "axis.valve.coil_14", "variable": "" }]
+          "assignments": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": ""
+            }
+          ]
         }
       },
       {
         "name": "a tag that is not a tag name",
-        "message": { "assignments": [{ "module": "m1", "tag": "valve", "variable": "x" }] }
+        "message": {
+          "assignments": [
+            {
+              "module": "m1",
+              "tag": "valve",
+              "variable": "x"
+            }
+          ]
+        }
       },
       {
         "name": "an extra key on an assignment",
         "message": {
           "assignments": [
-            { "module": "m1", "tag": "axis.valve.coil_14", "variable": "x", "zone": "coil" }
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": "x",
+              "zone": "coil"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "applyResponses": {
+    "valid": [
+      {
+        "name": "one applied entry and one refused",
+        "message": {
+          "status": "missing",
+          "mappingId": null,
+          "modules": [],
+          "problems": [],
+          "unmappedTags": [],
+          "applied": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": "GVL.a"
+            }
+          ],
+          "skipped": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_15",
+              "variable": "TYPE",
+              "reason": {
+                "code": "variable_reserved_name",
+                "values": {
+                  "variable": "TYPE",
+                  "reference": "TYPE"
+                },
+                "message": "Variable \"TYPE\" is an IEC 61131-3 keyword or type name."
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "a refusal that is still a bare sentence",
+        "message": {
+          "status": "missing",
+          "mappingId": null,
+          "modules": [],
+          "problems": [],
+          "unmappedTags": [],
+          "applied": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": "GVL.a"
+            }
+          ],
+          "skipped": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_15",
+              "variable": "TYPE",
+              "reason": "Variable is a keyword."
+            }
+          ]
+        }
+      },
+      {
+        "name": "a refusal with an unknown code",
+        "message": {
+          "status": "missing",
+          "mappingId": null,
+          "modules": [],
+          "problems": [],
+          "unmappedTags": [],
+          "applied": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": "GVL.a"
+            }
+          ],
+          "skipped": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_15",
+              "variable": "TYPE",
+              "reason": {
+                "code": "guess",
+                "values": {},
+                "message": "x"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "a refusal with no values",
+        "message": {
+          "status": "missing",
+          "mappingId": null,
+          "modules": [],
+          "problems": [],
+          "unmappedTags": [],
+          "applied": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_14",
+              "variable": "GVL.a"
+            }
+          ],
+          "skipped": [
+            {
+              "module": "m1",
+              "tag": "axis.valve.coil_15",
+              "variable": "TYPE",
+              "reason": {
+                "code": "variable_shared",
+                "message": "x"
+              }
+            }
           ]
         }
       }

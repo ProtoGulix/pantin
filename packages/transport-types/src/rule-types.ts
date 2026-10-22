@@ -8,6 +8,7 @@ import type {
   TransportKind,
   TransportPatch,
   TransportProblemCode,
+  TransportSymbolWarningCode,
 } from "./schemas.ts";
 
 // The contract of a transport's rules (ADR 0064 point 3): what the core asks of a
@@ -24,6 +25,16 @@ export interface RuleModule {
 export interface TransportProblem {
   path: (string | number)[];
   code: TransportProblemCode;
+  message: string;
+}
+
+/**
+ * A remark about a channel wired to a PLC variable: a code the client translates, the
+ * strings the English sentence interpolates, and that sentence for logs and the CLI.
+ */
+export interface TransportSymbolWarning {
+  code: TransportSymbolWarningCode;
+  values: Record<string, string>;
   message: string;
 }
 
@@ -94,11 +105,15 @@ export interface TransportRules {
   /** The order of the channels in the canonical text of a module. */
   compareChannels(first: TransportChannel, second: TransportChannel): number;
   /**
-   * Warnings, as sentences, about wiring `channel` to a PLC variable of this shape
+   * Warnings (code, values and an English sentence) about wiring `channel` to a PLC variable of this shape
    * (ADR 0064 point 12). The type table every transport shares is the core's; this adds
    * what the protocol knows, for example that its wire type differs from the variable's.
    */
-  symbolWarnings(channel: TransportChannel, symbol: SymbolShape, signal: SignalShape): string[];
+  symbolWarnings(
+    channel: TransportChannel,
+    symbol: SymbolShape,
+    signal: SignalShape,
+  ): TransportSymbolWarning[];
   /** The rules of the transport, against the signals of the document. */
   validateModule(module: RuleModule, signals: ReadonlyMap<string, SignalShape>): TransportProblem[];
 }

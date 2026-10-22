@@ -1,3 +1,4 @@
+import { TRANSPORT_SYMBOL_WARNING_CODES } from "@pantin/transport-types/schemas";
 import { z } from "zod";
 import { KeySchema } from "./ids.ts";
 import { IoMappingResponseSchema } from "./io-mapping.ts";
@@ -44,6 +45,38 @@ export const SYMBOL_MATCH_RULES = ["exact", "normalised", "suffix"] as const;
 export const SymbolMatchRuleSchema = z.enum(SYMBOL_MATCH_RULES);
 export type SymbolMatchRule = z.infer<typeof SymbolMatchRuleSchema>;
 
+// A remark about a variable or a refusal of an assignment, in the form of the other
+// translatable problems of the I/O view (IoProblem): a closed `code` the client turns into
+// a sentence in its language, the `values` that sentence interpolates (the keys are fixed
+// per code), and the English `message` kept for the command line and the logs.
+const SymbolNoticeShape = {
+  values: z.record(z.string(), z.string()),
+  message: z.string().min(1),
+};
+
+// The codes the core and the symbol reader emit; each transport adds its own.
+export const SYMBOL_COMMON_WARNING_CODES = [
+  // The reader of the file doubted something.
+  "access_unknown",
+  "nesting_too_deep",
+  "type_undefined",
+  "node_without_name",
+  // The shared type table doubts a variable.
+  "integer_may_not_fit",
+] as const;
+export const SYMBOL_WARNING_CODES = [
+  ...SYMBOL_COMMON_WARNING_CODES,
+  ...TRANSPORT_SYMBOL_WARNING_CODES,
+] as const;
+export const SymbolWarningCodeSchema = z.enum(SYMBOL_WARNING_CODES);
+export type SymbolWarningCode = z.infer<typeof SymbolWarningCodeSchema>;
+
+export const SymbolWarningSchema = z.strictObject({
+  code: SymbolWarningCodeSchema,
+  ...SymbolNoticeShape,
+});
+export type SymbolWarning = z.infer<typeof SymbolWarningSchema>;
+
 // "compatible": safe. "warning": probably right, to check (a narrower integer, a
 // transport remark). "incompatible": the type cannot carry the signal; it is
 // shown but never applied.
@@ -61,7 +94,7 @@ export const SymbolMatchSchema = z.strictObject({
   symbol: SymbolSummarySchema,
   rule: SymbolMatchRuleSchema,
   compatibility: SymbolCompatibilitySchema,
-  warnings: z.array(z.string()),
+  warnings: z.array(SymbolWarningSchema),
 });
 export type SymbolMatch = z.infer<typeof SymbolMatchSchema>;
 
@@ -114,7 +147,7 @@ export const SymbolImportPreviewSchema = z.strictObject({
     .nullable(),
   symbolCount: z.number().int().min(0),
   // What the reader doubted (an access spelling nobody has seen, a nesting too deep).
-  warnings: z.array(z.string()),
+  warnings: z.array(SymbolWarningSchema),
   proposals: z.array(SymbolMatchSchema),
   unchanged: z.array(SymbolMatchSchema),
   unmatchedSignals: z.array(UnmatchedSignalSchema),
@@ -137,10 +170,30 @@ export const ApplyIoVariablesRequestSchema = z.strictObject({
 });
 export type ApplyIoVariablesRequest = z.infer<typeof ApplyIoVariablesRequestSchema>;
 
+// Why an assignment is refused. The `values` keys of each code are in the comments of
+// the core's producers; the English message says what to fix.
+export const SKIP_REASON_CODES = [
+  "module_not_found",
+  "tag_not_mapped",
+  "variable_too_many_parts",
+  "variable_too_long",
+  "variable_invalid_name",
+  "variable_reserved_name",
+  "channel_assigned_twice",
+  "variable_shared",
+] as const;
+export const SkipReasonCodeSchema = z.enum(SKIP_REASON_CODES);
+export type SkipReasonCode = z.infer<typeof SkipReasonCodeSchema>;
+
+export const SkipReasonSchema = z.strictObject({
+  code: SkipReasonCodeSchema,
+  ...SymbolNoticeShape,
+});
+export type SkipReason = z.infer<typeof SkipReasonSchema>;
+
 export const SkippedAssignmentSchema = z.strictObject({
   ...IoVariableAssignmentSchema.shape,
-  // A sentence that says what to fix.
-  reason: z.string().min(1),
+  reason: SkipReasonSchema,
 });
 export type SkippedAssignment = z.infer<typeof SkippedAssignmentSchema>;
 

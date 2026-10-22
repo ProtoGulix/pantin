@@ -45,7 +45,9 @@ describe("the symbol import view", () => {
     const toCheck = view.sections.find((section) => section.id === "toCheck");
     const suffix = toCheck?.rows[0];
     expect(suffix?.details).toContain("Match: end of the name recognised (key and member)");
-    expect(suffix?.remarks).toEqual(["The variable is an INT and the channel a REAL."]);
+    expect(suffix?.remarks).toEqual([
+      "The OPC UA channel is REAL but the PLC variable is INT: change the type of the PLC variable to REAL.",
+    ]);
     expect(suffix?.tone).toBe("warning");
     expect(toCheck?.rows[1]?.remarks).toEqual(["Incompatible type: this row will not be applied."]);
     expect(toCheck?.rows[1]?.checkbox).toBeNull();

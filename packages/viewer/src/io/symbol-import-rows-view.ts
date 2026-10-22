@@ -2,6 +2,7 @@ import type { SymbolMatch, SymbolSummary, UnmatchedSignal, UnusedSymbol } from "
 import type { MessageKey, Translate } from "../i18n/translate.ts";
 import { isApplicable, pickOptions, symbolImportRows, symbolRowKey } from "./symbol-import-rows.ts";
 import type { SymbolImportState } from "./symbol-import-state.ts";
+import { symbolWarningText } from "./symbol-notice-text.ts";
 
 // The rows and sections of the PLC symbol import dialog as plain data (ADR 0064 point 14).
 // Every remark is a sentence: the tint of a row is never the only cue.
@@ -60,7 +61,7 @@ function matchRow(
 ): SymbolRowView {
   const key = symbolRowKey(match);
   const current = variableText(match.currentVariable, translate);
-  const remarks = [...match.warnings];
+  const remarks = match.warnings.map((warning) => symbolWarningText(warning, translate));
   if (match.compatibility === "warning" && match.warnings.length === 0) {
     remarks.push(translate("symbols.compat.warning"));
   }

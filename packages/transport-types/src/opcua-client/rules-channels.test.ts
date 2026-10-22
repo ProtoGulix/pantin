@@ -109,7 +109,14 @@ describe("the channels of an OPC UA module", () => {
     ).toEqual([]);
     expect(
       rules.symbolWarnings(channel, { iecType: "LREAL", access: "read_write" }, feedback),
-    ).toHaveLength(1);
+    ).toEqual([
+      {
+        code: "opcua_type_differs",
+        values: { channelType: "REAL", variableType: "LREAL" },
+        message:
+          "The OPC UA channel is REAL but the PLC variable is LREAL: change the type of the PLC variable to REAL.",
+      },
+    ]);
   });
 });
 
@@ -123,13 +130,17 @@ describe("the access warnings of an OPC UA channel (ADR 0065 point 12)", () => {
   it("asks a command's variable to be readable", () => {
     expect(rules.symbolWarnings(channel, bool("read"), command)).toEqual([]);
     expect(rules.symbolWarnings(channel, bool("read_write"), command)).toEqual([]);
-    expect(rules.symbolWarnings(channel, bool("write"), command)).toHaveLength(1);
+    expect(rules.symbolWarnings(channel, bool("write"), command)).toMatchObject([
+      { code: "opcua_command_not_readable", values: { access: "write" } },
+    ]);
   });
 
   it("asks a feedback's variable to be writable", () => {
     expect(rules.symbolWarnings(channel, bool("write"), feedback)).toEqual([]);
     expect(rules.symbolWarnings(channel, bool("read_write"), feedback)).toEqual([]);
-    expect(rules.symbolWarnings(channel, bool("read"), feedback)).toHaveLength(1);
+    expect(rules.symbolWarnings(channel, bool("read"), feedback)).toMatchObject([
+      { code: "opcua_feedback_not_writable", values: { access: "read" } },
+    ]);
   });
 
   it("does not judge an unknown access", () => {

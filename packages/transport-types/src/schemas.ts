@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   MODBUS_PROBLEM_CODES,
+  MODBUS_SYMBOL_WARNING_CODES,
   MODBUS_TCP_SLAVE_KIND,
   ModbusChannelPatchSchema,
   ModbusChannelSchema,
@@ -10,6 +11,7 @@ import {
 import {
   OPCUA_CLIENT_KIND,
   OPCUA_PROBLEM_CODES,
+  OPCUA_SYMBOL_WARNING_CODES,
   OpcuaChannelPatchSchema,
   OpcuaChannelSchema,
   OpcuaClientPatchSchema,
@@ -78,3 +80,10 @@ export const CHANNEL_KEY_BY_KIND: Readonly<Record<TransportKind, ChannelKey>> = 
 /** The problem codes the transports add to the common ones. */
 export const TRANSPORT_PROBLEM_CODES = [...MODBUS_PROBLEM_CODES, ...OPCUA_PROBLEM_CODES] as const;
 export type TransportProblemCode = (typeof TRANSPORT_PROBLEM_CODES)[number];
+
+/** The codes of the symbol warnings the transports add to the core's own. */
+export const TRANSPORT_SYMBOL_WARNING_CODES = [
+  ...MODBUS_SYMBOL_WARNING_CODES,
+  ...OPCUA_SYMBOL_WARNING_CODES,
+] as const;
+export type TransportSymbolWarningCode = (typeof TRANSPORT_SYMBOL_WARNING_CODES)[number];
