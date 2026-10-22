@@ -1,5 +1,6 @@
 import {
   type BridgeStatus,
+  BridgeStdinLineSchema,
   type IoMappingResponse,
   OPCUA_CLIENT_KIND,
   type PantinId,
@@ -101,7 +102,10 @@ function spawnFor(
     command: launcher.command,
     args,
     environment: launcher.environment,
-    stdinLine: plan.passwords === null ? null : JSON.stringify({ passwords: plan.passwords }),
+    stdinLine:
+      plan.passwords === null
+        ? null
+        : JSON.stringify(BridgeStdinLineSchema.parse({ passwords: plan.passwords })),
   };
   const handle = startBridgeProcess(
     options.spawn,

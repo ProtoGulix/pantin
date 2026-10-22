@@ -161,3 +161,11 @@ export const SetOpcuaBridgeRequestSchema = z.discriminatedUnion("running", [
   z.strictObject({ running: z.literal(false) }),
 ]);
 export type SetOpcuaBridgeRequest = z.infer<typeof SetOpcuaBridgeRequestSchema>;
+
+// The one line the core writes on the stdin of an OPC UA bridge started with --status-lines,
+// then EOF (ADR 0065 point 5): the passwords of its `user` modules, `{}` when none logs in.
+// It is the only way a password reaches the child, never the command line or the environment.
+export const BridgeStdinLineSchema = z.strictObject({
+  passwords: z.record(KeySchema, z.string().min(1).max(BRIDGE_MAX_PASSWORD_CHARACTERS)),
+});
+export type BridgeStdinLine = z.infer<typeof BridgeStdinLineSchema>;

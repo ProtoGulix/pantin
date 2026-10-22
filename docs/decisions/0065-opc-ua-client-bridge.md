@@ -677,3 +677,62 @@ and contradicting no decision.
   `.dependency-cruiser.cjs`.
 - **NOT VERIFIED:** the stdin write-error path; the PKI "inside the Pantins folder" check on
   Windows.
+
+## Amendment of 2026-10-22, S3
+
+Written when slice S3 was built (S3a the package, S3b sessions, S3c reconnection and
+certificates). Settled readings, adding detail and contradicting no decision; the NOT
+VERIFIED items they answer were measured against node-opcua 2.186.17 and its in-process
+server, not against CODESYS.
+
+- **Point 1, import rule:** node-opcua is confined to the folder
+  `packages/opcua-bridge/src/opcua/`, not to two files (rule
+  `node-opcua-only-in-the-opcua-folder`). `main.ts` installs the stdout guard and then loads
+  the rest with a dynamic import, which a dependency-cruiser rule enforces. node-opcua logs
+  through `node-opcua-debug`; the bridge redirects its debug, warning and error loggers to
+  stderr, and the guard catches the rest.
+- **Point 1, toolchain:** strict `tsc` with `noUncheckedIndexedAccess` passes with the
+  repository's `skipLibCheck: true`; without it, node-opcua's `@peculiar` typings need the DOM
+  library.
+- **Point 5, stdin:** the password line has a schema, `BridgeStdinLineSchema` in protocol,
+  used by both sides.
+- **Point 5, reconnection:** node-opcua's own retries are off with `connectionStrategy:
+  {maxRetry: 0}`. The bridge retries per module: 1 s doubling to 10 s after `closed` or
+  `timeout`, reset once connected; every 10 s after `node_mismatch` or
+  `certificate_rejected`. The last command values are cleared at each attempt, so that the
+  commands the core zeroed are forwarded again.
+- **Point 8, `remoteAddress`:** unreachable (private fields of node-opcua). The bridge watches
+  Node's `net.client.socket` diagnostics channel once sessions start: a client socket not
+  going to a module's exact address and port is destroyed and logged.
+- **Points 2 and 6:** `MaxNodesPerWrite` and `MaxNodesPerRead` are read from the server's
+  operation limits and writes and reads are split by them. Int64 values beyond 2^53 lose
+  their low bits (tags are JavaScript numbers); INT, DINT and LINT wrap. The watchdog starts
+  once monitoring is set up, after the subscription's revised settings are applied, and is fed
+  by every publish response. The monitored items are created before that and each item's
+  status is checked: an item the server refuses is `node_mismatch`, with one ERROR line naming
+  the node, and the module is never `connected` (point 6).
+- **Point 8, second line of defence:** the bridge itself refuses at start (exit
+  `configuration`) a user login with security None toward an address that is not loopback, as
+  the core does.
+- **Point 9:** a refused user login, a refused anonymous login and a None endpoint without a
+  user name policy all exit `authentication_failed` with `module` set.
+- **Point 10:**
+  - node-opcua checks neither the host name nor the application URI. A host name mismatch
+    is a WARNING; the bridge checks the application URI itself against the server's announced
+    one and exits `server_certificate_invalid` on a mismatch. A certificate without a URI in
+    its subject alternative names passes this check: there is nothing to compare.
+  - Text that comes from the PLC's certificate (subject, reason, quoted URIs) is cut to 256
+    characters, with an ellipsis marker, so that an `exiting` line never passes 4096 bytes; the
+    encoder also drops the certificate's text, then the certificate, if the line still does
+    not fit.
+  - Expired and not yet valid certificates both arrive as `BadCertificateTimeInvalid` and do
+    not land in `rejected/`; the bridge fetches the certificate by discovery to name the
+    reason.
+  - `rejected/` holds PEM files named by SHA-1; the bridge hashes the DER.
+  - The PLC refusing Pantin's certificate arrives as `BadSecurityChecksFailed` (or
+    `BadCertificateUntrusted`), mapped to `certificate_rejected`. NOT VERIFIED on CODESYS.
+  - node-opcua's `mutex/` does not cover creating a missing certificate: two concurrent
+    starts could create two. The bridge writes a candidate file and publishes it with a hard
+    link; the loser reads the winner's file.
+- **Point 14:** no listening socket is checked on Linux through `/proc`. `PANTIN_OPCUA_BRIDGE`
+  is set by `pnpm test` and read by the closed loop of S4.

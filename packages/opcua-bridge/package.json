@@ -1,0 +1,22 @@
+{
+  "name": "@pantin/opcua-bridge",
+  "version": "0.2.0",
+  "private": true,
+  "description": "OPC UA client bridge: a separate process, spawned by the core, that joins one PLC server per module to the tag bus (ADR 0065).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.ts"
+  },
+  "dependencies": {
+    "@pantin/network-address": "workspace:*",
+    "@pantin/protocol": "workspace:*",
+    "node-opcua-certificate-manager": "2.186.17",
+    "node-opcua-client": "2.186.17",
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "@types/ws": "8.18.2",
+    "node-opcua-server": "2.186.17"
+  }
+}

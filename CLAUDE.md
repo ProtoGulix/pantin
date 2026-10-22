@@ -47,6 +47,7 @@ Monorepo :
     packages/core        coeur headless (TypeScript, Node) : modèle, boucle, API, physique
     packages/viewer      viewer web (TypeScript, Vite, Babylon.js) : rendu et UI d'édition
     packages/bridge      pont vers les automates (Python, esclave Modbus TCP écrit à la main, processus séparé lancé par le coeur à la demande, ADR 0007, 0045, 0048, 0050)
+    packages/opcua-bridge pont client OPC UA (TypeScript, node-opcua, processus séparé lancé par le coeur à la demande, ADR 0065)
     packages/cli         validateur, générateur de variables CODESYS
     packages/step-converter  conversion STEP vers GLB (Python, OpenCascade, processus séparé, ADR 0009)
     parts/               pièces incluses (dossiers autonomes)
@@ -57,7 +58,7 @@ Monorepo :
 
 Nommage : le projet s'appelle Pantin. Les packages sont publiés sous la portée @pantin (par exemple @pantin/protocol, @pantin/core, @pantin/viewer, @pantin/cli ; le pont est un paquet Python non publié, pantin-bridge, ADR 0045) et la commande en ligne de commande est pantin. La disponibilité de ces noms sur GitHub, npm, PyPI, en nom de domaine et à l'INPI est NON VÉRIFIÉE : ne publie rien sous ce nom avant le spike correspondant (section 12).
 
-Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer et cli ; le pont, en Python, lui reste fidèle par les fixtures de packages/protocol/fixtures (ADR 0045). core, viewer et bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types, sensor-types et transport-types (sans logique), jamais leurs comportements, leurs évaluations ni leurs règles (ADR 0022, 0023, 0028, 0064). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028). plc-symbol-formats n'est importé que par core (ADR 0064). core importe network-address (opcua-bridge l'importera, ADR 0065).
+Règle de dépendance, vérifiée en CI : protocol est importé par core, viewer et cli ; le pont, en Python, lui reste fidèle par les fixtures de packages/protocol/fixtures (ADR 0045). core, viewer, bridge et opcua-bridge ne s'importent jamais entre eux, ils ne communiquent que par le tag bus et l'API. Seule exception pour protocol : il importe les schémas de drive-types, actuator-types, sensor-types et transport-types (sans logique), jamais leurs comportements, leurs évaluations ni leurs règles (ADR 0022, 0023, 0028, 0064). actuator-types importe les schémas d'état des orifices de drive-types, jamais ses comportements (ADR 0028). plc-symbol-formats n'est importé que par core (ADR 0064). core et opcua-bridge importent network-address ; opcua-bridge importe protocol (ADR 0065).
 
 Stack proposée (à confirmer en phase 0) :
 

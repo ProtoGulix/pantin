@@ -6,6 +6,11 @@
     },
     "packages/*": {
       "project": ["src/**/*.ts"]
+    },
+    "packages/opcua-bridge": {
+      "project": ["src/**/*.ts"],
+      // Spawned by the stdout guard test, never imported.
+      "entry": ["src/test-support/guard-probe.ts"]
     }
   }
 }

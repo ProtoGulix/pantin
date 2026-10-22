@@ -1,15 +1,19 @@
-// Enforces the package boundaries of CLAUDE.md section 4: core and viewer only talk through
-// the tag bus and the API, never through imports. The bridge is Python (ADR 0045): it has
-// no TypeScript to cruise, and its only link to the protocol is the shared fixtures.
+// Enforces the package boundaries of CLAUDE.md section 4: core, viewer and opcua-bridge only
+// talk through the tag bus and the API, never through imports. The Modbus bridge is Python
+// (ADR 0045): it has no TypeScript to cruise, and its only link to the protocol is the shared
+// fixtures.
 // The one crossing: the viewer's build config loads core's build-version module. It is build
 // tooling run by Node, never part of the bundle (ADR 0058 point 2).
 const VITE_CONFIG = "^packages/viewer/vite\\.config\\.ts$";
 const BUILD_VERSION_MODULE = "^packages/core/src/build-version\\.ts$";
 
-// Packages allowed to import network-address (ADR 0065); opcua-bridge is added in S3.
-const NETWORK_ADDRESS_USERS = ["core"];
+// Packages allowed to import network-address (ADR 0065).
+const NETWORK_ADDRESS_USERS = ["core", "opcua-bridge"];
 
-const isolatedPackages = ["core", "viewer"];
+// The rules of the OPC UA bridge package (ADR 0065 point 1), in their own file to keep this one short.
+const opcuaBridgeRules = require("./.dependency-cruiser-opcua-bridge.cjs");
+
+const isolatedPackages = ["core", "viewer", "opcua-bridge"];
 
 const isolationRules = isolatedPackages.map((packageName) => ({
   name: `${packageName}-is-isolated`,
@@ -28,6 +32,7 @@ const isolationRules = isolatedPackages.map((packageName) => ({
 module.exports = {
   forbidden: [
     ...isolationRules,
+    ...opcuaBridgeRules,
     {
       name: "viewer-config-imports-only-build-version",
       comment:
@@ -89,8 +94,7 @@ module.exports = {
     },
     {
       name: "network-address-is-imported-only-by-its-users",
-      comment:
-        "Only these packages import the address classification (ADR 0065); opcua-bridge joins the list in S3.",
+      comment: "Only these packages import the address classification (ADR 0065).",
       severity: "error",
       from: { pathNot: `^packages/(${NETWORK_ADDRESS_USERS.join("|")}|network-address)/` },
       to: { path: "^packages/network-address/|^@pantin/network-address" },

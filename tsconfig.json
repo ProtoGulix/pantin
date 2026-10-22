@@ -8,6 +8,7 @@
     { "path": "packages/plc-symbol-formats" },
     { "path": "packages/network-address" },
     { "path": "packages/protocol" },
+    { "path": "packages/opcua-bridge" },
     { "path": "packages/core" },
     { "path": "packages/viewer" },
     { "path": "packages/cli" },

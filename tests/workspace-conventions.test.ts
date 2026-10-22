@@ -34,6 +34,7 @@ describe("workspace packages", () => {
       "core",
       "drive-types",
       "network-address",
+      "opcua-bridge",
       "plc-symbol-formats",
       "protocol",
       "sensor-types",

@@ -19,6 +19,17 @@ All notable changes to Pantin. The format follows
   blocks or restarts the Modbus bridge, and the bridge start check reads the projection.
   `pantin gvl` names the GVL each OPC UA module expects. The viewer does not create an OPC UA module yet (S5), and the guide
   says that OPC UA connection is not available (Connect a PLC, the I/O view reference).
+- OPC UA client bridge, slice S3 (ADR 0065): the private package `@pantin/opcua-bridge`
+  (TypeScript, node-opcua 2.186.17 pinned exactly), spawned by the core with
+  `--opcua-bridge` (`pnpm serve` passes it). One session per module to the target given at
+  start, with the module's security mode and policy and an anonymous or user login; NodeId
+  and type checks at each session (`node_mismatch`), one subscription per module with a
+  publish watchdog, feedback written on change and in full after each session open, its own
+  reconnection loop. Unknown server certificates end the bridge
+  (`untrusted_server_certificate`) until trusted by SHA-256; expired or mismatching ones
+  end it (`server_certificate_invalid`); a PLC that refuses Pantin's certificate is retried
+  every 10 s. stdout carries status lines only, and the bridge opens no listening socket.
+  Not reachable from the viewer yet (S5).
 - Tag bus version 2 (ADR 0065 point 7): a `plc` hello carries its `transport` and the id of that
   transport's projection, there is one `plc` connection per (Pantin, transport), `io_changed`
   goes only to the connections whose projection changed, the watchdog zeroes the commands of
